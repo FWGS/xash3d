@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "mathlib.h"
 #include "input.h"
-#include "features.h"
+#include "engine_features.h"
 #include "render_api.h"	// decallist_t
 
 typedef void (*pfnChangeGame)( const char *progname );

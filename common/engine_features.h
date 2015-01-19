@@ -1,5 +1,5 @@
 /*
-features.h - engine features that can be enabled by mod-maker request
+engine_features.h - engine features that can be enabled by mod-maker request
 Copyright (C) 2012 Uncle Mike
 
 This program is free software: you can redistribute it and/or modify

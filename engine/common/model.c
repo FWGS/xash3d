@@ -20,7 +20,7 @@ GNU General Public License for more details.
 #include "wadfile.h"
 #include "world.h"
 #include "gl_local.h"
-#include "features.h"
+#include "engine_features.h"
 #include "client.h"
 
 #define MAX_SIDE_VERTS		512	// per one polygon
