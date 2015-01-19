@@ -1,0 +1,5 @@
+LIBRARY menu
+EXPORTS
+	GetMenuAPI			@1
+SECTIONS
+	.data READ WRITE

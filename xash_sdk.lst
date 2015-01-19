@@ -1,0 +1,22 @@
+//=======================================================================
+//			Copyright XashXT Group 2011 ©
+//			list with SDK directories
+//=======================================================================
+
+// global stuff
+xash_sdk\xash_sdk.dsw
+xash_sdk\cl_dll\
+xash_sdk\cl_dll\hl\
+xash_sdk\common\
+xash_sdk\dlls\
+xash_sdk\game_shared\
+xash_sdk\game_launch\
+xash_sdk\engine\
+xash_sdk\pm_shared\
+xash_sdk\mainui\
+xash_dsk\mainui\legacy
+xash_sdk\utils\
+xash_sdk\makefont\
+xash_sdk\utils\vgui\
+xash_sdk\utils\vgui\include\
+xash_sdk\utils\vgui\lib\win32_vc6\
