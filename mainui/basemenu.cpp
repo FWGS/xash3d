@@ -288,6 +288,7 @@ UI_DrawMouseCursor
 */
 void UI_DrawMouseCursor( void )
 {
+/* TODO: SDL2
 	menuCommon_s	*item;
 	HICON		hCursor = NULL;
 	int		i;
@@ -319,6 +320,7 @@ void UI_DrawMouseCursor( void )
 	if( !hCursor ) hCursor = (HICON)LoadCursor( NULL, (LPCTSTR)OCR_NORMAL );
 
 	SET_CURSOR( hCursor );
+*/
 }
 
 /*

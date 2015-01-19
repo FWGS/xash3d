@@ -23,8 +23,6 @@ GNU General Public License for more details.
 #pragma warning(disable : 4100)	// unreferenced formal parameter
 #pragma warning(disable : 4244)	// conversion from 'float' to 'int', possible loss of data
 
-#include "windows.h"
-
 // Misc C-runtime library headers
 #include <assert.h>
 #include <string.h>

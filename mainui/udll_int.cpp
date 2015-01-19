@@ -21,12 +21,6 @@ ui_enginefuncs_t	g_engfuncs;
 ui_globalvars_t	*gpGlobals;
 CMenu gMenu;
 
-// main DLL entry point
-BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
-{
-	return TRUE;
-}
-
 static UI_FUNCTIONS gFunctionTable = 
 {
 	UI_VidInit,
