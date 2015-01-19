@@ -9,7 +9,7 @@
 // Title Transition Time period
 #define TTT_PERIOD		200.0f
 
-quad_t TitleLerpQuads[2];
+ui_quad_t TitleLerpQuads[2];
 int transition_initial_time;
 int transition_state;
 HIMAGE TransPic = 0;
@@ -51,7 +51,7 @@ float UI_GetTitleTransFraction( void )
 	return fraction;
 }
 
-void LerpQuad( quad_t a, quad_t b, float frac, quad_t *c )
+void LerpQuad( ui_quad_t a, ui_quad_t b, float frac, ui_quad_t *c )
 {
 	c->x = a.x + (b.x - a.x) * frac;
 	c->y = a.y + (b.y - a.y) * frac;
@@ -84,7 +84,7 @@ void UI_DrawTitleAnim()
 	if( frac == 1 ) return;
 #endif
 
-	quad_t c;
+	ui_quad_t c;
 	
 	int f_idx = (transition_state == AS_TO_TITLE) ? 0 : 1;
 	int s_idx = (transition_state == AS_TO_TITLE) ? 1 : 0;
@@ -131,7 +131,7 @@ void UI_SetTitleAnim( int anim_state, menuPicButton_s *button )
 
 void UI_InitTitleAnim()
 {
-	memset( TitleLerpQuads, 0, sizeof( quad_t ) * 2 );
+	memset( TitleLerpQuads, 0, sizeof( ui_quad_t ) * 2 );
 
 	UI_SetupTitleQuad();
 

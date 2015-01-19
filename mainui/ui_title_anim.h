@@ -10,7 +10,7 @@ float UI_GetTitleTransFraction( void );
 typedef struct  
 {
 	int x, y, lx, ly;
-} quad_t;
+} ui_quad_t;
 
 void UI_PopPButtonStack( void );
 void UI_ClearButtonStack( void );
