@@ -90,7 +90,9 @@ UI_VidModes_GetModesList
 */
 static void UI_VidModes_GetConfig( void )
 {
-	for( int i = 0; i < MAX_VIDMODES-1; i++ )
+	int i;
+
+	for( i = 0; i < MAX_VIDMODES-1; i++ )
 		uiVidModes.videoModesPtr[i] = uiVideoModes[i];
 	uiVidModes.videoModesPtr[i] = NULL;	// terminator
 
