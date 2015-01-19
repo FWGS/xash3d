@@ -29,10 +29,20 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 
 #define bound( min, num, max )	((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
+#define min( a, b )	(((a) < (b)) ? (a) : (b))
+
+#define FALSE	0
+#define TRUE	(!FALSE)
+
+#define stricmp	strcasecmp
+#define strnicmp	strncasecmp
 
 typedef int (*cmpfunc)( const void *a, const void *b );
+typedef int BOOL;
+typedef unsigned char byte;
 
 #include "menu_int.h"
 
