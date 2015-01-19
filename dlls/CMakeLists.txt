@@ -21,10 +21,22 @@
 #
 
 cmake_minimum_required(VERSION 2.6.0)
-project (XASH3D)
+project (DLLS)
 
-add_subdirectory (dlls)
-# add_subdirectory (cl_dll)
-add_subdirectory (mainui)
-# add_subdirectory (engine)
-# add_subdirectory (game_launch)
+# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+set (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -Os")
+set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -O3")
+
+set (DLLS_LIBRARY dlls)
+set (DLLS_VERSION 2.8.67)
+
+file (GLOB DLLS_SOURCES *.cpp)
+include_directories (../common ../pm_shared ../game_shared ../engine)
+add_library (${DLLS_LIBRARY} SHARED ${DLLS_SOURCES})
+
+set_target_properties (${DLLS_SHARED} PROPERTIES
+    VERSION ${DLLS_VERSION} SOVERSION ${DLLS_VERSION}
+    POSITION_INDEPENDENT_CODE 1)
