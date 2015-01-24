@@ -59,14 +59,18 @@ typedef int BOOL;
 #endif //_WIN32
 
 // Misc C-runtime library headers
-#include "stdio.h"
-#include "stdlib.h"
-#include "math.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <ctype.h>
 
 // Header file containing definition of globalvars_t and entvars_t
 typedef int	func_t;					//
 typedef int	string_t;				// from engine's pr_comp.h;
 typedef float vec_t;				// needed before including progdefs.h
+
+#define stricmp	strcasecmp
+#define strnicmp	strncasecmp
 
 // Vector class
 #include "vector.h"

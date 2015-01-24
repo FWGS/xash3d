@@ -754,6 +754,7 @@ void CWorld :: KeyValue( KeyValueData *pkvd )
 // Xash3D physics interface
 //
 
+#define __cdecl	__attribute__((cdecl))
 typedef void (__cdecl *LINK_ENTITY_FN)( entvars_t *pev );
 
 //

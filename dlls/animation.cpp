@@ -19,6 +19,7 @@
 typedef int BOOL;
 #define TRUE	 1	
 #define FALSE	0
+#define stricmp	strcasecmp
 
 // hack into header files that we can ship
 typedef int qboolean;
