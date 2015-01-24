@@ -678,7 +678,7 @@ int CGraph :: FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, 
 
 			CNode *pCurrentNode = &m_pNodes[ iCurrentNode ];
 			
-			for ( i = 0 ; i < pCurrentNode->m_cNumLinks ; i++ )
+			for ( int i = 0 ; i < pCurrentNode->m_cNumLinks ; i++ )
 			{// run through all of this node's neighbors
 				
 				iVisitNode = INodeLink ( iCurrentNode, i );
@@ -725,7 +725,7 @@ int CGraph :: FindShortestPath ( int *piPath, int iStart, int iDest, int iHull, 
 		}
 
 		iCurrentNode = iDest;
-		for ( i = iNumPathNodes - 1 ; i >= 0 ; i-- )
+		for ( int i = iNumPathNodes - 1 ; i >= 0 ; i-- )
 		{
 			piPath[ i ] = iCurrentNode;
 			iCurrentNode = m_pNodes [ iCurrentNode ].m_iPreviousNode;
@@ -2763,7 +2763,7 @@ void CGraph::HashChoosePrimes(int TableSize)
 
     // Alternate negative and positive numbers
     //
-    for (iPrime = 0; iPrime < 16; iPrime += 2)
+    for (int iPrime = 0; iPrime < 16; iPrime += 2)
     {
         m_HashPrimes[iPrime] = TableSize-m_HashPrimes[iPrime];
     }
@@ -2771,7 +2771,7 @@ void CGraph::HashChoosePrimes(int TableSize)
     // Shuffle the set of primes to reduce correlation with bits in
     // hash key.
     //
-    for (iPrime = 0; iPrime < 16-1; iPrime++)
+    for (int iPrime = 0; iPrime < 16-1; iPrime++)
     {
         int Pick = RANDOM_LONG(0, 15-iPrime);
         int Temp = m_HashPrimes[Pick];
@@ -2796,7 +2796,7 @@ void CGraph::SortNodes(void)
 		m_pNodes[i].m_iPreviousNode = UNNUMBERED_NODE;
 	}
 
-	for (i = 0; i < m_cNodes; i++)
+	for (int i = 0; i < m_cNodes; i++)
 	{
 		// Run through all of this node's neighbors
 		//
@@ -2812,7 +2812,7 @@ void CGraph::SortNodes(void)
 
 	// Assign remaining node numbers to unlinked nodes.
 	//
-	for (i = 0; i < m_cNodes; i++)
+	for (int i = 0; i < m_cNodes; i++)
 	{
 		if (m_pNodes[i].m_iPreviousNode == UNNUMBERED_NODE)
 		{
@@ -2822,7 +2822,7 @@ void CGraph::SortNodes(void)
 
 	// Alter links to reflect new node numbers.
 	//
-	for (i = 0; i < m_cLinks; i++)
+	for (int i = 0; i < m_cLinks; i++)
 	{
 		m_pLinkPool[i].m_iSrcNode  = m_pNodes[m_pLinkPool[i].m_iSrcNode].m_iPreviousNode;
 		m_pLinkPool[i].m_iDestNode = m_pNodes[m_pLinkPool[i].m_iDestNode].m_iPreviousNode;
@@ -2830,7 +2830,7 @@ void CGraph::SortNodes(void)
 
 	// Rearrange nodes to reflect new node numbering.
 	//
-	for (i = 0; i < m_cNodes; i++)
+	for (int i = 0; i < m_cNodes; i++)
 	{
 		while (m_pNodes[i].m_iPreviousNode != i)
 		{
@@ -2861,7 +2861,7 @@ void CGraph::BuildLinkLookups(void)
 		m_pHashLinks[i] = ENTRY_STATE_EMPTY;
 	}
 
-	for (i = 0; i < m_cLinks; i++)
+	for (int i = 0; i < m_cLinks; i++)
 	{
 		CLink &link = Link(i);
 		HashInsert(link.m_iSrcNode, link.m_iDestNode, i);
@@ -2901,7 +2901,7 @@ void CGraph::BuildRegionTables(void)
 		m_RegionMin[i] =  999999999.0; // just a big number out there;
 		m_RegionMax[i] = -999999999.0; // just a big number out there;
 	}
-	for (i = 0; i < m_cNodes; i++)
+	for (int i = 0; i < m_cNodes; i++)
 	{
 		if (m_pNodes[i].m_vecOrigin.x < m_RegionMin[0])
 			m_RegionMin[0] = m_pNodes[i].m_vecOrigin.x;
@@ -2917,26 +2917,26 @@ void CGraph::BuildRegionTables(void)
 		if (m_pNodes[i].m_vecOrigin.z > m_RegionMax[2])
 			m_RegionMax[2] = m_pNodes[i].m_vecOrigin.z;
 	}
-	for (i = 0; i < m_cNodes; i++)
+	for (int i = 0; i < m_cNodes; i++)
 	{
 		m_pNodes[i].m_Region[0] = CALC_RANGE(m_pNodes[i].m_vecOrigin.x, m_RegionMin[0], m_RegionMax[0]);
 		m_pNodes[i].m_Region[1] = CALC_RANGE(m_pNodes[i].m_vecOrigin.y, m_RegionMin[1], m_RegionMax[1]);
 		m_pNodes[i].m_Region[2] = CALC_RANGE(m_pNodes[i].m_vecOrigin.z, m_RegionMin[2], m_RegionMax[2]);
 	}
 
-	for (i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		for (int j = 0; j < NUM_RANGES; j++)
 		{
 			m_RangeStart[i][j] = 255;
 			m_RangeEnd[i][j] = 0;
 		}
-		for (j = 0; j < m_cNodes; j++)
+		for (int j = 0; j < m_cNodes; j++)
 		{
 			m_di[j].m_SortedBy[i] = j;
 		}
 
-		for (j = 0; j < m_cNodes - 1; j++)
+		for (int j = 0; j < m_cNodes - 1; j++)
 		{
 			int jNode = m_di[j].m_SortedBy[i];
 			int jCodeX = m_pNodes[jNode].m_Region[0];
@@ -2990,7 +2990,7 @@ void CGraph::BuildRegionTables(void)
 
 	// Generate lookup tables.
 	//
-	for (i = 0; i < m_cNodes; i++)
+	for (int i = 0; i < m_cNodes; i++)
 	{
 		int CodeX = m_pNodes[m_di[i].m_SortedBy[0]].m_Region[0];
 		int CodeY = m_pNodes[m_di[i].m_SortedBy[1]].m_Region[1];
@@ -3068,7 +3068,7 @@ void CGraph :: ComputeStaticRoutingTables( void )
 					}
 				}
 
-				for (iFrom = 0; iFrom < m_cNodes; iFrom++)
+				for (int iFrom = 0; iFrom < m_cNodes; iFrom++)
 				{
 					for (int iTo = m_cNodes-1; iTo >= 0; iTo--)
 					{
@@ -3116,7 +3116,7 @@ void CGraph :: ComputeStaticRoutingTables( void )
 					}
 				}
 
-				for (iFrom = 0; iFrom < m_cNodes; iFrom++)
+				for (int iFrom = 0; iFrom < m_cNodes; iFrom++)
 				{
 					for (int iTo = 0; iTo < m_cNodes; iTo++)
 					{
@@ -3273,10 +3273,10 @@ void CGraph :: ComputeStaticRoutingTables( void )
 
 					// Go find a place to store this thing and point to it.
 					//
-					int nRoute = p - pRoute;
+					int i, nRoute = p - pRoute;
 					if (m_pRouteInfo)
 					{
-						for (int i = 0; i < m_nRouteInfo - nRoute; i++)
+						for (i = 0; i < m_nRouteInfo - nRoute; i++)
 						{
 							if (memcmp(m_pRouteInfo + i, pRoute, nRoute) == 0)
 							{
@@ -3392,7 +3392,7 @@ void CGraph :: TestRoutingTables( void )
 						}
 
 						float flDistance2 = 0.0;
-						for (i = 0; i < cPathSize2-1; i++)
+						for (int i = 0; i < cPathSize2-1; i++)
 						{
 							// Find the link from pMyPath2[i] to pMyPath2[i+1]
 							//
@@ -3427,7 +3427,7 @@ void CGraph :: TestRoutingTables( void )
 								ALERT(at_aiconsole, "%d ", pMyPath[i]);
 							}
 							ALERT(at_aiconsole, "\n(%d to %d |%d/%d)2:", iFrom, iTo, iHull, iCap);
-							for (i = 0; i < cPathSize2; i++)
+							for (int i = 0; i < cPathSize2; i++)
 							{
 								ALERT(at_aiconsole, "%d ", pMyPath2[i]);
 							}

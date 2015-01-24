@@ -1019,7 +1019,9 @@ BOOL CNihilanth :: EmitSphere( void )
 void CNihilanth :: 	TargetSphere( USE_TYPE useType, float value )
 {
 	CBaseMonster *pSphere;
-	for (int i = 0; i < N_SPHERES; i++)
+	int i;
+
+	for (i = 0; i < N_SPHERES; i++)
 	{
 		if (m_hSphere[i] != NULL)
 		{
