@@ -686,7 +686,7 @@ void CScientist :: Spawn( void )
 		pev->skin = 1;
 	
 	MonsterInit();
-	SetUse( FollowerUse );
+	SetUse( &CScientist::FollowerUse );
 }
 
 //=========================================================
@@ -1240,7 +1240,7 @@ void CSittingScientist :: Spawn( )
 	pev->sequence = m_baseSequence + RANDOM_LONG(0,4);
 	ResetSequenceInfo( );
 	
-	SetThink (SittingThink);
+	SetThink (&CSittingScientist::SittingThink);
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	DROP_TO_FLOOR ( ENT(pev) );

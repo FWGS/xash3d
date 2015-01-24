@@ -235,7 +235,7 @@ void CHgun::SecondaryAttack( void )
 	pHornet->pev->velocity = gpGlobals->v_forward * 1200;
 	pHornet->pev->angles = UTIL_VecToAngles( pHornet->pev->velocity );
 
-	pHornet->SetThink( CHornet::StartDart );
+	pHornet->SetThink( &CHornet::StartDart );
 
 	m_flRechargeTime = gpGlobals->time + 0.5;
 #endif

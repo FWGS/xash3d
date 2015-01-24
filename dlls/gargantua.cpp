@@ -161,7 +161,7 @@ void CStomp::Think( void )
 				pSprite->pev->velocity = Vector(RANDOM_FLOAT(-200,200),RANDOM_FLOAT(-200,200),175);
 				// pSprite->AnimateAndDie( RANDOM_FLOAT( 8.0, 12.0 ) );
 				pSprite->pev->nextthink = gpGlobals->time + 0.3;
-				pSprite->SetThink( SUB_Remove );
+				pSprite->SetThink( &CStomp::SUB_Remove );
 				pSprite->SetTransparency( kRenderTransAdd, 255, 255, 255, 255, kRenderFxFadeFast );
 			}
 		}
@@ -1126,7 +1126,7 @@ void CGargantua::RunTask( Task_t *pTask )
 			pev->rendercolor.z = 0;
 			StopAnimation();
 			pev->nextthink = gpGlobals->time + 0.15;
-			SetThink( SUB_Remove );
+			SetThink( &CGargantua::SUB_Remove );
 			int i;
 			int parts = MODEL_FRAMES( gGargGibModel );
 			for ( i = 0; i < 10; i++ )
@@ -1145,7 +1145,7 @@ void CGargantua::RunTask( Task_t *pTask )
 				pGib->pev->origin = pev->origin;
 				pGib->pev->velocity = UTIL_RandomBloodVector() * RANDOM_FLOAT( 300, 500 );
 				pGib->pev->nextthink = gpGlobals->time + 1.25;
-				pGib->SetThink( SUB_FadeOut );
+				pGib->SetThink( &CGargantua::SUB_FadeOut );
 			}
 			MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, pev->origin );
 				WRITE_BYTE( TE_BREAKMODEL);
@@ -1359,7 +1359,7 @@ void SpawnExplosion( Vector center, float randomRange, float time, int magnitude
 	pExplosion->pev->spawnflags |= SF_ENVEXPLOSION_NODAMAGE;
 
 	pExplosion->Spawn();
-	pExplosion->SetThink( CBaseEntity::SUB_CallUseToggle );
+	pExplosion->SetThink( &CBaseEntity::SUB_CallUseToggle );
 	pExplosion->pev->nextthink = gpGlobals->time + time;
 }
 

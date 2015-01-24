@@ -494,8 +494,8 @@ void CIchthyosaur :: Spawn()
 
 	MonsterInit();
 
-	SetTouch( BiteTouch );
-	SetUse( CombatUse );
+	SetTouch( &CIchthyosaur::BiteTouch );
+	SetUse( &CIchthyosaur::CombatUse );
 
 	m_idealDist = 384;
 	m_flMinSpeed = 80;

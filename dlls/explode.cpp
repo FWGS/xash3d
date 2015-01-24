@@ -217,7 +217,7 @@ void CEnvExplosion::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 		RadiusDamage ( pev, pev, m_iMagnitude, CLASS_NONE, DMG_BLAST );
 	}
 
-	SetThink( Smoke );
+	SetThink( &CEnvExplosion::Smoke );
 	pev->nextthink = gpGlobals->time + 0.3;
 
 	// draw sparks

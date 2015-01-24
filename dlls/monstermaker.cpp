@@ -111,29 +111,29 @@ void CMonsterMaker :: Spawn( )
 	{
 		if ( pev->spawnflags & SF_MONSTERMAKER_CYCLIC )
 		{
-			SetUse ( CyclicUse );// drop one monster each time we fire
+			SetUse ( &CMonsterMaker::CyclicUse );// drop one monster each time we fire
 		}
 		else
 		{
-			SetUse ( ToggleUse );// so can be turned on/off
+			SetUse ( &CMonsterMaker::ToggleUse );// so can be turned on/off
 		}
 
 		if ( FBitSet ( pev->spawnflags, SF_MONSTERMAKER_START_ON ) )
 		{// start making monsters as soon as monstermaker spawns
 			m_fActive = TRUE;
-			SetThink ( MakerThink );
+			SetThink ( &CMonsterMaker::MakerThink );
 		}
 		else
 		{// wait to be activated.
 			m_fActive = FALSE;
-			SetThink ( SUB_DoNothing );
+			SetThink ( &CMonsterMaker::SUB_DoNothing );
 		}
 	}
 	else
 	{// no targetname, just start.
 			pev->nextthink = gpGlobals->time + m_flDelay;
 			m_fActive = TRUE;
-			SetThink ( MakerThink );
+			SetThink ( &CMonsterMaker::MakerThink );
 	}
 
 	if ( m_cNumMonsters == 1 )
@@ -259,7 +259,7 @@ void CMonsterMaker :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCaller,
 	else
 	{
 		m_fActive = TRUE;
-		SetThink ( MakerThink );
+		SetThink ( &CMonsterMaker::MakerThink );
 	}
 
 	pev->nextthink = gpGlobals->time;

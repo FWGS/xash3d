@@ -196,7 +196,7 @@ void CLeech::Spawn( void )
 	m_flFieldOfView		= -0.5;	// 180 degree FOV
 	m_flDistLook		= 750;
 	MonsterInit();
-	SetThink( SwimThink );
+	SetThink( &CLeech::SwimThink );
 	SetUse( NULL );
 	SetTouch( NULL );
 	pev->view_ofs = g_vecZero;
@@ -717,7 +717,7 @@ void CLeech::Killed(entvars_t *pevAttacker, int iGib)
 	
 	pev->movetype = MOVETYPE_TOSS;
 	pev->takedamage = DAMAGE_NO;
-	SetThink( DeadThink );
+	SetThink( &CLeech::DeadThink );
 }
 
 

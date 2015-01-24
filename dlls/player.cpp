@@ -774,7 +774,7 @@ void CBasePlayer::PackDeadPlayerItems( void )
 	pWeaponBox->pev->angles.x = 0;// don't let weaponbox tilt.
 	pWeaponBox->pev->angles.z = 0;
 
-	pWeaponBox->SetThink( CWeaponBox::Kill );
+	pWeaponBox->SetThink( &CWeaponBox::Kill );
 	pWeaponBox->pev->nextthink = gpGlobals->time + 120;
 
 // back these two lists up to their first elements
@@ -933,7 +933,7 @@ void CBasePlayer::Killed( entvars_t *pevAttacker, int iGib )
 	pev->angles.x = 0;
 	pev->angles.z = 0;
 
-	SetThink(PlayerDeathThink);
+	SetThink(&CBasePlayer::PlayerDeathThink);
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
@@ -3209,7 +3209,7 @@ void CBloodSplat::Spawn ( entvars_t *pevOwner )
 	pev->angles = pevOwner->v_angle;
 	pev->owner = ENT(pevOwner);
 
-	SetThink ( Spray );
+	SetThink ( &CBloodSplat::Spray );
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
@@ -3224,7 +3224,7 @@ void CBloodSplat::Spray ( void )
 
 		UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
 	}
-	SetThink ( SUB_Remove );
+	SetThink ( &CBloodSplat::SUB_Remove );
 	pev->nextthink = gpGlobals->time + 0.1;
 }
 
@@ -3587,7 +3587,7 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 		if ( pEntity )
 		{
 			if ( pEntity->pev->takedamage )
-				pEntity->SetThink(SUB_Remove);
+				pEntity->SetThink(&CBasePlayer::SUB_Remove);
 		}
 		break;
 	}
@@ -4726,7 +4726,7 @@ void CRevertSaved :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 {
 	UTIL_ScreenFadeAll( pev->rendercolor, Duration(), HoldTime(), pev->renderamt, FFADE_OUT );
 	pev->nextthink = gpGlobals->time + MessageTime();
-	SetThink( MessageThink );
+	SetThink( &CRevertSaved::MessageThink );
 }
 
 
@@ -4737,7 +4737,7 @@ void CRevertSaved :: MessageThink( void )
 	if ( nextThink > 0 ) 
 	{
 		pev->nextthink = gpGlobals->time + nextThink;
-		SetThink( LoadThink );
+		SetThink( &CRevertSaved::LoadThink );
 	}
 	else
 		LoadThink();

@@ -231,7 +231,7 @@ void CBaseDelay :: SUB_UseTargets( CBaseEntity *pActivator, USE_TYPE useType, fl
 
 		pTemp->pev->nextthink = gpGlobals->time + m_flDelay;
 
-		pTemp->SetThink( DelayThink );
+		pTemp->SetThink( &CBaseDelay::DelayThink );
 		
 		// Save the useType
 		pTemp->pev->button = (int)useType;
@@ -413,7 +413,7 @@ void CBaseToggle ::  LinearMove( Vector	vecDest, float flSpeed )
 
 	// set nextthink to trigger a call to LinearMoveDone when dest is reached
 	pev->nextthink = pev->ltime + flTravelTime;
-	SetThink( LinearMoveDone );
+	SetThink( &CBaseToggle::LinearMoveDone );
 
 	// scale the destdelta vector by the time spent traveling to get velocity
 	pev->velocity = vecDestDelta / flTravelTime;
@@ -473,7 +473,7 @@ void CBaseToggle :: AngularMove( Vector vecDestAngle, float flSpeed )
 
 	// set nextthink to trigger a call to AngularMoveDone when dest is reached
 	pev->nextthink = pev->ltime + flTravelTime;
-	SetThink( AngularMoveDone );
+	SetThink( &CBaseToggle::AngularMoveDone );
 
 	// scale the destdelta vector by the time spent traveling to get velocity
 	pev->avelocity = vecDestDelta / flTravelTime;

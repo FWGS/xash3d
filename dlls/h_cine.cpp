@@ -124,7 +124,7 @@ void CLegacyCineMonster :: CineSpawn( char *szModel )
 	// if no targetname, start now
 	if ( FStringNull(pev->targetname) )	
 	{
-		SetThink( CineThink );
+		SetThink( &CLegacyCineMonster::CineThink );
 		pev->nextthink += 1.0;
 	}
 }
@@ -136,7 +136,7 @@ void CLegacyCineMonster :: CineSpawn( char *szModel )
 void CLegacyCineMonster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	pev->animtime = 0;	// reset the sequence
-	SetThink( CineThink );
+	SetThink( &CLegacyCineMonster::CineThink );
 	pev->nextthink = gpGlobals->time;
 }
 
@@ -145,7 +145,7 @@ void CLegacyCineMonster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 //
 void CLegacyCineMonster :: Die( void )
 {
-	SetThink( SUB_Remove );
+	SetThink( &CLegacyCineMonster::SUB_Remove );
 }
 
 //
@@ -228,14 +228,14 @@ void CCineBlood :: BloodGush ( void )
 
 void CCineBlood :: BloodStart ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	SetThink( BloodGush );
+	SetThink( &CCineBlood::BloodGush );
 	pev->nextthink = gpGlobals->time;// now!
 }
 
 void CCineBlood :: Spawn ( void )
 {
 	pev->solid = SOLID_NOT;
-	SetUse ( BloodStart );
+	SetUse ( &CCineBlood::BloodStart );
 	pev->health = 20;//hacked health to count iterations
 }
 

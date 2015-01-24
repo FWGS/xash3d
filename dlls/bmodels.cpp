@@ -419,7 +419,7 @@ void CFuncRotating :: Spawn( )
 	UTIL_SetOrigin(pev, pev->origin);
 	SET_MODEL( ENT(pev), STRING(pev->model) );
 
-	SetUse( RotatingUse );
+	SetUse( &CFuncRotating::RotatingUse );
 	// did level designer forget to assign speed?
 	if (pev->speed <= 0)
 		pev->speed = 0;
@@ -431,13 +431,13 @@ void CFuncRotating :: Spawn( )
 	// instant-use brush?
 	if ( FBitSet( pev->spawnflags, SF_BRUSH_ROTATE_INSTANT) )
 	{		
-		SetThink( SUB_CallUseToggle );
+		SetThink( &CFuncRotating::SUB_CallUseToggle );
 		pev->nextthink = pev->ltime + 1.5;	// leave a magic delay for client to start up
 	}	
 	// can this brush inflict pain?
 	if ( FBitSet (pev->spawnflags, SF_BRUSH_HURT) )
 	{
-		SetTouch( HurtTouch );
+		SetTouch( &CFuncRotating::HurtTouch );
 	}
 	
 	Precache( );
@@ -504,7 +504,7 @@ void CFuncRotating :: Precache( void )
 		// if fan was spinning, and we went through transition or save/restore,
 		// make sure we restart the sound.  1.5 sec delay is magic number. KDB
 
-		SetThink ( SpinUp );
+		SetThink ( &CFuncRotating::SpinUp );
 		pev->nextthink = pev->ltime + 1.5;
 	}
 }
@@ -600,7 +600,7 @@ void CFuncRotating :: SpinUp( void )
 		EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, (char *)STRING(pev->noiseRunning), 
 			m_flVolume, m_flAttenuation, SND_CHANGE_PITCH | SND_CHANGE_VOL, FANPITCHMAX);
 		
-		SetThink( Rotate );
+		SetThink( &CFuncRotating::Rotate );
 		Rotate();
 	} 
 	else
@@ -641,7 +641,7 @@ void CFuncRotating :: SpinDown( void )
 		EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, (char *)STRING(pev->noiseRunning /* Stop */), 
 				0, 0, SND_STOP, m_pitch);
 
-		SetThink( Rotate );
+		SetThink( &CFuncRotating::Rotate );
 		Rotate();
 	} 
 	else
@@ -666,7 +666,7 @@ void CFuncRotating :: RotatingUse( CBaseEntity *pActivator, CBaseEntity *pCaller
 		// fan is spinning, so stop it.
 		if ( pev->avelocity != g_vecZero )
 		{
-			SetThink ( SpinDown );
+			SetThink ( &CFuncRotating::SpinDown );
 			//EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, (char *)STRING(pev->noiseStop), 
 			//	m_flVolume, m_flAttenuation, 0, m_pitch);
 
@@ -674,7 +674,7 @@ void CFuncRotating :: RotatingUse( CBaseEntity *pActivator, CBaseEntity *pCaller
 		}
 		else// fan is not moving, so start it
 		{
-			SetThink ( SpinUp );
+			SetThink ( &CFuncRotating::SpinUp );
 			EMIT_SOUND_DYN(ENT(pev), CHAN_STATIC, (char *)STRING(pev->noiseRunning), 
 				0.01, m_flAttenuation, 0, FANPITCHMIN);
 
@@ -686,7 +686,7 @@ void CFuncRotating :: RotatingUse( CBaseEntity *pActivator, CBaseEntity *pCaller
 		if ( pev->avelocity != g_vecZero )
 		{
 			// play stopping sound here
-			SetThink ( SpinDown );
+			SetThink ( &CFuncRotating::SpinDown );
 
 			// EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, (char *)STRING(pev->noiseStop), 
 			//	m_flVolume, m_flAttenuation, 0, m_pitch);
@@ -700,7 +700,7 @@ void CFuncRotating :: RotatingUse( CBaseEntity *pActivator, CBaseEntity *pCaller
 				m_flVolume, m_flAttenuation, 0, FANPITCHMAX);
 			pev->avelocity = pev->movedir * pev->speed;
 
-			SetThink( Rotate );
+			SetThink( &CFuncRotating::Rotate );
 			Rotate();
 		}
 	}
@@ -812,15 +812,15 @@ void CPendulum :: Spawn( void )
 
 	if ( FBitSet( pev->spawnflags, SF_BRUSH_ROTATE_INSTANT) )
 	{		
-		SetThink( SUB_CallUseToggle );
+		SetThink( &CPendulum::SUB_CallUseToggle );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 	pev->speed = 0;
-	SetUse( PendulumUse );
+	SetUse( &CPendulum::PendulumUse );
 
 	if ( FBitSet( pev->spawnflags, SF_PENDULUM_SWING ) )
 	{
-		SetTouch ( RopeTouch );
+		SetTouch ( &CPendulum::RopeTouch );
 	}
 }
 
@@ -837,7 +837,7 @@ void CPendulum :: PendulumUse( CBaseEntity *pActivator, CBaseEntity *pCaller, US
 
 			pev->avelocity = m_maxSpeed * pev->movedir;
 			pev->nextthink = pev->ltime + (delta / m_maxSpeed);
-			SetThink( Stop );
+			SetThink( &CPendulum::Stop );
 		}
 		else
 		{
@@ -850,7 +850,7 @@ void CPendulum :: PendulumUse( CBaseEntity *pActivator, CBaseEntity *pCaller, US
 	{
 		pev->nextthink = pev->ltime + 0.1;		// Start the pendulum moving
 		m_time = gpGlobals->time;		// Save time to calculate dt
-		SetThink( Swing );
+		SetThink( &CPendulum::Swing );
 		m_dampSpeed = m_maxSpeed;
 	}
 }

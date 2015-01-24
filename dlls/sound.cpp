@@ -193,7 +193,7 @@ void CAmbientGeneric :: Spawn( void )
 	{
 		ALERT( at_error, "EMPTY AMBIENT AT: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z );
 		pev->nextthink = gpGlobals->time + 0.1;
-		SetThink( SUB_Remove );
+		SetThink( &CAmbientGeneric::SUB_Remove );
 		return;
 	}
     pev->solid		= SOLID_NOT;
@@ -203,12 +203,12 @@ void CAmbientGeneric :: Spawn( void )
 	// of ambient sound's pitch or volume. Don't
 	// start thinking yet.
 
-	SetThink(RampThink);
+	SetThink(&CAmbientGeneric::RampThink);
 	pev->nextthink = 0;
 
 	// allow on/off switching via 'use' function.
 
-	SetUse ( ToggleUse );
+	SetUse ( &CAmbientGeneric::ToggleUse );
 	
 	m_fActive = FALSE;
 
@@ -1824,19 +1824,19 @@ void CSpeaker :: Spawn( void )
 	{
 		ALERT( at_error, "SPEAKER with no Level/Sentence! at: %f, %f, %f\n", pev->origin.x, pev->origin.y, pev->origin.z );
 		pev->nextthink = gpGlobals->time + 0.1;
-		SetThink( SUB_Remove );
+		SetThink( &CSpeaker::SUB_Remove );
 		return;
 	}
     pev->solid		= SOLID_NOT;
     pev->movetype	= MOVETYPE_NONE;
 
 	
-	SetThink(SpeakerThink);
+	SetThink(&CSpeaker::SpeakerThink);
 	pev->nextthink = 0.0;
 
 	// allow on/off switching via 'use' function.
 
-	SetUse ( ToggleUse );
+	SetUse ( &CSpeaker::ToggleUse );
 
 	Precache( );
 }

@@ -147,7 +147,7 @@ void CCrowbar::PrimaryAttack()
 {
 	if (! Swing( 1 ))
 	{
-		SetThink( SwingAgain );
+		SetThink( &CCrowbar::SwingAgain );
 		pev->nextthink = gpGlobals->time + 0.1;
 	}
 }
@@ -306,7 +306,7 @@ int CCrowbar::Swing( int fFirst )
 #endif
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.25;
 		
-		SetThink( Smack );
+		SetThink( &CCrowbar::Smack );
 		pev->nextthink = UTIL_WeaponTimeBase() + 0.2;
 
 		

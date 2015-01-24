@@ -121,7 +121,7 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecVelocity
 	pSpit->pev->velocity = vecVelocity;
 	pSpit->pev->owner = ENT(pevOwner);
 
-	pSpit->SetThink ( Animate );
+	pSpit->SetThink ( &CSquidSpit::Animate );
 	pSpit->pev->nextthink = gpGlobals->time + 0.1;
 }
 
@@ -172,7 +172,7 @@ void CSquidSpit :: Touch ( CBaseEntity *pOther )
 		pOther->TakeDamage ( pev, pev, gSkillData.bullsquidDmgSpit, DMG_GENERIC );
 	}
 
-	SetThink ( SUB_Remove );
+	SetThink ( &CSquidSpit::SUB_Remove );
 	pev->nextthink = gpGlobals->time;
 }
 

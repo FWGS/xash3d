@@ -129,7 +129,7 @@ void CRecharge::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 	}
 
 	pev->nextthink = pev->ltime + 0.25;
-	SetThink(Off);
+	SetThink(&CRecharge::Off);
 
 	// Time to recharge yet?
 
@@ -179,7 +179,7 @@ void CRecharge::Recharge(void)
 {
 	m_iJuice = gSkillData.suitchargerCapacity;
 	pev->frame = 0;			
-	SetThink( SUB_DoNothing );
+	SetThink( &CRecharge::SUB_DoNothing );
 }
 
 void CRecharge::Off(void)
@@ -193,8 +193,8 @@ void CRecharge::Off(void)
 	if ((!m_iJuice) &&  ( ( m_iReactivate = g_pGameRules->FlHEVChargerRechargeTime() ) > 0) )
 	{
 		pev->nextthink = pev->ltime + m_iReactivate;
-		SetThink(Recharge);
+		SetThink(&CRecharge::Recharge);
 	}
 	else
-		SetThink( SUB_DoNothing );
+		SetThink( &CRecharge::SUB_DoNothing );
 }

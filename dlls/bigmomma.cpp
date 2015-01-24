@@ -1198,7 +1198,7 @@ CBMortar *CBMortar::Shoot( edict_t *pOwner, Vector vecStart, Vector vecVelocity 
 	pSpit->pev->velocity = vecVelocity;
 	pSpit->pev->owner = pOwner;
 	pSpit->pev->scale = 2.5;
-	pSpit->SetThink ( Animate );
+	pSpit->SetThink ( &CBMortar::Animate );
 	pSpit->pev->nextthink = gpGlobals->time + 0.1;
 
 	return pSpit;

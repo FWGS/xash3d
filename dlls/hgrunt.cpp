@@ -2393,7 +2393,7 @@ void CHGruntRepel::Spawn( void )
 	Precache( );
 	pev->solid = SOLID_NOT;
 
-	SetUse( RepelUse );
+	SetUse( &CHGruntRepel::RepelUse );
 }
 
 void CHGruntRepel::Precache( void )
@@ -2423,7 +2423,7 @@ void CHGruntRepel::RepelUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, USE
 	pBeam->PointEntInit( pev->origin + Vector(0,0,112), pGrunt->entindex() );
 	pBeam->SetFlags( BEAM_FSOLID );
 	pBeam->SetColor( 255, 255, 255 );
-	pBeam->SetThink( SUB_Remove );
+	pBeam->SetThink( &CHGruntRepel::SUB_Remove );
 	pBeam->pev->nextthink = gpGlobals->time + -4096.0 * tr.flFraction / pGrunt->pev->velocity.z + 0.5;
 
 	UTIL_Remove( this );

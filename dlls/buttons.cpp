@@ -173,7 +173,7 @@ void CMultiSource::Spawn()
 	pev->movetype = MOVETYPE_NONE;
 	pev->nextthink = gpGlobals->time + 0.1;
 	pev->spawnflags |= SF_MULTI_INIT;	// Until it's initialized
-	SetThink(Register);
+	SetThink(&CMultiSource::Register);
 }
 
 void CMultiSource::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
@@ -240,7 +240,7 @@ void CMultiSource::Register(void)
 	m_iTotal = 0;
 	memset( m_rgEntities, 0, MS_MAX_TARGETS * sizeof(EHANDLE) );
 
-	SetThink(SUB_DoNothing);
+	SetThink(&CMultiSource::SUB_DoNothing);
 
 	// search for all entities which target this multisource (pev->targetname)
 
@@ -455,7 +455,7 @@ void CBaseButton::Spawn( )
 
 	if ( FBitSet ( pev->spawnflags, SF_BUTTON_SPARK_IF_OFF ) )// this button should spark in OFF state
 	{
-		SetThink ( ButtonSpark );
+		SetThink ( &CBaseButton::ButtonSpark );
 		pev->nextthink = gpGlobals->time + 0.5;// no hurry, make sure everything else spawns
 	}
 
@@ -495,12 +495,12 @@ void CBaseButton::Spawn( )
 
 	if ( FBitSet ( pev->spawnflags, SF_BUTTON_TOUCH_ONLY ) ) // touchable button
 	{
-		SetTouch( ButtonTouch );
+		SetTouch( &CBaseButton::ButtonTouch );
 	}
 	else 
 	{
 		SetTouch ( NULL );
-		SetUse	 ( ButtonUse );
+		SetUse	 ( &CBaseButton::ButtonUse );
 	}
 }
 
@@ -567,7 +567,7 @@ void DoSpark(entvars_t *pev, const Vector &location )
 
 void CBaseButton::ButtonSpark ( void )
 {
-	SetThink ( ButtonSpark );
+	SetThink ( &CBaseButton::ButtonSpark );
 	pev->nextthink = gpGlobals->time + ( 0.1 + RANDOM_FLOAT ( 0, 1.5 ) );// spark again at random interval
 
 	DoSpark( pev, pev->mins );
@@ -680,7 +680,7 @@ void CBaseButton::ButtonActivate( )
 	ASSERT(m_toggle_state == TS_AT_BOTTOM);
 	m_toggle_state = TS_GOING_UP;
 	
-	SetMoveDone( TriggerAndWait );
+	SetMoveDone( &CBaseButton::TriggerAndWait );
 	if (!m_fRotating)
 		LinearMove( m_vecPosition2, pev->speed);
 	else
@@ -709,12 +709,12 @@ void CBaseButton::TriggerAndWait( void )
 		SetTouch ( NULL );
 		}
 		else
-			SetTouch( ButtonTouch );
+			SetTouch( &CBaseButton::ButtonTouch );
 	}
 	else
 	{
 		pev->nextthink = pev->ltime + m_flWait;
-		SetThink( ButtonReturn );
+		SetThink( &CBaseButton::ButtonReturn );
 	}
 	
 	pev->frame = 1;			// use alternate textures
@@ -732,7 +732,7 @@ void CBaseButton::ButtonReturn( void )
 	ASSERT(m_toggle_state == TS_AT_TOP);
 	m_toggle_state = TS_GOING_DOWN;
 	
-	SetMoveDone( ButtonBackHome );
+	SetMoveDone( &CBaseButton::ButtonBackHome );
 	if (!m_fRotating)
 		LinearMove( m_vecPosition1, pev->speed);
 	else
@@ -784,12 +784,12 @@ void CBaseButton::ButtonBackHome( void )
 		SetTouch ( NULL );
 	}
 	else
-		SetTouch( ButtonTouch );
+		SetTouch( &CBaseButton::ButtonTouch );
 
 // reset think for a sparking button
 	if ( FBitSet ( pev->spawnflags, SF_BUTTON_SPARK_IF_OFF ) )
 	{
-		SetThink ( ButtonSpark );
+		SetThink ( &CBaseButton::ButtonSpark );
 		pev->nextthink = gpGlobals->time + 0.5;// no hurry.
 	}
 }
@@ -857,10 +857,10 @@ void CRotButton::Spawn( void )
 	if ( !FBitSet ( pev->spawnflags, SF_BUTTON_TOUCH_ONLY ) )
 	{
 		SetTouch ( NULL );
-		SetUse	 ( ButtonUse );
+		SetUse	 ( &CRotButton::ButtonUse );
 	}
 	else // touchable button
-		SetTouch( ButtonTouch );
+		SetTouch( &CRotButton::ButtonTouch );
 
 	//SetTouch( ButtonTouch );
 }
@@ -1049,7 +1049,7 @@ void CMomentaryRotButton::UpdateSelf( float value )
 		pev->nextthink += 0.1;
 	
 	pev->avelocity = (m_direction * pev->speed) * pev->movedir;
-	SetThink( Off );
+	SetThink( &CMomentaryRotButton::Off );
 }
 
 void CMomentaryRotButton::UpdateTarget( float value )
@@ -1077,7 +1077,7 @@ void CMomentaryRotButton::Off( void )
 	m_lastUsed = 0;
 	if ( FBitSet( pev->spawnflags, SF_PENDULUM_AUTO_RETURN ) && m_returnSpeed > 0 )
 	{
-		SetThink( Return );
+		SetThink( &CMomentaryRotButton::Return );
 		pev->nextthink = pev->ltime + 0.1;
 		m_direction = -1;
 	}
@@ -1154,14 +1154,14 @@ void CEnvSpark::Spawn(void)
 	{
 		if (FBitSet(pev->spawnflags, 64)) // Start on
 		{
-			SetThink(SparkThink);	// start sparking
-			SetUse(SparkStop);		// set up +USE to stop sparking
+			SetThink(&CEnvSpark::SparkThink);	// start sparking
+			SetUse(&CEnvSpark::SparkStop);		// set up +USE to stop sparking
 		}
 		else
-			SetUse(SparkStart);
+			SetUse(&CEnvSpark::SparkStart);
 	}
 	else
-		SetThink(SparkThink);
+		SetThink(&CEnvSpark::SparkThink);
 		
 	pev->nextthink = gpGlobals->time + ( 0.1 + RANDOM_FLOAT ( 0, 1.5 ) );
 
@@ -1208,14 +1208,14 @@ void EXPORT CEnvSpark::SparkThink(void)
 
 void EXPORT CEnvSpark::SparkStart(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	SetUse(SparkStop);
-	SetThink(SparkThink);
+	SetUse(&CEnvSpark::SparkStop);
+	SetThink(&CEnvSpark::SparkThink);
 	pev->nextthink = gpGlobals->time + (0.1 + RANDOM_FLOAT ( 0, m_flDelay));
 }
 
 void EXPORT CEnvSpark::SparkStop(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	SetUse(SparkStart);
+	SetUse(&CEnvSpark::SparkStart);
 	SetThink(NULL);
 }
 
