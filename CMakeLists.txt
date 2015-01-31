@@ -23,8 +23,8 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (XASH3D)
 
-# add_subdirectory (dlls)
-# add_subdirectory (cl_dll)
+set (HL_SDK_DIR /opt/halflife CACHE PATH "Half Life 1 SDK directory")
+
 add_subdirectory (mainui)
 # add_subdirectory (engine)
 # add_subdirectory (game_launch)
