@@ -13,7 +13,22 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <windows.h>
+#include <SDL2/SDL.h>
+
+#ifdef __unix__
+ #include <dlfcn.h>
+ #ifdef __APPLE__
+  #define XASHLIB                "xash.dylib"
+ #else
+  #define XASHLIB                "xash.so"
+ #endif
+ #define LoadLibrary(x)          dlopen(x, RTLD_NOW)
+ #define FreeLibrary(x)          dlclose(x)
+ #define GetProcAddress(x, y)    dlsym(x, y)
+ #define HINSTANCE               void*
+#elif _WIN32
+ #define XASHLIB                 "xash.dll"
+#endif
 
 #define GAME_PATH	"valve"	// default dir to start from
 
@@ -28,13 +43,13 @@ HINSTANCE	hEngine;
 
 void Sys_Error( const char *errorstring )
 {
-	MessageBox( NULL, errorstring, "Xash Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP );
-	exit( 1 );
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
+        exit( 1 );
 }
 
 void Sys_LoadEngine( void )
 {
-	if(( hEngine = LoadLibrary( "xash.dll" )) == NULL )
+	if(( hEngine = LoadLibrary( XASHLIB )) == NULL )
 	{
 		Sys_Error( "Unable to load the xash.dll" );
 	}
@@ -63,12 +78,12 @@ void Sys_ChangeGame( const char *progname )
 	Sys_UnloadEngine ();
 	Sys_LoadEngine ();
 	
-	Host_Main( szGameDir, TRUE, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	Host_Main( szGameDir, true, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
 
-int APIENTRY WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+int main( int argc, char **argv )
 {
 	Sys_LoadEngine();
 
-	return Host_Main( GAME_PATH, FALSE, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	return Host_Main( GAME_PATH, false, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
