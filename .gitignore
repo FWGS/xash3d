@@ -1,0 +1,8 @@
+# Binaries
+*.o
+*.so
+*.a
+
+# Other
+*.save
+Makefile
