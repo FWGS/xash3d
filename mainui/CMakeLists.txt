@@ -34,7 +34,7 @@ set (MAINUI_LIBRARY mainui)
 set (MAINUI_VERSION 2.8.67)
 
 file (GLOB MAINUI_SOURCES *.cpp)
-include_directories (../common ../pm_shared ../engine)
+include_directories (../common ../engine ${HL_SDK_DIR}/pm_shared)
 add_library (${MAINUI_LIBRARY} SHARED ${MAINUI_SOURCES})
 
 set_target_properties (${MAINUI_SHARED} PROPERTIES
