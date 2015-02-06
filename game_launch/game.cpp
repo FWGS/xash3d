@@ -20,7 +20,7 @@ GNU General Public License for more details.
  #ifdef __APPLE__
   #define XASHLIB                "xash.dylib"
  #else
-  #define XASHLIB                "xash.so"
+  #define XASHLIB                "libxash.so"
  #endif
  #define LoadLibrary(x)          dlopen(x, RTLD_NOW)
  #define FreeLibrary(x)          dlclose(x)
@@ -43,8 +43,8 @@ HINSTANCE	hEngine;
 
 void Sys_Error( const char *errorstring )
 {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
-        exit( 1 );
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
+	exit( 1 );
 }
 
 void Sys_LoadEngine( void )
@@ -77,7 +77,7 @@ void Sys_ChangeGame( const char *progname )
 
 	Sys_UnloadEngine ();
 	Sys_LoadEngine ();
-	
+
 	Host_Main( szGameDir, true, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
 
