@@ -51,12 +51,12 @@ void Sys_LoadEngine( void )
 {
 	if(( hEngine = LoadLibrary( XASHLIB )) == NULL )
 	{
-		Sys_Error( "Unable to load the xash.dll" );
+		Sys_Error( "Unable to load the " XASHLIB );
 	}
 
 	if(( Host_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
 	{
-		Sys_Error( "xash.dll missed 'Host_Main' export" );
+		Sys_Error( XASHLIB " missed 'Host_Main' export" );
 	}
 
 	// this is non-fatal for us but change game will not working
