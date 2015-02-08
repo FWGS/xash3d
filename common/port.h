@@ -6,7 +6,11 @@
 #define TRUE 1
 #define FALSE 0
 
+#define _stdcall
+#define _inline inline
+
 typedef unsigned char	    BYTE;
+typedef unsigned char	    byte;
 typedef short int	    WORD;
 typedef unsigned int	    DWORD;
 typedef long int	    LONG;
