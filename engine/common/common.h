@@ -20,9 +20,16 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
+#ifndef _WIN32
+#include <linux/limits.h> // PATH_MAX
+#include "port.h"
+#else
+#define PATH_MAX 1024
+#endif
+
 #define MAX_STRING		256	// generic string
 #define MAX_INFO_STRING	256	// infostrings are transmitted across network
-#define MAX_SYSPATH		1024	// system filepath
+#define MAX_SYSPATH		PATH_MAX	// system filepath
 #define MAX_MODS		512	// environment games that engine can keep visible
 #define EXPORT		__declspec( dllexport )
 #define BIT( n )		(1<<( n ))
@@ -105,7 +112,7 @@ typedef enum
 #define FS_NOWRITE_PATH	2	// default behavior - last added gamedir set as writedir. This flag disables it
 #define FS_GAMEDIR_PATH	4	// just a marker for gamedir path
 
-#define GI		SI.GameInfo
+#define GI              SI.GameInfo
 #define FS_Gamedir()	SI.GameInfo->gamedir
 #define FS_Title()		SI.GameInfo->title
 
@@ -271,9 +278,9 @@ typedef struct
 
 typedef struct host_parm_s
 {
-	HINSTANCE			hInst;
-	HANDLE			hMutex;
-	LPTOP_LEVEL_EXCEPTION_FILTER	oldFilter;
+    HINSTANCE	hInst;
+    HANDLE		hMutex;
+    void*       oldFilter;
 
 	host_state	state;		// global host state
 	uint		type;		// running at
@@ -296,7 +303,7 @@ typedef struct host_parm_s
 	// list of unique decal indexes
 	char		draw_decals[MAX_DECALS][CS_SIZE];
 
-	HWND		hWnd;		// main window
+    SDL_Window*		hWnd;		// main window
 	int		developer;	// show all developer's message
 	int		old_developer;	// keep real dev state (we need enable dev-mode in multiplayer)
 	qboolean		key_overstrike;	// key overstrike mode
