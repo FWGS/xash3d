@@ -20,7 +20,7 @@ GNU General Public License for more details.
  #ifdef __APPLE__
   #define XASHLIB                "xash.dylib"
  #else
-  #define XASHLIB                "xash.so"
+  #define XASHLIB                "libxash.so"
  #endif
  #define LoadLibrary(x)          dlopen(x, RTLD_NOW)
  #define FreeLibrary(x)          dlclose(x)
@@ -43,20 +43,20 @@ HINSTANCE	hEngine;
 
 void Sys_Error( const char *errorstring )
 {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
-        exit( 1 );
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
+	exit( 1 );
 }
 
 void Sys_LoadEngine( void )
 {
 	if(( hEngine = LoadLibrary( XASHLIB )) == NULL )
 	{
-		Sys_Error( "Unable to load the xash.dll" );
+		Sys_Error( "Unable to load the " XASHLIB );
 	}
 
 	if(( Host_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
 	{
-		Sys_Error( "xash.dll missed 'Host_Main' export" );
+		Sys_Error( XASHLIB " missed 'Host_Main' export" );
 	}
 
 	// this is non-fatal for us but change game will not working
@@ -77,7 +77,7 @@ void Sys_ChangeGame( const char *progname )
 
 	Sys_UnloadEngine ();
 	Sys_LoadEngine ();
-	
+
 	Host_Main( szGameDir, true, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
 
