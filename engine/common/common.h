@@ -20,19 +20,6 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-// disable some warnings
-#pragma warning(disable : 4244)	// MIPS
-#pragma warning(disable : 4018)	// signed/unsigned mismatch
-#pragma warning(disable : 4305)	// truncation from const double to float
-#pragma warning(disable : 4115)	// named type definition in parentheses
-#pragma warning(disable : 4100)	// unreferenced formal parameter
-#pragma warning(disable : 4127)	// conditional expression is constant
-#pragma warning(disable : 4057)	// differs in indirection to slightly different base types
-#pragma warning(disable : 4201)	// nonstandard extension used
-#pragma warning(disable : 4706)	// assignment within conditional expression
-#pragma warning(disable : 4054)	// type cast' : from function pointer
-#pragma warning(disable : 4310)	// cast truncates constant value
-
 #define MAX_STRING		256	// generic string
 #define MAX_INFO_STRING	256	// infostrings are transmitted across network
 #define MAX_SYSPATH		1024	// system filepath
