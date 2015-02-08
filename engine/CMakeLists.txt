@@ -35,7 +35,16 @@ set (XASH_ENGINE_VERSION 0.95.2867)
 
 file (GLOB_RECURSE XASH_ENGINE_SOURCES *.cpp *.c)
 file (GLOB_RECURSE XASH_ENGINE_HEADERS *.h)
-include_directories (../common ${HL_SDK_DIR}/pm_shared ${HL_SDK_DIR}/utils/vgui/include)
+include_directories (. common/
+		    common/imagelib/
+		    common/soundlib/
+		    client/
+		    client/vgui/
+		    server/
+		    ../common
+		    ${HL_SDK_DIR}/pm_shared
+		    ${HL_SDK_DIR}/public
+		    ${HL_SDK_DIR}/utils/vgui/include)
 add_library (${XASH_ENGINE_LIBRARY} SHARED ${XASH_ENGINE_HEADERS} ${XASH_ENGINE_SOURCES})
 
 set_target_properties (${XASH_ENGINE_SHARED} PROPERTIES
