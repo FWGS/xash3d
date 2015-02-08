@@ -23,15 +23,17 @@ extern "C" {
 #ifndef _WIN32
 #include <linux/limits.h> // PATH_MAX
 #include "port.h"
+
+#define EXPORT __attribute__ ((visibility("default")))
 #else
 #define PATH_MAX 1024
+#define EXPORT		__declspec( dllexport )
 #endif
 
 #define MAX_STRING		256	// generic string
 #define MAX_INFO_STRING	256	// infostrings are transmitted across network
 #define MAX_SYSPATH		PATH_MAX	// system filepath
 #define MAX_MODS		512	// environment games that engine can keep visible
-#define EXPORT		__declspec( dllexport )
 #define BIT( n )		(1<<( n ))
 
 #ifndef __cplusplus
