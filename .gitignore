@@ -5,4 +5,5 @@
 
 # Other
 *.save
+*.user
 Makefile
