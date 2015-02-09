@@ -13,6 +13,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "port.h"
+
+#include <SDL2/SDL.h>
+#include <stdarg.h>  // va_args
+
 #include "common.h"
 #include "netchan.h"
 #include "protocol.h"
@@ -690,13 +695,15 @@ Host_InitCommon
 */
 void Host_InitCommon( const char *progname, qboolean bChangeGame )
 {
-	MEMORYSTATUS	lpBuffer;
 	char		dev_level[4];
 	char		szTemp[MAX_SYSPATH];
 	string		szRootPath;
+#ifdef _WIN32
+    MEMORYSTATUS	lpBuffer;
 
-	lpBuffer.dwLength = sizeof( MEMORYSTATUS );
-	GlobalMemoryStatus( &lpBuffer );
+    lpBuffer.dwLength = sizeof( MEMORYSTATUS );
+    GlobalMemoryStatus( &lpBuffer );
+#endif
 
 	if( !GetCurrentDirectory( sizeof( host.rootdir ), host.rootdir ))
 		Sys_Error( "couldn't determine current directory" );
@@ -704,8 +711,10 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
+#ifdef _WIN32
 	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
-	host.hInst = GetModuleHandle( NULL );
+    host.hInst = GetModuleHandle( NULL );
+#endif
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialzation started
 	host.developer = host.old_developer = 0;
@@ -785,7 +794,7 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	Con_CreateConsole();
 
 	// first text message into console or log 
-	MsgDev( D_NOTE, "Sys_LoadLibrary: Loading xash.dll - ok\n" );
+    MsgDev( D_NOTE, "Sys_LoadLibrary: Loading xash.dll - ok\n" );
 
 	// startup cmds and cvars subsystem
 	Cmd_Init();
@@ -979,9 +988,11 @@ void EXPORT Host_Shutdown( void )
 	if( host.oldFilter ) SetUnhandledExceptionFilter( host.oldFilter );
 }
 
+#ifdef _WIN32
 // main DLL entry point
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
 {
 	hCurrent = hinstDLL;
 	return TRUE;
 }
+#endif
