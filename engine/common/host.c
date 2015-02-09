@@ -699,10 +699,10 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	char		szTemp[MAX_SYSPATH];
 	string		szRootPath;
 #ifdef _WIN32
-    MEMORYSTATUS	lpBuffer;
+	MEMORYSTATUS	lpBuffer;
 
-    lpBuffer.dwLength = sizeof( MEMORYSTATUS );
-    GlobalMemoryStatus( &lpBuffer );
+	lpBuffer.dwLength = sizeof( MEMORYSTATUS );
+	GlobalMemoryStatus( &lpBuffer );
 #endif
 
 	if( !GetCurrentDirectory( sizeof( host.rootdir ), host.rootdir ))
@@ -713,7 +713,7 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 
 #ifdef _WIN32
 	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
-    host.hInst = GetModuleHandle( NULL );
+	host.hInst = GetModuleHandle( NULL );
 #endif
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialzation started
@@ -794,7 +794,7 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	Con_CreateConsole();
 
 	// first text message into console or log 
-    MsgDev( D_NOTE, "Sys_LoadLibrary: Loading xash.dll - ok\n" );
+	MsgDev( D_NOTE, "Sys_LoadLibrary: Loading xash.dll - ok\n" );
 
 	// startup cmds and cvars subsystem
 	Cmd_Init();
