@@ -33,7 +33,7 @@ GNU General Public License for more details.
 #define GAME_PATH	"valve"	// default dir to start from
 
 typedef void (*pfnChangeGame)( const char *progname );
-typedef int (*pfnInit)( const char *progname, int bChangeGame, pfnChangeGame func );
+typedef int (*pfnInit)( const char* moduleName, const char* cmdLine, const char *progname, int bChangeGame, pfnChangeGame func );
 typedef void (*pfnShutdown)( void );
 
 pfnInit Host_Main;
@@ -83,7 +83,15 @@ void Sys_ChangeGame( const char *progname )
 
 int main( int argc, char **argv )
 {
+	char *cmdLine = (char *)malloc(0, 256 * sizeof(char));
+	int i;
+	for(i = 1; i < argc; ++i)
+	{
+		strcat(cmdLine, argv[i]);
+		strcat(cmdLine, " ");
+	}
+
 	Sys_LoadEngine();
 
-	return Host_Main( GAME_PATH, false, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	return Host_Main( argv[0], cmdLine, GAME_PATH, false, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }

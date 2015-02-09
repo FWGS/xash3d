@@ -595,7 +595,7 @@ void Host_Error( const char *error, ... )
 	if( host.mouse_visible && !CL_IsInMenu( ))
 	{
 		// hide VGUI mouse
-		while( ShowCursor( false ) >= 0 );
+		SDL_ShowCursor( false );
 		host.mouse_visible = false;
 	}
 
@@ -693,7 +693,7 @@ static void Host_Crash_f( void )
 Host_InitCommon
 =================
 */
-void Host_InitCommon( const char *progname, qboolean bChangeGame )
+void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *progname, qboolean bChangeGame )
 {
 	char		dev_level[4];
 	char		szTemp[MAX_SYSPATH];
@@ -705,7 +705,7 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	GlobalMemoryStatus( &lpBuffer );
 #endif
 
-	if( !GetCurrentDirectory( sizeof( host.rootdir ), host.rootdir ))
+	if( !(host.rootdir = SDL_GetBasePath()) )
 		Sys_Error( "couldn't determine current directory" );
 
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
@@ -724,8 +724,10 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	// some commands may turn engine into infinity loop,
 	// e.g. xash.exe +game xash -game xash
 	// so we clearing all cmd_args, but leave dbg states as well
-	Sys_ParseCommandLine( GetCommandLine( ));
+	if( cmdLine ) Sys_ParseCommandLine( cmdLine );
+#ifdef _WIN32
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
+#endif
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
 
@@ -842,13 +844,13 @@ void Host_FreeCommon( void )
 Host_Main
 =================
 */
-int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func )
+int EXPORT Host_Main( const char* moduleName, const char* cmdLine, const char *progname, int bChangeGame, pfnChangeGame func )
 {
 	static double	oldtime, newtime;
 
 	pChangeGame = func;	// may be NULL
 
-	Host_InitCommon( progname, bChangeGame );
+	Host_InitCommon( moduleName, cmdLine, progname, bChangeGame );
 
 	// init commands and vars
 	if( host.developer >= 3 )
