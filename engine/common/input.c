@@ -24,7 +24,7 @@ GNU General Public License for more details.
 #define WND_HEADSIZE	wnd_caption		// some offset
 #define WND_BORDER		3			// sentinel border in pixels
 
-HICON	in_mousecursor;
+SDL_Cursor*	in_mousecursor;
 qboolean	in_mouseactive;				// false when not focus app
 qboolean	in_restore_spi;
 qboolean	in_mouseinitialized;
@@ -126,18 +126,21 @@ void IN_StartupMouse( void )
 
 	in_mouse_buttons = 8;
 	in_mouseinitialized = true;
+#ifdef _WIN32
 	in_mouse_wheel = RegisterWindowMessage( "MSWHEEL_ROLLMSG" );
+#endif
 }
 
 static qboolean IN_CursorInRect( void )
 {
+#ifdef _WIN32
 	POINT	curpos;
 	
 	if( !in_mouseinitialized || !in_mouseactive )
 		return false;
 
 	// find mouse movement
-	GetCursorPos( &curpos );
+	GetMouseState( &curpos );
 
 	if( curpos.x < real_rect.left + WND_BORDER )
 		return false;
@@ -148,17 +151,19 @@ static qboolean IN_CursorInRect( void )
 	if( curpos.y > real_rect.bottom - WND_BORDER * 3 )
 		return false;
 	return true;
+#endif
+	return true;
 }
 
 static void IN_ActivateCursor( void )
 {
 	if( cls.key_dest == key_menu )
 	{
-		SetCursor( in_mousecursor );
+		SDL_SetCursor( in_mousecursor );
 	}
 }
 
-void IN_SetCursor( HICON hCursor )
+void IN_SetCursor( SDL_Cursor* hCursor )
 {
 	in_mousecursor = hCursor;
 
@@ -183,16 +188,13 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 	else if( newstate == key_game )
 	{
 		// reset mouse pos, so cancel effect in game
-		SetCursorPos( host.window_center_x, host.window_center_y );	
+		SDL_WarpMouseInWindow( host.hWnd, host.window_center_x, host.window_center_y );
 		clgame.dllFuncs.IN_ActivateMouse();
 	}
 
 	if( newstate == key_menu && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
 	{
-		in_mouseactive = false;
-		ClipCursor( NULL );
-		ReleaseCapture();
-		while( ShowCursor( true ) < 0 );
+		SDL_SetWindowGrab(host.hWnd, false);
 	}
 }
 
@@ -207,12 +209,12 @@ void IN_ActivateMouse( qboolean force )
 {
 	int		width, height;
 	static int	oldstate;
-			
+
 	if( !in_mouseinitialized )
 		return;
 
 	if( CL_Active() && host.mouse_visible && !force )
-		return;	// VGUI controls  
+		return;	// VGUI controls
 
 	if( cls.key_dest == key_menu && !Cvar_VariableInteger( "fullscreen" ))
 	{
@@ -251,22 +253,7 @@ void IN_ActivateMouse( qboolean force )
 		clgame.dllFuncs.IN_ActivateMouse();
 	}
 
-	width = GetSystemMetrics( SM_CXSCREEN );
-	height = GetSystemMetrics( SM_CYSCREEN );
-
-	GetWindowRect( host.hWnd, &window_rect );
-	if( window_rect.left < 0 ) window_rect.left = 0;
-	if( window_rect.top < 0 ) window_rect.top = 0;
-	if( window_rect.right >= width ) window_rect.right = width - 1;
-	if( window_rect.bottom >= height - 1 ) window_rect.bottom = height - 1;
-
-	host.window_center_x = (window_rect.right + window_rect.left) / 2;
-	host.window_center_y = (window_rect.top + window_rect.bottom) / 2;
-	SetCursorPos( host.window_center_x, host.window_center_y );
-
-	SetCapture( host.hWnd );
-	ClipCursor( &window_rect );
-	while( ShowCursor( false ) >= 0 );
+	SDL_SetWindowGrab( host.hWnd, true );
 }
 
 /*
@@ -287,9 +274,7 @@ void IN_DeactivateMouse( void )
 	}
 
 	in_mouseactive = false;
-	ClipCursor( NULL );
-	ReleaseCapture();
-	while( ShowCursor( true ) < 0 );
+	SDL_SetWindowGrab( host.hWnd, false );
 }
 
 /*
@@ -304,10 +289,11 @@ void IN_MouseMove( void )
 	if( !in_mouseinitialized || !in_mouseactive || !UI_IsVisible( ))
 		return;
 
-	// find mouse movement
-	GetCursorPos( &current_pos );
-	ScreenToClient( host.hWnd, &current_pos );
+	// Show cursor in UI
+	if( UI_IsVisible() ) SDL_ShowCursor( true );
 
+	// find mouse movement
+	SDL_GetMouseState( &current_pos.x, &current_pos.y );
 	// if the menu is visible, move the menu cursor
 	UI_MouseMove( current_pos.x, current_pos.y );
 
@@ -328,8 +314,14 @@ void IN_MouseEvent( int mstate )
 
 	if( cls.key_dest == key_game )
 	{
+		SDL_SetRelativeMouseMode( true );
 		clgame.dllFuncs.IN_MouseEvent( mstate );
 		return;
+	}
+	else
+	{
+		SDL_SetRelativeMouseMode( false );
+		IN_MouseMove();
 	}
 
 	// perform button actions
