@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "input.h"
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
+#include "sdl/events.h"
 
 typedef void (*pfnChangeGame)( const char *progname );
 
@@ -962,7 +963,8 @@ int EXPORT Host_Main( const char* moduleName, const char* cmdLine, const char *p
 	// main window message loop
 	while( !host.crashed )
 	{
-		while(SDL_PollEvent()) SDLash_EventFilter();
+		while( SDL_PollEvent( &event ) )
+			SDLash_EventFilter( &event );
 		newtime = Sys_DoubleTime ();
 		Host_Frame( newtime - oldtime );
 		oldtime = newtime;
