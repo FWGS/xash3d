@@ -747,14 +747,20 @@ void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *p
 	host.con_showalways = true;
 
 	// we can specified custom name, from Sys_NewInstance
-	if( GetModuleFileName( NULL, szTemp, sizeof( szTemp )) && !host.change_game )
+	if( szTemp = SDL_GetBasePath() && !host.change_game )
 		FS_FileBase( szTemp, SI.ModuleName );
+
+	if(module_name) Q_strncpy(SI.ModuleName, module_name, sizeof(SI.ModuleName));
 
 	FS_ExtractFilePath( szTemp, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
 	{
 		Q_strncpy( host.rootdir, szRootPath, sizeof( host.rootdir ));
+#ifdef _WIN32
 		SetCurrentDirectory( host.rootdir );
+#else
+		chdir( host.rootdir );
+#endif
 	}
 
 	if( SI.ModuleName[0] == '#' ) host.type = HOST_DEDICATED; 
@@ -770,7 +776,7 @@ void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *p
 	if( host.type == HOST_DEDICATED )
 	{
 		// check for duplicate dedicated server
-		host.hMutex = CreateMutex( NULL, 0, "Xash Dedicated Server" );
+		host.hMutex = SDL_CreateMutex(  );
 
 		if( !host.hMutex )
 		{
@@ -779,10 +785,10 @@ void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *p
 			return;
 		}
 
-		Sys_MergeCommandLine( GetCommandLine( ));
+		Sys_MergeCommandLine( cmdLine );
 
-		CloseHandle( host.hMutex );
-		host.hMutex = CreateSemaphore( NULL, 0, 1, "Xash Dedicated Server" );
+		SDL_DestroyMutex( host.hMutex );
+		host.hMutex = SDL_CreateSemaphore( NULL );
 		if( host.developer < 3 ) host.developer = 3; // otherwise we see empty console
 	}
 	else
@@ -859,7 +865,7 @@ int EXPORT Host_Main( const char* moduleName, const char* cmdLine, const char *p
 		Cmd_AddCommand ( "host_error", Host_Error_f, "just throw a host error to test shutdown procedures");
 		Cmd_AddCommand ( "crash", Host_Crash_f, "a way to force a bus error for development reasons");
 		Cmd_AddCommand ( "net_error", Net_Error_f, "send network bad message from random place");
-          }
+	}
 
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow cheat variables to enable" );
 	host_maxfps = Cvar_Get( "fps_max", "72", CVAR_ARCHIVE, "host fps upper limit" );
@@ -950,9 +956,13 @@ int EXPORT Host_Main( const char* moduleName, const char* cmdLine, const char *p
 	oldtime = Sys_DoubleTime();
 	SCR_CheckStartupVids();	// must be last
 
+	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
+	SDL_Event event;
+
 	// main window message loop
 	while( !host.crashed )
 	{
+		while(SDL_PollEvent()) SDLash_EventFilter();
 		newtime = Sys_DoubleTime ();
 		Host_Frame( newtime - oldtime );
 		oldtime = newtime;
@@ -986,15 +996,15 @@ void EXPORT Host_Shutdown( void )
 	Host_FreeCommon();
 	Con_DestroyConsole();
 
+#ifdef _WIN32
 	// restore filter	
 	if( host.oldFilter ) SetUnhandledExceptionFilter( host.oldFilter );
 }
 
-#ifdef _WIN32
 // main DLL entry point
 BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
 {
 	hCurrent = hinstDLL;
 	return TRUE;
-}
 #endif
+}
