@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "port.h"
+
 #include "common.h"
 #include "input.h"
 #include "client.h"
@@ -29,7 +31,9 @@ qboolean	in_mouseinitialized;
 int	in_mouse_oldbuttonstate;
 qboolean	in_mouse_suspended;
 int	in_mouse_buttons;
+#ifdef _WIN32
 RECT	window_rect, real_rect;
+#endif
 uint	in_mouse_wheel;
 int	wnd_caption;
 
@@ -437,6 +441,7 @@ main window procedure
 */
 long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam )
 {
+#ifdef _WIN32
 	int	i, temp = 0;
 	qboolean	fActivate;
 
@@ -578,6 +583,9 @@ long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam )
 		}
 		break;
 	}
-
 	return DefWindowProc( hWnd, uMsg, wParam, lParam );
+#else
+	return 0;
+#endif
+
 }
