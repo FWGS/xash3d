@@ -13,11 +13,20 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "port.h"
+
 #include <fcntl.h>
-#include <direct.h>
 #include <sys/stat.h>
 #include <io.h>
 #include <time.h>
+#include <stdarg.h> // va
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <dirent.h>
+#include <errno.h>
+#endif
+
 #include "common.h"
 #include "wadfile.h"
 #include "filesystem.h"
@@ -239,17 +248,34 @@ void stringlistsort( stringlist_t *list )
 	}
 }
 
+#ifndef _WIN32
+int sel(const struct dirent *d)
+{
+	int plen, extlen;
+	char* p = strrchr(d->d_name, '.');
+	if ( !p ) return 0;
+	plen = strlen(p);
+	extlen = strlen("*");
+	return strncmp("*", p, (extlen < plen) ? extlen : plen) == 0;
+}
+#endif
+
+
 void listdirectory( stringlist_t *list, const char *path )
 {
 	int		i;
 	char		pattern[4096], *c;
+#ifdef _WIN32
 	struct _finddata_t	n_file;
+#else
+	struct dirent **n_file;
 	long		hFile;
 
 	Q_strncpy( pattern, path, sizeof( pattern ));
 	Q_strncat( pattern, "*", sizeof( pattern ));
 
 	// ask for the directory listing handle
+#ifdef _WIN32
 	hFile = _findfirst( pattern, &n_file );
 	if( hFile == -1 ) return;
 
@@ -259,6 +285,21 @@ void listdirectory( stringlist_t *list, const char *path )
 	while( _findnext( hFile, &n_file ) == 0 )
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
+#else
+	// ask for the directory listing handle
+	hFile = scandir( path, &n_file, NULL, NULL );
+	if( hFile < 1 )
+	{
+		MsgDev( D_ERROR, "listdirectory: scandir() failed, %s", strerror(hFile) );
+		return;
+	}
+
+	// iterate through the directory
+	for( i = 0; i < hFile; i++)
+	{
+		stringlistappend( list, n_file[i]->d_name );
+	}
+#endif
 
 	// convert names to lowercase because windows doesn't care, but pattern matching code often does
 	for( i = 0; i < list->numstrings; i++ )
@@ -1096,7 +1137,7 @@ void FS_CreateDefaultGameInfo( const char *filename )
 	Q_strncpy( defGI.sp_entity, "info_player_start", sizeof( defGI.sp_entity ));
 	Q_strncpy( defGI.mp_entity, "info_player_deathmatch", sizeof( defGI.mp_entity ));
 	Q_strncpy( defGI.dll_path, "cl_dlls", sizeof( defGI.dll_path ));
-	Q_strncpy( defGI.game_dll, "dlls/hl.dll", sizeof( defGI.game_dll ));
+	Q_strncpy( defGI.game_dll, "dlls/hl." OS_LIB_EXT, sizeof( defGI.game_dll ));
 	Q_strncpy( defGI.startmap, "newmap", sizeof( defGI.startmap ));
 	Q_strncpy( defGI.iconpath, "game.ico", sizeof( defGI.iconpath ));
 
@@ -1136,7 +1177,7 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	Q_strncpy( GameInfo->basedir, SI.ModuleName, sizeof( GameInfo->basedir ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
 	Q_strncpy( GameInfo->startmap, "newmap", sizeof( GameInfo->startmap ));
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
@@ -1312,7 +1353,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
 	Q_strncpy( GameInfo->startmap, "", sizeof( GameInfo->startmap ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
