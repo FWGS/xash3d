@@ -1,31 +1,60 @@
+/*
+port.h -- Portability Layer for Windows types
+Copyright (C) 2015 Alibek Omarov
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
 #ifndef PORT_H
 #define PORT_H
 
-#include <limits.h>
+#ifndef _WIN32
+    #include <limits.h>
 
-#define TRUE 1
-#define FALSE 0
+    #ifdef __APPLE__
+	#define OS_LIB_EXT "dylib"
+    #else
+	#define OS_LIB_EXT "so"
+    #endif
 
-#define _stdcall
-#define _inline inline
+    #define TRUE	    1
+    #define FALSE	    0
 
-typedef unsigned char	    BYTE;
-typedef unsigned char	    byte;
-typedef short int	    WORD;
-typedef unsigned int	    DWORD;
-typedef long int	    LONG;
-typedef unsigned long int   ULONG;
+    // Windows-specific
+    #define _stdcall
+    #define _inline	    inline
+    #define O_BINARY    0		//In Linux O_BINARY didn't exist
 
-typedef void* HANDLE;
-typedef void* HMODULE;
-typedef void* HINSTANCE;
+    // Windows functions to Linux equivalent
+    #define _mkdir( x ) mkdir( x, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
 
-typedef char* LPSTR;
+    typedef unsigned char	    BYTE;
+    typedef unsigned char	    byte;
+    typedef short int	    WORD;
+    typedef unsigned int	    DWORD;
+    typedef long int	    LONG;
+    typedef unsigned long int   ULONG;
 
-typedef struct POINT_s
-{
-    int x;
-    int y;
-} POINT;
+    typedef void* HANDLE;
+    typedef void* HMODULE;
+    typedef void* HINSTANCE;
+
+    typedef char* LPSTR;
+
+    typedef struct POINT_s
+    {
+	int x, y;
+    } POINT;
+#else
+    #define OS_LIB_EXT "dll"
+#endif
 
 #endif
