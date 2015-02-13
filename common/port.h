@@ -34,7 +34,10 @@ GNU General Public License for more details.
     #define O_BINARY    0		//In Linux O_BINARY didn't exist
 
     // Windows functions to Linux equivalent
-    #define _mkdir( x ) mkdir( x, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
+    #define _mkdir( x ) mkdir( x, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH )
+    #define LoadLibrary( x ) dlopen( x, RTLD_LAZY )
+    #define GetProcAddress( x, y ) dlsym( x, y )
+    #define FreeLibrary( x ) dlclose( x )
 
     typedef unsigned char	    BYTE;
     typedef unsigned char	    byte;
