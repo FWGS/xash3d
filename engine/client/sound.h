@@ -127,12 +127,21 @@ typedef struct
 	float		percent;
 } musicfade_t;
 
+typedef struct snd_format_s
+{
+	unsigned int	speed;
+	unsigned int	width;
+	unsigned int	channels;
+} snd_format_t;
+
 typedef struct
 {
 	int		samples;		// mono samples in buffer
 	int		samplepos;	// in mono samples
+	int     sampleframes;
 	byte		*buffer;
 	qboolean		initialized;	// sound engine is active
+	snd_format_t	format;
 } dma_t;
 
 #include "vox.h"
