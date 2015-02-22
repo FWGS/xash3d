@@ -19,7 +19,11 @@
 #endif
 
 #include <string.h>
+#ifdef _WIN32
 #include <new.h>
+#else
+#include <new>
+#endif
 #include "common.h"
 
 //-----------------------------------------------------------------------------
