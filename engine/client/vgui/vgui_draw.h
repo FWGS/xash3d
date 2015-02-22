@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 #include "port.h"
+#include <SDL2/SDL_events.h>
 #define VGUI_MAX_TEXTURES	2048	// a half of total textures count
 
 extern rgba_t g_color_table[8];	// for colored strings support
@@ -47,7 +48,7 @@ void VGUI_EnableTexture( qboolean enable );
 void VGUI_CreateTexture( int id, int width, int height );
 void VGUI_UploadTexture( int id, const char *buffer, int width, int height );
 void VGUI_UploadTextureBlock( int id, int drawX, int drawY, const byte *rgba, int blockWidth, int blockHeight );
-long VGUI_SurfaceWndProc( void* hwnd, unsigned int uMsg, WPARAM wParam, LPARAM lParam );
+long VGUI_SurfaceWndProc( SDL_Event *event );
 void VGUI_DrawQuad( const vpoint_t *ul, const vpoint_t *lr );
 void VGUI_GetTextureSizes( int *width, int *height );
 int VGUI_GenerateTexture( void );

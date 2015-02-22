@@ -225,7 +225,22 @@ KeyCode VGUI_MapKey( int keyCode )
 	}
 }
 
-long VGUI_SurfaceWndProc( void* hWnd, unsigned int uMsg, WPARAM wParam, LPARAM lParam )
+MouseCode VGUI_MapMouseButton( Uint8 button)
+{
+	switch(button)
+	{
+	case SDL_BUTTON_LEFT:
+		return MOUSE_LEFT;
+	case SDL_BUTTON_MIDDLE:
+		return MOUSE_MIDDLE;
+	case SDL_BUTTON_RIGHT:
+		return MOUSE_RIGHT;
+	}
+
+	return MOUSE_LAST; // What is MOUSE_LAST? Is it really used?
+}
+
+long VGUI_SurfaceWndProc( SDL_Event *event )
 {
 	SurfaceBase *surface = NULL;
 	CEnginePanel *panel = NULL;
@@ -241,57 +256,32 @@ long VGUI_SurfaceWndProc( void* hWnd, unsigned int uMsg, WPARAM wParam, LPARAM l
 	ASSERT( pApp != NULL );
 	ASSERT( surface != NULL );
 
-	switch( uMsg )
+	switch( event->type )
 	{
-	case WM_SETCURSOR:
+	/*case :
 		VGUI_ActivateCurrentCursor();
+		break;*/
+	case SDL_MOUSEMOTION:
+		pApp->internalCursorMoved(event->motion.x, event->motion.y, surface );
 		break;
-	case WM_MOUSEMOVE:
-		pApp->internalCursorMoved((short)LOWORD( lParam ), (short)HIWORD( lParam ), surface );
+	case SDL_MOUSEBUTTONDOWN:
+		if(event->button.clicks == 1)
+			pApp->internalMousePressed( VGUI_MapMouseButton( event->button.button ), surface );
+		else pApp->internalMouseDoublePressed( VGUI_MapMouseButton( event->button.button ), surface );
 		break;
-	case WM_LBUTTONDOWN:
-		pApp->internalMousePressed( MOUSE_LEFT, surface );
+	case SDL_MOUSEBUTTONUP:
+		pApp->internalMouseReleased( VGUI_MapMouseButton( event->button.button ), surface );
 		break;
-	case WM_RBUTTONDOWN:
-		pApp->internalMousePressed( MOUSE_RIGHT, surface );
+	case SDL_MOUSEWHEEL:
+		pApp->internalMouseWheeled(event->wheel.x, surface );
 		break;
-	case WM_MBUTTONDOWN:
-		pApp->internalMousePressed( MOUSE_MIDDLE, surface );
+	case SDL_KEYDOWN:
+		if(!( event->key.keysym.sym & ( 1 << 30 )))
+			pApp->internalKeyPressed( VGUI_MapKey( event->key.keysym.sym ), surface );
+		pApp->internalKeyTyped( VGUI_MapKey( event->key.keysym.sym ), surface );
 		break;
-	case WM_LBUTTONUP:
-		pApp->internalMouseReleased( MOUSE_LEFT, surface );
-		break;
-	case WM_RBUTTONUP:
-		pApp->internalMouseReleased( MOUSE_RIGHT, surface );
-		break;
-	case WM_MBUTTONUP:
-		pApp->internalMouseReleased( MOUSE_MIDDLE, surface );
-		break;
-	case WM_LBUTTONDBLCLK:
-		pApp->internalMouseDoublePressed( MOUSE_LEFT, surface );
-		break;
-	case WM_RBUTTONDBLCLK:
-		pApp->internalMouseDoublePressed( MOUSE_RIGHT, surface );
-		break;
-	case WM_MBUTTONDBLCLK:
-		pApp->internalMouseDoublePressed( MOUSE_MIDDLE, surface );
-		break;
-	case WM_MOUSEWHEEL:
-		pApp->internalMouseWheeled(((short)HIWORD( wParam )) / 120, surface );
-		break;
-	case WM_KEYDOWN:
-	case WM_SYSKEYDOWN:
-		if(!( lParam & ( 1 << 30 )))
-			pApp->internalKeyPressed( VGUI_MapKey( wParam ), surface );
-		pApp->internalKeyTyped( VGUI_MapKey( wParam ), surface );
-		break;
-	case WM_CHAR:
-	case WM_SYSCHAR:
-		// already handled in Key_Event
-		break;
-	case WM_KEYUP:
-	case WM_SYSKEYUP:
-		pApp->internalKeyReleased( VGUI_MapKey( wParam ), surface );
+	case SDL_KEYUP:
+		pApp->internalKeyReleased( VGUI_MapKey( event->key.keysym.sym ), surface );
 		break;
 	}
 	return 1;
