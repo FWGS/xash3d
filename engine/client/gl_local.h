@@ -16,6 +16,10 @@ GNU General Public License for more details.
 #ifndef GL_LOCAL_H
 #define GL_LOCAL_H
 
+#include "port.h"
+
+#include <SDL2/SDL.h>
+
 #include "gl_export.h"
 #include "com_model.h"
 #include "cl_entity.h"
@@ -569,8 +573,8 @@ typedef struct
 
 typedef struct
 {
-	word		gammaRamp[768];		// current gamma ramp
-	word		stateRamp[768];		// original gamma ramp
+	Uint16		gammaRamp[3];		// current gamma ramp, 0 is red, 1 is green, 2 is blue
+	Uint16		stateRamp[3];		// original gamma ramp
 
 	int		width, height;
 	qboolean		fullScreen;
@@ -593,8 +597,7 @@ typedef struct
 
 typedef struct
 {
-	HDC		hDC;		// handle to device context
-	HGLRC		hGLRC;		// handle to GL rendering context
+	SDL_GLContext		context;		// SDL GL Context
 
 	int		desktopBitsPixel;
 	int		desktopWidth;
