@@ -1117,7 +1117,7 @@ int CUtlRBTree<T, I>::Depth( I node ) const
 	
 	int depthright = Depth( RightChild(node) );
 	int depthleft = Depth( LeftChild(node) );
-	return max(depthright, depthleft) + 1;
+	return fmax(depthright, depthleft) + 1;
 }
 
 
