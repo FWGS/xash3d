@@ -35,16 +35,31 @@ set (XASH_ENGINE_LIBRARY xash)
 file (GLOB_RECURSE XASH_ENGINE_SOURCES *.cpp *.c)
 file (GLOB_RECURSE XASH_ENGINE_HEADERS *.h)
 include_directories (. common/
-		    common/imagelib/
-		    common/soundlib/
-		    client/
-		    client/vgui/
-		    server/
-		    ../common
-		    ${HL_SDK_DIR}/pm_shared
-		    ${HL_SDK_DIR}/public
-		    ${HL_SDK_DIR}/utils/vgui/include)
+    common/imagelib/
+    common/soundlib/
+    client/
+    client/vgui/
+    server/
+    ../common
+    ${HL_SDK_DIR}/pm_shared
+    ${HL_SDK_DIR}/public
+    ${HL_SDK_DIR}/utils/vgui/include)
+
 add_library (${XASH_ENGINE_LIBRARY} SHARED ${XASH_ENGINE_HEADERS} ${XASH_ENGINE_SOURCES})
+if(XASH_X11)
+    add_definitions(-DXASH_X11)
+    target_link_libraries(${XASH_ENGINE_LIBRARY} X11)
+endif()
+
+if(XASH_IPX)
+    add_definitions(-DXASH_IPX)
+endif()
+
+if(XASH_NOVGUI)
+    add_definitions(-DXASH_NOVGUI)
+endif()
+target_link_libraries(${XASH_ENGINE_LIBRARY}
+	${CMAKE_DL_LIBS} ${SDL2_LIBRARIES})
 
 set_target_properties (${XASH_ENGINE_SHARED} PROPERTIES
     VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
