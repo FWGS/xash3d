@@ -1317,8 +1317,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 			return;
 		}
 
-		ShowWindow( host.hWnd, SW_RESTORE );
-		SetForegroundWindow ( host.hWnd );
+		SDL_RestoreWindow( host.hWnd );
 		args = BF_ReadString( msg );
 		Cbuf_AddText( args );
 		Cbuf_AddText( "\n" );
@@ -1511,7 +1510,7 @@ A file has been received via the fragmentation/reassembly layer, put it in the r
  see if we have finished downloading files.
 ====================
 */
-void CL_ProcessFile( BOOL successfully_received, const char *filename )
+void CL_ProcessFile( qboolean successfully_received, const char *filename )
 {
 	MsgDev( D_INFO, "Received %s, but file processing is not hooked up!!!\n", filename );
 
