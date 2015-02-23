@@ -39,12 +39,14 @@ GNU General Public License for more details.
     #define GetProcAddress( x, y ) dlsym( x, y )
     #define FreeLibrary( x ) dlclose( x )
 
-    typedef unsigned char	    BYTE;
-    typedef unsigned char	    byte;
+    typedef unsigned char   BYTE;
+    typedef unsigned char   byte;
     typedef short int	    WORD;
-    typedef unsigned int	    DWORD;
+    typedef unsigned int    DWORD;
     typedef long int	    LONG;
     typedef unsigned long int   ULONG;
+    typedef long	    WPARAM;
+    typedef unsigned int    LPARAM;
 
     typedef void* HANDLE;
     typedef void* HMODULE;
