@@ -292,7 +292,7 @@ void Host_MemStats_f( void )
 
 void Host_Minimize_f( void )
 {
-	if( host.hWnd ) ShowWindow( host.hWnd, SW_MINIMIZE );
+	if( host.hWnd ) SDL_MinimizeWindow( host.hWnd );
 }
 
 qboolean Host_IsLocalGame( void )
@@ -706,8 +706,10 @@ void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *p
 	GlobalMemoryStatus( &lpBuffer );
 #endif
 
-	if( !(host.rootdir = SDL_GetBasePath()) )
+	if( !(SDL_GetBasePath()) )
 		Sys_Error( "couldn't determine current directory" );
+
+	Q_strncpy(host.rootdir, SDL_GetBasePath(), sizeof(host.rootdir));
 
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
@@ -748,10 +750,13 @@ void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *p
 	host.con_showalways = true;
 
 	// we can specified custom name, from Sys_NewInstance
-	if( szTemp = SDL_GetBasePath() && !host.change_game )
+	if( SDL_GetBasePath() && !host.change_game )
+	{
+		Q_strncpy( szTemp, SDL_GetBasePath(), sizeof(szTemp) );
 		FS_FileBase( szTemp, SI.ModuleName );
+	}
 
-	if(module_name) Q_strncpy(SI.ModuleName, module_name, sizeof(SI.ModuleName));
+	if(moduleName) Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
 
 	FS_ExtractFilePath( szTemp, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
