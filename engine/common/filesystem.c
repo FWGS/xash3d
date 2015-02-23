@@ -17,10 +17,10 @@ GNU General Public License for more details.
 
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <io.h>
 #include <time.h>
 #include <stdarg.h> // va
 #ifdef _WIN32
+#include <io.h>
 #include <direct.h>
 #else
 #include <dirent.h>
@@ -270,6 +270,7 @@ void listdirectory( stringlist_t *list, const char *path )
 #else
 	struct dirent **n_file;
 	long		hFile;
+#endif
 
 	Q_strncpy( pattern, path, sizeof( pattern ));
 	Q_strncat( pattern, "*", sizeof( pattern ));
@@ -1812,9 +1813,28 @@ Look for a existing folder
 */
 qboolean FS_SysFolderExists( const char *path )
 {
+#ifdef _WIN32
 	DWORD	dwFlags = GetFileAttributes( path );
 
 	return ( dwFlags != -1 ) && ( dwFlags & FILE_ATTRIBUTE_DIRECTORY );
+#else
+	DIR *dir = opendir(path);
+
+	if(dir)
+	{
+		closedir(dir);
+		return 1;
+	}
+	else if(errno == ENOENT)
+	{
+		return 0;
+	}
+	else
+	{
+		MsgDev(D_ERROR, "FS_SysFolderExists: problem while opening dir: %s", strerror(errno));
+		return 0;
+	}
+#endif
 }
 
 /*
