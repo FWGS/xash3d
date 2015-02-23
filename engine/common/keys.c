@@ -22,7 +22,7 @@ typedef struct key_s
 	qboolean		down;
 	int		repeats;	// if > 1, it is autorepeating
 	const char	*binding;
-} key_t;
+} engine_key_t;
 
 typedef struct keyname_s
 {
@@ -31,7 +31,7 @@ typedef struct keyname_s
 	const char	*binding;	// default bind
 } keyname_t;
 
-key_t	keys[256];
+engine_key_t	keys[256];
 
 keyname_t keynames[] =
 {
