@@ -138,7 +138,9 @@ static loopback_t	loopbacks[2];
 static int	ip_sockets[2];
 static int	ipx_sockets[2];
 
+#ifdef _WIN32
 static WSADATA winsockdata;
+#endif
 static qboolean winsockInitialized = false;
 static const char *net_src[2] = { "client", "server" };
 static qboolean noip = false;
@@ -351,6 +353,7 @@ char *NET_AdrToString( const netadr_t a )
 	return va( "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%i", a.ipx[0], a.ipx[1], a.ipx[2], a.ipx[3], a.ipx[4], a.ipx[5], a.ipx[6], a.ipx[7], a.ipx[8], a.ipx[9], pNtohs( a.port ));
 #else
 	return NULL; // compiler warning
+#endif
 }
 
 char *NET_BaseAdrToString( const netadr_t a )
@@ -654,6 +657,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 
 		MsgDev( D_ERROR, "NET_SendPacket: %s to %s\n", NET_ErrorString(), NET_AdrToString( to ));
 	}
+#endif
 }
 
 /*
@@ -1048,12 +1052,14 @@ void NET_Init( void )
 		return;
 	}
 
+#ifdef _WIN32
 	r = pWSAStartup( MAKEWORD( 1, 1 ), &winsockdata );
 	if( r )
 	{
 		MsgDev( D_WARN, "NET_Init: winsock initialization failed: %d\n", r );
 		return;
 	}
+#endif
 
 	net_showpackets = Cvar_Get( "net_showpackets", "0", 0, "show network packets" );
 	Cmd_AddCommand( "net_showip", NET_ShowIP_f,  "show hostname and ip's" );
