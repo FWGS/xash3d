@@ -36,12 +36,15 @@ WIN32 CONSOLE
 typedef struct
 {
 	char		title[64];
+#ifdef _WIN32
 	HWND		hWnd;
 	HWND		hwndBuffer;
 	HWND		hwndButtonSubmit;
 	HBRUSH		hbrEditBackground;
 	HFONT		hfBufferFont;
 	HWND		hwndInputLine;
+	WNDPROC		SysInputLineWndProc;
+#endif
 	string		consoleText;
 	string		returnedText;
 	string		historyLines[COMMAND_HISTORY];
@@ -49,9 +52,7 @@ typedef struct
 	int		historyLine;
 	int		status;
 	int		windowWidth, windowHeight;
-	WNDPROC		SysInputLineWndProc;
 	size_t		outLen;
-
 	// log stuff
 	qboolean		log_active;
 	char		log_path[MAX_SYSPATH];
@@ -62,6 +63,7 @@ static WinConData	s_wcd;
 
 void Con_ShowConsole( qboolean show )
 {
+#ifdef _WIN32
 	if( !s_wcd.hWnd || show == s_wcd.status )
 		return;
 
@@ -72,15 +74,18 @@ void Con_ShowConsole( qboolean show )
 		SendMessage( s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff );
 	}
 	else ShowWindow( s_wcd.hWnd, SW_HIDE );
+#endif
 }
 
 void Con_DisableInput( void )
 {
+#ifdef _WIN32
 	if( host.type != HOST_DEDICATED ) return;
 	SendMessage( s_wcd.hwndButtonSubmit, WM_ENABLE, 0, 0 );
 	SendMessage( s_wcd.hwndInputLine, WM_ENABLE, 0, 0 );
+#endif
 }
-
+#ifdef _WIN32
 void Con_SetInputText( const char *inputText )
 {
 	if( host.type != HOST_DEDICATED ) return;
@@ -215,7 +220,7 @@ long _stdcall Con_InputLineProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	}
 	return CallWindowProc( s_wcd.SysInputLineWndProc, hWnd, uMsg, wParam, lParam );
 }
-
+#endif
 
 /*
 ===============================================================================
@@ -233,6 +238,7 @@ print into window console
 */
 void Con_WinPrint( const char *pMsg )
 {
+#ifdef _WIN32
 	size_t	len = Q_strlen( pMsg );
 
 	// replace selection instead of appending if we're overflowing
@@ -248,6 +254,7 @@ void Con_WinPrint( const char *pMsg )
 	// put this text into the windows console
 	SendMessage( s_wcd.hwndBuffer, EM_LINESCROLL, 0, 0xffff );
 	SendMessage( s_wcd.hwndBuffer, EM_SCROLLCARET, 0, 0 );
+#endif
 }
 
 
@@ -260,6 +267,7 @@ create win32 console
 */
 void Con_CreateConsole( void )
 {
+#ifdef _WIN32
 	HDC	hDC;
 	WNDCLASS	wc;
 	RECT	rect;
@@ -374,6 +382,7 @@ void Con_CreateConsole( void )
 		s_wcd.status = true;
           }
 	else s_wcd.status = false;
+#endif
 }
 
 /*
@@ -385,8 +394,10 @@ register console commands (dedicated only)
 */
 void Con_InitConsoleCommands( void )
 {
+#ifdef _WIN32
 	if( host.type != HOST_DEDICATED ) return;
 	Cmd_AddCommand( "clear", Con_Clear_f, "clear console history" );
+#endif
 }
 
 /*
@@ -402,7 +413,7 @@ void Con_DestroyConsole( void )
 	MsgDev( D_NOTE, "Sys_FreeLibrary: Unloading xash.dll\n" );
 
 	Sys_CloseLog();
-
+#ifdef _WIN32
 	if( s_wcd.hWnd )
 	{
 		DeleteObject( s_wcd.hbrEditBackground );
@@ -429,9 +440,9 @@ void Con_DestroyConsole( void )
 	}
 
 	UnregisterClass( SYSCONSOLE, host.hInst );
-
+#endif
 	// place it here in case Sys_Crash working properly
-	if( host.hMutex ) CloseHandle( host.hMutex );
+	if( host.hMutex ) SDL_DestroyMutex( host.hMutex );
 }
 
 /*
@@ -461,10 +472,12 @@ change focus to console hwnd
 */
 void Con_RegisterHotkeys( void )
 {
+#ifdef _WIN32
 	SetFocus( s_wcd.hWnd );
 
 	// user can hit escape for quit
 	RegisterHotKey( s_wcd.hWnd, QUIT_ON_ESCAPE_ID, 0, VK_ESCAPE );
+#endif
 }
 
 /*
