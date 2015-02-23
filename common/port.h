@@ -18,6 +18,7 @@ GNU General Public License for more details.
 
 #ifndef _WIN32
     #include <limits.h>
+    #include <dlfcn.h>
 
     #ifdef __APPLE__
 	#define OS_LIB_EXT "dylib"
