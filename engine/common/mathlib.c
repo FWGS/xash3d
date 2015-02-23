@@ -111,6 +111,7 @@ SinCos
 */
 void SinCos( float radians, float *sine, float *cosine )
 {
+#ifdef _WIN32
 	_asm
 	{
 		fld	dword ptr [radians]
@@ -122,6 +123,11 @@ void SinCos( float radians, float *sine, float *cosine )
 		fstp dword ptr [edx]
 		fstp dword ptr [eax]
 	}
+#else
+	// I think, better use math.h function, instead of ^
+	*sine = sin(radians);
+	*cosine = cos(radians);
+#endif
 }
 
 float VectorNormalizeLength2( const vec3_t v, vec3_t out )
