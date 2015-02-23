@@ -577,7 +577,7 @@ void GL_UpdateSwapInterval( void )
 		gl_swapInterval->modified = false;
 
 		if( SDL_GL_SetSwapInterval(gl_swapInterval->integer) )
-			MsgDev("SDL_GL_SetSwapInterval: %s", SDL_GetError());
+			MsgDev("SDL_GL_SetSwapInterval: %s\n", SDL_GetError());
 	}
 }
 
@@ -619,7 +619,7 @@ GL_ContextError
 */
 static void GL_ContextError( void )
 {
-	MsgDev( D_ERROR, "GL_ContextError: %s", SDL_GetError(),  );
+	MsgDev( D_ERROR, "GL_ContextError: %s\n", SDL_GetError() );
 }
 
 /*
@@ -743,7 +743,7 @@ Window* NetClientList(Display* display, unsigned long *len)
 {
 	Window* windowList;
 	Atom type;
-	int form;
+	int form, errno;
 	unsigned long remain;
 
 	errno = XGetWindowProperty(
@@ -774,7 +774,7 @@ char* WindowClassName(Display* display, Window window)
 	char* className;
 	Atom type;
 	unsigned long len, remain;
-	int form;
+	int form, errno;
 	errno = XGetWindowProperty(
 		display,
 		window,
@@ -799,6 +799,7 @@ char* WindowClassName(Display* display, Window window)
 	return className;
 }
 #endif
+#endif
 
 uint VID_EnumerateInstances( void )
 {
@@ -813,6 +814,7 @@ uint VID_EnumerateInstances( void )
 	Window* winlist;
 	char* name;
 	unsigned long len;
+	int i;
 
 	if(!display)
 	{
@@ -822,7 +824,7 @@ uint VID_EnumerateInstances( void )
 
 	if( !(winlist = NetClientList(display, &len)) ) return 1;
 
-	for(int i = 0; i < len; i++)
+	for(i = 0; i < len; i++)
 	{
 		if( !(name = WindowsClassName(display, winlist[i])) ) continue;
 		if( !Q_strcmp( name, WINDOW_NAME ) )
@@ -932,13 +934,13 @@ void VID_StartupGamma( void )
 
 void VID_RestoreGamma( void )
 {
-	if( !glw_state.hDC || !glConfig.deviceSupportsGamma )
+	if( !glConfig.deviceSupportsGamma )
 		return;
 
 	// don't touch gamma if multiple instances was running
 	if( VID_EnumerateInstances( ) > 1 ) return;
 
-	SetDeviceGammaRamp( glw_state.hDC, glState.stateRamp );
+	SDL_SetWindowGammaRamp( host.hWnd, glState.stateRamp[0], glState.stateRamp[1], glState.stateRamp[2] );
 }
 
 /*
@@ -1066,17 +1068,17 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	static string	wndname;
 	Uint32 wndFlags = SDL_WINDOW_INPUT_GRABBED |
 		SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
-	SDL_Surface *icon;
+	SDL_Surface *ico;
 
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
 
 	if( fullscreen )
 	{
-		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		wndFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 
 	host.hWnd = SDL_CreateWindow(wndname, SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED, width, height, flags);
+		SDL_WINDOWPOS_UNDEFINED, width, height, wndFlags);
 
 	// host.hWnd must be filled in IN_WndProc
 	if( !host.hWnd )
@@ -1091,7 +1093,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	// find the icon file in the filesystem
 	if( FS_FileExists( GI->iconpath, true ))
 	{
-		char	localPath[MAX_PATH];
+		char	localPath[MAX_SYSPATH];
 
 		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
 		ico = IMG_Load(localPath);
@@ -1171,9 +1173,9 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 	height = r_height->integer;
 
 	// check our desktop attributes
-	glw_state.desktopBitsPixel = GetDeviceCaps( hDC, BITSPIXEL );
-	glw_state.desktopWidth = GetDeviceCaps( hDC, HORZRES );
-	glw_state.desktopHeight = GetDeviceCaps( hDC, VERTRES );
+	glw_state.desktopBitsPixel = 24;
+	glw_state.desktopWidth = displayMode.w;
+	glw_state.desktopHeight = displayMode.h;
 
 	// destroy the existing window
 	if( host.hWnd ) VID_DestroyWindow();
