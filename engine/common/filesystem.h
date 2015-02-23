@@ -89,6 +89,45 @@ typedef struct
 	char		name[16];		// must be null terminated
 } dlumpinfo_t;
 
+
+typedef struct wfile_s
+{
+	char		filename[MAX_SYSPATH];
+	int		infotableofs;
+	byte		*mempool;	// W_ReadLump temp buffers
+	int		numlumps;
+	int		mode;
+	int		handle;
+	dlumpinfo_t	*lumps;
+	time_t		filetime;
+};
+
+typedef struct packfile_s
+{
+	char		name[56];
+	fs_offset_t	offset;
+	fs_offset_t	realsize;	// real file size (uncompressed)
+} packfile_t;
+
+typedef struct pack_s
+{
+	char		filename[MAX_SYSPATH];
+	int		handle;
+	int		numfiles;
+	time_t		filetime;	// common for all packed files
+	packfile_t	*files;
+} pack_t;
+
+typedef struct searchpath_s
+{
+	char		filename[MAX_SYSPATH];
+	pack_t		*pack;
+	wfile_t		*wad;
+	int		flags;
+	struct searchpath_s *next;
+} searchpath_t;
+
+
 #include "custom.h"
 
 #define IDCUSTOMHEADER	(('K'<<24)+('A'<<16)+('P'<<8)+'H') // little-endian "HPAK"

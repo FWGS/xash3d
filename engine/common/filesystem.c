@@ -69,43 +69,6 @@ typedef struct file_s
 	byte		buff[FILE_BUFF_SIZE];	// intermediate buffer
 };
 
-typedef struct wfile_s
-{
-	char		filename[MAX_SYSPATH];
-	int		infotableofs;
-	byte		*mempool;	// W_ReadLump temp buffers
-	int		numlumps;
-	int		mode;
-	int		handle;
-	dlumpinfo_t	*lumps;
-	time_t		filetime;
-};
-
-typedef struct packfile_s
-{
-	char		name[56];
-	fs_offset_t	offset;
-	fs_offset_t	realsize;	// real file size (uncompressed)
-} packfile_t;
-
-typedef struct pack_s
-{
-	char		filename[MAX_SYSPATH];
-	int		handle;
-	int		numfiles;
-	time_t		filetime;	// common for all packed files
-	packfile_t	*files;
-} pack_t;
-
-typedef struct searchpath_s
-{
-	char		filename[MAX_SYSPATH];
-	pack_t		*pack;
-	wfile_t		*wad;
-	int		flags;
-	struct searchpath_s *next;
-} searchpath_t;
-
 byte		*fs_mempool;
 searchpath_t	*fs_searchpaths = NULL;
 searchpath_t	fs_directpath;		// static direct path
