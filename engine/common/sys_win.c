@@ -97,7 +97,7 @@ char *Sys_GetCurrentUser( void )
 #ifdef _WIN32
 	if( !GetUserName( s_userName, &size ) || !s_userName[0] )
 #else
-	if( !getlogin_r( s_userName, size || !s_userName[0] )
+	if( !getlogin_r( s_userName, size || !s_userName[0] ) )
 		Q_strcpy( s_userName, "player" );
 
 	return s_userName;
