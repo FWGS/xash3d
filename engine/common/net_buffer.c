@@ -26,6 +26,7 @@ static dword	ExtraMasks[32];
 
 short BF_BigShort( short swap )
 {
+#ifdef _WIN32
 	short *s = &swap;
 	
 	__asm {
@@ -34,7 +35,14 @@ short BF_BigShort( short swap )
 		mov ah, [ebx  ]
 		mov [ebx], ax
 	}
+
 	return *s;
+#else
+	// Taken from Xash3DLinux project
+	short pDest = 0;
+	pDest = (swap >> 8) | (swap << 8);
+	return pDest;
+#endif
 }
 
 void BF_InitMasks( void )
