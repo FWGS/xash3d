@@ -51,19 +51,6 @@ static byte scan_to_key[128] =
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
-// extra mouse buttons
-static int mouse_buttons[] =
-{
-	MK_LBUTTON,
-	MK_RBUTTON,
-	MK_MBUTTON,
-	MK_XBUTTON1,
-	MK_XBUTTON2,
-	MK_XBUTTON3,
-	MK_XBUTTON4,
-	MK_XBUTTON5
-};
-	
 /*
 =======
 Host_MapKey
