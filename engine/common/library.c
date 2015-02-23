@@ -13,9 +13,65 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#define _GNU_SOURCE // dladdr is a gnu extension
+
 #include "common.h"
 #include "library.h"
+#include "filesystem.h"
 
+#ifndef XASH_NONSTANDART_LOAD
+void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
+{
+	searchpath_t	*search;
+	int		pack_ind;
+	char	path [MAX_SYSPATH];
+
+	void *pHandle = LoadLibrary( dllname );
+
+	if(!pHandle)
+	{
+		search = FS_FindFile( dllname, &pack_ind, true );
+
+		if(!search)
+		{
+			return NULL;
+		}
+
+		sprintf( path, "%s%s", search->filename, dllname );
+
+		return LoadLibrary( path );
+	}
+
+	return pHandle;
+}
+
+void Com_FreeLibrary( void *hInstance )
+{
+	FreeLibrary( hInstance );
+}
+
+void *Com_GetProcAddress( void *hInstance, const char *name )
+{
+	return GetProcAddress( hInstance, name );
+}
+
+dword Com_FunctionFromName( void *hInstance, const char *pName )
+{
+	return (dword)GetProcAddress( hInstance, pName );
+}
+
+const char *Com_NameForFunction( void *hInstance, dword function )
+{
+#ifdef _WIN32
+	return NULL; //later
+#else
+	// Note: dladdr() is a glibc extension
+	Dl_info info;
+	dladdr((void*)function, &info);
+	return info.dli_fname;
+#endif
+}
+#else
 /*
 ---------------------------------------------------------------
 
@@ -885,3 +941,4 @@ const char *Com_NameForFunction( void *hInstance, dword function )
 	// couldn't find the function address to return name
 	return NULL;
 }
+#endif
