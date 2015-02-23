@@ -755,6 +755,8 @@ qboolean AVI_Initailize( void );
 void AVI_Shutdown( void );
 
 #include "con_nprint.h"
+#include "cl_entity.h"
+#include "studio_event.h"
 
 // shared calls
 qboolean CL_IsInGame( void );
