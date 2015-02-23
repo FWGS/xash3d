@@ -417,6 +417,8 @@ void Mod_LoadStudioModel( model_t *mod, const void *buffer, qboolean *loaded );
 struct mstudiotex_s *R_StudioGetTexture( cl_entity_t *e );
 void R_DrawStudioModel( cl_entity_t *e );
 
+#include "wadfile.h"
+
 //
 // gl_warp.c
 //
