@@ -41,7 +41,7 @@ include_directories (. common/
     client/vgui/
     server/
     ../common
-    ${HL_SDK_DIR}/pm_shared
+    ../pm_shared
     ${HL_SDK_DIR}/public
     ${HL_SDK_DIR}/utils/vgui/include)
 
