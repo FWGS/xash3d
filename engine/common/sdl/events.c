@@ -7,7 +7,7 @@ int SDLash_EventFilter( SDL_Event* event)
 	switch ( event->type )
 	{
 		case SDL_MOUSEMOTION:
-			IN_MouseEvent(event->motion, event->motion.state);
+			IN_MouseEvent(0);
 			break;
 		case SDL_QUIT:
 			Host_Shutdown();
