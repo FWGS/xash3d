@@ -99,6 +99,7 @@ char *Sys_GetCurrentUser( void )
 #else
 	if( !getlogin_r( s_userName, size || !s_userName[0] ) )
 		Q_strcpy( s_userName, "player" );
+#endif
 
 	return s_userName;
 }
@@ -482,7 +483,7 @@ void Sys_Break( const char *error, ... )
 
 	if( host.type == HOST_NORMAL )
 	{
-		if( host.hWnd ) SDL_HideWindow( host.hWnd, SW_HIDE );
+		if( host.hWnd ) SDL_HideWindow( host.hWnd );
 		VID_RestoreGamma();
 	}
 
