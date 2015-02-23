@@ -754,6 +754,8 @@ movie_state_t *AVI_GetState( int num );
 qboolean AVI_Initailize( void );
 void AVI_Shutdown( void );
 
+#include "con_nprint.h"
+
 // shared calls
 qboolean CL_IsInGame( void );
 qboolean CL_IsInMenu( void );
