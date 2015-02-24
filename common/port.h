@@ -41,6 +41,10 @@ GNU General Public License for more details.
     #define LoadLibrary( x ) dlopen( x, RTLD_LAZY )
     #define GetProcAddress( x, y ) dlsym( x, y )
     #define FreeLibrary( x ) dlclose( x )
+    #define MAKEWORD(a,b)   ((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
+    #define max(a, b) (a) > (b) ? (a) : (b)
+    #define min(a, b) (a) > (b) ? (b) : (a)
+    #define tell(a) lseek(a, 0, SEEK_CUR)
 
     typedef unsigned char   BYTE;
     typedef unsigned char   byte;
@@ -57,7 +61,7 @@ GNU General Public License for more details.
 
     typedef char* LPSTR;
 
-    typedef struct POINT_s
+    typedef struct tagPOINT
     {
 	int x, y;
     } POINT;
