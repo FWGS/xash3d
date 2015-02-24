@@ -105,7 +105,7 @@ void NET_FreeWinSock( void )
 }
 #else
 #define pHtons htons
-#define pInet_addr inet_addr
+#define pInet_Addr inet_addr
 #define pRecvFrom recvfrom
 #define pSendTo sendto
 #define pSocket socket
@@ -118,7 +118,10 @@ void NET_FreeWinSock( void )
 #define pGetHs
 #define pRecv recv
 #define pSend send
-
+#define pInet_Ntoa inet_ntoa
+#define pNtohs ntohs
+#define pGetHostByName gethostbyname
+#define pSelect select
 #define SOCKET int
 #endif
 
@@ -1046,13 +1049,13 @@ void NET_Init( void )
 {
 	int	r;
 
+#ifdef _WIN32
 	if( !NET_OpenWinSock())	// loading wsock32.dll
 	{
 		MsgDev( D_WARN, "NET_Init: wsock32.dll can't loaded\n" );
 		return;
 	}
 
-#ifdef _WIN32
 	r = pWSAStartup( MAKEWORD( 1, 1 ), &winsockdata );
 	if( r )
 	{
