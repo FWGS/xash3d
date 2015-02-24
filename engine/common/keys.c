@@ -537,11 +537,15 @@ void Key_Event( int key, qboolean down )
 	if( key == '`' || key == '~' )
 	{
 		// we are in typing mode. So don't switch to console
+#ifdef _WIN32
 		if( (word)GetKeyboardLayout( 0 ) == (word)0x419 )
 		{
+#endif
 			if( cls.key_dest != key_game )
 				return;
-                    }
+#ifdef _WIN32
+		}
+#endif
 
 		if( !down ) return;
     		Con_ToggleConsole_f();
