@@ -67,7 +67,7 @@ typedef struct file_s
 						// Contents buffer
 	fs_offset_t	buff_ind, buff_len;		// buffer current index and length
 	byte		buff[FILE_BUFF_SIZE];	// intermediate buffer
-};
+} file_t;
 
 byte		*fs_mempool;
 searchpath_t	*fs_searchpaths = NULL;
@@ -81,7 +81,7 @@ qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ pathes
 
 static void FS_InitMemory( void );
 const char *FS_FileExtension( const char *in );
-static searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
+searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
 static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
@@ -1810,7 +1810,7 @@ Return the searchpath where the file was found (or NULL)
 and the file index in the package if relevant
 ====================
 */
-static searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
+searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 {
 	searchpath_t	*search;
 	char		*pEnvPath;
@@ -2800,8 +2800,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 	slash = Q_strrchr( pattern, '/' );
 	backslash = Q_strrchr( pattern, '\\' );
 	colon = Q_strrchr( pattern, ':' );
-	separator = max( slash, backslash );
-	separator = max( separator, colon );
+	separator = max(max( slash, backslash ), colon);
 	basepathlength = separator ? (separator + 1 - pattern) : 0;
 	basepath = Mem_Alloc( fs_mempool, basepathlength + 1 );
 	if( basepathlength ) Q_memcpy( basepath, pattern, basepathlength );

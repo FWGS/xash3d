@@ -100,7 +100,7 @@ typedef struct wfile_s
 	int		handle;
 	dlumpinfo_t	*lumps;
 	time_t		filetime;
-};
+} wfile_t;
 
 typedef struct packfile_s
 {
