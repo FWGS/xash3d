@@ -213,9 +213,7 @@ void IN_ActivateMouse( qboolean force )
 		{
 			if( in_mouse_suspended )
 			{
-				ClipCursor( NULL );
-				ReleaseCapture();
-				while( ShowCursor( true ) < 0 );
+				SDL_ShowCursor( false );
 				UI_ShowCursor( false );
 			}
 		}
