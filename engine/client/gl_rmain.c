@@ -1354,8 +1354,7 @@ void R_EndFrame( void )
 	// flush any remaining 2D bits
 	R_Set2DMode( false );
 
-	if( !SDL_GL_SwapWindow(host.hWnd) )
-		Sys_Error( "SDL_GL_SwapWindow() failed: %s\n", SDL_GetError() );
+	SDL_GL_SwapWindow(host.hWnd);
 }
 
 /*
