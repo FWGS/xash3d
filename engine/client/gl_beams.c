@@ -94,7 +94,7 @@ void BeamNormalizeColor( BEAM *pBeam, float r, float g, float b, float brightnes
 
 	_max = max( max( r, g ), b );
 
-	if( max == 0 )
+	if( _max == 0 )
 	{
 		pBeam->r = pBeam->g = pBeam->b = 255.0f;
 		pBeam->brightness = brightness;
