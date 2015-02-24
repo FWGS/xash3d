@@ -1074,8 +1074,8 @@ void DLY_Free( dly_t *pdly )
 
 		if( pdly->w )
 		{
-			GlobalUnlock( pdly->h );
-			GlobalFree( pdly->h );
+			//GlobalUnlock( pdly->h );
+			free( pdly->h );
 		}
 		
 		// free dly slot
@@ -1183,12 +1183,12 @@ dly_t * DLY_AllocLP( int D, int a, int b, int type, int M, int L, int *fa, int *
 	}
 	
 	// lock delay memory
-	w = (int *)GlobalLock( h );
+	w = (int *) h ;
 
 	if( !w )
 	{ 
 		MsgDev( D_ERROR, "Sound DSP: Failed to lock.\n" );
-		GlobalFree( h );
+		free( h );
 		FLT_Free( pdly->pflt );
 		return NULL; 
 	}
