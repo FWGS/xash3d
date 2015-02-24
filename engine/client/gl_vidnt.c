@@ -826,7 +826,7 @@ uint VID_EnumerateInstances( void )
 
 	for(i = 0; i < len; i++)
 	{
-		if( !(name = WindowsClassName(display, winlist[i])) ) continue;
+		if( !(name = WindowClassName(display, winlist[i])) ) continue;
 		if( !Q_strcmp( name, WINDOW_NAME ) )
 			num_instances++;
 		free(name);
@@ -846,7 +846,8 @@ void VID_StartupGamma( void )
 	// init gamma ramp
 	Q_memset( glState.stateRamp, 0, sizeof( glState.stateRamp ));
 
-	glConfig.deviceSupportsGamma = SDL_GetWindowGammaRamp( host.hWnd, glState.stateRamp[0], glState.stateRamp[1], glState.stateRamp[2] );
+	glConfig.deviceSupportsGamma = SDL_GetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
+			&glState.stateRamp[1], &glState.stateRamp[2] );
 
 	if( !glConfig.deviceSupportsGamma )
 	{
@@ -940,7 +941,8 @@ void VID_RestoreGamma( void )
 	// don't touch gamma if multiple instances was running
 	if( VID_EnumerateInstances( ) > 1 ) return;
 
-	SDL_SetWindowGammaRamp( host.hWnd, glState.stateRamp[0], glState.stateRamp[1], glState.stateRamp[2] );
+	SDL_SetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
+			&glState.stateRamp[1], &glState.stateRamp[2] );
 }
 
 /*
