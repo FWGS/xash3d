@@ -74,7 +74,7 @@ Try to find a sound device to mix for.
 Returns false if nothing is found.
 ==================
 */
-int SNDDMA_Init( void *hInst )
+qboolean SNDDMA_Init( void *hInst )
 {
 	SDL_AudioSpec desired, obtained;
 	int ret = 0;
@@ -106,7 +106,7 @@ int SNDDMA_Init( void *hInst )
 	desired.format = AUDIO_S16LSB;
 	desired.samples = 512;
 	desired.channels = 2;
-	desired.callback = Filler;
+	desired.callback = SDL_SoundCallback;
 	ret = SDL_OpenAudio(&desired, &obtained);
 	if (ret == -1) {
 		Con_Printf("Couldn't open SDL audio: %s\n", SDL_GetError());
