@@ -23,6 +23,8 @@ GNU General Public License for more details.
 #include "const.h"
 #include "render_api.h"	// modelstate_t
 
+#include "port.h"
+
 // fatpvs stuff
 static byte fatpvs[MAX_MAP_LEAFS/8];
 static byte fatphs[MAX_MAP_LEAFS/8];
