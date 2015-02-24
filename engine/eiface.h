@@ -95,6 +95,7 @@ typedef struct
 } CDStatus;
 		
 typedef unsigned long	CRC32_t;
+struct delta_s;
 
 // Engine hands this to DLLs for functionality callbacks
 typedef struct enginefuncs_s

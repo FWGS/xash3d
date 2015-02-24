@@ -110,6 +110,9 @@ typedef struct hud_player_info_s
 	uint64_t	m_nSteamID;
 } hud_player_info_t;
 
+struct screenfade_s;
+struct tagPOINT;
+
 typedef struct cl_enginefuncs_s
 {
 	// sprite handlers

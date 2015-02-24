@@ -72,7 +72,7 @@ typedef struct stream_s
 	void		*ptr;	// internal decoder state
 	int		buffsize;	// cached buffer size
 	qboolean		timejump;	// true if position is changed
-};
+} stream_t;
 
 /*
 ========================================================================

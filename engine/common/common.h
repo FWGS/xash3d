@@ -759,6 +759,11 @@ void AVI_Shutdown( void );
 #include "studio_event.h"
 #include "pm_defs.h"
 
+// Compiler warning: struct X declared inside parameter list
+struct sizebuf_s;
+struct modelstate_s;
+struct pmtrace_s;
+
 // shared calls
 qboolean CL_IsInGame( void );
 qboolean CL_IsInMenu( void );
