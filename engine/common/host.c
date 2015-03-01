@@ -694,7 +694,7 @@ static void Host_Crash_f( void )
 Host_InitCommon
 =================
 */
-void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *progname, qboolean bChangeGame )
+void Host_InitCommon( const char* moduleName, char *cmdLine, const char *progname, qboolean bChangeGame )
 {
 	char		dev_level[4];
 	char		szTemp[MAX_SYSPATH];
@@ -758,7 +758,7 @@ void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *p
 
 	if(moduleName) Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
 
-	FS_ExtractFilePath( szTemp, szRootPath );
+	FS_ExtractFilePath( moduleName, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
 	{
 		Q_strncpy( host.rootdir, szRootPath, sizeof( host.rootdir ));
@@ -794,7 +794,7 @@ void Host_InitCommon( const char* moduleName, const char *cmdLine, const char *p
 		Sys_MergeCommandLine( cmdLine );
 
 		SDL_DestroyMutex( host.hMutex );
-		host.hMutex = SDL_CreateSemaphore( NULL );
+		host.hMutex = SDL_CreateSemaphore( 0 );
 		if( host.developer < 3 ) host.developer = 3; // otherwise we see empty console
 	}
 	else
