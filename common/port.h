@@ -25,6 +25,7 @@ GNU General Public License for more details.
     #else
 	#define OS_LIB_EXT "so"
     #endif
+    #define MENUDLL "libxashmenu." OS_LIB_EXT
 
     #define TRUE	    1
     #define FALSE	    0
@@ -67,6 +68,7 @@ GNU General Public License for more details.
     } POINT;
 #else
     #define OS_LIB_EXT "dll"
+    #define MENUDLL "mainui." OS_LIB_EXT
 #endif
 
 #endif

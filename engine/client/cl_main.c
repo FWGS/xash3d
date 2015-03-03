@@ -1798,7 +1798,7 @@ void CL_Init( void )
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
-	if( !CL_LoadProgs( va( "%s/client.dll", GI->dll_path )))
+	if( !CL_LoadProgs( va( "%s/client." OS_LIB_EXT, GI->dll_path )))
 		Host_Error( "can't initialize client.dll\n" );
 
 	cls.initialized = true;
