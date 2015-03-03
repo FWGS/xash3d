@@ -694,7 +694,7 @@ static void Host_Crash_f( void )
 Host_InitCommon
 =================
 */
-void Host_InitCommon( const char* moduleName, char *cmdLine, const char *progname, qboolean bChangeGame )
+void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *progname, qboolean bChangeGame )
 {
 	char		dev_level[4];
 	char		szTemp[MAX_SYSPATH];
@@ -758,7 +758,7 @@ void Host_InitCommon( const char* moduleName, char *cmdLine, const char *prognam
 
 	if(moduleName) Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
 
-	FS_ExtractFilePath( moduleName, szRootPath );
+	FS_ExtractFilePath( SI.ModuleName, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
 	{
 		Q_strncpy( host.rootdir, szRootPath, sizeof( host.rootdir ));
@@ -856,12 +856,38 @@ void Host_FreeCommon( void )
 Host_Main
 =================
 */
-int EXPORT Host_Main( const char* moduleName, const char* cmdLine, const char *progname, int bChangeGame, pfnChangeGame func )
+int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func )
 {
 	static double	oldtime, newtime;
 
 	pChangeGame = func;	// may be NULL
 
+#ifndef _WIN32
+	// Start of IO functions
+	FILE *fd = fopen("/proc/self/cmdline", "r");
+	char moduleName[64], cmdLine[512] = "", *arg;
+	size_t size = 0;
+	int i = 0;
+
+	for(i = 0; getdelim(&arg, &size, 0, fd) != -1; i++)
+	{
+		if(!i)
+		{
+			strcpy(moduleName, strrchr(arg, '/'));
+			//strrchr adds a / at begin of string =(
+			memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
+		}
+		else
+		{
+			strcat(cmdLine, arg);
+			strcat(cmdLine, " ");
+		}
+	}
+	free(arg);
+	fclose(fd);
+#else
+	// TODO
+#endif
 	Host_InitCommon( moduleName, cmdLine, progname, bChangeGame );
 
 	// init commands and vars
