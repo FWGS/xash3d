@@ -798,7 +798,7 @@ const char *FS_FileWithoutPath( const char *in )
 FS_ExtractFilePath
 ============
 */
-void FS_ExtractFilePath( const char* const path, char* dest )
+void FS_ExtractFilePath( const char* path, char* dest )
 {
 	const char	*src;
 	src = path + Q_strlen( path ) - 1;
@@ -1788,7 +1788,7 @@ qboolean FS_SysFolderExists( const char *path )
 		closedir(dir);
 		return 1;
 	}
-	else if(errno == ENOENT)
+	else if((errno == ENOENT) || (errno == ENOTDIR))
 	{
 		return 0;
 	}

@@ -17,12 +17,13 @@ GNU General Public License for more details.
 
 #ifdef __unix__
  #include <dlfcn.h>
+ #include <errno.h>
  #ifdef __APPLE__
   #define XASHLIB                "xash.dylib"
  #else
   #define XASHLIB                "libxash.so"
  #endif
- #define LoadLibrary(x)          dlopen(x, RTLD_NOW)
+ #define LoadLibrary(x)          dlopen(x, RTLD_LAZY)
  #define FreeLibrary(x)          dlclose(x)
  #define GetProcAddress(x, y)    dlsym(x, y)
  #define HINSTANCE               void*
@@ -33,7 +34,7 @@ GNU General Public License for more details.
 #define GAME_PATH	"valve"	// default dir to start from
 
 typedef void (*pfnChangeGame)( const char *progname );
-typedef int (*pfnInit)( const char* moduleName, const char* cmdLine, const char *progname, int bChangeGame, pfnChangeGame func );
+typedef int (*pfnInit)( const char *progname, int bChangeGame, pfnChangeGame func );
 typedef void (*pfnShutdown)( void );
 
 pfnInit Host_Main;
@@ -51,11 +52,13 @@ void Sys_LoadEngine( void )
 {
 	if(( hEngine = LoadLibrary( XASHLIB )) == NULL )
 	{
+		printf("%s\n", dlerror());
 		Sys_Error( "Unable to load the " XASHLIB );
 	}
 
 	if(( Host_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
 	{
+		printf("%s\n", dlerror());
 		Sys_Error( XASHLIB " missed 'Host_Main' export" );
 	}
 
@@ -83,15 +86,7 @@ void Sys_ChangeGame( const char *progname )
 
 int main( int argc, char **argv )
 {
-	char *cmdLine = (char *)malloc(0, 256 * sizeof(char));
-	int i;
-	for(i = 1; i < argc; ++i)
-	{
-		strcat(cmdLine, argv[i]);
-		strcat(cmdLine, " ");
-	}
-
 	Sys_LoadEngine();
 
-	return Host_Main( argv[0], cmdLine, GAME_PATH, false, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	return Host_Main( GAME_PATH, false, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
