@@ -24,7 +24,7 @@ extern "C" {
 #include <linux/limits.h> // PATH_MAX
 #include "port.h"
 
-#define EXPORT __attribute__ ((visibility("default")))
+#define EXPORT
 #else
 #define PATH_MAX 1024
 #define EXPORT		__declspec( dllexport )
@@ -356,7 +356,7 @@ void FS_LoadGameInfo( const char *rootfolder );
 void FS_FileBase( const char *in, char *out );
 const char *FS_FileExtension( const char *in );
 void FS_DefaultExtension( char *path, const char *extension );
-void FS_ExtractFilePath( const char* const path, char* dest );
+void FS_ExtractFilePath( const char *path, char* dest );
 const char *FS_GetDiskPath( const char *name, qboolean gamedironly );
 const char *FS_FileWithoutPath( const char *in );
 wfile_t *W_Open( const char *filename, const char *mode );
