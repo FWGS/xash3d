@@ -34,13 +34,16 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 
 		if(!search)
 		{
-			return NULL;
+			pHandle = 0;
 		}
 
 		sprintf( path, "%s%s", search->filename, dllname );
 
-		return LoadLibrary( path );
+		pHandle = LoadLibrary( path );
 	}
+
+	char *error = dlerror();
+	if(error) MsgDev("Error: loading library %s: %s", dllname, error);
 
 	return pHandle;
 }
