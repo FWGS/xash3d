@@ -758,7 +758,7 @@ Window* NetClientList(Display* display, unsigned long *len)
 		&form,
 		len,
 		&remain,
-		(byte*)&windowList
+		(byte**)&windowList
 	);
 
 	if(errno != Success)
@@ -787,7 +787,7 @@ char* WindowClassName(Display* display, Window window)
 		&form,
 		&len,
 		&remain,
-		(byte*)&className
+		(byte**)&className
 	);
 
 	if(errno != Success)
