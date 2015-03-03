@@ -75,6 +75,7 @@ void VGui_Startup( void )
 	surface = new CEngineSurface( rootpanel );
 	rootpanel->setSurfaceBaseTraverse( surface );
 
+
 	ASSERT( rootpanel->getApp() != NULL );
 	ASSERT( rootpanel->getSurfaceBase() != NULL );
 
