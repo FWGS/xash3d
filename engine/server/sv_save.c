@@ -578,7 +578,7 @@ void SV_ClearSaveDir( void )
 	int	i;
 
 	// just delete all HL? files
-	t = FS_Search( "save/*.HL?", true, true );	// lookup only in gamedir
+	t = FS_Search( "save/*.hl?", true, true );	// lookup only in gamedir
 	if( !t ) return; // already empty
 
 	for( i = 0; i < t->numfilenames; i++ )
@@ -865,7 +865,7 @@ SAVERESTOREDATA *SV_LoadSaveData( const char *level )
 	char			*pszTokenList;
 	int			i, id, size, version;
 	
-	Q_snprintf( name, sizeof( name ), "save/%s.HL1", level );
+	Q_snprintf( name, sizeof( name ), "save/%s.hl1", level );
 	MsgDev( D_INFO, "Loading game from %s...\n", name );
 
 	pFile = FS_Open( name, "rb", true );
@@ -997,7 +997,7 @@ void SV_EntityPatchWrite( SAVERESTOREDATA *pSaveData, const char *level )
 	file_t		*pFile;
 	int		i, size;
 
-	Q_snprintf( name, sizeof( name ), "save/%s.HL3", level );
+	Q_snprintf( name, sizeof( name ), "save/%s.hl3", level );
 
 	pFile = FS_Open( name, "wb", true );
 	if( !pFile ) return;
@@ -1034,7 +1034,7 @@ void SV_EntityPatchRead( SAVERESTOREDATA *pSaveData, const char *level )
 	file_t	*pFile;
 	int	i, size, entityId;
 
-	Q_snprintf( name, sizeof( name ), "save/%s.HL3", level );
+	Q_snprintf( name, sizeof( name ), "save/%s.hl3", level );
 
 	pFile = FS_Open( name, "rb", true );
 	if( !pFile ) return;
@@ -1071,7 +1071,7 @@ void SV_SaveClientState( SAVERESTOREDATA *pSaveData, const char *level )
 	string		curtrack, looptrack;
 	int		soundCount = 0;
 
-	Q_snprintf( name, sizeof( name ), "save/%s.HL2", level );
+	Q_snprintf( name, sizeof( name ), "save/%s.hl2", level );
 
 	pFile = FS_Open( name, "wb", true );
 	if( !pFile ) return;
@@ -1242,7 +1242,7 @@ void SV_LoadClientState( SAVERESTOREDATA *pSaveData, const char *level, qboolean
 	soundlist_t	soundInfo[MAX_CHANNELS];
 	int		soundCount;
 	
-	Q_snprintf( name, sizeof( name ), "save/%s.HL2", level );
+	Q_snprintf( name, sizeof( name ), "save/%s.hl2", level );
 
 	pFile = FS_Open( name, "rb", true );
 	if( !pFile ) return;
@@ -1493,7 +1493,7 @@ SAVERESTOREDATA *SV_SaveGameState( void )
 	version = SAVEGAME_VERSION;
 
 	// output to disk
-	pFile = FS_Open( va( "save/%s.HL1", sv.name ), "wb", true );
+	pFile = FS_Open( va( "save/%s.hl1", sv.name ), "wb", true );
 	if( !pFile ) return NULL;
 
 	// write the header
@@ -1976,7 +1976,7 @@ int SV_SaveGameSlot( const char *pSaveName, const char *pSaveComment )
 
 	pSaveData = SV_SaveInit( 0 );
 
-	Q_strncpy( hlPath, "save/*.HL?", sizeof( hlPath ));
+	Q_strncpy( hlPath, "save/*.hl?", sizeof( hlPath ));
 	gameHeader.mapCount = SV_MapCount( hlPath );
 	Q_strncpy( gameHeader.mapName, sv.name, sizeof( gameHeader.mapName ));
 	Q_strncpy( gameHeader.comment, pSaveComment, sizeof( gameHeader.comment ));

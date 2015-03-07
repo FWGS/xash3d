@@ -1647,6 +1647,26 @@ static long FS_SysFileTime( const char *filename )
 
 /*
 ====================
+FS_ToLowerCase
+
+Function to set all characters of path lowercase
+====================
+*/
+char* FS_ToLowerCase( const char* path )
+{
+	char *result = malloc(MAX_SYSPATH * sizeof(char));
+	int i = 0;
+	while( path[i] )
+	{
+		result[i] = tolower( path[i] );
+		++i;
+	}
+	result[i] = '\0';
+	return result;
+}
+
+/*
+====================
 FS_SysOpen
 
 Internal function used to create a file_t and open the relevant non-packed file on disk

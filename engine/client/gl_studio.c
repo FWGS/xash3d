@@ -179,7 +179,7 @@ const char *R_StudioTexName( model_t *mod )
 
 	Q_strncpy( texname, mod->name, sizeof( texname ));
 	FS_StripExtension( texname );
-	Q_strncat( texname, "T.mdl", sizeof( texname ));
+	Q_strncat( texname, "t.mdl", sizeof( texname ));
 
 	return texname;
 }
