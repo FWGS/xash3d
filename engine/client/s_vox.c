@@ -404,7 +404,10 @@ void VOX_LoadFirstWord( channel_t *pchan, voxword_t *pwords )
 	// sentence array, and set the channel to point to the
 	// sentence array
 	while( pwords[i].sfx != NULL )
-		pchan->words[i] = pwords[i++];
+	{
+		pchan->words[i] = pwords[i];
+		i++;
+	}
 		
 	pchan->words[i].sfx = NULL;
 
