@@ -2400,18 +2400,29 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 
 	file = FS_Open( path, "rb", gamedironly );
 
-	if( file )
+	if( !file )
 	{
-		filesize = file->real_length;
-		buf = (byte *)Mem_Alloc( fs_mempool, filesize + 1 );
-		buf[filesize] = '\0';
-		FS_Read( file, buf, filesize );
-		FS_Close( file );
+		// Try to open this file with lowered path
+		char *loweredPath = FS_ToLowerCase( path );
+		file = FS_Open( loweredPath, "rb", gamedironly );
+		if( !file )
+		{
+			// Now it truly doesn't exist in file system
+			buf = W_LoadFile( path, &filesize, gamedironly );
+
+			if( filesizeptr )
+				*filesizeptr = filesize;
+
+			return buf;
+		}
 	}
-	else
-	{
-		buf = W_LoadFile( path, &filesize, gamedironly );
-	}
+
+	// Try to load
+	filesize = file->real_length;
+	buf = (byte *)Mem_Alloc( fs_mempool, filesize + 1 );
+	buf[filesize] = '\0';
+	FS_Read( file, buf, filesize );
+	FS_Close( file );
 
 	if( filesizeptr )
 		*filesizeptr = filesize;
@@ -2429,6 +2440,12 @@ Simply version of FS_Open
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly )
 {
 	file_t	*file = FS_Open( path, "rb", gamedironly );
+
+	if( !file )
+	{
+		char *loweredPath = FS_ToLowerCase( path );
+		file = FS_Open( loweredPath, "rb", gamedironly );
+	}
 
 	if( filesizeptr )
 	{
