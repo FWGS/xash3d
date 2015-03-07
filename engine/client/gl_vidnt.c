@@ -488,7 +488,12 @@ GL_GetProcAddress
 */
 void *GL_GetProcAddress( const char *name )
 {
-	return SDL_GL_GetProcAddress(name);
+	void *func = SDL_GL_GetProcAddress(name);
+	if(!func)
+	{
+		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
+	}
+	return func;
 }
 
 /*
@@ -548,7 +553,9 @@ GL_BuildGammaTable
 */
 void GL_BuildGammaTable( void )
 {
-	Q_memcpy( glState.gammaRamp, glState.stateRamp, sizeof( glState.gammaRamp ));
+	glState.gammaRamp[0] = glState.stateRamp[0];
+	glState.gammaRamp[1] = glState.stateRamp[1];
+	glState.gammaRamp[2] = glState.stateRamp[2];
 }
 
 /*
@@ -562,7 +569,7 @@ void GL_UpdateGammaRamp( void )
 
 	GL_BuildGammaTable();
 
-	SDL_SetWindowGammaRamp( host.hWnd, &glState.gammaRamp[0], &glState.gammaRamp[1], &glState.gammaRamp[2] );
+	//SDL_SetWindowGammaRamp( host.hWnd, &glState.gammaRamp[0], &glState.gammaRamp[1], &glState.gammaRamp[2] );
 }
 
 /*
@@ -577,7 +584,7 @@ void GL_UpdateSwapInterval( void )
 		gl_swapInterval->modified = false;
 
 		if( SDL_GL_SetSwapInterval(gl_swapInterval->integer) )
-			MsgDev("SDL_GL_SetSwapInterval: %s\n", SDL_GetError());
+			MsgDev(D_ERROR, "SDL_GL_SetSwapInterval: %s\n", SDL_GetError());
 	}
 }
 
@@ -840,20 +847,23 @@ uint VID_EnumerateInstances( void )
 
 void VID_StartupGamma( void )
 {
+	// Device supports gamma anyway, but cannot do anything with it.
+	glConfig.deviceSupportsGamma = 1;
+	GL_SetExtension( GL_HARDWARE_GAMMA_CONTROL, glConfig.deviceSupportsGamma );
+	/*
 	size_t	gamma_size;
 	byte	*savedGamma;
+	size_t	gammaTypeSize = sizeof(glState.stateRamp) * sizeof(Uint16);
 
 	// init gamma ramp
-	Q_memset( glState.stateRamp, 0, sizeof( glState.stateRamp ));
+	Q_memset( glState.stateRamp, 0, gammaTypeSize);
 
-	glConfig.deviceSupportsGamma = SDL_GetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
-			&glState.stateRamp[1], &glState.stateRamp[2] );
 
 	if( !glConfig.deviceSupportsGamma )
 	{
 		// force to set cvar
 		Cvar_FullSet( "gl_ignorehwgamma", "1", CVAR_GLCONFIG );
-		MsgDev( D_ERROR, "VID_StartupGamma: SDL_GetWindowGammaRamp failed: %s\n", SDL_GetError());
+		MsgDev( D_ERROR, "VID_StartupGamma: hardware gamma unsupported");
 	}
 
 	if( gl_ignorehwgamma->integer )
@@ -869,10 +879,10 @@ void VID_StartupGamma( void )
 
 	savedGamma = FS_LoadFile( "gamma.dat", &gamma_size, false );
 
-	if( !savedGamma || gamma_size != sizeof( glState.stateRamp ))
+	if( !savedGamma || gamma_size != gammaTypeSize)
 	{
 		// saved gamma not found or corrupted file
-		FS_WriteFile( "gamma.dat", glState.stateRamp, sizeof( glState.stateRamp ));
+		FS_WriteFile( "gamma.dat", glState.stateRamp, gammaTypeSize);
 		MsgDev( D_NOTE, "VID_StartupGamma: gamma.dat initialized\n" );
 		if( savedGamma ) Mem_Free( savedGamma );
 	}
@@ -881,20 +891,20 @@ void VID_StartupGamma( void )
 		GL_BuildGammaTable();
 
 		// validate base gamma
-		if( !Q_memcmp( savedGamma, glState.stateRamp, sizeof( glState.stateRamp )))
+		if( !Q_memcmp( savedGamma, glState.stateRamp, gammaTypeSize))
 		{
 			// all ok, previous gamma is valid
 			MsgDev( D_NOTE, "VID_StartupGamma: validate screen gamma - ok\n" );
 		}
-		else if( !Q_memcmp( glState.gammaRamp, glState.stateRamp, sizeof( glState.stateRamp )))
+		else if( !Q_memcmp( glState.gammaRamp, glState.stateRamp, gammaTypeSize))
 		{
 			// screen gamma is equal to render gamma (probably previous instance crashed)
 			// run additional check to make sure for it
-			if( Q_memcmp( savedGamma, glState.stateRamp, sizeof( glState.stateRamp )))
+			if( Q_memcmp( savedGamma, glState.stateRamp, gammaTypeSize))
 			{
 				// yes, current gamma it's totally wrong, restore it from gamma.dat
 				MsgDev( D_NOTE, "VID_StartupGamma: restore original gamma after crash\n" );
-				Q_memcpy( glState.stateRamp, savedGamma, sizeof( glState.gammaRamp ));
+				Q_memcpy( glState.stateRamp, savedGamma, gammaTypeSize);
 			}
 			else
 			{
@@ -903,15 +913,15 @@ void VID_StartupGamma( void )
 				MsgDev( D_NOTE, "VID_StartupGamma: validate screen gamma - disabled\n" ); 
 			}
 		}
-		else if( !Q_memcmp( glState.gammaRamp, savedGamma, sizeof( glState.stateRamp )))
+		else if( !Q_memcmp( glState.gammaRamp, savedGamma, gammaTypeSize))
 		{
 			// saved gamma is equal render gamma, probably gamma.dat wroted after crash
 			// run additional check to make sure it
-			if( Q_memcmp( savedGamma, glState.stateRamp, sizeof( glState.stateRamp )))
+			if( Q_memcmp( savedGamma, glState.stateRamp, gammaTypeSize))
 			{
 				// yes, saved gamma it's totally wrong, get origianl gamma from screen
 				MsgDev( D_NOTE, "VID_StartupGamma: merge gamma.dat after crash\n" );
-				FS_WriteFile( "gamma.dat", glState.stateRamp, sizeof( glState.stateRamp ));
+				FS_WriteFile( "gamma.dat", glState.stateRamp, gammaTypeSize);
 			}
 			else
 			{
@@ -924,13 +934,14 @@ void VID_StartupGamma( void )
 		{
 			// current gamma unset by other application, so we can restore it here
 			MsgDev( D_NOTE, "VID_StartupGamma: restore original gamma after crash\n" );
-			Q_memcpy( glState.stateRamp, savedGamma, sizeof( glState.gammaRamp ));			
+			Q_memcpy( glState.stateRamp, savedGamma, gammaTypeSize);
 		}
 
 		Mem_Free( savedGamma );
 	}
 
 	vid_gamma->modified = true;
+	*/
 }
 
 void VID_RestoreGamma( void )
@@ -1132,6 +1143,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			return false;
 
 		VID_StartupGamma();
+		//glConfig.deviceSupportsGamma = 1;
 	}
 	else
 	{
