@@ -495,6 +495,12 @@ void Sys_InitLog( void )
 		mode = "a";
 	else mode = "w";
 
+	// print log to stdout
+	printf( "=================================================================================\n" );
+	printf( "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
+	printf( "=================================================================================\n" );
+
+
 	// create log if needed
 	if( s_wcd.log_active )
 	{
@@ -526,6 +532,12 @@ void Sys_CloseLog( void )
 		break;
 	}
 
+	printf( "\n");
+	printf( "=================================================================================");
+	printf( "\n\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+	printf( "=================================================================================");
+
+
 	if( s_wcd.logfile )
 	{
 		fprintf( s_wcd.logfile, "\n");
@@ -541,6 +553,9 @@ void Sys_CloseLog( void )
 
 void Sys_PrintLog( const char *pMsg )
 {
+	printf( "%s", pMsg );
+	fflush( stdout );
+
 	if( !s_wcd.logfile ) return;
 	fprintf( s_wcd.logfile, pMsg );
 	fflush( s_wcd.logfile );
