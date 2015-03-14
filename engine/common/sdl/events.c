@@ -115,6 +115,7 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	}
 	//printf("Pressed key. Code: %i\n", keynum);
 	Key_Event(keynum, down);
+	CL_CharEvent(keynum);
 }
 
 void SDLash_MouseEvent(SDL_MouseButtonEvent button)
@@ -125,7 +126,7 @@ void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 
 void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 {
-	int updown = wheel.x < 0 ? K_MWHEELDOWN : K_MWHEELDOWN;
+	int updown = wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
 	Key_Event(updown, true);
 	Key_Event(updown, false);
 }

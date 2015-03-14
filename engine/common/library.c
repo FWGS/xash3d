@@ -60,7 +60,12 @@ void *Com_GetProcAddress( void *hInstance, const char *name )
 
 dword Com_FunctionFromName( void *hInstance, const char *pName )
 {
-	return (dword)GetProcAddress( hInstance, pName );
+	dword function = (dword)GetProcAddress( hInstance, pName );
+	if(!function)
+	{
+		MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s", pName);
+	}
+	return function;
 }
 
 const char *Com_NameForFunction( void *hInstance, dword function )
@@ -71,7 +76,7 @@ const char *Com_NameForFunction( void *hInstance, dword function )
 	// Note: dladdr() is a glibc extension
 	Dl_info info;
 	dladdr((void*)function, &info);
-	return info.dli_fname;
+	return info.dli_sname;
 #endif
 }
 #else
