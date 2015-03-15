@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #define MAX_SENTENCES		2048
 #define SENTENCE_INDEX		-99999	// unique sentence index
 
+
 typedef struct voxword_s
 {
 	int	volume;		// increase percent, ie: 125 = 125% increase
@@ -34,12 +35,15 @@ typedef struct voxword_s
 	sfx_t	*sfx;		// name and cache pointer
 } voxword_t;
 
+#include "sound.h"
 
 typedef struct
 {
 	char	*pName;
 	float	length;
 } sentence_t;
+
+typedef struct channel_s channel_t;
 
 void VOX_LoadWord( struct channel_s *pchan );
 void VOX_FreeWord( struct channel_s *pchan );

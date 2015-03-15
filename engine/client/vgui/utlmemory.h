@@ -19,7 +19,11 @@
 #endif
 
 #include <string.h>
+#ifdef _WIN32
 #include <new.h>
+#else
+#include <new>
+#endif
 #include "common.h"
 
 //-----------------------------------------------------------------------------
@@ -322,7 +326,7 @@ inline void CUtlMemory<T>::EnsureCapacity( int num )
 	}
 	else
 	{
-		m_pMemory = (T*)alloc( m_nAllocationCount * sizeof(T) );
+		m_pMemory = (T*)malloc( m_nAllocationCount * sizeof(T) );
 	}
 }
 

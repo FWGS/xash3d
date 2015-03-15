@@ -984,11 +984,12 @@ qboolean UI_LoadProgs( void )
 	// setup globals
 	menu.globals = &gpGlobals;
 
-	if(!( menu.hInstance = Com_LoadLibrary( va( "%s/menu.dll", GI->dll_path ), false )))
+	if(!( menu.hInstance = Com_LoadLibrary( va( "%s/" MENUDLL, GI->dll_path ), false )))
 	{
 		FS_AllowDirectPaths( true );
 
-		if(!( menu.hInstance = Com_LoadLibrary( "../menu.dll", false )))
+		// Attempt to try finding library by libdl magic on Linux
+		if(!( menu.hInstance = Com_LoadLibrary( MENUDLL, false )))
 		{
 			FS_AllowDirectPaths( false );
 			return false;

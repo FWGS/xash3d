@@ -1354,8 +1354,7 @@ void R_EndFrame( void )
 	// flush any remaining 2D bits
 	R_Set2DMode( false );
 
-	if( !pwglSwapBuffers( glw_state.hDC ))
-		Sys_Error( "wglSwapBuffers() failed!\n" );
+	SDL_GL_SwapWindow(host.hWnd);
 }
 
 /*

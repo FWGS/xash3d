@@ -579,7 +579,7 @@ int pfnPrecacheModel( const char *s );
 int pfnNumberOfEntities( void );
 void SV_RestartStaticEnts( void );
 
-_inline edict_t *SV_EDICT_NUM( int n, const char * file, const int line )
+static _inline edict_t *SV_EDICT_NUM( int n, const char * file, const int line )
 {
 	if((n >= 0) && (n < svgame.globals->maxEntities))
 		return svgame.edicts + n;

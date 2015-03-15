@@ -125,8 +125,8 @@
 // mouse buttons generate virtual keys
 //
 #define K_MOUSE1		241
-#define K_MOUSE2		242
-#define K_MOUSE3		243
+#define K_MOUSE2		243
+#define K_MOUSE3		242
 #define K_MOUSE4		244
 #define K_MOUSE5		245
 

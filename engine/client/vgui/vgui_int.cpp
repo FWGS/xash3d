@@ -35,33 +35,23 @@ App* CEnginePanel::getApp( void )
 
 void CEngineApp :: setCursorPos( int x, int y )
 {
-	POINT pt;
-
-	pt.x = x;
-	pt.y = y;
-
-	ClientToScreen( (HWND)host.hWnd, &pt );
-
-	::SetCursorPos( pt.x, pt.y );
+	SDL_WarpMouseInWindow(host.hWnd, x, y);
 }
 	
 void CEngineApp :: getCursorPos( int &x,int &y )
 {
-	POINT	pt;
-
-	// find mouse movement
-	::GetCursorPos( &pt );
-	ScreenToClient((HWND)host.hWnd, &pt );
-
-	x = pt.x;
-	y = pt.y;
+	SDL_GetMouseState(&x, &y);
 }
 
 void VGui_RunFrame( void )
 {
-	if( GetModuleHandle( "fraps32.dll" ) || GetModuleHandle( "fraps64.dll" ))
+	// What? Why? >_<
+
+	/*if( GetModuleHandle( "fraps32.dll" ) || GetModuleHandle( "fraps64.dll" ))
 		host.force_draw_version = true;
-	else host.force_draw_version = false;
+	else host.force_draw_version = false;*/
+
+	host.force_draw_version = false;
 }
 
 void VGui_Startup( void )
@@ -85,6 +75,7 @@ void VGui_Startup( void )
 	surface = new CEngineSurface( rootpanel );
 	rootpanel->setSurfaceBaseTraverse( surface );
 
+
 	ASSERT( rootpanel->getApp() != NULL );
 	ASSERT( rootpanel->getSurfaceBase() != NULL );
 
@@ -106,7 +97,7 @@ void VGui_Shutdown( void )
 
 void VGui_Paint( void )
 {
-	RECT	rect;
+	int w, h;
 
 	if( cls.state != ca_active || !rootpanel )
 		return;
@@ -114,9 +105,8 @@ void VGui_Paint( void )
 	// setup the base panel to cover the screen
 	Panel *pVPanel = surface->getEmbeddedPanel();
 	if( !pVPanel ) return;
-
+	SDL_GetWindowSize(host.hWnd, &w, &h);
 	host.input_enabled = rootpanel->isVisible();
-	GetClientRect( host.hWnd, &rect );
 	EnableScissor( true );
 
 	if( cls.key_dest == key_game )
@@ -124,7 +114,7 @@ void VGui_Paint( void )
 		pApp->externalTick ();
 	}
 
-	pVPanel->setBounds( 0, 0, rect.right, rect.bottom );
+	pVPanel->setBounds( 0, 0, w, h );
 	pVPanel->repaint();
 
 	// paint everything 

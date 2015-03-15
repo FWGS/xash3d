@@ -2867,7 +2867,10 @@ model_t *Mod_FindName( const char *filename, qboolean create )
 		}
 	}
 
-	if( !create ) return NULL;			
+	if( !create )
+	{
+		return NULL;
+	}
 
 	// find a free model slot spot
 	for( i = 0, mod = cm_models; i < cm_nummodels; i++, mod++ )
@@ -2918,12 +2921,19 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 
 	if( !buf )
 	{
-		Q_memset( mod, 0, sizeof( model_t ));
+		// Try to load this model with lowered file name
+		char *loweredName = FS_ToLowerCase( tempname );
+		buf = FS_LoadFile( loweredName, NULL, false );
+		if( !buf )
+		{
+			Q_memset( mod, 0, sizeof( model_t ));
 
-		if( crash ) Host_Error( "Mod_ForName: %s couldn't load\n", tempname );
-		else MsgDev( D_ERROR, "Mod_ForName: %s couldn't load\n", tempname );
+			if( crash ) Host_Error( "Mod_ForName: %s couldn't load\n", tempname );
+			else MsgDev( D_ERROR, "Mod_ForName: %s couldn't load\n", tempname );
 
-		return NULL;
+			return NULL;
+		}
+
 	}
 
 	FS_FileBase( mod->name, modelname );

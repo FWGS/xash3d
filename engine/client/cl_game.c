@@ -30,6 +30,8 @@ GNU General Public License for more details.
 #include "vgui_draw.h"
 #include "sound.h"		// SND_STOP_LOOPING
 
+#include "port.h"
+
 #define MAX_TEXTCHANNELS	8		// must be power of two (GoldSrc uses 4 channels)
 #define TEXT_MSGNAME	"TextMessage%i"
 
@@ -1875,13 +1877,7 @@ pfnGetMousePosition
 */
 static void pfnGetMousePosition( int *mx, int *my )
 {
-	POINT	curpos;
-
-	GetCursorPos( &curpos );
-	ScreenToClient( host.hWnd, &curpos );
-
-	if( mx ) *mx = curpos.x;
-	if( my ) *my = curpos.y;
+	SDL_GetMouseState(mx, my);
 }
 
 /*
@@ -2617,13 +2613,9 @@ pfnGetMousePos
 
 =============
 */
-void pfnGetMousePos( struct tagPOINT *ppt )
+void pfnGetMousePos( POINT *ppt )
 {
-	ASSERT( ppt != NULL );
-
-	// find mouse movement
-	GetCursorPos( ppt );
-	ScreenToClient( host.hWnd, ppt );
+	SDL_GetMouseState(&ppt->x, &ppt->y);
 }
 
 /*
@@ -2634,13 +2626,7 @@ pfnSetMousePos
 */
 void pfnSetMousePos( int mx, int my )
 {
-	POINT pt;
-
-	pt.x = mx;
-	pt.y = my;
-
-	ClientToScreen( host.hWnd, &pt );
-	SetCursorPos( pt.x, pt.y );
+	SDL_WarpMouseInWindow(host.hWnd, mx, my);
 }
 
 /*

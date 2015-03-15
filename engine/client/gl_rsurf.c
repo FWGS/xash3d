@@ -599,7 +599,7 @@ static int LM_AllocBlock( int w, int h, int *x, int *y )
 	return true;
 }
 
-static void LM_UploadBlock( qboolean dynamic )
+static void LM_UploadBlock( int dynamic )
 {
 	int	i;
 

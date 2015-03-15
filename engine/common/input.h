@@ -46,6 +46,6 @@ void IN_ActivateMouse( qboolean force );
 void IN_DeactivateMouse( void );
 void IN_ToggleClientMouse( int newstate, int oldstate );
 long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam );
-void IN_SetCursor( HICON hCursor );
+void IN_SetCursor( SDL_Cursor *hCursor );
 
 #endif//INPUT_H

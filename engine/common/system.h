@@ -23,11 +23,11 @@ extern "C" {
 #include <setjmp.h>
 #include <stdio.h>
 #include <time.h>
-#include <windows.h>
+#include <SDL2/SDL.h>
 
-#define MSGBOX( x )		MessageBox( NULL, x, "Xash Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
-#define MSGBOX2( x )	MessageBox( host.hWnd, x, "Host Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
-#define MSGBOX3( x )	MessageBox( host.hWnd, x, "Host Recursive Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
+#define MSGBOX( x )		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Xash Error", x, NULL )
+#define MSGBOX2( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Error", x, NULL )
+#define MSGBOX3( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Recursive Error", x, NULL )
 
 // basic typedefs
 typedef int		sound_t;
@@ -80,7 +80,9 @@ void* Sys_GetProcAddress( dll_info_t *dll, const char* name );
 qboolean Sys_FreeLibrary( dll_info_t *dll );
 void Sys_ParseCommandLine( LPSTR lpCmdLine );
 void Sys_MergeCommandLine( LPSTR lpCmdLine );
+#ifdef _WIN32
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo );
+#endif
 void Sys_SetClipboardData( const byte *buffer, size_t size );
 #define Sys_GetParmFromCmdLine( parm, out ) _Sys_GetParmFromCmdLine( parm, out, sizeof( out ))
 qboolean _Sys_GetParmFromCmdLine( char *parm, char *out, size_t size );

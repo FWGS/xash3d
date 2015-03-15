@@ -20,24 +20,20 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-// disable some warnings
-#pragma warning(disable : 4244)	// MIPS
-#pragma warning(disable : 4018)	// signed/unsigned mismatch
-#pragma warning(disable : 4305)	// truncation from const double to float
-#pragma warning(disable : 4115)	// named type definition in parentheses
-#pragma warning(disable : 4100)	// unreferenced formal parameter
-#pragma warning(disable : 4127)	// conditional expression is constant
-#pragma warning(disable : 4057)	// differs in indirection to slightly different base types
-#pragma warning(disable : 4201)	// nonstandard extension used
-#pragma warning(disable : 4706)	// assignment within conditional expression
-#pragma warning(disable : 4054)	// type cast' : from function pointer
-#pragma warning(disable : 4310)	// cast truncates constant value
+#ifndef _WIN32
+#include <linux/limits.h> // PATH_MAX
+#include "port.h"
+
+#define EXPORT
+#else
+#define PATH_MAX 1024
+#define EXPORT		__declspec( dllexport )
+#endif
 
 #define MAX_STRING		256	// generic string
 #define MAX_INFO_STRING	256	// infostrings are transmitted across network
-#define MAX_SYSPATH		1024	// system filepath
+#define MAX_SYSPATH		PATH_MAX	// system filepath
 #define MAX_MODS		512	// environment games that engine can keep visible
-#define EXPORT		__declspec( dllexport )
 #define BIT( n )		(1<<( n ))
 
 #ifndef __cplusplus
@@ -118,7 +114,7 @@ typedef enum
 #define FS_NOWRITE_PATH	2	// default behavior - last added gamedir set as writedir. This flag disables it
 #define FS_GAMEDIR_PATH	4	// just a marker for gamedir path
 
-#define GI		SI.GameInfo
+#define GI              SI.GameInfo
 #define FS_Gamedir()	SI.GameInfo->gamedir
 #define FS_Title()		SI.GameInfo->title
 
@@ -284,9 +280,9 @@ typedef struct
 
 typedef struct host_parm_s
 {
-	HINSTANCE			hInst;
-	HANDLE			hMutex;
-	LPTOP_LEVEL_EXCEPTION_FILTER	oldFilter;
+    HINSTANCE	hInst;
+    HANDLE		hMutex;
+    void*       oldFilter;
 
 	host_state	state;		// global host state
 	uint		type;		// running at
@@ -309,7 +305,7 @@ typedef struct host_parm_s
 	// list of unique decal indexes
 	char		draw_decals[MAX_DECALS][CS_SIZE];
 
-	HWND		hWnd;		// main window
+    SDL_Window*		hWnd;		// main window
 	int		developer;	// show all developer's message
 	int		old_developer;	// keep real dev state (we need enable dev-mode in multiplayer)
 	qboolean		key_overstrike;	// key overstrike mode
@@ -351,6 +347,7 @@ extern sysinfo_t	SI;
 //
 void FS_Init( void );
 void FS_Path( void );
+char *FS_ToLowerCase( const char *path );
 void FS_Shutdown( void );
 void FS_ClearSearchPath( void );
 void FS_AllowDirectPaths( qboolean enable );
@@ -360,7 +357,7 @@ void FS_LoadGameInfo( const char *rootfolder );
 void FS_FileBase( const char *in, char *out );
 const char *FS_FileExtension( const char *in );
 void FS_DefaultExtension( char *path, const char *extension );
-void FS_ExtractFilePath( const char* const path, char* dest );
+void FS_ExtractFilePath( const char *path, char* dest );
 const char *FS_GetDiskPath( const char *name, qboolean gamedironly );
 const char *FS_FileWithoutPath( const char *in );
 wfile_t *W_Open( const char *filename, const char *mode );
@@ -757,6 +754,16 @@ void AVI_FreeVideo( movie_state_t *Avi );
 movie_state_t *AVI_GetState( int num );
 qboolean AVI_Initailize( void );
 void AVI_Shutdown( void );
+
+#include "con_nprint.h"
+#include "cl_entity.h"
+#include "studio_event.h"
+#include "pm_defs.h"
+
+// Compiler warning: struct X declared inside parameter list
+struct sizebuf_s;
+struct modelstate_s;
+struct pmtrace_s;
 
 // shared calls
 qboolean CL_IsInGame( void );

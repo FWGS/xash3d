@@ -13,11 +13,20 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "port.h"
+
 #include <fcntl.h>
-#include <direct.h>
 #include <sys/stat.h>
-#include <io.h>
 #include <time.h>
+#include <stdarg.h> // va
+#ifdef _WIN32
+#include <io.h>
+#include <direct.h>
+#else
+#include <dirent.h>
+#include <errno.h>
+#endif
+
 #include "common.h"
 #include "wadfile.h"
 #include "filesystem.h"
@@ -58,44 +67,7 @@ typedef struct file_s
 						// Contents buffer
 	fs_offset_t	buff_ind, buff_len;		// buffer current index and length
 	byte		buff[FILE_BUFF_SIZE];	// intermediate buffer
-};
-
-typedef struct wfile_s
-{
-	char		filename[MAX_SYSPATH];
-	int		infotableofs;
-	byte		*mempool;	// W_ReadLump temp buffers
-	int		numlumps;
-	int		mode;
-	int		handle;
-	dlumpinfo_t	*lumps;
-	time_t		filetime;
-};
-
-typedef struct packfile_s
-{
-	char		name[56];
-	fs_offset_t	offset;
-	fs_offset_t	realsize;	// real file size (uncompressed)
-} packfile_t;
-
-typedef struct pack_s
-{
-	char		filename[MAX_SYSPATH];
-	int		handle;
-	int		numfiles;
-	time_t		filetime;	// common for all packed files
-	packfile_t	*files;
-} pack_t;
-
-typedef struct searchpath_s
-{
-	char		filename[MAX_SYSPATH];
-	pack_t		*pack;
-	wfile_t		*wad;
-	int		flags;
-	struct searchpath_s *next;
-} searchpath_t;
+} file_t;
 
 byte		*fs_mempool;
 searchpath_t	*fs_searchpaths = NULL;
@@ -109,7 +81,7 @@ qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ pathes
 
 static void FS_InitMemory( void );
 const char *FS_FileExtension( const char *in );
-static searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
+searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
 static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
@@ -239,17 +211,35 @@ void stringlistsort( stringlist_t *list )
 	}
 }
 
+#ifndef _WIN32
+int sel(const struct dirent *d)
+{
+	int plen, extlen;
+	char* p = strrchr(d->d_name, '.');
+	if ( !p ) return 0;
+	plen = strlen(p);
+	extlen = strlen("*");
+	return strncmp("*", p, (extlen < plen) ? extlen : plen) == 0;
+}
+#endif
+
+
 void listdirectory( stringlist_t *list, const char *path )
 {
 	int		i;
 	char		pattern[4096], *c;
+#ifdef _WIN32
 	struct _finddata_t	n_file;
+#else
+	struct dirent **n_file;
 	long		hFile;
+#endif
 
 	Q_strncpy( pattern, path, sizeof( pattern ));
 	Q_strncat( pattern, "*", sizeof( pattern ));
 
 	// ask for the directory listing handle
+#ifdef _WIN32
 	hFile = _findfirst( pattern, &n_file );
 	if( hFile == -1 ) return;
 
@@ -259,6 +249,21 @@ void listdirectory( stringlist_t *list, const char *path )
 	while( _findnext( hFile, &n_file ) == 0 )
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
+#else
+	// ask for the directory listing handle
+	hFile = scandir( path, &n_file, NULL, NULL );
+	if( hFile < 1 )
+	{
+		MsgDev( D_ERROR, "listdirectory: scandir() failed, %s", strerror(hFile) );
+		return;
+	}
+
+	// iterate through the directory
+	for( i = 0; i < hFile; i++)
+	{
+		stringlistappend( list, n_file[i]->d_name );
+	}
+#endif
 
 	// convert names to lowercase because windows doesn't care, but pattern matching code often does
 	for( i = 0; i < list->numstrings; i++ )
@@ -793,7 +798,7 @@ const char *FS_FileWithoutPath( const char *in )
 FS_ExtractFilePath
 ============
 */
-void FS_ExtractFilePath( const char* const path, char* dest )
+void FS_ExtractFilePath( const char* path, char* dest )
 {
 	const char	*src;
 	src = path + Q_strlen( path ) - 1;
@@ -1096,7 +1101,7 @@ void FS_CreateDefaultGameInfo( const char *filename )
 	Q_strncpy( defGI.sp_entity, "info_player_start", sizeof( defGI.sp_entity ));
 	Q_strncpy( defGI.mp_entity, "info_player_deathmatch", sizeof( defGI.mp_entity ));
 	Q_strncpy( defGI.dll_path, "cl_dlls", sizeof( defGI.dll_path ));
-	Q_strncpy( defGI.game_dll, "dlls/hl.dll", sizeof( defGI.game_dll ));
+	Q_strncpy( defGI.game_dll, "dlls/hl." OS_LIB_EXT, sizeof( defGI.game_dll ));
 	Q_strncpy( defGI.startmap, "newmap", sizeof( defGI.startmap ));
 	Q_strncpy( defGI.iconpath, "game.ico", sizeof( defGI.iconpath ));
 
@@ -1136,7 +1141,7 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	Q_strncpy( GameInfo->basedir, SI.ModuleName, sizeof( GameInfo->basedir ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
 	Q_strncpy( GameInfo->startmap, "newmap", sizeof( GameInfo->startmap ));
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
@@ -1312,7 +1317,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
 	Q_strncpy( GameInfo->startmap, "", sizeof( GameInfo->startmap ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
@@ -1642,6 +1647,26 @@ static long FS_SysFileTime( const char *filename )
 
 /*
 ====================
+FS_ToLowerCase
+
+Function to set all characters of path lowercase
+====================
+*/
+char* FS_ToLowerCase( const char* path )
+{
+	char *result = malloc(MAX_SYSPATH * sizeof(char));
+	int i = 0;
+	while( path[i] )
+	{
+		result[i] = tolower( path[i] );
+		++i;
+	}
+	result[i] = '\0';
+	return result;
+}
+
+/*
+====================
 FS_SysOpen
 
 Internal function used to create a file_t and open the relevant non-packed file on disk
@@ -1771,9 +1796,28 @@ Look for a existing folder
 */
 qboolean FS_SysFolderExists( const char *path )
 {
+#ifdef _WIN32
 	DWORD	dwFlags = GetFileAttributes( path );
 
 	return ( dwFlags != -1 ) && ( dwFlags & FILE_ATTRIBUTE_DIRECTORY );
+#else
+	DIR *dir = opendir(path);
+
+	if(dir)
+	{
+		closedir(dir);
+		return 1;
+	}
+	else if((errno == ENOENT) || (errno == ENOTDIR))
+	{
+		return 0;
+	}
+	else
+	{
+		MsgDev(D_ERROR, "FS_SysFolderExists: problem while opening dir: %s", strerror(errno));
+		return 0;
+	}
+#endif
 }
 
 /*
@@ -1786,7 +1830,7 @@ Return the searchpath where the file was found (or NULL)
 and the file index in the package if relevant
 ====================
 */
-static searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
+searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 {
 	searchpath_t	*search;
 	char		*pEnvPath;
@@ -2356,18 +2400,29 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 
 	file = FS_Open( path, "rb", gamedironly );
 
-	if( file )
+	if( !file )
 	{
-		filesize = file->real_length;
-		buf = (byte *)Mem_Alloc( fs_mempool, filesize + 1 );
-		buf[filesize] = '\0';
-		FS_Read( file, buf, filesize );
-		FS_Close( file );
+		// Try to open this file with lowered path
+		char *loweredPath = FS_ToLowerCase( path );
+		file = FS_Open( loweredPath, "rb", gamedironly );
+		if( !file )
+		{
+			// Now it truly doesn't exist in file system
+			buf = W_LoadFile( path, &filesize, gamedironly );
+
+			if( filesizeptr )
+				*filesizeptr = filesize;
+
+			return buf;
+		}
 	}
-	else
-	{
-		buf = W_LoadFile( path, &filesize, gamedironly );
-	}
+
+	// Try to load
+	filesize = file->real_length;
+	buf = (byte *)Mem_Alloc( fs_mempool, filesize + 1 );
+	buf[filesize] = '\0';
+	FS_Read( file, buf, filesize );
+	FS_Close( file );
 
 	if( filesizeptr )
 		*filesizeptr = filesize;
@@ -2385,6 +2440,12 @@ Simply version of FS_Open
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly )
 {
 	file_t	*file = FS_Open( path, "rb", gamedironly );
+
+	if( !file )
+	{
+		char *loweredPath = FS_ToLowerCase( path );
+		file = FS_Open( loweredPath, "rb", gamedironly );
+	}
 
 	if( filesizeptr )
 	{
@@ -2776,8 +2837,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 	slash = Q_strrchr( pattern, '/' );
 	backslash = Q_strrchr( pattern, '\\' );
 	colon = Q_strrchr( pattern, ':' );
-	separator = max( slash, backslash );
-	separator = max( separator, colon );
+	separator = max(max( slash, backslash ), colon);
 	basepathlength = separator ? (separator + 1 - pattern) : 0;
 	basepath = Mem_Alloc( fs_mempool, basepathlength + 1 );
 	if( basepathlength ) Q_memcpy( basepath, pattern, basepathlength );

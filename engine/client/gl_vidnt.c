@@ -19,11 +19,16 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "input.h"
 
+#include <SDL2/SDL_image.h>
+
+#ifdef XASH_X11
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#endif
+
 #define VID_DEFAULTMODE		"1"
 #define DISP_CHANGE_BADDUALVIEW	-6 // MSVC 6.0 doesn't
 #define num_vidmodes		((int)(sizeof(vidmode) / sizeof(vidmode[0])) - 1)
-#define WINDOW_STYLE		(WS_OVERLAPPED|WS_BORDER|WS_SYSMENU|WS_CAPTION|WS_VISIBLE)
-#define WINDOW_EX_STYLE		(0)
 #define WINDOW_NAME			"Xash Window" // Half-Life
 
 convar_t	*renderinfo;
@@ -437,29 +442,6 @@ static dllfunc_t texturecompressionfuncs[] =
 { NULL, NULL }
 };
 
-static dllfunc_t wgl_funcs[] =
-{
-{ "wglSwapBuffers"         , (void **)&pwglSwapBuffers },
-{ "wglCreateContext"       , (void **)&pwglCreateContext },
-{ "wglDeleteContext"       , (void **)&pwglDeleteContext },
-{ "wglMakeCurrent"         , (void **)&pwglMakeCurrent },
-{ "wglGetCurrentContext"   , (void **)&pwglGetCurrentContext },
-{ NULL, NULL }
-};
-
-static dllfunc_t wglproc_funcs[] =
-{
-{ "wglGetProcAddress"  , (void **)&pwglGetProcAddress },
-{ NULL, NULL }
-};
-
-static dllfunc_t wglswapintervalfuncs[] =
-{
-{ "wglSwapIntervalEXT" , (void **)&pwglSwapIntervalEXT },
-{ NULL, NULL }
-};
-
-dll_info_t opengl_dll = { "opengl32.dll", wgl_funcs, true };
 
 /*
 =================
@@ -506,13 +488,12 @@ GL_GetProcAddress
 */
 void *GL_GetProcAddress( const char *name )
 {
-	void	*p = NULL;
-
-	if( pwglGetProcAddress != NULL )
-		p = (void *)pwglGetProcAddress( name );
-	if( !p ) p = (void *)Sys_GetProcAddress( &opengl_dll, name );
-
-	return p;
+	void *func = SDL_GL_GetProcAddress(name);
+	if(!func)
+	{
+		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
+	}
+	return func;
 }
 
 /*
@@ -572,21 +553,9 @@ GL_BuildGammaTable
 */
 void GL_BuildGammaTable( void )
 {
-	int	i, v;
-	double	invGamma, div;
-
-	invGamma = 1.0 / bound( 0.5, vid_gamma->value, 2.3 );
-	div = (double) 1.0 / 255.5;
-
-	Q_memcpy( glState.gammaRamp, glState.stateRamp, sizeof( glState.gammaRamp ));
-	
-	for( i = 0; i < 256; i++ )
-	{
-		v = (int)(65535.0 * pow(((double)i + 0.5 ) * div, invGamma ) + 0.5 );
-		glState.gammaRamp[i+0]   = ((word)bound( 0, v, 65535 ));
-		glState.gammaRamp[i+256] = ((word)bound( 0, v, 65535 ));
-		glState.gammaRamp[i+512] = ((word)bound( 0, v, 65535 ));
-	}
+	glState.gammaRamp[0] = glState.stateRamp[0];
+	glState.gammaRamp[1] = glState.stateRamp[1];
+	glState.gammaRamp[2] = glState.stateRamp[2];
 }
 
 /*
@@ -600,7 +569,7 @@ void GL_UpdateGammaRamp( void )
 
 	GL_BuildGammaTable();
 
-	SetDeviceGammaRamp( glw_state.hDC, glState.gammaRamp );
+	//SDL_SetWindowGammaRamp( host.hWnd, &glState.gammaRamp[0], &glState.gammaRamp[1], &glState.gammaRamp[2] );
 }
 
 /*
@@ -614,8 +583,8 @@ void GL_UpdateSwapInterval( void )
 	{
 		gl_swapInterval->modified = false;
 
-		if( pwglSwapIntervalEXT )
-			pwglSwapIntervalEXT( gl_swapInterval->integer );
+		if( SDL_GL_SetSwapInterval(gl_swapInterval->integer) )
+			MsgDev(D_ERROR, "SDL_GL_SetSwapInterval: %s\n", SDL_GetError());
 	}
 }
 
@@ -657,23 +626,7 @@ GL_ContextError
 */
 static void GL_ContextError( void )
 {
-	DWORD error = GetLastError();
-
-	if( error == ( 0xc0070000|ERROR_INVALID_VERSION_ARB ))
-		MsgDev( D_ERROR, "Unsupported OpenGL context version (%s).\n", "2.0" );
-	else if( error == ( 0xc0070000|ERROR_INVALID_PROFILE_ARB ))
-		MsgDev( D_ERROR, "Unsupported OpenGL profile (%s).\n", "compat" );
-	else if( error == ( 0xc0070000|ERROR_INVALID_OPERATION ))
-		MsgDev( D_ERROR, "wglCreateContextAttribsARB returned invalid operation.\n" );
-	else if( error == ( 0xc0070000|ERROR_DC_NOT_FOUND ))
-		MsgDev( D_ERROR, "wglCreateContextAttribsARB returned dc not found.\n" );
-	else if( error == ( 0xc0070000|ERROR_INVALID_PIXEL_FORMAT ))
-		MsgDev( D_ERROR, "wglCreateContextAttribsARB returned dc not found.\n" );
-	else if( error == ( 0xc0070000|ERROR_NO_SYSTEM_RESOURCES ))
-		MsgDev( D_ERROR, "wglCreateContextAttribsARB ran out of system resources.\n" );
-	else if( error == ( 0xc0070000|ERROR_INVALID_PARAMETER ))
-		MsgDev( D_ERROR, "wglCreateContextAttribsARB reported invalid parameter.\n" );
-	else MsgDev( D_ERROR, "Unknown error creating an OpenGL (%s) Context.\n", "2.0" );
+	MsgDev( D_ERROR, "GL_ContextError: %s\n", SDL_GetError() );
 }
 
 /*
@@ -683,52 +636,11 @@ GL_CreateContext
 */
 qboolean GL_CreateContext( void )
 {
-	HGLRC hBaseRC;
-
-	if(!( glw_state.hGLRC = pwglCreateContext( glw_state.hDC )))
-		return GL_DeleteContext();
-
-	if(!( pwglMakeCurrent( glw_state.hDC, glw_state.hGLRC )))
-		return GL_DeleteContext();
-
-	if( host.developer <= 1 )
-		return true;
-
-	pwglCreateContextAttribsARB = GL_GetProcAddress( "wglCreateContextAttribsARB" );
-
-	if( pwglCreateContextAttribsARB != NULL )
+	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
 	{
-		int attribs[] =
-		{
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 2,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 0,
-		WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,         
-//		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
-		0
-		};
-
-		hBaseRC = glw_state.hGLRC; // backup
-		glw_state.hGLRC = NULL;
-
-		if( !( glw_state.hGLRC = pwglCreateContextAttribsARB( glw_state.hDC, NULL, attribs )))
-		{
-			glw_state.hGLRC = hBaseRC;
-			GL_ContextError();
-			return true; // just use old context
-		}
-
-		if(!( pwglMakeCurrent( glw_state.hDC, glw_state.hGLRC )))
-		{
-			pwglDeleteContext( glw_state.hGLRC );
-			glw_state.hGLRC = hBaseRC;
-			GL_ContextError();
-			return true;
-		}
-
-		MsgDev( D_NOTE, "GL_CreateContext: using extended context\n" );
-		pwglDeleteContext( hBaseRC );	// release first context
+		MsgDev(D_ERROR, "GL_CreateContext: %s\n", SDL_GetError());
+		return GL_DeleteContext();
 	}
-
 	return true;
 }
 
@@ -739,8 +651,11 @@ GL_UpdateContext
 */
 qboolean GL_UpdateContext( void )
 {
-	if(!( pwglMakeCurrent( glw_state.hDC, glw_state.hGLRC )))
+	if(!( SDL_GL_MakeCurrent( host.hWnd, glw_state.context ) ) )
+	{
+		MsgDev(D_ERROR, "GL_UpdateContext: %s", SDL_GetError());
 		return GL_DeleteContext();
+	}
 
 	return true;
 }
@@ -752,21 +667,8 @@ GL_DeleteContext
 */
 qboolean GL_DeleteContext( void )
 {
-	if( pwglMakeCurrent )
-		pwglMakeCurrent( NULL, NULL );
-
-	if( glw_state.hGLRC )
-	{
-		if( pwglDeleteContext )
-			pwglDeleteContext( glw_state.hGLRC );
-		glw_state.hGLRC = NULL;
-	}
-
-	if( glw_state.hDC )
-	{
-		ReleaseDC( host.hWnd, glw_state.hDC );
-		glw_state.hDC = NULL;
-	}
+	SDL_GL_DeleteContext(glw_state.context);
+	glw_state.context = NULL;
 
 	return false;
 }
@@ -776,9 +678,9 @@ qboolean GL_DeleteContext( void )
 VID_ChoosePFD
 =================
 */
-static int VID_ChoosePFD( PIXELFORMATDESCRIPTOR *pfd, int colorBits, int alphaBits, int depthBits, int stencilBits )
+static int VID_ChoosePFD( SDL_PixelFormat *pfd, int colorBits, int alphaBits, int depthBits, int stencilBits )
 {
-	int	pixelFormat = 0;
+	/*int	pixelFormat = 0;
 
 	MsgDev( D_NOTE, "VID_ChoosePFD( color %i, alpha %i, depth %i, stencil %i )\n", colorBits, alphaBits, depthBits, stencilBits );
 
@@ -825,9 +727,12 @@ static int VID_ChoosePFD( PIXELFORMATDESCRIPTOR *pfd, int colorBits, int alphaBi
 		return 0;
 	}
 
-	return pixelFormat;
+	return pixelFormat;*/
+
+	return 0;
 }
 
+#ifdef _WIN32
 BOOL CALLBACK pfnEnumWnd( HWND hwnd, LPARAM lParam )
 {
 	string	wndname;
@@ -839,30 +744,126 @@ BOOL CALLBACK pfnEnumWnd( HWND hwnd, LPARAM lParam )
 	}
 	return true;
 }
+#else
+#ifdef XASH_X11
+Window* NetClientList(Display* display, unsigned long *len)
+{
+	Window* windowList;
+	Atom type;
+	int form, errno;
+	unsigned long remain;
+
+	errno = XGetWindowProperty(
+		display,
+		XDefaultRootWindow(display),
+		XInternAtom(display, "_NET_CLIENT_LIST", False),
+		0,
+		65536,
+		False,
+		XA_WINDOW,
+		&type,
+		&form,
+		len,
+		&remain,
+		(byte**)&windowList
+	);
+
+	if(errno != Success)
+	{
+		MsgDev(D_ERROR, "VID_EnumerateInstances: Xlib error: %s\n", strerror(errno));
+		return NULL;
+	}
+	return windowList;
+}
+
+char* WindowClassName(Display* display, Window window)
+{
+	char* className;
+	Atom type;
+	unsigned long len, remain;
+	int form, errno;
+	errno = XGetWindowProperty(
+		display,
+		window,
+		XInternAtom(display, "WM_CLASS", False),
+		0,
+		65536,
+		False,
+		XA_WINDOW,
+		&type,
+		&form,
+		&len,
+		&remain,
+		(byte**)&className
+	);
+
+	if(errno != Success)
+	{
+		MsgDev(D_ERROR, "VID_EnumerateInstances: Xlib error: %s\n", strerror(errno));
+		return NULL;
+	}
+
+	return className;
+}
+#endif
+#endif
 
 uint VID_EnumerateInstances( void )
 {
 	num_instances = 0;
 
+#ifdef _WIN32
 	if( EnumWindows( &pfnEnumWnd, 0 ))
 		return num_instances;
+#else
+#ifdef XASH_X11
+	Display* display = XOpenDisplay(NULL);
+	Window* winlist;
+	char* name;
+	unsigned long len;
+	int i;
+
+	if(!display)
+	{
+		MsgDev(D_ERROR, "Lol, no displays? Returning 1 instance.\n");
+		return 1;
+	}
+
+	if( !(winlist = NetClientList(display, &len)) ) return 1;
+
+	for(i = 0; i < len; i++)
+	{
+		if( !(name = WindowClassName(display, winlist[i])) ) continue;
+		if( !Q_strcmp( name, WINDOW_NAME ) )
+			num_instances++;
+		free(name);
+	}
+
+	XFree(winlist);
+#endif
+#endif
 	return 1;
 }
 
 void VID_StartupGamma( void )
 {
+	// Device supports gamma anyway, but cannot do anything with it.
+	glConfig.deviceSupportsGamma = 1;
+	GL_SetExtension( GL_HARDWARE_GAMMA_CONTROL, glConfig.deviceSupportsGamma );
+	/*
 	size_t	gamma_size;
 	byte	*savedGamma;
+	size_t	gammaTypeSize = sizeof(glState.stateRamp) * sizeof(Uint16);
 
 	// init gamma ramp
-	Q_memset( glState.stateRamp, 0, sizeof( glState.stateRamp ));
+	Q_memset( glState.stateRamp, 0, gammaTypeSize);
 
-	glConfig.deviceSupportsGamma = GetDeviceGammaRamp( glw_state.hDC, glState.stateRamp );
 
 	if( !glConfig.deviceSupportsGamma )
 	{
 		// force to set cvar
 		Cvar_FullSet( "gl_ignorehwgamma", "1", CVAR_GLCONFIG );
+		MsgDev( D_ERROR, "VID_StartupGamma: hardware gamma unsupported");
 	}
 
 	if( gl_ignorehwgamma->integer )
@@ -878,10 +879,10 @@ void VID_StartupGamma( void )
 
 	savedGamma = FS_LoadFile( "gamma.dat", &gamma_size, false );
 
-	if( !savedGamma || gamma_size != sizeof( glState.stateRamp ))
+	if( !savedGamma || gamma_size != gammaTypeSize)
 	{
 		// saved gamma not found or corrupted file
-		FS_WriteFile( "gamma.dat", glState.stateRamp, sizeof( glState.stateRamp ));
+		FS_WriteFile( "gamma.dat", glState.stateRamp, gammaTypeSize);
 		MsgDev( D_NOTE, "VID_StartupGamma: gamma.dat initialized\n" );
 		if( savedGamma ) Mem_Free( savedGamma );
 	}
@@ -890,20 +891,20 @@ void VID_StartupGamma( void )
 		GL_BuildGammaTable();
 
 		// validate base gamma
-		if( !Q_memcmp( savedGamma, glState.stateRamp, sizeof( glState.stateRamp )))
+		if( !Q_memcmp( savedGamma, glState.stateRamp, gammaTypeSize))
 		{
 			// all ok, previous gamma is valid
 			MsgDev( D_NOTE, "VID_StartupGamma: validate screen gamma - ok\n" );
 		}
-		else if( !Q_memcmp( glState.gammaRamp, glState.stateRamp, sizeof( glState.stateRamp )))
+		else if( !Q_memcmp( glState.gammaRamp, glState.stateRamp, gammaTypeSize))
 		{
 			// screen gamma is equal to render gamma (probably previous instance crashed)
 			// run additional check to make sure for it
-			if( Q_memcmp( savedGamma, glState.stateRamp, sizeof( glState.stateRamp )))
+			if( Q_memcmp( savedGamma, glState.stateRamp, gammaTypeSize))
 			{
 				// yes, current gamma it's totally wrong, restore it from gamma.dat
 				MsgDev( D_NOTE, "VID_StartupGamma: restore original gamma after crash\n" );
-				Q_memcpy( glState.stateRamp, savedGamma, sizeof( glState.gammaRamp ));
+				Q_memcpy( glState.stateRamp, savedGamma, gammaTypeSize);
 			}
 			else
 			{
@@ -912,15 +913,15 @@ void VID_StartupGamma( void )
 				MsgDev( D_NOTE, "VID_StartupGamma: validate screen gamma - disabled\n" ); 
 			}
 		}
-		else if( !Q_memcmp( glState.gammaRamp, savedGamma, sizeof( glState.stateRamp )))
+		else if( !Q_memcmp( glState.gammaRamp, savedGamma, gammaTypeSize))
 		{
 			// saved gamma is equal render gamma, probably gamma.dat wroted after crash
 			// run additional check to make sure it
-			if( Q_memcmp( savedGamma, glState.stateRamp, sizeof( glState.stateRamp )))
+			if( Q_memcmp( savedGamma, glState.stateRamp, gammaTypeSize))
 			{
 				// yes, saved gamma it's totally wrong, get origianl gamma from screen
 				MsgDev( D_NOTE, "VID_StartupGamma: merge gamma.dat after crash\n" );
-				FS_WriteFile( "gamma.dat", glState.stateRamp, sizeof( glState.stateRamp ));
+				FS_WriteFile( "gamma.dat", glState.stateRamp, gammaTypeSize);
 			}
 			else
 			{
@@ -933,24 +934,26 @@ void VID_StartupGamma( void )
 		{
 			// current gamma unset by other application, so we can restore it here
 			MsgDev( D_NOTE, "VID_StartupGamma: restore original gamma after crash\n" );
-			Q_memcpy( glState.stateRamp, savedGamma, sizeof( glState.gammaRamp ));			
+			Q_memcpy( glState.stateRamp, savedGamma, gammaTypeSize);
 		}
 
 		Mem_Free( savedGamma );
 	}
 
 	vid_gamma->modified = true;
+	*/
 }
 
 void VID_RestoreGamma( void )
 {
-	if( !glw_state.hDC || !glConfig.deviceSupportsGamma )
+	if( !glConfig.deviceSupportsGamma )
 		return;
 
 	// don't touch gamma if multiple instances was running
 	if( VID_EnumerateInstances( ) > 1 ) return;
 
-	SetDeviceGammaRamp( glw_state.hDC, glState.stateRamp );
+	SDL_SetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
+			&glState.stateRamp[1], &glState.stateRamp[2] );
 }
 
 /*
@@ -960,7 +963,7 @@ GL_SetPixelformat
 */
 qboolean GL_SetPixelformat( void )
 {
-	PIXELFORMATDESCRIPTOR	PFD;
+	/*PIXELFORMATDESCRIPTOR	PFD;
 	int			alphaBits;
 	int			stencilBits;
 	int			pixelFormat;
@@ -1036,7 +1039,7 @@ qboolean GL_SetPixelformat( void )
 	else glState.stencilEnabled = false;
 
 	// print out PFD specifics 
-	MsgDev( D_NOTE, "GL PFD: color( %d-bits ) alpha( %d-bits ) Z( %d-bit )\n", PFD.cColorBits, PFD.cAlphaBits, PFD.cDepthBits );
+	MsgDev( D_NOTE, "GL PFD: color( %d-bits ) alpha( %d-bits ) Z( %d-bit )\n", PFD.cColorBits, PFD.cAlphaBits, PFD.cDepthBits );*/
 
 	return true;
 }
@@ -1075,111 +1078,60 @@ qboolean R_DescribeVIDMode( int width, int height )
 
 qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
-	WNDCLASS		wc;
-	RECT		rect;
-	int		x = 0, y = 0, w, h;
-	int		stylebits = WINDOW_STYLE;
-	int		exstyle = WINDOW_EX_STYLE;
 	static string	wndname;
-	HWND		window;
-	
+	Uint32 wndFlags = SDL_WINDOW_INPUT_GRABBED |
+		SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
+	SDL_Surface *ico;
+
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
 
-	// register the frame class
-	wc.style         = CS_OWNDC|CS_NOCLOSE;
-	wc.lpfnWndProc   = (WNDPROC)IN_WndProc;
-	wc.cbClsExtra    = 0;
-	wc.cbWndExtra    = 0;
-	wc.hInstance     = host.hInst;
-	wc.hCursor       = LoadCursor( NULL, IDC_ARROW );
-	wc.hbrBackground = (void *)COLOR_3DSHADOW;
-	wc.lpszClassName = WINDOW_NAME;
-	wc.lpszMenuName  = 0;
+	if( fullscreen )
+	{
+		wndFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+	}
+
+	host.hWnd = SDL_CreateWindow(wndname, SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED, width, height, wndFlags);
+
+	// host.hWnd must be filled in IN_WndProc
+	if( !host.hWnd )
+	{
+		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s': %s\n", wndname, SDL_GetError());
+		return false;
+	}
+
+	host.window_center_x = width / 2;
+	host.window_center_y = height / 2;
 
 	// find the icon file in the filesystem
 	if( FS_FileExists( GI->iconpath, true ))
 	{
-		char	localPath[MAX_PATH];
+		char	localPath[MAX_SYSPATH];
 
 		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
-		wc.hIcon = LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
+		ico = IMG_Load(localPath);
 
-		if( !wc.hIcon )
+		if( !ico )
 		{
-			MsgDev( D_INFO, "Extract %s from pak if you want to see it.\n", GI->iconpath );
-			wc.hIcon = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ));
+			MsgDev( D_INFO, "Failed load icon: %s\n", SDL_GetError());
+			MsgDev( D_INFO, "Try to extract %s from pak if you want to see it.\n", GI->iconpath );
+			ico = NULL;
 		}
 	}
-	else wc.hIcon = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ));
+	else ico = NULL;
 
-	if( !RegisterClass( &wc ))
-	{ 
-		MsgDev( D_ERROR, "VID_CreateWindow: couldn't register window class %s\n" WINDOW_NAME );
-		return false;
-	}
+	// ico is NULL because there is no resource for standart icon. Sorry about that.
+	if(ico) SDL_SetWindowIcon(host.hWnd, ico);
 
-	if( fullscreen )
-	{
-		stylebits = WS_POPUP|WS_VISIBLE;
-		exstyle = WS_EX_TOPMOST;
-	}
-
-	rect.left = 0;
-	rect.top = 0;
-	rect.right  = width;
-	rect.bottom = height;
-
-	AdjustWindowRect( &rect, stylebits, FALSE );
-	w = rect.right - rect.left;
-	h = rect.bottom - rect.top;
-
-	if( !fullscreen )
-	{
-		x = r_xpos->integer;
-		y = r_ypos->integer;
-
-		// adjust window coordinates if necessary 
-		// so that the window is completely on screen
-		if( x < 0 ) x = 0;
-		if( y < 0 ) y = 0;
-
-		if( Cvar_VariableInteger( "vid_mode" ) != glConfig.prev_mode )
-		{
-			// adjust window in the screen size
-			if(( x + w > glw_state.desktopWidth ) || ( y + h > glw_state.desktopHeight ))
-			{
-				x = ( glw_state.desktopWidth - w ) / 2;
-				y = ( glw_state.desktopHeight - h ) / 2;
-			}
-		}
-	}
-
-	window = CreateWindowEx( exstyle, WINDOW_NAME, wndname, stylebits, x, y, w, h, NULL, NULL, host.hInst, NULL );
-
-	if( host.hWnd != window )
-	{
-		// probably never happens
-		MsgDev( D_WARN, "VID_CreateWindow: bad hWnd for '%s'\n", wndname );
-	}
-
-	// host.hWnd must be filled in IN_WndProc
-	if( !host.hWnd ) 
-	{
-		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s'\n", wndname );
-		return false;
-	}
-
-	ShowWindow( host.hWnd, SW_SHOW );
-	UpdateWindow( host.hWnd );
+	SDL_ShowWindow( host.hWnd );
 
 	// init all the gl stuff for the window
 	if( !GL_SetPixelformat( ))
 	{
-		ShowWindow( host.hWnd, SW_HIDE );
-		DestroyWindow( host.hWnd );
+		SDL_HideWindow( host.hWnd );
+		SDL_DestroyWindow( host.hWnd );
 		host.hWnd = NULL;
 
-		UnregisterClass( WINDOW_NAME, host.hInst );
 		MsgDev( D_ERROR, "OpenGL driver not installed\n" );
 
 		return false;
@@ -1191,6 +1143,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			return false;
 
 		VID_StartupGamma();
+		//glConfig.deviceSupportsGamma = 1;
 	}
 	else
 	{
@@ -1198,34 +1151,25 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			return false;		
 	}
 
-	SetForegroundWindow( host.hWnd );
-	SetFocus( host.hWnd );
-
 	return true;
 }
 
 void VID_DestroyWindow( void )
 {
-	if( pwglMakeCurrent )
-		pwglMakeCurrent( NULL, NULL );
-
-	if( glw_state.hDC )
+	if( glw_state.context )
 	{
-		ReleaseDC( host.hWnd, glw_state.hDC );
-		glw_state.hDC = NULL;
+		SDL_GL_DeleteContext( glw_state.context );
+		glw_state.context = NULL;
 	}
 
 	if( host.hWnd )
 	{
-		DestroyWindow ( host.hWnd );
+		SDL_DestroyWindow ( host.hWnd );
 		host.hWnd = NULL;
 	}
 
-	UnregisterClass( WINDOW_NAME, host.hInst );
-
 	if( glState.fullScreen )
 	{
-		ChangeDisplaySettings( 0, 0 );
 		glState.fullScreen = false;
 	}
 }
@@ -1233,20 +1177,19 @@ void VID_DestroyWindow( void )
 rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 {
 	int	width, height;
-	int	cds_result;
-	HDC	hDC;
-	
+	SDL_DisplayMode displayMode;
+
+	SDL_GetCurrentDisplayMode(0, &displayMode);
+
 	R_SaveVideoMode( vid_mode );
 
 	width = r_width->integer;
 	height = r_height->integer;
 
 	// check our desktop attributes
-	hDC = GetDC( GetDesktopWindow( ));
-	glw_state.desktopBitsPixel = GetDeviceCaps( hDC, BITSPIXEL );
-	glw_state.desktopWidth = GetDeviceCaps( hDC, HORZRES );
-	glw_state.desktopHeight = GetDeviceCaps( hDC, VERTRES );
-	ReleaseDC( GetDesktopWindow(), hDC );
+	glw_state.desktopBitsPixel = 24;
+	glw_state.desktopWidth = displayMode.w;
+	glw_state.desktopHeight = displayMode.h;
 
 	// destroy the existing window
 	if( host.hWnd ) VID_DestroyWindow();
@@ -1254,93 +1197,14 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 	// do a CDS if needed
 	if( fullscreen )
 	{
-		DEVMODE	dm;
+		glState.fullScreen = true;
 
-		Q_memset( &dm, 0, sizeof( dm ));
-		dm.dmSize = sizeof( dm );
-		dm.dmPelsWidth = width;
-		dm.dmPelsHeight = height;
-		dm.dmFields = DM_PELSWIDTH|DM_PELSHEIGHT;
-
-		if( vid_displayfrequency->integer > 0 )
-		{
-			if( vid_displayfrequency->integer < 60 ) Cvar_SetFloat( "vid_displayfrequency", 60 );
-			if( vid_displayfrequency->integer > 100 ) Cvar_SetFloat( "vid_displayfrequency", 100 );
-
-			dm.dmFields |= DM_DISPLAYFREQUENCY;
-			dm.dmDisplayFrequency = vid_displayfrequency->integer;
-		}
-
-		cds_result = ChangeDisplaySettings( &dm, CDS_FULLSCREEN );
-
-		if( cds_result == DISP_CHANGE_SUCCESSFUL )
-		{
-			glState.fullScreen = true;
-
-			if( !VID_CreateWindow( width, height, true ))
-				return rserr_invalid_mode;
-			return rserr_ok;
-		}
-		else if( cds_result == DISP_CHANGE_BADDUALVIEW )
-		{
-			dm.dmPelsWidth = width * 2;
-			dm.dmPelsHeight = height;
-			dm.dmFields = DM_PELSWIDTH|DM_PELSHEIGHT;
-
-			// our first CDS failed, so maybe we're running on some weird dual monitor system 
-			if( ChangeDisplaySettings( &dm, CDS_FULLSCREEN ) != DISP_CHANGE_SUCCESSFUL )
-			{
-				ChangeDisplaySettings( 0, 0 );
-				glState.fullScreen = false;
-				if( !VID_CreateWindow( width, height, false ))
-					return rserr_invalid_mode;
-				return rserr_invalid_fullscreen;
-			}
-			else
-			{
-				if( !VID_CreateWindow( width, height, true ))
-					return rserr_invalid_mode;
-				glState.fullScreen = true;
-				return rserr_ok;
-			}
-		}
-		else
-		{
-			int	freq_specified = 0;
-
-			if( vid_displayfrequency->integer > 0 )
-			{
-				// clear out custom frequency
-				freq_specified = vid_displayfrequency->integer;
-				Cvar_SetFloat( "vid_displayfrequency", 0.0f );
-				dm.dmFields &= ~DM_DISPLAYFREQUENCY;
-				dm.dmDisplayFrequency = 0;
-			}
-
-			// our first CDS failed, so maybe we're running with too high displayfrequency
-			if( ChangeDisplaySettings( &dm, CDS_FULLSCREEN ) != DISP_CHANGE_SUCCESSFUL )
-			{
-				ChangeDisplaySettings( 0, 0 );
-				glState.fullScreen = false;
-				if( !VID_CreateWindow( width, height, false ))
-					return rserr_invalid_mode;
-				return rserr_invalid_fullscreen;
-			}
-			else
-			{
-				if( !VID_CreateWindow( width, height, true ))
-					return rserr_invalid_mode;
-
-				if( freq_specified )
-					MsgDev( D_ERROR, "VID_SetMode: display frequency %i Hz not supported by your display\n", freq_specified );
-				glState.fullScreen = true;
-				return rserr_ok;
-			}
-		}
+		if( !VID_CreateWindow( width, height, true ) )
+			return rserr_invalid_mode;
+		return rserr_ok;
 	}
 	else
 	{
-		ChangeDisplaySettings( 0, 0 );
 		glState.fullScreen = false;
 		if( !VID_CreateWindow( width, height, false ))
 			return rserr_invalid_mode;
@@ -1432,12 +1296,12 @@ R_Init_OpenGL
 */
 qboolean R_Init_OpenGL( void )
 {
-	Sys_LoadLibrary( &opengl_dll );	// load opengl32.dll
+	//Sys_LoadLibrary( &opengl_dll );	// load opengl32.dll
 
-	if( !opengl_dll.link )
-		return false;
+	//if( !opengl_dll.link )
+	//	return false;
 
-	GL_CheckExtension( "OpenGL Internal ProcAddress", wglproc_funcs, NULL, GL_WGL_PROCADDRESS );
+	SDL_GL_LoadLibrary(NULL);
 
 	return VID_SetMode();
 }
@@ -1455,7 +1319,7 @@ void R_Free_OpenGL( void )
 
 	VID_DestroyWindow ();
 
-	Sys_FreeLibrary( &opengl_dll );
+	SDL_GL_UnloadLibrary ();
 
 	// now all extensions are disabled
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
@@ -1668,7 +1532,6 @@ void GL_InitExtensions( void )
 	MsgDev( D_INFO, "Video: %s\n", glConfig.renderer_string );
 
 	// initalize until base opengl functions loaded
-	GL_CheckExtension( "WGL_EXT_swap_control", wglswapintervalfuncs, NULL, GL_WGL_SWAPCONTROL );
 
 	GL_CheckExtension( "glDrawRangeElements", drawrangeelementsfuncs, "gl_drawrangeelments", GL_DRAW_RANGEELEMENTS_EXT );
 

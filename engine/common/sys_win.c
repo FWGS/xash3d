@@ -13,6 +13,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "port.h"
+#include <SDL2/SDL.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 #include "common.h"
 #include "mathlib.h"
 
@@ -25,18 +31,18 @@ Sys_DoubleTime
 */
 double Sys_DoubleTime( void )
 {
-	static LARGE_INTEGER	g_PerformanceFrequency;
-	static LARGE_INTEGER	g_ClockStart;
-	LARGE_INTEGER		CurrentTime;
+	static u_int64_t	g_PerformanceFrequency;
+	static u_int64_t	g_ClockStart;
+	u_int64_t		CurrentTime;
 
-	if( !g_PerformanceFrequency.QuadPart )
+	if( !g_PerformanceFrequency )
 	{
-		QueryPerformanceFrequency( &g_PerformanceFrequency );
-		QueryPerformanceCounter( &g_ClockStart );
+		g_PerformanceFrequency = SDL_GetPerformanceFrequency();
+		g_ClockStart = SDL_GetPerformanceCounter();
 	}
-	QueryPerformanceCounter( &CurrentTime );
+	CurrentTime = SDL_GetPerformanceCounter();
 
-	return (double)( CurrentTime.QuadPart - g_ClockStart.QuadPart ) / (double)( g_PerformanceFrequency.QuadPart );
+	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
 }
 
 /*
@@ -48,25 +54,7 @@ create buffer, that contain clipboard
 */
 char *Sys_GetClipboardData( void )
 {
-	char	*data = NULL;
-	char	*cliptext;
-
-	if( OpenClipboard( NULL ) != 0 )
-	{
-		HANDLE	hClipboardData;
-
-		if(( hClipboardData = GetClipboardData( CF_TEXT )) != 0 )
-		{
-			if(( cliptext = GlobalLock( hClipboardData )) != 0 ) 
-			{
-				data = Z_Malloc( GlobalSize( hClipboardData ) + 1 );
-				Q_strcpy( data, cliptext );
-				GlobalUnlock( hClipboardData );
-			}
-		}
-		CloseClipboard();
-	}
-	return data;
+	return SDL_GetClipboardText();
 }
 
 /*
@@ -78,23 +66,7 @@ write screenshot into clipboard
 */
 void Sys_SetClipboardData( const byte *buffer, size_t size )
 {
-	EmptyClipboard();
-
-	if( OpenClipboard( NULL ) != 0 )
-	{
-		HGLOBAL hResult = GlobalAlloc( GMEM_MOVEABLE, size ); 
-		byte *bufferCopy = (byte *)GlobalLock( hResult ); 
-
-		Q_memcpy( bufferCopy, buffer, size ); 
-		GlobalUnlock( hResult ); 
-
-		if( SetClipboardData( CF_DIB, hResult ) == NULL )
-		{
-			MsgDev( D_ERROR, "unable to write screenshot\n" );
-			GlobalFree( hResult );
-		}
-		CloseClipboard();
-	}
+	SDL_SetClipboardText(buffer);
 }
 
 /*
@@ -107,7 +79,7 @@ freeze application for some time
 void Sys_Sleep( int msec )
 {
 	msec = bound( 1, msec, 1000 );
-	Sleep( msec );
+	SDL_Delay( msec );
 }
 
 /*
@@ -122,8 +94,12 @@ char *Sys_GetCurrentUser( void )
 	static string	s_userName;
 	dword		size = sizeof( s_userName );
 
+#ifdef _WIN32
 	if( !GetUserName( s_userName, &size ) || !s_userName[0] )
+#else
+	if( !getlogin_r( s_userName, size || !s_userName[0] ) )
 		Q_strcpy( s_userName, "player" );
+#endif
 
 	return s_userName;
 }
@@ -135,7 +111,15 @@ Sys_ShellExecute
 */
 void Sys_ShellExecute( const char *path, const char *parms, qboolean exit )
 {
+#ifdef _WIN32
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
+#else
+	char buf[1024];
+	strcat(buf, "open ");
+	strcat(buf, path);
+	strcat(buf, parms);
+	system(buf);
+#endif
 
 	if( exit ) Sys_Quit();
 }
@@ -269,6 +253,7 @@ qboolean _Sys_GetParmFromCmdLine( char *parm, char *out, size_t size )
 
 void Sys_SendKeyEvents( void )
 {
+#ifdef _WIN32
 	MSG	msg;
 
 	while( PeekMessage( &msg, NULL, 0, 0, PM_NOREMOVE ))
@@ -279,6 +264,7 @@ void Sys_SendKeyEvents( void )
       		TranslateMessage( &msg );
       		DispatchMessage( &msg );
 	}
+#endif
 }
 
 //=======================================================================
@@ -372,6 +358,7 @@ wait for 'Esc' key will be hit
 */
 void Sys_WaitForQuit( void )
 {
+#ifdef _WIN32
 	MSG	msg;
 
 	Con_RegisterHotkeys();		
@@ -388,8 +375,10 @@ void Sys_WaitForQuit( void )
 		} 
 		else Sys_Sleep( 20 );
 	}
+#endif
 }
 
+#ifdef _WIN32
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
 	// save config
@@ -420,6 +409,7 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		return host.oldFilter( pInfo );
 	return EXCEPTION_CONTINUE_EXECUTION;
 }
+#endif
 
 /*
 ================
@@ -450,7 +440,7 @@ void Sys_Error( const char *error, ... )
 
 	if( host.type == HOST_NORMAL )
 	{
-		if( host.hWnd ) ShowWindow( host.hWnd, SW_HIDE );
+		if( host.hWnd ) SDL_HideWindow( host.hWnd );
 		VID_RestoreGamma();
 	}
 
@@ -493,7 +483,7 @@ void Sys_Break( const char *error, ... )
 
 	if( host.type == HOST_NORMAL )
 	{
-		if( host.hWnd ) ShowWindow( host.hWnd, SW_HIDE );
+		if( host.hWnd ) SDL_HideWindow( host.hWnd );
 		VID_RestoreGamma();
 	}
 

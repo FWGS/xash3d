@@ -128,6 +128,8 @@ public:
 	virtual void createPopup( Panel* embeddedPanel ) { }
 	virtual bool isWithin( int x, int y ) { return true; }
 	virtual bool hasFocus( void );
+	// now it's not abstract class, yay
+	virtual void GetMousePos(int &x, int &y) { SDL_GetMouseState(&x, &y); }
 protected:
 	virtual int createNewTextureID( void );
 	virtual void drawSetColor( int r, int g, int b, int a );

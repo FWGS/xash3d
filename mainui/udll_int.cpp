@@ -44,7 +44,7 @@ static UI_FUNCTIONS gFunctionTable =
 //=======================================================================
 //			GetApi
 //=======================================================================
-int GetMenuAPI( UI_FUNCTIONS *pFunctionTable, ui_enginefuncs_t* pEngfuncsFromEngine, ui_globalvars_t *pGlobals )
+extern "C" int GetMenuAPI( UI_FUNCTIONS *pFunctionTable, ui_enginefuncs_t* pEngfuncsFromEngine, ui_globalvars_t *pGlobals )
 {
 	if( !pFunctionTable || !pEngfuncsFromEngine )
 	{

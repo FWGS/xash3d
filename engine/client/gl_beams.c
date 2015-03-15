@@ -90,17 +90,17 @@ static cl_entity_t *CL_GetBeamEntityByIndex( int index )
 
 void BeamNormalizeColor( BEAM *pBeam, float r, float g, float b, float brightness ) 
 {
-	float	max, scale;
+	float	_max, scale;
 
-	max = max( max( r, g ), b );
+	_max = max( max( r, g ), b );
 
-	if( max == 0 )
+	if( _max == 0 )
 	{
 		pBeam->r = pBeam->g = pBeam->b = 255.0f;
 		pBeam->brightness = brightness;
 	}
 
-	scale = 255.0f / max;
+	scale = 255.0f / _max;
 
 	pBeam->r = r * scale;
 	pBeam->g = g * scale;

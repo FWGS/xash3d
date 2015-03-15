@@ -13,6 +13,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include "port.h"
+
+#include <SDL2/SDL.h>
+#include <stdarg.h>  // va_args
+
 #include "common.h"
 #include "netchan.h"
 #include "protocol.h"
@@ -21,6 +26,7 @@ GNU General Public License for more details.
 #include "input.h"
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
+#include "sdl/events.h"
 
 typedef void (*pfnChangeGame)( const char *progname );
 
@@ -286,7 +292,7 @@ void Host_MemStats_f( void )
 
 void Host_Minimize_f( void )
 {
-	if( host.hWnd ) ShowWindow( host.hWnd, SW_MINIMIZE );
+	if( host.hWnd ) SDL_MinimizeWindow( host.hWnd );
 }
 
 qboolean Host_IsLocalGame( void )
@@ -590,7 +596,7 @@ void Host_Error( const char *error, ... )
 	if( host.mouse_visible && !CL_IsInMenu( ))
 	{
 		// hide VGUI mouse
-		while( ShowCursor( false ) >= 0 );
+		SDL_ShowCursor( false );
 		host.mouse_visible = false;
 	}
 
@@ -688,24 +694,30 @@ static void Host_Crash_f( void )
 Host_InitCommon
 =================
 */
-void Host_InitCommon( const char *progname, qboolean bChangeGame )
+void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *progname, qboolean bChangeGame )
 {
-	MEMORYSTATUS	lpBuffer;
 	char		dev_level[4];
 	char		szTemp[MAX_SYSPATH];
 	string		szRootPath;
+#ifdef _WIN32
+	MEMORYSTATUS	lpBuffer;
 
 	lpBuffer.dwLength = sizeof( MEMORYSTATUS );
 	GlobalMemoryStatus( &lpBuffer );
+#endif
 
-	if( !GetCurrentDirectory( sizeof( host.rootdir ), host.rootdir ))
+	if( !(SDL_GetBasePath()) )
 		Sys_Error( "couldn't determine current directory" );
+
+	Q_strncpy(host.rootdir, SDL_GetBasePath(), sizeof(host.rootdir));
 
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
+#ifdef _WIN32
 	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 	host.hInst = GetModuleHandle( NULL );
+#endif
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialzation started
 	host.developer = host.old_developer = 0;
@@ -715,8 +727,10 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	// some commands may turn engine into infinity loop,
 	// e.g. xash.exe +game xash -game xash
 	// so we clearing all cmd_args, but leave dbg states as well
-	Sys_ParseCommandLine( GetCommandLine( ));
+	if( cmdLine ) Sys_ParseCommandLine( cmdLine );
+#ifdef _WIN32
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
+#endif
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
 
@@ -736,14 +750,23 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	host.con_showalways = true;
 
 	// we can specified custom name, from Sys_NewInstance
-	if( GetModuleFileName( NULL, szTemp, sizeof( szTemp )) && !host.change_game )
+	if( SDL_GetBasePath() && !host.change_game )
+	{
+		Q_strncpy( szTemp, SDL_GetBasePath(), sizeof(szTemp) );
 		FS_FileBase( szTemp, SI.ModuleName );
+	}
 
-	FS_ExtractFilePath( szTemp, szRootPath );
+	if(moduleName) Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
+
+	FS_ExtractFilePath( SI.ModuleName, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
 	{
 		Q_strncpy( host.rootdir, szRootPath, sizeof( host.rootdir ));
+#ifdef _WIN32
 		SetCurrentDirectory( host.rootdir );
+#else
+		chdir( host.rootdir );
+#endif
 	}
 
 	if( SI.ModuleName[0] == '#' ) host.type = HOST_DEDICATED; 
@@ -759,7 +782,7 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 	if( host.type == HOST_DEDICATED )
 	{
 		// check for duplicate dedicated server
-		host.hMutex = CreateMutex( NULL, 0, "Xash Dedicated Server" );
+		host.hMutex = SDL_CreateMutex(  );
 
 		if( !host.hMutex )
 		{
@@ -768,10 +791,10 @@ void Host_InitCommon( const char *progname, qboolean bChangeGame )
 			return;
 		}
 
-		Sys_MergeCommandLine( GetCommandLine( ));
+		Sys_MergeCommandLine( cmdLine );
 
-		CloseHandle( host.hMutex );
-		host.hMutex = CreateSemaphore( NULL, 0, 1, "Xash Dedicated Server" );
+		SDL_DestroyMutex( host.hMutex );
+		host.hMutex = SDL_CreateSemaphore( 0 );
 		if( host.developer < 3 ) host.developer = 3; // otherwise we see empty console
 	}
 	else
@@ -839,7 +862,33 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 
 	pChangeGame = func;	// may be NULL
 
-	Host_InitCommon( progname, bChangeGame );
+#ifndef _WIN32
+	// Start of IO functions
+	FILE *fd = fopen("/proc/self/cmdline", "r");
+	char moduleName[64], cmdLine[512] = "", *arg;
+	size_t size = 0;
+	int i = 0;
+
+	for(i = 0; getdelim(&arg, &size, 0, fd) != -1; i++)
+	{
+		if(!i)
+		{
+			strcpy(moduleName, strrchr(arg, '/'));
+			//strrchr adds a / at begin of string =(
+			memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
+		}
+		else
+		{
+			strcat(cmdLine, arg);
+			strcat(cmdLine, " ");
+		}
+	}
+	free(arg);
+	fclose(fd);
+#else
+	// TODO
+#endif
+	Host_InitCommon( moduleName, cmdLine, progname, bChangeGame );
 
 	// init commands and vars
 	if( host.developer >= 3 )
@@ -848,7 +897,7 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 		Cmd_AddCommand ( "host_error", Host_Error_f, "just throw a host error to test shutdown procedures");
 		Cmd_AddCommand ( "crash", Host_Crash_f, "a way to force a bus error for development reasons");
 		Cmd_AddCommand ( "net_error", Net_Error_f, "send network bad message from random place");
-          }
+	}
 
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow cheat variables to enable" );
 	host_maxfps = Cvar_Get( "fps_max", "72", CVAR_ARCHIVE, "host fps upper limit" );
@@ -939,9 +988,14 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 	oldtime = Sys_DoubleTime();
 	SCR_CheckStartupVids();	// must be last
 
+	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
+	SDL_Event event;
+
 	// main window message loop
 	while( !host.crashed )
 	{
+		while( SDL_PollEvent( &event ) )
+			SDLash_EventFilter( &event );
 		newtime = Sys_DoubleTime ();
 		Host_Frame( newtime - oldtime );
 		oldtime = newtime;
@@ -975,6 +1029,7 @@ void EXPORT Host_Shutdown( void )
 	Host_FreeCommon();
 	Con_DestroyConsole();
 
+#ifdef _WIN32
 	// restore filter	
 	if( host.oldFilter ) SetUnhandledExceptionFilter( host.oldFilter );
 }
@@ -984,4 +1039,5 @@ BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
 {
 	hCurrent = hinstDLL;
 	return TRUE;
+#endif
 }

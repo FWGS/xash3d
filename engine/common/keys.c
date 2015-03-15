@@ -22,7 +22,7 @@ typedef struct key_s
 	qboolean		down;
 	int		repeats;	// if > 1, it is autorepeating
 	const char	*binding;
-} key_t;
+} engine_key_t;
 
 typedef struct keyname_s
 {
@@ -31,7 +31,7 @@ typedef struct keyname_s
 	const char	*binding;	// default bind
 } keyname_t;
 
-key_t	keys[256];
+engine_key_t	keys[256];
 
 keyname_t keynames[] =
 {
@@ -537,11 +537,15 @@ void Key_Event( int key, qboolean down )
 	if( key == '`' || key == '~' )
 	{
 		// we are in typing mode. So don't switch to console
+#ifdef _WIN32
 		if( (word)GetKeyboardLayout( 0 ) == (word)0x419 )
 		{
+#endif
 			if( cls.key_dest != key_game )
 				return;
-                    }
+#ifdef _WIN32
+		}
+#endif
 
 		if( !down ) return;
     		Con_ToggleConsole_f();

@@ -179,7 +179,7 @@ const char *R_StudioTexName( model_t *mod )
 
 	Q_strncpy( texname, mod->name, sizeof( texname ));
 	FS_StripExtension( texname );
-	Q_strncat( texname, "T.mdl", sizeof( texname ));
+	Q_strncat( texname, "t.mdl", sizeof( texname ));
 
 	return texname;
 }
@@ -1668,7 +1668,7 @@ R_StudioLighting
 */
 void R_StudioLighting( float *lv, int bone, int flags, vec3_t normal )
 {
-	float		max, ambient;
+	float		_max, ambient;
 	vec3_t		illum;
 	studiolight_t	*plight;
 
@@ -1720,10 +1720,10 @@ void R_StudioLighting( float *lv, int bone, int flags, vec3_t normal )
 		}
 	}
 	
-	max = VectorMax( illum );
+	_max = VectorMax( illum );
 
-	if( max > 1.0f )
-		VectorScale( illum, ( 1.0f / max ), lv );
+	if( _max > 1.0f )
+		VectorScale( illum, ( 1.0f / _max ), lv );
 	else VectorCopy( illum, lv ); 
 
 }

@@ -13,8 +13,22 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifdef _WIN32
+// Winsock
 #include <winsock.h>
 #include <wsipx.h>
+#else
+// BSD sockets
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+// Errors handling
+#include <errno.h>
+#endif
+#include "port.h"
 #include "common.h"
 #include "netchan.h"
 
@@ -22,6 +36,7 @@ GNU General Public License for more details.
 #define MAX_LOOPBACK	4
 #define MASK_LOOPBACK	(MAX_LOOPBACK - 1)
 
+#ifdef _WIN32
 // wsock32.dll exports
 static int (_stdcall *pWSACleanup)( void );
 static word (_stdcall *pNtohs)( word netshort );
@@ -75,6 +90,41 @@ static dllfunc_t winsock_funcs[] =
 
 dll_info_t winsock_dll = { "wsock32.dll", winsock_funcs, false };
 
+qboolean NET_OpenWinSock( void )
+{
+	// initialize the Winsock function vectors (we do this instead of statically linking
+	// so we can run on Win 3.1, where there isn't necessarily Winsock)
+	if( Sys_LoadLibrary( &winsock_dll ))
+		return true;
+	return false;
+}
+
+void NET_FreeWinSock( void )
+{
+	Sys_FreeLibrary( &winsock_dll );
+}
+#else
+#define pHtons htons
+#define pInet_Addr inet_addr
+#define pRecvFrom recvfrom
+#define pSendTo sendto
+#define pSocket socket
+#define pIoctlSocket ioctl
+#define pCloseSocket close
+#define pSetSockopt setsockopt
+#define pBind bind
+#define pGetHostName gethostname
+#define pGetSockName getsockname
+#define pGetHs
+#define pRecv recv
+#define pSend send
+#define pInet_Ntoa inet_ntoa
+#define pNtohs ntohs
+#define pGetHostByName gethostbyname
+#define pSelect select
+#define SOCKET int
+#endif
+
 typedef struct
 {
 	byte	data[NET_MAX_PAYLOAD];
@@ -91,7 +141,9 @@ static loopback_t	loopbacks[2];
 static int	ip_sockets[2];
 static int	ipx_sockets[2];
 
+#ifdef _WIN32
 static WSADATA winsockdata;
+#endif
 static qboolean winsockInitialized = false;
 static const char *net_src[2] = { "client", "server" };
 static qboolean noip = false;
@@ -102,20 +154,7 @@ static convar_t *net_clientport;
 static convar_t *net_showpackets;
 void NET_Restart_f( void );
 
-qboolean NET_OpenWinSock( void )
-{
-	// initialize the Winsock function vectors (we do this instead of statically linking
-	// so we can run on Win 3.1, where there isn't necessarily Winsock)
-	if( Sys_LoadLibrary( &winsock_dll ))
-		return true;
-	return false;
-}
-
-void NET_FreeWinSock( void )
-{
-	Sys_FreeLibrary( &winsock_dll );
-}
-
+#ifdef _WIN32
 /*
 ====================
 NET_ErrorString
@@ -172,6 +211,9 @@ char *NET_ErrorString( void )
 	default: return "NO ERROR";
 	}
 }
+#else
+#define NET_ErrorString(x) strerror(errno)
+#endif
 
 static void NET_NetadrToSockadr( netadr_t *a, struct sockaddr *s )
 {
@@ -189,6 +231,7 @@ static void NET_NetadrToSockadr( netadr_t *a, struct sockaddr *s )
 		((struct sockaddr_in *)s)->sin_addr.s_addr = *(int *)&a->ip;
 		((struct sockaddr_in *)s)->sin_port = a->port;
 	}
+#ifdef XASH_IPX
 	else if( a->type == NA_IPX )
 	{
 		((struct sockaddr_ipx *)s)->sa_family = AF_IPX;
@@ -203,6 +246,7 @@ static void NET_NetadrToSockadr( netadr_t *a, struct sockaddr *s )
 		Q_memset(((struct sockaddr_ipx *)s)->sa_nodenum, 0xff, 6 );
 		((struct sockaddr_ipx *)s)->sa_socket = a->port;
 	}
+#endif
 }
 
 
@@ -214,6 +258,7 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 		*(int *)&a->ip = ((struct sockaddr_in *)s)->sin_addr.s_addr;
 		a->port = ((struct sockaddr_in *)s)->sin_port;
 	}
+#ifdef XASH_IPX
 	else if( s->sa_family == AF_IPX )
 	{
 		a->type = NA_IPX;
@@ -221,6 +266,7 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 		Q_memcpy( &a->ipx[4], ((struct sockaddr_ipx *)s)->sa_nodenum, 6 );
 		a->port = ((struct sockaddr_ipx *)s)->sa_socket;
 	}
+#endif
 }
 
 /*
@@ -249,6 +295,7 @@ static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
 	
 	Q_memset( sadr, 0, sizeof( *sadr ));
 
+#ifdef XASH_IPX
 	if((Q_strlen( s ) >= 23 ) && ( s[8] == ':' ) && ( s[21] == ':' )) // check for an IPX address
 	{
 		((struct sockaddr_ipx *)sadr)->sa_family = AF_IPX;
@@ -267,6 +314,7 @@ static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
 		((struct sockaddr_ipx *)sadr)->sa_socket = pHtons((word)val);
 	}
 	else
+#endif
 	{
 		((struct sockaddr_in *)sadr)->sin_family = AF_INET;
 		((struct sockaddr_in *)sadr)->sin_port = 0;
@@ -304,7 +352,11 @@ char *NET_AdrToString( const netadr_t a )
 		return "loopback";
 	else if( a.type == NA_IP )
 		return va( "%i.%i.%i.%i:%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3], pNtohs( a.port ));
+#ifdef XASH_IPX
 	return va( "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x:%i", a.ipx[0], a.ipx[1], a.ipx[2], a.ipx[3], a.ipx[4], a.ipx[5], a.ipx[6], a.ipx[7], a.ipx[8], a.ipx[9], pNtohs( a.port ));
+#else
+	return NULL; // compiler warning
+#endif
 }
 
 char *NET_BaseAdrToString( const netadr_t a )
@@ -313,7 +365,11 @@ char *NET_BaseAdrToString( const netadr_t a )
 		return "loopback";
 	else if( a.type == NA_IP )
 		return va( "%i.%i.%i.%i", a.ip[0], a.ip[1], a.ip[2], a.ip[3] );
+#ifdef XASH_IPX
 	return va( "%02x%02x%02x%02x:%02x%02x%02x%02x%02x%02x", a.ipx[0], a.ipx[1], a.ipx[2], a.ipx[3], a.ipx[4], a.ipx[5], a.ipx[6], a.ipx[7], a.ipx[8], a.ipx[9] );
+#else
+	return NULL;
+#endif
 }
 
 /*
@@ -337,13 +393,14 @@ qboolean NET_CompareBaseAdr( const netadr_t a, const netadr_t b )
 			return true;
 		return false;
 	}
-
+#ifdef XASH_IPX
 	if( a.type == NA_IPX )
 	{
 		if( !Q_memcmp( a.ipx, b.ipx, 10 ))
 			return true;
 		return false;
 	}
+#endif
 
 	MsgDev( D_ERROR, "NET_CompareBaseAdr: bad address type\n" );
 	return false;
@@ -364,12 +421,14 @@ qboolean NET_CompareAdr( const netadr_t a, const netadr_t b )
 		return false;
 	}
 
+#ifdef XASH_IPX
 	if( a.type == NA_IPX )
 	{
 		if(!Q_memcmp( a.ipx, b.ipx, 10 ) && a.port == b.port )
 			return true;
 		return false;
 	}
+#endif
 
 	MsgDev( D_ERROR, "NET_CompareAdr: bad address type\n" );
 	return false;
@@ -469,7 +528,7 @@ Never called by the game logic, just the system event queing
 */
 qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *length )
 {
-	uint 		ret;
+	int 		ret;
 	struct sockaddr	addr;
 	int		err, addr_len;
 	int		net_socket;
@@ -484,7 +543,9 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 	for( protocol = 0; protocol < 2; protocol++ )
 	{
 		if( !protocol) net_socket = ip_sockets[sock];
+#ifdef XASH_IPX
 		else net_socket = ipx_sockets[sock];
+#endif
 
 		if( !net_socket ) continue;
 
@@ -493,12 +554,20 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 
 		NET_SockadrToNetadr( &addr, from );
 
+#ifdef _WIN32
 		if( ret == SOCKET_ERROR )
 		{
 			err = pWSAGetLastError();
 
 			// WSAEWOULDBLOCK and WSAECONNRESET are silent
 			if( err == WSAEWOULDBLOCK || err == WSAECONNRESET )
+#else
+		if( ret < 0 )
+		{
+
+			// WSAEWOULDBLOCK and WSAECONNRESET are silent
+			if( errno == EWOULDBLOCK || errno == ECONNRESET )
+#endif
 				return false;
 
 			MsgDev( D_ERROR, "NET_GetPacket: %s from %s\n", NET_ErrorString(), NET_AdrToString( *from ));
@@ -548,6 +617,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 		net_socket = ip_sockets[sock];
 		if( !net_socket ) return;
 	}
+#ifdef XASH_IPX
 	else if( to.type == NA_IPX )
 	{
 		net_socket = ipx_sockets[sock];
@@ -558,12 +628,14 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 		net_socket = ipx_sockets[sock];
 		if( !net_socket ) return;
 	}
+#endif
 	else Host_Error( "NET_SendPacket: bad address type %i\n", to.type );
 
 	NET_NetadrToSockadr( &to, &addr );
 
 	ret = pSendTo( net_socket, data, length, 0, &addr, sizeof( addr ));
 
+#ifdef _WIN32
 	if( ret == SOCKET_ERROR )
 	{
 		err = pWSAGetLastError();
@@ -575,9 +647,20 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 		// some PPP links don't allow broadcasts
 		if(( err == WSAEADDRNOTAVAIL ) && (( to.type == NA_BROADCAST ) || ( to.type == NA_BROADCAST_IPX )))
 			return;
+#else
+	if( ret < 0 )
+	{
+		// WSAEWOULDBLOCK is silent
+		if( errno == EWOULDBLOCK )
+			return;
+
+		// some PPP links don't allow broadcasts
+		if(( errno == EADDRNOTAVAIL ) && (( to.type == NA_BROADCAST ) || ( to.type == NA_BROADCAST_IPX )))
+			return;
 
 		MsgDev( D_ERROR, "NET_SendPacket: %s to %s\n", NET_ErrorString(), NET_AdrToString( to ));
 	}
+#endif
 }
 
 /*
@@ -593,6 +676,7 @@ static int NET_IPSocket( const char *netInterface, int port )
 
 	MsgDev( D_NOTE, "NET_UDPSocket( %s, %i )\n", netInterface, port );
 	
+#ifdef _WIN32
 	if(( net_socket = pSocket( PF_INET, SOCK_DGRAM, IPPROTO_UDP )) == SOCKET_ERROR )
 	{
 		err = pWSAGetLastError();
@@ -615,6 +699,29 @@ static int NET_IPSocket( const char *netInterface, int port )
 		pCloseSocket( net_socket );
 		return 0;
 	}
+#else
+	if(( net_socket = pSocket( PF_INET, SOCK_DGRAM, IPPROTO_UDP )) < 0 )
+	{
+		if( errno != EAFNOSUPPORT )
+			MsgDev( D_WARN, "NET_UDPSocket: socket = %s\n", NET_ErrorString( ));
+		return 0;
+	}
+
+	if( pIoctlSocket( net_socket, FIONBIO, &_true ) < 0 )
+	{
+		MsgDev( D_WARN, "NET_UDPSocket: ioctlsocket FIONBIO = %s\n", NET_ErrorString( ));
+		pCloseSocket( net_socket );
+		return 0;
+	}
+
+	// make it broadcast capable
+	if( pSetSockopt( net_socket, SOL_SOCKET, SO_BROADCAST, (char *)&_true, sizeof( _true )) < 0 )
+	{
+		MsgDev( D_WARN, "NET_UDPSocket: setsockopt SO_BROADCAST = %s\n", NET_ErrorString( ));
+		pCloseSocket( net_socket );
+		return 0;
+	}
+#endif
 
 	if( !netInterface[0] || !Q_stricmp( netInterface, "localhost" ))
 		addr.sin_addr.s_addr = INADDR_ANY;
@@ -625,7 +732,11 @@ static int NET_IPSocket( const char *netInterface, int port )
 
 	addr.sin_family = AF_INET;
 
+#ifdef _WIN32
 	if( pBind( net_socket, (void *)&addr, sizeof( addr )) == SOCKET_ERROR )
+#else
+	if( pBind( net_socket, (void *)&addr, sizeof( addr )) < 0 )
+#endif
 	{
 		MsgDev( D_WARN, "NET_UDPSocket: bind = %s\n", NET_ErrorString( ));
 		pCloseSocket( net_socket );
@@ -671,6 +782,7 @@ static void NET_OpenIP( void )
 	}
 }
 
+#ifdef XASH_IPX
 /*
 ====================
 NET_IPXSocket
@@ -760,6 +872,8 @@ void NET_OpenIPX( void )
 	}
 }
 
+#endif
+
 /*
 ================
 NET_GetLocalAddress
@@ -839,19 +953,22 @@ void NET_Config( qboolean multiplayer )
 				pCloseSocket( ip_sockets[i] );
 				ip_sockets[i] = 0;
 			}
-
+#ifdef XASH_IPX
 			if( ipx_sockets[i] )
 			{
 				pCloseSocket( ipx_sockets[i] );
 				ipx_sockets[i] = 0;
 			}
+#endif
 		}
 	}
 	else
 	{	
 		// open sockets
 		if( !noip ) NET_OpenIP();
+#ifdef XASH_IPX
 		if( !noipx ) NET_OpenIPX();
+#endif
 
 		// Get our local address, if possible
 		if( bFirst )
@@ -881,14 +998,14 @@ void NET_Sleep( int msec )
 		FD_SET( ip_sockets[NS_SERVER], &fdset ); // network socket
 		i = ip_sockets[NS_SERVER];
 	}
-
+#ifdef XASH_IPX
 	if( ipx_sockets[NS_SERVER] )
 	{
 		FD_SET( ipx_sockets[NS_SERVER], &fdset ); // network socket
 		if( ipx_sockets[NS_SERVER] > i )
 			i = ipx_sockets[NS_SERVER];
 	}
-
+#endif
 	timeout.tv_sec = msec / 1000;
 	timeout.tv_usec = (msec % 1000) * 1000;
 	pSelect( i+1, &fdset, NULL, NULL, &timeout );
@@ -932,6 +1049,7 @@ void NET_Init( void )
 {
 	int	r;
 
+#ifdef _WIN32
 	if( !NET_OpenWinSock())	// loading wsock32.dll
 	{
 		MsgDev( D_WARN, "NET_Init: wsock32.dll can't loaded\n" );
@@ -944,13 +1062,16 @@ void NET_Init( void )
 		MsgDev( D_WARN, "NET_Init: winsock initialization failed: %d\n", r );
 		return;
 	}
+#endif
 
 	net_showpackets = Cvar_Get( "net_showpackets", "0", 0, "show network packets" );
 	Cmd_AddCommand( "net_showip", NET_ShowIP_f,  "show hostname and ip's" );
 	Cmd_AddCommand( "net_restart", NET_Restart_f, "restart the network subsystem" );
 
 	if( Sys_CheckParm( "-noip" )) noip = true;
+#ifdef XASH_IPX
 	if( Sys_CheckParm( "-noipx" )) noipx = true;
+#endif
 
 	winsockInitialized = true;
 	MsgDev( D_NOTE, "NET_Init()\n" );
@@ -971,8 +1092,10 @@ void NET_Shutdown( void )
 	Cmd_RemoveCommand( "net_restart" );
 
 	NET_Config( false );
+#ifdef _WIN32
 	pWSACleanup();
 	NET_FreeWinSock();
+#endif
 	winsockInitialized = false;
 }
 

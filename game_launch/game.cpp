@@ -17,12 +17,13 @@ GNU General Public License for more details.
 
 #ifdef __unix__
  #include <dlfcn.h>
+ #include <errno.h>
  #ifdef __APPLE__
   #define XASHLIB                "xash.dylib"
  #else
   #define XASHLIB                "libxash.so"
  #endif
- #define LoadLibrary(x)          dlopen(x, RTLD_NOW)
+ #define LoadLibrary(x)          dlopen(x, RTLD_LAZY)
  #define FreeLibrary(x)          dlclose(x)
  #define GetProcAddress(x, y)    dlsym(x, y)
  #define HINSTANCE               void*
@@ -51,11 +52,13 @@ void Sys_LoadEngine( void )
 {
 	if(( hEngine = LoadLibrary( XASHLIB )) == NULL )
 	{
+		printf("%s\n", dlerror());
 		Sys_Error( "Unable to load the " XASHLIB );
 	}
 
 	if(( Host_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
 	{
+		printf("%s\n", dlerror());
 		Sys_Error( XASHLIB " missed 'Host_Main' export" );
 	}
 
