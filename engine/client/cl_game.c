@@ -3798,8 +3798,13 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetLevelName,
 	pfnGetScreenFade,
 	pfnSetScreenFade,
+	#ifdef XASH_VGUI
 	VGui_GetPanel,
 	VGui_ViewportPaintBackground,
+	#else
+	NULL,
+	NULL,
+	#endif
 	COM_LoadFile,
 	COM_ParseFile,
 	COM_FreeFile,
@@ -3867,7 +3872,9 @@ void CL_UnloadProgs( void )
 	CL_FreeParticles();
 	CL_ClearAllRemaps();
 	Mod_ClearUserData();
+#ifdef XASH_VGUI
 	VGui_Shutdown();
+#endif
 
 	// NOTE: HLFX 0.5 has strange bug: hanging on exit if no map was loaded
 	if( !( !Q_stricmp( GI->gamedir, "hlfx" ) && GI->version == 0.5f ))
@@ -3907,7 +3914,9 @@ qboolean CL_LoadProgs( const char *name )
 	// NOTE: important stuff!
 	// vgui must startup BEFORE loading client.dll to avoid get error ERROR_NOACESS
 	// during LoadLibrary
+#ifdef XASH_VGUI
 	VGui_Startup ();
+#endif
 	
 	clgame.hInstance = Com_LoadLibrary( name, false );
 	if( !clgame.hInstance ) return false;

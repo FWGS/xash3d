@@ -63,17 +63,17 @@ if(XASH_IPX)
     add_definitions(-DXASH_IPX)
 endif()
 
-if(XASH_NOVGUI)
-    add_definitions(-DXASH_NOVGUI)
-endif()
-
 if(XASH_NONSTANDART_LOAD)
     add_definitions(-DXASH_NONSTANDART_LOAD)
 endif()
 
+if(XASH_VGUI)
+    add_definitions(-DXASH_VGUI)
+    target_link_libraries(${XASH_ENGINE_LIBRARY} -l:${HL_SDK_DIR}/linux/vgui.so)
+endif()
+
 target_link_libraries(${XASH_ENGINE_LIBRARY}
-    ${CMAKE_DL_LIBS} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES}
-    -l:${HL_SDK_DIR}/linux/vgui.so)
+    ${CMAKE_DL_LIBS} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
 
 set_target_properties (${XASH_ENGINE_SHARED} PROPERTIES
     VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}

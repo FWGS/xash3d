@@ -386,7 +386,9 @@ void V_PostRender( void )
 	{
 		SCR_TileClear();
 		CL_DrawHUD( CL_ACTIVE );
+#ifdef XASH_VGUI
 		VGui_Paint();
+#endif
 	}
 
 	switch( cls.scrshot_action )
