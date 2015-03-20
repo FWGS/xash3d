@@ -27,5 +27,5 @@ set (XASH3D_VERSION 0.96.2867)
 set (HL_SDK_DIR /opt/halflife CACHE PATH "Half Life 1 SDK directory")
 
 add_subdirectory (mainui)
-# add_subdirectory (engine)
+add_subdirectory (engine)
 add_subdirectory (game_launch)
