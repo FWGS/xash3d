@@ -517,7 +517,7 @@ void Key_Event( int key, qboolean down )
 
 	if( down )
 	{
-		keys[key].repeats++;
+		//keys[key].repeats++;
 
 		if( key != K_BACKSPACE && key != K_PAUSE && keys[key].repeats > 1 )
 		{
@@ -680,15 +680,19 @@ void Key_SetKeyDest( int key_dest )
 	switch( key_dest )
 	{
 	case key_game:
+		SDL_StopTextInput();
 		cls.key_dest = key_game;
 		break;
 	case key_menu:
+		SDL_StopTextInput();
 		cls.key_dest = key_menu;
 		break;
 	case key_console:
+		SDL_StartTextInput();
 		cls.key_dest = key_console;
 		break;
 	case key_message:
+		SDL_StartTextInput();
 		cls.key_dest = key_message;
 		break;
 	default:

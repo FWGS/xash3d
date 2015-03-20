@@ -1,6 +1,7 @@
 #include "events.h"
 #include "keydefs.h"
 #include "input.h"
+#include "client.h"
 
 int SDLash_EventFilter( SDL_Event* event)
 {
@@ -25,6 +26,14 @@ int SDLash_EventFilter( SDL_Event* event)
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEBUTTONDOWN:
 			SDLash_MouseEvent(event->button);
+			break;
+
+		case SDL_TEXTEDITING:
+			MsgDev(D_INFO, "Caught a text edit: %s %n %n\n", event->edit.text, event->edit.start, event->edit.length);
+			break;
+
+		case SDL_TEXTINPUT:
+			SDLash_InputEvent(event->text);
 			break;
 
 		case SDL_WINDOWEVENT:
@@ -115,7 +124,6 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	}
 	//printf("Pressed key. Code: %i\n", keynum);
 	Key_Event(keynum, down);
-	CL_CharEvent(keynum);
 }
 
 void SDLash_MouseEvent(SDL_MouseButtonEvent button)
@@ -129,4 +137,11 @@ void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 	int updown = wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
 	Key_Event(updown, true);
 	Key_Event(updown, false);
+}
+
+void SDLash_InputEvent(SDL_TextInputEvent input)
+{
+	int i = 0;
+	for(i = 0; input.text[i]; ++i)
+		Con_CharEvent((int)input.text[i]);
 }
