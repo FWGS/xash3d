@@ -17,11 +17,17 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "sound.h"
-#include <SDL2/SDL_mixer.h>
+#include <SDL.h>
 
 #define SAMPLE_16BIT_SHIFT		1
 #define SECONDARY_BUFFER_SIZE		0x10000
 
+/*
+=======================================================================
+Global variables. Must be visible to window-procedure function
+so it can unlock and free the data block after it has been played.
+=======================================================================
+*/
 convar_t		*s_primary;
 convar_t		*s_khz;
 dma_t			dma;
@@ -29,15 +35,6 @@ int				shutdown_temp = 0;
 
 static qboolean	snd_firsttime = true;
 static qboolean	primary_format_set;
-
-/* 
-=======================================================================
-Global variables. Must be visible to window-procedure function 
-so it can unlock and free the data block after it has been played.
-=======================================================================
-*/ 
-qboolean SNDDMA_InitDirect( void *hInst );
-void SNDDMA_FreeSound( void );
 
 void SDL_SoundCallback( void* userdata, Uint8* stream, int len)
 {
@@ -54,16 +51,6 @@ void SDL_SoundCallback( void* userdata, Uint8* stream, int len)
 		memcpy(stream + remaining, dma.buffer, wrapped);
 		dma.samplepos = wrapped >> 1;
 	}
-}
-
-/*
-==================
-SNDDMA_FreeSound
-==================
-*/
-void SNDDMA_FreeSound( void )
-{
-	SDL_CloseAudio();
 }
 
 /*
@@ -87,7 +74,7 @@ qboolean SNDDMA_Init( void *hInst )
 	}
 
 	memset(&desired, 0, sizeof(desired));
-	/*switch (s_khz->integer) {
+	switch (s_khz->integer) {
 	case 48:
 		desired.freq = 48000;
 		break;
@@ -100,8 +87,7 @@ qboolean SNDDMA_Init( void *hInst )
 	default:
 		desired.freq = 11025;
 		break;
-	}*/
-	desired.freq = 44100;
+	}
 
 	desired.format = AUDIO_S16LSB;
 	desired.samples = 512;
@@ -246,7 +232,7 @@ S_PrintDeviceName
 */
 void S_PrintDeviceName( void )
 {
-	Msg( "Audio: SDL(driver: %s)\n", SDL_GetCurrentAudioDriver() );
+	Msg( "Audio: SDL (driver: %s)\n", SDL_GetCurrentAudioDriver() );
 }
 
 /*
