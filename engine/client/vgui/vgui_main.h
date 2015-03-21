@@ -12,9 +12,9 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
 #ifndef VGUI_MAIN_H
 #define VGUI_MAIN_H
+#ifdef XASH_VGUI
 
 #include "utlvector.h"
 #include "utlrbtree.h"
@@ -188,4 +188,5 @@ void VGUI_InitCursors( void );
 void VGUI_CursorSelect( Cursor *cursor );
 void VGUI_ActivateCurrentCursor( void );
 
+#endif
 #endif//VGUI_MAIN_H

@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifdef XASH_VGUI
 #define OEMRESOURCE		// for OCR_* cursor junk
 
 #include "common.h"
@@ -286,3 +286,4 @@ long VGUI_SurfaceWndProc( SDL_Event *event )
 	}
 	return 1;
 }
+#endif

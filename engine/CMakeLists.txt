@@ -48,7 +48,6 @@ include_directories (. common/
     server/
     ../common
     ../pm_shared
-    ${HL_SDK_DIR}/utils/vgui/include
     ${HL_SDK_DIR}/public
     )
 
@@ -70,6 +69,7 @@ endif()
 if(XASH_VGUI)
     add_definitions(-DXASH_VGUI)
     target_link_libraries(${XASH_ENGINE_LIBRARY} -l:${HL_SDK_DIR}/linux/vgui.so)
+    INCLUDE_DIRECTORIES(${HL_SDK_DIR}/utils/vgui/include)
 endif()
 
 target_link_libraries(${XASH_ENGINE_LIBRARY}
