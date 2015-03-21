@@ -553,10 +553,10 @@ void Sys_CloseLog( void )
 
 void Sys_PrintLog( const char *pMsg )
 {
-	printf( "%s", pMsg );
+	puts( pMsg );
 	fflush( stdout );
 
 	if( !s_wcd.logfile ) return;
-	fprintf( s_wcd.logfile, pMsg );
+	fputs( pMsg, s_wcd.logfile );
 	fflush( s_wcd.logfile );
 }
