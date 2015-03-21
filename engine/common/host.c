@@ -15,7 +15,11 @@ GNU General Public License for more details.
 
 #include "port.h"
 
-#include <SDL2/SDL.h>
+#include <SDL_video.h>
+#include <SDL_keyboard.h>
+#include <SDL_events.h>
+#include <SDL_mouse.h>
+#include <SDL_mutex.h>
 #include <stdarg.h>  // va_args
 
 #include "common.h"

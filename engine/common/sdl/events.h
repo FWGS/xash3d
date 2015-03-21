@@ -1,8 +1,8 @@
 #ifndef KEYWRAPPER_H
 #define KEYWRAPPER_H
 
+#include <SDL_events.h>
 #include "common.h"
-#include "SDL2/SDL.h"
 
 int SDLash_EventFilter(SDL_Event* event);
 void SDLash_KeyEvent(SDL_KeyboardEvent key);

@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 #include "port.h"
-#include <SDL2/SDL_events.h>
+#include <SDL_events.h>
 #define VGUI_MAX_TEXTURES	2048	// a half of total textures count
 
 extern rgba_t g_color_table[8];	// for colored strings support

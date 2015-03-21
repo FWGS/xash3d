@@ -14,7 +14,9 @@ GNU General Public License for more details.
 */
 
 #include "port.h"
-#include <SDL2/SDL.h>
+#include <SDL_timer.h>
+#include <SDL_clipboard.h>
+#include <SDL_video.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif

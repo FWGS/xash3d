@@ -26,8 +26,6 @@ project (XASH_ENGINE)
 include(FindPkgConfig)
 pkg_search_module(SDL2 REQUIRED sdl2)
 pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
-include_directories(${SDL2_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES(${SDL2_IMAGE_INCLUDE_DIRS})
 
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
@@ -49,6 +47,8 @@ include_directories (. common/
     ../common
     ../pm_shared
     ${HL_SDK_DIR}/public
+    ${SDL2_INCLUDE_DIRS}
+    ${SDL2_IMAGE_INCLUDE_DIRS}
     )
 
 add_library (${XASH_ENGINE_LIBRARY} SHARED ${XASH_ENGINE_HEADERS} ${XASH_ENGINE_SOURCES})

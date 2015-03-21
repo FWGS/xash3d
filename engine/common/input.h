@@ -25,6 +25,7 @@ INPUT
 */
 
 #include "keydefs.h"
+#include <SDL_mouse.h>
 
 #define WM_MOUSEWHEEL	( WM_MOUSELAST + 1 ) // message that will be supported by the OS
 #define MK_XBUTTON1		0x0020

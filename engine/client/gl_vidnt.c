@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "input.h"
 
-#include <SDL2/SDL_image.h>
+#include <SDL_image.h>
 
 #ifdef XASH_X11
 #include <X11/Xlib.h>

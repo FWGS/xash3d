@@ -18,7 +18,7 @@ GNU General Public License for more details.
 
 #include "port.h"
 
-#include <SDL2/SDL.h>
+#include <SDL_video.h>
 
 #include "gl_export.h"
 #include "com_model.h"
