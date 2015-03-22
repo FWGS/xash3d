@@ -1301,7 +1301,18 @@ qboolean R_Init_OpenGL( void )
 	//if( !opengl_dll.link )
 	//	return false;
 
-	SDL_GL_LoadLibrary(NULL);
+
+#ifdef XASH_GLES
+	int error = SDL_GL_LoadLibrary("libNanoGL.so"); // support only nanoGL as wrapper
+#else
+	int error = SDL_GL_LoadLibrary(NULL);
+#endif
+
+	if(error == -1)
+	{
+		MsgDev(D_ERROR, "SDL_GL_LoadLibrary: Couldn't load GL library: %s", SDL_GetError());
+		return false;
+	}
 
 	return VID_SetMode();
 }

@@ -72,6 +72,10 @@ if(XASH_VGUI)
     INCLUDE_DIRECTORIES(${HL_SDK_DIR}/utils/vgui/include)
 endif()
 
+if(XASH_GLES)
+    add_definitions(-DXASH_GLES)
+endif()
+
 target_link_libraries(${XASH_ENGINE_LIBRARY}
     ${CMAKE_DL_LIBS} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
 
