@@ -15,11 +15,7 @@ GNU General Public License for more details.
 
 #include "port.h"
 
-#include <SDL_video.h>
-#include <SDL_keyboard.h>
-#include <SDL_events.h>
-#include <SDL_mouse.h>
-#include <SDL_mutex.h>
+#include <SDL.h>
 #include <stdarg.h>  // va_args
 
 #include "common.h"
@@ -865,6 +861,16 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 	static double	oldtime, newtime;
 
 	pChangeGame = func;	// may be NULL
+
+	if( SDL_Init( SDL_INIT_VIDEO |
+				SDL_INIT_TIMER |
+				SDL_INIT_AUDIO |
+				SDL_INIT_JOYSTICK |
+				SDL_INIT_EVENTS ))
+	{
+		MsgDev(D_ERROR, "SDL_Init: %s", SDL_GetError());
+		return 0;
+	}
 
 #ifndef _WIN32
 	// Start of IO functions
