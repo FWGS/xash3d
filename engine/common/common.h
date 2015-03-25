@@ -20,13 +20,11 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-#ifndef _WIN32
-#include <linux/limits.h> // PATH_MAX
 #include "port.h"
 
+#ifndef _WIN32
 #define EXPORT
 #else
-#define PATH_MAX 1024
 #define EXPORT		__declspec( dllexport )
 #endif
 

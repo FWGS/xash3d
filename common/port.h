@@ -21,11 +21,14 @@ GNU General Public License for more details.
     #include <dlfcn.h>
 
     #ifdef __APPLE__
+	#include <sys/syslimits.h>
 	#define OS_LIB_EXT "dylib"
     #else
+	#include <linux/limits.h>
 	#define OS_LIB_EXT "so"
     #endif
     #define MENUDLL "libxashmenu." OS_LIB_EXT
+    #define MAX_PATH PATH_MAX
 
     #define TRUE	    1
     #define FALSE	    0
@@ -69,6 +72,7 @@ GNU General Public License for more details.
 #else
     #define OS_LIB_EXT "dll"
     #define MENUDLL "mainui." OS_LIB_EXT
+    #define PATH_MAX 1024
 #endif
 
 #endif
