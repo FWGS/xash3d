@@ -1141,9 +1141,14 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	Q_strncpy( GameInfo->basedir, SI.ModuleName, sizeof( GameInfo->basedir ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
 	Q_strncpy( GameInfo->startmap, "newmap", sizeof( GameInfo->startmap ));
+#ifdef __ANDROID__
+	Q_strncpy( GameInfo->dll_path, LIBPATH, sizeof( GameInfo->dll_path ));
+	Q_strncpy( GameInfo->game_dll, LIBPATH "/" SERVERDLL, sizeof( GameInfo->game_dll ));
+#else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
+#endif
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
 	VectorSet( GameInfo->client_mins[0],   0,   0,  0  );
@@ -1191,8 +1196,11 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		}
 		else if( !Q_stricmp( token, "gamedll" ))
 		{
+			// already set up for __ANDROID__. Just ignore a path in game config
+#ifndef __ANDROID__
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
 			COM_FixSlashes( GameInfo->game_dll );
+#endif
 		}
 		else if( !Q_stricmp( token, "icon" ))
 		{
@@ -1316,8 +1324,13 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->title, "New Game", sizeof( GameInfo->title ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
+#ifdef __ANDROID__
+	Q_strncpy( GameInfo->dll_path, LIBPATH, sizeof( GameInfo->dll_path ));
+	Q_strncpy( GameInfo->game_dll, LIBPATH "/" SERVERDLL, sizeof( GameInfo->game_dll ));
+#else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
+#endif
 	Q_strncpy( GameInfo->startmap, "", sizeof( GameInfo->startmap ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
@@ -1366,11 +1379,16 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		}
 		else if( !Q_stricmp( token, "gamedll" ))
 		{
+			// already set up for __ANDROID__. Just ignore a path in game config
+#ifndef __ANDROID__
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
+#endif
 		}
 		else if( !Q_stricmp( token, "dllpath" ))
 		{
+#ifndef __ANDROID__
 			pfile = COM_ParseFile( pfile, GameInfo->dll_path );
+#endif
 		}
 		else if( !Q_stricmp( token, "startmap" ))
 		{

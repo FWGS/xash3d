@@ -25,7 +25,17 @@ GNU General Public License for more details.
     #else
 	#define OS_LIB_EXT "so"
     #endif
-    #define MENUDLL "libxashmenu." OS_LIB_EXT
+
+    #ifdef __ANDROID__
+	#define MENUDLL "libmenu." OS_LIB_EXT
+	#define CLIENTDLL "libclient." OS_LIB_EXT
+	#define SERVERDLL "libserver." OS_LIB_EXT
+	#define LIBPATH "/data/data/org.libsdl.app/lib"
+	#define GAMEPATH "/sdcard/xash"
+    #else
+	#define MENUDLL "libxashmenu." OS_LIB_EXT
+	#define CLIENTDLL "client." OS_LIB_EXT
+    #endif
 
     #define TRUE	    1
     #define FALSE	    0
@@ -69,6 +79,7 @@ GNU General Public License for more details.
 #else
     #define OS_LIB_EXT "dll"
     #define MENUDLL "mainui." OS_LIB_EXT
+    #define CLIENTDLL "client." OS_LIB_EXT
 #endif
 
 #endif
