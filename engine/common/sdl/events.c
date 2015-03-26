@@ -114,6 +114,9 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	case SDLK_END:
 		keynum = K_END;
 		break;
+	case ANDROID_K_BACK:
+		keynum = K_ESCAPE;
+		break;
 	}
 
 	if((key.keysym.sym >= SDLK_F1) && (key.keysym.sym <= SDLK_F12))
