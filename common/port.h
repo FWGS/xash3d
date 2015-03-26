@@ -16,6 +16,12 @@ GNU General Public License for more details.
 #ifndef PORT_H
 #define PORT_H
 
+#ifdef XASH_VGUI
+    #if !(defined(__i386__) || defined(_X86_))
+	#error "VGUI is exists only for x86. You must disable VGUI flag or build Xash3D for x86 target."
+    #endif
+#endif
+
 #ifndef _WIN32
     #include <limits.h>
     #include <dlfcn.h>
