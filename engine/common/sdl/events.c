@@ -56,7 +56,9 @@ int SDLash_EventFilter( SDL_Event* event)
 				}
 			}
 	}
+#ifdef XASH_VGUI
 	VGUI_SurfaceWndProc(event);
+#endif
 	return 0;
 }
 void SDLash_KeyEvent(SDL_KeyboardEvent key)
