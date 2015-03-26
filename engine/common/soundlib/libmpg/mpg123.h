@@ -3,7 +3,11 @@
 #include        <signal.h>
 
 #ifndef WIN32
+#ifdef __ANDROID__
+#include		<signal.h>
+#else
 #include        <sys/signal.h>
+#endif
 #include        <unistd.h>
 #endif
 
