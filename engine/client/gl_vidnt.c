@@ -1191,23 +1191,22 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 	glw_state.desktopWidth = displayMode.w;
 	glw_state.desktopHeight = displayMode.h;
 
-	// destroy the existing window
-	if( host.hWnd ) VID_DestroyWindow();
+	glState.fullScreen = fullscreen;
 
-	// do a CDS if needed
-	if( fullscreen )
+	if(!host.hWnd)
 	{
-		glState.fullScreen = true;
-
-		if( !VID_CreateWindow( width, height, true ) )
+		if( !VID_CreateWindow( width, height, fullscreen ) )
 			return rserr_invalid_mode;
-		return rserr_ok;
 	}
 	else
 	{
-		glState.fullScreen = false;
-		if( !VID_CreateWindow( width, height, false ))
+		SDL_SetWindowSize(host.hWnd, vidmode[vid_mode].width, vidmode[vid_mode].height );
+		int error = SDL_SetWindowFullscreen( host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : false );
+		if( error )
+		{
+			MsgDev(D_ERROR, "Cannot change resolution: %s", SDL_GetError());
 			return rserr_invalid_mode;
+		}
 	}
 
 	return rserr_ok;
