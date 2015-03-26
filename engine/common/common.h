@@ -603,6 +603,10 @@ int Q_buildnum( void );
 //
 // host.c
 //
+#ifdef __ANDROID__
+typedef void (*pfnChangeGame)( const char *progname );
+int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func );
+#endif
 void EXPORT Host_Shutdown( void );
 void Host_SetServerState( int state );
 int Host_ServerState( void );

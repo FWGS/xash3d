@@ -15,6 +15,8 @@ GNU General Public License for more details.
 
 #include "common.h"
 
+#include <SDL_mutex.h>
+
 #ifdef __ANDROID__
 #include <android/log.h>
 #endif
@@ -558,7 +560,7 @@ void Sys_CloseLog( void )
 void Sys_PrintLog( const char *pMsg )
 {
 #ifdef __ANDROID__
-	__android_log_print( ANDROID_LOG_DEBUG, "Xash", pMsg );
+	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
 #endif
 
 	puts( pMsg );

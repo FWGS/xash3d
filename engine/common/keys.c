@@ -17,6 +17,8 @@ GNU General Public License for more details.
 #include "input.h"
 #include "client.h"
 
+#include <SDL_keyboard.h>
+
 typedef struct key_s
 {
 	qboolean		down;
