@@ -7,20 +7,15 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := xash
 
-SDL_PATH := /home/nicknekit/SDL2 #your sdl2 source path
-SDLIMAGE_PATH := /home/nicknekit/SDL2_image #your sdl2_image source path
-SDLMIXER_PATH := /home/nicknekit/SDL2_mixer #your sdl2_mixer source path
-NANOGL_PATH := /../../nanogl #your nanogl source path
-
 APP_PLATFORM := android-12
-LOCAL_CFLAGS += -O2
+LOCAL_CFLAGS += -O2 -D__MULTITEXTURE_SUPPORT__ -g -msoft-float
 LOCAL_CONLYFLAGS += -std=c99
 
 LOCAL_C_INCLUDES := $(SDL_PATH)/include \
-	$(SDLIMAGE_PATH) \
-	$(SDLMIXER_PATH) \
-	$(NANOGL_PATH)/GL \
-	$(LOCAL_PATH)/.			    \
+	$(NANOGL_PATH)/GL			    \
+	$(NANOGL_PATH)/				    \
+	$(SDL_IMAGE_PATH)/include/		    \
+	$(LOCAL_PATH)/.				    \
 	$(LOCAL_PATH)/common			    \
 	$(LOCAL_PATH)/client			    \
 	$(LOCAL_PATH)/client/vgui		    \
@@ -28,16 +23,17 @@ LOCAL_C_INCLUDES := $(SDL_PATH)/include \
 	$(LOCAL_PATH)/common/imagelib		    \
 	$(LOCAL_PATH)/common/sdl		    \
 	$(LOCAL_PATH)/common/soundlib		    \
-	$(LOCAL_PATH)/common/soundlib/libmpg   \
-	$(LOCAL_PATH)/../common		    \
+	$(LOCAL_PATH)/common/soundlib/libmpg        \
+	$(LOCAL_PATH)/../common		            \
 	$(LOCAL_PATH)/../pm_shared		    \
 	$(LOCAL_PATH)/../			    \
-	$(LOCAL_PATH)/../utils/vgui/include
+	$(LOCAL_PATH)/../utils/vgui/include	    \
+	$(HLSDK_PATH)/cl_dll/
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 
-LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
-	client/cl_cmds.c \
+LOCAL_SRC_FILES := android.c \
+	   client/cl_cmds.c \
            client/cl_demo.c \
            client/cl_events.c \
            client/cl_frame.c \
@@ -135,7 +131,6 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
            common/soundlib/snd_mp3.c \
            common/soundlib/snd_utils.c \
            common/soundlib/snd_wav.c \
-	   android.cpp \
 	   common/sdl/events.c \
 	   common/soundlib/libmpg/dct64_i386.c \
 	   common/soundlib/libmpg/decode_i386.c \
@@ -145,10 +140,10 @@ LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.c \
 	   common/soundlib/libmpg/tabinit.c \
 	   common/soundlib/libmpg/common.c
 
-LOCAL_SHARED_LIBRARIES += SDL2
-LOCAL_SHARED_LIBRARIES += SDL2_image
-LOCAL_SHARED_LIBRARIES += SDL2_mixer
+LOCAL_SHARED_LIBRARIES := SDL2 SDL2_image
 
-LOCAL_LDLIBS := -ldl -llog 
+LOCAL_STATIC_LIBRARIES := NanoGL
+
+LOCAL_LDLIBS := -ldl -llog
 
 include $(BUILD_SHARED_LIBRARY)
