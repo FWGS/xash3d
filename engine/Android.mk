@@ -32,7 +32,8 @@ LOCAL_C_INCLUDES := $(SDL_PATH)/include \
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 
-LOCAL_SRC_FILES := android.c \
+LOCAL_SRC_FILES := platform/android/android.c \
+	    platform/android/dlsym-weak.cpp \
 	   client/cl_cmds.c \
            client/cl_demo.c \
            client/cl_events.c \

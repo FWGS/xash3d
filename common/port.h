@@ -36,7 +36,9 @@ GNU General Public License for more details.
 	#define MENUDLL "libmenu." OS_LIB_EXT
 	#define CLIENTDLL "libclient." OS_LIB_EXT
 	#define SERVERDLL "libserver." OS_LIB_EXT
-	#define LIBPATH "/data/data/org.libsdl.app/lib"
+	#define APPPATH "/data/data/in.celest.xash3d.hl/"
+	#define LIBPATH APPPATH "lib"
+	#define ASSETSPATH APPPATH "assets"
 	#define GAMEPATH "/sdcard/xash"
     #else
 	#define MENUDLL "libxashmenu." OS_LIB_EXT
@@ -55,7 +57,7 @@ GNU General Public License for more details.
 
     // Windows functions to Linux equivalent
     #define _mkdir( x ) mkdir( x, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH )
-    #define LoadLibrary( x ) dlopen( x, RTLD_LAZY )
+    #define LoadLibrary( x ) dlopen( x, RTLD_NOW )
     #define GetProcAddress( x, y ) dlsym( x, y )
     #define FreeLibrary( x ) dlclose( x )
     #define MAKEWORD(a,b)   ((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))

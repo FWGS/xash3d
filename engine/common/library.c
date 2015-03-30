@@ -13,13 +13,17 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#define _GNU_SOURCE // dladdr is a gnu extension
+#define _GNU_SOURCE
 
 #include "common.h"
 #include "library.h"
 #include "filesystem.h"
 
 #ifndef XASH_NONSTANDART_LOAD
+#ifdef __ANDROID__
+#include "platform/android/dlsym-weak.h"
+#endif
+
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
 	searchpath_t	*search;
@@ -43,7 +47,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	}
 
 	char *error = dlerror();
-	if(error) MsgDev("Error: loading library %s: %s", dllname, error);
+	if(error) MsgDev(D_ERROR, "loading library %s: %s", dllname, error);
 
 	return pHandle;
 }
@@ -63,7 +67,12 @@ dword Com_FunctionFromName( void *hInstance, const char *pName )
 	dword function = (dword)GetProcAddress( hInstance, pName );
 	if(!function)
 	{
-		MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s", pName);
+#ifdef __ANDROID__
+		// Shitty Android dlsym don't resolve weak symbols
+		function = (dword)dlsym_weak( hInstance, pName );
+		if(!function)
+#endif
+			MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s: %s", pName, dlerror());
 	}
 	return function;
 }
