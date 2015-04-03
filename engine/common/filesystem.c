@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include <sys/stat.h>
 #include <time.h>
 #include <stdarg.h> // va
+#include <SDL_system.h> // Android External storage
 #ifdef _WIN32
 #include <io.h>
 #include <direct.h>
@@ -254,7 +255,7 @@ void listdirectory( stringlist_t *list, const char *path )
 	hFile = scandir( path, &n_file, NULL, NULL );
 	if( hFile < 1 )
 	{
-		MsgDev( D_ERROR, "listdirectory: scandir() failed, %s", strerror(hFile) );
+		MsgDev( D_ERROR, "listdirectory: scandir() failed, %s at %s", strerror(hFile), path );
 		return;
 	}
 
@@ -707,13 +708,15 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	if(!( flags & FS_NOWRITE_PATH ))
 		Q_strncpy( fs_gamedir, dir, sizeof( fs_gamedir ));
 
+
 	stringlistinit( &list );
 	listdirectory( &list, dir );
 	stringlistsort( &list );
 
-	// add any PAK package in the directory
+	// For priority files, first is unpacked, then WAD and last PAK
 	for( i = 0; i < list.numstrings; i++ )
 	{
+		// add any PAK package in the directory
 		if( !Q_stricmp( FS_FileExtension( list.strings[i] ), "pak" ))
 		{
 			Q_sprintf( fullpath, "%s%s", dir, list.strings[i] );
@@ -721,9 +724,9 @@ void FS_AddGameDirectory( const char *dir, int flags )
 		}
 	}
 
-	// add any WAD package in the directory
 	for( i = 0; i < list.numstrings; i++ )
 	{
+		// add any WAD package in the directory
 		if( !Q_stricmp( FS_FileExtension( list.strings[i] ), "wad" ))
 		{
 			Q_sprintf( fullpath, "%s%s", dir, list.strings[i] );
@@ -737,11 +740,9 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	// (unpacked files have the priority over packed files)
 	search = (searchpath_t *)Mem_Alloc( fs_mempool, sizeof( searchpath_t ));
 	Q_strncpy( search->filename, dir, sizeof ( search->filename ));
-	search->next = fs_searchpaths;
 	search->flags = flags;
+	search->next = fs_searchpaths;
 	fs_searchpaths = search;
-
-
 }
 
 /*
@@ -1919,6 +1920,8 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 			if( !anywadname && Q_stricmp( wadname, shortname ))
 				continue;
 
+			return search;
+
 			// NOTE: we can't using long names for wad,
 			// because we using original wad names[16];
 			FS_FileBase( name, shortname );
@@ -2054,8 +2057,10 @@ file_t *FS_Open( const char *filepath, const char *mode, qboolean gamedironly )
 
 		// open the file on disk directly
 		Q_sprintf( real_path, "%s/%s", fs_gamedir, filepath );
+
 		FS_CreatePath( real_path );// Create directories up to the file
 		return FS_SysOpen( real_path, mode );
+
 	}
 	
 	// else, we look at the various search paths and open the file in read-only mode
@@ -2863,7 +2868,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 
 	// search through the path, one element at a time
 	for( searchpath = fs_searchpaths; searchpath; searchpath = searchpath->next )
-	{
+	{	
 		if( gamedironly && !( searchpath->flags & FS_GAMEDIR_PATH ))
 			continue;
 
