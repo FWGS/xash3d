@@ -117,6 +117,12 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	case ANDROID_K_BACK:
 		keynum = K_ESCAPE;
 		break;
+	case SDLK_VOLUMEDOWN:
+		keynum = 'e';
+		break;
+	case SDLK_VOLUMEUP:
+		keynum = K_SPACE;
+		break;
 	}
 
 	if((key.keysym.sym >= SDLK_F1) && (key.keysym.sym <= SDLK_F12))
@@ -127,7 +133,6 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	{
 		keynum = key.keysym.scancode - 41;
 	}
-	//printf("Pressed key. Code: %i\n", keynum);
 	Key_Event(keynum, down);
 }
 
