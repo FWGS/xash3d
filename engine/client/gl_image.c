@@ -69,6 +69,9 @@ GL_Bind
 */
 void GL_Bind( GLint tmu, GLenum texnum )
 {
+#ifdef __ANDROID__
+	tmu = tmu - GL_TEXTURE0;
+#endif
 	gltexture_t	*texture;
 
 	// missed texture ?

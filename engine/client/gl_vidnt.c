@@ -21,6 +21,10 @@ GNU General Public License for more details.
 
 #include <SDL_image.h>
 
+#ifdef __ANDROID__
+#include <GL/nanogl.h>
+#endif
+
 #ifdef XASH_X11
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -100,6 +104,7 @@ glstate_t		glState;
 glwstate_t	glw_state;
 uint		num_instances;
 
+
 typedef enum
 {
 	rserr_ok,
@@ -142,6 +147,308 @@ vidmode_t vidmode[] =
 { "Mode 21: 16x9",	1920,	1200,	true	},
 { "Mode 22: 16x9",	2560,	1600,	true	},
 };
+
+#ifdef __ANDROID__
+
+static char* opengl_110funcs[] =
+{
+ "glClearColor"         ,
+ "glClear"              ,
+ "glAlphaFunc"          ,
+ "glBlendFunc"          ,
+ "glCullFace"           ,
+ "glDrawBuffer"         ,
+ "glReadBuffer"         ,
+ "glEnable"             ,
+ "glDisable"            ,
+ "glEnableClientState"  ,
+ "glDisableClientState" ,
+ "glGetBooleanv"        ,
+ "glGetDoublev"         ,
+ "glGetFloatv"          ,
+ "glGetIntegerv"        ,
+ "glGetError"           ,
+ "glGetString"          ,
+ "glFinish"             ,
+ "glFlush"              ,
+ "glClearDepth"         ,
+ "glDepthFunc"          ,
+ "glDepthMask"          ,
+ "glDepthRange"         ,
+ "glFrontFace"          ,
+ "glDrawElements"       ,
+ "glColorMask"          ,
+ "glIndexPointer"       ,
+ "glVertexPointer"      ,
+ "glNormalPointer"      ,
+ "glColorPointer"       ,
+ "glTexCoordPointer"    ,
+ "glArrayElement"       ,
+ "glColor3f"            ,
+ "glColor3fv"           ,
+ "glColor4f"            ,
+ "glColor4fv"           ,
+ "glColor3ub"           ,
+ "glColor4ub"           ,
+ "glColor4ubv"          ,
+ "glTexCoord1f"         ,
+ "glTexCoord2f"         ,
+ "glTexCoord3f"         ,
+ "glTexCoord4f"         ,
+ "glTexGenf"            ,
+ "glTexGenfv"           ,
+ "glTexGeni"            ,
+ "glVertex2f"           ,
+ "glVertex3f"           ,
+ "glVertex3fv"          ,
+ "glNormal3f"           ,
+ "glNormal3fv"          ,
+ "glBegin"              ,
+ "glEnd"                ,
+ "glLineWidth"          ,
+ "glPointSize"          ,
+ "glMatrixMode"         ,
+ "glOrtho"              ,
+ "glRasterPos2f"        ,
+ "glFrustum"            ,
+ "glViewport"           ,
+ "glPushMatrix"         ,
+ "glPopMatrix"          ,
+ "glPushAttrib"         ,
+ "glPopAttrib"          ,
+ "glLoadIdentity"       ,
+ "glLoadMatrixd"        ,
+ "glLoadMatrixf"        ,
+ "glMultMatrixd"        ,
+ "glMultMatrixf"        ,
+ "glRotated"            ,
+ "glRotatef"            ,
+ "glScaled"             ,
+ "glScalef"             ,
+ "glTranslated"         ,
+ "glTranslatef"         ,
+ "glReadPixels"         ,
+ "glDrawPixels"         ,
+ "glStencilFunc"        ,
+ "glStencilMask"        ,
+ "glStencilOp"          ,
+ "glClearStencil"       ,
+ "glIsEnabled"          ,
+ "glIsList"             ,
+ "glIsTexture"          ,
+ "glTexEnvf"            ,
+ "glTexEnvfv"           ,
+ "glTexEnvi"            ,
+ "glTexParameterf"      ,
+ "glTexParameterfv"     ,
+ "glTexParameteri"      ,
+ "glHint"               ,
+ "glPixelStoref"        ,
+ "glPixelStorei"        ,
+ "glGenTextures"        ,
+ "glDeleteTextures"     ,
+ "glBindTexture"        ,
+ "glTexImage1D"         ,
+ "glTexImage2D"         ,
+ "glTexSubImage1D"      ,
+ "glTexSubImage2D"      ,
+ "glCopyTexImage1D"     ,
+ "glCopyTexImage2D"     ,
+ "glCopyTexSubImage1D"  ,
+ "glCopyTexSubImage2D"  ,
+ "glScissor"            ,
+ "glGetTexEnviv"        ,
+ "glPolygonOffset"      ,
+ "glPolygonMode"        ,
+ "glPolygonStipple"     ,
+ "glClipPlane"          ,
+ "glGetClipPlane"       ,
+ "glShadeModel"         ,
+ "glFogfv"              ,
+ "glFogf"               ,
+ "glFogi"               ,
+ NULL
+};
+
+static char* pointparametersfunc[] =
+{
+"glPointParameterfEXT"  ,
+"glPointParameterfvEXT" ,
+NULL
+};
+
+static char* drawrangeelementsfuncs[] =
+{
+ "glDrawRangeElements" ,
+ NULL
+};
+
+static char* drawrangeelementsextfuncs[] =
+{
+ "glDrawRangeElementsEXT" ,
+ NULL
+};
+
+static char* sgis_multitexturefuncs[] =
+{
+ "glSelectTextureSGIS" ,
+ "glMTexCoord2fSGIS"   ,
+ NULL
+};
+
+static char* multitexturefuncs[] =
+{
+ "glMultiTexCoord1fARB"     ,
+ "glMultiTexCoord2fARB"     ,
+ "glMultiTexCoord3fARB"     ,
+ "glMultiTexCoord4fARB"     ,
+ "glActiveTextureARB"       ,
+ "glClientActiveTextureARB" ,
+ "glClientActiveTextureARB" ,
+ NULL
+};
+
+static char* compiledvertexarrayfuncs[] =
+{
+ "glLockArraysEXT"   ,
+ "glUnlockArraysEXT" ,
+ "glDrawArrays"      ,
+ NULL
+};
+
+static char* texture3dextfuncs[] =
+{
+ "glTexImage3DEXT"        ,
+ "glTexSubImage3DEXT"     ,
+ "glCopyTexSubImage3DEXT" ,
+ NULL
+};
+
+static char* atiseparatestencilfuncs[] =
+{
+ "glStencilOpSeparateATI"   ,
+ "glStencilFuncSeparateATI" ,
+ NULL
+};
+
+static char* gl2separatestencilfuncs[] =
+{
+ "glStencilOpSeparate"   ,
+ "glStencilFuncSeparate" ,
+ NULL
+};
+
+static char* stenciltwosidefuncs[] =
+{
+ "glActiveStencilFaceEXT" ,
+ NULL
+};
+
+static char* blendequationfuncs[] =
+{
+ "glBlendEquationEXT" ,
+ NULL
+};
+
+static char* shaderobjectsfuncs[] =
+{
+ "glDeleteObjectARB"             ,
+ "glGetHandleARB"                ,
+ "glDetachObjectARB"             ,
+ "glCreateShaderObjectARB"       ,
+ "glShaderSourceARB"             ,
+ "glCompileShaderARB"            ,
+ "glCreateProgramObjectARB"      ,
+ "glAttachObjectARB"             ,
+ "glLinkProgramARB"              ,
+ "glUseProgramObjectARB"         ,
+ "glValidateProgramARB"          ,
+ "glUniform1fARB"                ,
+ "glUniform2fARB"                ,
+ "glUniform3fARB"                ,
+ "glUniform4fARB"                ,
+ "glUniform1iARB"                ,
+ "glUniform2iARB"                ,
+ "glUniform3iARB"                ,
+ "glUniform4iARB"                ,
+ "glUniform1fvARB"               ,
+ "glUniform2fvARB"               ,
+ "glUniform3fvARB"               ,
+ "glUniform4fvARB"               ,
+ "glUniform1ivARB"               ,
+ "glUniform2ivARB"               ,
+ "glUniform3ivARB"               ,
+ "glUniform4ivARB"               ,
+ "glUniformMatrix2fvARB"         ,
+ "glUniformMatrix3fvARB"         ,
+ "glUniformMatrix4fvARB"         ,
+ "glGetObjectParameterfvARB"     ,
+ "glGetObjectParameterivARB"     ,
+ "glGetInfoLogARB"               ,
+ "glGetAttachedObjectsARB"       ,
+ "glGetUniformLocationARB"       ,
+ "glGetActiveUniformARB"         ,
+ "glGetUniformfvARB"             ,
+ "glGetUniformivARB"             ,
+ "glGetShaderSourceARB"          ,
+ "glVertexAttribPointerARB"      ,
+ "glEnableVertexAttribArrayARB"  ,
+ "glDisableVertexAttribArrayARB" ,
+ "glBindAttribLocationARB"       ,
+ "glGetActiveAttribARB"          ,
+ "glGetAttribLocationARB"        ,
+ NULL
+};
+
+static char* vertexshaderfuncs[] =
+{
+ "glVertexAttribPointerARB"      ,
+ "glEnableVertexAttribArrayARB"  ,
+ "glDisableVertexAttribArrayARB" ,
+ "glBindAttribLocationARB"       ,
+ "glGetActiveAttribARB"          ,
+ "glGetAttribLocationARB"        ,
+ NULL
+};
+
+static char* vbofuncs[] =
+{
+ "glBindBufferARB"    ,
+ "glDeleteBuffersARB" ,
+ "glGenBuffersARB"    ,
+ "glIsBufferARB"      ,
+ "glMapBufferARB"     ,
+ "glUnmapBufferARB"   ,
+ "glBufferDataARB"    ,
+ "glBufferSubDataARB" ,
+ NULL
+};
+
+static char* occlusionfunc[] =
+{
+ "glGenQueriesARB"        ,
+ "glDeleteQueriesARB"     ,
+ "glIsQueryARB"           ,
+ "glBeginQueryARB"        ,
+ "glEndQueryARB"          ,
+ "glGetQueryivARB"        ,
+ "glGetQueryObjectivARB"  ,
+ "glGetQueryObjectuivARB" ,
+ NULL
+};
+
+static char* texturecompressionfuncs[] =
+{
+ "glCompressedTexImage3DARB"    ,
+ "glCompressedTexImage2DARB"    ,
+ "glCompressedTexImage1DARB"    ,
+ "glCompressedTexSubImage3DARB" ,
+ "glCompressedTexSubImage2DARB" ,
+ "glCompressedTexSubImage1DARB" ,
+ "glGetCompressedTexImageARB"   ,
+ NULL
+};
+#else
 
 static dllfunc_t opengl_110funcs[] =
 {
@@ -441,7 +748,7 @@ static dllfunc_t texturecompressionfuncs[] =
 { "glGetCompressedTexImageARB"   , (void **)&pglGetCompressedTexImage },
 { NULL, NULL }
 };
-
+#endif
 
 /*
 =================
@@ -530,16 +837,21 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 	}
 
 	// clear exports
+#ifndef __ANDROID__
 	for( func = funcs; func && func->name; func++ )
 		*func->func = NULL;
+#endif
+
 
 	GL_SetExtension( r_ext, true ); // predict extension state
+#ifndef __ANDROID__
 	for( func = funcs; func && func->name != NULL; func++ )
 	{
 		// functions are cleared before all the extensions are evaluated
 		if(!(*func->func = (void *)GL_GetProcAddress( func->name )))
 			GL_SetExtension( r_ext, false ); // one or more functions are invalid, extension will be disabled
 	}
+#endif
 
 	if( GL_Support( r_ext ))
 		MsgDev( D_NOTE, "- ^2enabled\n" );
@@ -630,12 +942,40 @@ static void GL_ContextError( void )
 }
 
 /*
+==================
+GL_SetupAttributes
+==================
+*/
+void GL_SetupAttributes()
+{
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+
+
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+#ifdef __ANDROID__
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
+}
+
+/*
 =================
 GL_CreateContext
 =================
 */
 qboolean GL_CreateContext( void )
 {
+#ifdef __ANDROID__
+	nanoGL_Init();
+#endif
+
 	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
 	{
 		MsgDev(D_ERROR, "GL_CreateContext: %s\n", SDL_GetError());
@@ -1047,7 +1387,7 @@ qboolean GL_SetPixelformat( void )
 void R_SaveVideoMode( int vid_mode )
 {
 	int	mode = bound( 0, vid_mode, num_vidmodes ); // check range
-
+#ifndef __ANDROID__
 	glState.width = vidmode[mode].width;
 	glState.height = vidmode[mode].height;
 	glState.wideScreen = vidmode[mode].wideScreen;
@@ -1056,7 +1396,24 @@ void R_SaveVideoMode( int vid_mode )
 	Cvar_FullSet( "height", va( "%i", vidmode[mode].height ), CVAR_READ_ONLY );
 	Cvar_SetFloat( "vid_mode", mode ); // merge if it out of bounds
 
-	MsgDev( D_NOTE, "Set: %s [%dx%d]\n", vidmode[mode].desc, vidmode[mode].width, vidmode[mode].height );
+	MsgDev( D_INFO, "Set: %s [%dx%d]\n", vidmode[mode].desc, vidmode[mode].width, vidmode[mode].height );
+#else
+
+	// Auto-detect of screen size on Android Devices
+
+	SDL_DisplayMode displayMode;
+
+	SDL_GetCurrentDisplayMode(0, &displayMode);
+	glState.width = displayMode.w;
+	glState.height = displayMode.h;
+	glState.wideScreen = true;
+
+	Cvar_FullSet( "width", va( "%i", glState.width ), CVAR_READ_ONLY );
+	Cvar_FullSet( "height", va( "%i", glState.height ), CVAR_READ_ONLY );
+	Cvar_SetFloat( "vid_mode", mode );
+
+	MsgDev( D_INFO, "Set: [%dx%d]\n", glState.width, glState.height );
+#endif
 }
 
 qboolean R_DescribeVIDMode( int width, int height )
@@ -1187,7 +1544,7 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 	height = r_height->integer;
 
 	// check our desktop attributes
-	glw_state.desktopBitsPixel = 24;
+	glw_state.desktopBitsPixel = SDL_BITSPERPIXEL(displayMode.format);
 	glw_state.desktopWidth = displayMode.w;
 	glw_state.desktopHeight = displayMode.h;
 
@@ -1300,9 +1657,17 @@ qboolean R_Init_OpenGL( void )
 	//if( !opengl_dll.link )
 	//	return false;
 
+	GL_SetupAttributes();
 
 #ifdef XASH_GLES
-	int error = SDL_GL_LoadLibrary("libNanoGL.so"); // support only nanoGL as wrapper
+	// SDL creates only context through default EGL
+	/*NGLHandle = LoadLibrary(LIBPATH "/libNanoGL.so");
+	if(!NGLHandle)
+	{
+		MsgDev(D_ERROR, "R_Init_OpenGL: Couldn't load NanoGL library: %s", dlerror());
+		return false;
+	}*/
+	int error = SDL_GL_LoadLibrary(LIBPATH "/libNanoGL.so");
 #else
 	int error = SDL_GL_LoadLibrary(NULL);
 #endif
@@ -1328,6 +1693,10 @@ void R_Free_OpenGL( void )
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();
+
+#ifdef XASH_GLES
+	dlclose(NGLHandle);
+#endif
 
 	SDL_GL_UnloadLibrary ();
 
@@ -1633,8 +2002,9 @@ void GL_InitExtensions( void )
 	GL_CheckExtension( "GL_ARB_vertex_buffer_object", vbofuncs, "gl_vertex_buffer_object", GL_ARB_VERTEX_BUFFER_OBJECT_EXT );
 
 	// we don't care if it's an extension or not, they are identical functions, so keep it simple in the rendering code
+#ifndef __ANDROID__
 	if( pglDrawRangeElementsEXT == NULL ) pglDrawRangeElementsEXT = pglDrawRangeElements;
-
+#endif
 	GL_CheckExtension( "GL_ARB_texture_env_add", NULL, "gl_texture_env_add", GL_TEXTURE_ENV_ADD_EXT );
 
 	// vp and fp shaders
@@ -1668,11 +2038,13 @@ void GL_InitExtensions( void )
 		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_NV;
 		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_NV, &glConfig.max_2d_rectangle_size );
 	}
+#ifndef __ANDROID__
 	else if( Q_strstr( glConfig.extensions_string, "GL_EXT_texture_rectangle" ))
 	{
 		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_EXT;
 		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_EXT, &glConfig.max_2d_rectangle_size );
 	}
+#endif
 	else glConfig.texRectangle = glConfig.max_2d_rectangle_size = 0; // no rectangle
 
 	glConfig.max_2d_texture_size = 0;
