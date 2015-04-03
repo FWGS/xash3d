@@ -322,7 +322,6 @@ void Con_CreateConsole( void )
 	}
 
 	Sys_InitLog();
-
 	if( !RegisterClass( &wc ))
 	{
 		// print into log
@@ -389,6 +388,14 @@ void Con_CreateConsole( void )
           }
 	else s_wcd.status = false;
 #endif
+
+	if( Sys_CheckParm( "-log" ) && host.developer != 0 )
+	{
+		s_wcd.log_active = true;
+		Q_strncpy( s_wcd.log_path, "engine.log", sizeof( s_wcd.log_path ));
+	}
+
+	Sys_InitLog();
 }
 
 /*
