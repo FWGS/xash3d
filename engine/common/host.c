@@ -754,10 +754,10 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 	host.con_showalways = true;
 
 #ifdef __ANDROID__
-	  if (chdir(host.rootdir) == 0)
-	MsgDev(D_INFO,"%s is working directory now",host.rootdir);
+	if (chdir(host.rootdir) == 0)
+		MsgDev(D_INFO,"%s is working directory now",host.rootdir);
 	else
-	MsgDev(D_ERROR,"%s is not exists",host.rootdir);
+		MsgDev(D_ERROR,"%s is not exists",host.rootdir);
 #else
 	// we can specified custom name, from Sys_NewInstance
 	if( SDL_GetBasePath() && !host.change_game )
@@ -838,6 +838,7 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 	FS_LoadGameInfo( NULL );
 	Q_strncpy( host.gamefolder, GI->gamefolder, sizeof( host.gamefolder ));
 
+
 	if( GI->secure )
 	{
 		// clear all developer levels when game is protected
@@ -915,7 +916,7 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 	#ifndef __ANDROID__
 	Host_InitCommon( moduleName, cmdLine, progname, bChangeGame );
 	#else
-	Host_InitCommon(NULL, NULL, progname, bChangeGame);
+	Host_InitCommon( NULL, "-dev 3 -log", progname, bChangeGame );
 	#endif
 
 	// init commands and vars
