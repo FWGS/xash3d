@@ -1920,8 +1920,6 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 			if( !anywadname && Q_stricmp( wadname, shortname ))
 				continue;
 
-			return search;
-
 			// NOTE: we can't using long names for wad,
 			// because we using original wad names[16];
 			FS_FileBase( name, shortname );
