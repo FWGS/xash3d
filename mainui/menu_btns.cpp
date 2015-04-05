@@ -147,6 +147,7 @@ UI_LoadBmpButtons
 */
 void UI_LoadBmpButtons( void )
 {
+#ifndef __ANDROID__
 	memset( uiStatic.buttonsPics, 0, sizeof( uiStatic.buttonsPics ));
 
 	int bmp_len_holder;
@@ -225,4 +226,5 @@ void UI_LoadBmpButtons( void )
 
 	FREE( raw_img_buff );
 	FREE_FILE( bmp_buffer );
+#endif
 }
