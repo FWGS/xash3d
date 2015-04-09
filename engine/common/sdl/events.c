@@ -23,6 +23,12 @@ int SDLash_EventFilter( SDL_Event* event)
 			SDLash_WheelEvent(event->wheel);
 			break;
 
+		case SDL_FINGERMOTION:
+		case SDL_FINGERUP:
+		case SDL_FINGERDOWN:
+			SDLash_TouchEvent(event->tfinger);
+			break;
+
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEBUTTONDOWN:
 			SDLash_MouseEvent(event->button);

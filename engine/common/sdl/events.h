@@ -10,4 +10,7 @@ void SDLash_MouseEvent(SDL_MouseButtonEvent button);
 void SDLash_WheelEvent(SDL_MouseWheelEvent wheel);
 void SDLash_InputEvent(SDL_TextInputEvent input);
 
+// Prototype
+void SDLash_TouchEvent(SDL_TouchFingerEvent finger);
+
 #endif // KEYWRAPPER_H
