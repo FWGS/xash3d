@@ -8,7 +8,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := xash
 
 APP_PLATFORM := android-12
-LOCAL_CFLAGS += -O2 -D__MULTITEXTURE_SUPPORT__ -g -msoft-float
+LOCAL_CFLAGS += -Og -D__MULTITEXTURE_SUPPORT__ -g -msoft-float -fsigned-char
 LOCAL_CONLYFLAGS += -std=c99
 
 LOCAL_C_INCLUDES := $(SDL_PATH)/include \
@@ -133,6 +133,7 @@ LOCAL_SRC_FILES := platform/android/android.c \
            common/soundlib/snd_utils.c \
            common/soundlib/snd_wav.c \
 	   common/sdl/events.c \
+	   common/sdl/touchscreen.c \
 	   common/soundlib/libmpg/dct64_i386.c \
 	   common/soundlib/libmpg/decode_i386.c \
 	   common/soundlib/libmpg/interface.c \

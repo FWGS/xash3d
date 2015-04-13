@@ -16,20 +16,26 @@ GNU General Public License for more details.
 #include "touchscreen.h"
 #include "gl_local.h"
 
+#include "port.h"
+
+convar_t *touch_enable;
+
 touchbutton_t *buttons; // dynamic array of buttons
 touchbutton_t *lastButton;
 
 int x, y;
 
 
-
 void SDLash_TouchEvent(SDL_TouchFingerEvent finger)
 {
+	if(touch_enable->integer == 0)
+		return;
+
 	x = finger.x * glState.width;
 	y = finger.y * glState.height;
 
 	// Find suitable button
-	for( lastButton = buttons; lastButton != NULL; lastButton++ )
+	/*for( lastButton = buttons; lastButton != NULL; lastButton++ )
 	{
 		if( ( x > lastButton->touchField.left &&
 			  x < lastButton->touchField.right ) &&
@@ -39,15 +45,16 @@ void SDLash_TouchEvent(SDL_TouchFingerEvent finger)
 			lastButton->touchEvent(finger);
 			break;
 		}
-	}
+	}*/
 
-	MsgDev(D_NOTE, "Caught a Touch Event: %i %f %f, button pointer %p", finger.fingerId, finger.x, finger.y, lastButton);
+	MsgDev(D_NOTE, "Caught a Touch Event: %i %f %f\n", finger.fingerId, x, y, lastButton);
 }
 
-bool touchInit()
+void Touch_Init()
 {
-	buttons = (touchbutton_t*)malloc( sizeof(touchbutton_t) * 10 );
+	//buttons = (touchbutton_t*)malloc( sizeof(touchbutton_t) );
+	//Jump_Button_Init();
 	// Why ten? Because we can!
 
-
+	touch_enable = Cvar_Get( "touch_enable", "0", CVAR_ARCHIVE, "enable on-screen controls and event handling" );
 }
