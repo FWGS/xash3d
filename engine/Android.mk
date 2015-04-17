@@ -8,7 +8,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := xash
 
 APP_PLATFORM := android-12
-LOCAL_CFLAGS += -Og -D__MULTITEXTURE_SUPPORT__ -g -msoft-float -fsigned-char
+LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -fsigned-char -O3
+
+ifneq ($(TARGET_ARCH),x86)
+	LOCAL_CFLAGS += -msoft-float
+endif
+
 LOCAL_CONLYFLAGS += -std=c99
 
 LOCAL_C_INCLUDES := $(SDL_PATH)/include \
@@ -142,7 +147,7 @@ LOCAL_SRC_FILES := platform/android/android.c \
 	   common/soundlib/libmpg/tabinit.c \
 	   common/soundlib/libmpg/common.c
 
-LOCAL_SHARED_LIBRARIES := SDL2 SDL2_image
+LOCAL_SHARED_LIBRARIES := SDL2
 
 LOCAL_STATIC_LIBRARIES := NanoGL
 

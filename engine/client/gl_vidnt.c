@@ -19,7 +19,9 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "input.h"
 
-#include <SDL_image.h>
+#ifndef __ANDROID__
+#include <SDL_image.h> // Android: disable useless SDL_image
+#endif
 
 #ifdef __ANDROID__
 #include <GL/nanogl.h>
@@ -1438,7 +1440,6 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	static string	wndname;
 	Uint32 wndFlags = SDL_WINDOW_INPUT_GRABBED |
 		SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
-	SDL_Surface *ico;
 
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
 
@@ -1460,6 +1461,9 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
+#ifndef __ANDROID__
+	SDL_Surface *ico;
+
 	// find the icon file in the filesystem
 	if( FS_FileExists( GI->iconpath, true ))
 	{
@@ -1479,6 +1483,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 	// ico is NULL because there is no resource for standart icon. Sorry about that.
 	if(ico) SDL_SetWindowIcon(host.hWnd, ico);
+#endif
 
 	SDL_ShowWindow( host.hWnd );
 
