@@ -584,8 +584,8 @@ typedef struct
 
 typedef struct
 {
-	Uint16		gammaRamp[3];		// current gamma ramp, 0 is red, 1 is green, 2 is blue
-	Uint16		stateRamp[3];		// original gamma ramp
+	word		gammaRamp[768];		// current gamma ramp, 0 is red, 1 is green, 2 is blue
+	word		stateRamp[768];		// original gamma ramp
 
 	int		width, height;
 	qboolean		fullScreen;
