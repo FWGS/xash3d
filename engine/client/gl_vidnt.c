@@ -953,7 +953,7 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
-
+	//SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -1657,25 +1657,9 @@ R_Init_OpenGL
 */
 qboolean R_Init_OpenGL( void )
 {
-	//Sys_LoadLibrary( &opengl_dll );	// load opengl32.dll
-
-	//if( !opengl_dll.link )
-	//	return false;
-
 	GL_SetupAttributes();
 
-#ifdef XASH_GLES
-	// SDL creates only context through default EGL
-	/*NGLHandle = LoadLibrary(LIBPATH "/libNanoGL.so");
-	if(!NGLHandle)
-	{
-		MsgDev(D_ERROR, "R_Init_OpenGL: Couldn't load NanoGL library: %s", dlerror());
-		return false;
-	}*/
-	int error = SDL_GL_LoadLibrary(LIBPATH "/libNanoGL.so");
-#else
 	int error = SDL_GL_LoadLibrary(NULL);
-#endif
 
 	if(error == -1)
 	{
@@ -1698,10 +1682,6 @@ void R_Free_OpenGL( void )
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();
-
-#ifdef XASH_GLES
-	dlclose(NGLHandle);
-#endif
 
 	SDL_GL_UnloadLibrary ();
 
