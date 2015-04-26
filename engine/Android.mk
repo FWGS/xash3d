@@ -8,7 +8,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := xash
 
 APP_PLATFORM := android-12
-LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -fsigned-char -O3
+LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -fsigned-char -O3
 
 ifneq ($(TARGET_ARCH),x86)
 	LOCAL_CFLAGS += -msoft-float

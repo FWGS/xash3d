@@ -23,6 +23,7 @@ extern "C" {
 #ifndef _WIN32
 #include <linux/limits.h> // PATH_MAX
 #include <stddef.h> // size_t
+#include <stdio.h> // off_t
 #include "port.h"
 
 #define EXPORT __attribute__ ((visibility ("default")))
@@ -50,7 +51,7 @@ extern "C" {
 typedef unsigned long	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
-typedef size_t		fs_offset_t;
+typedef off_t		fs_offset_t;
 typedef struct file_s	file_t;		// normal file
 typedef struct wfile_s	wfile_t;		// wad file
 typedef struct stream_s	stream_t;		// sound stream for background music playing

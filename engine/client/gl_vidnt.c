@@ -867,9 +867,22 @@ GL_BuildGammaTable
 */
 void GL_BuildGammaTable( void )
 {
-	glState.gammaRamp[0] = glState.stateRamp[0];
-	glState.gammaRamp[1] = glState.stateRamp[1];
-	glState.gammaRamp[2] = glState.stateRamp[2];
+	int	i, v;
+	double	invGamma, div;
+
+	invGamma = 1.0 / bound( 0.5, vid_gamma->value, 2.3 );
+	div = (double) 1.0 / 255.5;
+
+	Q_memcpy( glState.gammaRamp, glState.stateRamp, sizeof( glState.gammaRamp ));
+
+	for( i = 0; i < 256; i++ )
+	{
+		v = (int)(65535.0 * pow(((double)i + 0.5 ) * div, invGamma ) + 0.5 );
+
+		glState.gammaRamp[i+0] = ((word)bound( 0, v, 65535 ));
+		glState.gammaRamp[i+256] = ((word)bound( 0, v, 65535 ));
+		glState.gammaRamp[i+512] = ((word)bound( 0, v, 65535 ));
+	}
 }
 
 /*
@@ -883,7 +896,7 @@ void GL_UpdateGammaRamp( void )
 
 	GL_BuildGammaTable();
 
-	//SDL_SetWindowGammaRamp( host.hWnd, &glState.gammaRamp[0], &glState.gammaRamp[1], &glState.gammaRamp[2] );
+	SDL_SetWindowGammaRamp( host.hWnd, &glState.gammaRamp[0], &glState.gammaRamp[256], &glState.gammaRamp[512] );
 }
 
 /*
@@ -953,8 +966,11 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
-
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 
 #ifdef __ANDROID__
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
@@ -1186,17 +1202,20 @@ uint VID_EnumerateInstances( void )
 
 void VID_StartupGamma( void )
 {
-	// Device supports gamma anyway, but cannot do anything with it.
-	glConfig.deviceSupportsGamma = 1;
-	GL_SetExtension( GL_HARDWARE_GAMMA_CONTROL, glConfig.deviceSupportsGamma );
-	/*
 	size_t	gamma_size;
 	byte	*savedGamma;
-	size_t	gammaTypeSize = sizeof(glState.stateRamp) * sizeof(Uint16);
+	size_t	gammaTypeSize = sizeof(glState.stateRamp);
 
 	// init gamma ramp
 	Q_memset( glState.stateRamp, 0, gammaTypeSize);
 
+#ifndef __ANDROID__
+	glConfig.deviceSupportsGamma = !SDL_GetWindowGammaRamp( host.hWnd, NULL, NULL, NULL);
+#else
+	// Android doesn't support hw gamma. (thanks, SDL!)
+
+	glConfig.deviceSupportsGamma = 0;
+#endif
 
 	if( !glConfig.deviceSupportsGamma )
 	{
@@ -1280,7 +1299,6 @@ void VID_StartupGamma( void )
 	}
 
 	vid_gamma->modified = true;
-	*/
 }
 
 void VID_RestoreGamma( void )
@@ -1292,7 +1310,7 @@ void VID_RestoreGamma( void )
 	if( VID_EnumerateInstances( ) > 1 ) return;
 
 	SDL_SetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
-			&glState.stateRamp[1], &glState.stateRamp[2] );
+			&glState.stateRamp[256], &glState.stateRamp[512] );
 }
 
 /*
@@ -1502,7 +1520,6 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			return false;
 
 		VID_StartupGamma();
-		//glConfig.deviceSupportsGamma = 1;
 	}
 	else
 	{
@@ -1654,25 +1671,9 @@ R_Init_OpenGL
 */
 qboolean R_Init_OpenGL( void )
 {
-	//Sys_LoadLibrary( &opengl_dll );	// load opengl32.dll
-
-	//if( !opengl_dll.link )
-	//	return false;
-
 	GL_SetupAttributes();
 
-#ifdef XASH_GLES
-	// SDL creates only context through default EGL
-	/*NGLHandle = LoadLibrary(LIBPATH "/libNanoGL.so");
-	if(!NGLHandle)
-	{
-		MsgDev(D_ERROR, "R_Init_OpenGL: Couldn't load NanoGL library: %s", dlerror());
-		return false;
-	}*/
-	int error = SDL_GL_LoadLibrary(LIBPATH "/libNanoGL.so");
-#else
 	int error = SDL_GL_LoadLibrary(NULL);
-#endif
 
 	if(error == -1)
 	{
@@ -1695,10 +1696,6 @@ void R_Free_OpenGL( void )
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();
-
-#ifdef XASH_GLES
-	dlclose(NGLHandle);
-#endif
 
 	SDL_GL_UnloadLibrary ();
 
