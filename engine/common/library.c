@@ -19,6 +19,11 @@ GNU General Public License for more details.
 #include "library.h"
 #include "filesystem.h"
 
+#ifdef _WIN32
+#define XASH_NONSTANDART_LOAD
+#warning "XASH_NONSTANDART_LOAD defined for Windows automatically"
+#endif
+
 #ifndef XASH_NONSTANDART_LOAD
 #ifdef __ANDROID__
 #include "platform/android/dlsym-weak.h"
@@ -44,10 +49,13 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		sprintf( path, "%s%s", search->filename, dllname );
 
 		pHandle = LoadLibrary( path );
-	}
 
-	char *error = dlerror();
-	if(error) MsgDev(D_ERROR, "loading library %s: %s", dllname, error);
+		if(!pHandle)
+		{
+			MsgDev(D_ERROR, "loading library %s: %s", dllname, dlerror());
+			return NULL;
+		}
+	}
 
 	return pHandle;
 }
@@ -79,14 +87,10 @@ dword Com_FunctionFromName( void *hInstance, const char *pName )
 
 const char *Com_NameForFunction( void *hInstance, dword function )
 {
-#ifdef _WIN32
-	return NULL; //later
-#else
 	// Note: dladdr() is a glibc extension
 	Dl_info info;
 	dladdr((void*)function, &info);
 	return info.dli_sname;
-#endif
 }
 #else
 /*
