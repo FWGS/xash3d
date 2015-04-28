@@ -1698,7 +1698,7 @@ void Con_DrawSolidConsole( float frac )
 	if( y >= 1 )
 	{
 		GL_SetRenderMode( kRenderNormal );
-		R_DrawStretchPic( 0, y - scr_height->integer, scr_width->integer, scr_width->integer * 4 / 3, 0, 0, 1, 1, con.background );
+		R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
 	}
 	else y = 0;
 
