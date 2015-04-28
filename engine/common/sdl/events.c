@@ -139,6 +139,10 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	{
 		keynum = key.keysym.scancode - 41;
 	}
+	if(key.keysym.scancode > 284) // Joystick keys are AUX, if present.
+	{
+		keynum = key.keysym.scancode - 285 + K_AUX1;
+	}
 	Key_Event(keynum, down);
 }
 

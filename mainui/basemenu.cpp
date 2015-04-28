@@ -797,6 +797,8 @@ const char *UI_DefaultKey( menuFramework_s *menu, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
+	case K_AUX1:
+	case K_AUX13:
 		if( item )
 		{
 			if( !(item->flags & (QMF_GRAYED|QMF_INACTIVE|QMF_HIDDEN|QMF_MOUSEONLY)))
