@@ -1462,10 +1462,9 @@ UI_VidInit
 int UI_VidInit( void )
 {
 	UI_Precache ();
-		
-	uiStatic.scaleX = ScreenWidth / 1024.0f;
-	uiStatic.scaleY = ScreenHeight / 768.0f;
-
+	// Sizes are based on screen height
+	uiStatic.scaleX = uiStatic.scaleY = ScreenHeight / 768.0f;
+	uiStatic.width = ScreenWidth / uiStatic.scaleX;
 	// move cursor to screen center
 	uiStatic.cursorX = ScreenWidth >> 1;
 	uiStatic.cursorY = ScreenHeight >> 1;

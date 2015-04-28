@@ -102,7 +102,7 @@ typedef enum
 	QMTYPE_FIELD,
 	QMTYPE_ACTION,
 	QMTYPE_BITMAP,
-	// CR: новый тип кнопки
+	// CR: пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	QMTYPE_BM_BUTTON
 } menuType_t;
 
@@ -374,9 +374,12 @@ typedef struct
 
 	int		buttons_draw_width;	// scaled image what we drawing
 	int		buttons_draw_height;
+	int		width;
 } uiStatic_t;
 
 extern uiStatic_t		uiStatic;
+
+#define DLG_X ((uiStatic.width - 640) / 2 - 192) // Dialogs are 640px in width
 
 extern char		uiEmptyString[256];	// HACKHACK
 extern const char		*uiSoundIn;
