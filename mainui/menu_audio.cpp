@@ -165,7 +165,7 @@ static void UI_Audio_Init( void )
 	uiAudio.background.generic.flags = QMF_INACTIVE;
 	uiAudio.background.generic.x = 0;
 	uiAudio.background.generic.y = 0;
-	uiAudio.background.generic.width = 1024;
+	uiAudio.background.generic.width = uiStatic.width;
 	uiAudio.background.generic.height = 768;
 	uiAudio.background.pic = ART_BACKGROUND;
 

@@ -103,7 +103,7 @@ static void UI_MultiPlayer_Init( void )
 	uiMultiPlayer.background.generic.flags = QMF_INACTIVE;
 	uiMultiPlayer.background.generic.x = 0;
 	uiMultiPlayer.background.generic.y = 0;
-	uiMultiPlayer.background.generic.width = 1024;
+	uiMultiPlayer.background.generic.width = uiStatic.width;
 	uiMultiPlayer.background.generic.height = 768;
 	uiMultiPlayer.background.pic = ART_BACKGROUND;
 
