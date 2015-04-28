@@ -266,9 +266,9 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 			ch = *l++;
 			ch &= 255;
 
-			// fix for letter ¸
-			if( ch == 0xB8 ) ch = (byte)'å';
-			if( ch == 0xA8 ) ch = (byte)'Å';
+			// fix for letter ï¿½
+			if( ch == 0xB8 ) ch = (byte)'ï¿½';
+			if( ch == 0xA8 ) ch = (byte)'ï¿½';
 
 			if( ch != ' ' )
 			{
@@ -342,7 +342,7 @@ void UI_DrawBackground_Callback( void *self )
 
 	// work out scaling factors
 	xScale = ScreenWidth / uiStatic.m_flTotalWidth;
-	yScale = ScreenHeight / uiStatic.m_flTotalHeight;
+	yScale = xScale;
 
 	// iterate and draw all the background pieces
 	ypos = 0;

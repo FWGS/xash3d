@@ -1698,7 +1698,7 @@ void Con_DrawSolidConsole( float frac )
 	if( y >= 1 )
 	{
 		GL_SetRenderMode( kRenderNormal );
-		R_DrawStretchPic( 0, y - scr_height->integer, scr_width->integer, scr_height->integer, 0, 0, 1, 1, con.background );
+		R_DrawStretchPic( 0, y - scr_height->integer, scr_width->integer, scr_width->integer * 4 / 3, 0, 0, 1, 1, con.background );
 	}
 	else y = 0;
 
@@ -1897,7 +1897,8 @@ void Con_RunConsole( void )
 	{
 		if( cls.state == ca_disconnected )
 			con.finalFrac = 1.0f;// full screen
-		else con.finalFrac = 0.5f;	// half screen	
+		else
+			con.finalFrac = 0.5f;	// half screen	
 	}
 	else con.finalFrac = 0; // none visible
 
