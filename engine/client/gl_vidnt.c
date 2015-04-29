@@ -1211,6 +1211,7 @@ uint VID_EnumerateInstances( void )
 
 void VID_StartupGamma( void )
 {
+	// Device supports gamma anyway, but cannot do anything with it.
 	size_t	gamma_size;
 	byte	*savedGamma;
 	size_t	gammaTypeSize = sizeof(glState.stateRamp);
@@ -1223,7 +1224,14 @@ void VID_StartupGamma( void )
 #else
 	// Android doesn't support hw gamma. (thanks, SDL!)
 
+#ifdef PANDORA
 	glConfig.deviceSupportsGamma = 0;
+	GL_BuildGammaTable();
+	vid_gamma->modified = true;
+	return;
+#else
+	glConfig.deviceSupportsGamma = 0;
+#endif
 #endif
 
 	if( !glConfig.deviceSupportsGamma )
