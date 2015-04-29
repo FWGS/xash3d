@@ -346,7 +346,7 @@ static const char *UI_Controls_KeyFunc( int key, int down )
 			return uiSoundLaunch;
 		}
 
-		if( key == K_ENTER && uiControls.dlgMessage.generic.flags & QMF_HIDDEN )
+		if( down && ( key == K_ENTER || key == K_AUX1 || key == K_AUX13 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN ) // ENTER, A or SELECT
 		{
 			if( !strlen( uiControls.keysBind[uiControls.keysList.curItem] ))
 			{
@@ -454,7 +454,7 @@ static void UI_Controls_Init( void )
 	uiControls.background.generic.flags = QMF_INACTIVE;
 	uiControls.background.generic.x = 0;
 	uiControls.background.generic.y = 0;
-	uiControls.background.generic.width = 1024;
+	uiControls.background.generic.width = uiStatic.width;
 	uiControls.background.generic.height = 768;
 	uiControls.background.pic = ART_BACKGROUND;
 
@@ -534,7 +534,7 @@ static void UI_Controls_Init( void )
 	uiControls.msgBox1.generic.type = QMTYPE_ACTION;
 	uiControls.msgBox1.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiControls.msgBox1.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiControls.msgBox1.generic.x = 192;
+	uiControls.msgBox1.generic.x = DLG_X + 192;
 	uiControls.msgBox1.generic.y = 256;
 	uiControls.msgBox1.generic.width = 640;
 	uiControls.msgBox1.generic.height = 128;
@@ -543,7 +543,7 @@ static void UI_Controls_Init( void )
 	uiControls.msgBox2.generic.type = QMTYPE_ACTION;
 	uiControls.msgBox2.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiControls.msgBox2.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiControls.msgBox2.generic.x = 192;
+	uiControls.msgBox2.generic.x = DLG_X + 192;
 	uiControls.msgBox2.generic.y = 256;
 	uiControls.msgBox2.generic.width = 640;
 	uiControls.msgBox2.generic.height = 256;
@@ -552,21 +552,21 @@ static void UI_Controls_Init( void )
 	uiControls.dlgMessage.generic.type = QMTYPE_ACTION;
 	uiControls.dlgMessage.generic.flags = QMF_INACTIVE|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiControls.dlgMessage.generic.name = "Press a key or button";
-	uiControls.dlgMessage.generic.x = 320;
+	uiControls.dlgMessage.generic.x = DLG_X + 320;
 	uiControls.dlgMessage.generic.y = 280;
 
 	uiControls.promptMessage.generic.id = ID_PROMPT;
 	uiControls.promptMessage.generic.type = QMTYPE_ACTION;
 	uiControls.promptMessage.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiControls.promptMessage.generic.name = "Reset buttons to default?";
-	uiControls.promptMessage.generic.x = 290;
+	uiControls.promptMessage.generic.x = DLG_X + 290;
 	uiControls.promptMessage.generic.y = 280;
 
 	uiControls.yes.generic.id = ID_YES;
 	uiControls.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiControls.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiControls.yes.generic.name = "Ok";
-	uiControls.yes.generic.x = 380;
+	uiControls.yes.generic.x = DLG_X + 380;
 	uiControls.yes.generic.y = 460;
 	uiControls.yes.generic.callback = UI_Controls_Callback;
 
@@ -576,7 +576,7 @@ static void UI_Controls_Init( void )
 	uiControls.no.generic.type = QMTYPE_BM_BUTTON;
 	uiControls.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiControls.no.generic.name = "Cancel";
-	uiControls.no.generic.x = 530;
+	uiControls.no.generic.x = DLG_X + 530;
 	uiControls.no.generic.y = 460;
 	uiControls.no.generic.callback = UI_Controls_Callback;
 

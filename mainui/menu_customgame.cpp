@@ -247,7 +247,7 @@ static void UI_CustomGame_Init( void )
 	uiCustomGame.background.generic.flags = QMF_INACTIVE;
 	uiCustomGame.background.generic.x = 0;
 	uiCustomGame.background.generic.y = 0;
-	uiCustomGame.background.generic.width = 1024;
+	uiCustomGame.background.generic.width = uiStatic.width;
 	uiCustomGame.background.generic.height = 768;
 	uiCustomGame.background.pic = ART_BACKGROUND;
 
@@ -314,7 +314,7 @@ static void UI_CustomGame_Init( void )
 	uiCustomGame.msgBox.generic.type = QMTYPE_ACTION;
 	uiCustomGame.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiCustomGame.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiCustomGame.msgBox.generic.x = 192;
+	uiCustomGame.msgBox.generic.x = DLG_X + 192;
 	uiCustomGame.msgBox.generic.y = 256;
 	uiCustomGame.msgBox.generic.width = 640;
 	uiCustomGame.msgBox.generic.height = 256;
@@ -323,14 +323,14 @@ static void UI_CustomGame_Init( void )
 	uiCustomGame.promptMessage.generic.type = QMTYPE_ACTION;
 	uiCustomGame.promptMessage.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiCustomGame.promptMessage.generic.name = "Leave current game?";
-	uiCustomGame.promptMessage.generic.x = 315;
+	uiCustomGame.promptMessage.generic.x = DLG_X + 315;
 	uiCustomGame.promptMessage.generic.y = 280;
 
 	uiCustomGame.yes.generic.id = ID_YES;
 	uiCustomGame.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiCustomGame.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiCustomGame.yes.generic.name = "Ok";
-	uiCustomGame.yes.generic.x = 380;
+	uiCustomGame.yes.generic.x = DLG_X + 380;
 	uiCustomGame.yes.generic.y = 460;
 	uiCustomGame.yes.generic.callback = UI_CustomGame_Callback;
 
@@ -340,7 +340,7 @@ static void UI_CustomGame_Init( void )
 	uiCustomGame.no.generic.type = QMTYPE_BM_BUTTON;
 	uiCustomGame.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiCustomGame.no.generic.name = "Cancel";
-	uiCustomGame.no.generic.x = 530;
+	uiCustomGame.no.generic.x = DLG_X + 530;
 	uiCustomGame.no.generic.y = 460;
 	uiCustomGame.no.generic.callback = UI_CustomGame_Callback;
 

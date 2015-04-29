@@ -196,7 +196,7 @@ static void UI_AdvControls_Init( void )
 	uiAdvControls.background.generic.flags = QMF_INACTIVE;
 	uiAdvControls.background.generic.x = 0;
 	uiAdvControls.background.generic.y = 0;
-	uiAdvControls.background.generic.width = 1024;
+	uiAdvControls.background.generic.width = uiStatic.width;
 	uiAdvControls.background.generic.height = 768;
 	uiAdvControls.background.pic = ART_BACKGROUND;
 

@@ -184,7 +184,7 @@ static void UI_VidModes_Init( void )
 	uiVidModes.background.generic.flags = QMF_INACTIVE;
 	uiVidModes.background.generic.x = 0;
 	uiVidModes.background.generic.y = 0;
-	uiVidModes.background.generic.width = 1024;
+	uiVidModes.background.generic.width = uiStatic.width;
 	uiVidModes.background.generic.height = 768;
 	uiVidModes.background.pic = ART_BACKGROUND;
 

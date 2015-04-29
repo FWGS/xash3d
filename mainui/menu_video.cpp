@@ -88,7 +88,7 @@ static void UI_Video_Init( void )
 	uiVideo.background.generic.flags = QMF_INACTIVE;
 	uiVideo.background.generic.x = 0;
 	uiVideo.background.generic.y = 0;
-	uiVideo.background.generic.width = 1024;
+	uiVideo.background.generic.width = uiStatic.width;
 	uiVideo.background.generic.height = 768;
 	uiVideo.background.pic = ART_BACKGROUND;
 

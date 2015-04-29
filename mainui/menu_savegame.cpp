@@ -333,7 +333,7 @@ static void UI_SaveGame_Init( void )
 	uiSaveGame.background.generic.flags = QMF_INACTIVE;
 	uiSaveGame.background.generic.x = 0;
 	uiSaveGame.background.generic.y = 0;
-	uiSaveGame.background.generic.width = 1024;
+	uiSaveGame.background.generic.width = uiStatic.width;
 	uiSaveGame.background.generic.height = 768;
 	uiSaveGame.background.pic = ART_BACKGROUND;
 
@@ -409,7 +409,7 @@ static void UI_SaveGame_Init( void )
 	uiSaveGame.msgBox.generic.type = QMTYPE_ACTION;
 	uiSaveGame.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiSaveGame.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiSaveGame.msgBox.generic.x = 192;
+	uiSaveGame.msgBox.generic.x = DLG_X + 192;
 	uiSaveGame.msgBox.generic.y = 256;
 	uiSaveGame.msgBox.generic.width = 640;
 	uiSaveGame.msgBox.generic.height = 256;
@@ -418,14 +418,14 @@ static void UI_SaveGame_Init( void )
 	uiSaveGame.promptMessage.generic.type = QMTYPE_ACTION;
 	uiSaveGame.promptMessage.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiSaveGame.promptMessage.generic.name = "Delete selected game?";
-	uiSaveGame.promptMessage.generic.x = 315;
+	uiSaveGame.promptMessage.generic.x = DLG_X + 315;
 	uiSaveGame.promptMessage.generic.y = 280;
 
 	uiSaveGame.yes.generic.id = ID_YES;
 	uiSaveGame.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiSaveGame.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiSaveGame.yes.generic.name = "Ok";
-	uiSaveGame.yes.generic.x = 380;
+	uiSaveGame.yes.generic.x = DLG_X + 380;
 	uiSaveGame.yes.generic.y = 460;
 	uiSaveGame.yes.generic.callback = UI_SaveGame_Callback;
 
@@ -435,7 +435,7 @@ static void UI_SaveGame_Init( void )
 	uiSaveGame.no.generic.type = QMTYPE_BM_BUTTON;
 	uiSaveGame.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiSaveGame.no.generic.name = "Cancel";
-	uiSaveGame.no.generic.x = 530;
+	uiSaveGame.no.generic.x = DLG_X + 530;
 	uiSaveGame.no.generic.y = 460;
 	uiSaveGame.no.generic.callback = UI_SaveGame_Callback;
 

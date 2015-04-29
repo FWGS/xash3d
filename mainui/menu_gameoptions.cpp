@@ -188,7 +188,7 @@ static void UI_GameOptions_Init( void )
 	uiGameOptions.background.generic.flags = QMF_INACTIVE;
 	uiGameOptions.background.generic.x = 0;
 	uiGameOptions.background.generic.y = 0;
-	uiGameOptions.background.generic.width = 1024;
+	uiGameOptions.background.generic.width = uiStatic.width;
 	uiGameOptions.background.generic.height = 768;
 	uiGameOptions.background.pic = ART_BACKGROUND;
 

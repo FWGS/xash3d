@@ -313,7 +313,7 @@ static void UI_LoadGame_Init( void )
 	uiLoadGame.background.generic.flags = QMF_INACTIVE;
 	uiLoadGame.background.generic.x = 0;
 	uiLoadGame.background.generic.y = 0;
-	uiLoadGame.background.generic.width = 1024;
+	uiLoadGame.background.generic.width = uiStatic.width;
 	uiLoadGame.background.generic.height = 768;
 	uiLoadGame.background.pic = ART_BACKGROUND;
 
@@ -389,7 +389,7 @@ static void UI_LoadGame_Init( void )
 	uiLoadGame.msgBox.generic.type = QMTYPE_ACTION;
 	uiLoadGame.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiLoadGame.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiLoadGame.msgBox.generic.x = 192;
+	uiLoadGame.msgBox.generic.x = DLG_X + 192;
 	uiLoadGame.msgBox.generic.y = 256;
 	uiLoadGame.msgBox.generic.width = 640;
 	uiLoadGame.msgBox.generic.height = 256;
@@ -398,14 +398,14 @@ static void UI_LoadGame_Init( void )
 	uiLoadGame.promptMessage.generic.type = QMTYPE_ACTION;
 	uiLoadGame.promptMessage.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiLoadGame.promptMessage.generic.name = "Delete selected game?";
-	uiLoadGame.promptMessage.generic.x = 315;
+	uiLoadGame.promptMessage.generic.x = DLG_X + 315;
 	uiLoadGame.promptMessage.generic.y = 280;
 
 	uiLoadGame.yes.generic.id = ID_YES;
 	uiLoadGame.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiLoadGame.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiLoadGame.yes.generic.name = "Ok";
-	uiLoadGame.yes.generic.x = 380;
+	uiLoadGame.yes.generic.x = DLG_X + 380;
 	uiLoadGame.yes.generic.y = 460;
 	uiLoadGame.yes.generic.callback = UI_LoadGame_Callback;
 
@@ -415,7 +415,7 @@ static void UI_LoadGame_Init( void )
 	uiLoadGame.no.generic.type = QMTYPE_BM_BUTTON;
 	uiLoadGame.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiLoadGame.no.generic.name = "Cancel";
-	uiLoadGame.no.generic.x = 530;
+	uiLoadGame.no.generic.x = DLG_X + 530;
 	uiLoadGame.no.generic.y = 460;
 	uiLoadGame.no.generic.callback = UI_LoadGame_Callback;
 

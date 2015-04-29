@@ -189,7 +189,7 @@ static void UI_NewGame_Init( void )
 	uiNewGame.background.generic.flags = QMF_INACTIVE;
 	uiNewGame.background.generic.x = 0;
 	uiNewGame.background.generic.y = 0;
-	uiNewGame.background.generic.width = 1024;
+	uiNewGame.background.generic.width = uiStatic.width;
 	uiNewGame.background.generic.height = 768;
 	uiNewGame.background.pic = ART_BACKGROUND;
 
@@ -250,7 +250,7 @@ static void UI_NewGame_Init( void )
 	uiNewGame.msgBox.generic.type = QMTYPE_ACTION;
 	uiNewGame.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiNewGame.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiNewGame.msgBox.generic.x = 192;
+	uiNewGame.msgBox.generic.x = DLG_X + 192;
 	uiNewGame.msgBox.generic.y = 256;
 	uiNewGame.msgBox.generic.width = 640;
 	uiNewGame.msgBox.generic.height = 256;
@@ -259,7 +259,7 @@ static void UI_NewGame_Init( void )
 	uiNewGame.dlgMessage1.generic.type = QMTYPE_ACTION;
 	uiNewGame.dlgMessage1.generic.flags = QMF_INACTIVE|QMF_HIDDEN|QMF_DROPSHADOW|QMF_CENTER_JUSTIFY;
 	uiNewGame.dlgMessage1.generic.name = MenuStrings[HINT_RESTART_GAME];
-	uiNewGame.dlgMessage1.generic.x = 192;
+	uiNewGame.dlgMessage1.generic.x = DLG_X + 192;
 	uiNewGame.dlgMessage1.generic.y = 280;
 	uiNewGame.dlgMessage1.generic.width = 640;
 	uiNewGame.dlgMessage1.generic.height = 256;
@@ -268,7 +268,7 @@ static void UI_NewGame_Init( void )
 	uiNewGame.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiNewGame.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiNewGame.yes.generic.name = "Ok";
-	uiNewGame.yes.generic.x = 380;
+	uiNewGame.yes.generic.x = DLG_X + 380;
 	uiNewGame.yes.generic.y = 460;
 	uiNewGame.yes.generic.callback = UI_NewGame_Callback;
 
@@ -278,7 +278,7 @@ static void UI_NewGame_Init( void )
 	uiNewGame.no.generic.type = QMTYPE_BM_BUTTON;
 	uiNewGame.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiNewGame.no.generic.name = "Cancel";
-	uiNewGame.no.generic.x = 530;
+	uiNewGame.no.generic.x = DLG_X + 530;
 	uiNewGame.no.generic.y = 460;
 	uiNewGame.no.generic.callback = UI_NewGame_Callback;
 
