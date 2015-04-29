@@ -506,7 +506,9 @@ void Sys_Break( const char *error, ... )
 
 	Sys_Quit();
 }
-
+#ifdef PANDORA
+void Pandora_Host_Shutdown( void );
+#endif
 /*
 ================
 Sys_Quit
@@ -515,7 +517,11 @@ Sys_Quit
 void Sys_Quit( void )
 {
 	MsgDev(D_INFO, "Shutting down...");
+	#ifdef PANDORA
+	Pandora_Host_Shutdown();	// some conflict somewhere with the name I guess
+	#else
 	Host_Shutdown();
+	#endif
 	exit( error_on_exit );
 }
 

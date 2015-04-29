@@ -17,6 +17,8 @@ GNU General Public License for more details.
 
 #ifndef _WIN32
 #define BI_RGB 0
+
+#pragma pack( 1 )
 typedef struct tagRGBQUAD {
 	BYTE rgbBlue;
 	BYTE rgbGreen;
@@ -45,6 +47,8 @@ typedef struct tagBITMAPINFOHEADER {
 	DWORD biClrUsed;
 	DWORD biClrImportant;
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+#pragma pack( )
+
 #endif
 
 /*
@@ -375,6 +379,7 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	cbBmpBits = biTrueWidth * pix->height * pixel_size;
 	if( pixel_size == 1 ) cbPalBytes = 256 * sizeof( RGBQUAD );
 
+	memset(&bmfh, 0, sizeof(bmfh));
 	// Bogus file header check
 	bmfh.bfType = MAKEWORD( 'B', 'M' );
 	bmfh.bfSize = sizeof( bmfh ) + sizeof( bmih ) + cbBmpBits + cbPalBytes;

@@ -559,6 +559,10 @@ msurfmesh_t *R_DecalCreateMesh( decalinfo_t *decalinfo, decal_t *pdecal, msurfac
 		mesh->elems[i*3+1] = i + 1;
 		mesh->elems[i*3+2] = i + 2;
 	}
+	#ifdef __arm__
+	float inv_w = 1.0f / surf->texinfo->texture->width;
+	float inv_h = 1.0f / surf->texinfo->texture->height;
+	#endif
 
 	// fill the mesh
 	for( i = 0; i < numVerts; i++, v += VERTEXSIZE )
@@ -573,8 +577,18 @@ msurfmesh_t *R_DecalCreateMesh( decalinfo_t *decalinfo, decal_t *pdecal, msurfac
 		out->stcoord[1] = v[4];
 		out->lmcoord[0] = v[5];
 		out->lmcoord[1] = v[6];
-		out->sccoord[0] = (( DotProduct( v , surf->texinfo->vecs[0] ) + surf->texinfo->vecs[0][3] ) / surf->texinfo->texture->width );
-		out->sccoord[1] = (( DotProduct( v , surf->texinfo->vecs[1] ) + surf->texinfo->vecs[1][3] ) / surf->texinfo->texture->height );
+		out->sccoord[0] = (( DotProduct( v , surf->texinfo->vecs[0] ) + surf->texinfo->vecs[0][3] ) 
+		#ifdef __arm__
+			* inv_w );
+		#else
+			/ surf->texinfo->texture->width );
+		#endif
+		out->sccoord[1] = (( DotProduct( v , surf->texinfo->vecs[1] ) + surf->texinfo->vecs[1][3] ) 
+		#ifdef __arm__
+			* inv_h );
+		#else
+			/ surf->texinfo->texture->height );
+		#endif
 
 		// clear colors (it can be used for vertex lighting)
 		Q_memset( out->color, 0xFF, sizeof( out->color ));

@@ -107,7 +107,7 @@ Host_NewGame
 qboolean Host_NewGame( const char *mapName, qboolean loadGame )
 {
 	qboolean	iRet;
-
+printf("Host_NewGame(\"%s\", %s)\n", mapName, (loadGame)?"TRUE":"FALSE");
 	iRet = SV_NewGame( mapName, loadGame );
 
 	return iRet;
@@ -862,7 +862,9 @@ void Host_FreeCommon( void )
 
 	Mem_FreePool( &host.mempool );
 }
-
+#ifdef PANDORA
+int noshouldermb = 0;
+#endif
 /*
 =================
 Host_Main
@@ -891,7 +893,9 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 	char moduleName[64], cmdLine[512] = "", *arg;
 	size_t size = 0;
 	int i = 0;
-
+#ifdef PANDORA
+	noshouldermb=0;
+#endif
 	for(i = 0; getdelim(&arg, &size, 0, fd) != -1; i++)
 	{
 		if(!i)
@@ -902,8 +906,16 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 		}
 		else
 		{
-			strcat(cmdLine, arg);
-			strcat(cmdLine, " ");
+			#ifdef PANDORA
+			if( !strcmp( arg, "--noshouldermb" )) {
+				noshouldermb=1;
+			} else {
+			#endif
+				strcat(cmdLine, arg);
+				strcat(cmdLine, " ");
+			#ifdef PANDORA
+			}
+			#endif
 		}
 	}
 	free(arg);
@@ -1070,3 +1082,26 @@ BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
 	return TRUE;
 #endif
 }
+
+#ifdef PANDORA
+void Pandora_Host_Shutdown( void )
+{
+	if( host.shutdown_issued ) return;
+	host.shutdown_issued = true;
+
+	if( host.state != HOST_ERR_FATAL ) host.state = HOST_SHUTDOWN; // prepare host to normal shutdown
+	if( !host.change_game ) Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
+
+	if( host.type == HOST_NORMAL )
+		Host_WriteConfig();
+
+	SV_Shutdown( false );
+	CL_Shutdown();
+
+	Mod_Shutdown();
+	NET_Shutdown();
+	Host_FreeCommon();
+	Con_DestroyConsole();
+
+}
+#endif

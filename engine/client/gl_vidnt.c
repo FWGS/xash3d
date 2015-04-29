@@ -32,8 +32,13 @@ GNU General Public License for more details.
 #include <X11/Xatom.h>
 #endif
 
+#ifdef PANDORA
+#define VID_AUTOMODE	"10"
+#define VID_DEFAULTMODE         2.0f
+#else
 #define VID_AUTOMODE	"-1"
 #define VID_DEFAULTMODE	2.0f
+#endif
 #define DISP_CHANGE_BADDUALVIEW	-6 // MSVC 6.0 doesn't
 #define num_vidmodes	( sizeof( vidmode ) / sizeof( vidmode[0] ))
 #define WINDOW_NAME			"Xash Window" // Half-Life
@@ -1604,6 +1609,9 @@ qboolean VID_SetMode( void )
 	qboolean	fullscreen;
 	rserr_t	err;
 
+#ifdef PANDORA
+	fullscreen = true;
+#else
 	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
 	{
 		SDL_DisplayMode mode;
@@ -1624,14 +1632,20 @@ qboolean VID_SetMode( void )
 			Cvar_SetFloat( "vid_mode", VID_DEFAULTMODE );
 		}
 	}
-
-	fullscreen = vid_fullscreen->integer;
-
+#endif
 	gl_swapInterval->modified = true;
 
+#ifdef PANDORA
+    if(( err = R_ChangeDisplaySettings( 10, fullscreen )) == rserr_ok )
+#else
 	if(( err = R_ChangeDisplaySettings( vid_mode->integer, fullscreen )) == rserr_ok )
+#endif
 	{
+#ifdef PANDORA
+		glConfig.prev_mode = 10;
+#else
 		glConfig.prev_mode = vid_mode->integer;
+#endif
 	}
 	else
 	{

@@ -44,6 +44,12 @@ GNU General Public License for more details.
 	#define GAMEPATH "/sdcard/xash"
     #else
 	#define MENUDLL "libxashmenu." OS_LIB_EXT
+    #ifdef PANDORA
+    #define CLIENTDLL "client." OS_LIB_EXT
+    #define SERVERDLL "hl." OS_LIB_EXT
+    #define LIBPATH "."
+    #define GAMEPATH "."
+    #else
 	#define CLIENTDLL "client." OS_LIB_EXT
     #endif
 

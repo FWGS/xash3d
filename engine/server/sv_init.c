@@ -714,9 +714,9 @@ qboolean SV_NewGame( const char *mapName, qboolean loadGame )
 {
 	if( !loadGame )
 	{
-		if( !SV_MapIsValid( mapName, GI->sp_entity, NULL ))
+		if( !SV_MapIsValid( mapName, GI->sp_entity, NULL )) {
 			return false;
-
+		}
 		SV_ClearSaveDir ();
 		SV_Shutdown( true );
 	}

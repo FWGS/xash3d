@@ -33,11 +33,11 @@ App* CEnginePanel::getApp( void )
 	return pApp;
 }
 
-void CEngineApp :: setCursorPos( int x, int y )
+void CEnginePanel::setPaintBorderEnabled( bool state )
 {
-	SDL_WarpMouseInWindow(host.hWnd, x, y);
+	return;
 }
-	
+
 void CEngineApp :: getCursorPos( int &x,int &y )
 {
 	SDL_GetMouseState(&x, &y);
