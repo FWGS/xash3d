@@ -97,14 +97,12 @@ static dframetype_t *R_SpriteLoadFrame( model_t *mod, void *pin, mspriteframe_t 
 	pspriteframe = Mem_Alloc( mod->mempool, sizeof( mspriteframe_t ));
 	pspriteframe->width = pinframe->width;
 	pspriteframe->height = pinframe->height;
-	#ifdef __VFP_FP__ 
-	float tmp;        // Cannot directly load unaligned int to float register
-	int tmp2;         // So load it to int first
-	tmp2 = *( pinframe->origin + 1 );
-	tmp = tmp2;
-	pspriteframe->up=tmp;
-	tmp = *( pinframe->origin );
-	pspriteframe->left = tmp;
+	#ifdef __VFP_FP__
+	volatile int tmp2;                // Cannot directly load unaligned int to float register
+	tmp2 = *( pinframe->origin + 1 ); // So load it to int first. Must not be optimized out
+	pspriteframe->up = tmp2;
+	tmp2 = *( pinframe->origin );
+	pspriteframe->left = tmp2;
 	tmp2 = *( pinframe->origin + 1 ) - pinframe->height;
 	pspriteframe->down = tmp2;
 	tmp2 = pinframe->width + * ( pinframe->origin );

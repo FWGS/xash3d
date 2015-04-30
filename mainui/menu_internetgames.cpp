@@ -287,7 +287,7 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.background.generic.flags = QMF_INACTIVE;
 	uiInternetGames.background.generic.x = 0;
 	uiInternetGames.background.generic.y = 0;
-	uiInternetGames.background.generic.width = 1024;
+	uiInternetGames.background.generic.width = uiStatic.width;
 	uiInternetGames.background.generic.height = 768;
 	uiInternetGames.background.pic = ART_BACKGROUND;
 	uiInternetGames.background.generic.ownerdraw = UI_Background_Ownerdraw;
@@ -360,7 +360,7 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.msgBox.generic.type = QMTYPE_ACTION;
 	uiInternetGames.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiInternetGames.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiInternetGames.msgBox.generic.x = 192;
+	uiInternetGames.msgBox.generic.x = DLG_X + 192;
 	uiInternetGames.msgBox.generic.y = 256;
 	uiInternetGames.msgBox.generic.width = 640;
 	uiInternetGames.msgBox.generic.height = 256;
@@ -369,21 +369,21 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.dlgMessage1.generic.type = QMTYPE_ACTION;
 	uiInternetGames.dlgMessage1.generic.flags = QMF_INACTIVE|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiInternetGames.dlgMessage1.generic.name = "Join a network game will exit";
-	uiInternetGames.dlgMessage1.generic.x = 248;
+	uiInternetGames.dlgMessage1.generic.x = DLG_X + 248;
 	uiInternetGames.dlgMessage1.generic.y = 280;
 
 	uiInternetGames.dlgMessage2.generic.id = ID_MSGTEXT;
 	uiInternetGames.dlgMessage2.generic.type = QMTYPE_ACTION;
 	uiInternetGames.dlgMessage2.generic.flags = QMF_INACTIVE|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiInternetGames.dlgMessage2.generic.name = "any current game, OK to exit?";
-	uiInternetGames.dlgMessage2.generic.x = 248;
+	uiInternetGames.dlgMessage2.generic.x = DLG_X + 248;
 	uiInternetGames.dlgMessage2.generic.y = 310;
 
 	uiInternetGames.yes.generic.id = ID_YES;
 	uiInternetGames.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiInternetGames.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiInternetGames.yes.generic.name = "Ok";
-	uiInternetGames.yes.generic.x = 380;
+	uiInternetGames.yes.generic.x = DLG_X + 380;
 	uiInternetGames.yes.generic.y = 460;
 	uiInternetGames.yes.generic.callback = UI_InternetGames_Callback;
 
@@ -393,7 +393,7 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.no.generic.type = QMTYPE_BM_BUTTON;
 	uiInternetGames.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiInternetGames.no.generic.name = "Cancel";
-	uiInternetGames.no.generic.x = 530;
+	uiInternetGames.no.generic.x = DLG_X + 530;
 	uiInternetGames.no.generic.y = 460;
 	uiInternetGames.no.generic.callback = UI_InternetGames_Callback;
 

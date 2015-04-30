@@ -266,9 +266,9 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 			ch = *l++;
 			ch &= 255;
 
-			// fix for letter ¸
-			if( ch == 0xB8 ) ch = (byte)'å';
-			if( ch == 0xA8 ) ch = (byte)'Å';
+			// fix for letter ï¿½
+			if( ch == 0xB8 ) ch = (byte)'ï¿½';
+			if( ch == 0xA8 ) ch = (byte)'ï¿½';
 
 			if( ch != ' ' )
 			{
@@ -342,7 +342,7 @@ void UI_DrawBackground_Callback( void *self )
 
 	// work out scaling factors
 	xScale = ScreenWidth / uiStatic.m_flTotalWidth;
-	yScale = ScreenHeight / uiStatic.m_flTotalHeight;
+	yScale = xScale;
 
 	// iterate and draw all the background pieces
 	ypos = 0;
@@ -797,6 +797,8 @@ const char *UI_DefaultKey( menuFramework_s *menu, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
+	case K_AUX1:
+	case K_AUX13:
 		if( item )
 		{
 			if( !(item->flags & (QMF_GRAYED|QMF_INACTIVE|QMF_HIDDEN|QMF_MOUSEONLY)))
@@ -1462,10 +1464,9 @@ UI_VidInit
 int UI_VidInit( void )
 {
 	UI_Precache ();
-		
-	uiStatic.scaleX = ScreenWidth / 1024.0f;
-	uiStatic.scaleY = ScreenHeight / 768.0f;
-
+	// Sizes are based on screen height
+	uiStatic.scaleX = uiStatic.scaleY = ScreenHeight / 768.0f;
+	uiStatic.width = ScreenWidth / uiStatic.scaleX;
 	// move cursor to screen center
 	uiStatic.cursorX = ScreenWidth >> 1;
 	uiStatic.cursorY = ScreenHeight >> 1;
