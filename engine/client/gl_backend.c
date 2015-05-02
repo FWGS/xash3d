@@ -407,6 +407,7 @@ void GL_SetRenderMode( int mode )
 		pglEnable( GL_BLEND );
 		pglDisable( GL_ALPHA_TEST );
 #ifdef XASH_GLES // Problem with blending exists on every GLES configuration, not only on Android
+		// On Pandora,  glshim will take care and change to GL_ONE, GL_ONE
 		pglBlendFunc( GL_ONE, GL_ONE );
 #else
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
@@ -499,7 +500,6 @@ qboolean VID_ScreenShot( const char *filename, int shot_type )
 	// get screen frame
 	pglPixelStorei(GL_PACK_ALIGNMENT, 1);	// PANDORA, just in case
 	pglReadPixels( 0, 0, r_shot->width, r_shot->height, GL_RGB, GL_UNSIGNED_BYTE, r_shot->buffer );
-
 	switch( shot_type )
 	{
 	case VID_SCREENSHOT:
