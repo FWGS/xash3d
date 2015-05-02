@@ -1226,8 +1226,7 @@ void VID_StartupGamma( void )
 
 #ifdef PANDORA
 	glConfig.deviceSupportsGamma = 0;
-	GL_BuildGammaTable();
-	vid_gamma->modified = true;
+	BuildGammaTable( vid_gamma->value, vid_texgamma->value );
 	return;
 #else
 	glConfig.deviceSupportsGamma = 0;
