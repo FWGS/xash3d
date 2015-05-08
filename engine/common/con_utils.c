@@ -67,6 +67,7 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 		int		ver = -1, mapver = -1, lumpofs = 0, lumplen = 0;
 		const char	*ext = FS_FileExtension( t->filenames[i] ); 
 		char		*ents = NULL, *pfile;
+		qboolean		paranoia = false;
 		qboolean		gearbox = false;
 			
 		if( Q_stricmp( ext, "bsp" )) continue;
@@ -75,12 +76,13 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 	
 		if( f )
 		{
-			dheader_t	*header, tmphdr;
+			dheader_t	*header;
+			dextrahdr_t	*hdrext;
 
-			Q_memset( &tmphdr, 0, sizeof( tmphdr ));
-			FS_Read( f, &tmphdr, sizeof( tmphdr ));
-			ver = tmphdr.version;
-			header = &tmphdr;
+			Q_memset( buf, 0, sizeof( buf ));
+			FS_Read( f, buf, sizeof( buf ));
+			header = (dheader_t *)buf;
+			ver = header->version;
                               
 			switch( ver )
 			{
@@ -101,6 +103,13 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 				}
 				break;
 			}
+
+			if( ver == XTBSP_VERSION )
+				hdrext = (dextrahdr_t *)((byte *)buf + sizeof( dheader31_t ));
+			else hdrext = (dextrahdr_t *)((byte *)buf + sizeof( dheader_t ));
+
+			if( hdrext->id == IDEXTRAHEADER && hdrext->version == EXTRA_VERSION )
+				paranoia = true;
 
 			Q_strncpy( entfilename, t->filenames[i], sizeof( entfilename ));
 			FS_StripExtension( entfilename );
@@ -154,12 +163,16 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 			break;
 		case HLBSP_VERSION:
 			if( gearbox ) Q_strncpy( buf, "Blue-Shift", sizeof( buf ));
+			else if( paranoia ) Q_strncpy( buf, "Paranoia 2", sizeof( buf ));
 			else Q_strncpy( buf, "Half-Life", sizeof( buf ));
 			break;
 		case XTBSP_VERSION:
-			Q_strncpy( buf, "Xash3D", sizeof( buf ));
+			if( paranoia ) Q_strncpy( buf, "Paranoia 2", sizeof( buf ));
+			else Q_strncpy( buf, "Xash3D", sizeof( buf ));
 			break;
-		default:	Q_strncpy( buf, "??", sizeof( buf )); break;
+		default:
+			Q_strncpy( buf, "??", sizeof( buf ));
+			break;
 		}
 
 		Msg( "%16s (%s) ^3%s^7\n", matchbuf, buf, message );

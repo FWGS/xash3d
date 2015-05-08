@@ -524,6 +524,17 @@ static pmtrace_t *pfnTraceLineEx( float *start, float *end, int flags, int usehu
 	return &tr;
 }
 
+static struct msurface_s *pfnTraceSurface( int ground, float *vstart, float *vend )
+{
+	physent_t *pe;
+
+	if( ground < 0 || ground >= svgame.pmove->numphysent )
+		return NULL; // bad ground
+
+	pe = &svgame.pmove->physents[ground];
+	return PM_TraceSurface( pe, vstart, vend );
+}
+
 /*
 ===============
 SV_InitClientMove
@@ -584,6 +595,7 @@ void SV_InitClientMove( void )
 	svgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx;
 	svgame.pmove->PM_TestPlayerPositionEx = pfnTestPlayerPositionEx;
 	svgame.pmove->PM_TraceLineEx = pfnTraceLineEx;
+	svgame.pmove->PM_TraceSurface = pfnTraceSurface;
 
 	// initalize pmove
 	svgame.dllFuncs.pfnPM_Init( svgame.pmove );

@@ -65,12 +65,12 @@ float r_turbsin[] =
 
 static qboolean CheckSkybox( const char *name )
 {
-	const char	*skybox_ext[2] = { "tga", "bmp" };
+	const char	*skybox_ext[] = { "dds", "tga", "bmp" };
 	int		i, j, num_checked_sides;
 	const char	*sidename;
 
 	// search for skybox images				
-	for( i = 0; i < 2; i++ )
+	for( i = 0; i < sizeof( skybox_ext ); i++ )
 	{	
 		num_checked_sides = 0;
 		for( j = 0; j < 6; j++ )

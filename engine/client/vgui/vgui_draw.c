@@ -88,6 +88,8 @@ void VGUI_UploadTexture( int id, const char *buffer, int width, int height )
 	}
 
 	Q_snprintf( texName, sizeof( texName ), "*vgui%i", id );
+	Q_memset( &r_image, 0, sizeof( r_image ));
+
 	r_image.width = width;
 	r_image.height = height;
 	r_image.type = PF_RGBA_32;
@@ -119,6 +121,8 @@ void VGUI_CreateTexture( int id, int width, int height )
 	}
 
 	Q_snprintf( texName, sizeof( texName ), "*vgui%i", id );
+	Q_memset( &r_image, 0, sizeof( r_image ));
+
 	r_image.width = width;
 	r_image.height = height;
 	r_image.type = PF_RGBA_32;

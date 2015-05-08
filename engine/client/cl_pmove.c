@@ -594,6 +594,17 @@ static pmtrace_t *pfnTraceLineEx( float *start, float *end, int flags, int usehu
 	return &tr;
 }
 
+static struct msurface_s *pfnTraceSurface( int ground, float *vstart, float *vend )
+{
+	physent_t *pe;
+
+	if( ground < 0 || ground >= clgame.pmove->numphysent )
+		return NULL; // bad ground
+
+	pe = &clgame.pmove->physents[ground];
+	return PM_TraceSurface( pe, vstart, vend );
+}
+
 /*
 ===============
 CL_InitClientMove
@@ -654,6 +665,7 @@ void CL_InitClientMove( void )
 	clgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx;
 	clgame.pmove->PM_TestPlayerPositionEx = pfnTestPlayerPositionEx;
 	clgame.pmove->PM_TraceLineEx = pfnTraceLineEx;
+	clgame.pmove->PM_TraceSurface = pfnTraceSurface;
 
 	// initalize pmove
 	clgame.dllFuncs.pfnPlayerMoveInit( clgame.pmove );

@@ -30,6 +30,9 @@ BRUSH MODELS
 #define HLBSP_VERSION	30	// half-life regular version
 #define XTBSP_VERSION	31	// extended lightmaps and expanded clipnodes limit
 
+#define IDEXTRAHEADER	(('H'<<24)+('S'<<16)+('A'<<8)+'X') // little-endian "XASH"
+#define EXTRA_VERSION	2 // because version 1 was occupied by old versions of XashXT
+
 #define DELUXEMAP_VERSION	1
 #define IDDELUXEMAPHEADER	(('T'<<24)+('I'<<16)+('L'<<8)+'Q') // little-endian "QLIT"
 
@@ -99,6 +102,14 @@ BRUSH MODELS
 #define LUMP_CLIPNODES2		15		// hull0 goes into LUMP_NODES, hull1 goes into LUMP_CLIPNODES,
 #define LUMP_CLIPNODES3		16		// hull2 goes into LUMP_CLIPNODES2, hull3 goes into LUMP_CLIPNODES3
 
+#define HEADER_LUMPS_31	17
+
+#define LUMP_FACES_EXTRADATA	0	// extension of dface_t
+#define LUMP_VERTS_EXTRADATA	1	// extension of dvertex_t
+#define LUMP_CUBEMAPS	2	// cubemap description
+
+#define EXTRA_LUMPS	8	// g-cont. just for future expansions
+
 // texture flags
 #define TEX_SPECIAL			BIT( 0 )		// sky or slime, no lightmap or 256 subdivision
 
@@ -121,6 +132,19 @@ typedef struct
 	int	fileofs;
 	int	filelen;
 } dlump_t;
+
+typedef struct
+{
+	int	version;
+	dlump_t	lumps[HEADER_LUMPS_31];
+} dheader31_t;
+
+typedef struct
+{
+	int	id; // must be little endian XASH
+	int	version;
+	dlump_t lumps[EXTRA_LUMPS];
+} dextrahdr_t;
 
 typedef struct
 {

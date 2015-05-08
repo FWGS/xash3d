@@ -383,25 +383,24 @@ void GL_FrontFace( GLenum front )
 
 void GL_SetRenderMode( int mode )
 {
+	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+
 	switch( mode )
 	{
 	case kRenderNormal:
 	default:
 		pglDisable( GL_BLEND );
 		pglDisable( GL_ALPHA_TEST );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 		break;
 	case kRenderTransColor:
 	case kRenderTransTexture:
 		pglEnable( GL_BLEND );
 		pglDisable( GL_ALPHA_TEST );
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 		break;
 	case kRenderTransAlpha:
 		pglDisable( GL_BLEND );
 		pglEnable( GL_ALPHA_TEST );
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 		break;
 	case kRenderGlow:
 	case kRenderTransAdd:
@@ -412,7 +411,6 @@ void GL_SetRenderMode( int mode )
 #else
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
 #endif
-		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 		break;
 	}
 }

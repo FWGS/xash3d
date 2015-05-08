@@ -1151,7 +1151,7 @@ static void Mod_LoadDeluxemap( void )
 	if( iCompare < 0 ) // this may happens if level-designer used -onlyents key for hlcsg
 		MsgDev( D_WARN, "Mod_LoadDeluxemap: %s probably is out of date\n", path );
 
-	in = FS_LoadFile( path, &world.vecdatasize, true );
+	in = FS_LoadFile( path, &world.vecdatasize, false );
 
 	ASSERT( in != NULL );
 

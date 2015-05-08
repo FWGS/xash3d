@@ -593,11 +593,16 @@ void Key_Event( int key, qboolean down )
 	// escape is always handled special
 	if( key == K_ESCAPE && down )
 	{
+		kb = keys[key].binding;
+
 		switch( cls.key_dest )
 		{
 		case key_game:
 			if( host.mouse_visible && cls.state != ca_cinematic )
+			{
+				clgame.dllFuncs.pfnKey_Event( down, key, keys[key].binding );
 				return; // handled in client.dll
+			}
 			break;
 		case key_message:
 			Key_Message( key );

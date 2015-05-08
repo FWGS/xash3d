@@ -617,6 +617,7 @@ trace_t SV_TraceHull( edict_t *ent, int hullNum, const vec3_t start, vec3_t mins
 trace_t SV_Move( const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int type, edict_t *e );
 trace_t SV_MoveNoEnts( const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int type, edict_t *e );
 const char *SV_TraceTexture( edict_t *ent, const vec3_t start, const vec3_t end );
+msurface_t *SV_TraceSurface( edict_t *ent, const vec3_t start, const vec3_t end );
 trace_t SV_MoveToss( edict_t *tossent, edict_t *ignore );
 void SV_LinkEdict( edict_t *ent, qboolean touch_triggers );
 void SV_TouchLinks( edict_t *ent, areanode_t *node );

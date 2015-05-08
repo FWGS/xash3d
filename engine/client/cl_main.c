@@ -278,6 +278,7 @@ void CL_CreateCmd( void )
 
 	ms = host.frametime * 1000;
 	if( ms > 250 ) ms = 100;	// time was unreasonable
+	else if( ms <= 0 ) ms = 1; // keep time an actual
 
 	Q_memset( &cmd, 0, sizeof( cmd ));
 

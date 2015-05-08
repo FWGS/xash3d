@@ -51,8 +51,10 @@ void SCR_DrawFPS( void )
 	static double	nexttime = 0, lasttime = 0;
 	static double	framerate = 0;
 	static int	framecount = 0;
+	static int	minfps = 9999;
+	static int	maxfps = 0;
 	double		newtime;
-	char		fpsstring[32];
+	char		fpsstring[64];
 	int		offset;
 
 	if( cls.state != ca_active ) return; 
@@ -81,14 +83,21 @@ void SCR_DrawFPS( void )
 
 	if( calc < 1.0f )
 	{
-		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i spf", (int)(1.0f / calc + 0.5));
+		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i spf", (int)(1.0f / calc + 0.5f));
 		MakeRGBA( color, 255, 0, 0, 255 );
 	}
 	else
 	{
-		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", (int)(calc + 0.5));
+		int	curfps = (int)(calc + 0.5f);
+
+		if( curfps < minfps ) minfps = curfps;
+		if( curfps > maxfps ) maxfps = curfps;
+
+		if( cl_showfps->integer == 2 )
+			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max", minfps, curfps, maxfps );
+		else Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
 		MakeRGBA( color, 255, 255, 255, 255 );
-          }
+	}
 
 	Con_DrawStringLen( fpsstring, &offset, NULL );
 	Con_DrawString( scr_width->integer - offset - 2, 4, fpsstring, color );

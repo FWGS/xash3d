@@ -58,6 +58,12 @@ typedef struct server_physics_api_s
 	const char	*( *pfnGetLightStyle )( int style ); // read custom appreance for selected lightstyle
 	void		( *pfnUpdateFogSettings )( unsigned int packed_fog );
 	char		**(*pfnGetFilesList)( const char *pattern, int *numFiles, int gamedironly );
+	struct msurface_s	*(*pfnTraceSurface)( edict_t *pTextureEntity, const float *v1, const float *v2 );
+	const byte *(*pfnGetTextureData)( unsigned int texnum );
+
+	// static allocations
+	void	*(*pfnMemAlloc)( size_t cb, const char *filename, const int fileline );
+	void	(*pfnMemFree)( void *mem, const char *filename, const int fileline );
 } server_physics_api_t;
 
 // physic callbacks

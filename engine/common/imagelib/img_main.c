@@ -90,6 +90,9 @@ const bpc_desc_t PFDesc[] =
 {PF_BGRA_32,	"BGRA 32",0x80E1, 4 },
 {PF_RGB_24,	"RGB 24",	0x1908, 3 },
 {PF_BGR_24,	"BGR 24",	0x80E0, 3 },
+{PF_DXT1, "DXT 1", 0x83F1, 4 },
+{PF_DXT3, "DXT 3", 0x83F2, 4 },
+{PF_DXT5, "DXT 5", 0x83F3, 4 },
 };
 
 void Image_Reset( void )
@@ -98,7 +101,7 @@ void Image_Reset( void )
 	image.width = image.height = image.depth = 0;
 	image.source_width = image.source_height = 0;
 	image.num_sides = image.flags = 0;
-	image.source_type = 0;
+	image.source_type = image.num_mips = 0;
 	image.type = PF_UNKNOWN;
 	image.fogParams[0] = 0;
 	image.fogParams[1] = 0;
@@ -143,7 +146,6 @@ rgbdata_t *ImagePack( void )
 		pack->buffer = image.rgba;
 		pack->width = image.width;
 		pack->height = image.height;
-		pack->depth = image.depth;
 		pack->type = image.type;
 		pack->size = image.size;
 	}
@@ -155,7 +157,9 @@ rgbdata_t *ImagePack( void )
 	pack->fogParams[3] = image.fogParams[3];
 
 	pack->flags = image.flags;
+	pack->numMips = image.num_mips;
 	pack->palette = image.palette;
+	pack->depth = image.depth;
 	
 	return pack;
 }

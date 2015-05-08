@@ -1912,6 +1912,17 @@ static char **pfnGetFilesList( const char *pattern, int *numFiles, int gamediron
 	return t->filenames;
 }
 
+static void *pfnMem_Alloc( size_t cb, const char *filename, const int fileline )
+{
+	return _Mem_Alloc( svgame.mempool, cb, filename, fileline );
+}
+
+static void pfnMem_Free( void *mem, const char *filename, const int fileline )
+{
+	_Mem_Free( mem, filename, fileline );
+}
+
+
 static server_physics_api_t gPhysicsAPI =
 {
 	SV_LinkEdict,
@@ -1930,6 +1941,10 @@ static server_physics_api_t gPhysicsAPI =
 	SV_GetLightStyle,
 	SV_UpdateFogSettings,
 	pfnGetFilesList,
+	SV_TraceSurface,
+	GL_TextureData,
+	pfnMem_Alloc,
+	pfnMem_Free,
 };
 
 /*

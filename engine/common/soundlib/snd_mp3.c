@@ -24,7 +24,7 @@ GNU General Public License for more details.
 #define MP3_OK		0
 #define MP3_NEED_MORE	1
 
-#define FRAME_SIZE		16384	// must match with mp3 frame size
+#define FRAME_SIZE		32768	// must match with mp3 frame size
 
 typedef struct mpeg_s
 {

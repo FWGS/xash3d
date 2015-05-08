@@ -46,6 +46,7 @@ GNU General Public License for more details.
 #define PARM_TEX_FLAGS	10
 #define PARM_TEX_TYPE	11
 #define PARM_TEX_CACHEFRAME	12	// compare with worldmodel->needload
+#define PARM_TEX_GLFORMAT	13	// get a texture GL-format
 // reserved
 #define PARM_WORLD_VERSION	16	// return the version of bsp
 #define PARM_SKY_SPHERE	17	// sky is quake sphere ?
@@ -123,6 +124,7 @@ typedef enum
 	TF_ALPHACONTRAST	= (1<<25),	// special texture flags for internal usage
 	TF_FLOAT		= (1<<26),	// float textures
 	TF_NOCOMPARE	= (1<<27),	// disable comparing for depth textures
+	TF_FLOATDATA	= (1<<28),
 } texFlags_t;
 
 typedef struct beam_s BEAM;

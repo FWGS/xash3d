@@ -82,14 +82,14 @@ typedef enum
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	0.96f		// engine current version
+#define XASH_VERSION	0.97f		// engine current version
 
 // PERFORMANCE INFO
 #define MIN_FPS         	15.0		// host minimum fps value for maxfps.
 #define MAX_FPS         	500.0		// upper limit for maxfps.
 
 #define MAX_FRAMETIME	0.1
-#define MIN_FRAMETIME	0.001
+#define MIN_FRAMETIME	0.000001
 
 #define MAX_CMD_TOKENS	80		// cmd tokens
 #define MAX_ENTNUMBER	99999		// for server and client parsing
@@ -421,6 +421,8 @@ typically expanded to rgba buffer
 NOTE: number at end of pixelformat name it's a total bitscount e.g. PF_RGB_24 == PF_RGB_888
 ========================================================================
 */
+#define ImageDXT( type ) (type == PF_DXT1 || type == PF_DXT3 || type == PF_DXT5)
+
 typedef enum
 {
 	PF_UNKNOWN = 0,
@@ -430,6 +432,9 @@ typedef enum
 	PF_BGRA_32,	// big endian RGBA (MacOS)
 	PF_RGB_24,	// uncompressed dds or another 24-bit image 
 	PF_BGR_24,	// big-endian RGB (MacOS)
+	PF_DXT1, // nvidia DXT1 format
+	PF_DXT3, // nvidia DXT3 format
+	PF_DXT5, // nvidia DXT5 format
 	PF_TOTALCOUNT,	// must be last
 } pixformat_t;
 
@@ -448,6 +453,7 @@ typedef enum
 	IL_KEEP_8BIT	= BIT(1),	// don't expand paletted images
 	IL_ALLOW_OVERWRITE	= BIT(2),	// allow to overwrite stored images
 	IL_DONTFLIP_TGA	= BIT(3),	// Steam background completely ignore tga attribute 0x20 (stupid lammers!)
+	IL_DDS_HARDWARE = BIT(4), // DXT compression is support
 } ilFlags_t;
 
 // rgbdata output flags
@@ -461,6 +467,7 @@ typedef enum
 	IMAGE_HAS_LUMA	= BIT(4),		// image has luma pixels (q1-style maps)
 	IMAGE_SKYBOX	= BIT(5),		// only used by FS_SaveImage - for write right suffixes
 	IMAGE_QUAKESKY	= BIT(6),		// it's a quake sky double layered clouds (so keep it as 8 bit)
+	IMAGE_DDS_FORMAT = BIT(7), // a hint for GL loader
 
 	// Image_Process manipulation flags
 	IMAGE_FLIP_X	= BIT(16),	// flip the image by width
@@ -496,6 +503,7 @@ typedef struct rgbdata_s
 	word	depth;		// image depth
 	uint	type;		// compression type
 	uint	flags;		// misc image flags
+	byte	numMips;	// mipmap count
 	byte	*palette;		// palette if present
 	byte	*buffer;		// image buffer
 	rgba_t	fogParams;	// some water textures in hl1 has info about fog color and alpha
@@ -522,6 +530,7 @@ typedef struct imgfilter_s
 //
 void Image_Init( void );
 void Image_Shutdown( void );
+void Image_AddCmdFlags( uint flags );
 rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size );
 qboolean FS_SaveImage( const char *filename, rgbdata_t *pix );
 rgbdata_t *FS_CopyImage( rgbdata_t *in );
@@ -530,6 +539,7 @@ extern const bpc_desc_t PFDesc[];	// image get pixelformat
 qboolean Image_Process( rgbdata_t **pix, int width, int height, float gamma, uint flags, imgfilter_t *filter );
 void Image_PaletteHueReplace( byte *palSrc, int newHue, int start, int end );
 void Image_SetForceFlags( uint flags );	// set image force flags on loading
+size_t Image_DXTGetLinearSize( int type, int width, int height, int depth );
 
 /*
 ========================================================================
@@ -853,7 +863,8 @@ void Cmd_AutoComplete( char *complete_string );
 void COM_SetRandomSeed( long lSeed );
 long Com_RandomLong( long lMin, long lMax );
 float Com_RandomFloat( float fMin, float fMax );
-void TrimSpace( const char *source, char *dest );
+void TrimSpace( const char *source, char *dest );\
+const byte *GL_TextureData( unsigned int texnum );
 void GL_FreeImage( const char *name );
 void VID_RestoreGamma( void );
 void UI_SetActiveMenu( qboolean fActive );

@@ -1353,6 +1353,42 @@ trace_t SV_MoveNoEnts( const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_
 
 /*
 ==================
+SV_TraceSurface
+
+find the face where the traceline hit
+assume pTextureEntity is valid
+==================
+*/
+msurface_t *SV_TraceSurface( edict_t *ent, const vec3_t start, const vec3_t end )
+{
+	matrix4x4		matrix;
+	model_t		*bmodel;
+	hull_t		*hull;
+	vec3_t		start_l, end_l;
+	vec3_t		offset;
+
+	bmodel = Mod_Handle( ent->v.modelindex );
+	if( !bmodel || bmodel->type != mod_brush )
+		return NULL;
+
+	hull = SV_HullForBsp( ent, vec3_origin, vec3_origin, offset );
+
+	VectorSubtract( start, offset, start_l );
+	VectorSubtract( end, offset, end_l );
+
+	// rotate start and end into the models frame of reference
+	if( !VectorIsNull( ent->v.angles ))
+	{
+		Matrix4x4_CreateFromEntity( matrix, ent->v.angles, offset, 1.0f );
+		Matrix4x4_VectorITransform( matrix, start, start_l );
+		Matrix4x4_VectorITransform( matrix, end, end_l );
+	}
+
+	return PM_RecursiveSurfCheck( bmodel, &bmodel->nodes[hull->firstclipnode], start_l, end_l );
+}
+
+/*
+==================
 SV_TraceTexture
 
 find the face where the traceline hit

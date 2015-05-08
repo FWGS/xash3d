@@ -1511,7 +1511,8 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->falldir )))
 		GameInfo->falldir[0] = '\0';
 
-	Mem_Free( afile );
+	if( afile != NULL )
+		Mem_Free( afile );
 
 	return true;
 }
@@ -2388,7 +2389,7 @@ indicates at reached end of file
 qboolean FS_Eof( file_t* file )
 {
 	if( !file ) return true;
-	return (file->position == file->real_length) ? true : false;
+	return (( file->position - file->buff_len + file->buff_ind ) == file->real_length ) ? true : false;
 }
 
 /*

@@ -2345,7 +2345,24 @@ static const char *pfnTraceTexture( int ground, float *vstart, float *vend )
 	pe = &clgame.pmove->physents[ground];
 	return PM_TraceTexture( pe, vstart, vend );
 }
-	
+
+/*
+=============
+pfnTraceSurface
+
+=============
+*/
+static struct msurface_s *pfnTraceSurface( int ground, float *vstart, float *vend )
+{
+	physent_t *pe;
+
+	if( ground < 0 || ground >= clgame.pmove->numphysent )
+		return NULL; // bad ground
+
+	pe = &clgame.pmove->physents[ground];
+	return PM_TraceSurface( pe, vstart, vend );
+}
+
 /*
 =============
 pfnStopAllSounds
@@ -3684,6 +3701,7 @@ static event_api_t gEventApi =
 	CL_IndexEvent,
 	CL_PlayerTraceExt,
 	CL_SoundFromIndex,
+	pfnTraceSurface,
 };
 
 static demo_api_t gDemoApi =

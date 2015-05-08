@@ -32,9 +32,10 @@ GNU General Public License for more details.
 #include <X11/Xatom.h>
 #endif
 
-#define VID_DEFAULTMODE		"1"
+#define VID_AUTOMODE	"-1"
+#define VID_DEFAULTMODE	2.0f
 #define DISP_CHANGE_BADDUALVIEW	-6 // MSVC 6.0 doesn't
-#define num_vidmodes		((int)(sizeof(vidmode) / sizeof(vidmode[0])) - 1)
+#define num_vidmodes	( sizeof( vidmode ) / sizeof( vidmode[0] ))
 #define WINDOW_NAME			"Xash Window" // Half-Life
 
 convar_t	*renderinfo;
@@ -148,6 +149,7 @@ vidmode_t vidmode[] =
 { "Mode 20: 16x9",	1920,	1080,	true	},
 { "Mode 21: 16x9",	1920,	1200,	true	},
 { "Mode 22: 16x9",	2560,	1600,	true	},
+{ "Mode 23: 16x9",	1600,	900,	true	},
 };
 
 #ifdef __ANDROID__
@@ -990,6 +992,8 @@ qboolean GL_CreateContext( void )
 #ifdef __ANDROID__
 	nanoGL_Init();
 #endif
+	/*if( !Sys_CheckParm( "-gldebug" ) || host.developer < 1 ) // debug bit the kills perfomance
+		return true;*/
 
 	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
 	{
@@ -1600,7 +1604,29 @@ qboolean VID_SetMode( void )
 	qboolean	fullscreen;
 	rserr_t	err;
 
+	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
+	{
+		SDL_DisplayMode mode;
+
+		SDL_GetDesktopDisplayMode(0, &mode);
+
+		int	iScreenWidth = mode.w;
+		int	iScreenHeight = mode.h;
+
+		if( R_DescribeVIDMode( iScreenWidth, iScreenHeight ))
+		{
+			MsgDev( D_NOTE, "found specified vid mode %i [%ix%i]\n", vid_mode->integer, iScreenWidth, iScreenHeight );
+			Cvar_SetFloat( "fullscreen", 1 );
+		}
+		else
+		{
+			MsgDev( D_NOTE, "failed to set specified vid mode [%ix%i]\n", iScreenWidth, iScreenHeight );
+			Cvar_SetFloat( "vid_mode", VID_DEFAULTMODE );
+		}
+	}
+
 	fullscreen = vid_fullscreen->integer;
+
 	gl_swapInterval->modified = true;
 
 	if(( err = R_ChangeDisplaySettings( vid_mode->integer, fullscreen )) == rserr_ok )
@@ -1673,11 +1699,9 @@ qboolean R_Init_OpenGL( void )
 {
 	GL_SetupAttributes();
 
-	int error = SDL_GL_LoadLibrary(NULL);
-
-	if(error == -1)
+	if( SDL_GL_LoadLibrary( NULL ) )
 	{
-		MsgDev(D_ERROR, "SDL_GL_LoadLibrary: Couldn't load GL library: %s", SDL_GetError());
+		MsgDev( D_ERROR, "Couldn't initialize OpenGL: %s\n", SDL_GetError());
 		return false;
 	}
 
@@ -1782,7 +1806,10 @@ void R_RenderInfo_f( void )
 	Msg( "GL_VENDOR: %s\n", glConfig.vendor_string );
 	Msg( "GL_RENDERER: %s\n", glConfig.renderer_string );
 	Msg( "GL_VERSION: %s\n", glConfig.version_string );
-	Msg( "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
+
+	// don't spam about extensions
+	if( host.developer >= 4 )
+		Msg( "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
 
 	Msg( "GL_MAX_TEXTURE_SIZE: %i\n", glConfig.max_2d_texture_size );
 	
@@ -1798,6 +1825,8 @@ void R_RenderInfo_f( void )
 	{
 		Msg( "GL_MAX_TEXTURE_COORDS_ARB: %i\n", glConfig.max_texture_coords );
 		Msg( "GL_MAX_TEXTURE_IMAGE_UNITS_ARB: %i\n", glConfig.max_teximage_units );
+		Msg( "GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB: %i\n", glConfig.max_vertex_uniforms );
+		Msg( "GL_MAX_VERTEX_ATTRIBS_ARB: %i\n", glConfig.max_vertex_attribs );
 	}
 
 	Msg( "\n" );
@@ -1883,7 +1912,7 @@ void GL_InitCommands( void )
 
 	vid_gamma = Cvar_Get( "gamma", "1.0", CVAR_ARCHIVE, "gamma amount" );
 	vid_texgamma = Cvar_Get( "texgamma", "2.2", CVAR_GLCONFIG, "texgamma amount (default Half-Life artwork gamma)" );
-	vid_mode = Cvar_Get( "vid_mode", VID_DEFAULTMODE, CVAR_RENDERINFO, "display resolution mode" );
+	vid_mode = Cvar_Get( "vid_mode", VID_AUTOMODE, CVAR_RENDERINFO, "display resolution mode" );
 	vid_fullscreen = Cvar_Get( "fullscreen", "0", CVAR_RENDERINFO, "set in 1 to enable fullscreen mode" );
 	vid_displayfrequency = Cvar_Get ( "vid_displayfrequency", "0", CVAR_RENDERINFO, "fullscreen refresh rate" );
 
@@ -1960,7 +1989,12 @@ void GL_InitExtensions( void )
 	GL_CheckExtension( "GL_ARB_texture_cube_map", NULL, "gl_texture_cubemap", GL_TEXTURECUBEMAP_EXT );
 
 	if( GL_Support( GL_TEXTURECUBEMAP_EXT ))
+	{
 		pglGetIntegerv( GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, &glConfig.max_cubemap_size );
+
+		// check for seamless cubemaps too
+		GL_CheckExtension( "GL_ARB_seamless_cube_map", NULL, "gl_seamless_cubemap", GL_ARB_SEAMLESS_CUBEMAP );
+	}
 
 	// point particles extension
 	GL_CheckExtension( "GL_EXT_point_parameters", pointparametersfunc, NULL, GL_EXT_POINTPARAMETERS );
@@ -2016,6 +2050,7 @@ void GL_InitExtensions( void )
 	GL_CheckExtension( "GL_ARB_shadow", NULL, "gl_arb_shadow", GL_SHADOW_EXT );
 
 	GL_CheckExtension( "GL_ARB_texture_float", NULL, "gl_arb_texture_float", GL_ARB_TEXTURE_FLOAT_EXT );
+	GL_CheckExtension( "GL_ARB_depth_buffer_float", NULL, "gl_arb_depth_float", GL_ARB_DEPTH_FLOAT_EXT );
 
 	// occlusion queries
 	GL_CheckExtension( "GL_ARB_occlusion_query", occlusionfunc, "gl_occlusion_queries", GL_OCCLUSION_QUERIES_EXT );
@@ -2053,6 +2088,9 @@ void GL_InitExtensions( void )
 	Cvar_Get( "gl_max_texture_size", "0", CVAR_INIT, "opengl texture max dims" );
 	Cvar_Set( "gl_max_texture_size", va( "%i", glConfig.max_2d_texture_size ));
 
+	pglGetIntegerv( GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, &glConfig.max_vertex_uniforms );
+	pglGetIntegerv( GL_MAX_VERTEX_ATTRIBS_ARB, &glConfig.max_vertex_attribs );
+
 	// MCD has buffering issues
 	if(Q_strstr( glConfig.renderer_string, "gdi" ))
 		Cvar_SetFloat( "gl_finish", 1 );
@@ -2062,6 +2100,9 @@ void GL_InitExtensions( void )
 	// software mipmap generator does wrong result with NPOT textures ...
 	if( !GL_Support( GL_SGIS_MIPMAPS_EXT ))
 		GL_SetExtension( GL_ARB_TEXTURE_NPOT_EXT, false );
+
+	if( GL_Support( GL_TEXTURE_COMPRESSION_EXT ))
+		Image_AddCmdFlags( IL_DDS_HARDWARE );
 
 	glw_state.initialized = true;
 

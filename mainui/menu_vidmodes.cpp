@@ -62,6 +62,7 @@ static const char *uiVideoModes[] =
 	"1920 x 1080 (wide)",
 	"1920 x 1200 (wide)",
 	"2560 x 1600 (wide)",
+	"1600 x 900 (wide)",
 };
 
 typedef struct
