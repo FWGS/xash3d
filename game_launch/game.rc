@@ -25,4 +25,4 @@
 
 #include <common.ver>
 
-IDI_ICON1	ICON    DISCARDABLE		"game.ico"
+IDI_ICON1	ICON    DISCARDABLE		"icon-xash-material.ico"

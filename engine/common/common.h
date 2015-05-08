@@ -28,7 +28,6 @@ extern "C" {
 
 #define EXPORT __attribute__ ((visibility ("default")))
 #else
-#define PATH_MAX 1024
 #define EXPORT		__declspec( dllexport )
 #endif
 

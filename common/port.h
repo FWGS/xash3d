@@ -27,8 +27,10 @@ GNU General Public License for more details.
     #include <dlfcn.h>
 
     #ifdef __APPLE__
+	#include <sys/syslimits.h>
 	#define OS_LIB_EXT "dylib"
     #else
+	#include <linux/limits.h>
 	#define OS_LIB_EXT "so"
     #endif
 

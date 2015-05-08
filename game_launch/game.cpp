@@ -15,14 +15,18 @@ GNU General Public License for more details.
 
 #include <SDL_messagebox.h>
 
-#ifdef __unix__
+#ifdef __APPLE__
  #include <dlfcn.h>
  #include <errno.h>
- #ifdef __APPLE__
-  #define XASHLIB                "xash.dylib"
- #else
-  #define XASHLIB                "libxash.so"
- #endif
+ #define XASHLIB                "xash.dylib"
+ #define LoadLibrary(x)          dlopen(x, RTLD_LAZY)
+ #define FreeLibrary(x)          dlclose(x)
+ #define GetProcAddress(x, y)    dlsym(x, y)
+ #define HINSTANCE               void*
+#elif __unix__
+ #include <dlfcn.h>
+ #include <errno.h>
+ #define XASHLIB                "libxash.so"
  #define LoadLibrary(x)          dlopen(x, RTLD_LAZY)
  #define FreeLibrary(x)          dlclose(x)
  #define GetProcAddress(x, y)    dlsym(x, y)
