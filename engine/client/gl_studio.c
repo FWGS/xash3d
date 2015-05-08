@@ -46,14 +46,14 @@ static vec3_t hullcolor[8] =
 // enumerate all the bones that used for gait animation
 const char *legs_bones[] =
 {
-{ "Bip01" },
-{ "Bip01 Pelvis" },
-{ "Bip01 L Leg" },
-{ "Bip01 L Leg1" },
-{ "Bip01 L Foot" },
-{ "Bip01 R Leg" },
-{ "Bip01 R Leg1" },
-{ "Bip01 R Foot" },
+ "Bip01" ,
+ "Bip01 Pelvis" ,
+ "Bip01 L Leg" ,
+ "Bip01 L Leg1" ,
+ "Bip01 L Foot" ,
+ "Bip01 R Leg" ,
+ "Bip01 R Leg1" ,
+ "Bip01 R Foot" ,
 };
 
 typedef struct studiolight_s
@@ -2662,9 +2662,12 @@ static void R_StudioDrawPlanarShadow( void )
 	pglEnableClientState( GL_VERTEX_ARRAY );
 	pglVertexPointer( 3, GL_FLOAT, 12, g_xarrayverts );
 
+#ifndef __ANDROID__
 	if( GL_Support( GL_DRAW_RANGEELEMENTS_EXT ))
 		pglDrawRangeElementsEXT( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
-	else pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
+	else
+#endif
+	pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
 
 	if( glState.stencilEnabled )
 		pglDisable( GL_STENCIL_TEST );

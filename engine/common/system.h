@@ -23,7 +23,7 @@ extern "C" {
 #include <setjmp.h>
 #include <stdio.h>
 #include <time.h>
-#include <SDL2/SDL.h>
+#include <SDL_messagebox.h>
 
 #define MSGBOX( x )		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Xash Error", x, NULL )
 #define MSGBOX2( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Error", x, NULL )

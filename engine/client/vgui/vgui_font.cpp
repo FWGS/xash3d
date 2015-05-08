@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifdef XASH_VGUI
 #include "common.h"
 #include "vgui_draw.h"
 #include "vgui_main.h"
@@ -171,3 +171,4 @@ bool FontCache::AllocatePageForChar( int charWide, int charTall, int &pageIndex,
 
 	return true;
 }
+#endif

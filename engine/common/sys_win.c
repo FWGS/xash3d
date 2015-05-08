@@ -14,7 +14,9 @@ GNU General Public License for more details.
 */
 
 #include "port.h"
-#include <SDL2/SDL.h>
+#include <SDL_timer.h>
+#include <SDL_clipboard.h>
+#include <SDL_video.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -97,7 +99,9 @@ char *Sys_GetCurrentUser( void )
 #ifdef _WIN32
 	if( !GetUserName( s_userName, &size ) || !s_userName[0] )
 #else
+#ifndef __ANDROID__
 	if( !getlogin_r( s_userName, size || !s_userName[0] ) )
+#endif
 		Q_strcpy( s_userName, "player" );
 #endif
 
@@ -510,6 +514,7 @@ Sys_Quit
 */
 void Sys_Quit( void )
 {
+	MsgDev(D_INFO, "Shutting down...");
 	Host_Shutdown();
 	exit( error_on_exit );
 }

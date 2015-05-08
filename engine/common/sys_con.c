@@ -15,6 +15,12 @@ GNU General Public License for more details.
 
 #include "common.h"
 
+#include <SDL_mutex.h>
+
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 /*
 ===============================================================================
 
@@ -316,7 +322,6 @@ void Con_CreateConsole( void )
 	}
 
 	Sys_InitLog();
-
 	if( !RegisterClass( &wc ))
 	{
 		// print into log
@@ -383,6 +388,14 @@ void Con_CreateConsole( void )
           }
 	else s_wcd.status = false;
 #endif
+
+	if( Sys_CheckParm( "-log" ) && host.developer != 0 )
+	{
+		s_wcd.log_active = true;
+		Q_strncpy( s_wcd.log_path, "engine.log", sizeof( s_wcd.log_path ));
+	}
+
+	Sys_InitLog();
 }
 
 /*
@@ -553,10 +566,14 @@ void Sys_CloseLog( void )
 
 void Sys_PrintLog( const char *pMsg )
 {
-	printf( "%s", pMsg );
+#ifdef __ANDROID__
+	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
+#endif
+
+	puts( pMsg );
 	fflush( stdout );
 
 	if( !s_wcd.logfile ) return;
-	fprintf( s_wcd.logfile, pMsg );
+	fputs( pMsg, s_wcd.logfile );
 	fflush( s_wcd.logfile );
 }

@@ -1738,8 +1738,9 @@ void Host_ClientFrame( void )
 
 	// if in the debugger last frame, don't timeout
 	if( host.frametime > 5.0f ) cls.netchan.last_received = Sys_DoubleTime();
-
+#ifdef XASH_VGUI
 	VGui_RunFrame ();
+#endif
 
 	clgame.dllFuncs.pfnFrame( host.frametime );
 
@@ -1798,7 +1799,7 @@ void CL_Init( void )
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
-	if( !CL_LoadProgs( va( "%s/client." OS_LIB_EXT, GI->dll_path )))
+	if( !CL_LoadProgs( va( "%s/" CLIENTDLL , GI->dll_path )))
 		Host_Error( "can't initialize client.dll\n" );
 
 	cls.initialized = true;

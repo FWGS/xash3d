@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <SDL2/SDL.h>
+#include <SDL_messagebox.h>
 
 #ifdef __APPLE__
  #include <dlfcn.h>

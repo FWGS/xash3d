@@ -20,10 +20,13 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
+#ifndef _WIN32
+#include <linux/limits.h> // PATH_MAX
+#include <stddef.h> // size_t
+#include <stdio.h> // off_t
 #include "port.h"
 
-#ifndef _WIN32
-#define EXPORT
+#define EXPORT __attribute__ ((visibility ("default")))
 #else
 #define EXPORT		__declspec( dllexport )
 #endif
@@ -47,7 +50,7 @@ extern "C" {
 typedef unsigned long	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
-typedef long		fs_offset_t;
+typedef off_t		fs_offset_t;
 typedef struct file_s	file_t;		// normal file
 typedef struct wfile_s	wfile_t;		// wad file
 typedef struct stream_s	stream_t;		// sound stream for background music playing
@@ -601,6 +604,10 @@ int Q_buildnum( void );
 //
 // host.c
 //
+#ifdef __ANDROID__
+typedef void (*pfnChangeGame)( const char *progname );
+int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func );
+#endif
 void EXPORT Host_Shutdown( void );
 void Host_SetServerState( int state );
 int Host_ServerState( void );

@@ -347,7 +347,7 @@ static void UI_Main_Init( void )
 	uiMain.background.generic.flags = QMF_INACTIVE;
 	uiMain.background.generic.x = 0;
 	uiMain.background.generic.y = 0;
-	uiMain.background.generic.width = 1024;
+	uiMain.background.generic.width = uiStatic.width;
 	uiMain.background.generic.height = 768;
 	uiMain.background.pic = ART_BACKGROUND;
 	uiMain.background.generic.ownerdraw = UI_Background_Ownerdraw;
@@ -499,7 +499,7 @@ static void UI_Main_Init( void )
 	uiMain.minimizeBtn.generic.id = ID_MINIMIZE;
 	uiMain.minimizeBtn.generic.type = QMTYPE_BITMAP;
 	uiMain.minimizeBtn.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_MOUSEONLY|QMF_ACT_ONRELEASE;
-	uiMain.minimizeBtn.generic.x = 952;
+	uiMain.minimizeBtn.generic.x = uiStatic.width - 72;
 	uiMain.minimizeBtn.generic.y = 13;
 	uiMain.minimizeBtn.generic.width = 32;
 	uiMain.minimizeBtn.generic.height = 32;
@@ -510,7 +510,7 @@ static void UI_Main_Init( void )
 	uiMain.quitButton.generic.id = ID_QUIT_BUTTON;
 	uiMain.quitButton.generic.type = QMTYPE_BITMAP;
 	uiMain.quitButton.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_MOUSEONLY|QMF_ACT_ONRELEASE;
-	uiMain.quitButton.generic.x = 984;
+	uiMain.quitButton.generic.x = uiStatic.width - 36;
 	uiMain.quitButton.generic.y = 13;
 	uiMain.quitButton.generic.width = 32;
 	uiMain.quitButton.generic.height = 32;
@@ -522,7 +522,7 @@ static void UI_Main_Init( void )
 	uiMain.msgBox.generic.type = QMTYPE_ACTION;
 	uiMain.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiMain.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiMain.msgBox.generic.x = 192;
+	uiMain.msgBox.generic.x = DLG_X + 192;
 	uiMain.msgBox.generic.y = 256;
 	uiMain.msgBox.generic.width = 640;
 	uiMain.msgBox.generic.height = 256;
@@ -531,7 +531,7 @@ static void UI_Main_Init( void )
 	uiMain.quitMessage.generic.type = QMTYPE_ACTION;
 	uiMain.quitMessage.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN|QMF_CENTER_JUSTIFY;
 	uiMain.quitMessage.generic.name = (CL_IsActive( )) ? MenuStrings[HINT_QUIT_ACTIVE] : MenuStrings[HINT_QUIT];
-	uiMain.quitMessage.generic.x = 192;
+	uiMain.quitMessage.generic.x = DLG_X + 192;
 	uiMain.quitMessage.generic.y = 280;
 	uiMain.quitMessage.generic.width = 640;
 	uiMain.quitMessage.generic.height = 256;
@@ -540,7 +540,7 @@ static void UI_Main_Init( void )
 	uiMain.dlgMessage1.generic.type = QMTYPE_ACTION;
 	uiMain.dlgMessage1.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN|QMF_CENTER_JUSTIFY;
 	uiMain.dlgMessage1.generic.name = MenuStrings[HINT_RESTART_HZ];
-	uiMain.dlgMessage1.generic.x = 192;
+	uiMain.dlgMessage1.generic.x = DLG_X + 192;
 	uiMain.dlgMessage1.generic.y = 280;
 	uiMain.dlgMessage1.generic.width = 640;
 	uiMain.dlgMessage1.generic.height = 256;
@@ -549,7 +549,7 @@ static void UI_Main_Init( void )
 	uiMain.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiMain.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiMain.yes.generic.name = "Ok";
-	uiMain.yes.generic.x = 380;
+	uiMain.yes.generic.x = DLG_X + 380;
 	uiMain.yes.generic.y = 460;
 	uiMain.yes.generic.callback = UI_Main_Callback;
 
@@ -559,7 +559,7 @@ static void UI_Main_Init( void )
 	uiMain.no.generic.type = QMTYPE_BM_BUTTON;
 	uiMain.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
 	uiMain.no.generic.name = "Cancel";
-	uiMain.no.generic.x = 530;
+	uiMain.no.generic.x = DLG_X + 530;
 	uiMain.no.generic.y = 460;
 	uiMain.no.generic.callback = UI_Main_Callback;
 	

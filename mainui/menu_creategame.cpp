@@ -285,7 +285,7 @@ static void UI_CreateGame_Init( void )
 	uiCreateGame.background.generic.flags = QMF_INACTIVE;
 	uiCreateGame.background.generic.x = 0;
 	uiCreateGame.background.generic.y = 0;
-	uiCreateGame.background.generic.width = 1024;
+	uiCreateGame.background.generic.width = uiStatic.width;
 	uiCreateGame.background.generic.height = 768;
 	uiCreateGame.background.pic = ART_BACKGROUND;
 
@@ -407,7 +407,7 @@ static void UI_CreateGame_Init( void )
 	uiCreateGame.msgBox.generic.type = QMTYPE_ACTION;
 	uiCreateGame.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiCreateGame.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiCreateGame.msgBox.generic.x = 192;
+	uiCreateGame.msgBox.generic.x = DLG_X + 192;
 	uiCreateGame.msgBox.generic.y = 256;
 	uiCreateGame.msgBox.generic.width = 640;
 	uiCreateGame.msgBox.generic.height = 256;
@@ -416,21 +416,21 @@ static void UI_CreateGame_Init( void )
 	uiCreateGame.dlgMessage1.generic.type = QMTYPE_ACTION;
 	uiCreateGame.dlgMessage1.generic.flags = QMF_INACTIVE|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiCreateGame.dlgMessage1.generic.name = "Starting a new game will exit";
-	uiCreateGame.dlgMessage1.generic.x = 248;
+	uiCreateGame.dlgMessage1.generic.x = DLG_X + 248;
 	uiCreateGame.dlgMessage1.generic.y = 280;
 
 	uiCreateGame.dlgMessage2.generic.id = ID_MSGTEXT;
 	uiCreateGame.dlgMessage2.generic.type = QMTYPE_ACTION;
 	uiCreateGame.dlgMessage2.generic.flags = QMF_INACTIVE|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiCreateGame.dlgMessage2.generic.name = "any current game, OK to exit?";
-	uiCreateGame.dlgMessage2.generic.x = 248;
+	uiCreateGame.dlgMessage2.generic.x = DLG_X + 248;
 	uiCreateGame.dlgMessage2.generic.y = 310;
 
 	uiCreateGame.yes.generic.id = ID_YES;
 	uiCreateGame.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiCreateGame.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiCreateGame.yes.generic.name = "Ok";
-	uiCreateGame.yes.generic.x = 380;
+	uiCreateGame.yes.generic.x = DLG_X + 380;
 	uiCreateGame.yes.generic.y = 460;
 	uiCreateGame.yes.generic.callback = UI_CreateGame_Callback;
 
@@ -440,7 +440,7 @@ static void UI_CreateGame_Init( void )
 	uiCreateGame.no.generic.type = QMTYPE_BM_BUTTON;
 	uiCreateGame.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiCreateGame.no.generic.name = "Cancel";
-	uiCreateGame.no.generic.x = 530;
+	uiCreateGame.no.generic.x = DLG_X + 530;
 	uiCreateGame.no.generic.y = 460;
 	uiCreateGame.no.generic.callback = UI_CreateGame_Callback;
 

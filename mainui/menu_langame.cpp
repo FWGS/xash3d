@@ -287,7 +287,7 @@ static void UI_LanGame_Init( void )
 	uiLanGame.background.generic.flags = QMF_INACTIVE;
 	uiLanGame.background.generic.x = 0;
 	uiLanGame.background.generic.y = 0;
-	uiLanGame.background.generic.width = 1024;
+	uiLanGame.background.generic.width = uiStatic.width;
 	uiLanGame.background.generic.height = 768;
 	uiLanGame.background.pic = ART_BACKGROUND;
 	uiLanGame.background.generic.ownerdraw = UI_Background_Ownerdraw;
@@ -360,7 +360,7 @@ static void UI_LanGame_Init( void )
 	uiLanGame.msgBox.generic.type = QMTYPE_ACTION;
 	uiLanGame.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
 	uiLanGame.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
-	uiLanGame.msgBox.generic.x = 192;
+	uiLanGame.msgBox.generic.x = DLG_X + 192;
 	uiLanGame.msgBox.generic.y = 256;
 	uiLanGame.msgBox.generic.width = 640;
 	uiLanGame.msgBox.generic.height = 256;
@@ -369,21 +369,21 @@ static void UI_LanGame_Init( void )
 	uiLanGame.dlgMessage1.generic.type = QMTYPE_ACTION;
 	uiLanGame.dlgMessage1.generic.flags = QMF_INACTIVE|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiLanGame.dlgMessage1.generic.name = "Join a network game will exit";
-	uiLanGame.dlgMessage1.generic.x = 248;
+	uiLanGame.dlgMessage1.generic.x = DLG_X + 248;
 	uiLanGame.dlgMessage1.generic.y = 280;
 
 	uiLanGame.dlgMessage2.generic.id = ID_MSGTEXT;
 	uiLanGame.dlgMessage2.generic.type = QMTYPE_ACTION;
 	uiLanGame.dlgMessage2.generic.flags = QMF_INACTIVE|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiLanGame.dlgMessage2.generic.name = "any current game, OK to exit?";
-	uiLanGame.dlgMessage2.generic.x = 248;
+	uiLanGame.dlgMessage2.generic.x = DLG_X + 248;
 	uiLanGame.dlgMessage2.generic.y = 310;
 
 	uiLanGame.yes.generic.id = ID_YES;
 	uiLanGame.yes.generic.type = QMTYPE_BM_BUTTON;
 	uiLanGame.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiLanGame.yes.generic.name = "Ok";
-	uiLanGame.yes.generic.x = 380;
+	uiLanGame.yes.generic.x = DLG_X + 380;
 	uiLanGame.yes.generic.y = 460;
 	uiLanGame.yes.generic.callback = UI_LanGame_Callback;
 
@@ -393,7 +393,7 @@ static void UI_LanGame_Init( void )
 	uiLanGame.no.generic.type = QMTYPE_BM_BUTTON;
 	uiLanGame.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_HIDDEN|QMF_DROPSHADOW;
 	uiLanGame.no.generic.name = "Cancel";
-	uiLanGame.no.generic.x = 530;
+	uiLanGame.no.generic.x = DLG_X + 530;
 	uiLanGame.no.generic.y = 460;
 	uiLanGame.no.generic.callback = UI_LanGame_Callback;
 

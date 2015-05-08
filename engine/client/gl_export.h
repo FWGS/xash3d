@@ -15,6 +15,95 @@ GNU General Public License for more details.
 
 #ifndef GL_EXPORT_H
 #define GL_EXPORT_H
+
+#ifdef __ANDROID__
+
+#include "platform/android/gl_mangle.h"
+#undef pglMultiTexCoord2f
+
+#include <GL/gl.h>
+
+
+#define GL_TEXTURE0_ARB                     0x84C0
+#define GL_TEXTURE1_ARB                     0x84C1
+
+#define glActiveTextureARB glActiveTexture
+#define glClientActiveTextureARB glClientActiveTexture
+#define glTexEnvi glTexEnvf
+
+#define GL_TEXTURE_COMPARE_MODE_ARB       0x884C
+#define GL_TEXTURE_COMPARE_FUNC_ARB       0x884D
+#define GL_COMPARE_R_TO_TEXTURE_ARB       0x884E
+#define GL_TEXTURE_CUBE_MAP_ARB           0x8513
+#define GL_BGRA					0x80E1
+#define GL_TEXTURE_3D				0x806F
+#define GL_DEPTH_TEXTURE_MODE_ARB         0x884B
+#define GL_COMPRESSED_ALPHA_ARB           0x84E9
+#define GL_COMPRESSED_LUMINANCE_ARB       0x84EA
+#define GL_COMPRESSED_LUMINANCE_ALPHA_ARB 0x84EB
+#define GL_COMPRESSED_INTENSITY_ARB       0x84EC
+#define GL_COMPRESSED_RGB_ARB             0x84ED
+#define GL_COMPRESSED_RGBA_ARB            0x84EE
+#define GL_RGBA32F_ARB                    0x8814
+#define GL_RGB32F_ARB                     0x8815
+#define GL_ALPHA32F_ARB                   0x8816
+#define GL_INTENSITY32F_ARB               0x8817
+#define GL_LUMINANCE32F_ARB               0x8818
+#define GL_LUMINANCE_ALPHA32F_ARB         0x8819
+#define GL_RGBA16F_ARB                    0x881A
+#define GL_RGB16F_ARB                     0x881B
+#define GL_ALPHA16F_ARB                   0x881C
+#define GL_INTENSITY16F_ARB               0x881D
+#define GL_LUMINANCE16F_ARB               0x881E
+#define GL_LUMINANCE_ALPHA16F_ARB         0x881F
+#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT   0x83F0
+#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT  0x83F1
+#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT  0x83F2
+#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT  0x83F3
+
+#define GL_GENERATE_MIPMAP                0x8191
+#define GL_GENERATE_MIPMAP_HINT           0x8192
+
+#define GL_TEXTURE_CUBE_MAP			0x8513
+#define GL_TEXTURE_BINDING_CUBE_MAP		0x8514
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_X		0x8515
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X		0x8516
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y		0x8517
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y		0x8518
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z		0x8519
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z		0x851A
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB 0x8515
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB 0x8516
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB 0x8517
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB 0x8518
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB 0x8519
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB 0x851A
+#define GL_TEXTURE_RECTANGLE_EXT		0x84F5
+
+
+#define GL_GENERATE_MIPMAP_SGIS           0x8191
+#define GL_GENERATE_MIPMAP_HINT_SGIS      0x8192
+
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT     0x84FE
+#define GL_CLAMP_TO_BORDER			0x812D
+#define GL_TEXTURE_WRAP_R			0x8072
+#define GL_TEXTURE_LOD_BIAS_EXT           0x8501
+
+#define GL_ADD_SIGNED				0x8574
+
+#define GL_MAX_RECTANGLE_TEXTURE_SIZE_NV  0x84F8
+#define GL_TEXTURE_RECTANGLE_NV           0x84F5
+#define GL_MAX_TEXTURE_IMAGE_UNITS_ARB    0x8872
+#define GL_MAX_TEXTURE_COORDS_ARB         0x8871
+#define GL_MAX_3D_TEXTURE_SIZE_EXT        0x8073
+#define GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB  0x851C
+#define GL_MAX_TEXTURE_UNITS_ARB          0x84E2
+
+#define GL_MAX_TEXTURE_LOD_BIAS_EXT       0x84FD
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
+#define GL_MAX_3D_TEXTURE_SIZE            0x8073
+
+#else
 #ifndef APIENTRY
 #define APIENTRY
 #endif
@@ -1170,5 +1259,7 @@ void ( APIENTRY * pglSelectTextureSGIS) ( GLenum );
 void ( APIENTRY * pglMTexCoord2fSGIS) ( GLenum, GLfloat, GLfloat );
 void ( APIENTRY * pglSwapInterval) ( int interval );
 extern void *pglGetProcAddress( const GLubyte * );
+
+#endif
 
 #endif//GL_EXPORT_H

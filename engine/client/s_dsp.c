@@ -41,6 +41,10 @@ GNU General Public License for more details.
 #define XFADE( y1, y2, r )	(((y1) * (r)) >> PBITS) + (((y2) * (PMAX - (r))) >> PBITS);
 #define XFADEF( y1, y2, r )	(((y1) * (r)) / (float)(PMAX)) + (((y2) * (PMAX - (r))) / (float)(PMAX));
 
+#ifdef __ANDROID__
+#undef _inline
+#define _inline static inline
+#endif
 /////////////////////
 // dsp helpers
 /////////////////////

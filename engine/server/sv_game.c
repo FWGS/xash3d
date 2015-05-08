@@ -2818,7 +2818,7 @@ static void pfnEngineFprintf( FILE *pfile, char *szFmt, ... )
 	Q_vsnprintf( buffer, 2048, szFmt, args );
 	va_end( args );
 
-	fprintf( pfile, buffer );
+	fputs( buffer, pfile );
 }
 	
 /*

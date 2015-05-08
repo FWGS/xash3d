@@ -16,6 +16,12 @@ GNU General Public License for more details.
 #ifndef PORT_H
 #define PORT_H
 
+#ifdef XASH_VGUI
+    #if !(defined(__i386__) || defined(_X86_))
+	#error "VGUI is exists only for x86. You must disable VGUI flag or build Xash3D for x86 target."
+    #endif
+#endif
+
 #ifndef _WIN32
     #include <limits.h>
     #include <dlfcn.h>
@@ -27,8 +33,19 @@ GNU General Public License for more details.
 	#include <linux/limits.h>
 	#define OS_LIB_EXT "so"
     #endif
-    #define MENUDLL "libxashmenu." OS_LIB_EXT
-    #define MAX_PATH PATH_MAX
+
+    #ifdef __ANDROID__
+	#define MENUDLL "libmenu." OS_LIB_EXT
+	#define CLIENTDLL "libclient." OS_LIB_EXT
+	#define SERVERDLL "libserver." OS_LIB_EXT
+	#define APPPATH "/data/data/in.celest.xash3d.hl/"
+	#define LIBPATH APPPATH "lib"
+	#define ASSETSPATH APPPATH "assets"
+	#define GAMEPATH "/sdcard/xash"
+    #else
+	#define MENUDLL "libxashmenu." OS_LIB_EXT
+	#define CLIENTDLL "client." OS_LIB_EXT
+    #endif
 
     #define TRUE	    1
     #define FALSE	    0
@@ -42,7 +59,7 @@ GNU General Public License for more details.
 
     // Windows functions to Linux equivalent
     #define _mkdir( x ) mkdir( x, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH )
-    #define LoadLibrary( x ) dlopen( x, RTLD_LAZY )
+    #define LoadLibrary( x ) dlopen( x, RTLD_NOW )
     #define GetProcAddress( x, y ) dlsym( x, y )
     #define FreeLibrary( x ) dlclose( x )
     #define MAKEWORD(a,b)   ((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
@@ -72,7 +89,7 @@ GNU General Public License for more details.
 #else
     #define OS_LIB_EXT "dll"
     #define MENUDLL "mainui." OS_LIB_EXT
-    #define PATH_MAX 1024
+    #define CLIENTDLL "client." OS_LIB_EXT
 #endif
 
 #endif

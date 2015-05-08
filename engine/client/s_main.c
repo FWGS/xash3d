@@ -23,6 +23,11 @@ GNU General Public License for more details.
 #define MAX_DUPLICATED_CHANNELS	4		// threshold for identical static channels (probably error)
 #define SND_CLIP_DISTANCE		(float)(GI->soundclip_dist)
 
+#ifdef __ANDROID__
+#undef _inline
+#define _inline static inline
+#endif
+
 dma_t		dma;
 byte		*sndpool;
 static soundfade_t	soundfade;
@@ -1786,6 +1791,7 @@ qboolean S_Init( void )
 	s_cull = Cvar_Get( "s_cull", "0", CVAR_ARCHIVE, "cull sounds by geometry" );
 	s_test = Cvar_Get( "s_test", "0", 0, "engine developer cvar for quick testing new features" );
 	s_phs = Cvar_Get( "s_phs", "0", CVAR_ARCHIVE, "cull sounds by PHS" );
+	s_khz = Cvar_Get("s_khz", "44", CVAR_ARCHIVE, "set sampling frequency. Available values is 11, 22, 44, 48");
 
 	Cmd_AddCommand( "play", S_Play_f, "playing a specified sound file" );
 	Cmd_AddCommand( "playvol", S_PlayVol_f, "playing a specified sound file with specified volume" );

@@ -23,6 +23,12 @@ int SDLash_EventFilter( SDL_Event* event)
 			SDLash_WheelEvent(event->wheel);
 			break;
 
+		case SDL_FINGERMOTION:
+		case SDL_FINGERUP:
+		case SDL_FINGERDOWN:
+			SDLash_TouchEvent(event->tfinger);
+			break;
+
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEBUTTONDOWN:
 			SDLash_MouseEvent(event->button);
@@ -56,30 +62,32 @@ int SDLash_EventFilter( SDL_Event* event)
 				}
 			}
 	}
+#ifdef XASH_VGUI
 	VGUI_SurfaceWndProc(event);
+#endif
 	return 0;
 }
+
 void SDLash_KeyEvent(SDL_KeyboardEvent key)
 {
 	// TODO: improve that.
 	int keynum = key.keysym.sym;
 	int down = key.type == SDL_KEYDOWN ? 1 : 0;
-	if(key.repeat) return;
 	switch(key.keysym.sym)
 	{
 	case SDLK_BACKSPACE:
-		keynum =  K_BACKSPACE;
+		keynum = K_BACKSPACE;
 		break;
-	case SDL_SCANCODE_UP:
+	case SDLK_UP:
 		keynum = K_UPARROW;
 		break;
-	case SDL_SCANCODE_DOWN:
+	case SDLK_DOWN:
 		keynum = K_DOWNARROW;
 		break;
-	case SDL_SCANCODE_LEFT:
+	case SDLK_LEFT:
 		keynum = K_LEFTARROW;
 		break;
-	case SDL_SCANCODE_RIGHT:
+	case SDLK_RIGHT:
 		keynum = K_RIGHTARROW;
 		break;
 	case SDLK_LALT:
@@ -112,6 +120,15 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	case SDLK_END:
 		keynum = K_END;
 		break;
+	case ANDROID_K_BACK:
+		keynum = K_ESCAPE;
+		break;
+	case SDLK_VOLUMEDOWN:
+		keynum = 'e';
+		break;
+	case SDLK_VOLUMEUP:
+		keynum = K_SPACE;
+		break;
 	}
 
 	if((key.keysym.sym >= SDLK_F1) && (key.keysym.sym <= SDLK_F12))
@@ -122,7 +139,10 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	{
 		keynum = key.keysym.scancode - 41;
 	}
-	//printf("Pressed key. Code: %i\n", keynum);
+	if(key.keysym.scancode > 284) // Joystick keys are AUX, if present.
+	{
+		keynum = key.keysym.scancode - 285 + K_AUX1;
+	}
 	Key_Event(keynum, down);
 }
 

@@ -344,6 +344,8 @@ IN_Init
 */
 void IN_Init( void )
 {
+	Touch_Init(); // initialize touch screen
+
 	IN_StartupMouse( );
 }
 

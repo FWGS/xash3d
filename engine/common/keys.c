@@ -17,6 +17,8 @@ GNU General Public License for more details.
 #include "input.h"
 #include "client.h"
 
+#include <SDL_keyboard.h>
+
 typedef struct key_s
 {
 	qboolean		down;
@@ -93,7 +95,38 @@ keyname_t keynames[] =
 {"KP_MINUS",	K_KP_MINUS,	""		},
 {"KP_PLUS",	K_KP_PLUS,	""		},
 {"PAUSE",		K_PAUSE,		"pause"		},
-
+{"AUX1", K_AUX1, ""},
+{"AUX2", K_AUX2, ""},
+{"AUX3", K_AUX3, ""},
+{"AUX4", K_AUX4, ""},
+{"AUX5", K_AUX5, ""},
+{"AUX6", K_AUX6, ""},
+{"AUX7", K_AUX7, ""},
+{"AUX8", K_AUX8, ""},
+{"AUX9", K_AUX9, ""},
+{"AUX10", K_AUX10, ""},
+{"AUX11", K_AUX11, ""},
+{"AUX12", K_AUX12, ""},
+{"AUX13", K_AUX13, ""},
+{"AUX14", K_AUX14, ""},
+{"AUX15", K_AUX15, ""},
+{"AUX16", K_AUX16, ""},
+{"AUX17", K_AUX17, ""},
+{"AUX18", K_AUX18, ""},
+{"AUX19", K_AUX19, ""},
+{"AUX20", K_AUX20, ""},
+{"AUX21", K_AUX21, ""},
+{"AUX22", K_AUX22, ""},
+{"AUX23", K_AUX23, ""},
+{"AUX24", K_AUX24, ""},
+{"AUX25", K_AUX25, ""},
+{"AUX26", K_AUX26, ""},
+{"AUX27", K_AUX27, ""},
+{"AUX28", K_AUX28, ""},
+{"AUX29", K_AUX29, ""},
+{"AUX30", K_AUX30, ""},
+{"AUX31", K_AUX31, ""},
+{"AUX32", K_AUX32, ""},
 // raw semicolon seperates commands
 {"SEMICOLON",	';',		""		},
 {NULL,		0,		NULL		},
@@ -511,7 +544,12 @@ void Key_Event( int key, qboolean down )
 {
 	const char	*kb;
 	char		cmd[1024];
-
+	//Con_Printf( "Keycode %d\n", key );
+	if ( key > 255 || key < 0) 
+	{
+		Con_Printf ("Keynum %d out of range\n", key);
+		return;
+	}
 	// update auto-repeat status and BUTTON_ANY status
 	keys[key].down = down;
 
@@ -739,8 +777,8 @@ void CL_CharEvent( int key )
 
 	if( cls.key_dest == key_console && !Con_Visible( ))
 	{
-		if((char)key == '¸' || (char)key == '¨' )
-			return; // don't pass '¸' when we open the console 
+		if((char)key == 'ï¿½' || (char)key == 'ï¿½' )
+			return; // don't pass 'ï¿½' when we open the console 
 	}
 
 	// distribute the key down event to the apropriate handler

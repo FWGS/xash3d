@@ -182,10 +182,12 @@ void GL_SelectTexture( GLint tmu )
 		if( tmu < glConfig.max_texture_coords )
 			pglClientActiveTextureARB( tmu + GL_TEXTURE0_ARB );
 	}
+#ifndef __ANDROID__
 	else if( pglSelectTextureSGIS )
 	{
 		pglSelectTextureSGIS( tmu + GL_TEXTURE0_SGIS );
 	}
+#endif
 }
 
 /*
@@ -234,6 +236,7 @@ GL_MultiTexCoord2f
 */
 void GL_MultiTexCoord2f( GLenum texture, GLfloat s, GLfloat t )
 {
+#ifndef __ANDROID__
 	if( pglMultiTexCoord2f )
 	{
 		pglMultiTexCoord2f( texture + GL_TEXTURE0_ARB, s, t );
@@ -242,6 +245,9 @@ void GL_MultiTexCoord2f( GLenum texture, GLfloat s, GLfloat t )
 	{
 		pglMTexCoord2fSGIS( texture + GL_TEXTURE0_SGIS, s, t );
 	}
+#else
+	glTexCoord2f( s, t );
+#endif
 }
 
 /*
@@ -401,7 +407,11 @@ void GL_SetRenderMode( int mode )
 	case kRenderTransAdd:
 		pglEnable( GL_BLEND );
 		pglDisable( GL_ALPHA_TEST );
+#ifdef XASH_GLES // Problem with blending exists on every GLES configuration, not only on Android
+		pglBlendFunc( GL_ONE, GL_ONE );
+#else
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
+#endif
 		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 		break;
 	}

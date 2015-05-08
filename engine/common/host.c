@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "port.h"
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <stdarg.h>  // va_args
 
 #include "common.h"
@@ -706,6 +706,7 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 	GlobalMemoryStatus( &lpBuffer );
 #endif
 
+#ifndef __ANDROID__
 	if( !(SDL_GetBasePath()) )
 		Sys_Error( "couldn't determine current directory" );
 
@@ -713,6 +714,9 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
+#else
+	Q_strncpy(host.rootdir, GAMEPATH, sizeof(host.rootdir));
+#endif
 
 #ifdef _WIN32
 	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
@@ -749,6 +753,12 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 	host.type = HOST_NORMAL; // predict state
 	host.con_showalways = true;
 
+#ifdef __ANDROID__
+	if (chdir(host.rootdir) == 0)
+		MsgDev(D_INFO,"%s is working directory now",host.rootdir);
+	else
+		MsgDev(D_ERROR,"%s is not exists",host.rootdir);
+#else
 	// we can specified custom name, from Sys_NewInstance
 	if( SDL_GetBasePath() && !host.change_game )
 	{
@@ -768,6 +778,7 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 		chdir( host.rootdir );
 #endif
 	}
+#endif
 
 	if( SI.ModuleName[0] == '#' ) host.type = HOST_DEDICATED; 
 
@@ -827,6 +838,7 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 	FS_LoadGameInfo( NULL );
 	Q_strncpy( host.gamefolder, GI->gamefolder, sizeof( host.gamefolder ));
 
+
 	if( GI->secure )
 	{
 		// clear all developer levels when game is protected
@@ -862,7 +874,18 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 
 	pChangeGame = func;	// may be NULL
 
+	if( SDL_Init( SDL_INIT_VIDEO |
+				SDL_INIT_TIMER |
+				SDL_INIT_AUDIO |
+				SDL_INIT_JOYSTICK |
+				SDL_INIT_EVENTS ))
+	{
+		MsgDev(D_ERROR, "SDL_Init: %s", SDL_GetError());
+		return 0;
+	}
+
 #ifndef _WIN32
+#ifndef __ANDROID__
 	// Start of IO functions
 	FILE *fd = fopen("/proc/self/cmdline", "r");
 	char moduleName[64], cmdLine[512] = "", *arg;
@@ -885,10 +908,16 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 	}
 	free(arg);
 	fclose(fd);
+#endif
 #else
 	// TODO
 #endif
+
+	#ifndef __ANDROID__
 	Host_InitCommon( moduleName, cmdLine, progname, bChangeGame );
+	#else
+	Host_InitCommon( NULL, "-dev 3 -log", progname, bChangeGame );
+	#endif
 
 	// init commands and vars
 	if( host.developer >= 3 )

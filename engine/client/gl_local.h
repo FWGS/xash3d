@@ -18,7 +18,7 @@ GNU General Public License for more details.
 
 #include "port.h"
 
-#include <SDL2/SDL.h>
+#include <SDL_video.h>
 
 #include "gl_export.h"
 #include "com_model.h"
@@ -493,6 +493,10 @@ void R_NewMap( void );
 
 =======================================================================
 */
+#ifdef __ANDROID__
+#undef GL_TEXTURE_3D_EXT
+#undef GL_VERTEX_SHADER_EXT
+#endif
 enum
 {
 	GL_OPENGL_110 = 0,		// base
@@ -532,6 +536,7 @@ enum
 	GL_EXTCOUNT,		// must be last
 };
 
+#ifndef __ANDROID__
 enum
 {
 	GL_KEEP_UNIT = -1,
@@ -541,6 +546,10 @@ enum
 	GL_TEXTURE3,		// g-cont. 4 units should be enough
 	MAX_TEXTURE_UNITS = 32	// can't acess to all over units without GLSL or cg
 };
+#else
+#define GL_KEEP_UNIT -1
+#define MAX_TEXTURE_UNITS 32
+#endif
 
 typedef struct
 {
@@ -575,8 +584,8 @@ typedef struct
 
 typedef struct
 {
-	Uint16		gammaRamp[3];		// current gamma ramp, 0 is red, 1 is green, 2 is blue
-	Uint16		stateRamp[3];		// original gamma ramp
+	word		gammaRamp[768];		// current gamma ramp, 0 is red, 1 is green, 2 is blue
+	word		stateRamp[768];		// original gamma ramp
 
 	int		width, height;
 	qboolean		fullScreen;
