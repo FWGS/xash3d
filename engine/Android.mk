@@ -133,6 +133,7 @@ LOCAL_SRC_FILES := platform/android/android.c \
            common/imagelib/img_tga.c \
            common/imagelib/img_utils.c \
            common/imagelib/img_wad.c \
+	   common/imagelib/img_dds.c \
            common/soundlib/snd_main.c \
            common/soundlib/snd_mp3.c \
            common/soundlib/snd_utils.c \
