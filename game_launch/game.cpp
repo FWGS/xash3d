@@ -41,8 +41,8 @@ typedef void (*pfnChangeGame)( const char *progname );
 typedef int (*pfnInit)( const char *progname, int bChangeGame, pfnChangeGame func );
 typedef void (*pfnShutdown)( void );
 
-pfnInit Host_Main;
-pfnShutdown Host_Shutdown = NULL;
+pfnInit Xash_Main;
+pfnShutdown Xash_Shutdown = NULL;
 char szGameDir[128]; // safe place to keep gamedir
 HINSTANCE	hEngine;
 
@@ -60,37 +60,40 @@ void Sys_LoadEngine( void )
 		Sys_Error( "Unable to load the " XASHLIB );
 	}
 
-	if(( Host_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
+	if(( Xash_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
 	{
 		printf("%s\n", dlerror());
 		Sys_Error( XASHLIB " missed 'Host_Main' export" );
 	}
 
 	// this is non-fatal for us but change game will not working
-	Host_Shutdown = (pfnShutdown)GetProcAddress( hEngine, "Host_Shutdown" );
+	Xash_Shutdown = (pfnShutdown)GetProcAddress( hEngine, "Host_Shutdown" );
 }
 
 void Sys_UnloadEngine( void )
 {
-	if( Host_Shutdown ) Host_Shutdown( );
+	if( Xash_Shutdown ) Xash_Shutdown( );
 	if( hEngine ) FreeLibrary( hEngine );
+
+	Xash_Main = NULL;
+	Xash_Shutdown = NULL;
 }
 
 void Sys_ChangeGame( const char *progname )
 {
 	if( !progname || !progname[0] ) Sys_Error( "Sys_ChangeGame: NULL gamedir" );
-	if( Host_Shutdown == NULL ) Sys_Error( "Sys_ChangeGame: missed 'Host_Shutdown' export\n" );
+	if( Xash_Shutdown == NULL ) Sys_Error( "Sys_ChangeGame: missed 'Host_Shutdown' export\n" );
 	strncpy( szGameDir, progname, sizeof( szGameDir ) - 1 );
 
 	Sys_UnloadEngine ();
 	Sys_LoadEngine ();
 
-	Host_Main( szGameDir, true, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	Xash_Main( szGameDir, true, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
 
 int main( int argc, char **argv )
 {
 	Sys_LoadEngine();
 
-	return Host_Main( GAME_PATH, false, ( Host_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	return Xash_Main( GAME_PATH, false, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
