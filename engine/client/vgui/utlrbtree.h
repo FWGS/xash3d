@@ -430,10 +430,10 @@ inline void  CUtlRBTree<T, I>::SetRightChild( I i, I child  )
 //-----------------------------------------------------------------------------
 
 template <class T, class I>
-inline typename CUtlRBTree<T, I>::Links_t const &CUtlRBTree<T, I>::Links( I i ) const 
+inline typename CUtlRBTree<T, I>::Links_t const &CUtlRBTree<T, I>::Links( I i ) const
 {
 	// Sentinel node, makes life easier
-	static Links_t s_Sentinel = 
+	Links_t s_Sentinel =
 	{ 
 		InvalidIndex(), InvalidIndex(), InvalidIndex(), CUtlRBTree<T, I>::BLACK 
 	};
