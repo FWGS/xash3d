@@ -874,6 +874,15 @@ GL_BuildGammaTable
 */
 void GL_BuildGammaTable( void )
 {
+#ifdef PANDORA
+	char buff[100];
+	float gamma = vid_gamma->value/*-0.8f*/;
+	/*if (gamma<1.0f)
+		gamma = 1.0f;*/
+	snprintf(buff, 100, "sudo -n /usr/pandora/scripts/op_gamma.sh %f", gamma);
+	system(buff);
+printf("Gamma: %s\n", buff);
+#else
 	int	i, v;
 	double	invGamma, div;
 
@@ -890,6 +899,7 @@ void GL_BuildGammaTable( void )
 		glState.gammaRamp[i+256] = ((word)bound( 0, v, 65535 ));
 		glState.gammaRamp[i+512] = ((word)bound( 0, v, 65535 ));
 	}
+#endif
 }
 
 /*
@@ -1225,8 +1235,9 @@ void VID_StartupGamma( void )
 	// Android doesn't support hw gamma. (thanks, SDL!)
 
 #ifdef PANDORA
-	glConfig.deviceSupportsGamma = 0;
+	glConfig.deviceSupportsGamma = 1;
 	BuildGammaTable( vid_gamma->value, vid_texgamma->value );
+	GL_BuildGammaTable();
 	return;
 #else
 	glConfig.deviceSupportsGamma = 0;
@@ -1325,8 +1336,12 @@ void VID_RestoreGamma( void )
 	// don't touch gamma if multiple instances was running
 	if( VID_EnumerateInstances( ) > 1 ) return;
 
+#ifdef PANDORA
+	system("sudo -n /usr/pandora/scripts/op_gamma.sh 0");
+#else
 	SDL_SetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
 			&glState.stateRamp[256], &glState.stateRamp[512] );
+#endif
 }
 
 /*
