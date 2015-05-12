@@ -41,7 +41,7 @@ GNU General Public License for more details.
 #define XFADE( y1, y2, r )	(((y1) * (r)) >> PBITS) + (((y2) * (PMAX - (r))) >> PBITS);
 #define XFADEF( y1, y2, r )	(((y1) * (r)) / (float)(PMAX)) + (((y2) * (PMAX - (r))) / (float)(PMAX));
 
-#if defiend(__ANDROID__) || defined(PANDORA)
+#if defined(__ANDROID__) || defined(PANDORA)
 #undef _inline
 #define _inline static inline
 #endif

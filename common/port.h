@@ -52,6 +52,7 @@ GNU General Public License for more details.
     #else
 	#define CLIENTDLL "client." OS_LIB_EXT
     #endif
+    #endif
 
     #define TRUE	    1
     #define FALSE	    0

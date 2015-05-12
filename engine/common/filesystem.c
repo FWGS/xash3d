@@ -1203,7 +1203,6 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		}
 		else if( !Q_stricmp( token, "gamedll" ))
 		{
-<<<<<<< HEAD
 			// already set up for __ANDROID__. Just ignore a path in game config
 #if !defined(__ANDROID__) && !defined(PANDORA)
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
@@ -1332,7 +1331,6 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->title, "New Game", sizeof( GameInfo->title ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
-<<<<<<< HEAD
 #if defined(__ANDROID__) && defined(PANDORA)
 	Q_strncpy( GameInfo->dll_path, LIBPATH, sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->game_dll, LIBPATH "/" SERVERDLL, sizeof( GameInfo->game_dll ));
