@@ -139,7 +139,6 @@ LOCAL_SRC_FILES := platform/android/android.c \
            common/soundlib/snd_utils.c \
            common/soundlib/snd_wav.c \
 	   common/sdl/events.c \
-	   common/sdl/touchscreen.c \
 	   common/soundlib/libmpg/dct64_i386.c \
 	   common/soundlib/libmpg/decode_i386.c \
 	   common/soundlib/libmpg/interface.c \
