@@ -33,11 +33,6 @@ App* CEnginePanel::getApp( void )
 	return pApp;
 }
 
-void CEnginePanel::setPaintBorderEnabled( bool state )
-{
-	return;
-}
-
 void CEngineApp :: getCursorPos( int &x,int &y )
 {
 	SDL_GetMouseState(&x, &y);

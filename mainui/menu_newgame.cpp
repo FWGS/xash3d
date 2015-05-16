@@ -71,7 +71,6 @@ UI_NewGame_StartGame
 */
 static void UI_NewGame_StartGame( float skill )
 {
-printf("StartGame(%f)\n", skill);
 	if( CVAR_GET_FLOAT( "host_serverstate" ) && CVAR_GET_FLOAT( "maxplayers" ) > 1 )
 		HOST_ENDGAME( "end of the game" );
 

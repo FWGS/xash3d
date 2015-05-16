@@ -107,7 +107,7 @@ Host_NewGame
 qboolean Host_NewGame( const char *mapName, qboolean loadGame )
 {
 	qboolean	iRet;
-printf("Host_NewGame(\"%s\", %s)\n", mapName, (loadGame)?"TRUE":"FALSE");
+
 	iRet = SV_NewGame( mapName, loadGame );
 
 	return iRet;

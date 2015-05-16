@@ -272,9 +272,7 @@ Con_ToggleConsole_f
 */
 void Con_ToggleConsole_f( void )
 {
-	#ifndef PANDORA
 	if( !host.developer ) return;	// disabled
-	#endif
 
 	if( UI_CreditsActive( )) return; // disabled by final credits
 
@@ -1706,9 +1704,7 @@ void Con_DrawSolidConsole( float frac )
 
 	if( !con.curFont ) return; // nothing to draw
 
-#ifndef PANDORA
 	if( host.developer )
-#endif
 	{
 		// draw current version
 		byte	*color = g_color_table[7];
@@ -1816,11 +1812,7 @@ void Con_DrawConsole( void )
 	case ca_uninitialized:
 		break;
 	case ca_disconnected:
-#ifdef PANDORA
-		if( cls.key_dest != key_menu )
-#else
 		if( cls.key_dest != key_menu && host.developer )
-#endif
 		{
 			Con_DrawSolidConsole( 1.0f );
 			Key_SetKeyDest( key_console );
@@ -1901,11 +1893,7 @@ Scroll it up or down
 void Con_RunConsole( void )
 {
 	// decide on the destination height of the console
-#ifdef PANDORA
-	if( cls.key_dest == key_console )
-#else
 	if( host.developer && cls.key_dest == key_console )
-#endif
 	{
 		if( cls.state == ca_disconnected )
 			con.finalFrac = 1.0f;// full screen

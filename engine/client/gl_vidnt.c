@@ -876,12 +876,9 @@ void GL_BuildGammaTable( void )
 {
 #ifdef PANDORA
 	char buff[100];
-	float gamma = vid_gamma->value/*-0.8f*/;
-	/*if (gamma<1.0f)
-		gamma = 1.0f;*/
+	float gamma = vid_gamma->value;
 	snprintf(buff, 100, "sudo -n /usr/pandora/scripts/op_gamma.sh %f", gamma);
 	system(buff);
-printf("Gamma: %s\n", buff);
 #else
 	int	i, v;
 	double	invGamma, div;

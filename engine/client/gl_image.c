@@ -1388,7 +1388,7 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 
 		if( !glConfig.deviceSupportsGamma )
 		{
-			if(/*!( tex->flags & TF_NOMIPMAP ) && !( tex->flags & TF_SKYSIDE ) && */!( tex->flags & TF_TEXTURE_3D ))
+			if(!( tex->flags & TF_NOMIPMAP ) && !( tex->flags & TF_SKYSIDE ) && !( tex->flags & TF_TEXTURE_3D ))
 				data = GL_ApplyGamma( data, tex->width * tex->height, ( tex->flags & TF_NORMALMAP ));
 		}		
 
