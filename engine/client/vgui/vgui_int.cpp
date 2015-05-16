@@ -33,10 +33,10 @@ App* CEnginePanel::getApp( void )
 	return pApp;
 }
 
-void CEngineApp :: getCursorPos( int &x,int &y )
+void CEngineApp :: getCursorPos( int &x,int &y ) 
 {
-	SDL_GetMouseState(&x, &y);
-}
+	SDL_GetMouseState(&x, &y); 
+} 
 
 void VGui_RunFrame( void )
 {
