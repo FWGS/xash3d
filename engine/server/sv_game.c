@@ -2348,7 +2348,6 @@ void pfnClientCommand( edict_t* pEdict, char* szFmt, ... )
 	va_start( args, szFmt );
 	Q_vsnprintf( buffer, MAX_STRING, szFmt, args );
 	va_end( args );
-
 	if( SV_IsValidCmd( buffer ))
 	{
 		BF_WriteByte( &client->netchan.message, svc_stufftext );

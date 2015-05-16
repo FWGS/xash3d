@@ -24,6 +24,9 @@ extern "C" {
 #include <linux/limits.h> // PATH_MAX
 #include <stddef.h> // size_t
 #include <stdio.h> // off_t
+#ifdef PANDORA
+#include <unistd.h>	//off_t on PANDORA
+#endif
 #include "port.h"
 
 #define EXPORT __attribute__ ((visibility ("default")))

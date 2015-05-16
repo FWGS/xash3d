@@ -147,7 +147,11 @@ qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset )
 		Q_strncpy( mapname, clgame.mapname, MAX_STRING );
 		Q_strncpy( maptitle, clgame.maptitle, MAX_STRING );
 
-		if( !CL_LoadProgs( va( "%s/client.dll", GI->dll_path )))
+#ifdef PANDORA
+                if( !CL_LoadProgs( va( "%s/" CLIENTDLL, "." )))
+#else
+		if( !CL_LoadProgs( va( "%s/" CLIENTDLL, GI->dll_path )))
+#endif
 			Host_Error( "can't initialize client.dll\n" );
 
 		// restore parms
@@ -288,6 +292,7 @@ void CL_CreateCmd( void )
 	VectorCopy( cl.refdef.cl_viewangles, angles );
 	VectorCopy( cl.frame.local.client.origin, cl.data.origin );
 	VectorCopy( cl.refdef.cl_viewangles, cl.data.viewangles );
+
 	cl.data.iWeaponBits = cl.frame.local.client.weapons;
 	cl.data.fov = cl.frame.local.client.fov;
 
@@ -1800,7 +1805,11 @@ void CL_Init( void )
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
+#ifdef PANDORA
+	if( !CL_LoadProgs( va( "%s/" CLIENTDLL , "."/*GI->dll_path*/ )))
+#else
 	if( !CL_LoadProgs( va( "%s/" CLIENTDLL , GI->dll_path )))
+#endif
 		Host_Error( "can't initialize client.dll\n" );
 
 	cls.initialized = true;
