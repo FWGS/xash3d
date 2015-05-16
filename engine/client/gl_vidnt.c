@@ -1419,7 +1419,6 @@ void R_SaveVideoMode( int vid_mode )
 
 	MsgDev( D_INFO, "Set: %s [%dx%d]\n", vidmode[mode].desc, vidmode[mode].width, vidmode[mode].height );
 #else
-
 	// Auto-detect of screen size on Android Devices
 
 	SDL_DisplayMode displayMode;
@@ -1601,7 +1600,7 @@ Set the described video mode
 */
 qboolean VID_SetMode( void )
 {
-	qboolean	fullscreen;
+	qboolean	fullscreen = false;
 	rserr_t	err;
 
 	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
