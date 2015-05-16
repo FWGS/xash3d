@@ -44,6 +44,9 @@ convar_t	*host_maxfps;
 convar_t	*host_framerate;
 convar_t	*con_gamemaps;
 convar_t	*build, *ver;
+#ifdef PANDORA
+int noshouldermb = 0;
+#endif
 
 static int num_decals;
 
@@ -865,9 +868,6 @@ void Host_FreeCommon( void )
 
 	Mem_FreePool( &host.mempool );
 }
-#ifdef PANDORA
-int noshouldermb = 0;
-#endif
 /*
 =================
 Host_Main
@@ -896,9 +896,6 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 	char moduleName[64], cmdLine[512] = "", *arg;
 	size_t size = 0;
 	int i = 0;
-#ifdef PANDORA
-	noshouldermb=0;
-#endif
 	for(i = 0; getdelim(&arg, &size, 0, fd) != -1; i++)
 	{
 		if(!i)
@@ -909,16 +906,8 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 		}
 		else
 		{
-			#ifdef PANDORA
-			if( !strcmp( arg, "--noshouldermb" )) {
-				noshouldermb=1;
-			} else {
-			#endif
-				strcat(cmdLine, arg);
-				strcat(cmdLine, " ");
-			#ifdef PANDORA
-			}
-			#endif
+			strcat(cmdLine, arg);
+			strcat(cmdLine, " ");
 		}
 	}
 	free(arg);
