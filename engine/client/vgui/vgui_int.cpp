@@ -37,7 +37,7 @@ void CEngineApp :: setCursorPos( int x, int y )
 {
 	SDL_WarpMouseInWindow(host.hWnd, x, y);
 }
-	
+
 void CEngineApp :: getCursorPos( int &x,int &y )
 {
 	SDL_GetMouseState(&x, &y);

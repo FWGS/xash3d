@@ -506,7 +506,6 @@ void Sys_Break( const char *error, ... )
 
 	Sys_Quit();
 }
-
 /*
 ================
 Sys_Quit

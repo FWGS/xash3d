@@ -32,8 +32,13 @@ GNU General Public License for more details.
 #include <X11/Xatom.h>
 #endif
 
+#ifdef PANDORA
+#define VID_AUTOMODE	"10"
+#define VID_DEFAULTMODE         2.0f
+#else
 #define VID_AUTOMODE	"-1"
 #define VID_DEFAULTMODE	2.0f
+#endif
 #define DISP_CHANGE_BADDUALVIEW	-6 // MSVC 6.0 doesn't
 #define num_vidmodes	( sizeof( vidmode ) / sizeof( vidmode[0] ))
 #define WINDOW_NAME			"Xash Window" // Half-Life
@@ -869,6 +874,12 @@ GL_BuildGammaTable
 */
 void GL_BuildGammaTable( void )
 {
+#ifdef PANDORA
+	char buff[100];
+	float gamma = vid_gamma->value;
+	snprintf(buff, 100, "sudo -n /usr/pandora/scripts/op_gamma.sh %f", gamma);
+	system(buff);
+#else
 	int	i, v;
 	double	invGamma, div;
 
@@ -885,6 +896,7 @@ void GL_BuildGammaTable( void )
 		glState.gammaRamp[i+256] = ((word)bound( 0, v, 65535 ));
 		glState.gammaRamp[i+512] = ((word)bound( 0, v, 65535 ));
 	}
+#endif
 }
 
 /*
@@ -1206,6 +1218,7 @@ uint VID_EnumerateInstances( void )
 
 void VID_StartupGamma( void )
 {
+	// Device supports gamma anyway, but cannot do anything with it.
 	size_t	gamma_size;
 	byte	*savedGamma;
 	size_t	gammaTypeSize = sizeof(glState.stateRamp);
@@ -1218,7 +1231,14 @@ void VID_StartupGamma( void )
 #else
 	// Android doesn't support hw gamma. (thanks, SDL!)
 
+#ifdef PANDORA
+	glConfig.deviceSupportsGamma = 1;
+	BuildGammaTable( vid_gamma->value, vid_texgamma->value );
+	GL_BuildGammaTable();
+	return;
+#else
 	glConfig.deviceSupportsGamma = 0;
+#endif
 #endif
 
 	if( !glConfig.deviceSupportsGamma )
@@ -1313,8 +1333,12 @@ void VID_RestoreGamma( void )
 	// don't touch gamma if multiple instances was running
 	if( VID_EnumerateInstances( ) > 1 ) return;
 
+#ifdef PANDORA
+	system("sudo -n /usr/pandora/scripts/op_gamma.sh 0");
+#else
 	SDL_SetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
 			&glState.stateRamp[256], &glState.stateRamp[512] );
+#endif
 }
 
 /*
@@ -1603,6 +1627,9 @@ qboolean VID_SetMode( void )
 	qboolean	fullscreen = false;
 	rserr_t	err;
 
+#ifdef PANDORA
+	fullscreen = true;
+#else
 	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
 	{
 		SDL_DisplayMode mode;
@@ -1623,14 +1650,20 @@ qboolean VID_SetMode( void )
 			Cvar_SetFloat( "vid_mode", VID_DEFAULTMODE );
 		}
 	}
-
-	fullscreen = vid_fullscreen->integer;
-
+#endif
 	gl_swapInterval->modified = true;
 
+#ifdef PANDORA
+    if(( err = R_ChangeDisplaySettings( 10, fullscreen )) == rserr_ok )
+#else
 	if(( err = R_ChangeDisplaySettings( vid_mode->integer, fullscreen )) == rserr_ok )
+#endif
 	{
+#ifdef PANDORA
+		glConfig.prev_mode = 10;
+#else
 		glConfig.prev_mode = vid_mode->integer;
+#endif
 	}
 	else
 	{

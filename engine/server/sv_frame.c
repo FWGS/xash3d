@@ -481,6 +481,7 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 	Q_memset( &frame->clientdata, 0, sizeof( frame->clientdata ));
 
 	// update clientdata_t
+
 	svgame.dllFuncs.pfnUpdateClientData( clent, cl->local_weapons, &frame->clientdata );
 
 	BF_WriteByte( msg, svc_clientdata );

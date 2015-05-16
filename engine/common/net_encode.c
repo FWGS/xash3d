@@ -885,63 +885,63 @@ int Delta_ClampIntegerField( int iValue, qboolean bSigned, int bits )
 		iValue = bound( 0, (byte)iValue, 1 );
 		break;
 	case 2:
-		if( bSigned ) iValue = bound( -1, (short)iValue, 2 );
+		if( bSigned ) iValue = bound( -2, (short)iValue, 1 );
 		else iValue = bound( 0, (word)iValue, 3 );
 		break;
 	case 3:
-		if( bSigned ) iValue = bound( -3, (short)iValue, 4 );
+		if( bSigned ) iValue = bound( -4, (short)iValue, 3 );
 		else iValue = bound( 0, (word)iValue, 7 );
 		break;
 	case 4:
-		if( bSigned ) iValue = bound( -7, (short)iValue, 8 );
+		if( bSigned ) iValue = bound( -8, (short)iValue, 7 );
 		else iValue = bound( 0, (word)iValue, 15 );
 		break;
 	case 5:
-		if( bSigned ) iValue = bound( -15, (short)iValue, 16 );
+		if( bSigned ) iValue = bound( -16, (short)iValue, 15 );
 		else iValue = bound( 0, (word)iValue, 31 );
 		break;
 	case 6:
-		if( bSigned ) iValue = bound( -31, (short)iValue, 32 );
+		if( bSigned ) iValue = bound( -32, (short)iValue, 31 );
 		else iValue = bound( 0, (word)iValue, 63 );
 		break;
 	case 7:
-		if( bSigned ) iValue = bound( -63, (short)iValue, 64 );
+		if( bSigned ) iValue = bound( -64, (short)iValue, 63 );
 		else iValue = bound( 0, (word)iValue, 127 );
 		break;
 	case 8:
-		if( bSigned ) iValue = bound( -127, (short)iValue, 128 );
+		if( bSigned ) iValue = bound( -128, (short)iValue, 127 );
 		else iValue = bound( 0, (word)iValue, 255 );
 		break;
 	case 9:
-		if( bSigned ) iValue = bound( -255, (short)iValue, 256 );
+		if( bSigned ) iValue = bound( -256, (short)iValue, 255 );
 		else iValue = bound( 0, (word)iValue, 511 );
 		break;
 	case 10:
-		if( bSigned ) iValue = bound( -511, (short)iValue, 512 );
+		if( bSigned ) iValue = bound( -512, (short)iValue, 511 );
 		else iValue = bound( 0, (word)iValue, 1023 );
 		break;
 	case 11:
-		if( bSigned ) iValue = bound( -1023, (short)iValue, 1024 );
+		if( bSigned ) iValue = bound( -1024, (short)iValue, 1023 );
 		else iValue = bound( 0, (word)iValue, 2047 );
 		break;
 	case 12:
-		if( bSigned ) iValue = bound( -2047, (short)iValue, 2048 );
+		if( bSigned ) iValue = bound( -2048, (short)iValue, 2047 );
 		else iValue = bound( 0, (word)iValue, 4095 );
 		break;
 	case 13:
-		if( bSigned ) iValue = bound( -4095, (short)iValue, 4096 );
+		if( bSigned ) iValue = bound( -4096, (short)iValue, 4095 );
 		else iValue = bound( 0, (word)iValue, 8191 );
 		break;
 	case 14:
-		if( bSigned ) iValue = bound( -8191, (short)iValue, 8192 );
+		if( bSigned ) iValue = bound( -8192, (short)iValue, 8191 );
 		else iValue = bound( 0, (word)iValue, 16383 );
 		break;
 	case 15:
-		if( bSigned ) iValue = bound( -16383, (short)iValue, 16384 );
+		if( bSigned ) iValue = bound( -16384, (short)iValue, 16383 );
 		else iValue = bound( 0, (word)iValue, 32767 );
 		break;
 	case 16:
-		if( bSigned ) iValue = bound( -32767, (short)iValue, 32768 );
+		if( bSigned ) iValue = bound( -32768, (short)iValue, 32767 );
 		else iValue = bound( 0, (word)iValue, 65535 );
 		break;
 	}
@@ -1110,13 +1110,21 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 	}
 	else if( pField->flags & DT_FLOAT )
 	{
+		#ifdef __arm__
+		memcpy(&flValue,(byte *)to + pField->offset, sizeof(float) );
+		#else
 		flValue = *(float *)((byte *)to + pField->offset );
+		#endif
 		iValue = (int)(flValue * pField->multiplier);
 		BF_WriteBitLong( msg, iValue, pField->bits, bSigned );
 	}
 	else if( pField->flags & DT_ANGLE )
 	{
+		#ifdef __arm__
+		memcpy(&flAngle,(byte *)to + pField->offset, sizeof(float) );
+		#else
 		flAngle = *(float *)((byte *)to + pField->offset );
+		#endif
 
 		// NOTE: never applies multipliers to angle because
 		// result may be wrong on client-side
@@ -1124,17 +1132,39 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 	}
 	else if( pField->flags & DT_TIMEWINDOW_8 )
 	{
+		#ifdef __arm__
+		memcpy(&flValue,(byte *)to + pField->offset, sizeof(float) );
+		#else
 		flValue = *(float *)((byte *)to + pField->offset );
+		#endif
 		flTime = (timebase * 100.0f) - (flValue * 100.0f);
+		#if 1
+		iValue = (uint)abs(flTime );
+		#else
 		iValue = (uint)abs( flTime );
+		if (flTime<0.0f) {
+			iValue |= 0x80000000;
+		}
+		#endif
 
 		BF_WriteBitLong( msg, iValue, pField->bits, bSigned );
 	}
 	else if( pField->flags & DT_TIMEWINDOW_BIG )
 	{
+		#ifdef __arm__
+		memcpy(&flValue,(byte *)to + pField->offset, sizeof(float) );
+		#else
 		flValue = *(float *)((byte *)to + pField->offset );
+		#endif
 		flTime = (timebase * pField->multiplier) - (flValue * pField->multiplier);
+		#if 1
+		iValue = (uint)abs(flTime );
+		#else
 		iValue = (uint)abs( flTime );
+		if (flTime<0.0f) {
+			iValue |= 0x80000000;
+		}
+		#endif
 
 		BF_WriteBitLong( msg, iValue, pField->bits, bSigned );
 	}
@@ -1159,7 +1189,7 @@ qboolean Delta_ReadField( sizebuf_t *msg, delta_t *pField, void *from, void *to,
 	qboolean		bSigned = ( pField->flags & DT_SIGNED ) ? true : false;
 	float		flValue, flAngle, flTime;
 	qboolean		bChanged;
-	uint		iValue;	
+	uint		iValue;
 	const char	*pStr;
 	char		*pOut;
 	
@@ -1216,9 +1246,17 @@ qboolean Delta_ReadField( sizebuf_t *msg, delta_t *pField, void *from, void *to,
 		}
 		else
 		{
+			#ifdef __arm__
+			memcpy(&flValue, (byte *)from + pField->offset, sizeof(float) );
+			#else
 			flValue = *(float *)((byte *)from + pField->offset );
+			#endif
 		}
+		#ifdef __arm__
+		memcpy((byte *)to + pField->offset, &flValue, sizeof(float));
+		#else
 		*(float *)((byte *)to + pField->offset ) = flValue;
+		#endif
 	}
 	else if( pField->flags & DT_ANGLE )
 	{
@@ -1228,37 +1266,61 @@ qboolean Delta_ReadField( sizebuf_t *msg, delta_t *pField, void *from, void *to,
 		}
 		else
 		{
+			#ifdef __arm__
+			memcpy(&flAngle, (byte *)from + pField->offset, sizeof(float) );
+			#else
 			flAngle = *(float *)((byte *)from + pField->offset );
+			#endif
 		}
+		#ifdef __arm__
+		memcpy((byte *)to + pField->offset, &flAngle, sizeof(float));
+		#else
 		*(float *)((byte *)to + pField->offset ) = flAngle;
+		#endif
 	}
 	else if( pField->flags & DT_TIMEWINDOW_8 )
 	{
 		if( bChanged )
 		{
 			iValue = BF_ReadBitLong( msg, pField->bits, bSigned );
-			flValue = (float)((int)(iValue * 0.01f ));
+			flValue = (float)((int)iValue) * 0.01f;
 			flTime = timebase + flValue;
 		}
 		else
 		{
+			#ifdef __arm__
+			memcpy(&flTime, (byte *)from + pField->offset, sizeof(float) );
+			#else
 			flTime = *(float *)((byte *)from + pField->offset );
+			#endif
 		}
+		#ifdef __arm__
+		memcpy((byte *)to + pField->offset, &flTime, sizeof(float));
+		#else
 		*(float *)((byte *)to + pField->offset ) = flTime;
+		#endif
 	}
 	else if( pField->flags & DT_TIMEWINDOW_BIG )
 	{
 		if( bChanged )
 		{
 			iValue = BF_ReadBitLong( msg, pField->bits, bSigned );
-			flValue = (float)(iValue * ( 1.0f / pField->multiplier ));
+			flValue = (float)((int)iValue) * ( 1.0f / pField->multiplier );
 			flTime = timebase + flValue;
 		}
 		else
 		{
+			#ifdef __arm__
+			memcpy(&flTime, (byte *)from + pField->offset, sizeof(float) );
+			#else
 			flTime = *(float *)((byte *)from + pField->offset );
+			#endif
 		}
+		#ifdef __arm__
+		memcpy((byte *)to + pField->offset, &flTime, sizeof(float));
+		#else
 		*(float *)((byte *)to + pField->offset ) = flTime;
+		#endif
 	}
 	else if( pField->flags & DT_STRING )
 	{
@@ -1487,7 +1549,6 @@ void MSG_WriteClientData( sizebuf_t *msg, clientdata_t *from, clientdata_t *to, 
 
 	pField = dt->pFields;
 	ASSERT( pField );
-
 	// activate fields and call custom encode func
 	Delta_CustomEncode( dt, from, to );
 

@@ -30,6 +30,7 @@ GNU General Public License for more details.
 #undef offsetof
 #define offsetof( s, m )	(size_t)&(((s *)0)->m)
 #endif
+
 #define NUM_FIELDS( x )	((sizeof( x ) / sizeof( x[0] )) - 1)
 
 // helper macroses

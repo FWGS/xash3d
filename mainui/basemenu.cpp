@@ -113,6 +113,8 @@ UI_DrawPic
 void UI_DrawPic( int x, int y, int width, int height, const int color, const char *pic )
 {
 	HIMAGE hPic = PIC_Load( pic );
+	if (!hPic)
+		return;
 
 	int r, g, b, a;
 	UnpackRGBA( r, g, b, a, color );
@@ -129,6 +131,8 @@ UI_DrawPicAdditive
 void UI_DrawPicAdditive( int x, int y, int width, int height, const int color, const char *pic )
 {
 	HIMAGE hPic = PIC_Load( pic );
+	if (!hPic)
+		return;
 
 	int r, g, b, a;
 	UnpackRGBA( r, g, b, a, color );

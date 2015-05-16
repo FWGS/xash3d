@@ -44,6 +44,9 @@ convar_t	*host_maxfps;
 convar_t	*host_framerate;
 convar_t	*con_gamemaps;
 convar_t	*build, *ver;
+#ifdef PANDORA
+int noshouldermb = 0;
+#endif
 
 static int num_decals;
 
@@ -752,6 +755,9 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 
 	host.type = HOST_NORMAL; // predict state
 	host.con_showalways = true;
+#ifdef PANDORA
+	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
+#endif
 
 #ifdef __ANDROID__
 	if (chdir(host.rootdir) == 0)
@@ -862,7 +868,6 @@ void Host_FreeCommon( void )
 
 	Mem_FreePool( &host.mempool );
 }
-
 /*
 =================
 Host_Main
@@ -891,7 +896,6 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 	char moduleName[64], cmdLine[512] = "", *arg;
 	size_t size = 0;
 	int i = 0;
-
 	for(i = 0; getdelim(&arg, &size, 0, fd) != -1; i++)
 	{
 		if(!i)
