@@ -752,6 +752,9 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 
 	host.type = HOST_NORMAL; // predict state
 	host.con_showalways = true;
+#ifdef PANDORA
+	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
+#endif
 
 #ifdef __ANDROID__
 	if (chdir(host.rootdir) == 0)
@@ -1082,26 +1085,3 @@ BOOL WINAPI DllMain( HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved )
 	return TRUE;
 #endif
 }
-
-#ifdef PANDORA
-void Pandora_Host_Shutdown( void )
-{
-	if( host.shutdown_issued ) return;
-	host.shutdown_issued = true;
-
-	if( host.state != HOST_ERR_FATAL ) host.state = HOST_SHUTDOWN; // prepare host to normal shutdown
-	if( !host.change_game ) Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
-
-	if( host.type == HOST_NORMAL )
-		Host_WriteConfig();
-
-	SV_Shutdown( false );
-	CL_Shutdown();
-
-	Mod_Shutdown();
-	NET_Shutdown();
-	Host_FreeCommon();
-	Con_DestroyConsole();
-
-}
-#endif
