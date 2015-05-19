@@ -70,7 +70,7 @@ static qboolean CheckSkybox( const char *name )
 	const char	*sidename;
 
 	// search for skybox images				
-	for( i = 0; i < sizeof( skybox_ext ); i++ )
+	for( i = 0; i < sizeof( skybox_ext ) / sizeof( skybox_ext[0] ); i++ )
 	{	
 		num_checked_sides = 0;
 		for( j = 0; j < 6; j++ )
