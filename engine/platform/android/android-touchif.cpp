@@ -359,6 +359,7 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 		//Game
 		tcGameMain->setAlpha(gameControlsAlpha);
 		tcGameMain->addControl(new touchcontrols::Button("attack",touchcontrols::RectF(20,7,23,10),"shoot",KEY_SHOOT));
+		tcGameMain->addControl(new touchcontrols::Button("attack_alt",touchcontrols::RectF(20,4,23,7),"shoot_alt",PORT_ACT_ATTACK_ALT));
 		tcGameMain->addControl(new touchcontrols::Button("use",touchcontrols::RectF(23,6,26,9),"use",PORT_ACT_USE));
 		tcGameMain->addControl(new touchcontrols::Button("quick_save",touchcontrols::RectF(24,0,26,2),"save",PORT_ACT_QUICKSAVE));
 		tcGameMain->addControl(new touchcontrols::Button("quick_load",touchcontrols::RectF(20,0,22,2),"load",PORT_ACT_QUICKLOAD));

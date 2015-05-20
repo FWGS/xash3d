@@ -23,6 +23,7 @@
 
 #define PORT_ACT_RELOAD     52
 #define PORT_ACT_LIGHT      53
+#define PORT_ACT_ATTACK_ALT     54
 
 #define PORT_ACT_WEAP0              100
 #define PORT_ACT_WEAP1              101

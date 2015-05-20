@@ -125,6 +125,9 @@ void PortableAction(int state, int action)
 	case PORT_ACT_ATTACK:
 		DoCommand(state,"attack");
 		break;
+	case PORT_ACT_ATTACK_ALT:
+		DoCommand(state,"attack2");
+		break;
 	case PORT_ACT_RELOAD:
 		DoCommand(state,"reload");
 		break;
@@ -286,6 +289,7 @@ extern "C" void AndroidEvents()
 }
 
 static bool forwardHackActive = false;
+static bool backwardHackActive = false;
 extern cvar_t *cl_sidespeed;
 extern cvar_t *cl_forwardspeed;
 
@@ -313,6 +317,16 @@ void IN_MobileMove ( float frametime, usercmd_t *cmd)
 		//LOGI("Fwd hack off");
 		Cmd_ExecuteString("-forward",src_command);
 		forwardHackActive = false;
+	}
+	else if (forwardmove < -0.9 && !backwardHackActive)
+	{
+		Cmd_ExecuteString("+back",src_command);
+		backwardHackActive = true;
+	}
+	else if (forwardmove > -0.8 && backwardHackActive)
+	{
+		Cmd_ExecuteString("-back",src_command);
+		backwardHackActive = false;
 	}
 }
 
