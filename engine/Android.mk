@@ -16,7 +16,9 @@ LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -fsigned-char -O3
 
 LOCAL_CONLYFLAGS += -std=c99
 
-LOCAL_C_INCLUDES := $(SDL_PATH)/include \
+LOCAL_C_INCLUDES := \
+	$(TOUCHCONTROLS_PATH) \
+	$(SDL_PATH)/include \
 	$(NANOGL_PATH)/GL			    \
 	$(NANOGL_PATH)/				    \
 	$(SDL_IMAGE_PATH)/include/		    \
@@ -37,7 +39,10 @@ LOCAL_C_INCLUDES := $(SDL_PATH)/include \
 
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 
-LOCAL_SRC_FILES := platform/android/android.c \
+LOCAL_SRC_FILES := \
+           platform/android/android.c \
+           platform/android/android-touchif.cpp \
+           platform/android/android-gameif.cpp \
 	    platform/android/dlsym-weak.cpp \
 	   client/cl_cmds.c \
            client/cl_demo.c \
@@ -147,7 +152,7 @@ LOCAL_SRC_FILES := platform/android/android.c \
 	   common/soundlib/libmpg/tabinit.c \
 	   common/soundlib/libmpg/common.c
 
-LOCAL_SHARED_LIBRARIES := SDL2
+LOCAL_SHARED_LIBRARIES := touchcontrols SDL2 
 
 LOCAL_STATIC_LIBRARIES := NanoGL
 
