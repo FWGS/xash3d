@@ -134,16 +134,16 @@ Sys_ParseCommandLine
 
 ==================
 */
-void Sys_ParseCommandLine( LPSTR lpCmdLine )
+void Sys_ParseCommandLine( int argc, const char** argv )
 {
 	const char	*blank = "censored";
-	static char	commandline[MAX_SYSPATH];
+	//static char	commandline[MAX_SYSPATH];
 	int		i;
 
-	host.argc = 1;
-	host.argv[0] = "exe";
+	host.argc = argc;
+	host.argv = argv;
 
-	Q_strncpy( commandline, lpCmdLine, Q_strlen( lpCmdLine ) + 1 );
+	/*Q_strncpy( commandline, lpCmdLine, Q_strlen( lpCmdLine ) + 1 );
 	lpCmdLine = commandline; // to prevent modify original commandline
 
 	while( *lpCmdLine && ( host.argc < MAX_NUM_ARGVS ))
@@ -175,7 +175,7 @@ void Sys_ParseCommandLine( LPSTR lpCmdLine )
 			*lpCmdLine = 0;
 			lpCmdLine++;
 		}
-	}
+	}*/
 
 	if( !host.change_game ) return;
 
@@ -200,7 +200,7 @@ Sys_MergeCommandLine
 
 ==================
 */
-void Sys_MergeCommandLine( LPSTR lpCmdLine )
+void Sys_MergeCommandLine( )
 {
 	const char	*blank = "censored";
 	int		i;

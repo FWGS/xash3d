@@ -38,12 +38,14 @@ GNU General Public License for more details.
 #define GAME_PATH	"valve"	// default dir to start from
 
 typedef void (*pfnChangeGame)( const char *progname );
-typedef int (*pfnInit)( const char *progname, int bChangeGame, pfnChangeGame func );
+typedef int (*pfnInit)( int argc, char **argv, const char *progname, int bChangeGame, pfnChangeGame func );
 typedef void (*pfnShutdown)( void );
 
 pfnInit Xash_Main;
 pfnShutdown Xash_Shutdown = NULL;
 char szGameDir[128]; // safe place to keep gamedir
+int szArgc;
+char **szArgv;
 HINSTANCE	hEngine;
 
 void Sys_Error( const char *errorstring )
@@ -88,12 +90,15 @@ void Sys_ChangeGame( const char *progname )
 	Sys_UnloadEngine ();
 	Sys_LoadEngine ();
 
-	Xash_Main( szGameDir, true, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	Xash_Main( szArgc, szArgv, szGameDir, true, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
 
 int main( int argc, char **argv )
 {
+	szArgc = argc;
+	szArgv = argv;
+
 	Sys_LoadEngine();
 
-	return Xash_Main( GAME_PATH, false, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	return Xash_Main( argc, argv, GAME_PATH, false, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }

@@ -697,10 +697,11 @@ static void Host_Crash_f( void )
 Host_InitCommon
 =================
 */
-void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *progname, qboolean bChangeGame )
+void Host_InitCommon( int argc, const char** argv, const char *progname, qboolean bChangeGame )
 {
 	char		dev_level[4];
 	char		szTemp[MAX_SYSPATH];
+	char		moduleName[64];
 	string		szRootPath;
 #ifdef _WIN32
 	MEMORYSTATUS	lpBuffer;
@@ -734,7 +735,7 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 	// some commands may turn engine into infinity loop,
 	// e.g. xash.exe +game xash -game xash
 	// so we clearing all cmd_args, but leave dbg states as well
-	if( cmdLine ) Sys_ParseCommandLine( cmdLine );
+	Sys_ParseCommandLine( argc, argv );
 #ifdef _WIN32
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
 #endif
@@ -772,7 +773,13 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 		FS_FileBase( szTemp, SI.ModuleName );
 	}
 
-	if(moduleName) Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
+	// We didn't need full path, only executable name
+	strcpy(moduleName, strrchr(argv[0], '/'));
+	//strrchr adds a / at begin of string =(
+	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
+
+	//argv[0] is always stands for program name
+	Q_strncpy(SI.ModuleName, argv[0], sizeof(SI.ModuleName));
 
 	FS_ExtractFilePath( SI.ModuleName, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
@@ -808,7 +815,7 @@ void Host_InitCommon( const char* moduleName, const char* cmdLine, const char *p
 			return;
 		}
 
-		Sys_MergeCommandLine( cmdLine );
+		Sys_MergeCommandLine( );
 
 		SDL_DestroyMutex( host.hMutex );
 		host.hMutex = SDL_CreateSemaphore( 0 );
@@ -873,7 +880,7 @@ void Host_FreeCommon( void )
 Host_Main
 =================
 */
-int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func )
+int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func )
 {
 	static double	oldtime, newtime;
 
@@ -889,7 +896,7 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 		return 0;
 	}
 
-#ifndef _WIN32
+/*#ifndef _WIN32
 #ifndef __ANDROID__
 	// Start of IO functions
 	FILE *fd = fopen("/proc/self/cmdline", "r");
@@ -915,13 +922,9 @@ int EXPORT Host_Main( const char *progname, int bChangeGame, pfnChangeGame func 
 #endif
 #else
 	// TODO
-#endif
+#endif*/
 
-	#ifndef __ANDROID__
-	Host_InitCommon( moduleName, cmdLine, progname, bChangeGame );
-	#else
-	Host_InitCommon( NULL, "-dev 3 -log", progname, bChangeGame );
-	#endif
+	Host_InitCommon( argc, argv, progname, bChangeGame );
 
 	// init commands and vars
 	if( host.developer >= 3 )
