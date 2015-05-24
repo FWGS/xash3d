@@ -5,10 +5,6 @@
 
 int SDLash_EventFilter( SDL_Event* event)
 {
-#ifdef __ANDROID__
-	void AndroidEvents();
-	AndroidEvents();
-#endif
 	switch ( event->type )
 	{
 		case SDL_MOUSEMOTION:
