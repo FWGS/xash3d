@@ -1448,20 +1448,11 @@ static int pfnGetScreenInfo( SCREENINFO *pscrinfo )
 	// setup screen info
 	clgame.scrInfo.iSize = sizeof( clgame.scrInfo );
 
-	if( Cvar_VariableInteger( "hud_scale" ))
+	float scale_factor = Cvar_VariableValue( "hud_scale" );
+	if( scale_factor && scale_factor != 1.0f)
 	{
-		if( scr_width->integer < 640 )
-		{
-			// virtual screen space 320x200
-			clgame.scrInfo.iWidth = 320;
-			clgame.scrInfo.iHeight = 200;
-		}
-		else
-		{
-			// virtual screen space 640x480
-			clgame.scrInfo.iWidth = 640;
-			clgame.scrInfo.iHeight = 480;
-		}
+		clgame.scrInfo.iWidth = scr_width->integer/scale_factor;
+		clgame.scrInfo.iHeight = scr_height->integer/scale_factor;
 		clgame.scrInfo.iFlags |= SCRINFO_STRETCHED;
 	}
 	else
