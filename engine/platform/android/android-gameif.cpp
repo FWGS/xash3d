@@ -243,9 +243,12 @@ void PortableLookYaw(int mode, float yaw)
 
 
 
+typedef void (*pfnChangeGame)( const char *progname );
+extern "C" int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func );
+
 #define GAME_PATH	"valve"	// default dir to start from
 void PortableInit(int argc,const char ** argv){
-	Host_Main( GAME_PATH, false, NULL );
+	Host_Main(argc, argv, GAME_PATH, false, NULL );
 }
 
 
