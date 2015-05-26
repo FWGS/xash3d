@@ -29,8 +29,8 @@ void BuildGammaTable( float gamma, float texGamma )
 	float	g1, g = gamma;
 	double	f;
 
-	g = bound( 1.8f, g, 3.0f );
-	texGamma = bound( 1.8f, texGamma, 3.0f );
+	g = bound( 1.8f, g, 30.0f );
+	texGamma = bound( 1.0f, texGamma, 15.0f ); // In settings only 1.8-7.0, but give user more values with cvar
 
 	g = 1.0f / g;
 	g1 = texGamma * g; 
