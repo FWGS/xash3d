@@ -778,6 +778,7 @@ Normal keyboard characters, already shifted / capslocked / etc
 void CL_CharEvent( int key )
 {
 	// the console key should never be used as a char
+#ifdef _WIN32
 	if( key == '`' || key == '~' ) return;
 
 	if( cls.key_dest == key_console && !Con_Visible( ))
@@ -785,7 +786,7 @@ void CL_CharEvent( int key )
 		if((char)key == '�' || (char)key == '�' )
 			return; // don't pass '�' when we open the console 
 	}
-
+#endif
 	// distribute the key down event to the apropriate handler
 	if( cls.key_dest == key_console || cls.key_dest == key_message )
 	{
