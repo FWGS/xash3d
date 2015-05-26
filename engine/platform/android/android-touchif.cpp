@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-
+#ifdef __ANDROID__
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -363,7 +363,7 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 		tcGameMain->addControl(new touchcontrols::Button("use",touchcontrols::RectF(23,6,26,9),"use",PORT_ACT_USE));
 		tcGameMain->addControl(new touchcontrols::Button("quick_save",touchcontrols::RectF(24,0,26,2),"save",PORT_ACT_QUICKSAVE));
 		tcGameMain->addControl(new touchcontrols::Button("quick_load",touchcontrols::RectF(20,0,22,2),"load",PORT_ACT_QUICKLOAD));
-		tcGameMain->addControl(new touchcontrols::Button("flashlight",touchcontrols::RectF(4,0,6,2),"show_weapons",PORT_ACT_LIGHT));
+		tcGameMain->addControl(new touchcontrols::Button("flashlight",touchcontrols::RectF(4,0,6,2),"flash_light_filled",PORT_ACT_LIGHT));
 		tcGameMain->addControl(new touchcontrols::Button("jump",touchcontrols::RectF(23,3,26,6),"jump",PORT_ACT_JUMP));
 		tcGameMain->addControl(new touchcontrols::Button("crouch",touchcontrols::RectF(24,14,26,16),"crouch",PORT_ACT_DOWN));
 
@@ -673,3 +673,4 @@ JAVA_FUNC(setScreenSize) ( JNIEnv* env,	jobject thiz, jint width, jint height)
 
 
 }
+#endif

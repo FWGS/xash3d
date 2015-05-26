@@ -1,10 +1,14 @@
-
+#ifdef __ANDROID__
 #include "android-gameif.h"
 
 #include "port.h"
 
+extern "C"
+{
 #include "common.h"
+#include "client.h"
 #include "input.h"
+}
 
 #include "MultitouchMouse.h"
 
@@ -145,11 +149,11 @@ void PortableAction(int state, int action)
 		break;
 	case PORT_ACT_NEXT_WEP:
 		if (state)
-			PostCommand("invnext");
+			PostCommand("invprev");
 		break;
 	case PORT_ACT_PREV_WEP:
 		if (state)
-			PostCommand("invprev");
+			PostCommand("invnext");
 		break;
 	}
 }
@@ -253,9 +257,10 @@ void PortableInit(int argc,const char ** argv){
 
 
 
-extern qboolean CL_IsInMenu( void );
-int PortableInMenu(void){
-	return CL_IsInMenu();
+int PortableInMenu(void)
+{
+	// Don't draw controls, when you are not in game
+	return cls.key_dest != key_game ? 1: 0;
 }
 
 // CALLED FROM GAME//////////////////////
@@ -362,3 +367,4 @@ void IN_MobileAngles(float *viewangles)
 		break;
 	}
 }
+#endif
