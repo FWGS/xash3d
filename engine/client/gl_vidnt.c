@@ -20,7 +20,9 @@ GNU General Public License for more details.
 #include "input.h"
 
 #ifndef __ANDROID__
+#ifdef XASH_SDL
 #include <SDL_image.h> // Android: disable useless SDL_image
+#endif
 #endif
 
 #ifdef __ANDROID__
@@ -804,7 +806,11 @@ GL_GetProcAddress
 */
 void *GL_GetProcAddress( const char *name )
 {
+#ifdef XASH_SDL
 	void *func = SDL_GL_GetProcAddress(name);
+#else
+	void *func = glGetProcAddress(name);
+#endif
 	if(!func)
 	{
 		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
@@ -909,8 +915,9 @@ void GL_UpdateGammaRamp( void )
 	if( !glConfig.deviceSupportsGamma ) return;
 
 	GL_BuildGammaTable();
-
+#ifdef XASH_SDL
 	SDL_SetWindowGammaRamp( host.hWnd, &glState.gammaRamp[0], &glState.gammaRamp[256], &glState.gammaRamp[512] );
+#endif
 }
 
 /*
@@ -923,9 +930,10 @@ void GL_UpdateSwapInterval( void )
 	if( gl_swapInterval->modified )
 	{
 		gl_swapInterval->modified = false;
-
+#ifdef XASH_SDL
 		if( SDL_GL_SetSwapInterval(gl_swapInterval->integer) )
 			MsgDev(D_ERROR, "SDL_GL_SetSwapInterval: %s\n", SDL_GetError());
+#endif
 	}
 }
 
@@ -977,6 +985,7 @@ GL_SetupAttributes
 */
 void GL_SetupAttributes()
 {
+#ifdef XASH_SDL
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
@@ -992,6 +1001,7 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #endif
+#endif // XASH_SDL
 }
 
 /*
@@ -1006,12 +1016,13 @@ qboolean GL_CreateContext( void )
 #endif
 	/*if( !Sys_CheckParm( "-gldebug" ) || host.developer < 1 ) // debug bit the kills perfomance
 		return true;*/
-
+#ifdef XASH_SDL
 	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
 	{
 		MsgDev(D_ERROR, "GL_CreateContext: %s\n", SDL_GetError());
 		return GL_DeleteContext();
 	}
+#endif
 	return true;
 }
 
@@ -1022,12 +1033,13 @@ GL_UpdateContext
 */
 qboolean GL_UpdateContext( void )
 {
+#ifdef XASH_SDL
 	if(!( SDL_GL_MakeCurrent( host.hWnd, glw_state.context ) ) )
 	{
 		MsgDev(D_ERROR, "GL_UpdateContext: %s", SDL_GetError());
 		return GL_DeleteContext();
 	}
-
+#endif
 	return true;
 }
 
@@ -1038,7 +1050,9 @@ GL_DeleteContext
 */
 qboolean GL_DeleteContext( void )
 {
+#ifdef XASH_SDL
 	SDL_GL_DeleteContext(glw_state.context);
+#endif
 	glw_state.context = NULL;
 
 	return false;
@@ -1335,7 +1349,7 @@ void VID_RestoreGamma( void )
 
 #ifdef PANDORA
 	system("sudo -n /usr/pandora/scripts/op_gamma.sh 0");
-#else
+#elif defined XASH_SDL
 	SDL_SetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
 			&glState.stateRamp[256], &glState.stateRamp[512] );
 #endif
@@ -1444,12 +1458,16 @@ void R_SaveVideoMode( int vid_mode )
 	MsgDev( D_INFO, "Set: %s [%dx%d]\n", vidmode[mode].desc, vidmode[mode].width, vidmode[mode].height );
 #else
 	// Auto-detect of screen size on Android Devices
-
+#ifdef XASH_SDL
 	SDL_DisplayMode displayMode;
 
 	SDL_GetCurrentDisplayMode(0, &displayMode);
+
 	glState.width = displayMode.w;
 	glState.height = displayMode.h;
+#elif defined __ANDROID__
+	Android_getScreenRes(&glState.width, glState.width);
+#endif
 	glState.wideScreen = true;
 
 	Cvar_FullSet( "width", va( "%i", glState.width ), CVAR_READ_ONLY );
@@ -1479,6 +1497,7 @@ qboolean R_DescribeVIDMode( int width, int height )
 
 qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
+#ifdef XASH_SDL
 	static string	wndname;
 	Uint32 wndFlags = SDL_WINDOW_INPUT_GRABBED |
 		SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
@@ -1553,12 +1572,14 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		if( !GL_UpdateContext( ))
 			return false;		
 	}
+#endif
 
 	return true;
 }
 
 void VID_DestroyWindow( void )
 {
+#ifdef XASH_SDL
 	if( glw_state.context )
 	{
 		SDL_GL_DeleteContext( glw_state.context );
@@ -1570,15 +1591,15 @@ void VID_DestroyWindow( void )
 		SDL_DestroyWindow ( host.hWnd );
 		host.hWnd = NULL;
 	}
-
+#endif
 	if( glState.fullScreen )
 	{
 		glState.fullScreen = false;
 	}
 }
-
 rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 {
+#ifdef XASH_SDL
 	int	width, height;
 	SDL_DisplayMode displayMode;
 
@@ -1611,7 +1632,7 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 			return rserr_invalid_mode;
 		}
 	}
-
+#endif
 	return rserr_ok;
 }
 
@@ -1624,6 +1645,7 @@ Set the described video mode
 */
 qboolean VID_SetMode( void )
 {
+#ifdef XASH_SDL
 	qboolean	fullscreen = false;
 	rserr_t	err;
 
@@ -1687,7 +1709,7 @@ qboolean VID_SetMode( void )
 			return false;
 		}
 	}
-
+#endif
 	return true;
 }
 
@@ -1730,13 +1752,13 @@ R_Init_OpenGL
 qboolean R_Init_OpenGL( void )
 {
 	GL_SetupAttributes();
-
+#ifdef XASH_SDL
 	if( SDL_GL_LoadLibrary( NULL ) )
 	{
 		MsgDev( D_ERROR, "Couldn't initialize OpenGL: %s\n", SDL_GetError());
 		return false;
 	}
-
+#endif
 	return VID_SetMode();
 }
 
@@ -1752,9 +1774,9 @@ void R_Free_OpenGL( void )
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();
-
+#ifdef XASH_SDL
 	SDL_GL_UnloadLibrary ();
-
+#endif
 	// now all extensions are disabled
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
 	glw_state.initialized = false;

@@ -9,12 +9,13 @@ extern "C"
 #include "client.h"
 #include "input.h"
 }
+#include <pthread.h>
 
 #include "MultitouchMouse.h"
-
+#ifdef XASH_SDL
 #include "SDL.h"
 #include "SDL_keycode.h"
-
+#endif
 
 #include <android/log.h>
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,"JNI", __VA_ARGS__))
@@ -26,7 +27,8 @@ extern "C"
 // FIFO STUFF ////////////////////
 // Copied from FTEQW, I don't know if this is thread safe, but it's safe enough for a game :)
 #define COMMAND 0x123
-
+#define KEY_DOWN 0x124
+#define KEY_UP 0x125
 #define EVENTQUEUELENGTH 128
 struct eventlist_s
 {
@@ -34,14 +36,16 @@ struct eventlist_s
 	int action;
 	int x,y;
 	std::string command;
+	int key;
 
 } eventlist[EVENTQUEUELENGTH];
 
 volatile int events_avail; /*volatile to make sure the cc doesn't try leaving these cached in a register*/
 volatile int events_used;
-
+pthread_mutex_t events_mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct eventlist_s *in_newevent(void)
 {
+	pthread_mutex_lock(&events_mutex);
 	if (events_avail >= events_used + EVENTQUEUELENGTH)
 		return 0;
 	return &eventlist[events_avail & (EVENTQUEUELENGTH-1)];
@@ -50,26 +54,30 @@ static struct eventlist_s *in_newevent(void)
 static void in_finishevent(void)
 {
 	events_avail++;
+	pthread_mutex_unlock(&events_mutex);
 }
 ///////////////////////
-
 extern "C"
 {
 extern int SDL_SendKeyboardKey(Uint8 state, SDL_Scancode scancode);
 }
 
 int PortableKeyEvent(int state, int code, int unicode){
-	//NOT USED
-	LOGI("PortableKeyEvent %d %d %d",state,code,unicode);
+	//LOGI("PortableKeyEvent %d %d %d",state,code,unicode);
+	struct eventlist_s *ev = in_newevent();
 
-	if (state)
-		SDL_SendKeyboardKey(SDL_PRESSED, (SDL_Scancode)code);
+	if (!ev)
+		return 1; //Queue full
+	if(state)
+		ev->action = KEY_DOWN;
 	else
-		SDL_SendKeyboardKey(SDL_RELEASED, (SDL_Scancode) code);
+		ev->action = KEY_UP;
+	ev->key = code;
+	in_finishevent();
+	
 
 	return 0;
 }
-
 
 extern "C" void UI_MouseMove( int x, int y );
 
@@ -79,8 +87,7 @@ void PortableMenuMouse(int action,float x,float y){
 
 	if (!ev)
 		return; //Queue full
-
-	ev->action = action;
+	ev->action=action;
 	ev->x = x;
 	ev->y = y;
 	in_finishevent();
@@ -109,7 +116,6 @@ static void DoCommand(int state,const char * cmd)
 		sprintf(cmdfull,"+%s",cmd);
 	else
 		sprintf(cmdfull,"-%s",cmd);
-
 	PostCommand(cmdfull);
 }
 void PortableAction(int state, int action)
@@ -268,6 +274,7 @@ int PortableInMenu(void)
 
 extern "C" void AndroidEvents()
 {
+	pthread_mutex_lock(&events_mutex);
 	if (events_used != events_avail)
 	{
 		struct eventlist_s *ev = &eventlist[events_used & (EVENTQUEUELENGTH-1)];
@@ -291,9 +298,18 @@ extern "C" void AndroidEvents()
 			UI_MouseMove( ev->x,  ev->y );
 			Key_Event( K_MOUSE1, false );
 		}
+		else if (ev->action == KEY_DOWN)
+		{
+			Key_Event( ev->key, true );
+		}
+		else if (ev->action == KEY_UP)
+		{
+			Key_Event( ev->key, false );
+		}
 
 		events_used++;
 	}
+	pthread_mutex_unlock(&events_mutex);
 }
 
 static bool forwardHackActive = false;

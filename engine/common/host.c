@@ -599,7 +599,9 @@ void Host_Error( const char *error, ... )
 	if( host.mouse_visible && !CL_IsInMenu( ))
 	{
 		// hide VGUI mouse
+#ifdef XASH_SDL
 		SDL_ShowCursor( false );
+#endif
 		host.mouse_visible = false;
 	}
 
@@ -711,11 +713,14 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #endif
 
 #ifndef __ANDROID__
+#ifdef XASH_SDL
 	if( !(SDL_GetBasePath()) )
 		Sys_Error( "couldn't determine current directory" );
 
 	Q_strncpy(host.rootdir, SDL_GetBasePath(), sizeof(host.rootdir));
-
+#else
+	if( !getcwd(host.rootdir, sizeof(host.rootdir) ) host.rootdir[0] = 0;
+#endif
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 #else
@@ -767,12 +772,15 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		MsgDev(D_ERROR,"%s is not exists",host.rootdir);
 #else
 	// we can specified custom name, from Sys_NewInstance
+#if XASH_SDL
 	if( SDL_GetBasePath() && !host.change_game )
 	{
 		Q_strncpy( szTemp, SDL_GetBasePath(), sizeof(szTemp) );
 		FS_FileBase( szTemp, SI.ModuleName );
 	}
-
+#else
+	FS_FileBase( host.rootdir, SI.ModuleName );
+#endif
 	// We didn't need full path, only executable name
 	strcpy(moduleName, strrchr(argv[0], '/'));
 	//strrchr adds a / at begin of string =(
@@ -806,6 +814,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	if( host.type == HOST_DEDICATED )
 	{
 		// check for duplicate dedicated server
+#ifdef XASH_SDL		
 		host.hMutex = SDL_CreateMutex(  );
 
 		if( !host.hMutex )
@@ -814,11 +823,12 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 			Sys_Quit();
 			return;
 		}
-
+#endif
 		Sys_MergeCommandLine( );
-
+#ifdef XASH_SDL	
 		SDL_DestroyMutex( host.hMutex );
 		host.hMutex = SDL_CreateSemaphore( 0 );
+#endif
 		if( host.developer < 3 ) host.developer = 3; // otherwise we see empty console
 	}
 	else
@@ -885,7 +895,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	static double	oldtime, newtime;
 
 	pChangeGame = func;	// may be NULL
-
+#ifdef XASH_SDL
 	if( SDL_Init( SDL_INIT_VIDEO |
 				SDL_INIT_TIMER |
 				SDL_INIT_AUDIO |
@@ -895,6 +905,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		MsgDev(D_ERROR, "SDL_Init: %s", SDL_GetError());
 		return 0;
 	}
+#endif
 
 /*#ifndef _WIN32
 #ifndef __ANDROID__
@@ -1023,15 +1034,17 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Cmd_ExecuteString( "exec config.cfg\n", src_command );
 	oldtime = Sys_DoubleTime();
 	SCR_CheckStartupVids();	// must be last
-
+#ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
 	SDL_Event event;
-
+#endif
 	// main window message loop
 	while( !host.crashed )
 	{
+#ifdef XASH_SDL
 		while( SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
+#endif
 		#ifdef __ANDROID__
 		void AndroidEvents();
 		AndroidEvents();

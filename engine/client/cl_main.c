@@ -1322,8 +1322,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 			Msg( "Command packet from remote host. Ignored.\n" );
 			return;
 		}
-
+#ifdef XASH_SDL
 		SDL_RestoreWindow( host.hWnd );
+#endif
 		args = BF_ReadString( msg );
 		Cbuf_AddText( args );
 		Cbuf_AddText( "\n" );

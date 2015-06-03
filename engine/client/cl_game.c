@@ -1869,7 +1869,11 @@ pfnGetMousePosition
 */
 static void pfnGetMousePosition( int *mx, int *my )
 {
+#ifdef XASH_SDL
 	SDL_GetMouseState(mx, my);
+#else
+mx=my=0;
+#endif
 }
 
 /*
@@ -2693,7 +2697,11 @@ pfnGetMousePos
 */
 void pfnGetMousePos( POINT *ppt )
 {
+#ifdef XASH_SDL
 	SDL_GetMouseState(&ppt->x, &ppt->y);
+#else
+	ppt->x=ppt0>y=0;
+#endif
 }
 
 /*
@@ -2704,7 +2712,9 @@ pfnSetMousePos
 */
 void pfnSetMousePos( int mx, int my )
 {
+#ifdef XASH_SDL
 	SDL_WarpMouseInWindow(host.hWnd, mx, my);
+#endif
 }
 
 /*

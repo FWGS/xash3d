@@ -308,8 +308,11 @@ typedef struct host_parm_s
 
 	// list of unique decal indexes
 	char		draw_decals[MAX_DECALS][CS_SIZE];
-
+#ifdef XASH_SDL
     SDL_Window*		hWnd;		// main window
+#else
+	void *hWnd;
+#endif
 	int		developer;	// show all developer's message
 	int		old_developer;	// keep real dev state (we need enable dev-mode in multiplayer)
 	qboolean		key_overstrike;	// key overstrike mode

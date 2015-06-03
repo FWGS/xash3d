@@ -17,8 +17,9 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "sound.h"
+#ifdef XASH_SDL
 #include <SDL.h>
-
+#endif
 #define SAMPLE_16BIT_SHIFT		1
 #define SECONDARY_BUFFER_SIZE		0x10000
 
@@ -36,6 +37,7 @@ int				shutdown_temp = 0;
 static qboolean	snd_firsttime = true;
 static qboolean	primary_format_set;
 
+#ifdef XASH_SDL
 void SDL_SoundCallback( void* userdata, Uint8* stream, int len)
 {
 	int size = dma.samples << 1;
@@ -128,7 +130,7 @@ fail:
 	SNDDMA_Shutdown();
 	return false;
 }
-
+#endif
 /*
 ==============
 SNDDMA_GetDMAPos
@@ -189,7 +191,9 @@ Makes sure dma.buffer is valid
 */
 void SNDDMA_BeginPainting( void )
 {
+#ifdef XASH_SDL
 	SDL_LockAudio();
+#endif
 }
 
 /*
@@ -202,7 +206,9 @@ Also unlocks the dsound buffer
 */
 void SNDDMA_Submit( void )
 {
+#ifdef XASH_SDL
 	SDL_UnlockAudio();
+#endif
 }
 
 /*
@@ -214,11 +220,13 @@ Reset the sound device for exiting
 */
 void SNDDMA_Shutdown( void )
 {
-	Con_Printf("Shutting down SDL audio.\n");
+	Con_Printf("Shutting down audio.\n");
 	dma.initialized = false;
+#ifdef XASH_SDL
 	SDL_CloseAudio();
 	if (SDL_WasInit(SDL_INIT_AUDIO != 0))
 		 SDL_QuitSubSystem(SDL_INIT_AUDIO);
+#endif
 	if (dma.buffer) {
 		 Z_Free(dma.buffer);
 		 dma.buffer = NULL;

@@ -24,7 +24,9 @@ GNU General Public License for more details.
 #define WND_HEADSIZE	wnd_caption		// some offset
 #define WND_BORDER		3			// sentinel border in pixels
 
+#ifdef XASH_SDL
 SDL_Cursor*	in_mousecursor;
+#endif
 qboolean	in_mouseactive;				// false when not focus app
 qboolean	in_restore_spi;
 qboolean	in_mouseinitialized;
@@ -146,7 +148,9 @@ static void IN_ActivateCursor( void )
 {
 	if( cls.key_dest == key_menu )
 	{
+#ifdef XASH_SDL
 		SDL_SetCursor( in_mousecursor );
+#endif
 	}
 }
 
@@ -175,13 +179,17 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 	else if( newstate == key_game )
 	{
 		// reset mouse pos, so cancel effect in game
+#ifdef XASH_SDL
 		SDL_WarpMouseInWindow( host.hWnd, host.window_center_x, host.window_center_y );
+#endif
 		clgame.dllFuncs.IN_ActivateMouse();
 	}
 
 	if( newstate == key_menu && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
 	{
+#ifdef XASH_SDL
 		SDL_SetWindowGrab(host.hWnd, false);
+#endif
 	}
 }
 
@@ -237,8 +245,9 @@ void IN_ActivateMouse( qboolean force )
 	{
 		clgame.dllFuncs.IN_ActivateMouse();
 	}
-
+#ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, true );
+#endif
 }
 
 /*
@@ -259,7 +268,9 @@ void IN_DeactivateMouse( void )
 	}
 
 	in_mouseactive = false;
+#ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, false );
+#endif
 }
 
 /*
@@ -275,10 +286,13 @@ void IN_MouseMove( void )
 		return;
 
 	// Show cursor in UI
+#ifdef XASH_SDL
 	if( UI_IsVisible() ) SDL_ShowCursor( true );
-
+#endif
 	// find mouse movement
+#ifdef XASH_SDL
 	SDL_GetMouseState( &current_pos.x, &current_pos.y );
+#endif
 	// if the menu is visible, move the menu cursor
 	UI_MouseMove( current_pos.x, current_pos.y );
 
@@ -299,13 +313,17 @@ void IN_MouseEvent( int mstate )
 
 	if( cls.key_dest == key_game )
 	{
+#ifdef XASH_SDL
 		SDL_SetRelativeMouseMode( true );
+#endif
 		clgame.dllFuncs.IN_MouseEvent( mstate );
 		return;
 	}
 	else
 	{
+#ifdef XASH_SDL
 		SDL_SetRelativeMouseMode( false );
+#endif
 		IN_MouseMove();
 	}
 

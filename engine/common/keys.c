@@ -16,9 +16,9 @@ GNU General Public License for more details.
 #include "common.h"
 #include "input.h"
 #include "client.h"
-
+#ifdef XASH_SDL
 #include <SDL_keyboard.h>
-
+#endif
 typedef struct key_s
 {
 	qboolean		down;
@@ -723,19 +723,27 @@ void Key_SetKeyDest( int key_dest )
 	switch( key_dest )
 	{
 	case key_game:
+#ifdef XASH_SDL
 		SDL_StopTextInput();
+#endif
 		cls.key_dest = key_game;
 		break;
 	case key_menu:
+#ifdef XASH_SDL
 		SDL_StopTextInput();
+#endif		
 		cls.key_dest = key_menu;
 		break;
 	case key_console:
+#ifdef XASH_SDL
 		SDL_StartTextInput();
+#endif		
 		cls.key_dest = key_console;
 		break;
 	case key_message:
+#ifdef XASH_SDL
 		SDL_StartTextInput();
+#endif		
 		cls.key_dest = key_message;
 		break;
 	default:

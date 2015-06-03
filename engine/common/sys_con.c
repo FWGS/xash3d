@@ -455,7 +455,9 @@ void Con_DestroyConsole( void )
 	UnregisterClass( SYSCONSOLE, host.hInst );
 #endif
 	// place it here in case Sys_Crash working properly
+#ifdef XASH_SDL
 	if( host.hMutex ) SDL_DestroyMutex( host.hMutex );
+#endif
 }
 
 /*

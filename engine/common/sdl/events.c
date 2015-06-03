@@ -1,3 +1,4 @@
+#ifdef XASH_SDL
 #include "events.h"
 #include "keydefs.h"
 #include "input.h"
@@ -177,3 +178,4 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 	for(i = 0; input.text[i]; ++i)
 		Con_CharEvent((int)input.text[i]);
 }
+#endif // XASH_SDL
