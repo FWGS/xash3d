@@ -24,9 +24,7 @@ GNU General Public License for more details.
 #define WND_HEADSIZE	wnd_caption		// some offset
 #define WND_BORDER		3			// sentinel border in pixels
 
-#ifdef XASH_SDL
-SDL_Cursor*	in_mousecursor;
-#endif
+Xash_Cursor*	in_mousecursor;
 qboolean	in_mouseactive;				// false when not focus app
 qboolean	in_restore_spi;
 qboolean	in_mouseinitialized;
@@ -154,7 +152,7 @@ static void IN_ActivateCursor( void )
 	}
 }
 
-void IN_SetCursor( SDL_Cursor* hCursor )
+void IN_SetCursor( Xash_Cursor* hCursor )
 {
 	in_mousecursor = hCursor;
 

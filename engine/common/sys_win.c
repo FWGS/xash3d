@@ -141,9 +141,9 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean exit )
 {
 #ifdef _WIN32
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
-#else
+#elif !defined __ANDROID__
 	char buf[1024];
-	strcat(buf, "open ");
+	strcat(buf, "xdg_open ");
 	strcat(buf, path);
 	strcat(buf, parms);
 	system(buf);

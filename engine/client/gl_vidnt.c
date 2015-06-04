@@ -1057,7 +1057,7 @@ qboolean GL_DeleteContext( void )
 
 	return false;
 }
-
+#ifdef XASH_SDL
 /*
 =================
 VID_ChoosePFD
@@ -1116,7 +1116,7 @@ static int VID_ChoosePFD( SDL_PixelFormat *pfd, int colorBits, int alphaBits, in
 
 	return 0;
 }
-
+#endif
 #ifdef _WIN32
 BOOL CALLBACK pfnEnumWnd( HWND hwnd, LPARAM lParam )
 {

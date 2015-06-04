@@ -2700,7 +2700,7 @@ void pfnGetMousePos( POINT *ppt )
 #ifdef XASH_SDL
 	SDL_GetMouseState(&ppt->x, &ppt->y);
 #else
-	ppt->x=ppt0>y=0;
+	ppt->x=ppt->y=0;
 #endif
 }
 

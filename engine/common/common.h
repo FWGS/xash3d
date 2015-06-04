@@ -24,6 +24,8 @@ extern "C" {
 #include <linux/limits.h> // PATH_MAX
 #include <stddef.h> // size_t
 #include <stdio.h> // off_t
+#include <stdarg.h> // va_list
+#include <stdlib.h> // rand, abs
 #ifdef PANDORA
 #include <unistd.h>	//off_t on PANDORA
 #endif
