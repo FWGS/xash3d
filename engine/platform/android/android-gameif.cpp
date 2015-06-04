@@ -47,7 +47,10 @@ static struct eventlist_s *in_newevent(void)
 {
 	pthread_mutex_lock(&events_mutex);
 	if (events_avail >= events_used + EVENTQUEUELENGTH)
+	{
+		pthread_mutex_unlock(&events_mutex);
 		return 0;
+	}
 	return &eventlist[events_avail & (EVENTQUEUELENGTH-1)];
 }
 
@@ -57,11 +60,12 @@ static void in_finishevent(void)
 	pthread_mutex_unlock(&events_mutex);
 }
 ///////////////////////
+#if 0
 extern "C"
 {
 extern int SDL_SendKeyboardKey(Uint8 state, SDL_Scancode scancode);
 }
-
+#endif
 int PortableKeyEvent(int state, int code, int unicode){
 	//LOGI("PortableKeyEvent %d %d %d",state,code,unicode);
 	struct eventlist_s *ev = in_newevent();
@@ -83,6 +87,7 @@ extern "C" void UI_MouseMove( int x, int y );
 
 void PortableMenuMouse(int action,float x,float y){
 
+	if(eventlist[events_avail & (EVENTQUEUELENGTH-1)].action == action) return; //skip multiple mouse movements
 	struct eventlist_s *ev = in_newevent();
 
 	if (!ev)
@@ -106,8 +111,6 @@ static void PostCommand(const char * cmd)
 	in_finishevent();
 }
 
-//TODO ASAP, This needs to changed to a threadsafe fifo, this will probably
-//cause random crashes!
 static void DoCommand(int state,const char * cmd)
 {
 	char cmdfull[50];
@@ -164,7 +167,7 @@ void PortableAction(int state, int action)
 	}
 }
 
-int mdx=0,mdy=0;
+volatile int mdx=0,mdy=0;
 void PortableMouse(float dx,float dy)
 {
 	dx *= 1500;
@@ -184,7 +187,7 @@ void PortableMouseAbs(float x,float y)
 
 // =================== FORWARD and SIDE MOVMENT ==============
 
-float forwardmove, sidemove; //Joystick mode
+volatile float forwardmove, sidemove; //Joystick mode
 
 void PortableMoveFwd(float fwd)
 {
@@ -215,8 +218,8 @@ void PortableMove(float fwd, float strafe)
 //======================================================================
 
 //Look up and down
-int look_pitch_mode;
-float look_pitch_mouse,look_pitch_abs,look_pitch_joy;
+volatile int look_pitch_mode;
+volatile float look_pitch_mouse,look_pitch_abs,look_pitch_joy;
 void PortableLookPitch(int mode, float pitch)
 {
 	look_pitch_mode = mode;
@@ -279,7 +282,7 @@ extern "C" void AndroidEvents()
 	{
 		struct eventlist_s *ev = &eventlist[events_used & (EVENTQUEUELENGTH-1)];
 
-		LOGI("Queue event");
+		//LOGI("Queue event");
 		if (ev->action == COMMAND)
 		{
 			Cmd_ExecuteString((char*)ev->command.c_str(),src_command);

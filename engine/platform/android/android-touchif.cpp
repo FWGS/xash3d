@@ -161,7 +161,7 @@ static jclass NativeLibClass = 0;
 static jmethodID swapBuffersMethod = 0;
 
 
-extern unsigned int Sys_Milliseconds(void);
+//extern unsigned int Sys_Milliseconds(void);
 
 static unsigned int reload_time_down;
 void gameButton(int state,int code)

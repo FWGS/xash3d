@@ -40,7 +40,7 @@ double Sys_DoubleTime( void )
 	static u_int64_t	g_PerformanceFrequency;
 	static u_int64_t	g_ClockStart;
 	u_int64_t		CurrentTime;
-#ifdef XASH_SDL
+#if 0
 	if( !g_PerformanceFrequency )
 	{
 		g_PerformanceFrequency = SDL_GetPerformanceFrequency();
@@ -56,8 +56,8 @@ double Sys_DoubleTime( void )
 		if( !clock_getres(CLOCK_MONOTONIC, &res) )
 			g_PerformanceFrequency = 1000000000LL/res.tv_nsec;
 	}
-	clock_gettime(CLOCK_MONOTONIC, &ts)
-	return (double) ts.sec + (double) ts.tv_nsec/1000000000.0
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
 #endif
 }
 
