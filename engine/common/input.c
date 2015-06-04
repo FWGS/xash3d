@@ -219,7 +219,9 @@ void IN_ActivateMouse( qboolean force )
 		{
 			if( in_mouse_suspended )
 			{
+#ifdef XASH_SDL
 				SDL_ShowCursor( false );
+#endif
 				UI_ShowCursor( false );
 			}
 		}

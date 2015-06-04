@@ -19,6 +19,10 @@ endif
 
 LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -fsigned-char
 
+ifeq ($(XASH_SDL),1)
+LOCAL_CFLAGS += -DXASH_SDL
+endif
+
 LOCAL_CONLYFLAGS += -std=c99
 
 LOCAL_C_INCLUDES := \
@@ -157,8 +161,11 @@ LOCAL_SRC_FILES := \
 	   common/soundlib/libmpg/tabinit.c \
 	   common/soundlib/libmpg/common.c
 
-LOCAL_SHARED_LIBRARIES := touchcontrols SDL2 
+LOCAL_SHARED_LIBRARIES := touchcontrols
 
+ifeq ($(XASH_SDL),1)
+LOCAL_SHARED_LIBRARIES += SDL2
+endif
 LOCAL_STATIC_LIBRARIES := NanoGL
 
 LOCAL_LDLIBS := -ldl -llog

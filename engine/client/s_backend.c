@@ -240,7 +240,9 @@ S_PrintDeviceName
 */
 void S_PrintDeviceName( void )
 {
+#ifdef XASH_SDL
 	Msg( "Audio: SDL (driver: %s)\n", SDL_GetCurrentAudioDriver() );
+#endif
 }
 
 /*

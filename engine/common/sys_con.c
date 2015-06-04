@@ -14,9 +14,9 @@ GNU General Public License for more details.
 */
 
 #include "common.h"
-
+#ifdef XASH_SDL
 #include <SDL_mutex.h>
-
+#endif
 #ifdef __ANDROID__
 #include <android/log.h>
 #endif

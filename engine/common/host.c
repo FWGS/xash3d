@@ -14,8 +14,9 @@ GNU General Public License for more details.
 */
 
 #include "port.h"
-
+#ifdef XASH_SDL
 #include <SDL.h>
+#endif
 #include <stdarg.h>  // va_args
 
 #include "common.h"
@@ -295,7 +296,9 @@ void Host_MemStats_f( void )
 
 void Host_Minimize_f( void )
 {
+#ifdef XASH_SDL
 	if( host.hWnd ) SDL_MinimizeWindow( host.hWnd );
+#endif
 }
 
 qboolean Host_IsLocalGame( void )
