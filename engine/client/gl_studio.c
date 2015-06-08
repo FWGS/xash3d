@@ -28,7 +28,7 @@ GNU General Public License for more details.
 #define STUDIO_MERGE_TEXTURES
 
 #define EVENT_CLIENT	5000	// less than this value it's a server-side studio events
-#define MAXARRAYVERTS	16384	// used for draw shadows
+#define MAXARRAYVERTS	20000	// used for draw shadows
 #define LEGS_BONES_COUNT	8
 
 static vec3_t hullcolor[8] = 
