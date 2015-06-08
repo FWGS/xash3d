@@ -270,10 +270,11 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 			ch = *l++;
 			ch &= 255;
 
+#ifdef _WIN32
 			// fix for letter �
 			if( ch == 0xB8 ) ch = (byte)'�';
 			if( ch == 0xA8 ) ch = (byte)'�';
-
+#endif
 			if( ch != ' ' )
 			{
 				if( shadow ) TextMessageDrawChar( xx + ofsX, yy + ofsY, charW, charH, ch, shadowModulate, uiStatic.hFont );
