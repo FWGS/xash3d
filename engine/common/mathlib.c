@@ -16,6 +16,23 @@ GNU General Public License for more details.
 #include "common.h"
 #include "mathlib.h"
 
+#ifdef VECTORIZE_SINCOS
+
+// Test shown that this is not so effictively
+#ifdef __SSE__
+ #ifdef __SSE2__
+  #define USE_SSE2
+ #endif
+#include "sse_mathfun.h"
+#endif
+
+
+#if defined(__ARM_NEON__) || defined(__NEON__)
+	#include "neon_mathfun.h"
+#endif
+
+#endif
+
 vec3_t	vec3_origin = { 0, 0, 0 };
 
 /*
@@ -125,10 +142,36 @@ void SinCos( float radians, float *sine, float *cosine )
 	}
 #else
 	// I think, better use math.h function, instead of ^
-	*sine = sin(radians);
-	*cosine = cos(radians);
+#ifndef __ANDROID__
+	sincosf(radians, sine, cosine);
+#else
+	*sine = sinf(radians);
+	*cosine = cosf(radians);
+#endif
 #endif
 }
+
+#ifdef VECTORIZE_SINCOS
+void SinCosFastVector(float r1, float r2, float r3, float r4,
+					  float *s0, float *s1, float *s2, float *s3,
+					  float *c0, float *c1, float *c2, float *c3)
+{
+	v4sf rad_vector = {r1, r2, r3, r4};
+	v4sf sin_vector, cos_vector;
+
+	sincos_ps(rad_vector, &sin_vector, &cos_vector);
+
+	*s0 = sin_vector[0];
+	if(s1) *s1 = sin_vector[1];
+	if(s2) *s2 = sin_vector[2];
+	if(s3) *s3 = sin_vector[3];
+
+	*c0 = cos_vector[0];
+	if(s1) *c1 = cos_vector[1];
+	if(s2) *c2 = cos_vector[2];
+	if(s3) *c3 = cos_vector[3];
+}
+#endif
 
 float VectorNormalizeLength2( const vec3_t v, vec3_t out )
 {
@@ -170,11 +213,17 @@ AngleVectors
 */
 void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
 {
-	float	sr, sp, sy, cr, cp, cy;
+	static float	sr, sp, sy, cr, cp, cy;
 
+#ifdef VECTORIZE_SINCOS
+	SinCosFastVector( DEG2RAD(angles[YAW]), DEG2RAD(angles[PITCH]), DEG2RAD(angles[ROLL]), 0,
+					  &sy, &sp, &sr, NULL,
+					  &cy, &cp, &cr, NULL);
+#else
 	SinCos( DEG2RAD( angles[YAW] ), &sy, &cy );
 	SinCos( DEG2RAD( angles[PITCH] ), &sp, &cp );
 	SinCos( DEG2RAD( angles[ROLL] ), &sr, &cr );
+#endif
 
 	if( forward )
 	{
@@ -391,8 +440,14 @@ AngleQuaternion
 */
 void AngleQuaternion( const vec3_t angles, vec4_t q )
 {
-	float	angle;
 	float	sr, sp, sy, cr, cp, cy;
+
+#ifdef VECTORIZE_SINCOS
+	SinCosFastVector( angles[2] * 0.5f, angles[1] * 0.5f, angles[0] * 0.5f, 0,
+					  &sy, &sp, &sr, NULL,
+					  &cy, &cp, &cr, NULL);
+#else
+	float	angle;
 
 	angle = angles[2] * 0.5f;
 	SinCos( angle, &sy, &cy );
@@ -400,6 +455,7 @@ void AngleQuaternion( const vec3_t angles, vec4_t q )
 	SinCos( angle, &sp, &cp );
 	angle = angles[0] * 0.5f;
 	SinCos( angle, &sr, &cr );
+#endif
 
 	q[0] = sr * cp * cy - cr * sp * sy; // X
 	q[1] = cr * sp * cy + sr * cp * sy; // Y

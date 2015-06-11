@@ -52,6 +52,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 
 		if(!pHandle)
 		{
+			char *error = dlerror();
 			MsgDev(D_ERROR, "loading library %s: %s", dllname, dlerror());
 			return NULL;
 		}

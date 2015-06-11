@@ -615,12 +615,18 @@ void CL_EntityParticles( cl_entity_t *ent )
 		p = CL_AllocParticle( NULL );
 		if( !p ) return;
 
+#ifdef VECTORIZE_SINCOS
+		SinCosFastVector( cl.time * cl_avelocities[i][0], cl.time * cl_avelocities[i][1], cl.time * cl_avelocities[i][2], 0,
+						  &sy, &sp, &sr, NULL,
+						  &cy, &cp, &cr, NULL);
+#else
 		angle = cl.time * cl_avelocities[i][0];
 		SinCos( angle, &sy, &cy );
 		angle = cl.time * cl_avelocities[i][1];
 		SinCos( angle, &sp, &cp );
 		angle = cl.time * cl_avelocities[i][2];
 		SinCos( angle, &sr, &cr );
+#endif
 	
 		VectorSet( forward, cp * cy, cp * sy, -sp ); 
 
