@@ -85,9 +85,22 @@ int Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jobject 
     return status;
 }
 #else
-int Java_in_celest_xash3d_hl_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
+
+#include "nanogl.h" //use NanoGL
+
+jclass gClass;
+JNIEnv *gEnv;
+jmethodID gSwapBuffers;
+JavaVM *gVM;
+/*JNIEXPORT jint JNICALL JNIOnLoad(JavaVM * vm, void*)
 {
-	int i;
+	gVM = vm;
+	
+	return JNI_VERSION_1_6;
+}*/
+int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
+{
+    int i;
     int argc;
     int status;
     /* Prepare the arguments. */
@@ -115,7 +128,13 @@ int Java_in_celest_xash3d_hl_XashActivity_nativeInit(JNIEnv* env, jclass cls, jo
     }
     argv[argc] = NULL;
 
+    /* Init callbacks. */
 
+    gEnv = env;
+    gClass = (*env)->FindClass(env, "in/celest/xash3d/XashActivity");
+    gSwapBuffers = (*env)->GetStaticMethodID(env, gClass, "swapBuffers", "()V");
+
+    nanoGL_Init();
     /* Run the application. */
 
     status = Host_Main(argc, argv, GAME_PATH, false, NULL);
@@ -125,8 +144,21 @@ int Java_in_celest_xash3d_hl_XashActivity_nativeInit(JNIEnv* env, jclass cls, jo
     for (i = 0; i < argc; ++i) {
         free(argv[i]);
     }
-    
+
     return status;
+}
+
+void frameControls();
+
+void Android_SwapBuffers()
+{
+	//frameControls();
+	//nanoGL_Flush();
+	(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gSwapBuffers);
+}
+void Android_GetScreenRes(int *width, int *height)
+{
+	*width=800, *height=450;
 }
 #endif
 #endif

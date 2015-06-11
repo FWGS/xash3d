@@ -130,6 +130,11 @@ fail:
 	SNDDMA_Shutdown();
 	return false;
 }
+#elif defined __ANDROID__
+qboolean SNDDMA_Init( void *hInst )
+{
+	return false;
+}
 #endif
 /*
 ==============

@@ -30,7 +30,7 @@
 
 #include "android-gameif.h"
 
-void ResetNanoState();
+#include "nanogl.h"
 
 extern "C"
 {
@@ -128,7 +128,7 @@ void openGLStart()
 
 void openGLEnd()
 {
-	ResetNanoState();
+	nanoGL_Reset();
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(model);
@@ -429,6 +429,7 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 int inMenuLast = 1;
 int inAutomapLast = 0;
 static int glInit = 0;
+extern "C" void frameControls();
 void frameControls()
 {
 	//LOGI("frameControls");
@@ -467,9 +468,10 @@ void frameControls()
 	setHideSticks(!showSticks);
 
 	//flush(); //draw out game from glshim
-
+	nanoGL_Flush();
+	
 	controlsContainer.draw();
-
+	
 	//flush(); //draw out controls from glshim
 	// glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	// glClear(GL_COLOR_BUFFER_BIT);

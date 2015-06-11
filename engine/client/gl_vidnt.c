@@ -809,7 +809,7 @@ void *GL_GetProcAddress( const char *name )
 #ifdef XASH_SDL
 	void *func = SDL_GL_GetProcAddress(name);
 #else
-	void *func = glGetProcAddress(name);
+	void *func = nanoGL_GetProcAddress(name);
 #endif
 	if(!func)
 	{
@@ -1466,7 +1466,7 @@ void R_SaveVideoMode( int vid_mode )
 	glState.width = displayMode.w;
 	glState.height = displayMode.h;
 #elif defined __ANDROID__
-	Android_getScreenRes(&glState.width, glState.width);
+	Android_GetScreenRes(&glState.width, glState.width);
 #endif
 	glState.wideScreen = true;
 
