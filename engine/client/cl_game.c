@@ -2949,7 +2949,9 @@ pfnGetAppID
 */
 int pfnGetAppID( void )
 {
-	return 220; // standard Valve value
+	return 130;
+
+	//return 220; // standard Valve value
 }
 
 /*
