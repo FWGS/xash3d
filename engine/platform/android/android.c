@@ -92,6 +92,7 @@ jclass gClass;
 JNIEnv *gEnv;
 jmethodID gSwapBuffers;
 JavaVM *gVM;
+int gWidth, gHeight;
 /*JNIEXPORT jint JNICALL JNIOnLoad(JavaVM * vm, void*)
 {
 	gVM = vm;
@@ -147,18 +148,22 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
 
     return status;
 }
+void Java_in_celest_xash3d_XashActivity_onNativeResize(JNIEnv* env, jclass cls, jint width, jint height)
+{
+	gWidth=width, gHeight=height;
+}
 
 void frameControls();
 
 void Android_SwapBuffers()
 {
 	//frameControls();
-	//nanoGL_Flush();
+	nanoGL_Flush();
 	(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gSwapBuffers);
 }
 void Android_GetScreenRes(int *width, int *height)
 {
-	*width=800, *height=450;
+	*width=gWidth, *height=gHeight;
 }
 #endif
 #endif

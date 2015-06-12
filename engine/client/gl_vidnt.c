@@ -1465,8 +1465,9 @@ void R_SaveVideoMode( int vid_mode )
 
 	glState.width = displayMode.w;
 	glState.height = displayMode.h;
-#elif defined __ANDROID__
-	Android_GetScreenRes(&glState.width, glState.width);
+#else
+	Android_GetScreenRes(&glState.width, &glState.height);
+	//glState.width = glState.height = 600;
 #endif
 	glState.wideScreen = true;
 
@@ -1559,7 +1560,12 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 		return false;
 	}
-
+#else
+	host.hWnd = 1; //fake window
+	GL_SetPixelformat( );
+	host.window_center_x = width / 2;
+	host.window_center_y = height / 2;
+#endif
 	if( !glw_state.initialized )
 	{
 		if( !GL_CreateContext( ))
@@ -1572,8 +1578,6 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		if( !GL_UpdateContext( ))
 			return false;		
 	}
-#endif
-
 	return true;
 }
 
@@ -1631,6 +1635,16 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 			MsgDev(D_ERROR, "Cannot change resolution: %s", SDL_GetError());
 			return rserr_invalid_mode;
 		}
+	}
+#else
+	R_SaveVideoMode( vid_mode );
+	glw_state.desktopWidth = r_width->integer;
+	glw_state.desktopHeight = r_height->integer;
+	glw_state.desktopBitsPixel = 32;
+	if(!host.hWnd)
+	{
+		if( !VID_CreateWindow( 640, 480, fullscreen ) )
+			return rserr_invalid_mode;
 	}
 #endif
 	return rserr_ok;
@@ -1709,6 +1723,12 @@ qboolean VID_SetMode( void )
 			return false;
 		}
 	}
+#else
+	gl_swapInterval->modified = true;
+	MsgDev( D_ERROR, "VID_SetMode: enabling fake window\n" );
+	Cvar_SetFloat( "vid_mode", 10 );
+	Cvar_SetFloat( "fullscreen", 1 );
+        R_ChangeDisplaySettings( vid_mode->integer, true );
 #endif
 	return true;
 }
