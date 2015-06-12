@@ -929,8 +929,10 @@ void GL_UpdateSwapInterval( void )
 {
 	if( cls.state < ca_active )
 	{
+#ifdef XASH_SDL
 		SDL_GL_SetSwapInterval( 0 );
 		gl_swapInterval->modified = true;
+#endif
 	}
 	else if( gl_swapInterval->modified )
 	{

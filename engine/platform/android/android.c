@@ -153,11 +153,16 @@ void Java_in_celest_xash3d_XashActivity_onNativeResize(JNIEnv* env, jclass cls, 
 	gWidth=width, gHeight=height;
 }
 
+void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
+{
+}
+
+
 void frameControls();
 
 void Android_SwapBuffers()
 {
-	//frameControls();
+	frameControls();
 	nanoGL_Flush();
 	(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gSwapBuffers);
 }
