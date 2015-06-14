@@ -597,7 +597,8 @@ JAVA_FUNC(keypress) (JNIEnv *env, jobject obj,jint down, jint keycode, jint unic
 	PortableKeyEvent(down,keycode,unicode);
 }
 
-
+void EXPORT_ME
+JAVA_FUNC(touchEvent) (JNIEnv *env, jobject obj,jint action, jint pid, jfloat x, jfloat y) __attribute__((pcs("aapcs")));
 void EXPORT_ME
 JAVA_FUNC(touchEvent) (JNIEnv *env, jobject obj,jint action, jint pid, jfloat x, jfloat y)
 {
@@ -642,7 +643,8 @@ JAVA_FUNC(analogYaw) (JNIEnv *env, jobject obj,	jint mode,jfloat v)
 {
 	PortableLookYaw(mode, v);
 }
-
+void EXPORT_ME
+JAVA_FUNC(setTouchSettings) (JNIEnv *env, jobject obj,	jfloat alpha,jfloat strafe,jfloat fwd,jfloat pitch,jfloat yaw,int other) __attribute__((pcs("aapcs")));
 void EXPORT_ME
 JAVA_FUNC(setTouchSettings) (JNIEnv *env, jobject obj,	jfloat alpha,jfloat strafe,jfloat fwd,jfloat pitch,jfloat yaw,int other)
 {
