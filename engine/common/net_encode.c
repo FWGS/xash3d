@@ -1293,7 +1293,7 @@ qboolean Delta_ReadField( sizebuf_t *msg, delta_t *pField, void *from, void *to,
 		if( bChanged )
 		{
 			iValue = BF_ReadBitLong( msg, pField->bits, bSigned );
-			flValue = (float)((int)iValue) * 0.01f;
+			flValue = (float)((int)(iValue * 0.01f ));
 			flTime = timebase + flValue;
 		}
 		else
