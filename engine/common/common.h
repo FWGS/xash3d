@@ -21,7 +21,9 @@ extern "C" {
 #endif
 
 #ifndef _WIN32
+#ifdef __linux__
 #include <linux/limits.h> // PATH_MAX
+#endif
 #include <stddef.h> // size_t
 #include <stdio.h> // off_t
 #ifdef PANDORA
