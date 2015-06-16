@@ -406,8 +406,7 @@ void GL_SetRenderMode( int mode )
 	case kRenderTransAdd:
 		pglEnable( GL_BLEND );
 		pglDisable( GL_ALPHA_TEST );
-#ifdef XASH_GLES // Problem with blending exists on every GLES configuration, not only on Android
-		// On Pandora,  glshim will take care and change to GL_ONE, GL_ONE
+#if defined(XASH_GLES) || defined(PANDORA) // Problem with blending exists on every GLES configuration, not only on Android
 		pglBlendFunc( GL_ONE, GL_ONE );
 #else
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );

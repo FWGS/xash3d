@@ -248,7 +248,7 @@ void R_ParseDetailTextures( const char *filename )
 
 		// read detailtexture name
 		pfile = COM_ParseFile( pfile, token );
-		Q_snprintf( detail_texname, sizeof( detail_texname ), "gfx/%s.tga", token );
+		Q_snprintf( detail_texname, sizeof( detail_texname ), "gfx/%s", token );
 
 		// read scales
 		pfile = COM_ParseFile( pfile, token );
