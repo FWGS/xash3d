@@ -40,7 +40,7 @@ double Sys_DoubleTime( void )
 	static u_int64_t	g_PerformanceFrequency;
 	static u_int64_t	g_ClockStart;
 	u_int64_t		CurrentTime;
-#if 0
+#if defined(__APPLE__)
 	if( !g_PerformanceFrequency )
 	{
 		g_PerformanceFrequency = SDL_GetPerformanceFrequency();
