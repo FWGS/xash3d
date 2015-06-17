@@ -142,7 +142,7 @@ void SinCos( float radians, float *sine, float *cosine )
 	}
 #else
 	// I think, better use math.h function, instead of ^
-#ifndef __ANDROID__
+#ifdef __linux__
 	sincosf(radians, sine, cosine);
 #else
 	*sine = sinf(radians);
