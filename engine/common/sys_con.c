@@ -14,9 +14,9 @@ GNU General Public License for more details.
 */
 
 #include "common.h"
-
+#ifdef XASH_SDL
 #include <SDL_mutex.h>
-
+#endif
 #ifdef __ANDROID__
 #include <android/log.h>
 #endif
@@ -455,7 +455,9 @@ void Con_DestroyConsole( void )
 	UnregisterClass( SYSCONSOLE, host.hInst );
 #endif
 	// place it here in case Sys_Crash working properly
+#ifdef XASH_SDL
 	if( host.hMutex ) SDL_DestroyMutex( host.hMutex );
+#endif
 }
 
 /*

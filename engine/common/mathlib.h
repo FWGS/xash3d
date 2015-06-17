@@ -108,6 +108,11 @@ float anglemod( const float a );
 int SignbitsForPlane( const vec3_t normal );
 int NearestPOW( int value, qboolean roundDown );
 void SinCos( float radians, float *sine, float *cosine );
+#ifdef VECTORIZE_SINCOS
+void SinCosFastVector(float r1, float r2, float r3, float r4,
+					  float *s0, float *s1, float *s2, float *s3,
+					  float *c0, float *c1, float *c2, float *c3);
+#endif
 float VectorNormalizeLength2( const vec3_t v, vec3_t out );
 void VectorVectors( const vec3_t forward, vec3_t right, vec3_t up );
 void VectorAngles( const float *forward, float *angles );

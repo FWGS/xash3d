@@ -18,8 +18,9 @@ GNU General Public License for more details.
 
 #include "port.h"
 
+#ifdef XASH_SDL
 #include <SDL_video.h>
-
+#endif
 #include "gl_export.h"
 #include "com_model.h"
 #include "cl_entity.h"
@@ -614,8 +615,11 @@ typedef struct
 
 typedef struct
 {
+#ifdef XASH_SDL
 	SDL_GLContext		context;		// SDL GL Context
-
+#else
+	void *context;
+#endif
 	int		desktopBitsPixel;
 	int		desktopWidth;
 	int		desktopHeight;

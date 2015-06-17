@@ -23,12 +23,17 @@ extern "C" {
 #include <setjmp.h>
 #include <stdio.h>
 #include <time.h>
+#ifdef XASH_SDL
 #include <SDL_messagebox.h>
 
 #define MSGBOX( x )		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Xash Error", x, NULL )
 #define MSGBOX2( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Error", x, NULL )
 #define MSGBOX3( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Recursive Error", x, NULL )
-
+#else
+	#define MSGBOX( x )	 fprintf(stderr, "Xash Error: %s\n",x)
+	#define MSGBOX2( x )	 fprintf(stderr, "Host Error: %s\n",x)
+	#define MSGBOX3( x )	 fprintf(stderr, "Host Recursive Error: %s\n",x)
+#endif
 // basic typedefs
 typedef int		sound_t;
 typedef float		vec_t;

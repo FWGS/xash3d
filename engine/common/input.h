@@ -25,8 +25,12 @@ INPUT
 */
 
 #include "keydefs.h"
+#ifdef XASH_SDL
 #include <SDL_mouse.h>
-
+typedef SDL_Cursor Xash_Cursor;
+#else
+typedef void Xash_Cursor;
+#endif
 #define WM_MOUSEWHEEL	( WM_MOUSELAST + 1 ) // message that will be supported by the OS
 #define MK_XBUTTON1		0x0020
 #define MK_XBUTTON2		0x0040
@@ -47,6 +51,5 @@ void IN_ActivateMouse( qboolean force );
 void IN_DeactivateMouse( void );
 void IN_ToggleClientMouse( int newstate, int oldstate );
 long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam );
-void IN_SetCursor( SDL_Cursor *hCursor );
-
+void IN_SetCursor( Xash_Cursor *hCursor );
 #endif//INPUT_H

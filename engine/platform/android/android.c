@@ -8,7 +8,9 @@ nicknekit
 
 #include "common.h"
 #include <android/log.h>
+#include <jni.h>
 
+#ifdef XASH_SDL
 /* Include the SDL main definition header */
 #include "SDL_main.h"
 
@@ -21,7 +23,7 @@ int SDL_main( int argc, char **argv )
 /*******************************************************************************
 				 Functions called by JNI
 *******************************************************************************/
-#include <jni.h>
+
 
 /* Called before SDL_main() to initialize JNI bindings in SDL library */
 extern void SDL_Android_Init(JNIEnv* env, jclass cls);
@@ -82,7 +84,92 @@ int Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jobject 
 
     return status;
 }
+#else
+
+#include "nanogl.h" //use NanoGL
+
+jclass gClass;
+JNIEnv *gEnv;
+jmethodID gSwapBuffers;
+JavaVM *gVM;
+int gWidth, gHeight;
+/*JNIEXPORT jint JNICALL JNIOnLoad(JavaVM * vm, void*)
+{
+	gVM = vm;
+	
+	return JNI_VERSION_1_6;
+}*/
+int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
+{
+    int i;
+    int argc;
+    int status;
+    /* Prepare the arguments. */
+
+    int len = (*env)->GetArrayLength(env, array);
+    char* argv[1 + len + 1];
+    argc = 0;
+    argv[argc++] = strdup("app_process");
+    for (i = 0; i < len; ++i) {
+        const char* utf;
+        char* arg = NULL;
+        jstring string = (*env)->GetObjectArrayElement(env, array, i);
+        if (string) {
+            utf = (*env)->GetStringUTFChars(env, string, 0);
+            if (utf) {
+                arg = strdup(utf);
+                (*env)->ReleaseStringUTFChars(env, string, utf);
+            }
+            (*env)->DeleteLocalRef(env, string);
+        }
+        if (!arg) {
+            arg = strdup("");
+        }
+        argv[argc++] = arg;
+    }
+    argv[argc] = NULL;
+
+    /* Init callbacks. */
+
+    gEnv = env;
+    gClass = (*env)->FindClass(env, "in/celest/xash3d/XashActivity");
+    gSwapBuffers = (*env)->GetStaticMethodID(env, gClass, "swapBuffers", "()V");
+
+    nanoGL_Init();
+    /* Run the application. */
+
+    status = Host_Main(argc, argv, GAME_PATH, false, NULL);
+
+    /* Release the arguments. */
+
+    for (i = 0; i < argc; ++i) {
+        free(argv[i]);
+    }
+
+    return status;
+}
+void Java_in_celest_xash3d_XashActivity_onNativeResize(JNIEnv* env, jclass cls, jint width, jint height)
+{
+	gWidth=width, gHeight=height;
+}
+
+void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
+{
+}
 
 
+void frameControls();
+
+void Android_SwapBuffers()
+{
+	frameControls();
+	nanoGL_Flush();
+	(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gSwapBuffers);
+}
+void Android_GetScreenRes(int *width, int *height)
+{
+	*width=gWidth, *height=gHeight;
+}
+#endif
 #endif
 

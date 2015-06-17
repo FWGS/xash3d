@@ -16,6 +16,8 @@ GNU General Public License for more details.
 #ifndef STDLIB_H
 #define STDLIB_H
 
+#include <stdarg.h>
+
 // timestamp modes
 enum
 {

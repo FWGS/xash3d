@@ -52,7 +52,7 @@ LOCAL_SRC_FILES := basemenu.cpp \
            udll_int.cpp \
            ui_title_anim.cpp \
 	   utils.cpp
-
+ifeq ($(XASH_SDL),1)
 LOCAL_SHARED_LIBRARIES += SDL2
-
+endif
 include $(BUILD_SHARED_LIBRARY)

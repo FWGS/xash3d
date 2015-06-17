@@ -1,6 +1,6 @@
 #ifndef KEYWRAPPER_H
 #define KEYWRAPPER_H
-
+#ifdef XASH_SDL
 #include <SDL_events.h>
 #include "common.h"
 
@@ -12,5 +12,5 @@ void SDLash_InputEvent(SDL_TextInputEvent input);
 
 // Prototype
 void SDLash_TouchEvent(SDL_TouchFingerEvent finger);
-
+#endif // XASH_SDL
 #endif // KEYWRAPPER_H

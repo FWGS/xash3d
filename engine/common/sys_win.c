@@ -14,9 +14,13 @@ GNU General Public License for more details.
 */
 
 #include "port.h"
+#ifdef XASH_SDL
 #include <SDL_timer.h>
 #include <SDL_clipboard.h>
 #include <SDL_video.h>
+#else
+#include <time.h>
+#endif
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -36,15 +40,25 @@ double Sys_DoubleTime( void )
 	static u_int64_t	g_PerformanceFrequency;
 	static u_int64_t	g_ClockStart;
 	u_int64_t		CurrentTime;
-
+#if 0
 	if( !g_PerformanceFrequency )
 	{
 		g_PerformanceFrequency = SDL_GetPerformanceFrequency();
 		g_ClockStart = SDL_GetPerformanceCounter();
 	}
 	CurrentTime = SDL_GetPerformanceCounter();
-
 	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
+#else
+	struct timespec ts;
+	if( !g_PerformanceFrequency )
+	{
+		struct timespec res;
+		if( !clock_getres(CLOCK_MONOTONIC, &res) )
+			g_PerformanceFrequency = 1000000000LL/res.tv_nsec;
+	}
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
+#endif
 }
 
 /*
@@ -56,7 +70,11 @@ create buffer, that contain clipboard
 */
 char *Sys_GetClipboardData( void )
 {
+#ifdef XASH_SDL
 	return SDL_GetClipboardText();
+#else
+	return 0;
+#endif
 }
 
 /*
@@ -68,7 +86,9 @@ write screenshot into clipboard
 */
 void Sys_SetClipboardData( const byte *buffer, size_t size )
 {
+#ifdef XASH_SDL
 	SDL_SetClipboardText(buffer);
+#endif
 }
 
 /*
@@ -81,7 +101,11 @@ freeze application for some time
 void Sys_Sleep( int msec )
 {
 	msec = bound( 1, msec, 1000 );
+#ifdef XASH_SDL
 	SDL_Delay( msec );
+#else
+	usleep(msec * 1000);
+#endif
 }
 
 /*
@@ -117,9 +141,9 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean exit )
 {
 #ifdef _WIN32
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
-#else
+#elif !defined __ANDROID__
 	char buf[1024];
-	strcat(buf, "open ");
+	strcat(buf, "xdg_open ");
 	strcat(buf, path);
 	strcat(buf, parms);
 	system(buf);
@@ -444,7 +468,9 @@ void Sys_Error( const char *error, ... )
 
 	if( host.type == HOST_NORMAL )
 	{
+#ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
+#endif
 		VID_RestoreGamma();
 	}
 
@@ -487,7 +513,9 @@ void Sys_Break( const char *error, ... )
 
 	if( host.type == HOST_NORMAL )
 	{
+#ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
+#endif
 		VID_RestoreGamma();
 	}
 

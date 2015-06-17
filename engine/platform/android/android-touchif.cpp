@@ -30,15 +30,14 @@
 
 #include "android-gameif.h"
 
-void ResetNanoState();
+#include "nanogl.h"
 
 extern "C"
 {
-
+#ifdef XASH_SDL
 void SDL_SetSwapBufferCallBack(void (*pt2Func)(void));
-
-#include "SDL_keycode.h"
-
+//#include "SDL_keycode.h"
+#endif
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,"JNI", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "JNI", __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR,"JNI", __VA_ARGS__))
@@ -129,7 +128,7 @@ void openGLStart()
 
 void openGLEnd()
 {
-	ResetNanoState();
+	nanoGL_Reset();
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(model);
@@ -162,7 +161,7 @@ static jclass NativeLibClass = 0;
 static jmethodID swapBuffersMethod = 0;
 
 
-extern unsigned int Sys_Milliseconds(void);
+//extern unsigned int Sys_Milliseconds(void);
 
 static unsigned int reload_time_down;
 void gameButton(int state,int code)
@@ -209,7 +208,6 @@ void weaponWheel(int segment)
 		code = '0';
 	else
 		code = '1' + segment;
-
 	PortableKeyEvent(1,code,0);
 	PortableKeyEvent(0, code,0);
 }
@@ -390,17 +388,17 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 		tcGameMain->signal_button.connect(  sigc::ptr_fun(&gameButton) );
 
 		//Weapons
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,14,3,16),"key_1",SDL_SCANCODE_1));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon2",touchcontrols::RectF(3,14,5,16),"key_2",SDL_SCANCODE_2));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon3",touchcontrols::RectF(5,14,7,16),"key_3",SDL_SCANCODE_3));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon4",touchcontrols::RectF(7,14,9,16),"key_4",SDL_SCANCODE_4));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon5",touchcontrols::RectF(9,14,11,16),"key_5",SDL_SCANCODE_5));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,14,3,16),"key_1",'1'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon2",touchcontrols::RectF(3,14,5,16),"key_2",'2'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon3",touchcontrols::RectF(5,14,7,16),"key_3",'3'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon4",touchcontrols::RectF(7,14,9,16),"key_4",'4'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon5",touchcontrols::RectF(9,14,11,16),"key_5",'5'));
 
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon6",touchcontrols::RectF(15,14,17,16),"key_6",SDL_SCANCODE_6));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon7",touchcontrols::RectF(17,14,19,16),"key_7",SDL_SCANCODE_7));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon8",touchcontrols::RectF(19,14,21,16),"key_8",SDL_SCANCODE_8));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon9",touchcontrols::RectF(21,14,23,16),"key_9",SDL_SCANCODE_9));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon0",touchcontrols::RectF(23,14,25,16),"key_0",SDL_SCANCODE_0));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon6",touchcontrols::RectF(15,14,17,16),"key_6",'6'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon7",touchcontrols::RectF(17,14,19,16),"key_7",'7'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon8",touchcontrols::RectF(19,14,21,16),"key_8",'8'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon9",touchcontrols::RectF(21,14,23,16),"key_9",'9'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon0",touchcontrols::RectF(23,14,25,16),"key_0",'0'));
 		tcGameWeapons->signal_button.connect(  sigc::ptr_fun(&selectWeaponButton) );
 		tcGameWeapons->setAlpha(0.8);
 
@@ -426,11 +424,12 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 
 }
 
-extern void flush(); //in glshim/arc/gl/gl.c
+//extern void flush(); //in glshim/arc/gl/gl.c
 
 int inMenuLast = 1;
 int inAutomapLast = 0;
 static int glInit = 0;
+extern "C" void frameControls();
 void frameControls()
 {
 	//LOGI("frameControls");
@@ -469,9 +468,10 @@ void frameControls()
 	setHideSticks(!showSticks);
 
 	//flush(); //draw out game from glshim
-
+	nanoGL_Flush();
+	
 	controlsContainer.draw();
-
+	
 	//flush(); //draw out controls from glshim
 	// glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	// glClear(GL_COLOR_BUFFER_BIT);
@@ -567,11 +567,18 @@ JAVA_FUNC(initTouchControls) ( JNIEnv* env,	jobject thiz,jstring graphics_dir,ji
 	android_screen_height = height;
 
 	initControls(android_screen_width,-android_screen_height,graphicpath.c_str(),(graphicpath + "/game_controls.xml").c_str());
-
+#ifdef XASH_SDL
 	SDL_SetSwapBufferCallBack(frameControls);
-
+#endif
 	return 0;
 }
+
+#ifdef SOFTFP_LINK
+void EXPORT_ME
+JAVA_FUNC(setTouchSettings) (JNIEnv *env, jobject obj,	jfloat alpha,jfloat strafe,jfloat fwd,jfloat pitch,jfloat yaw,int other) __attribute__((pcs("aapcs")));
+void EXPORT_ME
+JAVA_FUNC(touchEvent) (JNIEnv *env, jobject obj,jint action, jint pid, jfloat x, jfloat y) __attribute__((pcs("aapcs")));
+#endif
 
 
 jint EXPORT_ME
@@ -596,7 +603,6 @@ JAVA_FUNC(keypress) (JNIEnv *env, jobject obj,jint down, jint keycode, jint unic
 	LOGI("keypress %d",keycode);
 	PortableKeyEvent(down,keycode,unicode);
 }
-
 
 void EXPORT_ME
 JAVA_FUNC(touchEvent) (JNIEnv *env, jobject obj,jint action, jint pid, jfloat x, jfloat y)
@@ -642,7 +648,6 @@ JAVA_FUNC(analogYaw) (JNIEnv *env, jobject obj,	jint mode,jfloat v)
 {
 	PortableLookYaw(mode, v);
 }
-
 void EXPORT_ME
 JAVA_FUNC(setTouchSettings) (JNIEnv *env, jobject obj,	jfloat alpha,jfloat strafe,jfloat fwd,jfloat pitch,jfloat yaw,int other)
 {

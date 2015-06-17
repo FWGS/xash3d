@@ -1044,10 +1044,20 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 	}
 	else if( pField->flags & DT_TIMEWINDOW_BIG )
 	{
-		val_a = (*(float *)((byte *)from + pField->offset )) * pField->multiplier;
-		val_b = (*(float *)((byte *)to + pField->offset )) * pField->multiplier;
-		val_a = (timebase * pField->multiplier) - val_a;
-		val_b = (timebase * pField->multiplier) - val_b;
+		val_a = (*(float *)((byte *)from + pField->offset ));
+		val_b = (*(float *)((byte *)to + pField->offset ));
+		if( pField->multiplier != 1.0f )
+		{
+			val_a *= pField->multiplier;
+			val_b *= pField->multiplier;
+			val_a = (timebase * pField->multiplier) - val_a;
+			val_b = (timebase * pField->multiplier) - val_b;
+		}
+		else
+		{
+			val_a = timebase - val_a;
+			val_b = timebase - val_b;
+		}
 		fromF = *((int *)&val_a);
 		toF = *((int *)&val_b);
 	}
