@@ -23,6 +23,8 @@ $ cd xash3d/build
 $ cmake -DHL_SDK_DIR=/opt/halflife ..
 $ make
 
+On OSX: cmake -DHL_SDK_DIR=../../halflife -DCMAKE_OSX_ARCHITECTURES=i386 ..
+
 The library is licensed under GPLv3 license, see COPYING for details.
 CMakeLists.txt files are licensed under MIT license, you will find its text
 in every CMakeLists.txt header.
