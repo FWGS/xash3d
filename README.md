@@ -44,11 +44,11 @@ Copy **valve** folder from Half-Life:
     
 Copy script:
 
-    cp ../xash.sh $HOME/Games/Xash3D
+    cp ../xash3d.sh $HOME/Games/Xash3D
 
 Run:
 
-    $HOME/Games/Xash3D/xash.sh
+    $HOME/Games/Xash3D/xash3d.sh
 
 # License
 
