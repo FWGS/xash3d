@@ -152,7 +152,7 @@ qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset )
 #else
 		if( !CL_LoadProgs( va( "%s/" CLIENTDLL, GI->dll_path )))
 #endif
-			Host_Error( "can't initialize client.dll\n" );
+			Host_Error( "can't initialize " CLIENTDLL "\n" );
 
 		// restore parms
 		clgame.maxEntities = maxEntities;
@@ -1811,7 +1811,7 @@ void CL_Init( void )
 #else
 	if( !CL_LoadProgs( va( "%s/" CLIENTDLL , GI->dll_path )))
 #endif
-		Host_Error( "can't initialize client.dll\n" );
+		Host_Error( "can't initialize " CLIENTDLL "\n" );
 
 	cls.initialized = true;
 	cl.maxclients = 1; // allow to drawing player in menu

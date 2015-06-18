@@ -2927,6 +2927,7 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 		// Try to load this model with lowered file name
 		char *loweredName = FS_ToLowerCase( tempname );
 		buf = FS_LoadFile( loweredName, NULL, false );
+		free(loweredName);
 		if( !buf )
 		{
 			Q_memset( mod, 0, sizeof( model_t ));
