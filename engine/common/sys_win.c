@@ -23,6 +23,13 @@ GNU General Public License for more details.
 #endif
 #ifndef _WIN32
 #include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+
+#ifndef __ANDROID__
+extern char **environ;
+#endif
+
 #endif
 
 #include "common.h"
@@ -137,19 +144,24 @@ char *Sys_GetCurrentUser( void )
 Sys_ShellExecute
 =================
 */
-void Sys_ShellExecute( const char *path, const char *parms, qboolean exit )
+void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit )
 {
 #ifdef _WIN32
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
 #elif !defined __ANDROID__
-	char buf[1024];
-	strcat(buf, "xdg_open ");
-	strcat(buf, path);
-	strcat(buf, parms);
-	system(buf);
+	//signal(SIGCHLD, SIG_IGN);
+	const char* xdgOpen = "/usr/bin/xdg-open"; //TODO: find xdg-open in PATH
+	
+	const char* argv[] = {xdgOpen, path, NULL};
+	pid_t id = fork();
+	if (id == 0) {
+		execve(xdgOpen, argv, environ);
+		printf("error opening %s %s", xdgOpen, path);
+		exit(1);
+	}
 #endif
 
-	if( exit ) Sys_Quit();
+	if( shouldExit ) Sys_Quit();
 }
 
 /*
