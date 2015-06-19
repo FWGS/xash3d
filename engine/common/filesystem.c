@@ -1170,6 +1170,14 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	VectorSet( GameInfo->client_maxs[3],  16,  16,  18 );
 
 	pfile = afile;
+	
+#ifdef _WIN32
+	const char* gameDll = "gamedll";
+#elif defined(__APPLE__)
+	const char* gameDll = "gamedll_osx";
+#else
+	const char* gameDll = "gamedll_linux";
+#endif
 
 	while(( pfile = COM_ParseFile( pfile, token )) != NULL )
 	{
@@ -1203,7 +1211,7 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->update_url );
 		}
-		else if( !Q_stricmp( token, "gamedll" ))
+		else if( !Q_stricmp( token, gameDll ))
 		{
 			// already set up for __ANDROID__. Just ignore a path in game config
 #if !defined(__ANDROID__) && !defined(PANDORA)
@@ -1682,15 +1690,18 @@ Function to set all characters of path lowercase
 */
 char* FS_ToLowerCase( const char* path )
 {
-	char *result = malloc(MAX_SYSPATH * sizeof(char));
-	int i = 0;
-	while( path[i] )
-	{
-		result[i] = tolower( path[i] );
-		++i;
+	if (path) {
+		char *result = malloc(strlen(path) + 1);
+		int i = 0;
+		while( path[i] )
+		{
+			result[i] = tolower( path[i] );
+			++i;
+		}
+		result[i] = '\0';
+		return result;
 	}
-	result[i] = '\0';
-	return result;
+	return NULL;
 }
 
 /*
@@ -2435,6 +2446,7 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 		// Try to open this file with lowered path
 		char *loweredPath = FS_ToLowerCase( path );
 		file = FS_Open( loweredPath, "rb", gamedironly );
+		free(loweredPath);
 		if( !file )
 		{
 			// Now it truly doesn't exist in file system
@@ -2475,6 +2487,7 @@ file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedi
 	{
 		char *loweredPath = FS_ToLowerCase( path );
 		file = FS_Open( loweredPath, "rb", gamedironly );
+		free(loweredPath);
 	}
 
 	if( filesizeptr )
