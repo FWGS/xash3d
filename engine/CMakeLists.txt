@@ -95,6 +95,10 @@ if(XASH_GLES)
     add_definitions(-DXASH_GLES)
 endif()
 
+if(XASH_DEDICATED)
+    add_definitions(-DXASH_DEDICATED)
+endif()
+
 target_link_libraries(${XASH_ENGINE_LIBRARY}
     ${CMAKE_DL_LIBS} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
 
