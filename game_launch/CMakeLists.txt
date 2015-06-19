@@ -38,6 +38,10 @@ if(PANDORA)
         add_definitions(-DPANDORA)
 endif()
 
+if(XASH_SDL)
+	add_definitions(-DXASH_SDL)
+endif()
+
 set (XASH_LAUNCHER_EXECUTABLE xash3d)
 
 file (GLOB XASH_LAUNCHER_SOURCES *.cpp)
