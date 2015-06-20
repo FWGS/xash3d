@@ -172,7 +172,8 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 
 	if( oldstate == key_game )
 	{
-		clgame.dllFuncs.IN_DeactivateMouse();
+		if( cls.initialized )
+			clgame.dllFuncs.IN_DeactivateMouse();
 	}
 	else if( newstate == key_game )
 	{
@@ -180,7 +181,8 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 #ifdef XASH_SDL
 		SDL_WarpMouseInWindow( host.hWnd, host.window_center_x, host.window_center_y );
 #endif
-		clgame.dllFuncs.IN_ActivateMouse();
+		if( cls.initialized )
+			clgame.dllFuncs.IN_ActivateMouse();
 	}
 
 	if( newstate == key_menu && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
@@ -262,7 +264,7 @@ void IN_DeactivateMouse( void )
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
 
-	if( cls.key_dest == key_game )
+	if( cls.key_dest == key_game && cls.initialized )
 	{
 		clgame.dllFuncs.IN_DeactivateMouse();
 	}

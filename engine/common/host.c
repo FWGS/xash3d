@@ -555,7 +555,8 @@ void Host_Frame( float time )
 	Host_GetConsoleCommands ();
 
 	Host_ServerFrame (); // server frame
-	Host_ClientFrame (); // client frame
+	if ( host.type != HOST_DEDICATED )
+		Host_ClientFrame (); // client frame
 
 	host.framecount++;
 }

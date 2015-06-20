@@ -1727,8 +1727,7 @@ Host_ClientFrame
 */
 void Host_ClientFrame( void )
 {
-	// if client is not active, do nothing
-	if( !cls.initialized ) return;
+	// if client is not active, skip render functions
 
 	// decide the simulation time
 	cl.oldtime = cl.time;
@@ -1749,36 +1748,42 @@ void Host_ClientFrame( void )
 	VGui_RunFrame ();
 #endif
 
-	clgame.dllFuncs.pfnFrame( host.frametime );
-
-	// fetch results from server
-	CL_ReadPackets();
-
-	VID_CheckChanges();
-
-	// allow sound and video DLL change
-	if( cls.state == ca_active )
+	if( cls.initialized )
 	{
-		if( !cl.video_prepped ) CL_PrepVideo();
-		if( !cl.audio_prepped ) CL_PrepSound();
-	}
+		clgame.dllFuncs.pfnFrame( host.frametime );
 
+		// fetch results from server
+		CL_ReadPackets();
+
+		VID_CheckChanges();
+
+		// allow sound and video DLL change
+		if( cls.state == ca_active )
+		{
+			if( !cl.video_prepped ) CL_PrepVideo();
+			if( !cl.audio_prepped ) CL_PrepSound();
+		}
+	
+	}
 	// update the screen
 	SCR_UpdateScreen ();
+	if( cls.initialized )
+	{
+		// update audio
+		S_RenderFrame( &cl.refdef );
 
-	// update audio
-	S_RenderFrame( &cl.refdef );
+		// send a new command message to the server
+		CL_SendCommand();
 
-	// send a new command message to the server
-	CL_SendCommand();
+		// predict all unacknowledged movements
+		CL_PredictMovement();
 
-	// predict all unacknowledged movements
-	CL_PredictMovement();
+		// decay dynamic lights
+		CL_DecayLights ();
 
-	// decay dynamic lights
-	CL_DecayLights ();
-
-	SCR_RunCinematic();
+		SCR_RunCinematic();
+	}
+	
 	Con_RunConsole();
 
 	cls.framecount++;
@@ -1807,16 +1812,16 @@ void CL_Init( void )
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
 #ifdef PANDORA
-	if( !CL_LoadProgs( va( "%s/" CLIENTDLL , "."/*GI->dll_path*/ )))
+	if( CL_LoadProgs( va( "%s/" CLIENTDLL , "."/*GI->dll_path*/ )))
 #else
-	if( !CL_LoadProgs( va( "%s/" CLIENTDLL , GI->dll_path )))
+	if( CL_LoadProgs( va( "%s/" CLIENTDLL , GI->dll_path )))
 #endif
-		Host_Error( "can't initialize " CLIENTDLL "\n" );
-
-	cls.initialized = true;
-	cl.maxclients = 1; // allow to drawing player in menu
-	cls.olddemonum = -1;
-	cls.demonum = -1;
+	{
+		cls.initialized = true;
+		cl.maxclients = 1; // allow to drawing player in menu
+		cls.olddemonum = -1;
+		cls.demonum = -1;
+	}
 }
 
 /*
@@ -1828,8 +1833,6 @@ CL_Shutdown
 void CL_Shutdown( void )
 {
 	// already freed
-	if( !cls.initialized ) return;
-	cls.initialized = false;
 
 	MsgDev( D_INFO, "CL_Shutdown()\n" );
 
@@ -1839,7 +1842,7 @@ void CL_Shutdown( void )
 	CL_CloseDemoHeader();
 	IN_Shutdown ();
 	SCR_Shutdown ();
-	CL_UnloadProgs ();
+	if( cls.initialized ) CL_UnloadProgs ();
 
 	FS_Delete( "demoheader.tmp" ); // remove tmp file
 	SCR_FreeCinematic (); // release AVI's *after* client.dll because custom renderer may use them

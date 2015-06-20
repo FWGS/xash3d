@@ -1025,6 +1025,8 @@ qboolean CL_GetEntitySpatialization( int entnum, vec3_t origin, float *pradius )
 
 void CL_ExtraUpdate( void )
 {
+	if( !cls.initialized )
+		return;
 	clgame.dllFuncs.IN_Accumulate();
 	S_ExtraUpdate();
 }
