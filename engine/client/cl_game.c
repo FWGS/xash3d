@@ -773,7 +773,7 @@ cl_entity_t *CL_GetLocalPlayer( void )
 	cl_entity_t	*player;
 
 	player = CL_EDICT_NUM( cl.playernum + 1 );
-	ASSERT( player != NULL );
+	//ASSERT( player != NULL );
 
 	return player;
 }

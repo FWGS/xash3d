@@ -672,9 +672,11 @@ CL_Connect_f
 
 ================
 */
+
+#include <sys/mman.h>
 void CL_Connect_f( void )
 {
-	char	*server;
+	char server[ sizeof( cls.servername ) ];
 
 	if( Cmd_Argc() != 2 )
 	{
@@ -682,6 +684,8 @@ void CL_Connect_f( void )
 		return;	
 	}
 	
+	Q_strncpy( server, Cmd_Argv( 1 ), sizeof( cls.servername ));
+
 	if( Host_ServerState())
 	{	
 		// if running a local server, kill it and reissue
@@ -689,9 +693,8 @@ void CL_Connect_f( void )
 		SV_Shutdown( false );
 	}
 
-	server = Cmd_Argv( 1 );
 	NET_Config( true ); // allow remote
-	
+
 	Msg( "server %s\n", server );
 	CL_Disconnect();
 
