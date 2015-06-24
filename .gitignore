@@ -54,3 +54,11 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 
+# Visual Studio
+*.suo
+*.sdf
+Debug/
+Release/
+ipch/
+*.opensdf
+
