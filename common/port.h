@@ -99,6 +99,12 @@ GNU General Public License for more details.
 	int x, y;
     } POINT;
 #else
+	#define strcasecmp _stricmp
+	#define strncasecmp _strnicmp
+
+	typedef short int	    WORD;
+	typedef unsigned int    DWORD;
+
     #define OS_LIB_EXT "dll"
     #define MENUDLL "mainui." OS_LIB_EXT
     #define CLIENTDLL "client." OS_LIB_EXT

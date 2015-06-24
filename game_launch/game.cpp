@@ -33,6 +33,7 @@ GNU General Public License for more details.
  #define HINSTANCE               void*
 #elif _WIN32
  #define XASHLIB                 "xash.dll"
+ #include "windows.h" 
 #endif
 
 #define GAME_PATH	"valve"	// default dir to start from
@@ -56,15 +57,19 @@ void Sys_Error( const char *errorstring )
 
 void Sys_LoadEngine( void )
 {
-	if(( hEngine = LoadLibrary( XASHLIB )) == NULL )
+	if(( hEngine = LoadLibraryA( XASHLIB )) == NULL )
 	{
+#ifndef _WIN32
 		printf("%s\n", dlerror());
+#endif
 		Sys_Error( "Unable to load the " XASHLIB );
 	}
 
 	if(( Xash_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
 	{
+#ifndef _WIN32
 		printf("%s\n", dlerror());
+#endif
 		Sys_Error( XASHLIB " missed 'Host_Main' export" );
 	}
 
@@ -92,13 +97,30 @@ void Sys_ChangeGame( const char *progname )
 
 	Xash_Main( szArgc, szArgv, szGameDir, true, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
-
+#ifdef _WIN32
+int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow)
+#else // _WIN32
 int main( int argc, char **argv )
+#endif
 {
+
+#ifdef _WIN32
+	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
+	szArgv = (char**)malloc(szArgc*sizeof(char*));
+	int size, i = 0;
+	for (; i < szArgc; ++i)
+	{
+		size = wcslen(lpArgv[i]) + 1;
+		szArgv[i] = (char*)malloc(size);
+		wcstombs(szArgv[i], lpArgv[i], size);
+	}
+	LocalFree(lpArgv);
+#else
 	szArgc = argc;
 	szArgv = argv;
+#endif
 
 	Sys_LoadEngine();
 
-	return Xash_Main( argc, argv, GAME_PATH, false, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	return Xash_Main( szArgc, szArgv, GAME_PATH, false, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
