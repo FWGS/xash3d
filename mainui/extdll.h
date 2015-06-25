@@ -37,8 +37,13 @@ GNU General Public License for more details.
 #define FALSE	0
 #define TRUE	(!FALSE)
 
+#ifndef _WIN32
 #define stricmp	strcasecmp
 #define strnicmp	strncasecmp
+#else
+#define strnicmp _strnicmp
+#define stricmp _stricmp
+#endif
 
 typedef int (*cmpfunc)( const void *a, const void *b );
 typedef int BOOL;

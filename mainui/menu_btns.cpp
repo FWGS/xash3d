@@ -113,7 +113,7 @@ typedef struct
 } bmphdr_t;
 #pragma pack(pop)
 
-#ifndef _WIN32
+//#ifndef _WIN32
 struct BITMAPFILEHEADER
 {
 	WORD    bfType;
@@ -137,7 +137,7 @@ struct BITMAPINFOHEADER
 	DWORD    biClrUsed;
 	DWORD    biClrImportant;
 };
-#endif
+//#endif
 
 
 /*
