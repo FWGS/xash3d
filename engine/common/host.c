@@ -709,12 +709,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	char		szTemp[MAX_SYSPATH];
 	char		moduleName[64];
 	string		szRootPath;
-#ifdef _WIN32
-	MEMORYSTATUS	lpBuffer;
-
-	lpBuffer.dwLength = sizeof( MEMORYSTATUS );
-	GlobalMemoryStatus( &lpBuffer );
-#endif
 
 #ifndef __ANDROID__
 #ifdef XASH_SDL
@@ -785,13 +779,18 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #else
 	FS_FileBase( host.rootdir, SI.ModuleName );
 #endif
+
+#ifdef _WIN32
+	GetModuleFileName(host.hInst, &moduleName, sizeof(moduleName));
+#else
 	// We didn't need full path, only executable name
 	strcpy(moduleName, strrchr(argv[0], '/'));
 	//strrchr adds a / at begin of string =(
 	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
-
+#endif
 	//argv[0] is always stands for program name
-	Q_strncpy(SI.ModuleName, argv[0], sizeof(SI.ModuleName));
+	Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
+
 
 	FS_ExtractFilePath( SI.ModuleName, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
