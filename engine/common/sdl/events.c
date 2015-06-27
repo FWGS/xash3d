@@ -3,6 +3,7 @@
 #include "keydefs.h"
 #include "input.h"
 #include "client.h"
+#include "vgui_draw.h"
 
 int SDLash_EventFilter( SDL_Event* event)
 {
@@ -37,7 +38,7 @@ int SDLash_EventFilter( SDL_Event* event)
 			break;
 
 		case SDL_TEXTEDITING:
-			MsgDev(D_INFO, "Caught a text edit: %s %n %n\n", event->edit.text, event->edit.start, event->edit.length);
+			//MsgDev(D_INFO, "Caught a text edit: %s %n %n\n", event->edit.text, event->edit.start, event->edit.length);
 			break;
 
 		case SDL_TEXTINPUT:

@@ -19,12 +19,8 @@ GNU General Public License for more details.
 #include "library.h"
 #include "filesystem.h"
 
-#ifdef _WIN32
-#define XASH_NONSTANDART_LOAD
-#warning "XASH_NONSTANDART_LOAD defined for Windows automatically"
-#endif
-
 #ifndef XASH_NONSTANDART_LOAD
+
 #ifdef __ANDROID__
 #include "platform/android/dlsym-weak.h"
 #endif
@@ -52,8 +48,10 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 
 		if(!pHandle)
 		{
+#ifndef _WIN32
 			char *error = dlerror();
 			MsgDev(D_ERROR, "loading library %s: %s", dllname, dlerror());
+#endif
 			return NULL;
 		}
 	}
@@ -81,17 +79,23 @@ dword Com_FunctionFromName( void *hInstance, const char *pName )
 		function = (dword)dlsym_weak( hInstance, pName );
 		if(!function)
 #endif
+#ifndef _WIN32
 			MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s: %s", pName, dlerror());
+#endif
 	}
 	return function;
 }
 
 const char *Com_NameForFunction( void *hInstance, dword function )
 {
+#ifdef _WIN32
+	
+#else
 	// Note: dladdr() is a glibc extension
 	Dl_info info;
 	dladdr((void*)function, &info);
 	return info.dli_sname;
+#endif
 }
 #else
 /*
@@ -101,6 +105,11 @@ const char *Com_NameForFunction( void *hInstance, dword function )
 
 ---------------------------------------------------------------
 */
+
+#ifndef IMAGE_SIZEOF_BASE_RELOCATION
+// Vista SDKs no longer define IMAGE_SIZEOF_BASE_RELOCATION!?
+#define IMAGE_SIZEOF_BASE_RELOCATION (sizeof(IMAGE_BASE_RELOCATION))
+#endif
 
 typedef struct
 {
@@ -845,7 +854,8 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 	dll_user_t *hInst;
 
 	hInst = FS_FindLibrary( dllname, directpath );
-	if( !hInst ) return NULL; // nothing to load
+	if( !hInst ) 
+		return NULL; // nothing to load
 		
 	if( hInst->custom_loader )
 	{

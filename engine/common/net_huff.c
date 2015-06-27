@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #include "common.h"
 #include "netchan.h"
 
-#define VALUE(a)			(int   )(a)
+#define VALUE(a)			((int   )(a))
 #define NODE(a)			((void *)(a))
 
 #define NODE_START			NODE(  1)
