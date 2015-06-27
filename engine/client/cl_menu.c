@@ -989,8 +989,12 @@ qboolean UI_LoadProgs( void )
 	{
 		FS_AllowDirectPaths( true );
 
+#ifdef _WIN32
+		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false )))
+#else
 		// Attempt to try finding library by libdl magic on Linux
 		if(!( menu.hInstance = Com_LoadLibrary( MENUDLL, false )))
+#endif
 		{
 			FS_AllowDirectPaths( false );
 			return false;
