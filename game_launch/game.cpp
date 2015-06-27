@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#include <SDL_main.h>
 #include <SDL_messagebox.h>
 
 #ifdef __APPLE__
@@ -97,14 +98,14 @@ void Sys_ChangeGame( const char *progname )
 
 	Xash_Main( szArgc, szArgv, szGameDir, true, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
-#ifdef _WIN32
+#if 0
 int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow)
 #else // _WIN32
 int main( int argc, char **argv )
 #endif
 {
 
-#ifdef _WIN32
+#if 0
 	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
 	szArgv = (char**)malloc(szArgc*sizeof(char*));
 	int size, i = 0;
