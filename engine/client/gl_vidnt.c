@@ -19,10 +19,12 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "input.h"
 
-#ifndef __ANDROID__
-#ifdef XASH_SDL
+#if defined(__ANDROID__)
+// TODO: Find a way how to change icon in runtime on Android
+#elif (defined(_WIN32) && defined(XASH_SDL))
+#include <SDL_syswm.h>
+#elif defined(XASH_SDL)
 #include <SDL_image.h> // Android: disable useless SDL_image
-#endif
 #endif
 
 #ifdef __ANDROID__
@@ -33,6 +35,7 @@ GNU General Public License for more details.
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #endif
+
 
 #ifdef PANDORA
 #define VID_AUTOMODE	"10"
@@ -1530,7 +1533,34 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
-#ifndef __ANDROID__
+#if defined(__ANDROID__)
+	// TODO: Find a way to change icon in runtime in Android
+#elif defined(_WIN32)
+	HICON ico;
+
+	if( FS_FileExists( GI->iconpath, true ))
+	{
+		char	localPath[MAX_PATH];
+
+		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
+		ico = LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
+
+		if( !ico )
+		{
+			MsgDev( D_INFO, "Extract %s from pak if you want to see it.\n", GI->iconpath );
+			ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ));
+		}
+	}
+	else ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ));
+
+	SDL_SysWMinfo info;
+	if(SDL_GetWindowWMInfo(host.hWnd, &info))
+	{
+		// info.info.info.info.info... Holy shit, SDL?
+		SetClassLong(info.info.win.window, GCL_HICON, ico);
+	}
+
+#else
 	SDL_Surface *ico;
 
 	// find the icon file in the filesystem
