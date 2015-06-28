@@ -23,10 +23,6 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (XASH_LAUNCHER)
 
-include(FindPkgConfig)
-pkg_search_module(SDL2 REQUIRED sdl2)
-include_directories(${SDL2_INCLUDE_DIRS})
-
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
@@ -38,10 +34,20 @@ if(PANDORA)
         add_definitions(-DPANDORA)
 endif()
 
+if(XASH_SDL)
+	include(FindPkgConfig)
+	pkg_search_module(SDL2 REQUIRED sdl2)
+	include_directories(${SDL2_INCLUDE_DIRS})
+
+	add_definitions(-DXASH_SDL)
+
+	target_link_libraries(${XASH_LAUNCHER_EXECUTABLE} ${SDL2_LIBRARIES})
+endif()
+
 set (XASH_LAUNCHER_EXECUTABLE xash3d)
 
 file (GLOB XASH_LAUNCHER_SOURCES *.cpp)
 
 add_executable (${XASH_LAUNCHER_EXECUTABLE} ${XASH_LAUNCHER_SOURCES})
 target_link_libraries(${XASH_LAUNCHER_EXECUTABLE}
-	${CMAKE_DL_LIBS} ${SDL2_LIBRARIES})
+	${CMAKE_DL_LIBS})
