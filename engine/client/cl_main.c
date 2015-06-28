@@ -1845,7 +1845,11 @@ void CL_Shutdown( void )
 	CL_CloseDemoHeader();
 	IN_Shutdown ();
 	SCR_Shutdown ();
-	if( cls.initialized ) CL_UnloadProgs ();
+	if( cls.initialized ) 
+	{
+		CL_UnloadProgs ();
+		cls.initialized = false;
+	}
 
 	FS_Delete( "demoheader.tmp" ); // remove tmp file
 	SCR_FreeCinematic (); // release AVI's *after* client.dll because custom renderer may use them

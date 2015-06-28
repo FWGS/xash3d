@@ -1043,7 +1043,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	SDL_Event event;
 #endif
 	// main window message loop
-	while( !host.crashed )
+	while( !host.crashed && !host.shutdown_issued )
 	{
 #ifdef XASH_SDL
 		while( SDL_PollEvent( &event ) )
