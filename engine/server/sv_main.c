@@ -656,6 +656,7 @@ void SV_Init( void )
 	Cvar_Get( "mp_autocrosshair", "0", 0, "allow auto crosshair in multiplayer (legacy, unused)" );
 	Cvar_Get( "sv_allow_PhysX", "1", CVAR_ARCHIVE, "allow XashXT to usage PhysX engine" ); //XashXT cvar
 	Cvar_Get( "sv_precache_meshes", "1", CVAR_ARCHIVE, "cache SOLID_CUSTOM meshes before level loading" ); // Paranoia 2 cvar
+	Cvar_Get( "mp_allowmonsters", "0", CVAR_SERVERNOTIFY | CVAR_LATCH, "allow auto monsters in multiplayer" );
 		
 	// half-life shared variables
 	sv_zmax = Cvar_Get ("sv_zmax", "4096", CVAR_PHYSICINFO, "zfar server value" );

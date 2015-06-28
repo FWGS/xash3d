@@ -542,6 +542,75 @@ void SV_ChangeLevel_f( void )
 
 /*
 ==================
+SV_ChangeLevel2_f
+
+Saves the state of the map just being exited and goes to a new map. Force Half-Life style changelevel.
+==================
+*/
+
+void SV_ChangeLevel2_f( void )
+{
+	char	*spawn_entity, *mapname;
+	int	flags, c = Cmd_Argc();
+
+	if( c < 2 )
+	{
+		Msg( "Usage: changelevel <map> [landmark]\n" );
+		return;
+	}
+
+	mapname = Cmd_Argv( 1 );
+
+	// determine spawn entity classname
+	if( sv_maxclients->integer == 1 )
+		spawn_entity = GI->sp_entity;
+	else spawn_entity = GI->mp_entity;
+
+	flags = SV_MapIsValid( mapname, spawn_entity, Cmd_Argv( 2 ));
+
+	if( flags & MAP_INVALID_VERSION )
+	{
+		Msg( "SV_ChangeLevel: map %s is invalid or not supported\n", mapname );
+		return;
+	}
+	
+	if(!( flags & MAP_IS_EXIST ))
+	{
+		Msg( "SV_ChangeLevel: map %s doesn't exist\n", mapname );
+		return;
+	}
+
+	if( c >= 3 && !Q_stricmp( sv.name, Cmd_Argv( 1 )))
+	{
+		MsgDev( D_INFO, "SV_ChangeLevel: can't changelevel with same map. Ignored.\n" );
+		return;	
+	}
+
+	// bad changelevel position invoke enables in one-way transtion
+	if( sv.net_framenum < 15 )
+	{
+		if( sv_validate_changelevel->integer )
+		{
+			MsgDev( D_INFO, "SV_ChangeLevel: a infinite changelevel detected.\n" );
+			MsgDev( D_INFO, "Changelevel will be disabled until a next save\\restore.\n" );
+			return; // lock with svs.spawncount here
+		}
+	}
+
+	/*if( sv.state != ss_active )
+	{
+		MsgDev( D_INFO, "Only the server may changelevel\n" );
+		return;
+	}*/
+
+	SCR_BeginLoadingPlaque( false );
+
+	SV_ChangeLevel( true, Cmd_Argv( 1 ), Cmd_Argv( 2 ));
+}
+
+
+/*
+==================
 SV_Restart_f
 
 restarts current level
@@ -922,6 +991,7 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "killgame", SV_KillGame_f, "end current game" );
 	Cmd_AddCommand( "hazardcourse", SV_HazardCourse_f, "starting a Hazard Course" );
 	Cmd_AddCommand( "changelevel", SV_ChangeLevel_f, "changing level" );
+	Cmd_AddCommand( "changelevel2", SV_ChangeLevel2_f, "changing level, in half-life style" );
 	Cmd_AddCommand( "restart", SV_Restart_f, "restarting current level" );
 	Cmd_AddCommand( "reload", SV_Reload_f, "continue from latest save or restart level" );
 	Cmd_AddCommand( "entpatch", SV_EntPatch_f, "write entity patch to allow external editing" );
@@ -966,6 +1036,7 @@ void SV_KillOperatorCommands( void )
 	Cmd_RemoveCommand( "killgame" );
 	Cmd_RemoveCommand( "hazardcourse" );
 	Cmd_RemoveCommand( "changelevel" );
+	Cmd_RemoveCommand( "changelevel2" );
 	Cmd_RemoveCommand( "restart" );
 	Cmd_RemoveCommand( "reload" );
 	Cmd_RemoveCommand( "entpatch" );
