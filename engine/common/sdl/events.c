@@ -50,12 +50,13 @@ int SDLash_EventFilter( SDL_Event* event)
 				break; // no need to activate
 			if( host.state != HOST_RESTART )
 			{
-				switch( event->window.type )
+				switch( event->window.event )
 				{
 				case SDL_WINDOWEVENT_MINIMIZED:
 					host.state = HOST_SLEEP;
 					break;
 				case SDL_WINDOWEVENT_FOCUS_LOST:
+				case SDL_WINDOWEVENT_LEAVE:
 					host.state = HOST_NOFOCUS;
 					IN_DeactivateMouse();
 					break;
@@ -175,7 +176,8 @@ void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 
 void SDLash_InputEvent(SDL_TextInputEvent input)
 {
-	int i = 0;
+	int i;
+	// Pass characters one by one to Con_CharEvent
 	for(i = 0; input.text[i]; ++i)
 		Con_CharEvent((int)input.text[i]);
 }
