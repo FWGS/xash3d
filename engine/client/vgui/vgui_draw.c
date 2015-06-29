@@ -17,11 +17,145 @@ GNU General Public License for more details.
 #include "client.h"
 #include "gl_local.h"
 #include "vgui_draw.h"
+#include "library.h"
 
-convar_t	*vgui_colorstrings;
+
 int	g_textures[VGUI_MAX_TEXTURES];
 int	g_textureId = 0;
 int	g_iBoundTexture;
+
+// Helper functions for vgui backend
+
+void VGUI_HideCursor( void )
+{
+	host.mouse_visible = false;
+}
+
+void VGUI_ShowCursor( void )
+{
+	host.mouse_visible = true;
+}
+
+void *VGUI_EngineMalloc(size_t size)
+{
+	return Z_Malloc( size );
+}
+
+qboolean VGUI_IsInGame()
+{
+	return true; // cls.state == ca_active && cls.key_dest == key_game ;
+}
+
+void VGUI_ActivateCurrentCursor( void )
+{
+	if( cls.key_dest != key_game || cl.refdef.paused )
+		return;
+#ifdef XASH_SDL
+	if( host.mouse_visible )
+	{
+		SDL_ShowCursor( true );
+	}
+	else
+	{
+		SDL_ShowCursor( false );
+	}
+#endif
+}
+
+byte VGUI_GetColor( int i, int j)
+{
+	return g_color_table[i][j];
+}
+
+// Define and initialize vgui API
+
+vguiapi_t vgui =
+{
+	false, //Not initialized yet
+	VGUI_DrawInit,
+	VGUI_DrawShutdown,
+	VGUI_SetupDrawingText,
+	VGUI_SetupDrawingRect,
+	VGUI_SetupDrawingImage,
+	VGUI_BindTexture,
+	VGUI_EnableTexture,
+	VGUI_CreateTexture,
+	VGUI_UploadTexture,
+	VGUI_UploadTextureBlock,
+	VGUI_DrawQuad,
+	VGUI_GetTextureSizes,
+	VGUI_GenerateTexture,
+	VGUI_EngineMalloc,
+	VGUI_ShowCursor,
+	VGUI_HideCursor,
+	VGUI_ActivateCurrentCursor,
+	VGUI_GetColor,
+	VGUI_IsInGame,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL
+} ;
+
+
+void *lib; //vgui_support library
+
+
+/*
+================
+VGui_Startup
+
+Load vgui_support library and call VGui_Startup
+================
+*/
+void VGui_Startup( int width, int height )
+{
+	if(!vgui.initialized)
+	{
+		void (*F) (vguiapi_t *);
+#ifdef _WIN32
+		lib = Com_LoadLibrary("vgui_support.dll", false);
+#else
+		lib = Com_LoadLibrary("libvgui_support.so", false);
+#endif
+		if(!lib)
+			MsgDev(D_ERROR, "Failed to load vgui_support library!\n");
+		else
+		{
+			F = Com_GetProcAddress(lib, "F");
+			if(F)
+			{
+				F(&vgui);
+				vgui.initialized = true;
+			}
+			else
+				MsgDev(D_ERROR, "Failed to find vgui_support library entry point!\n");
+		}
+	}
+	if (vgui.initialized)
+		vgui.Startup(width, height);
+}
+
+
+
+/*
+================
+VGui_Shutdown
+
+Unload vgui_support library and call VGui_Shutdown
+================
+*/
+void VGui_Shutdown( void )
+{
+	if( vgui.Shutdown) 
+		vgui.Shutdown();
+	if(lib)
+		Com_FreeLibrary(lib);
+}
+
+
 
 /*
 ================
@@ -34,8 +168,6 @@ void VGUI_DrawInit( void )
 {
 	Q_memset( g_textures, 0, sizeof( g_textures ));
 	g_textureId = g_iBoundTexture = 0;
-
-	vgui_colorstrings = Cvar_Get( "vgui_colorstrings", "0", CVAR_ARCHIVE, "allow colorstrings in VGUI texts" );
 }
 
 /*

@@ -38,6 +38,8 @@ GNU General Public License for more details.
 char			cl_textbuffer[MAX_TEXTCHANNELS][512];
 client_textmessage_t	cl_textmessage[MAX_TEXTCHANNELS];
 
+rgba_t g_color_table[8];
+
 static dllfunc_t cdll_exports[] =
 {
 { "Initialize", (void **)&clgame.dllFuncs.pfnInitialize },
@@ -3889,13 +3891,8 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetLevelName,
 	pfnGetScreenFade,
 	pfnSetScreenFade,
-	#ifdef XASH_VGUI
-	VGui_GetPanel,
-	VGui_ViewportPaintBackground,
-	#else
-	NULL,
-	NULL,
-	#endif
+	NULL,	// VGui_GetPanel
+	NULL,	// VGui_ViewportPaintBackground
 	COM_LoadFile,
 	COM_ParseFile,
 	COM_FreeFile,
@@ -4006,7 +4003,9 @@ qboolean CL_LoadProgs( const char *name )
 	// vgui must startup BEFORE loading client.dll to avoid get error ERROR_NOACESS
 	// during LoadLibrary
 #ifdef XASH_VGUI
-	VGui_Startup ();
+	VGui_Startup (menu.globals->scrWidth, menu.globals->scrHeight);
+	gEngfuncs.VGui_GetPanel = vgui.GetPanel;
+	gEngfuncs.VGui_ViewportPaintBackground = vgui.ViewportPaintBackground;
 #endif
 	
 	clgame.hInstance = Com_LoadLibrary( name, false );

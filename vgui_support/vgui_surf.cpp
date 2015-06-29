@@ -15,10 +15,10 @@ GNU General Public License for more details.
 #ifdef XASH_VGUI
 #include "common.h"
 #include "client.h"
-#include "vgui_draw.h"
+#include "vgui_api.h"
 #include "vgui_main.h"
 
-static FontCache g_FontCache;
+//static FontCache g_FontCache;
 
 CEngineSurface :: CEngineSurface( Panel *embeddedPanel ):SurfaceBase( embeddedPanel )
 {
@@ -27,8 +27,9 @@ CEngineSurface :: CEngineSurface( Panel *embeddedPanel ):SurfaceBase( embeddedPa
 	_drawTextColor[0] = _drawTextColor[1] = _drawTextColor[2] = _drawTextColor[3] = 255;
 
 	_surfaceExtents[0] = _surfaceExtents[1] = 0;
-	_surfaceExtents[2] = menu.globals->scrWidth;
-	_surfaceExtents[3] = menu.globals->scrHeight;
+	//_surfaceExtents[2] = menu.globals->scrWidth;
+	//_surfaceExtents[3] = menu.globals->scrHeight;
+	embeddedPanel->getSize(_surfaceExtents[2], _surfaceExtents[3]);
 	_drawTextPos[0] = _drawTextPos[1] = 0;
 	_hCurrentFont = null;
 
@@ -37,7 +38,7 @@ CEngineSurface :: CEngineSurface( Panel *embeddedPanel ):SurfaceBase( embeddedPa
 
 CEngineSurface :: ~CEngineSurface( void )
 {
-	VGUI_DrawShutdown ();
+	g_api->DrawShutdown ();
 }
 
 Panel *CEngineSurface :: getEmbeddedPanel( void )
@@ -47,7 +48,9 @@ Panel *CEngineSurface :: getEmbeddedPanel( void )
 
 bool CEngineSurface :: hasFocus( void )
 {
-	return host.state != HOST_NOFOCUS;
+	// What differs when window does not has focus?
+	//return host.state != HOST_NOFOCUS;
+	return true;
 }
 	
 void CEngineSurface :: setCursor( Cursor *cursor )
@@ -74,7 +77,7 @@ void CEngineSurface :: InitVertex( vpoint_t &vertex, int x, int y, float u, floa
 
 int CEngineSurface :: createNewTextureID( void )
 {
-	return VGUI_GenerateTexture();
+	return g_api->GenerateTexture();
 }
 
 void CEngineSurface :: drawSetColor( int r, int g, int b, int a )
@@ -107,10 +110,10 @@ void CEngineSurface :: drawFilledRect( int x0, int y0, int x1, int y1 )
 	if( !ClipRect( rect[0], rect[1], &clippedRect[0], &clippedRect[1] ))
 		return;	
 
-	VGUI_SetupDrawingRect( _drawColor );	
-	VGUI_EnableTexture( false );
-	VGUI_DrawQuad( &clippedRect[0], &clippedRect[1] );
-	VGUI_EnableTexture( true );
+	g_api->SetupDrawingRect( _drawColor );	
+	g_api->EnableTexture( false );
+	g_api->DrawQuad( &clippedRect[0], &clippedRect[1] );
+	g_api->EnableTexture( true );
 }
 
 void CEngineSurface :: drawOutlinedRect( int x0, int y0, int x1, int y1 )
@@ -136,6 +139,7 @@ void CEngineSurface :: drawSetTextPos( int x, int y )
 
 void CEngineSurface :: drawPrintText( const char* text, int textLen )
 {
+	//return;
 	static bool hasColor = 0;
 	static int numColor = 7;
 
@@ -151,19 +155,19 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 	int curTextColor[4];
 
 	//  HACKHACK: allow color strings in VGUI
-	if( numColor != 7 && vgui_colorstrings->integer )
+	if( numColor != 7 )
 	{
 		for( j = 0; j < 3; j++ ) // grab predefined color
-			curTextColor[j] = g_color_table[numColor][j];
-          }
-          else
-          {
+			curTextColor[j] = g_api->GetColor(numColor,j);
+    }
+    else
+    {
 		for( j = 0; j < 3; j++ ) // revert default color
 			curTextColor[j] = _drawTextColor[j];
 	}
 	curTextColor[3] = _drawTextColor[3]; // copy alpha
 
-	if( textLen == 1 && vgui_colorstrings->integer )
+	if( textLen == 1 )
 	{
 		if( *text == '^' )
 		{
@@ -178,7 +182,6 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 		}
 		else hasColor = false;
 	}
-
 	for( int i = 0; i < textLen; i++ )
 	{
 		char ch = text[i];
@@ -195,7 +198,7 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 			int iTexId = 0;
 			float *texCoords = NULL;
 
-			if( !g_FontCache.GetTextureForChar( _hCurrentFont, ch, &iTexId, &texCoords ))
+			if( !g_FontCache->GetTextureForChar( _hCurrentFont, ch, &iTexId, &texCoords ))
 				continue;
 
 			Assert( texCoords != NULL );
@@ -219,8 +222,8 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 				continue;
                                         
 			drawSetTexture( iTexId );
-			VGUI_SetupDrawingText( curTextColor );
-			VGUI_DrawQuad(  &clippedRect[0], &clippedRect[1] ); // draw the letter
+			g_api->SetupDrawingText( curTextColor );
+			g_api->DrawQuad(  &clippedRect[0], &clippedRect[1] ); // draw the letter
 		}
 
 		iTotalWidth += iWide + abcC;
@@ -231,12 +234,12 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 
 void CEngineSurface :: drawSetTextureRGBA( int id, const char* rgba, int wide, int tall )
 {
-	VGUI_UploadTexture( id, rgba, wide, tall );
+	g_api->UploadTexture( id, rgba, wide, tall );
 }
 	
 void CEngineSurface :: drawSetTexture( int id )
 {
-	VGUI_BindTexture( id );
+	g_api->BindTexture( id );
 }
 	
 void CEngineSurface :: drawTexturedRect( int x0, int y0, int x1, int y1 )
@@ -251,8 +254,8 @@ void CEngineSurface :: drawTexturedRect( int x0, int y0, int x1, int y1 )
 	if( !ClipRect( rect[0], rect[1], &clippedRect[0], &clippedRect[1] ))
 		return;	
 
-	VGUI_SetupDrawingImage( _drawColor );	
-	VGUI_DrawQuad( &clippedRect[0], &clippedRect[1] );
+	g_api->SetupDrawingImage( _drawColor );	
+	g_api->DrawQuad( &clippedRect[0], &clippedRect[1] );
 }
 	
 void CEngineSurface :: pushMakeCurrent( Panel* panel, bool useInsets )
@@ -304,16 +307,20 @@ void CEngineSurface :: popMakeCurrent( Panel *panel )
 bool CEngineSurface :: setFullscreenMode( int wide, int tall, int bpp )
 {
 	// NOTE: Xash3D always working in 32-bit mode
-	if( R_DescribeVIDMode( wide, tall ))
+	// Skip it now. VGUI cannot change video modes
+	/*if( R_DescribeVIDMode( wide, tall ))
 	{
 		Cvar_SetFloat( "fullscreen", 1.0f );
 		return true;
-	}
+	}*/
 	return false;
 }
 	
 void CEngineSurface :: setWindowedMode( void )
 {
+	// Skip it now. VGUI cannot change video modes
+	/*
 	Cvar_SetFloat( "fullscreen", 0.0f );
+	*/
 }
 #endif

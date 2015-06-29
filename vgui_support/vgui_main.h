@@ -187,6 +187,21 @@ public:
 void VGUI_InitCursors( void );
 void VGUI_CursorSelect( Cursor *cursor );
 void VGUI_ActivateCurrentCursor( void );
+void *VGui_GetPanel( void );
+void VGui_RunFrame( void );
+void VGui_Paint( void );
+void VGui_ViewportPaintBackground( int extents[4] );
+long VGUI_SurfaceWndProc( Xash_Event *event );
+//
+// vgui_clip.cpp
+//
+void EnableScissor( qboolean enable );
+void SetScissorRect( int left, int top, int right, int bottom );
+qboolean ClipRect( const vpoint_t &inUL, const vpoint_t &inLR, vpoint_t *pOutUL, vpoint_t *pOutLR );
+
+extern FontCache *g_FontCache;
+
+extern vguiapi_t *g_api;
 
 #endif
 #endif//VGUI_MAIN_H

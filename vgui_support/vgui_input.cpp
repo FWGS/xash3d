@@ -17,7 +17,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "client.h"
-#include "vgui_draw.h"
+#include "vgui_api.h"
 #include "vgui_main.h"
 #include "input.h"
 
@@ -41,21 +41,26 @@ void VGUI_InitCursors( void )
 	s_pDefaultCursor[Cursor::dc_no]       = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
 	s_pDefaultCursor[Cursor::dc_hand]     = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 
-	host.mouse_visible = true;
+	//VGUI_Show_Cursor
+	//host.mouse_visible = true;
+	g_api->ShowCursor();
 	SDL_SetCursor(s_pDefaultCursor[Cursor::dc_arrow]);
 }
 
 void VGUI_CursorSelect( Cursor *cursor )
 {
-	Assert( cursor != NULL );
-
-	host.mouse_visible = true;
+	//Assert( cursor != NULL );
+	
+	g_api->ShowCursor();
+	//host.mouse_visible = true;
 
 	switch( cursor->getDefaultCursor( ))
 	{
 	case Cursor::dc_user:
 	case Cursor::dc_none:
-		host.mouse_visible = false;
+		//VGUI_Hide_Cursor
+		g_api->HideCursor();
+		//host.mouse_visible = false;
 		break;
 	case Cursor::dc_arrow:
 	case Cursor::dc_ibeam:
@@ -72,27 +77,14 @@ void VGUI_CursorSelect( Cursor *cursor )
 		SDL_SetCursor(s_pDefaultCursor[cursor->getDefaultCursor()]);
 		break;
 	default:
-		host.mouse_visible = false;
-		Assert( 0 );
+		//VGUI_Hide_Cursor
+		//host.mouse_visible = false;
+		g_api->HideCursor();
+		//Assert( 0 );
 		break;
 	}
 
-	VGUI_ActivateCurrentCursor();
-}
-
-void VGUI_ActivateCurrentCursor( void )
-{
-	if( cls.key_dest != key_game || cl.refdef.paused )
-		return;
-
-	if( host.mouse_visible )
-	{
-		SDL_ShowCursor( true );
-	}
-	else
-	{
-		SDL_ShowCursor( false );
-	}
+	g_api->ActivateCurrentCursor();
 }
 
 void VGUI_InitKeyTranslationTable( void )
@@ -103,7 +95,7 @@ void VGUI_InitKeyTranslationTable( void )
 	bInitted = true;
 
 	// set virtual key translation table
-	Q_memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ));	
+	memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ));	
 
 	s_pVirtualKeyTrans['0'] = KEY_0;
 	s_pVirtualKeyTrans['1'] = KEY_1;
@@ -216,7 +208,7 @@ KeyCode VGUI_MapKey( int keyCode )
 
 	if( keyCode < 0 || keyCode >= sizeof( s_pVirtualKeyTrans ) / sizeof( s_pVirtualKeyTrans[0] ))
 	{
-		Assert( false );
+		//Assert( false );
 		return (KeyCode)-1;
 	}
 	else
@@ -253,8 +245,8 @@ long VGUI_SurfaceWndProc( SDL_Event *event )
 	surface = panel->getSurfaceBase();
 	pApp = panel->getApp();
 
-	ASSERT( pApp != NULL );
-	ASSERT( surface != NULL );
+	//ASSERT( pApp != NULL );
+	//ASSERT( surface != NULL );
 
 	switch( event->type )
 	{

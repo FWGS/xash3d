@@ -21,27 +21,12 @@ extern "C" {
 #endif
 
 #include "port.h"
-#ifdef XASH_SDL
-#include <SDL_events.h>
-typedef SDL_Event Xash_Event;
-#else
-typedef void Xash_Event;
-#endif
+
 #define VGUI_MAX_TEXTURES	2048	// a half of total textures count
 
-extern rgba_t g_color_table[8];	// for colored strings support
-extern convar_t *vgui_colorstrings;
+#include "vgui_api.h"
 
-// VGUI generic vertex
-typedef struct
-{
-	vec2_t	point;
-	vec2_t	coord;
-} vpoint_t;
-
-//
-// vgui_backend.c
-//
+extern vguiapi_t vgui;
 
 void VGUI_DrawInit( void );
 void VGUI_DrawShutdown( void );
@@ -53,32 +38,16 @@ void VGUI_EnableTexture( qboolean enable );
 void VGUI_CreateTexture( int id, int width, int height );
 void VGUI_UploadTexture( int id, const char *buffer, int width, int height );
 void VGUI_UploadTextureBlock( int id, int drawX, int drawY, const byte *rgba, int blockWidth, int blockHeight );
-long VGUI_SurfaceWndProc( Xash_Event *event );
 void VGUI_DrawQuad( const vpoint_t *ul, const vpoint_t *lr );
 void VGUI_GetTextureSizes( int *width, int *height );
 int VGUI_GenerateTexture( void );
-void *VGui_GetPanel( void );
 
-#ifdef __cplusplus
-void EnableScissor( qboolean enable );
-void SetScissorRect( int left, int top, int right, int bottom );
-qboolean ClipRect( const vpoint_t &inUL, const vpoint_t &inLR, vpoint_t *pOutUL, vpoint_t *pOutLR );
-#endif
 
 //
-// gl_vidnt.c
+// vgui_draw.c
 //
-qboolean R_DescribeVIDMode( int width, int height );
-
-//
-// vgui_int.c
-//
-void VGui_Startup( void );
+void VGui_Startup( int width, int height );
 void VGui_Shutdown( void );
-void *VGui_GetPanel( void );
-void VGui_Paint( void );
-void VGui_RunFrame( void );
-void VGui_ViewportPaintBackground( int extents[4] );
 
 #ifdef __cplusplus
 }

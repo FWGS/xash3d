@@ -617,6 +617,8 @@ static _inline cl_entity_t *CL_EDICT_NUM( int n )
 	return NULL;	
 }
 
+extern rgba_t g_color_table[8];
+
 //
 // cl_parse.c
 //

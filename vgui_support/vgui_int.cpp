@@ -16,8 +16,12 @@ GNU General Public License for more details.
 #include "common.h"
 #include "client.h"
 #include "const.h"
-#include "vgui_draw.h"
+#include "vgui_api.h"
 #include "vgui_main.h"
+
+vguiapi_t *g_api;
+
+FontCache *g_FontCache = 0;
 
 CEnginePanel	*rootpanel = NULL;
 CEngineSurface	*surface = NULL;
@@ -35,7 +39,7 @@ App* CEnginePanel::getApp( void )
 
 void CEngineApp :: setCursorPos( int x, int y )
 {
-	SDL_WarpMouseInWindow(host.hWnd, x, y);
+	//SDL_WarpMouseInWindow(host.hWnd, x, y);
 }
 
 void CEngineApp :: getCursorPos( int &x,int &y )
@@ -51,18 +55,22 @@ void VGui_RunFrame( void )
 		host.force_draw_version = true;
 	else host.force_draw_version = false;*/
 
-	host.force_draw_version = false;
+	//host.force_draw_version = false;
 }
 
-void VGui_Startup( void )
+void VGui_Startup( int width, int height )
 {
+	if(!g_FontCache)
+		g_FontCache = new FontCache();
+
 	if( rootpanel )
 	{
-		rootpanel->setSize( menu.globals->scrWidth, menu.globals->scrHeight );
+		rootpanel->setSize( width, height );
 		return;
 	}
 
 	rootpanel = new CEnginePanel;
+	rootpanel->setSize( width, height );
 	rootpanel->setPaintBorderEnabled( false );
 	rootpanel->setPaintBackgroundEnabled( false );
 	rootpanel->setVisible( true );
@@ -76,10 +84,10 @@ void VGui_Startup( void )
 	rootpanel->setSurfaceBaseTraverse( surface );
 
 
-	ASSERT( rootpanel->getApp() != NULL );
-	ASSERT( rootpanel->getSurfaceBase() != NULL );
+	//ASSERT( rootpanel->getApp() != NULL );
+	//ASSERT( rootpanel->getSurfaceBase() != NULL );
 
-	VGUI_DrawInit ();
+	g_api->DrawInit ();
 }
 
 void VGui_Shutdown( void )
@@ -99,17 +107,20 @@ void VGui_Paint( void )
 {
 	int w, h;
 
-	if( cls.state != ca_active || !rootpanel )
+	//if( cls.state != ca_active || !rootpanel )
+	//	return;
+	if( !g_api->IsInGame() || !rootpanel )
 		return;
 
 	// setup the base panel to cover the screen
 	Panel *pVPanel = surface->getEmbeddedPanel();
 	if( !pVPanel ) return;
-	SDL_GetWindowSize(host.hWnd, &w, &h);
-	host.input_enabled = rootpanel->isVisible();
+	//SDL_GetWindowSize(host.hWnd, &w, &h);
+	//host.input_enabled = rootpanel->isVisible();
+	rootpanel->getSize(w, h);
 	EnableScissor( true );
 
-	if( cls.key_dest == key_game )
+	if( g_api->IsInGame() )
 	{
 		pApp->externalTick ();
 	}
@@ -131,5 +142,17 @@ void VGui_ViewportPaintBackground( int extents[4] )
 void *VGui_GetPanel( void )
 {
 	return (void *)rootpanel;
+}
+
+extern "C" void F(vguiapi_t * api)
+{
+	g_api = api;
+	g_api->Startup = VGui_Startup;
+	g_api->Shutdown = VGui_Shutdown;
+	g_api->GetPanel = VGui_GetPanel;
+	g_api->RunFrame = VGui_RunFrame;
+	g_api->ViewportPaintBackground = VGui_ViewportPaintBackground;
+	g_api->SurfaceWndProc = VGUI_SurfaceWndProc;
+	g_api->Paint = VGui_Paint;
 }
 #endif

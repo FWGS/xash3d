@@ -3,7 +3,7 @@
 #include "keydefs.h"
 #include "input.h"
 #include "client.h"
-
+#include "vgui_draw.h"
 int SDLash_EventFilter( SDL_Event* event)
 {
 	switch ( event->type )
@@ -65,7 +65,8 @@ int SDLash_EventFilter( SDL_Event* event)
 			}
 	}
 #ifdef XASH_VGUI
-	VGUI_SurfaceWndProc(event);
+	if(vgui.initialized)
+		vgui.SurfaceWndProc(event);
 #endif
 	return 0;
 }

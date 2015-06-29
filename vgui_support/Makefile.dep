@@ -1,0 +1,344 @@
+# DO NOT DELETE
+
+vgui_clip.o: ../engine/common/common.h /usr/include/stdio.h
+vgui_clip.o: /usr/include/features.h /usr/include/stdc-predef.h
+vgui_clip.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+vgui_clip.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+vgui_clip.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+vgui_clip.o: /usr/include/_G_config.h /usr/include/wchar.h
+vgui_clip.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+vgui_clip.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+vgui_clip.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+vgui_clip.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+vgui_clip.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+vgui_clip.o: /usr/include/time.h /usr/include/sys/select.h
+vgui_clip.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+vgui_clip.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+vgui_clip.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+vgui_clip.o: /usr/include/bits/stdlib-float.h ../common/port.h
+vgui_clip.o: /usr/include/limits.h /usr/include/bits/posix1_lim.h
+vgui_clip.o: /usr/include/bits/local_lim.h /usr/include/linux/limits.h
+vgui_clip.o: /usr/include/bits/posix2_lim.h /usr/include/dlfcn.h
+vgui_clip.o: /usr/include/bits/dlfcn.h ../engine/common/system.h
+vgui_clip.o: /usr/include/setjmp.h /usr/include/bits/setjmp.h
+vgui_clip.o: /usr/include/SDL2/SDL_messagebox.h
+vgui_clip.o: /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h
+vgui_clip.o: /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/begin_code.h
+vgui_clip.o: /usr/include/SDL2/close_code.h /usr/include/string.h
+vgui_clip.o: /usr/include/xlocale.h /usr/include/strings.h
+vgui_clip.o: /usr/include/inttypes.h /usr/include/stdint.h
+vgui_clip.o: /usr/include/bits/wchar.h /usr/include/ctype.h
+vgui_clip.o: /usr/include/math.h /usr/include/bits/huge_val.h
+vgui_clip.o: /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h
+vgui_clip.o: /usr/include/bits/inf.h /usr/include/bits/nan.h
+vgui_clip.o: /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h
+vgui_clip.o: /usr/include/iconv.h /usr/include/SDL2/SDL_video.h
+vgui_clip.o: /usr/include/SDL2/SDL_pixels.h /usr/include/SDL2/SDL_rect.h
+vgui_clip.o: /usr/include/SDL2/SDL_error.h /usr/include/SDL2/SDL_rwops.h
+vgui_clip.o: /usr/include/SDL2/SDL_surface.h
+vgui_clip.o: /usr/include/SDL2/SDL_blendmode.h ../common/const.h
+vgui_clip.o: ../common/ref_params.h ../common/com_model.h ../common/bspfile.h
+vgui_clip.o: ../engine/custom.h ../engine/common/crtlib.h ../common/cvardef.h
+vgui_clip.o: ../common/netadr.h ../common/con_nprint.h ../common/cl_entity.h
+vgui_clip.o: ../common/entity_state.h ../pm_shared/pm_info.h
+vgui_clip.o: ../common/weaponinfo.h ../common/event_args.h
+vgui_clip.o: ../common/studio_event.h ../pm_shared/pm_defs.h
+vgui_clip.o: ../common/pmtrace.h ../common/usercmd.h
+vgui_clip.o: ../engine/client/vgui/vgui_api.h /usr/include/SDL2/SDL_events.h
+vgui_clip.o: /usr/include/SDL2/SDL_keyboard.h /usr/include/SDL2/SDL_keycode.h
+vgui_clip.o: /usr/include/SDL2/SDL_scancode.h /usr/include/SDL2/SDL_mouse.h
+vgui_clip.o: /usr/include/SDL2/SDL_joystick.h
+vgui_clip.o: /usr/include/SDL2/SDL_gamecontroller.h
+vgui_clip.o: /usr/include/SDL2/SDL_quit.h /usr/include/SDL2/SDL_gesture.h
+vgui_clip.o: /usr/include/SDL2/SDL_touch.h ../common/wrect.h
+vgui_int.o: ../engine/common/common.h /usr/include/stdio.h
+vgui_int.o: /usr/include/features.h /usr/include/stdc-predef.h
+vgui_int.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+vgui_int.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+vgui_int.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+vgui_int.o: /usr/include/_G_config.h /usr/include/wchar.h
+vgui_int.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+vgui_int.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+vgui_int.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+vgui_int.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+vgui_int.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+vgui_int.o: /usr/include/time.h /usr/include/sys/select.h
+vgui_int.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+vgui_int.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+vgui_int.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+vgui_int.o: /usr/include/bits/stdlib-float.h ../common/port.h
+vgui_int.o: /usr/include/limits.h /usr/include/bits/posix1_lim.h
+vgui_int.o: /usr/include/bits/local_lim.h /usr/include/linux/limits.h
+vgui_int.o: /usr/include/bits/posix2_lim.h /usr/include/dlfcn.h
+vgui_int.o: /usr/include/bits/dlfcn.h ../engine/common/system.h
+vgui_int.o: /usr/include/setjmp.h /usr/include/bits/setjmp.h
+vgui_int.o: /usr/include/SDL2/SDL_messagebox.h /usr/include/SDL2/SDL_stdinc.h
+vgui_int.o: /usr/include/SDL2/SDL_config.h /usr/include/SDL2/SDL_platform.h
+vgui_int.o: /usr/include/SDL2/begin_code.h /usr/include/SDL2/close_code.h
+vgui_int.o: /usr/include/string.h /usr/include/xlocale.h
+vgui_int.o: /usr/include/strings.h /usr/include/inttypes.h
+vgui_int.o: /usr/include/stdint.h /usr/include/bits/wchar.h
+vgui_int.o: /usr/include/ctype.h /usr/include/math.h
+vgui_int.o: /usr/include/bits/huge_val.h /usr/include/bits/huge_valf.h
+vgui_int.o: /usr/include/bits/huge_vall.h /usr/include/bits/inf.h
+vgui_int.o: /usr/include/bits/nan.h /usr/include/bits/mathdef.h
+vgui_int.o: /usr/include/bits/mathcalls.h /usr/include/iconv.h
+vgui_int.o: /usr/include/SDL2/SDL_video.h /usr/include/SDL2/SDL_pixels.h
+vgui_int.o: /usr/include/SDL2/SDL_rect.h /usr/include/SDL2/SDL_error.h
+vgui_int.o: /usr/include/SDL2/SDL_rwops.h /usr/include/SDL2/SDL_surface.h
+vgui_int.o: /usr/include/SDL2/SDL_blendmode.h ../common/const.h
+vgui_int.o: ../common/ref_params.h ../common/com_model.h ../common/bspfile.h
+vgui_int.o: ../engine/custom.h ../engine/common/crtlib.h ../common/cvardef.h
+vgui_int.o: ../common/netadr.h ../common/con_nprint.h ../common/cl_entity.h
+vgui_int.o: ../common/entity_state.h ../pm_shared/pm_info.h
+vgui_int.o: ../common/weaponinfo.h ../common/event_args.h
+vgui_int.o: ../common/studio_event.h ../pm_shared/pm_defs.h
+vgui_int.o: ../common/pmtrace.h ../common/usercmd.h ../engine/client/client.h
+vgui_int.o: ../common/mathlib.h ../engine/cdll_int.h ../common/wrect.h
+vgui_int.o: ../engine/menu_int.h ../common/gameinfo.h
+vgui_int.o: ../engine/common/mod_local.h ../engine/edict.h
+vgui_int.o: ../engine/progdefs.h ../engine/eiface.h
+vgui_int.o: ../pm_shared/pm_movevars.h ../common/render_api.h
+vgui_int.o: ../common/lightstyle.h ../common/dlight.h ../engine/cdll_exp.h
+vgui_int.o: ../common/screenfade.h ../engine/common/protocol.h
+vgui_int.o: ../engine/common/netchan.h ../engine/common/net_buffer.h
+vgui_int.o: ../common/engine_features.h ../common/net_api.h
+vgui_int.o: ../engine/common/world.h ../pm_shared/pm_shared.h
+vgui_int.o: ../common/event_api.h ../engine/client/vgui/vgui_api.h
+vgui_int.o: /usr/include/SDL2/SDL_events.h /usr/include/SDL2/SDL_keyboard.h
+vgui_int.o: /usr/include/SDL2/SDL_keycode.h /usr/include/SDL2/SDL_scancode.h
+vgui_int.o: /usr/include/SDL2/SDL_mouse.h /usr/include/SDL2/SDL_joystick.h
+vgui_int.o: /usr/include/SDL2/SDL_gamecontroller.h
+vgui_int.o: /usr/include/SDL2/SDL_quit.h /usr/include/SDL2/SDL_gesture.h
+vgui_int.o: /usr/include/SDL2/SDL_touch.h vgui_main.h utlvector.h utlmemory.h
+vgui_int.o: utlrbtree.h /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_App.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_MouseCode.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_KeyCode.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Dar.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Cursor.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Font.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Panel.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Scheme.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Color.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_RepaintSignal.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_SurfaceBase.h
+vgui_int.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_InputSignal.h
+vgui_input.o: ../engine/common/common.h /usr/include/stdio.h
+vgui_input.o: /usr/include/features.h /usr/include/stdc-predef.h
+vgui_input.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+vgui_input.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+vgui_input.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+vgui_input.o: /usr/include/_G_config.h /usr/include/wchar.h
+vgui_input.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+vgui_input.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+vgui_input.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+vgui_input.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+vgui_input.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+vgui_input.o: /usr/include/time.h /usr/include/sys/select.h
+vgui_input.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+vgui_input.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+vgui_input.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+vgui_input.o: /usr/include/bits/stdlib-float.h ../common/port.h
+vgui_input.o: /usr/include/limits.h /usr/include/bits/posix1_lim.h
+vgui_input.o: /usr/include/bits/local_lim.h /usr/include/linux/limits.h
+vgui_input.o: /usr/include/bits/posix2_lim.h /usr/include/dlfcn.h
+vgui_input.o: /usr/include/bits/dlfcn.h ../engine/common/system.h
+vgui_input.o: /usr/include/setjmp.h /usr/include/bits/setjmp.h
+vgui_input.o: /usr/include/SDL2/SDL_messagebox.h
+vgui_input.o: /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h
+vgui_input.o: /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/begin_code.h
+vgui_input.o: /usr/include/SDL2/close_code.h /usr/include/string.h
+vgui_input.o: /usr/include/xlocale.h /usr/include/strings.h
+vgui_input.o: /usr/include/inttypes.h /usr/include/stdint.h
+vgui_input.o: /usr/include/bits/wchar.h /usr/include/ctype.h
+vgui_input.o: /usr/include/math.h /usr/include/bits/huge_val.h
+vgui_input.o: /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h
+vgui_input.o: /usr/include/bits/inf.h /usr/include/bits/nan.h
+vgui_input.o: /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h
+vgui_input.o: /usr/include/iconv.h /usr/include/SDL2/SDL_video.h
+vgui_input.o: /usr/include/SDL2/SDL_pixels.h /usr/include/SDL2/SDL_rect.h
+vgui_input.o: /usr/include/SDL2/SDL_error.h /usr/include/SDL2/SDL_rwops.h
+vgui_input.o: /usr/include/SDL2/SDL_surface.h
+vgui_input.o: /usr/include/SDL2/SDL_blendmode.h ../common/const.h
+vgui_input.o: ../common/ref_params.h ../common/com_model.h
+vgui_input.o: ../common/bspfile.h ../engine/custom.h
+vgui_input.o: ../engine/common/crtlib.h ../common/cvardef.h
+vgui_input.o: ../common/netadr.h ../common/con_nprint.h ../common/cl_entity.h
+vgui_input.o: ../common/entity_state.h ../pm_shared/pm_info.h
+vgui_input.o: ../common/weaponinfo.h ../common/event_args.h
+vgui_input.o: ../common/studio_event.h ../pm_shared/pm_defs.h
+vgui_input.o: ../common/pmtrace.h ../common/usercmd.h
+vgui_input.o: ../engine/client/client.h ../common/mathlib.h
+vgui_input.o: ../engine/cdll_int.h ../common/wrect.h ../engine/menu_int.h
+vgui_input.o: ../common/gameinfo.h ../engine/common/mod_local.h
+vgui_input.o: ../engine/edict.h ../engine/progdefs.h ../engine/eiface.h
+vgui_input.o: ../pm_shared/pm_movevars.h ../common/render_api.h
+vgui_input.o: ../common/lightstyle.h ../common/dlight.h ../engine/cdll_exp.h
+vgui_input.o: ../common/screenfade.h ../engine/common/protocol.h
+vgui_input.o: ../engine/common/netchan.h ../engine/common/net_buffer.h
+vgui_input.o: ../common/engine_features.h ../common/net_api.h
+vgui_input.o: ../engine/common/world.h ../pm_shared/pm_shared.h
+vgui_input.o: ../common/event_api.h ../engine/client/vgui/vgui_api.h
+vgui_input.o: /usr/include/SDL2/SDL_events.h /usr/include/SDL2/SDL_keyboard.h
+vgui_input.o: /usr/include/SDL2/SDL_keycode.h
+vgui_input.o: /usr/include/SDL2/SDL_scancode.h /usr/include/SDL2/SDL_mouse.h
+vgui_input.o: /usr/include/SDL2/SDL_joystick.h
+vgui_input.o: /usr/include/SDL2/SDL_gamecontroller.h
+vgui_input.o: /usr/include/SDL2/SDL_quit.h /usr/include/SDL2/SDL_gesture.h
+vgui_input.o: /usr/include/SDL2/SDL_touch.h vgui_main.h utlvector.h
+vgui_input.o: utlmemory.h utlrbtree.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_App.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_MouseCode.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_KeyCode.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Dar.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Cursor.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Font.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Panel.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Scheme.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Color.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_RepaintSignal.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_SurfaceBase.h
+vgui_input.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_InputSignal.h
+vgui_input.o: ../engine/common/input.h ../engine/keydefs.h
+vgui_surf.o: ../engine/common/common.h /usr/include/stdio.h
+vgui_surf.o: /usr/include/features.h /usr/include/stdc-predef.h
+vgui_surf.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+vgui_surf.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+vgui_surf.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+vgui_surf.o: /usr/include/_G_config.h /usr/include/wchar.h
+vgui_surf.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+vgui_surf.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+vgui_surf.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+vgui_surf.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+vgui_surf.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+vgui_surf.o: /usr/include/time.h /usr/include/sys/select.h
+vgui_surf.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+vgui_surf.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+vgui_surf.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+vgui_surf.o: /usr/include/bits/stdlib-float.h ../common/port.h
+vgui_surf.o: /usr/include/limits.h /usr/include/bits/posix1_lim.h
+vgui_surf.o: /usr/include/bits/local_lim.h /usr/include/linux/limits.h
+vgui_surf.o: /usr/include/bits/posix2_lim.h /usr/include/dlfcn.h
+vgui_surf.o: /usr/include/bits/dlfcn.h ../engine/common/system.h
+vgui_surf.o: /usr/include/setjmp.h /usr/include/bits/setjmp.h
+vgui_surf.o: /usr/include/SDL2/SDL_messagebox.h
+vgui_surf.o: /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h
+vgui_surf.o: /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/begin_code.h
+vgui_surf.o: /usr/include/SDL2/close_code.h /usr/include/string.h
+vgui_surf.o: /usr/include/xlocale.h /usr/include/strings.h
+vgui_surf.o: /usr/include/inttypes.h /usr/include/stdint.h
+vgui_surf.o: /usr/include/bits/wchar.h /usr/include/ctype.h
+vgui_surf.o: /usr/include/math.h /usr/include/bits/huge_val.h
+vgui_surf.o: /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h
+vgui_surf.o: /usr/include/bits/inf.h /usr/include/bits/nan.h
+vgui_surf.o: /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h
+vgui_surf.o: /usr/include/iconv.h /usr/include/SDL2/SDL_video.h
+vgui_surf.o: /usr/include/SDL2/SDL_pixels.h /usr/include/SDL2/SDL_rect.h
+vgui_surf.o: /usr/include/SDL2/SDL_error.h /usr/include/SDL2/SDL_rwops.h
+vgui_surf.o: /usr/include/SDL2/SDL_surface.h
+vgui_surf.o: /usr/include/SDL2/SDL_blendmode.h ../common/const.h
+vgui_surf.o: ../common/ref_params.h ../common/com_model.h ../common/bspfile.h
+vgui_surf.o: ../engine/custom.h ../engine/common/crtlib.h ../common/cvardef.h
+vgui_surf.o: ../common/netadr.h ../common/con_nprint.h ../common/cl_entity.h
+vgui_surf.o: ../common/entity_state.h ../pm_shared/pm_info.h
+vgui_surf.o: ../common/weaponinfo.h ../common/event_args.h
+vgui_surf.o: ../common/studio_event.h ../pm_shared/pm_defs.h
+vgui_surf.o: ../common/pmtrace.h ../common/usercmd.h
+vgui_surf.o: ../engine/client/client.h ../common/mathlib.h
+vgui_surf.o: ../engine/cdll_int.h ../common/wrect.h ../engine/menu_int.h
+vgui_surf.o: ../common/gameinfo.h ../engine/common/mod_local.h
+vgui_surf.o: ../engine/edict.h ../engine/progdefs.h ../engine/eiface.h
+vgui_surf.o: ../pm_shared/pm_movevars.h ../common/render_api.h
+vgui_surf.o: ../common/lightstyle.h ../common/dlight.h ../engine/cdll_exp.h
+vgui_surf.o: ../common/screenfade.h ../engine/common/protocol.h
+vgui_surf.o: ../engine/common/netchan.h ../engine/common/net_buffer.h
+vgui_surf.o: ../common/engine_features.h ../common/net_api.h
+vgui_surf.o: ../engine/common/world.h ../pm_shared/pm_shared.h
+vgui_surf.o: ../common/event_api.h ../engine/client/vgui/vgui_api.h
+vgui_surf.o: /usr/include/SDL2/SDL_events.h /usr/include/SDL2/SDL_keyboard.h
+vgui_surf.o: /usr/include/SDL2/SDL_keycode.h /usr/include/SDL2/SDL_scancode.h
+vgui_surf.o: /usr/include/SDL2/SDL_mouse.h /usr/include/SDL2/SDL_joystick.h
+vgui_surf.o: /usr/include/SDL2/SDL_gamecontroller.h
+vgui_surf.o: /usr/include/SDL2/SDL_quit.h /usr/include/SDL2/SDL_gesture.h
+vgui_surf.o: /usr/include/SDL2/SDL_touch.h vgui_main.h utlvector.h
+vgui_surf.o: utlmemory.h utlrbtree.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_App.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_MouseCode.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_KeyCode.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Dar.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Cursor.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Font.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Panel.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Scheme.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Color.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_RepaintSignal.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_SurfaceBase.h
+vgui_surf.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_InputSignal.h
+vgui_font.o: ../engine/common/common.h /usr/include/stdio.h
+vgui_font.o: /usr/include/features.h /usr/include/stdc-predef.h
+vgui_font.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+vgui_font.o: /usr/include/gnu/stubs.h /usr/include/bits/types.h
+vgui_font.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+vgui_font.o: /usr/include/_G_config.h /usr/include/wchar.h
+vgui_font.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+vgui_font.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+vgui_font.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+vgui_font.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+vgui_font.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
+vgui_font.o: /usr/include/time.h /usr/include/sys/select.h
+vgui_font.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+vgui_font.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
+vgui_font.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
+vgui_font.o: /usr/include/bits/stdlib-float.h ../common/port.h
+vgui_font.o: /usr/include/limits.h /usr/include/bits/posix1_lim.h
+vgui_font.o: /usr/include/bits/local_lim.h /usr/include/linux/limits.h
+vgui_font.o: /usr/include/bits/posix2_lim.h /usr/include/dlfcn.h
+vgui_font.o: /usr/include/bits/dlfcn.h ../engine/common/system.h
+vgui_font.o: /usr/include/setjmp.h /usr/include/bits/setjmp.h
+vgui_font.o: /usr/include/SDL2/SDL_messagebox.h
+vgui_font.o: /usr/include/SDL2/SDL_stdinc.h /usr/include/SDL2/SDL_config.h
+vgui_font.o: /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/begin_code.h
+vgui_font.o: /usr/include/SDL2/close_code.h /usr/include/string.h
+vgui_font.o: /usr/include/xlocale.h /usr/include/strings.h
+vgui_font.o: /usr/include/inttypes.h /usr/include/stdint.h
+vgui_font.o: /usr/include/bits/wchar.h /usr/include/ctype.h
+vgui_font.o: /usr/include/math.h /usr/include/bits/huge_val.h
+vgui_font.o: /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h
+vgui_font.o: /usr/include/bits/inf.h /usr/include/bits/nan.h
+vgui_font.o: /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h
+vgui_font.o: /usr/include/iconv.h /usr/include/SDL2/SDL_video.h
+vgui_font.o: /usr/include/SDL2/SDL_pixels.h /usr/include/SDL2/SDL_rect.h
+vgui_font.o: /usr/include/SDL2/SDL_error.h /usr/include/SDL2/SDL_rwops.h
+vgui_font.o: /usr/include/SDL2/SDL_surface.h
+vgui_font.o: /usr/include/SDL2/SDL_blendmode.h ../common/const.h
+vgui_font.o: ../common/ref_params.h ../common/com_model.h ../common/bspfile.h
+vgui_font.o: ../engine/custom.h ../engine/common/crtlib.h ../common/cvardef.h
+vgui_font.o: ../common/netadr.h ../common/con_nprint.h ../common/cl_entity.h
+vgui_font.o: ../common/entity_state.h ../pm_shared/pm_info.h
+vgui_font.o: ../common/weaponinfo.h ../common/event_args.h
+vgui_font.o: ../common/studio_event.h ../pm_shared/pm_defs.h
+vgui_font.o: ../common/pmtrace.h ../common/usercmd.h
+vgui_font.o: ../engine/client/vgui/vgui_api.h /usr/include/SDL2/SDL_events.h
+vgui_font.o: /usr/include/SDL2/SDL_keyboard.h /usr/include/SDL2/SDL_keycode.h
+vgui_font.o: /usr/include/SDL2/SDL_scancode.h /usr/include/SDL2/SDL_mouse.h
+vgui_font.o: /usr/include/SDL2/SDL_joystick.h
+vgui_font.o: /usr/include/SDL2/SDL_gamecontroller.h
+vgui_font.o: /usr/include/SDL2/SDL_quit.h /usr/include/SDL2/SDL_gesture.h
+vgui_font.o: /usr/include/SDL2/SDL_touch.h vgui_main.h utlvector.h
+vgui_font.o: utlmemory.h utlrbtree.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_App.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_MouseCode.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_KeyCode.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Dar.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Cursor.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Font.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Panel.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Scheme.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_Color.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_RepaintSignal.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_SurfaceBase.h
+vgui_font.o: /mnt/data/xash/bin/halflife/utils/vgui/include/VGUI_InputSignal.h
