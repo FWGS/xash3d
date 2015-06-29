@@ -1517,7 +1517,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 	if( fullscreen )
 	{
-		wndFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		wndFlags |= SDL_WINDOW_FULLSCREEN;
 	}
 
 	host.hWnd = SDL_CreateWindow(wndname, SDL_WINDOWPOS_UNDEFINED,
@@ -1666,7 +1666,7 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 	else
 	{
 		SDL_SetWindowSize(host.hWnd, vidmode[vid_mode].width, vidmode[vid_mode].height );
-		int error = SDL_SetWindowFullscreen( host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : false );
+		int error = SDL_SetWindowFullscreen(host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN : false);
 		if( error )
 		{
 			MsgDev(D_ERROR, "Cannot change resolution: %s", SDL_GetError());
@@ -1725,6 +1725,7 @@ qboolean VID_SetMode( void )
 	}
 #endif
 	gl_swapInterval->modified = true;
+	fullscreen = Cvar_VariableInteger("fullscreen");
 
 #ifdef PANDORA
     if(( err = R_ChangeDisplaySettings( 10, fullscreen )) == rserr_ok )
