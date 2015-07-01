@@ -602,6 +602,7 @@ void SV_InitGame( void )
 				MsgDev( D_ERROR, "SV_InitGame: can't initialize %s\n", GI->game_dll );
 				return; // can't loading
 			}
+			MsgDev( D_INFO, "Server loaded\n", GI->game_dll );
 		}
 
 		// make sure the client is down

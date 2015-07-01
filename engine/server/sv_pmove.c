@@ -372,10 +372,11 @@ static int pfnHullPointContents( struct hull_s *hull, int num, float *p )
 {
 	return PM_HullPointContents( hull, num, p );
 }
-
-static pmtrace_t pfnPlayerTrace( float *start, float *end, int traceFlags, int ignore_pe )
+//static pmtrace_t *pfnPlayerTrace( float *start, float *end, int traceFlags, int ignore_pe, pmtrace_t * trace );
+static pmtrace_t *pfnPlayerTrace(pmtrace_t *trace, float *start, float *end, int traceFlags, int ignore_pe)
 {
-	return PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
+	*trace = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
+	return trace;
 }
 
 static pmtrace_t *pfnTraceLine( float *start, float *end, int flags, int usehull, int ignore_pe )
@@ -599,6 +600,7 @@ void SV_InitClientMove( void )
 
 	// initalize pmove
 	svgame.dllFuncs.pfnPM_Init( svgame.pmove );
+	MsgDev( D_NOTE, "svgame.dllFuncs.pfnPM_Init\n");
 }
 
 static void PM_CheckMovingGround( edict_t *ent, float frametime )

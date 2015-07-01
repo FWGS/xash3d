@@ -158,4 +158,10 @@ const char *Com_NameForFunction( void *hInstance, dword function );
 dword Com_FunctionFromName( void *hInstance, const char *pName );
 void Com_FreeLibrary( void *hInstance );
 
+#ifdef DLL_LOADER // wine-based dll loader
+void *Loader_GetProcAddress( void *hInstance, const char *name );
+void *Loader_LoadLibrary( const char *dllname);
+void Loader_FreeLibrary( void *hInstance );
+#endif
+
 #endif//LIBRARY_H

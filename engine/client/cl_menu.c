@@ -813,11 +813,11 @@ int pfnCheckGameDll( void )
 
 	if( SV_Active( )) return true;
 
-	if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
+	/*if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
 		return true;
-	}
+	}*/ return true;
 	return false;
 }
 

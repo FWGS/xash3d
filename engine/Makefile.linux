@@ -1,0 +1,57 @@
+CC ?= gcc
+CXX ?= g++
+CFLAGS ?= -Og -ggdb
+LDFLAGS =
+LIBS = -lSDL2
+LBITS := $(shell getconf LONG_BIT)
+ifeq ($(LBITS),64)
+    LDFLAGS += -m32
+    CFLAGS += -m32
+endif
+TOPDIR = $(PWD)/..
+XASHXT ?= $(TOPDIR)/../xashXT
+HLSDK ?= $(TOPDIR)/../halflife/
+INCLUDES = -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui
+DEFINES = -DXASH_SDL -DDLL_LOADER
+ifeq ($(XASH_VGUI),1)
+#    INCLUDES += -I$(HLSDK)/utils/vgui/include/
+    DEFINES += -DXASH_VGUI
+#    LIBS += vgui.so
+endif
+
+%.o : %.c
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
+
+%.o : %.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
+
+SRCS_CPP =
+#ifeq ($(XASH_VGUI),1)
+#    SRCS_CPP += $(wildcard client/vgui/*.cpp)
+#endif
+
+OBJS_CPP = $(SRCS_CPP:.cpp=.o)
+SRCS = $(wildcard server/*.c) $(wildcard client/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
+OBJS = $(SRCS:.c=.o)
+
+libxash.so : $(OBJS) $(OBJS_CPP)
+	$(CC) $(LIBS) -o libxash.so $(LDFLAGS) -shared $(OBJS) $(OBJS_CPP) /mnt/data/xash/libloader.so
+
+.PHONY: depend clean list
+
+clean:
+	$(RM) $(OBJS) $(OBJS_CPP) libxash.so
+
+list:
+	@echo Sources:
+	@echo $(SRCS)
+	@echo C++ Sources:
+	@echo $(SRCS_CPP)
+	@echo Objects:
+	@echo $(OBJS) $(OBJS_CPP)
+
+depend: $(SRCS) $(SRCS_CPP)
+	touch Makefile.dep
+	makedepend -fMakefile.dep -- $(DEFINES) -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -- $^
+
+include Makefile.dep

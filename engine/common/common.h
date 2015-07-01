@@ -348,6 +348,7 @@ typedef struct host_parm_s
 
 	soundlist_t	*soundList;	// used for keep ambient sounds, when renderer or sound is restarted
 	int		numsounds;
+	qboolean serverdll;
 } host_parm_t;
 
 extern host_parm_t	host;

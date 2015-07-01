@@ -716,6 +716,31 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	GlobalMemoryStatus( &lpBuffer );
 #endif
 
+	CRT_Init(); // init some CRT functions
+
+	// some commands may turn engine into infinity loop,
+	// e.g. xash.exe +game xash -game xash
+	// so we clearing all cmd_args, but leave dbg states as well
+	Sys_ParseCommandLine( argc, argv );
+	
+	host.serverdll = Sys_CheckParm( "-serverdll" );
+#ifdef DLL_LOADER
+	if( host.serverdll )
+		Setup_LDT_Keeper(); // Must call before any thread creating
+#endif
+
+#ifdef XASH_SDL
+	if( SDL_Init( SDL_INIT_VIDEO |
+				SDL_INIT_TIMER |
+				SDL_INIT_AUDIO |
+				SDL_INIT_JOYSTICK |
+				SDL_INIT_EVENTS ))
+	{
+		MsgDev(D_ERROR, "SDL_Init: %s", SDL_GetError());
+		return 0;
+	}
+#endif
+
 #ifndef __ANDROID__
 #ifdef XASH_SDL
 	if( !(SDL_GetBasePath()) )
@@ -739,12 +764,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.state = HOST_INIT; // initialzation started
 	host.developer = host.old_developer = 0;
 
-	CRT_Init(); // init some CRT functions
 
-	// some commands may turn engine into infinity loop,
-	// e.g. xash.exe +game xash -game xash
-	// so we clearing all cmd_args, but leave dbg states as well
-	Sys_ParseCommandLine( argc, argv );
 #ifdef _WIN32
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
 #endif
@@ -765,6 +785,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 	host.type = HOST_NORMAL; // predict state
 	host.con_showalways = true;
+	
 #ifdef PANDORA
 	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
 #endif
@@ -899,17 +920,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	static double	oldtime, newtime;
 
 	pChangeGame = func;	// may be NULL
-#ifdef XASH_SDL
-	if( SDL_Init( SDL_INIT_VIDEO |
-				SDL_INIT_TIMER |
-				SDL_INIT_AUDIO |
-				SDL_INIT_JOYSTICK |
-				SDL_INIT_EVENTS ))
-	{
-		MsgDev(D_ERROR, "SDL_Init: %s", SDL_GetError());
-		return 0;
-	}
-#endif
 
 /*#ifndef _WIN32
 #ifndef __ANDROID__

@@ -984,6 +984,11 @@ void Mod_InitStudioAPI( void )
 
 	pBlendAPI = &gBlendAPI;
 
+#ifdef DLL_LOADER
+	if( host.serverdll )
+		pBlendIface = (STUDIOAPI)Loader_GetProcAddress( svgame.hInstance, "Server_GetBlendingInterface" );
+	else
+#endif
 	pBlendIface = (STUDIOAPI)Com_GetProcAddress( svgame.hInstance, "Server_GetBlendingInterface" );
 	if( pBlendIface && pBlendIface( SV_BLENDING_INTERFACE_VERSION, &pBlendAPI, &gStudioAPI, &studio_transform, &studio_bones ))
 	{
