@@ -372,11 +372,21 @@ static int pfnHullPointContents( struct hull_s *hull, int num, float *p )
 {
 	return PM_HullPointContents( hull, num, p );
 }
-//static pmtrace_t *pfnPlayerTrace( float *start, float *end, int traceFlags, int ignore_pe, pmtrace_t * trace );
-static pmtrace_t *pfnPlayerTrace(pmtrace_t *trace, float *start, float *end, int traceFlags, int ignore_pe)
+/*
+ * MVSC has special mangling for functions that return agregate values.
+ * 
+*/
+
+#ifdef DLL_LOADER
+static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t *trace, float *start, float *end, int traceFlags, int ignore_pe)
 {
 	*trace = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
 	return trace;
+}
+#endif
+static pmtrace_t pfnPlayerTrace(float *start, float *end, int traceFlags, int ignore_pe)
+{
+	return PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
 }
 
 static pmtrace_t *pfnTraceLine( float *start, float *end, int flags, int usehull, int ignore_pe )
@@ -491,6 +501,13 @@ static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, f
 		iparam1, iparam2,
 		bparam1, bparam2 );
 }
+#ifdef DLL_LOADER
+static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t* trace, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
+{
+	*trace = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, -1, pmFilter );
+	return trace;
+}
+#endif
 
 static pmtrace_t pfnPlayerTraceEx( float *start, float *end, int traceFlags, pfnIgnore pmFilter )
 {
@@ -597,6 +614,13 @@ void SV_InitClientMove( void )
 	svgame.pmove->PM_TestPlayerPositionEx = pfnTestPlayerPositionEx;
 	svgame.pmove->PM_TraceLineEx = pfnTraceLineEx;
 	svgame.pmove->PM_TraceSurface = pfnTraceSurface;
+#ifdef DLL_LOADER // w32-compatible ABI
+	if(host.serverdll)
+	{
+		svgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
+		svgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
+	}
+#endif
 
 	// initalize pmove
 	svgame.dllFuncs.pfnPM_Init( svgame.pmove );

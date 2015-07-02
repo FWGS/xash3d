@@ -3642,7 +3642,6 @@ static UINT WINAPI expGetWindowsDirectoryA(LPSTR s,UINT c)
     dbgprintf("GetWindowsDirectoryA(0x%x, %d) => %d\n", s, c, result);
     return result;
 }
-#ifdef CONFIG_QTX_CODECS
 static UINT WINAPI expGetCurrentDirectoryA(UINT c, LPSTR s)
 {
     char curdir[]="c:\\";
@@ -3687,7 +3686,6 @@ static int WINAPI expCreateDirectoryA(const char *pathname, void *sa)
 #endif
     return 1;
 }
-#endif
 static WIN_BOOL  WINAPI expDeleteFileA(LPCSTR s)
 {
     dbgprintf("DeleteFileA(0x%x='%s') => 0\n", s, s);
@@ -5317,11 +5315,9 @@ static const struct exports exp_kernel32[]=
     FF(CreateFileA,-1)
     FF(GetSystemDirectoryA,-1)
     FF(GetWindowsDirectoryA,-1)
-#ifdef CONFIG_QTX_CODECS
     FF(GetCurrentDirectoryA,-1)
     FF(SetCurrentDirectoryA,-1)
     FF(CreateDirectoryA,-1)
-#endif
     FF(GetShortPathNameA,-1)
     FF(GetFullPathNameA,-1)
     FF(SetErrorMode, -1)
