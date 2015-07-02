@@ -27,6 +27,7 @@ typedef struct {
 struct wine_modref;
 int PE_unloadImage(HMODULE hModule);
 FARPROC PE_FindExportedFunction(struct wine_modref *wm, LPCSTR funcName, WIN_BOOL snoop);
+const char *PE_FindFunctionName(struct wine_modref *wm, FARPROC funcaddr);
 WIN_BOOL PE_EnumResourceTypesA(HMODULE, ENUMRESTYPEPROCA, LONG);
 WIN_BOOL PE_EnumResourceTypesW(HMODULE, ENUMRESTYPEPROCW, LONG);
 WIN_BOOL PE_EnumResourceNamesA(HMODULE, LPCSTR, ENUMRESNAMEPROCA, LONG);

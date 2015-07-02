@@ -171,11 +171,6 @@ int SumBytes( SaveFileSectionsInfo_t *section )
 
 void SV_InitSaveRestore( void )
 {
-#ifdef DLL_LOADER
-	if( host.serverdll )
-		pfnSaveGameComment = Loader_GetProcAddress( svgame.hInstance, "SV_SaveGameComment" );
-	else
-#endif
 	pfnSaveGameComment = Com_GetProcAddress( svgame.hInstance, "SV_SaveGameComment" );
 }
 

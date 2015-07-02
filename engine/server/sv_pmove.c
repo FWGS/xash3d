@@ -615,7 +615,7 @@ void SV_InitClientMove( void )
 	svgame.pmove->PM_TraceLineEx = pfnTraceLineEx;
 	svgame.pmove->PM_TraceSurface = pfnTraceSurface;
 #ifdef DLL_LOADER // w32-compatible ABI
-	if(host.serverdll)
+	if( host.enabledll && Loader_GetDllHandle( svgame.hInstance ) )
 	{
 		svgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
 		svgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;

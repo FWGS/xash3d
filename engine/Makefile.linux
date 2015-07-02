@@ -12,7 +12,14 @@ TOPDIR = $(PWD)/..
 XASHXT ?= $(TOPDIR)/../xashXT
 HLSDK ?= $(TOPDIR)/../halflife/
 INCLUDES = -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui
-DEFINES = -DXASH_SDL -DDLL_LOADER
+DEFINES = -DXASH_SDL
+
+
+ifeq ($(XASH_DLL_LOADER),1)
+    DEFINES += -DDLL_LOADER
+    LIBS += libloader.so
+endif
+
 ifeq ($(XASH_VGUI),1)
 #    INCLUDES += -I$(HLSDK)/utils/vgui/include/
     DEFINES += -DXASH_VGUI
@@ -35,7 +42,10 @@ SRCS = $(wildcard server/*.c) $(wildcard client/*.c) $(wildcard client/vgui/*.c)
 OBJS = $(SRCS:.c=.o)
 
 libxash.so : $(OBJS) $(OBJS_CPP)
-	$(CC) $(LIBS) -o libxash.so $(LDFLAGS) -shared $(OBJS) $(OBJS_CPP) /mnt/data/xash/libloader.so
+ifeq ($(XASH_DLL_LOADER),1)
+	cp $(TOPDIR)/loader/libloader.so .
+endif
+	$(CC) $(LIBS) -o libxash.so $(LDFLAGS) -shared $(OBJS) $(OBJS_CPP)
 
 .PHONY: depend clean list
 

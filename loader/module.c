@@ -667,5 +667,3 @@ FARPROC MODULE_GetProcAddress(
     }
     return retproc;
 }
-
-

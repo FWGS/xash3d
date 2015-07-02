@@ -19,19 +19,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ldt_keeper.h"
+#include "wine/module.h"
+#include "wine/pe_image.h"
 #include "wine/winbase.h"
 
+// Wrapper functions (to convert __cdecl to __stdcall)
 void * Loader_LoadLibrary (const char *name)
 {
-	printf("Loader_LoadLibrary( \"%s\" )", name);
-    return LoadLibraryA(name);
+	printf("Loader_LoadLibrary( \"%s\" )\n", name);
+    return (void *)LoadLibraryA(name);
 }
 void * Loader_GetProcAddress (void *hndl, const char *name)
-{
-    return GetProcAddress(hndl, name);
+{ 
+	printf("Loader_GetProcAdderss( %p, \"%s\" )\n", hndl, name);
+	return (void *)GetProcAddress((HMODULE)hndl, name);
 }
 void Loader_FreeLibrary(void *hndl)
 {
-	FreeLibrary(hndl);
+	printf("Loader_FreeLibrary( %p )\n", hndl);
+	FreeLibrary((HMODULE)hndl);
+}
+
+void *Loader_GetDllHandle( void *hndl )
+{
+	printf("Loader_GetDllHandle( %p )\n", hndl);
+	return (void*)MODULE32_LookupHMODULE( (HMODULE)hndl );
+}
+
+const char * Loader_GetFuncName( void *hndl, void *func)
+{
+	WINE_MODREF *wm = MODULE32_LookupHMODULE( (HMODULE)hndl );
+	if(wm) return PE_FindFunctionName(wm, func);
+	return 0;
+}
+
+const char * Loader_GetFuncName_int( void *wm , void *func)
+{
+	const char *s = PE_FindFunctionName(wm, func);
+	printf("Loader_GetFuncName_int( %p ) => \"%s\"\n", func, s);
+	return s;
 }

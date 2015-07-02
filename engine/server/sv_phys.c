@@ -1957,11 +1957,6 @@ Initialize server external physics
 qboolean SV_InitPhysicsAPI( void )
 {
 	static PHYSICAPI	pPhysIface;
-	#ifdef DLL_LOADER
-	if(host.serverdll)
-		pPhysIface = (PHYSICAPI)Loader_GetProcAddress( svgame.hInstance, "Server_GetPhysicsInterface" );
-	else
-#endif
 	pPhysIface = (PHYSICAPI)Com_GetProcAddress( svgame.hInstance, "Server_GetPhysicsInterface" );
 	if( pPhysIface )
 	{

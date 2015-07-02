@@ -723,9 +723,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	// so we clearing all cmd_args, but leave dbg states as well
 	Sys_ParseCommandLine( argc, argv );
 	
-	host.serverdll = Sys_CheckParm( "-serverdll" );
+	host.enabledll = !Sys_CheckParm( "-nodll" );
 #ifdef DLL_LOADER
-	if( host.serverdll )
+	if( host.enabledll )
 		Setup_LDT_Keeper(); // Must call before any thread creating
 #endif
 
