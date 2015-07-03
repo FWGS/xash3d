@@ -30,10 +30,10 @@ for DLL to know too much about its environment.
 #define WIN32_LOADER
 #endif
 
-#ifdef CONFIG_QTX_CODECS
+
 #define PSEUDO_SCREEN_WIDTH	/*640*/800
 #define PSEUDO_SCREEN_HEIGHT	/*480*/600
-#endif
+
 
 #include "wine/winbase.h"
 #include "wine/winreg.h"
@@ -2725,10 +2725,9 @@ static void* WINAPI expGetWindowDC(int hdc)
     return 0;
 }
 
-#ifdef CONFIG_QTX_CODECS
 static int WINAPI expGetWindowRect(HWND win, RECT *r)
 {
-    dbgprintf("GetWindowRect(0x%x, 0x%x) => 1\n", win, r);
+    //dbgprintf("GetWindowRect(0x%x, 0x%x) => 1\n", win, r);
     /* (win == 0) => desktop */
     r->right = PSEUDO_SCREEN_WIDTH;
     r->left = 0;
@@ -2818,7 +2817,7 @@ static int WINAPI expIsWindowVisible(HWND win)
 
 static HWND WINAPI expGetActiveWindow(void)
 {
-    dbgprintf("GetActiveWindow() => 0\n");
+    //dbgprintf("GetActiveWindow() => 0\n");
     return (HWND)0;
 }
 
@@ -2895,7 +2894,6 @@ static int WINAPI expwaveOutGetNumDevs(void)
     dbgprintf("waveOutGetNumDevs() => 0\n");
     return 0;
 }
-#endif
 
 /*
  * Returns the number of milliseconds, modulo 2^32, since the start
@@ -3174,12 +3172,24 @@ static int WINAPI expSetCursor(void *cursor)
     dbgprintf("SetCursor(0x%x) => 0x%x\n", cursor, cursor);
     return (int)cursor;
 }
-static int WINAPI expGetCursorPos(void *cursor)
+
+POINT mousepos;
+static int WINAPI expGetCursorPos(LPPOINT cp)
 {
-    dbgprintf("GetCursorPos(0x%x) => 0x%x\n", cursor, cursor);
+    //dbgprintf("GetCursorPos(0x%x) => 0x%x\n", cursor, cursor);
+    cp->x=mousepos.x;
+    cp->y=mousepos.y;
     return 1;
 }
-#ifdef CONFIG_QTX_CODECS
+
+static WIN_BOOL WINAPI expSetCursorPos(int x, int y)
+{
+    //dbgprintf("SetCursorPos(0x%x) => 0x%x\n", cursor, cursor);
+    mousepos.x=x;
+    mousepos.y=y;
+    return 1;
+}
+
 static int show_cursor = 0;
 static int WINAPI expShowCursor(int show)
 {
@@ -3190,7 +3200,7 @@ static int WINAPI expShowCursor(int show)
 	show_cursor--;
     return show_cursor;
 }
-#endif
+
 static int WINAPI expRegisterWindowMessageA(char *message)
 {
     dbgprintf("RegisterWindowMessageA(%s)\n", message);
@@ -3278,6 +3288,17 @@ static int WINAPI expGetSystemPaletteEntries(int hdc, int iStartIndex, int nEntr
  long DaylightBias;
  } TIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
  */
+
+static WIN_BOOL WINAPI expSystemParametersInfoA(
+UINT  uiAction,
+UINT  uiParam,
+PVOID pvParam,
+UINT  fWinIni
+)
+{
+	return FALSE;
+}
+
 
 static int WINAPI expGetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 {
@@ -4041,7 +4062,7 @@ static void* expnew(int size)
     assert(size >= 0);
 
     result=my_mreq(size,0);
-    dbgprintf("new(%d) => %p\n", size, result);
+    //dbgprintf("new(%d) => %p\n", size, result);
     if (result==0)
 	printf("WARNING: new() failed\n");
     return result;
@@ -4049,7 +4070,7 @@ static void* expnew(int size)
 }
 static int expdelete(void* memory)
 {
-    dbgprintf("delete(%p)\n", memory);
+    //dbgprintf("delete(%p)\n", memory);
     my_release(memory);
     return 0;
 }
@@ -4232,11 +4253,24 @@ static int expsscanf(const char* str, const char* format, ...)
 static void* expfopen(const char* path, const char* mode)
 {
     printf("fopen: \"%s\"  mode:%s\n", path, mode);
-    if (strcmp(mode, "r") == 0 || strcmp(mode, "rb") == 0)
-        return NULL;
-    //return fopen(path, mode);
-    return fdopen(0, mode); // everything on screen
+    return fopen(path, mode);
 }
+
+static int expfclose(void *file)
+{
+    return fclose(file);
+}
+
+static int expfwrite(void *ptr, int size, int n,  void *file)
+{
+
+    return fwrite(ptr, size, n, file);
+}
+static int exp_mkdir(char *path, int mode)
+{
+    return mkdir(path, 0666);
+}
+
 static int expfprintf(void* stream, const char* format, ...)
 {
     va_list args;
@@ -4347,19 +4381,19 @@ static int expisalnum(int c)
 static int expisspace(int c)
 {
     int result= (int) isspace(c);
-    dbgprintf("isspace(0x%x='%c' => %d\n", c, c, result);
+    //dbgprintf("isspace(0x%x='%c' => %d\n", c, c, result);
     return result;
 }
 static int expisalpha(int c)
 {
     int result= (int) isalpha(c);
-    dbgprintf("isalpha(0x%x='%c' => %d\n", c, c, result);
+    //dbgprintf("isalpha(0x%x='%c' => %d\n", c, c, result);
     return result;
 }
 static int expisdigit(int c)
 {
     int result= (int) isdigit(c);
-    dbgprintf("isdigit(0x%x='%c' => %d\n", c, c, result);
+    //dbgprintf("isdigit(0x%x='%c' => %d\n", c, c, result);
     return result;
 }
 static void* expmemmove(void* dest, void* src, int n)
@@ -4418,7 +4452,65 @@ static double expcos(double x)
     /*printf("Cos %f => %f  0x%Lx\n", x, cos(x), *((int64_t*)&x));*/
     return cos(x);
 }
+static double expsin(double x)
+{
+    return sin(x);
+}
 
+static double expsqrt(double x)
+{
+    return sqrt(x);
+}
+static double expfabs(double x)
+{
+    return fabs(x);
+}
+
+static double expacos(double x)
+{
+    return acos(x);
+}
+
+static double expatan2(double x, double y)
+{
+    return atan2(x, y);
+}
+
+static double exptan(double x)
+{
+    return tan(x);
+}
+
+static double expatan(double x)
+{
+    return atan(x);
+}
+
+static double expexp(double x)
+{
+    return exp(x);
+}
+
+static double expfmod(double x, double y)
+{
+    return atan2(x, y);
+}
+
+
+static int expatoi(const char *s)
+{
+    return atoi(s);
+}
+
+static double expatof(const char *s)
+{
+    return atof(s);
+}
+
+static char exptoupper(char c)
+{
+    return toupper(c);
+}
 #else
 
 static void explog10(void)
@@ -4448,7 +4540,7 @@ static void expcos(void)
 // of debuging fixing & testing - it's almost unimaginable - kabi
 
 // _ftol - operated on the float value which is already on the FPU stack
-
+/*
 static void exp_ftol(void)
 {
     __asm__ volatile
@@ -4467,7 +4559,10 @@ static void exp_ftol(void)
 	 //      knows that ebp=esp
 	 "movl %ebp, %esp       \n\t"
 	);
-}
+}*/
+
+
+
 
 #define FPU_DOUBLES(var1,var2) double var1,var2; \
   __asm__ volatile( "fstpl %0;fwait" : "=m" (var2) : ); \
@@ -4526,6 +4621,11 @@ static char *exp_mbsupr(char *str)
 static int exp_stricmp(const char* s1, const char* s2)
 {
     return strcasecmp(s1, s2);
+}
+
+static int exp_strnicmp(const char* s1, const char* s2, int n)
+{
+    return strncasecmp(s1, s2, n);
 }
 
 static uint64_t exp_time64(void)
@@ -4966,6 +5066,12 @@ static double expfloor(double x)
 #define FPU_DOUBLE(var) double var; \
   __asm__ volatile( "fstpl %0;fwait" : "=m" (var) : )
 
+LONG64 exp_ftol(void)
+{
+  FPU_DOUBLE(x);
+ return (LONG64)x;
+}
+
 static double exp_CIcos(void)
 {
     FPU_DOUBLE(x);
@@ -4980,6 +5086,14 @@ static double exp_CIsin(void)
 
     dbgprintf("_CIsin(%f)\n", x);
     return sin(x);
+}
+
+static double exp_CImod(void)
+{
+    FPU_DOUBLE(x);
+
+    dbgprintf("_CImod(%f)\n", x);
+    return mod(x);
 }
 
 static double exp_CIsqrt(void)
@@ -5283,6 +5397,7 @@ static const struct exports exp_msvcrt[]={
     FF(strncmp, -1)
     FF(strcat, -1)
     FF(_stricmp,-1)
+    FF(_strnicmp,-1)
     FF(_strdup,-1)
     FF(_setjmp3,-1)
     FF(isalnum, -1)
@@ -5299,16 +5414,32 @@ static const struct exports exp_msvcrt[]={
     FF(log10, -1)
     FF(pow, -1)
     FF(cos, -1)
+    FF(fabs, -1)
+    FF(sqrt, -1)
+    FF(sin, -1)
+    FF(atan2, -1)
+    FF(acos, -1)
+    FF(toupper, -1)
+    FF(atoi, -1)
+    FF(atof, -1)
+    FF(tan, -1)
+    FF(exp, -1)
+    FF(atan, -1)
+    FF(fmod, -1)
     FF(_ftol,-1)
     FF(_CIpow,-1)
     FF(_CIcos,-1)
     FF(_CIsin,-1)
     FF(_CIsqrt,-1)
+    FF(_CImod,-1)
     FF(ldexp,-1)
     FF(frexp,-1)
     FF(sprintf,-1)
     FF(sscanf,-1)
     FF(fopen,-1)
+    FF(fclose,-1)
+    FF(fwrite,-1)
+    FF(_mkdir,-1)
     FF(fprintf,-1)
     FF(printf,-1)
     FF(getenv,-1)
@@ -5323,6 +5454,10 @@ static const struct exports exp_msvcrt[]={
     {"clock",-1,(void*)&clock},
     {"memchr",-1,(void*)&memchr},
     {"vfprintf",-1,(void*)&vfprintf},
+    {"_vsnprintf",-1,(void*)&vsnprintf},
+    {"_vsprintf",-1,(void*)&vsprintf},
+    {"vsprintf",-1,(void*)&vsprintf},
+    {"strtok",-1,(void*)&strtok},
 //    {"realloc",-1,(void*)&realloc},
     FF(realloc,-1)
     {"puts",-1,(void*)&puts}
@@ -5354,9 +5489,8 @@ static const struct exports exp_user32[]={
     FF(LoadCursorA,-1)
     FF(SetCursor,-1)
     FF(GetCursorPos,-1)
-#ifdef CONFIG_QTX_CODECS
+    FF(SetCursorPos,-1)
     FF(ShowCursor,-1)
-#endif
     FF(RegisterWindowMessageA,-1)
     FF(GetSystemMetrics,-1)
     FF(GetSysColor,-1)
@@ -5366,7 +5500,6 @@ static const struct exports exp_user32[]={
     FF(MessageBoxA, -1)
     FF(RegisterClassA, -1)
     FF(UnregisterClassA, -1)
-#ifdef CONFIG_QTX_CODECS
     FF(GetWindowRect, -1)
     FF(MonitorFromWindow, -1)
     FF(MonitorFromRect, -1)
@@ -5374,8 +5507,8 @@ static const struct exports exp_user32[]={
     FF(EnumDisplayMonitors, -1)
     FF(GetMonitorInfoA, -1)
     FF(EnumDisplayDevicesA, -1)
-    FF(GetClientRect, -1)
-    FF(ClientToScreen, -1)
+//    FF(GetClientRect, -1)
+//    FF(ClientToScreen, -1)
     FF(IsWindowVisible, -1)
     FF(GetActiveWindow, -1)
     FF(GetClassNameA, -1)
@@ -5384,12 +5517,12 @@ static const struct exports exp_user32[]={
     FF(EnumWindows, -1)
     FF(GetWindowThreadProcessId, -1)
     FF(CreateWindowExA, -1)
-#endif
     FF(MessageBeep, -1)
     FF(DialogBoxParamA, -1)
     FF(RegisterClipboardFormatA, -1)
     FF(CharNextA, -1)
     FF(EnumDisplaySettingsA, -1)
+    FF(SystemParametersInfoA, -1)
 };
 static const struct exports exp_advapi32[]={
     FF(RegCloseKey, -1)

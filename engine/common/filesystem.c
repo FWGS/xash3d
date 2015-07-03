@@ -1401,6 +1401,13 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
 #endif
 		}
+		else if( !Q_stricmp( token, "clientlib" ))
+		{
+			// already set up for __ANDROID__. Just ignore a path in game config
+#if !defined(__ANDROID__) && !defined(PANDORA)
+			pfile = COM_ParseFile( pfile, GameInfo->client_lib );
+#endif
+		}
 		else if( !Q_stricmp( token, "dllpath" ))
 		{
 #ifndef __ANDROID__

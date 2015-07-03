@@ -36,6 +36,7 @@ RECT	window_rect, real_rect;
 #endif
 uint	in_mouse_wheel;
 int	wnd_caption;
+convar_t *fullscreen = 0;
 
 static byte scan_to_key[128] = 
 { 
@@ -117,6 +118,7 @@ void IN_StartupMouse( void )
 
 	in_mouse_buttons = 8;
 	in_mouseinitialized = true;
+	fullscreen = Cvar_FindVar( "fullscreen" );
 
 #ifdef XASH_SDL
 	m_valvehack = Cvar_Get("m_valvehack", "0", CVAR_ARCHIVE, "Enable mouse hack for valve client.so");
@@ -220,7 +222,7 @@ void IN_ActivateMouse( qboolean force )
 	if( CL_Active() && host.mouse_visible && !force )
 		return;	// VGUI controls
 
-	if( cls.key_dest == key_menu && !Cvar_VariableInteger( "fullscreen" ))
+	if( cls.key_dest == key_menu && fullscreen && !fullscreen->integer)
 	{
 		// check for mouse leave-entering
 		if( !in_mouse_suspended && !UI_MouseInRect( ))

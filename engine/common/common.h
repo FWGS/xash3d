@@ -172,7 +172,7 @@ typedef struct gameinfo_s
 	// .dll pathes
 	char		dll_path[64];	// e.g. "bin" or "cl_dlls"
 	char		game_dll[64];	// custom path for game.dll
-
+	char		client_lib[64];	// custom name of client library
 	// .ico path
 	char		iconpath[64];	// "game.ico" by default
 
