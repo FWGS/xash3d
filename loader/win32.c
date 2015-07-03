@@ -3667,23 +3667,8 @@ static int WINAPI expSetCurrentDirectoryA(const char *pathname)
 static int WINAPI expCreateDirectoryA(const char *pathname, void *sa)
 {
     dbgprintf("CreateDirectory(0x%x = %s, 0x%x) => 1\n",
-	pathname, pathname, sa);
-#if 0
-    p = strrchr(pathname, '\\')+1;
-    strcpy(&buf[0], p); /* should be strncpy */
-    if (!strlen(p))
-    {
-	buf[0] = '.';
-	buf[1] = 0;
-    }
-#if 0
-    if (strrchr(pathname, '\\'))
-	mkdir(strcat(strrchr(pathname, '\\')+1, '/'), 666);
-    else
-	mkdir(pathname, 666);
-#endif
-    mkdir(&buf);
-#endif
+	pathname, pathname, sa); // HLSDK seems to generate correct pathnames
+    mkdir(pathname, 0777);
     return 1;
 }
 static WIN_BOOL  WINAPI expDeleteFileA(LPCSTR s)
@@ -3722,96 +3707,15 @@ static HANDLE WINAPI expCreateFileA(LPCSTR cs1,DWORD i1,DWORD i2,
 {
     dbgprintf("CreateFileA(0x%x='%s', %d, %d, 0x%x, %d, %d, 0x%x)\n", cs1, cs1, i1,
 	      i2, p1, i3, i4, i5);
-    if((!cs1) || (strlen(cs1)<2))return -1;
-#if 0
-#ifdef CONFIG_QTX_CODECS
-    if(strstr(cs1, "QuickTime.qts"))
-    {
-	int result;
-	char* tmp = malloc(strlen(codec_path) + 50);
-	strcpy(tmp, codec_path);
-	strcat(tmp, "/");
-	strcat(tmp, "QuickTime.qts");
-	result=open(tmp, O_RDONLY);
-	free(tmp);
-	return result;
-    }
-    if(strstr(cs1, ".qtx"))
-    {
-	int result;
-	char* tmp = malloc(strlen(codec_path) + 250);
-	char* x=strrchr(cs1,'\\');
-	sprintf(tmp, "%s/%s", codec_path, x ? (x + 1) : cs1);
-//	printf("### Open: %s -> %s\n",cs1,tmp);
-	result=open(tmp, O_RDONLY);
-	free(tmp);
-	return result;
-    }
-#endif
-
-    if(strncmp(cs1, "AP", 2) == 0)
-    {
-	int result;
-	char* tmp = malloc(strlen(codec_path) + 50);
-	strcpy(tmp, codec_path);
-	strcat(tmp, "/");
-	strcat(tmp, "APmpg4v1.apl");
-	result=open(tmp, O_RDONLY);
-	free(tmp);
-	return result;
-    }
-    if (strstr(cs1, "vp3") || strstr(cs1, ".fpf") || strstr(cs1, ".col"))
-    {
-	int r;
-	int flg = 0;
-	char* tmp=malloc(20 + strlen(cs1));
-	strcpy(tmp, "/tmp/");
-	strcat(tmp, cs1);
-	r = 4;
-	while (tmp[r])
-	{
-	    if (tmp[r] == ':' || tmp[r] == '\\')
-		tmp[r] = '_';
-	    r++;
-	}
-	if (GENERIC_READ & i1)
-	    flg |= O_RDONLY;
-	else if (GENERIC_WRITE & i1)
-	{
-	    flg |= O_WRONLY | O_CREAT;
-	    printf("Warning: openning filename %s  %d (flags; 0x%x) for write\n", tmp, r, flg);
-	}
-	r=open(tmp, flg, S_IRWXU);
-	free(tmp);
-	return r;
-    }
-
-    // Needed by wnvplay1.dll
-    if (strstr(cs1, "WINNOV.bmp"))
-    {
-	int r;
-	r=open("/dev/null", O_RDONLY);
-	return r;
-    }
-
-#if 0
-    /* we need this for some virtualdub filters */
-    {
-	int r;
-	int flg = 0;
+	int flg = O_CREAT;
 	if (GENERIC_READ & i1)
 	    flg |= O_RDONLY;
 	else if (GENERIC_WRITE & i1)
 	{
 	    flg |= O_WRONLY;
-	    printf("Warning: openning filename %s  %d (flags; 0x%x) for write\n", cs1, r, flg);
+	    printf("Warning: openning filename %s (flags; 0x%x) for write\n", cs1, flg);
 	}
-	r=open(cs1, flg);
-	return r;
-    }
-#endif
-#endif
-    return atoi(cs1+2);
+	return open(cs1, flg, S_IRWXU);;
 }
 static UINT WINAPI expGetSystemDirectoryA(
   char* lpBuffer,  // address of buffer for system directory
