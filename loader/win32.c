@@ -1235,8 +1235,8 @@ static void* WINAPI expHeapAlloc(HANDLE heap, int flags, int size)
     //if (size == 22276) trapbug();
     z=my_mreq((size + 0xfff) & 0x7ffff000, (flags & HEAP_ZERO_MEMORY));
     if(z==0)
-	printf("HeapAlloc failure\n");
-    dbgprintf("HeapAlloc(heap 0x%x, flags 0x%x, size %d) => 0x%x\n", heap, flags, size, z);
+		printf("HeapAlloc failure\n");
+    //dbgprintf("HeapAlloc(heap 0x%x, flags 0x%x, size %d) => 0x%x\n", heap, flags, size, z);
     heapfreehack = 0; // reset
     return z;
 }
@@ -1249,7 +1249,7 @@ static long WINAPI expHeapDestroy(void* heap)
 
 static long WINAPI expHeapFree(HANDLE heap, DWORD dwFlags, LPVOID lpMem)
 {
-    dbgprintf("HeapFree(0x%x, 0x%x, pointer 0x%x) => 1\n", heap, dwFlags, lpMem);
+    //dbgprintf("HeapFree(0x%x, 0x%x, pointer 0x%x) => 1\n", heap, dwFlags, lpMem);
     if (heapfreehack != lpMem && lpMem != (void*)0xffffffff
 	&& lpMem != (void*)0xbdbdbdbd)
 	// 0xbdbdbdbd is for i263_drv.drv && libefence
@@ -2911,14 +2911,33 @@ static int WINAPI expGetTickCount(void)
 	tcstart = 0;
         tc = 0;
     }
-    dbgprintf("GetTickCount() => %d\n", tc);
+    //dbgprintf("GetTickCount() => %d\n", tc);
     return tc;
 }
-
+/*
 static int WINAPI expCreateFontA(void)
 {
     dbgprintf("CreateFontA() => 0x0\n");
     return 1;
+}*/
+
+static HFONT WINAPI expCreateFontA(int     nHeight,
+	int     nWidth,
+	int     nEscapement,
+	int     nOrientation,
+	int     fnWeight,
+	DWORD   fdwItalic,
+	DWORD   fdwUnderline,
+	DWORD   fdwStrikeOut,
+	DWORD   fdwCharSet,
+	DWORD   fdwOutputPrecision,
+	DWORD   fdwClipPrecision,
+	DWORD   fdwQuality,
+	DWORD   fdwPitchAndFamily,
+	LPCTSTR lpszFace
+)
+{
+	return NULL;
 }
 
 /* tried to get pvmjpg work in a different way - no success */
@@ -3299,6 +3318,16 @@ UINT  fWinIni
 	return FALSE;
 }
 
+static int WINAPI expPeekMessageA(
+  void *lpMsg,
+  HWND  hWnd,
+  UINT  wMsgFilterMin,
+  UINT  wMsgFilterMax,
+  UINT  wRemoveMsg
+)
+{
+	return 0;
+}
 
 static int WINAPI expGetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 {
@@ -4705,6 +4734,11 @@ static MMRESULT WINAPI exptimeBeginPeriod(UINT wPeriod)
     return 0;
 }
 
+static int WINAPI expjoyGetNumDevs ()
+{
+	return 0;
+}
+
 #ifdef CONFIG_QTX_CODECS
 static MMRESULT WINAPI exptimeEndPeriod(UINT wPeriod)
 {
@@ -4915,7 +4949,6 @@ static int WINAPI expUnregisterClassA(const char *className, HINSTANCE hInstance
     return 0;
 }
 
-#ifdef CONFIG_QTX_CODECS
 /* should be fixed bcs it's not fully strlen equivalent */
 static int expSysStringByteLen(void *str)
 {
@@ -4964,6 +4997,42 @@ static int expCreatePalette(void)
 }
 #endif
 
+
+
+static HGDIOBJ WINAPI expSelectObject(
+      HDC hdc,        
+      HGDIOBJ hgdiobj
+    )
+{
+	dbgprintf("SelectObject(%p, %p) => 0\n", hdc, hgdiobj);
+	return 0;
+}
+
+static int WINAPI expSetTextAlign(HDC  hdc,  int fMode)
+{
+	return 0;
+}
+static char DIBbitmap[4096];
+
+static void*  WINAPI expCreateDIBSection(HDC        hdc, const BITMAPINFO *pbmi,
+  UINT       iUsage, VOID       **ppvBits, HANDLE     hSection,
+  DWORD      dwOffset)
+{
+	return (void*)DIBbitmap;
+}
+
+static WIN_BOOL WINAPI expGetTextMetricsA(HDC          hdc, void *lptm)
+{
+	return FALSE;
+}
+
+static WIN_BOOL WINAPI expGetCharABCWidthsA(HDC   hdc, int  uFirstChar,
+  int  uLastChar, WIN_BOOL a
+)
+{
+	return FALSE;
+}
+
 static int WINAPI expGetClientRect(HWND win, RECT *r)
 {
     dbgprintf("GetClientRect(0x%x, 0x%x) => 1\n", win, r);
@@ -4988,7 +5057,6 @@ static int WINAPI expClientToScreen(HWND win, POINT *p)
     p->y = 0;
     return 1;
 }
-#endif
 
 /* for m3jpeg */
 static int WINAPI expSetThreadIdealProcessor(HANDLE thread, int proc)
@@ -5470,6 +5538,7 @@ static const struct exports exp_winmm[]={
     FF(OpenDriver, -1)
     FF(timeGetDevCaps, -1)
     FF(timeBeginPeriod, -1)
+    FF(joyGetNumDevs, -1)
 #ifdef CONFIG_QTX_CODECS
     FF(timeEndPeriod, -1)
     FF(waveOutGetNumDevs, -1)
@@ -5523,6 +5592,7 @@ static const struct exports exp_user32[]={
     FF(CharNextA, -1)
     FF(EnumDisplaySettingsA, -1)
     FF(SystemParametersInfoA, -1)
+    FF(PeekMessageA, -1)
 };
 static const struct exports exp_advapi32[]={
     FF(RegCloseKey, -1)
@@ -5543,11 +5613,14 @@ static const struct exports exp_gdi32[]={
     FF(DeleteObject, -1)
     FF(GetDeviceCaps, -1)
     FF(GetSystemPaletteEntries, -1)
-#ifdef CONFIG_QTX_CODECS
     FF(CreatePalette, -1)
     FF(GetObjectA, -1)
+    FF(GetCharABCWidthsA, -1)
+    FF(SetTextAlign, -1)
+    FF(GetTextMetricsA, -1)
+    FF(CreateDIBSection, -1)
+    FF(SelectObject, -1)
     FF(CreateRectRgn, -1)
-#endif
 };
 static const struct exports exp_version[]={
     FF(GetFileVersionInfoSizeA, -1)
@@ -5732,9 +5805,14 @@ static WIN_BOOL WINAPI ext_stubs(void)
 static int pos=0;
 static char *extcode = NULL;
 
+static void mystub()
+{
+	printf("THIS IS STUB!!!\n");
+}
+
 static void* add_stub(void)
 {
-    int i;
+    /*int i;
     int found = 0;
     // generated code in runtime!
     char* answ;
@@ -5764,7 +5842,8 @@ static void* add_stub(void)
     }
     pos++;
     printf("Generated stub %p\n", answ);
-    return (void*)answ;
+    return (void*)answ;*/
+    return (void*)mystub;
 }
 
 void* LookupExternal(const char* library, int ordinal)
@@ -5861,7 +5940,7 @@ void* LookupExternalByName(const char* library, const char* name)
 
 #ifndef LOADLIB_TRY_NATIVE
   /* hack for vss h264 */
-  if (!strcmp(library,"vssh264core.dll") || !strcmp(library,"3ivx.dll"))
+  //if (!strcmp(library,"vssh264core.dll") || !strcmp(library,"3ivx.dll"))
 #endif
     /* ok, this is a hack, and a big memory leak. should be fixed. - alex */
     {

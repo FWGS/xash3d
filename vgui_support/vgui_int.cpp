@@ -13,10 +13,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #ifdef XASH_VGUI
-#include "common.h"
-#include "client.h"
-#include "const.h"
-#include "vgui_api.h"
 #include "vgui_main.h"
 
 vguiapi_t *g_api;
@@ -39,12 +35,16 @@ App* CEnginePanel::getApp( void )
 
 void CEngineApp :: setCursorPos( int x, int y )
 {
+#ifdef XASH_SDL
 	//SDL_WarpMouseInWindow(host.hWnd, x, y);
+#endif
 }
 
 void CEngineApp :: getCursorPos( int &x,int &y )
 {
+#ifdef XASH_SDL
 	SDL_GetMouseState(&x, &y);
+#endif
 }
 
 void VGui_RunFrame( void )
@@ -144,7 +144,12 @@ void *VGui_GetPanel( void )
 	return (void *)rootpanel;
 }
 
+
+#ifdef _WIN32
+extern "C" void _declspec( dllexport ) F(vguiapi_t * api)
+#else
 extern "C" void F(vguiapi_t * api)
+#endif
 {
 	g_api = api;
 	g_api->Startup = VGui_Startup;
@@ -155,4 +160,20 @@ extern "C" void F(vguiapi_t * api)
 	g_api->SurfaceWndProc = VGUI_SurfaceWndProc;
 	g_api->Paint = VGui_Paint;
 }
+
+#ifdef _WIN32
+#include "windows.h"
+// Required DLL entry point
+qboolean WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+if (fdwReason == DLL_PROCESS_ATTACH)
+{
+}
+else if (fdwReason == DLL_PROCESS_DETACH)
+{
+}
+return TRUE;
+}
+#endif
+
 #endif

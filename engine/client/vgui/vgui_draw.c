@@ -115,11 +115,7 @@ void VGui_Startup( int width, int height )
 	if(!vgui.initialized)
 	{
 		void (*F) (vguiapi_t *);
-#ifdef _WIN32
-		lib = Com_LoadLibrary("vgui_support.dll", false);
-#else
-		lib = Com_LoadLibrary("libvgui_support.so", false);
-#endif
+		lib = Com_LoadLibrary(host.vguiloader, false);
 		if(!lib)
 			MsgDev(D_ERROR, "Failed to load vgui_support library!\n");
 		else

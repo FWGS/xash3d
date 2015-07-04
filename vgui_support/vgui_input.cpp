@@ -15,17 +15,17 @@ GNU General Public License for more details.
 #ifdef XASH_VGUI
 #define OEMRESOURCE		// for OCR_* cursor junk
 
-#include "common.h"
-#include "client.h"
-#include "vgui_api.h"
+
 #include "vgui_main.h"
 #include "input.h"
 
 static KeyCode s_pVirtualKeyTrans[256];
+#ifdef XASH_SDL
 static SDL_Cursor* s_pDefaultCursor[20];
-
+#endif
 void VGUI_InitCursors( void )
 {
+#ifdef XASH_SDL
 	// load up all default cursors
 	s_pDefaultCursor[Cursor::dc_none]     = NULL;
 	s_pDefaultCursor[Cursor::dc_arrow]    = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_ARROW);
@@ -45,6 +45,7 @@ void VGUI_InitCursors( void )
 	//host.mouse_visible = true;
 	g_api->ShowCursor();
 	SDL_SetCursor(s_pDefaultCursor[Cursor::dc_arrow]);
+#endif
 }
 
 void VGUI_CursorSelect( Cursor *cursor )
@@ -74,7 +75,9 @@ void VGUI_CursorSelect( Cursor *cursor )
 	case Cursor::dc_sizeall:
 	case Cursor::dc_no:
 	case Cursor::dc_hand:
+#ifdef XASH_SDL
 		SDL_SetCursor(s_pDefaultCursor[cursor->getDefaultCursor()]);
+#endif
 		break;
 	default:
 		//VGUI_Hide_Cursor
@@ -133,6 +136,7 @@ void VGUI_InitKeyTranslationTable( void )
 	s_pVirtualKeyTrans['X'] = s_pVirtualKeyTrans['x'] = KEY_X;
 	s_pVirtualKeyTrans['Y'] = s_pVirtualKeyTrans['y'] = KEY_Y;
 	s_pVirtualKeyTrans['Z'] = s_pVirtualKeyTrans['z'] = KEY_Z;
+#ifdef XASH_SDL
 	s_pVirtualKeyTrans[SDLK_KP_0] = KEY_PAD_0;
 	s_pVirtualKeyTrans[SDLK_KP_1] = KEY_PAD_1;
 	s_pVirtualKeyTrans[SDLK_KP_2] = KEY_PAD_2;
@@ -200,6 +204,7 @@ void VGUI_InitKeyTranslationTable( void )
 	s_pVirtualKeyTrans[SDLK_F10] = KEY_F10;
 	s_pVirtualKeyTrans[SDLK_F11] = KEY_F11;
 	s_pVirtualKeyTrans[SDLK_F12] = KEY_F12;
+#endif
 }
 
 KeyCode VGUI_MapKey( int keyCode )
@@ -217,8 +222,9 @@ KeyCode VGUI_MapKey( int keyCode )
 	}
 }
 
-MouseCode VGUI_MapMouseButton( Uint8 button)
+MouseCode VGUI_MapMouseButton( byte button)
 {
+#ifdef XASH_SDL
 	switch(button)
 	{
 	case SDL_BUTTON_LEFT:
@@ -228,10 +234,13 @@ MouseCode VGUI_MapMouseButton( Uint8 button)
 	case SDL_BUTTON_RIGHT:
 		return MOUSE_RIGHT;
 	}
-
+#else
+	return (vgui::MouseCode)button;
+#endif
 	return MOUSE_LAST; // What is MOUSE_LAST? Is it really used?
 }
 
+#ifdef XASH_SDL
 long VGUI_SurfaceWndProc( SDL_Event *event )
 {
 	SurfaceBase *surface = NULL;
@@ -278,4 +287,10 @@ long VGUI_SurfaceWndProc( SDL_Event *event )
 	}
 	return 1;
 }
+#else
+long VGUI_SurfaceWndProc( void *event )
+{
+    return 1;
+}
+#endif
 #endif

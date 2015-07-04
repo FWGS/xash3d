@@ -782,6 +782,15 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		}
 		else host.developer++; // -dev == 1, -dev -console == 2
 	}
+	if( !Sys_CheckParm( "-vguiloader" ) || !Sys_GetParmFromCmdLine( "-vguiloader", host.vguiloader ) )
+	{
+#ifdef _WIN32
+		Q_strcpy(host.vguiloader, "vgui_support.dll");
+#else
+		Q_strcpy(host.vguiloader, "libvgui_support.so");
+#endif
+	}
+
 
 	host.type = HOST_NORMAL; // predict state
 	host.con_showalways = true;

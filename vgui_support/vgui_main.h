@@ -16,6 +16,10 @@ GNU General Public License for more details.
 #define VGUI_MAIN_H
 #ifdef XASH_VGUI
 
+#define Assert(x)
+
+#include "system.h"
+#include "vgui_api.h"
 #include "utlvector.h"
 #include "utlrbtree.h"
 
@@ -129,7 +133,13 @@ public:
 	virtual bool isWithin( int x, int y ) { return true; }
 	virtual bool hasFocus( void );
 	// now it's not abstract class, yay
-	virtual void GetMousePos(int &x, int &y) { SDL_GetMouseState(&x, &y); }
+	virtual void GetMousePos(int &x, int &y) { 
+#ifdef XASH_SDL
+		//int x1,y1;
+		SDL_GetMouseState(&x, &y);
+		//x=x1, y=y1;
+#endif
+		}
 protected:
 	virtual int createNewTextureID( void );
 	virtual void drawSetColor( int r, int g, int b, int a );

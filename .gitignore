@@ -54,3 +54,12 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 
+# makedepend
+Makefile.dep
+*.bak
+
+# msvc
+*.obj
+*.dll
+*.exp
+*.lib

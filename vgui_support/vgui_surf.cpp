@@ -13,12 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #ifdef XASH_VGUI
-#include "common.h"
-#include "client.h"
-#include "vgui_api.h"
+#include <ctype.h>
 #include "vgui_main.h"
 
-//static FontCache g_FontCache;
+#define ColorIndex( c )((( c ) - '0' ) & 7 )
 
 CEngineSurface :: CEngineSurface( Panel *embeddedPanel ):SurfaceBase( embeddedPanel )
 {

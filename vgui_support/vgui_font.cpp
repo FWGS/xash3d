@@ -13,8 +13,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #ifdef XASH_VGUI
-#include "common.h"
-#include "vgui_api.h"
 #include "vgui_main.h"
 
 int FontCache::s_pFontPageSize[FONT_PAGE_SIZE_COUNT] = { 16, 32, 64, 128 };
