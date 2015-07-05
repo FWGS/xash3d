@@ -40,8 +40,6 @@ if(XASH_SDL)
 	include_directories(${SDL2_INCLUDE_DIRS})
 
 	add_definitions(-DXASH_SDL)
-
-	target_link_libraries(${XASH_LAUNCHER_EXECUTABLE} ${SDL2_LIBRARIES})
 endif()
 
 set (XASH_LAUNCHER_EXECUTABLE xash3d)
@@ -49,5 +47,10 @@ set (XASH_LAUNCHER_EXECUTABLE xash3d)
 file (GLOB XASH_LAUNCHER_SOURCES *.cpp)
 
 add_executable (${XASH_LAUNCHER_EXECUTABLE} ${XASH_LAUNCHER_SOURCES})
+
+if(XASH_SDL)
+	target_link_libraries(${XASH_LAUNCHER_EXECUTABLE} ${SDL2_LIBRARIES})
+endif()
+
 target_link_libraries(${XASH_LAUNCHER_EXECUTABLE}
 	${CMAKE_DL_LIBS})
