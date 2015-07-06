@@ -94,7 +94,7 @@ static _inline void Huff_PrepareTree( tree_t tree )
 	
 	// create first node
 	node = &tree[263];
-	VALUE( tree[0] )++;
+	VALUE( tree[0]++ );
 
 	node[7] = NODE_NONE;
 	tree[2] = node;
@@ -116,7 +116,7 @@ static _inline void **Huff_GetNode( void **tree )
 	node = tree[262];
 	if( !node )
 	{
-		value = VALUE( tree[1] )++;
+		value = VALUE( tree[1]++ );
 		node = &tree[value + 6407];
 		return node;
 	}
@@ -250,7 +250,7 @@ static void Huff_IncrementFreq_r( void **tree1, void **tree2 )
 	}
 
 	
-	VALUE( tree2[6] )++;
+	VALUE( tree2[6]++ );
 	a = tree2[3];
 	if( a && a[6] == tree2[6] )
 	{
@@ -296,10 +296,10 @@ static void Huff_AddReference( void **tree, int ch )
 		return; // already added
 	}
 
-	value = VALUE( tree[0] )++;
+	value = VALUE( tree[0]++ );
 	b = &tree[value * 8 + 263];
 
-	value = VALUE( tree[0] )++;
+	value = VALUE( tree[0]++ );
 	a = &tree[value * 8 + 263];
 
 	a[7] = NODE_NEXT;
