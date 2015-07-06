@@ -327,8 +327,13 @@ void IN_MouseEvent( int mstate )
 #ifdef XASH_SDL
 		static qboolean ignore; // igonre mouse warp event
 		if( m_valvehack->integer == 0 )
-			SDL_SetRelativeMouseMode( SDL_TRUE );
-		else
+		{
+			if( host.mouse_visible )
+				SDL_SetRelativeMouseMode( SDL_FALSE );
+			else
+				SDL_SetRelativeMouseMode( SDL_TRUE );
+		}
+		else if(!host.mouse_visible)
 		{
 			int x, y;
 			SDL_GetMouseState(&x, &y);
@@ -337,11 +342,27 @@ void IN_MouseEvent( int mstate )
 				SDL_WarpMouseInWindow(host.hWnd, host.window_center_x, host.window_center_y);
 				ignore = 1; // next mouse event will be mouse warp
 				clgame.dllFuncs.IN_MouseEvent( mstate );
+				if(1)
+				{
+					int mouse_x, mouse_y;
+					SDL_GetRelativeMouseState( &mouse_x, &mouse_y );
+					cl.refdef.cl_viewangles[PITCH] += mouse_y;
+					cl.refdef.cl_viewangles[PITCH] = bound( -89, cl.refdef.cl_viewangles[PITCH], 89 );
+					cl.refdef.cl_viewangles[YAW] -= mouse_x;
+				}
 				return;
 			}
 			if (!ignore)
 			{
 				clgame.dllFuncs.IN_MouseEvent( mstate );
+				/*if(1)
+				{
+					int mouse_x, mouse_y;
+					SDL_GetRelativeMouseState( &mouse_x, &mouse_y );
+					cl.refdef.cl_viewangles[PITCH] += mouse_y;
+					cl.refdef.cl_viewangles[PITCH] = bound( -89, cl.refdef.cl_viewangles[PITCH], 89 );
+					cl.refdef.cl_viewangles[YAW] -= mouse_x;
+				}*/
 			}
 			else
 			{

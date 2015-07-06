@@ -387,8 +387,7 @@ void V_PostRender( void )
 		SCR_TileClear();
 		CL_DrawHUD( CL_ACTIVE );
 #ifdef XASH_VGUI
-		if(vgui.initialized)
-			vgui.Paint();
+		VGui_Paint();
 #endif
 	}
 

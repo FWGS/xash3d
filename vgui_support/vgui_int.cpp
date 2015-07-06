@@ -146,9 +146,9 @@ void *VGui_GetPanel( void )
 
 
 #ifdef _WIN32
-extern "C" void _declspec( dllexport ) F(vguiapi_t * api)
+extern "C" void _declspec( dllexport ) InitAPI(vguiapi_t * api)
 #else
-extern "C" void F(vguiapi_t * api)
+extern "C" void InitAPI(vguiapi_t * api)
 #endif
 {
 	g_api = api;
@@ -157,8 +157,10 @@ extern "C" void F(vguiapi_t * api)
 	g_api->GetPanel = VGui_GetPanel;
 	g_api->RunFrame = VGui_RunFrame;
 	g_api->ViewportPaintBackground = VGui_ViewportPaintBackground;
-	g_api->SurfaceWndProc = VGUI_SurfaceWndProc;
 	g_api->Paint = VGui_Paint;
+	g_api->Mouse = VGUI_Mouse;
+	g_api->MouseMove = VGUI_MouseMove;
+	g_api->Key = VGUI_Key;
 }
 
 #ifdef _WIN32

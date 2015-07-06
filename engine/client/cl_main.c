@@ -1748,8 +1748,7 @@ void Host_ClientFrame( void )
 	// if in the debugger last frame, don't timeout
 	if( host.frametime > 5.0f ) cls.netchan.last_received = Sys_DoubleTime();
 #ifdef XASH_VGUI
-	if(vgui.initialized)
-		vgui.RunFrame ();
+	VGui_RunFrame ();
 #endif
 
 	if( cls.initialized )

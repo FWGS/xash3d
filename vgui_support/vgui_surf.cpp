@@ -30,8 +30,6 @@ CEngineSurface :: CEngineSurface( Panel *embeddedPanel ):SurfaceBase( embeddedPa
 	embeddedPanel->getSize(_surfaceExtents[2], _surfaceExtents[3]);
 	_drawTextPos[0] = _drawTextPos[1] = 0;
 	_hCurrentFont = null;
-
-	VGUI_InitCursors ();
 }
 
 CEngineSurface :: ~CEngineSurface( void )
@@ -54,7 +52,7 @@ bool CEngineSurface :: hasFocus( void )
 void CEngineSurface :: setCursor( Cursor *cursor )
 {
 	_currentCursor = cursor;
-	VGUI_CursorSelect( cursor );
+	g_api->CursorSelect( (VGUI_DefaultCursor)cursor->getDefaultCursor() );
 }
 
 void CEngineSurface :: SetupPaintState( const paintState_t &paintState )

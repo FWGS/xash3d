@@ -71,6 +71,22 @@ WINE_MODREF* MODULE_FindModule(LPCSTR m)
     TRACE("Resolved to %s\n", list->wm->filename);
     return list->wm;
 }
+WINE_MODREF* MODULE_FindNearFunctionName(FARPROC f)
+{
+    modref_list* list=local_wm;
+    //TRACE("FindModule: Module %s request\n", m);
+    if(list==NULL)
+		return NULL;
+	const char *s = NULL;
+//    while(strcmp(m, list->wm->filename))
+    while(list && !s)
+    {
+		s=PE_FindNearFunctionName(list->wm, f);
+		list = list->prev;
+	}
+	return s;
+}
+
 
 static void MODULE_RemoveFromList(WINE_MODREF *mod)
 {

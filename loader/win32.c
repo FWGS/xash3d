@@ -3196,6 +3196,10 @@ POINT mousepos;
 static int WINAPI expGetCursorPos(LPPOINT cp)
 {
     //dbgprintf("GetCursorPos(0x%x) => 0x%x\n", cursor, cursor);
+    int x ,y;
+    SDL_GetRelativeMouseState(&x, &y);
+    mousepos.x += x;
+    mousepos.y += y;
     cp->x=mousepos.x;
     cp->y=mousepos.y;
     return 1;
@@ -3837,6 +3841,7 @@ static WIN_BOOL WINAPI expWriteFile(HANDLE h,LPCVOID pv,DWORD size,LPDWORD wr,LP
     int result;
     dbgprintf("WriteFile(%d, 0x%x, %d -> 0x%x)\n", h, pv, size, wr);
     if(h==1234)h=1;
+    if(h==4649)h=1;
     result=write(h, pv, size);
     if(wr)*wr=result;
     if(!result)return 0;
@@ -5251,6 +5256,22 @@ static DWORD WINAPI expGetLocaleInfoA(DWORD locale, DWORD lctype, char* lpLCData
     return 0;
 }
 
+static void expSDL_GetRelativeMouseState(int *x, int *y)
+{
+	return SDL_GetRelativeMouseState(x,y);
+}
+
+static int expSDL_NumJoysticks(void)
+{
+	return 0;
+}
+
+static short expSDL_GameControllerGetAxis(void* gc,int a)
+{
+	return 0;
+}
+
+
 struct exports
 {
     char name[64];
@@ -5764,6 +5785,12 @@ static const struct exports exp_msvcr100[]={
     {"??3@YAXPAX@Z", -1, expdelete}
 };
 
+static const struct exports exp_sdl2[]={
+    FF(SDL_GetRelativeMouseState, -1)
+    FF(SDL_NumJoysticks, -1)
+    FF(SDL_GameControllerGetAxis, -1)
+};
+
 #define LL(X) \
     {#X".dll", sizeof(exp_##X)/sizeof(struct exports), exp_##X},
 
@@ -5787,6 +5814,7 @@ static const struct libs libraries[]={
     LL(msvcr80)
     LL(msvcp60)
     LL(msvcr100)
+    LL(sdl2)
 };
 
 static WIN_BOOL WINAPI ext_stubs(void)
@@ -5807,7 +5835,10 @@ static char *extcode = NULL;
 
 static void mystub()
 {
-	printf("THIS IS STUB!!!\n");
+  printf("THIS IS STUB!!!\n");
+  void *trace[32];
+  backtrace_symbols_fd(trace, backtrace(trace, 32), 1);
+  printf("%s\n", MODULE_FindNearFunctionName(trace[1]));
 }
 
 static void* add_stub(void)

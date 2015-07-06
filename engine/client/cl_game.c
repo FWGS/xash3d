@@ -4004,8 +4004,8 @@ qboolean CL_LoadProgs( const char *name )
 	// during LoadLibrary
 #ifdef XASH_VGUI
 	VGui_Startup (menu.globals->scrWidth, menu.globals->scrHeight);
-	gEngfuncs.VGui_GetPanel = vgui.GetPanel;
-	gEngfuncs.VGui_ViewportPaintBackground = vgui.ViewportPaintBackground;
+	gEngfuncs.VGui_GetPanel = VGui_GetPanel;
+	gEngfuncs.VGui_ViewportPaintBackground = VGui_ViewportPaintBackground;
 #endif
 	
 	clgame.hInstance = Com_LoadLibrary( name, false );

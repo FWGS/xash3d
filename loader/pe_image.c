@@ -288,6 +288,50 @@ const char * PE_FindFunctionName(
   return 0;
 }
 
+const char * PE_FindNearFunctionName(
+	WINE_MODREF *wm,
+	FARPROC funcAddr )
+{
+	unsigned short			* ordinal;
+	unsigned long			* function;
+	unsigned char			** name;
+	const char *ename = NULL;
+	int				i, j;
+	PE_MODREF			*pem = &(wm->binfmt.pe);
+	IMAGE_EXPORT_DIRECTORY 		*exports = pem->pe_export;
+	unsigned int			load_addr = wm->module;
+	unsigned long			rva_start, rva_end, addr;
+	char				* forward;
+	if (!exports) {
+		/* Not a fatal problem, some apps do
+		 * GetProcAddress(0,"RegisterPenApp") which triggers this
+		 * case.
+		 */
+		WARN("Module %08x(%s)/MODREF %p doesn't have a exports table.\n",wm->module,wm->modname,pem);
+		return NULL;
+	}
+	ordinal= (unsigned short*)  RVA(exports->AddressOfNameOrdinals);
+	function= (unsigned long*)   RVA(exports->AddressOfFunctions);
+	name	= (unsigned char **) RVA(exports->AddressOfNames);
+	forward = NULL;
+	rva_start = PE_HEADER(wm->module)->OptionalHeader
+		.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+	rva_end = rva_start + PE_HEADER(wm->module)->OptionalHeader
+		.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
+	void *last_func = 0;
+	
+	for (j = 0; j < exports->NumberOfNames; j++)
+	{
+		int index = ordinal[j];
+		//printf("%p %p %s\n", function[index], funcAddr, RVA(name[j]));
+		if(((void*)last_func >= funcAddr-load_addr ) && ((void*)function[index] < funcAddr-load_addr ) ) 
+		return  (char*)RVA(name[j-1]);
+		last_func = function[index];
+	}
+	//printf("PE_FindFunctionName: could not resolve %p\n", funcAddr);
+  return 0;
+}
+
 static DWORD fixup_imports( WINE_MODREF *wm )
 {
     IMAGE_IMPORT_DESCRIPTOR	*pe_imp;

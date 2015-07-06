@@ -201,7 +201,9 @@ void *VGui_GetPanel( void );
 void VGui_RunFrame( void );
 void VGui_Paint( void );
 void VGui_ViewportPaintBackground( int extents[4] );
-long VGUI_SurfaceWndProc( Xash_Event *event );
+void VGUI_Mouse(VGUI_MouseAction action, int code);
+void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code);
+void VGUI_MouseMove(int x, int y);
 //
 // vgui_clip.cpp
 //
@@ -212,6 +214,11 @@ qboolean ClipRect( const vpoint_t &inUL, const vpoint_t &inLR, vpoint_t *pOutUL,
 extern FontCache *g_FontCache;
 
 extern vguiapi_t *g_api;
+
+
+extern CEnginePanel	*rootpanel;
+extern CEngineSurface	*surface;
+extern CEngineApp          *pApp;
 
 #endif
 #endif//VGUI_MAIN_H

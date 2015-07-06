@@ -3,12 +3,18 @@
 #include "keydefs.h"
 #include "input.h"
 #include "client.h"
-#include "vgui_draw.h"
+
 int SDLash_EventFilter( SDL_Event* event)
 {
+	#ifdef XASH_VGUI
+	if(host.mouse_visible)
+		VGUI_SurfaceWndProc(event);
+	//else
+	#endif
 	switch ( event->type )
 	{
 		case SDL_MOUSEMOTION:
+		if(!host.mouse_visible)
 			IN_MouseEvent(0);
 			break;
 		case SDL_QUIT:
@@ -33,6 +39,7 @@ int SDLash_EventFilter( SDL_Event* event)
 
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEBUTTONDOWN:
+		//if(!host.mouse_visible)
 			SDLash_MouseEvent(event->button);
 			break;
 
@@ -64,10 +71,6 @@ int SDLash_EventFilter( SDL_Event* event)
 				}
 			}
 	}
-#ifdef XASH_VGUI
-	if(vgui.initialized)
-		vgui.SurfaceWndProc(event);
-#endif
 	return 0;
 }
 
