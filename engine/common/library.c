@@ -40,8 +40,11 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	}
 	else
 #endif
+#ifdef _WIN32
+	pHandle = LoadLibrary( dllname );
+#else
 	pHandle = dlopen( dllname, RTLD_LAZY );
-
+#endif
 	if(!pHandle)
 	{
 		search = FS_FindFile( dllname, &pack_ind, true );
@@ -55,13 +58,16 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		}
 		else
 #endif
-		pHandle = dlopen( path, RTLD_LAZY );
-
+#ifdef _WIN32
+	pHandle = LoadLibrary( path );
+#else
+	pHandle = dlopen( path, RTLD_LAZY );
+#endif
 		if(!pHandle)
 		{
 #ifndef _WIN32
 			char *error = dlerror();
-			MsgDev(D_ERROR, "loading library %s: %s", dllname, dlerror());
+			MsgDev(D_ERROR, "loading library %s: %s\n", dllname, dlerror());
 #endif
 			return NULL;
 		}
@@ -78,7 +84,11 @@ void Com_FreeLibrary( void *hInstance )
 		return Loader_FreeLibrary(hInstance);
 	else
 #endif
+#ifdef _WIN32
+	FreeLibrary( hInstance);
+#else
 	dlclose( hInstance );
+#endif
 }
 
 void *Com_GetProcAddress( void *hInstance, const char *name )
@@ -89,7 +99,11 @@ void *Com_GetProcAddress( void *hInstance, const char *name )
 		return Loader_GetProcAddress(hInstance, name);
 	else
 #endif
+#ifdef _WIN32
+	return GetProcAddress( hInstance, name );
+#else
 	return dlsym( hInstance, name );
+#endif
 }
 
 void *Com_FunctionFromName( void *hInstance, const char *pName )

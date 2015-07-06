@@ -1129,6 +1129,13 @@ void FS_CreateDefaultGameInfo( const char *filename )
 static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, gameinfo_t *GameInfo )
 {
 	char	*afile, *pfile;
+#ifdef _WIN32
+	const char* gameDll = "gamedll";
+#elif defined(__APPLE__)
+	const char* gameDll = "gamedll_osx";
+#else
+	const char* gameDll = "gamedll_linux";
+#endif
 	string	token;
 
 	if( !GameInfo ) return false;	
@@ -1169,14 +1176,6 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	VectorSet( GameInfo->client_maxs[3],  16,  16,  18 );
 
 	pfile = afile;
-	
-#ifdef _WIN32
-	const char* gameDll = "gamedll";
-#elif defined(__APPLE__)
-	const char* gameDll = "gamedll_osx";
-#else
-	const char* gameDll = "gamedll_linux";
-#endif
 
 	while(( pfile = COM_ParseFile( pfile, token )) != NULL )
 	{

@@ -26,7 +26,7 @@ GNU General Public License for more details.
 #define NOT_REFERENCED		256
 
 #define HUFF_TREE_SIZE		7175
-typedef void			*tree_t[HUFF_TREE_SIZE];
+typedef byte			*tree_t[HUFF_TREE_SIZE];
 
 //
 // pre-defined frequency counts for all bytes [0..255]
@@ -88,7 +88,7 @@ Huff_PrepareTree
 */
 static _inline void Huff_PrepareTree( tree_t tree )
 {
-	void	**node;
+	byte	**node;
 	
 	Q_memset( tree, 0, sizeof( tree_t ));
 	
@@ -108,7 +108,7 @@ static _inline void Huff_PrepareTree( tree_t tree )
 Huff_GetNode
 ============
 */
-static _inline void **Huff_GetNode( void **tree )
+static _inline void **Huff_GetNode( byte **tree )
 {
 	void	**node;
 	int	value;
@@ -217,7 +217,7 @@ static _inline void Huff_DeleteNode( void **tree1, void **tree2 )
 Huff_IncrementFreq_r
 ============
 */
-static void Huff_IncrementFreq_r( void **tree1, void **tree2 )
+static void Huff_IncrementFreq_r( byte **tree1, byte **tree2 )
 {
 	void **a, **b;
 
@@ -284,7 +284,7 @@ Huff_AddReference
 Insert 'ch' into the tree or increment it's frequency
 ============
 */
-static void Huff_AddReference( void **tree, int ch )
+static void Huff_AddReference( byte **tree, int ch )
 {
 	void **a, **b, **c, **d;
 	int value;

@@ -673,7 +673,7 @@ CL_Connect_f
 ================
 */
 
-#include <sys/mman.h>
+//#include <sys/mman.h>
 void CL_Connect_f( void )
 {
 	char server[ sizeof( cls.servername ) ];

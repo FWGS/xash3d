@@ -812,7 +812,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #endif
 
 #ifdef _WIN32
-	GetModuleFileName(host.hInst, &moduleName, sizeof(moduleName));
+	GetModuleFileName(host.hInst, moduleName, sizeof(moduleName));
 #else
 	// We didn't need full path, only executable name
 	strcpy(moduleName, strrchr(argv[0], '/'));

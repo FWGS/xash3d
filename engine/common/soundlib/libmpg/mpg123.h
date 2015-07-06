@@ -6,9 +6,11 @@
 #ifdef __ANDROID__
 #include		<signal.h>
 #else
+#ifndef _WIN32
 #include        <sys/signal.h>
 #endif
-#include        <unistd.h>
+#endif
+//#include        <unistd.h>
 #endif
 
 #include        <math.h>

@@ -90,7 +90,7 @@ qboolean Sys_FreeLibrary( dll_info_t *dll );
 void Sys_ParseCommandLine( int argc , const char **argv);
 void Sys_MergeCommandLine();
 #ifdef _WIN32
-//long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo );
+long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo );
 #endif
 void Sys_SetClipboardData( const byte *buffer, size_t size );
 #define Sys_GetParmFromCmdLine( parm, out ) _Sys_GetParmFromCmdLine( parm, out, sizeof( out ))

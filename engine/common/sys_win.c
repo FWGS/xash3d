@@ -47,9 +47,9 @@ Sys_DoubleTime
 */
 double Sys_DoubleTime( void )
 {
-	static unsigned long long	g_PerformanceFrequency;
-	static unsigned long long	g_ClockStart;
-	unsigned long long		CurrentTime;
+	static Uint64	g_PerformanceFrequency;
+	static Uint64	g_ClockStart;
+	Uint64		CurrentTime;
 #if defined(__APPLE__) || defined(_WIN32)
 	if( !g_PerformanceFrequency )
 	{

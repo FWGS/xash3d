@@ -1448,9 +1448,10 @@ get actual screen info
 static int pfnGetScreenInfo( SCREENINFO *pscrinfo )
 {
 	// setup screen info
+	float scale_factor = Cvar_VariableValue( "hud_scale" );
 	clgame.scrInfo.iSize = sizeof( clgame.scrInfo );
 
-	float scale_factor = Cvar_VariableValue( "hud_scale" );
+	
 	if( scale_factor && scale_factor != 1.0f)
 	{
 		clgame.scrInfo.iWidth = scr_width->integer/scale_factor;
