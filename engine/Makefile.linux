@@ -12,8 +12,12 @@ TOPDIR = $(PWD)/..
 XASHXT ?= $(TOPDIR)/../xashXT
 HLSDK ?= $(TOPDIR)/../halflife/
 INCLUDES = -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui
-DEFINES = -DXASH_SDL
-
+DEFINES =
+ifeq ($(XASH_DEDICATED),1)
+    DEFINES += -DXASH_DEDICATED
+else
+    DEFINES += -DXASH_SDL
+endif
 
 ifeq ($(XASH_DLL_LOADER),1)
     DEFINES += -DDLL_LOADER
