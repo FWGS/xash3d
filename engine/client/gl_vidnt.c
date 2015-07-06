@@ -19,10 +19,12 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "input.h"
 
-#ifndef __ANDROID__
-#ifdef XASH_SDL
+#if defined(__ANDROID__)
+// TODO: Find a way how to change icon in runtime on Android
+#elif (defined(_WIN32) && defined(XASH_SDL))
+#include <SDL_syswm.h>
+#elif defined(XASH_SDL)
 #include <SDL_image.h> // Android: disable useless SDL_image
-#endif
 #endif
 
 #ifdef __ANDROID__
@@ -33,6 +35,7 @@ GNU General Public License for more details.
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #endif
+
 
 #ifdef PANDORA
 #define VID_AUTOMODE	"10"
@@ -1514,7 +1517,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 	if( fullscreen )
 	{
-		wndFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		wndFlags |= SDL_WINDOW_FULLSCREEN;
 	}
 
 	host.hWnd = SDL_CreateWindow(wndname, SDL_WINDOWPOS_UNDEFINED,
@@ -1530,7 +1533,34 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
-#ifndef __ANDROID__
+#if defined(__ANDROID__)
+	// TODO: Find a way to change icon in runtime in Android
+#elif defined(_WIN32)
+	HICON ico;
+
+	if( FS_FileExists( GI->iconpath, true ))
+	{
+		char	localPath[MAX_PATH];
+
+		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
+		ico = LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
+
+		if( !ico )
+		{
+			MsgDev( D_INFO, "Extract %s from pak if you want to see it.\n", GI->iconpath );
+			ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ));
+		}
+	}
+	else ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ));
+
+	SDL_SysWMinfo info;
+	if(SDL_GetWindowWMInfo(host.hWnd, &info))
+	{
+		// info.info.info.info.info... Holy shit, SDL?
+		SetClassLong(info.info.win.window, GCL_HICON, ico);
+	}
+
+#else
 	SDL_Surface *ico;
 
 	// find the icon file in the filesystem
@@ -1636,7 +1666,7 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 	else
 	{
 		SDL_SetWindowSize(host.hWnd, vidmode[vid_mode].width, vidmode[vid_mode].height );
-		int error = SDL_SetWindowFullscreen( host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : false );
+		int error = SDL_SetWindowFullscreen(host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN : false);
 		if( error )
 		{
 			MsgDev(D_ERROR, "Cannot change resolution: %s", SDL_GetError());
@@ -1695,6 +1725,7 @@ qboolean VID_SetMode( void )
 	}
 #endif
 	gl_swapInterval->modified = true;
+	fullscreen = Cvar_VariableInteger("fullscreen");
 
 #ifdef PANDORA
     if(( err = R_ChangeDisplaySettings( 10, fullscreen )) == rserr_ok )

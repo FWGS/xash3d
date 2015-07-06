@@ -20,6 +20,10 @@ GNU General Public License for more details.
 #include "client.h"
 #include "vgui_draw.h"
 
+#ifdef _WIN32
+#include "windows.h"
+#endif
+
 #define PRINTSCREEN_ID	1
 #define WND_HEADSIZE	wnd_caption		// some offset
 #define WND_BORDER		3			// sentinel border in pixels
@@ -141,7 +145,9 @@ static qboolean IN_CursorInRect( void )
 		return false;
 
 	// find mouse movement
-	GetMouseState( &curpos );
+	//GetMouseState( &curpos );
+
+	SDL_GetMouseState(&curpos.x, &curpos.y);
 
 	if( curpos.x < real_rect.left + WND_BORDER )
 		return false;
@@ -327,7 +333,7 @@ void IN_MouseEvent( int mstate )
 		return;
 	if( cls.key_dest == key_game )
 	{
-#ifdef XASH_SDL
+#if defined(XASH_SDL) && !defined(_WIN32)
 		static qboolean ignore; // igonre mouse warp event
 		if( m_valvehack->integer == 0 )
 		{
@@ -378,7 +384,7 @@ void IN_MouseEvent( int mstate )
 	}
 	else
 	{
-#ifdef XASH_SDL
+#if defined(XASH_SDL) && !defined(_WIN32)
 		SDL_SetRelativeMouseMode( false );
 #endif
 		IN_MouseMove();
@@ -497,6 +503,7 @@ main window procedure
 */
 long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam )
 {
+/*
 #ifdef _WIN32
 	int	i, temp = 0;
 	qboolean	fActivate;
@@ -640,8 +647,7 @@ long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam )
 		break;
 	}
 	return DefWindowProc( hWnd, uMsg, wParam, lParam );
-#else
+#else*/
 	return 0;
-#endif
-
+//#endif
 }

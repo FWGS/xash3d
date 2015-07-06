@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C66BF480-DB25-4609-80BE-738F3F5E8AEA}</ProjectGuid>
+    <RootNamespace>engine</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(ProjectDir);client;common;server;client/imagelib;client/vgui;client/soundlib;../../SDL2/include/;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
+    <LibraryPath>common/soundlib;../../SDL2/lib/x86/;../../halflife/utils/vgui/lib/win32_vc6;$(LibraryPath)</LibraryPath>
+    <TargetExt>.dll</TargetExt>
+    <TargetName>xash</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(ProjectDir);client;common;server;client/imagelib;client/vgui;client/soundlib;../../SDL2/include/;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
+    <LibraryPath>common/soundlib;../../SDL2/lib/x86/;../../halflife/utils/vgui/lib/win32_vc6;$(LibraryPath)</LibraryPath>
+    <TargetExt>.dll</TargetExt>
+    <TargetName>xash</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>XASH_SDL;XASH_NONSTANDART_LOAD;XASH_VGUI;_MBCS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>vgui.lib;SDL2.lib;mpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBC.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>XASH_SDL;XASH_VGUI;XASH_NONSTANDART_LOAD;_MBCS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>vgui.lib;SDL2.lib;mpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBC.lib</IgnoreSpecificDefaultLibraries>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="client\cl_cmds.c" />
+    <ClCompile Include="client\cl_demo.c" />
+    <ClCompile Include="client\cl_events.c" />
+    <ClCompile Include="client\cl_frame.c" />
+    <ClCompile Include="client\cl_game.c" />
+    <ClCompile Include="client\cl_main.c" />
+    <ClCompile Include="client\cl_menu.c" />
+    <ClCompile Include="client\cl_parse.c" />
+    <ClCompile Include="client\cl_pmove.c" />
+    <ClCompile Include="client\cl_remap.c" />
+    <ClCompile Include="client\cl_scrn.c" />
+    <ClCompile Include="client\cl_tent.c" />
+    <ClCompile Include="client\cl_video.c" />
+    <ClCompile Include="client\cl_view.c" />
+    <ClCompile Include="client\gl_backend.c" />
+    <ClCompile Include="client\gl_beams.c" />
+    <ClCompile Include="client\gl_cull.c" />
+    <ClCompile Include="client\gl_decals.c" />
+    <ClCompile Include="client\gl_draw.c" />
+    <ClCompile Include="client\gl_image.c" />
+    <ClCompile Include="client\gl_mirror.c" />
+    <ClCompile Include="client\gl_refrag.c" />
+    <ClCompile Include="client\gl_rlight.c" />
+    <ClCompile Include="client\gl_rmain.c" />
+    <ClCompile Include="client\gl_rmath.c" />
+    <ClCompile Include="client\gl_rmisc.c" />
+    <ClCompile Include="client\gl_rpart.c" />
+    <ClCompile Include="client\gl_rsurf.c" />
+    <ClCompile Include="client\gl_sprite.c" />
+    <ClCompile Include="client\gl_studio.c" />
+    <ClCompile Include="client\gl_vidnt.c" />
+    <ClCompile Include="client\gl_warp.c" />
+    <ClCompile Include="client\s_backend.c" />
+    <ClCompile Include="client\s_dsp.c" />
+    <ClCompile Include="client\s_load.c" />
+    <ClCompile Include="client\s_main.c" />
+    <ClCompile Include="client\s_mix.c" />
+    <ClCompile Include="client\s_mouth.c" />
+    <ClCompile Include="client\s_stream.c" />
+    <ClCompile Include="client\s_utils.c" />
+    <ClCompile Include="client\s_vox.c" />
+    <ClCompile Include="client\vgui\vgui_clip.cpp" />
+    <ClCompile Include="client\vgui\vgui_draw.c" />
+    <ClCompile Include="client\vgui\vgui_font.cpp" />
+    <ClCompile Include="client\vgui\vgui_input.cpp" />
+    <ClCompile Include="client\vgui\vgui_int.cpp" />
+    <ClCompile Include="client\vgui\vgui_surf.cpp" />
+    <ClCompile Include="common\avikit.c" />
+    <ClCompile Include="common\build.c" />
+    <ClCompile Include="common\cmd.c" />
+    <ClCompile Include="common\common.c" />
+    <ClCompile Include="common\console.c" />
+    <ClCompile Include="common\con_utils.c" />
+    <ClCompile Include="common\crclib.c" />
+    <ClCompile Include="common\crtlib.c" />
+    <ClCompile Include="common\cvar.c" />
+    <ClCompile Include="common\filesystem.c" />
+    <ClCompile Include="common\gamma.c" />
+    <ClCompile Include="common\host.c" />
+    <ClCompile Include="common\hpak.c" />
+    <ClCompile Include="common\imagelib\img_bmp.c" />
+    <ClCompile Include="common\imagelib\img_dds.c" />
+    <ClCompile Include="common\imagelib\img_main.c" />
+    <ClCompile Include="common\imagelib\img_quant.c" />
+    <ClCompile Include="common\imagelib\img_tga.c" />
+    <ClCompile Include="common\imagelib\img_utils.c" />
+    <ClCompile Include="common\imagelib\img_wad.c" />
+    <ClCompile Include="common\infostring.c" />
+    <ClCompile Include="common\input.c" />
+    <ClCompile Include="common\keys.c" />
+    <ClCompile Include="common\library.c" />
+    <ClCompile Include="common\mathlib.c" />
+    <ClCompile Include="common\matrixlib.c" />
+    <ClCompile Include="common\model.c" />
+    <ClCompile Include="common\mod_studio.c" />
+    <ClCompile Include="common\network.c" />
+    <ClCompile Include="common\net_buffer.c" />
+    <ClCompile Include="common\net_chan.c" />
+    <ClCompile Include="common\net_encode.c" />
+    <ClCompile Include="common\net_huff.c" />
+    <ClCompile Include="common\pm_surface.c" />
+    <ClCompile Include="common\pm_trace.c" />
+    <ClCompile Include="common\random.c" />
+    <ClCompile Include="common\sdl\events.c" />
+    <ClCompile Include="common\soundlib\snd_main.c" />
+    <ClCompile Include="common\soundlib\snd_mp3.c" />
+    <ClCompile Include="common\soundlib\snd_utils.c" />
+    <ClCompile Include="common\soundlib\snd_wav.c" />
+    <ClCompile Include="common\sys_con.c" />
+    <ClCompile Include="common\sys_win.c" />
+    <ClCompile Include="common\titles.c" />
+    <ClCompile Include="common\world.c" />
+    <ClCompile Include="common\zone.c" />
+    <ClCompile Include="server\sv_client.c" />
+    <ClCompile Include="server\sv_cmds.c" />
+    <ClCompile Include="server\sv_custom.c" />
+    <ClCompile Include="server\sv_frame.c" />
+    <ClCompile Include="server\sv_game.c" />
+    <ClCompile Include="server\sv_init.c" />
+    <ClCompile Include="server\sv_main.c" />
+    <ClCompile Include="server\sv_move.c" />
+    <ClCompile Include="server\sv_phys.c" />
+    <ClCompile Include="server\sv_pmove.c" />
+    <ClCompile Include="server\sv_save.c" />
+    <ClCompile Include="server\sv_world.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="anorms.h" />
+    <ClInclude Include="cdll_exp.h" />
+    <ClInclude Include="cdll_int.h" />
+    <ClInclude Include="client\anorm_dots.h" />
+    <ClInclude Include="client\client.h" />
+    <ClInclude Include="client\cl_tent.h" />
+    <ClInclude Include="client\gl_export.h" />
+    <ClInclude Include="client\gl_local.h" />
+    <ClInclude Include="client\sound.h" />
+    <ClInclude Include="client\vgui\utlmemory.h" />
+    <ClInclude Include="client\vgui\utlrbtree.h" />
+    <ClInclude Include="client\vgui\utlvector.h" />
+    <ClInclude Include="client\vgui\vgui_draw.h" />
+    <ClInclude Include="client\vgui\vgui_main.h" />
+    <ClInclude Include="client\vox.h" />
+    <ClInclude Include="common\common.h" />
+    <ClInclude Include="common\crtlib.h" />
+    <ClInclude Include="common\filesystem.h" />
+    <ClInclude Include="common\imagelib\imagelib.h" />
+    <ClInclude Include="common\input.h" />
+    <ClInclude Include="common\library.h" />
+    <ClInclude Include="common\mathlib.h" />
+    <ClInclude Include="common\mod_local.h" />
+    <ClInclude Include="common\netchan.h" />
+    <ClInclude Include="common\net_buffer.h" />
+    <ClInclude Include="common\net_encode.h" />
+    <ClInclude Include="common\pm_local.h" />
+    <ClInclude Include="common\protocol.h" />
+    <ClInclude Include="common\sdl\events.h" />
+    <ClInclude Include="common\soundlib\soundlib.h" />
+    <ClInclude Include="common\sse_mathfun.h" />
+    <ClInclude Include="common\system.h" />
+    <ClInclude Include="common\world.h" />
+    <ClInclude Include="custom.h" />
+    <ClInclude Include="customentity.h" />
+    <ClInclude Include="edict.h" />
+    <ClInclude Include="eiface.h" />
+    <ClInclude Include="keydefs.h" />
+    <ClInclude Include="menu_int.h" />
+    <ClInclude Include="physint.h" />
+    <ClInclude Include="progdefs.h" />
+    <ClInclude Include="server\server.h" />
+    <ClInclude Include="shake.h" />
+    <ClInclude Include="sprite.h" />
+    <ClInclude Include="studio.h" />
+    <ClInclude Include="warpsin.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="common\soundlib\mpeg.lib" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

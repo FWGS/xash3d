@@ -20,6 +20,8 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
+#include "port.h"
+
 #ifndef _WIN32
 #ifdef __linux__
 #include <linux/limits.h> // PATH_MAX
@@ -31,11 +33,15 @@ extern "C" {
 #ifdef PANDORA
 #include <unistd.h>	//off_t on PANDORA
 #endif
-#include "port.h"
 
 #define EXPORT __attribute__ ((visibility ("default")))
 #else
+#include <sys/types.h> // off_t
+#include <stdio.h>
+#include <stdlib.h> // rand, adbs
+#include <stdarg.h> // va
 #define EXPORT		__declspec( dllexport )
+#define PATH_MAX MAX_PATH // Now there is must be MATH_PAX
 #endif
 
 #define MAX_STRING		256	// generic string
@@ -290,7 +296,9 @@ typedef struct host_parm_s
 {
     HINSTANCE	hInst;
     HANDLE		hMutex;
-    void*       oldFilter;
+#ifdef _WIN32
+	LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
+#endif
 
 	host_state	state;		// global host state
 	uint		type;		// running at

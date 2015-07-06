@@ -637,17 +637,18 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 	ret = pSendTo( net_socket, data, length, 0, &addr, sizeof( addr ));
 
 #ifdef _WIN32
-	if( ret == SOCKET_ERROR )
+	if (ret == SOCKET_ERROR)
 	{
 		err = pWSAGetLastError();
 
 		// WSAEWOULDBLOCK is silent
-		if( err == WSAEWOULDBLOCK )
+		if (err == WSAEWOULDBLOCK)
 			return;
 
 		// some PPP links don't allow broadcasts
-		if(( err == WSAEADDRNOTAVAIL ) && (( to.type == NA_BROADCAST ) || ( to.type == NA_BROADCAST_IPX )))
+		if ((err == WSAEADDRNOTAVAIL) && ((to.type == NA_BROADCAST) || (to.type == NA_BROADCAST_IPX)))
 			return;
+	}
 #else
 	if( ret < 0 )
 	{

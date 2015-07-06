@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #define PORT_H
 
 #ifdef XASH_VGUI
-    #if !(defined(__i386__) || defined(_X86_))
+	#if !(defined(__i386__) || defined(_X86_) || defined(_WIN32))
 	#error "VGUI is exists only for x86. You must disable VGUI flag or build Xash3D for x86 target."
     #endif
 #endif
@@ -100,8 +100,30 @@ GNU General Public License for more details.
 	int x, y;
     } POINT;
 #else
+	#define strcasecmp _stricmp
+	#define strncasecmp _strnicmp
+	#define open _open
+	#define read _read
+
+	// shut-up compiler warnings
+	#pragma warning(disable : 4244)	// MIPS
+	#pragma warning(disable : 4018)	// signed/unsigned mismatch
+	#pragma warning(disable : 4305)	// truncation from const double to float
+	#pragma warning(disable : 4115)	// named type definition in parentheses
+	#pragma warning(disable : 4100)	// unreferenced formal parameter
+	#pragma warning(disable : 4127)	// conditional expression is constant
+	#pragma warning(disable : 4057)	// differs in indirection to slightly different base types
+	#pragma warning(disable : 4201)	// nonstandard extension used
+	#pragma warning(disable : 4706)	// assignment within conditional expression
+	#pragma warning(disable : 4054)	// type cast' : from function pointer
+	#pragma warning(disable : 4310)	// cast truncates constant value
+
+	#define HSPRITE WINAPI_HSPRITE
+	#include <windows.h>
+	#undef HSPRITE
+
     #define OS_LIB_EXT "dll"
-    #define MENUDLL "mainui." OS_LIB_EXT
+    #define MENUDLL "menu." OS_LIB_EXT
     #define CLIENTDLL "client." OS_LIB_EXT
 #endif
 

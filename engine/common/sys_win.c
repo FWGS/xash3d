@@ -30,6 +30,9 @@ GNU General Public License for more details.
 extern char **environ;
 #endif
 
+#else
+#include <stdlib.h>
+#include <time.h>
 #endif
 
 #include "common.h"
@@ -44,10 +47,10 @@ Sys_DoubleTime
 */
 double Sys_DoubleTime( void )
 {
-	static u_int64_t	g_PerformanceFrequency;
-	static u_int64_t	g_ClockStart;
-	u_int64_t		CurrentTime;
-#if defined(__APPLE__)
+	static unsigned long long	g_PerformanceFrequency;
+	static unsigned long long	g_ClockStart;
+	unsigned long long		CurrentTime;
+#if defined(__APPLE__) || defined(_WIN32)
 	if( !g_PerformanceFrequency )
 	{
 		g_PerformanceFrequency = SDL_GetPerformanceFrequency();
@@ -127,14 +130,12 @@ char *Sys_GetCurrentUser( void )
 	static string	s_userName;
 	dword		size = sizeof( s_userName );
 
-#ifdef _WIN32
+#if defined(_WIN32)
 	if( !GetUserName( s_userName, &size ) || !s_userName[0] )
-#else
-#ifndef __ANDROID__
+#elif !defined(__ANDROID__)
 	if( !getlogin_r( s_userName, size || !s_userName[0] ) )
 #endif
 		Q_strcpy( s_userName, "player" );
-#endif
 
 	return s_userName;
 }
@@ -408,7 +409,7 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 
 		// all other states keep unchanged to let debugger find bug
 		Con_DestroyConsole();
-          }
+	}
 
 	if( host.oldFilter )
 		return host.oldFilter( pInfo );

@@ -811,10 +811,16 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	FS_FileBase( host.rootdir, SI.ModuleName );
 #endif
 
-	strcpy(moduleName, strrchr(argv[0], '/')); 	// We didn't need full path, only executable name
-	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1); //strrchr adds a / at begin of string =(
-	Q_strncpy(SI.ModuleName, argv[0], sizeof(SI.ModuleName)); //argv[0] is always stands for program name
-
+#ifdef _WIN32
+	GetModuleFileName(host.hInst, &moduleName, sizeof(moduleName));
+#else
+	// We didn't need full path, only executable name
+	strcpy(moduleName, strrchr(argv[0], '/'));
+	//strrchr adds a / at begin of string =(
+	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
+#endif
+	//argv[0] is always stands for program name
+	Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
 	FS_ExtractFilePath( SI.ModuleName, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
 	{

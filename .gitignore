@@ -53,13 +53,18 @@ CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
-
 # makedepend
 Makefile.dep
 *.bak
 
-# msvc
+# Visual Studio
 *.obj
 *.dll
 *.exp
 *.lib
+*.suo
+*.sdf
+Debug/
+Release/
+ipch/
+*.opensdf

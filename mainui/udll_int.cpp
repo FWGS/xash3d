@@ -41,10 +41,16 @@ static UI_FUNCTIONS gFunctionTable =
 	UI_FinalCredits
 };
 
+#ifdef _WIN32
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT
+#endif
+
 //=======================================================================
 //			GetApi
 //=======================================================================
-extern "C" int GetMenuAPI( UI_FUNCTIONS *pFunctionTable, ui_enginefuncs_t* pEngfuncsFromEngine, ui_globalvars_t *pGlobals )
+extern "C" EXPORT int GetMenuAPI(UI_FUNCTIONS *pFunctionTable, ui_enginefuncs_t* pEngfuncsFromEngine, ui_globalvars_t *pGlobals)
 {
 	if( !pFunctionTable || !pEngfuncsFromEngine )
 	{

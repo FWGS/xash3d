@@ -19,8 +19,8 @@ GNU General Public License for more details.
 #ifdef VECTORIZE_SINCOS
 
 // Test shown that this is not so effictively
-#ifdef __SSE__
- #ifdef __SSE2__
+#if defined(__SSE__) || defined(_M_IX86_FP)
+#if defined(__SSE2__) || defined(_M_IX86_FP)
   #define USE_SSE2
  #endif
 #include "sse_mathfun.h"
@@ -128,7 +128,7 @@ SinCos
 */
 void SinCos( float radians, float *sine, float *cosine )
 {
-#ifdef _WIN32
+#if 0
 	_asm
 	{
 		fld	dword ptr [radians]

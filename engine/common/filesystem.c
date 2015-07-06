@@ -235,8 +235,8 @@ void listdirectory( stringlist_t *list, const char *path )
 	struct _finddata_t	n_file;
 #else
 	struct dirent **n_file;
-	long		hFile;
 #endif
+	long		hFile;
 
 	Q_strncpy( pattern, path, sizeof( pattern ));
 	Q_strncat( pattern, "*", sizeof( pattern ));
@@ -3072,7 +3072,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 
 void FS_InitMemory( void )
 {
-	fs_mempool = Mem_AllocPool( "FileSystem Pool" );	
+	fs_mempool = Mem_AllocPool( "FileSystem Pool" );
 
 	// add a path separator to the end of the basedir if it lacks one
 	if( fs_basedir[0] && fs_basedir[Q_strlen(fs_basedir) - 1] != '/' && fs_basedir[Q_strlen(fs_basedir) - 1] != '\\' )
