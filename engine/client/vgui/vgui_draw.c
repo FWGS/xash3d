@@ -13,12 +13,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifdef XASH_VGUI
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
 #include "vgui_draw.h"
 #include "vgui_api.h"
 #include "library.h"
+#include <string.h>
 
 
 int	g_textures[VGUI_MAX_TEXTURES];
@@ -358,7 +361,7 @@ enum VGUI_MouseCode VGUI_MapMouseButton( byte button)
 		return MOUSE_RIGHT;
 	}
 #else
-	return (VGUI_MouseCode)button;
+	return (enum VGUI_MouseCode)button;
 #endif
 	return MOUSE_LAST; // What is MOUSE_LAST? Is it really used?
 }
@@ -367,6 +370,7 @@ enum VGUI_MouseCode VGUI_MapMouseButton( byte button)
 
 void VGUI_SurfaceWndProc( Xash_Event *event )
 {
+#ifdef XASH_SDL
 	switch( event->type )
 	{
 	/*case :
@@ -396,6 +400,7 @@ void VGUI_SurfaceWndProc( Xash_Event *event )
 		vgui.Key( KA_RELEASED, VGUI_MapKey( event->key.keysym.sym ) );
 		break;
 	}
+#endif
 }
 
 
@@ -647,3 +652,4 @@ void VGui_RunFrame()
 	if(vgui.initialized)
 		vgui.RunFrame();
 }
+#endif
