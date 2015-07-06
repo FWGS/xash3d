@@ -28,6 +28,8 @@ set (HL_SDK_DIR /opt/halflife CACHE PATH "Half Life 1 SDK directory")
 
 option(PANDORA "Set to ON if targeting an OpenPandora device" ${PANDORA})
 
-add_subdirectory (mainui)
+if(NOT XASH_DEDICATED)
+	add_subdirectory (mainui)
+endif()
 add_subdirectory (engine)
 add_subdirectory (game_launch)
