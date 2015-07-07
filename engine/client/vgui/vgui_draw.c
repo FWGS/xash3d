@@ -194,7 +194,10 @@ void VGui_Startup( int width, int height )
 		VGUI_InitCursors();
 	}
 	if (vgui.initialized)
+	{
+		host.mouse_visible = true;
 		vgui.Startup(width, height);
+	}
 }
 
 

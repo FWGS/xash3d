@@ -788,9 +788,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 	host.type = HOST_NORMAL; // predict state
 	host.con_showalways = true;
-	
-	host.mouse_visible = true;
-	
+
+	host.mouse_visible = false;
+
 #ifdef PANDORA
 	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
 #endif
