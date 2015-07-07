@@ -812,10 +812,10 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #endif
 
 #ifdef _WIN32
-	GetModuleFileName(host.hInst, moduleName, sizeof(moduleName));
+	GetModuleFileName( host.hInst, moduleName, sizeof(moduleName) );
 #else
 	// We didn't need full path, only executable name
-	strcpy(moduleName, strrchr(argv[0], '/'));
+	Q_strncpy(moduleName, strrchr(argv[0], '/'), sizeof(moduleName) );
 	//strrchr adds a / at begin of string =(
 	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
 #endif
