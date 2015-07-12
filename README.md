@@ -5,7 +5,7 @@ https://github.com/SDLash3D/xash3d
 
 Orignal project: [Xash3D on moddb](http://www.moddb.com/engines/xash3d-engine)
 
-Xash3D Engine is a custom Gold Source Engine rewritten from scratch. Xash3D
+Xash3D Engine is a custom Gold Source engine rewritten from scratch. Xash3D
 is compatible with many of the Gold Source games and mods and should be
 able to run almost any existing singleplayer Half-Life mod without a hitch.
 The multiplayer part is not yet completed, multiplayer mods should work just
@@ -30,7 +30,7 @@ build Xash3D as:
 
 # How to run    
 
-After successful build copy the next files to some other directory where you want to run xash3d:
+After a successful build, copy the next files to some other directory where you want to run Xash3D:
 
     cp engine/libxash.so game_launch/xash3d mainui/libxashmenu.so $HOME/Games/Xash3D
 
@@ -53,5 +53,5 @@ Run:
 # License
 
 The library is licensed under GPLv3 license, see COPYING for details.
-CMakeLists.txt files are licensed under MIT license, you will find its text
+CMakeLists.txt files are licensed under MIT license, you will find it's text
 in every CMakeLists.txt header.
