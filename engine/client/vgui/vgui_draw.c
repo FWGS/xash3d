@@ -97,7 +97,7 @@ void VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 	if( cls.key_dest != key_game || cl.refdef.paused )
 		return;
 #ifdef XASH_SDL
-	host.mouse_visible = true;
+	
 	switch( cursor )
 	{
 		case dc_user:
@@ -105,7 +105,9 @@ void VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 			host.mouse_visible = false;
 			break;
 		default:
-			SDL_SetCursor(s_pDefaultCursor[cursor]);
+		host.mouse_visible = true;
+		SDL_SetRelativeMouseMode( SDL_FALSE );
+		SDL_SetCursor(s_pDefaultCursor[cursor]);
 			//SDL_SetCursor(s_pDefaultCursor[dc_arrow]);
 			break;
 	}

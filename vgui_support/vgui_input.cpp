@@ -19,11 +19,6 @@ GNU General Public License for more details.
 #include "vgui_main.h"
 #include "input.h"
 
-static KeyCode s_pVirtualKeyTrans[256];
-#ifdef XASH_SDL
-static SDL_Cursor* s_pDefaultCursor[20];
-#endif
-
 void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code)
 {
 	if(!surface)
