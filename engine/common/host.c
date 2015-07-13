@@ -809,7 +809,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 #else
 	FS_FileBase( host.rootdir, SI.ModuleName );
-#endif
+
 
 #ifdef _WIN32
 	GetModuleFileName( host.hInst, moduleName, sizeof(moduleName) );
@@ -822,12 +822,13 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	//argv[0] is always stands for program name
 	Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
 	FS_ExtractFilePath( SI.ModuleName, szRootPath );
-	if( Q_stricmp( host.rootdir, szRootPath ))
+	/*if( Q_stricmp( host.rootdir, szRootPath ))
 	{
 		Q_strncpy( host.rootdir, szRootPath, sizeof( host.rootdir ));
 		SetCurrentDirectory( host.rootdir );
-	}
-
+	}*/
+#endif
+	SetCurrentDirectory( host.rootdir );
 	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
 
 #ifdef XASH_DEDICATED
