@@ -51,6 +51,8 @@ typedef vec_t		matrix3x4[3][4];
 typedef vec_t		matrix4x4[4][4];
 #ifdef XASH_SDL
 typedef Uint64 longtime_t;
+#elif _MSC_VER == 1200 // Shitty msvc6 does not know about ULL
+typedef __int64 longtime_t;
 #else
 typedef unsigned long long longtime_t;
 #endif

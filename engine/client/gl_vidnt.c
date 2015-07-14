@@ -1565,12 +1565,14 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 #else
 	SDL_Surface *ico;
 
+#ifdef _WIN32
 	// find the icon file in the filesystem
 	if( FS_FileExists( GI->iconpath, true ))
 	{
 		char	localPath[MAX_SYSPATH];
 
 		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
+
 		ico = IMG_Load(localPath);
 
 		if( !ico )
@@ -1580,7 +1582,9 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			ico = NULL;
 		}
 	}
-	else ico = NULL;
+	else 
+#endif
+	ico = NULL;
 
 	// ico is NULL because there is no resource for standart icon. Sorry about that.
 	if(ico) SDL_SetWindowIcon(host.hWnd, ico);
