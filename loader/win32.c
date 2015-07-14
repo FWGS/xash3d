@@ -5166,10 +5166,10 @@ static double exp_CIsin(void)
 
 static double exp_CImod(void)
 {
-    FPU_DOUBLE(x);
+    FPU_DOUBLES(x,y);
 
     dbgprintf("_CImod(%f)\n", x);
-    return mod(x);
+    return fmod(x,y);
 }
 
 static double exp_CIsqrt(void)

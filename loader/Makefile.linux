@@ -16,7 +16,7 @@ SRCS = $(wildcard *.c)
 OBJS = $(SRCS:.c=.o)
 
 libloader.so : $(OBJS)
-	$(CC) $(LDFLAGS) -o libloader.so -shared -lm $(OBJS)
+	$(CC) $(LDFLAGS) -o libloader.so -shared $(OBJS) -lm
 
 .PHONY: depend clean
 
