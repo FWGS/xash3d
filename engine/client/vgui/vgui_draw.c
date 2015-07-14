@@ -130,6 +130,14 @@ byte VGUI_GetColor( int i, int j)
 
 // Define and initialize vgui API
 
+void VGUI_SetVisible ( qboolean state )
+{
+	host.input_enabled=state;
+	host.mouse_visible=state;
+#ifdef XASH_SDL
+	SDL_ShowCursor(state);
+#endif
+}
 vguiapi_t vgui =
 {
 	false, //Not initialized yet
@@ -152,6 +160,7 @@ vguiapi_t vgui =
 	VGUI_CursorSelect,
 	VGUI_GetColor,
 	VGUI_IsInGame,
+	VGUI_SetVisible,
 	NULL,
 	NULL,
 	NULL,
@@ -197,7 +206,7 @@ void VGui_Startup( int width, int height )
 	}
 	if (vgui.initialized)
 	{
-		host.mouse_visible = true;
+		//host.mouse_visible = true;
 		vgui.Startup(width, height);
 	}
 }
@@ -373,8 +382,10 @@ enum VGUI_MouseCode VGUI_MapMouseButton( byte button)
 
 
 
-void VGUI_SurfaceWndProc( Xash_Event *event )
+qboolean VGUI_SurfaceWndProc( Xash_Event *event )
 {
+/* When false returned, event passed to engine, else only to vgui*/
+/* NOTE: this disabled because VGUI shows it's cursor on engine start*/
 #ifdef XASH_SDL
 	switch( event->type )
 	{
@@ -383,29 +394,31 @@ void VGUI_SurfaceWndProc( Xash_Event *event )
 		break;*/
 	case SDL_MOUSEMOTION:
 		vgui.MouseMove(event->motion.x, event->motion.y);
-		break;
+		return false;
 	case SDL_MOUSEBUTTONDOWN:
 		if(event->button.clicks == 1)
 		vgui.Mouse(MA_PRESSED, VGUI_MapMouseButton(event->button.button));
 		else
 		vgui.Mouse(MA_DOUBLE, VGUI_MapMouseButton(event->button.button));
-		break;
+		return true;
 	case SDL_MOUSEBUTTONUP:
 		vgui.Mouse(MA_RELEASED, VGUI_MapMouseButton(event->button.button));
-		break;
+		return true;
 	case SDL_MOUSEWHEEL:
 		vgui.Mouse(MA_WHEEL, event->wheel.y);
-		break;
+		return true;
 	case SDL_KEYDOWN:
 		if(!( event->key.keysym.sym & ( 1 << 30 )))
 			vgui.Key( KA_PRESSED, VGUI_MapKey( event->key.keysym.sym ));
 		vgui.Key( KA_TYPED, VGUI_MapKey( event->key.keysym.sym ));
-		break;
+		return false;
 	case SDL_KEYUP:
 		vgui.Key( KA_RELEASED, VGUI_MapKey( event->key.keysym.sym ) );
-		break;
+		return false;
 	}
+	
 #endif
+	return false;
 }
 
 

@@ -47,6 +47,11 @@ void CEngineApp :: getCursorPos( int &x,int &y )
 #endif
 }
 
+void CEnginePanel :: setVisible(bool state)
+{
+	g_api->SetVisible(state);
+}
+
 void VGui_RunFrame( void )
 {
 	// What? Why? >_<

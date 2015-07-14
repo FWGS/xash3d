@@ -189,6 +189,7 @@ class CEnginePanel : public Panel
 public:
 	virtual SurfaceBase* getSurfaceBase( void );
 	virtual App* getApp( void );
+	virtual void setVisible(bool state);
 };
 
 //

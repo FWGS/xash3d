@@ -182,11 +182,10 @@ typedef struct  vguiapi_s
 	void	(*GetTextureSizes)( int *width, int *height );
 	int		(*GenerateTexture)( void );
 	void	*(*EngineMalloc)( size_t size );
-/*	void	(*ShowCursor)( void );
-	void	(*HideCursor)( void );*/
 	void	(*CursorSelect)( enum VGUI_DefaultCursor cursor );
 	byte		(*GetColor)( int i, int j );
 	qboolean	(*IsInGame)( void );
+	void	(*SetVisible)( qboolean state );
 	void	(*Startup)( int width, int height );
 	void	(*Shutdown)( void );
 	void	*(*GetPanel)( void );
