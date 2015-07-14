@@ -3751,11 +3751,7 @@ static UINT WINAPI expGetTempFileNameA(LPCSTR cs1,LPCSTR cs2,UINT i,LPSTR ps)
     dbgprintf(" => %d\n", strlen(ps));
     return strlen(ps);
 }
-//
-// This func might need proper implementation if we want AngelPotion codec.
-// They try to open APmpeg4v1.apl with it.
-// DLL will close opened file with CloseHandle().
-//
+
 static HANDLE WINAPI expCreateFileA(LPCSTR cs1,DWORD i1,DWORD i2,
 				    LPSECURITY_ATTRIBUTES p1, DWORD i3,DWORD i4,HANDLE i5)
 {
@@ -3769,7 +3765,14 @@ static HANDLE WINAPI expCreateFileA(LPCSTR cs1,DWORD i1,DWORD i2,
 	    flg |= O_WRONLY;
 	    printf("Warning: openning filename %s (flags; 0x%x) for write\n", cs1, flg);
 	}
-	return open(cs1, flg, S_IRWXU);;
+	char *s=strdup(cs1);
+	char *path=s;
+	while(s=strchr(s, '\\'))
+	*s++='/';
+	dbgprintf("open(\"%s\", %x, %o)\n", path, flg, S_IRWXU);
+	int res = open(path, flg, S_IRWXU);
+	free(path);
+	return res;
 }
 static UINT WINAPI expGetSystemDirectoryA(
   char* lpBuffer,  // address of buffer for system directory
