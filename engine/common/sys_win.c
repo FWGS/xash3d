@@ -47,10 +47,10 @@ Sys_DoubleTime
 */
 double Sys_DoubleTime( void )
 {
-	static Uint64	g_PerformanceFrequency;
-	static Uint64	g_ClockStart;
-	Uint64		CurrentTime;
-#if defined(__APPLE__) || defined(_WIN32)
+	static longtime_t g_PerformanceFrequency;
+	static longtime_t g_ClockStart;
+	longtime_t CurrentTime;
+#ifdef XASH_SDL
 	if( !g_PerformanceFrequency )
 	{
 		g_PerformanceFrequency = SDL_GetPerformanceFrequency();

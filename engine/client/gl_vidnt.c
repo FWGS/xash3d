@@ -811,8 +811,10 @@ void *GL_GetProcAddress( const char *name )
 {
 #ifdef XASH_SDL
 	void *func = SDL_GL_GetProcAddress(name);
-#else
+#elif defined (XASH_GLES)
 	void *func = nanoGL_GetProcAddress(name);
+#else //No opengl implementation
+	void *func = NULL;
 #endif
 	if(!func)
 	{

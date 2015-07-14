@@ -49,7 +49,11 @@ typedef byte		rgba_t[4];	// unsigned byte colorpack
 typedef byte		rgb_t[3];		// unsigned byte colorpack
 typedef vec_t		matrix3x4[3][4];
 typedef vec_t		matrix4x4[4][4];
-
+#ifdef XASH_SDL
+typedef Uint64 longtime_t;
+#else
+typedef unsigned long long longtime_t;
+#endif
 #include "const.h"
 
 #define ASSERT( exp )	if(!( exp )) Sys_Break( "assert failed at %s:%i\n", __FILE__, __LINE__ )
