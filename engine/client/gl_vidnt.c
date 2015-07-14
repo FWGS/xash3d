@@ -1252,7 +1252,7 @@ void VID_StartupGamma( void )
 	// init gamma ramp
 	Q_memset( glState.stateRamp, 0, gammaTypeSize);
 
-#ifndef __ANDROID__
+#if !defined (__ANDROID__) && defined(XASH_SDL)
 	glConfig.deviceSupportsGamma = !SDL_GetWindowGammaRamp( host.hWnd, NULL, NULL, NULL);
 #else
 	// Android doesn't support hw gamma. (thanks, SDL!)
