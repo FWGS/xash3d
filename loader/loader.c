@@ -22,6 +22,7 @@
 #include "wine/module.h"
 #include "wine/pe_image.h"
 #include "wine/winbase.h"
+#include "debug.h"
 
 // Wrapper functions (to convert __cdecl to __stdcall)
 void * Loader_LoadLibrary (const char *name)
@@ -31,7 +32,7 @@ void * Loader_LoadLibrary (const char *name)
 }
 void * Loader_GetProcAddress (void *hndl, const char *name)
 { 
-	printf("Loader_GetProcAdderss( %p, \"%s\" )\n", hndl, name);
+	dbg_printf("Loader_GetProcAdderss( %p, \"%s\" )\n", hndl, name);
 	return (void *)GetProcAddress((HMODULE)hndl, name);
 }
 void Loader_FreeLibrary(void *hndl)
@@ -42,7 +43,7 @@ void Loader_FreeLibrary(void *hndl)
 
 void *Loader_GetDllHandle( void *hndl )
 {
-	printf("Loader_GetDllHandle( %p )\n", hndl);
+	dbg_printf("Loader_GetDllHandle( %p )\n", hndl);
 	return (void*)MODULE32_LookupHMODULE( (HMODULE)hndl );
 }
 

@@ -650,12 +650,12 @@ FARPROC MODULE_GetProcAddress(
     WINE_MODREF	*wm = MODULE32_LookupHMODULE( hModule );
 //    WINE_MODREF *wm=local_wm;
     FARPROC	retproc;
-
+#ifdef DEBUG
     if (HIWORD(function))
 	fprintf(stderr,"XXX GetProcAddress(%08lx,%s)\n",(DWORD)hModule,function);
     else
 	fprintf(stderr,"XXX GetProcAddress(%08lx,%p)\n",(DWORD)hModule,function);
-
+#endif
 //	TRACE_(win32)("(%08lx,%s)\n",(DWORD)hModule,function);
 //    else
 //	TRACE_(win32)("(%08lx,%p)\n",(DWORD)hModule,function);

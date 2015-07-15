@@ -172,6 +172,7 @@ static void longcount_stub(long long* z)
 //#include "mp_msg.h"
 int LOADER_DEBUG=1; // active only if compiled with -DDETAILED_OUT
 //#define DETAILED_OUT
+#ifdef DEBUG
 static inline void dbgprintf(char* fmt, ...)
 {
 #ifdef DETAILED_OUT
@@ -211,7 +212,9 @@ static inline void dbgprintf(char* fmt, ...)
 	fflush(stderr);
 
 }
-
+#else
+#define dbgprintf(...)
+#endif
 
 char export_names[300][32]={
     "name1",
@@ -5838,7 +5841,7 @@ static char *extcode = NULL;
 
 static void mystub()
 {
-  printf("THIS IS STUB!!!\n");
+  printf("Called stub function:\n");
   void *trace[32];
   backtrace_symbols_fd(trace, backtrace(trace, 32), 1);
   printf("%s\n", MODULE_FindNearFunctionName(trace[1]));
@@ -5900,7 +5903,7 @@ void* LookupExternal(const char* library, int ordinal)
 	{
 	    if(ordinal!=libraries[i].exps[j].id)
 		continue;
-	    printf("Hit: 0x%p\n", libraries[i].exps[j].func);
+	    dbgprintf("Hit: 0x%p\n", libraries[i].exps[j].func);
 	    return libraries[i].exps[j].func;
 	}
     }
@@ -5932,7 +5935,7 @@ void* LookupExternal(const char* library, int ordinal)
 	    goto no_dll;
 	}
 
-	printf("External dll loaded (offset: 0x%x, func: %p)\n",
+	dbgprintf("External dll loaded (offset: 0x%x, func: %p)\n",
 	       hand, func);
 	return func;
     }
@@ -5967,7 +5970,7 @@ void* LookupExternalByName(const char* library, const char* name)
 		continue;
  	    if((unsigned int)(libraries[i].exps[j].func) == -1)
 		return NULL; //undefined func
-	    	    printf("Hit: 0x%08X\n", libraries[i].exps[j].func);
+	    	    dbgprintf("Hit: 0x%08X\n", libraries[i].exps[j].func);
 	    return libraries[i].exps[j].func;
 	}
     }
@@ -5999,7 +6002,7 @@ void* LookupExternalByName(const char* library, const char* name)
 	    goto no_dll_byname;
 	}
 
-	printf("External dll loaded (offset: 0x%x, func: %p)\n",
+	dbgprintf("External dll loaded (offset: 0x%x, func: %p)\n",
 	       hand, func);
 	return func;
     }
