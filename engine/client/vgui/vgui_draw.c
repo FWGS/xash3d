@@ -94,6 +94,7 @@ void VGUI_InitCursors( void )
 
 void VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 {
+	qboolean oldstate = host.mouse_visible;
 	if( cls.key_dest != key_game || cl.refdef.paused )
 		return;
 #ifdef XASH_SDL
@@ -118,6 +119,8 @@ void VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 	else
 	{
 		SDL_ShowCursor( false );
+		if( oldstate )
+			SDL_GetRelativeMouseState( 0, 0 );
 	}
 	//SDL_SetRelativeMouseMode(false);
 #endif
@@ -135,7 +138,8 @@ void VGUI_SetVisible ( qboolean state )
 	host.input_enabled=state;
 	host.mouse_visible=state;
 #ifdef XASH_SDL
-	SDL_ShowCursor(state);
+	SDL_ShowCursor( state );
+	if(!state) SDL_GetRelativeMouseState( 0, 0 );
 #endif
 }
 vguiapi_t vgui =

@@ -269,6 +269,7 @@ void IN_ActivateMouse( qboolean force )
 	}
 #ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, true );
+	SDL_GetRelativeMouseState( 0, 0 ); // Reset mouse position
 #endif
 }
 
