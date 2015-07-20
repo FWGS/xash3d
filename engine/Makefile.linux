@@ -2,7 +2,7 @@ CC ?= gcc
 CXX ?= g++
 CFLAGS ?= -Og -ggdb
 LDFLAGS =
-LIBS =
+LIBS = -lm
 LBITS := $(shell getconf LONG_BIT)
 ifeq ($(LBITS),64)
     LDFLAGS += -m32
@@ -17,7 +17,7 @@ ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
 else
     DEFINES += -DXASH_SDL
-    LIBS += -lSDL2
+    LIBS += -lSDL2 -pthread
 endif
 
 ifeq ($(XASH_DLL_LOADER),1)
