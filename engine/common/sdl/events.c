@@ -8,7 +8,10 @@
 int SDLash_EventFilter( SDL_Event* event)
 {
 	#ifdef XASH_VGUI
-	if( !host.mouse_visible || !VGUI_SurfaceWndProc(event)); // CEnginePanel is visible by default, why?
+	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
+	// switch ....
+	// CEnginePanel is visible by default, why?
+	VGUI_SurfaceWndProc(event);
 	#endif
 	switch ( event->type )
 	{

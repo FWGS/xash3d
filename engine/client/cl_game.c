@@ -1870,7 +1870,7 @@ pfnGetMousePosition
 
 =============
 */
-static void pfnGetMousePosition( int *mx, int *my )
+void CL_GetMousePosition( int *mx, int *my )
 {
 #ifdef XASH_SDL
 	SDL_GetMouseState(mx, my);
@@ -3864,7 +3864,7 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetClientMaxspeed,
 	pfnCheckParm,
 	Key_Event,
-	pfnGetMousePosition,
+	CL_GetMousePosition,
 	pfnIsNoClipping,
 	CL_GetLocalPlayer,
 	pfnGetViewModel,

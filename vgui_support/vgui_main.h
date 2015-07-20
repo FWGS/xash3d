@@ -33,6 +33,9 @@ GNU General Public License for more details.
 #include<VGUI_MouseCode.h>
 #include<VGUI_KeyCode.h>
 
+
+extern vguiapi_t *g_api;
+
 using namespace vgui;
 
 class FontCache
@@ -134,11 +137,7 @@ public:
 	virtual bool hasFocus( void );
 	// now it's not abstract class, yay
 	virtual void GetMousePos(int &x, int &y) { 
-#ifdef XASH_SDL
-		//int x1,y1;
-		SDL_GetMouseState(&x, &y);
-		//x=x1, y=y1;
-#endif
+		g_api->GetCursorPos(&x, &y);
 		}
 protected:
 	virtual int createNewTextureID( void );
@@ -213,8 +212,6 @@ void SetScissorRect( int left, int top, int right, int bottom );
 qboolean ClipRect( const vpoint_t &inUL, const vpoint_t &inLR, vpoint_t *pOutUL, vpoint_t *pOutLR );
 
 extern FontCache *g_FontCache;
-
-extern vguiapi_t *g_api;
 
 
 extern CEnginePanel	*rootpanel;

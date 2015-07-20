@@ -70,6 +70,11 @@ qboolean VGUI_IsInGame()
 	return cls.state == ca_active && cls.key_dest == key_game;
 }
 
+void VGUI_GetMousePos( int *x, int *y )
+{
+	CL_GetMousePosition( x, y );
+}
+
 void VGUI_InitCursors( void )
 {
 	// load up all default cursors
@@ -165,6 +170,7 @@ vguiapi_t vgui =
 	VGUI_GetColor,
 	VGUI_IsInGame,
 	VGUI_SetVisible,
+	VGUI_GetMousePos,
 	NULL,
 	NULL,
 	NULL,
@@ -400,10 +406,10 @@ qboolean VGUI_SurfaceWndProc( Xash_Event *event )
 		vgui.MouseMove(event->motion.x, event->motion.y);
 		return false;
 	case SDL_MOUSEBUTTONDOWN:
-		if(event->button.clicks == 1)
+		//if(event->button.clicks == 1)
 		vgui.Mouse(MA_PRESSED, VGUI_MapMouseButton(event->button.button));
-		else
-		vgui.Mouse(MA_DOUBLE, VGUI_MapMouseButton(event->button.button));
+	//	else
+	//	vgui.Mouse(MA_DOUBLE, VGUI_MapMouseButton(event->button.button));
 		return true;
 	case SDL_MOUSEBUTTONUP:
 		vgui.Mouse(MA_RELEASED, VGUI_MapMouseButton(event->button.button));

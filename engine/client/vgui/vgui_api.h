@@ -186,6 +186,7 @@ typedef struct  vguiapi_s
 	byte		(*GetColor)( int i, int j );
 	qboolean	(*IsInGame)( void );
 	void	(*SetVisible)( qboolean state );
+	void	(*GetCursorPos)( int *x, int *y );
 	void	(*Startup)( int width, int height );
 	void	(*Shutdown)( void );
 	void	*(*GetPanel)( void );

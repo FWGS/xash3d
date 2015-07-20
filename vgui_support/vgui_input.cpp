@@ -56,7 +56,7 @@ void VGUI_Mouse(VGUI_MouseAction action, int code)
 			break;
 		case MA_WHEEL:
 			//fprintf(stdout, "vgui_support: VGUI mouse wheeled %d %d\n", action, code);
-			pApp->internalMouseWheeled( code*100, surface );
+			pApp->internalMouseWheeled( code, surface );
 			break;
 	}
 	//fprintf(stdout, "vgui_support: VGUI mouse action %d %d\n", action, code);	

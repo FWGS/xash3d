@@ -42,9 +42,7 @@ void CEngineApp :: setCursorPos( int x, int y )
 
 void CEngineApp :: getCursorPos( int &x,int &y )
 {
-#ifdef XASH_SDL
-	SDL_GetMouseState(&x, &y);
-#endif
+	g_api->GetCursorPos( &x, &y );
 }
 
 void CEnginePanel :: setVisible(bool state)
@@ -125,10 +123,7 @@ void VGui_Paint( void )
 	rootpanel->getSize(w, h);
 	EnableScissor( true );
 
-	if( g_api->IsInGame() )
-	{
-		pApp->externalTick ();
-	}
+	pApp->externalTick ();
 
 	pVPanel->setBounds( 0, 0, w, h );
 	pVPanel->repaint();
