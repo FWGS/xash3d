@@ -15,10 +15,6 @@
 #define UTLRBTREE_H
 
 #include "utlmemory.h"
-
-#ifdef _WIN32
-#define strcasecmp stricmp
-#endif
 //-----------------------------------------------------------------------------
 // Tool to generate a default compare function for any type that implements
 // operator<, including all simple types

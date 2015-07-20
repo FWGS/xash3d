@@ -50,16 +50,6 @@ void CEnginePanel :: setVisible(bool state)
 	g_api->SetVisible(state);
 }
 
-void VGui_RunFrame( void )
-{
-	// What? Why? >_<
-
-	/*if( GetModuleHandle( "fraps32.dll" ) || GetModuleHandle( "fraps64.dll" ))
-		host.force_draw_version = true;
-	else host.force_draw_version = false;*/
-
-	//host.force_draw_version = false;
-}
 
 void VGui_Startup( int width, int height )
 {
@@ -133,12 +123,6 @@ void VGui_Paint( void )
 
 	EnableScissor( false );
 }
-
-void VGui_ViewportPaintBackground( int extents[4] )
-{
-//	Msg( "Vgui_ViewportPaintBackground( %i, %i, %i, %i )\n", extents[0], extents[1], extents[2], extents[3] );
-}
-
 void *VGui_GetPanel( void )
 {
 	return (void *)rootpanel;
@@ -155,8 +139,6 @@ extern "C" void InitAPI(vguiapi_t * api)
 	g_api->Startup = VGui_Startup;
 	g_api->Shutdown = VGui_Shutdown;
 	g_api->GetPanel = VGui_GetPanel;
-	g_api->RunFrame = VGui_RunFrame;
-	g_api->ViewportPaintBackground = VGui_ViewportPaintBackground;
 	g_api->Paint = VGui_Paint;
 	g_api->Mouse = VGUI_Mouse;
 	g_api->MouseMove = VGUI_MouseMove;

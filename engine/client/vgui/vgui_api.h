@@ -190,8 +190,6 @@ typedef struct  vguiapi_s
 	void	(*Startup)( int width, int height );
 	void	(*Shutdown)( void );
 	void	*(*GetPanel)( void );
-	void	(*RunFrame)( void );
-	void	(*ViewportPaintBackground)( int extents[4] );
 	void	(*Paint)( void );
 	void	(*Mouse)(enum VGUI_MouseAction action, int code );
 	void	(*Key)(enum VGUI_KeyAction action,enum VGUI_KeyCode code );

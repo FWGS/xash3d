@@ -178,8 +178,6 @@ vguiapi_t vgui =
 	NULL,
 	NULL,
 	NULL,
-	NULL,
-	NULL,
 } ;
 
 
@@ -236,6 +234,7 @@ void VGui_Shutdown( void )
 		vgui.Shutdown();
 	if(lib)
 		Com_FreeLibrary(lib);
+	vgui.initialized = false;
 }
 
 
@@ -671,13 +670,11 @@ void *VGui_GetPanel()
 }
 void VGui_ViewportPaintBackground( int extents[4])
 {
-	if(vgui.initialized)
-		vgui.ViewportPaintBackground(extents);
+	//stub
 }
 
 void VGui_RunFrame()
 {
-	if(vgui.initialized)
-		vgui.RunFrame();
+	//stub
 }
 #endif
