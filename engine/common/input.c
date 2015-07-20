@@ -61,6 +61,8 @@ static byte scan_to_key[128] =
 
 #ifdef XASH_SDL
 convar_t *m_valvehack;
+convar_t *m_enginemouse;
+convar_t *m_enginesens;
 #endif
 
 /*
@@ -121,15 +123,20 @@ IN_StartupMouse
 void IN_StartupMouse( void )
 {
 	if( host.type == HOST_DEDICATED ) return;
-	if( Sys_CheckParm( "-nomouse" )) return; 
+	
+	// You can use -nomouse argument to prevent using mouse from client
+	// -noenginemouse will disable all mouse input
+	if( Sys_CheckParm( "-noenginemouse" )) return; 
+
+#ifdef XASH_SDL
+	m_valvehack = Cvar_Get("m_valvehack", "0", CVAR_ARCHIVE, "Enable mouse hack for client.so with different SDL binary");
+	m_enginemouse = Cvar_Get("m_enginemouse", "0", CVAR_ARCHIVE, "Read mouse events in engine instead of client");
+	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
+#endif
 
 	in_mouse_buttons = 8;
 	in_mouseinitialized = true;
 	fullscreen = Cvar_FindVar( "fullscreen" );
-
-#ifdef XASH_SDL
-	m_valvehack = Cvar_Get("m_valvehack", "0", CVAR_ARCHIVE, "Enable mouse hack for valve client.so");
-#endif
 
 #ifdef _WIN32
 	in_mouse_wheel = RegisterWindowMessage( "MSWHEEL_ROLLMSG" );
@@ -343,7 +350,7 @@ void IN_MouseEvent( int mstate )
 			else
 				SDL_SetRelativeMouseMode( SDL_TRUE );
 		}
-		else if(!host.mouse_visible)
+		else
 		{
 			int x, y;
 			SDL_GetMouseState(&x, &y);
@@ -355,28 +362,19 @@ void IN_MouseEvent( int mstate )
 			{
 				SDL_WarpMouseInWindow(host.hWnd, host.window_center_x, host.window_center_y);
 				ignore = 1; // next mouse event will be mouse warp
-				clgame.dllFuncs.IN_MouseEvent( mstate );
-				if(1)
-				{
-					int mouse_x, mouse_y;
-					SDL_GetRelativeMouseState( &mouse_x, &mouse_y );
-					cl.refdef.cl_viewangles[PITCH] += mouse_y;
-					cl.refdef.cl_viewangles[PITCH] = bound( -89, cl.refdef.cl_viewangles[PITCH], 89 );
-					cl.refdef.cl_viewangles[YAW] -= mouse_x;
-				}
 				return;
 			}
-			if (!ignore)
+			if ( !ignore )
 			{
-				clgame.dllFuncs.IN_MouseEvent( mstate );
-				/*if(1)
+				if( m_enginemouse->integer )
 				{
 					int mouse_x, mouse_y;
 					SDL_GetRelativeMouseState( &mouse_x, &mouse_y );
-					cl.refdef.cl_viewangles[PITCH] += mouse_y;
-					cl.refdef.cl_viewangles[PITCH] = bound( -89, cl.refdef.cl_viewangles[PITCH], 89 );
-					cl.refdef.cl_viewangles[YAW] -= mouse_x;
-				}*/
+					cl.refdef.cl_viewangles[PITCH] += mouse_y * m_enginesens->value;
+					cl.refdef.cl_viewangles[PITCH] = bound( -90, cl.refdef.cl_viewangles[PITCH], 90 );
+					cl.refdef.cl_viewangles[YAW] -= mouse_x * m_enginesens->value;
+				}
+				else clgame.dllFuncs.IN_MouseEvent( mstate );
 			}
 			else
 			{
@@ -489,7 +487,7 @@ void Host_InputFrame( void )
 	if( cl.refdef.paused && cls.key_dest == key_game )
 		shutdownMouse = true; // release mouse during pause or console typeing
 	
-	if( shutdownMouse && !Cvar_VariableInteger( "fullscreen" ))
+	if( shutdownMouse && !fullscreen->integer )
 	{
 		IN_DeactivateMouse();
 		return;
