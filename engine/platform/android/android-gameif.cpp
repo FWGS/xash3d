@@ -188,7 +188,7 @@ void PortableMouseAbs(float x,float y)
 
 // =================== FORWARD and SIDE MOVMENT ==============
 
-volatile float forwardmove, sidemove; //Joystick mode
+volatile float forwardmove = 0, sidemove = 0; //Joystick mode
 
 void PortableMoveFwd(float fwd)
 {

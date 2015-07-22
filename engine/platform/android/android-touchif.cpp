@@ -430,6 +430,8 @@ int inAutomapLast = 0;
 static int glInit = 0;
 extern "C" void Android_DrawControls()
 {
+	if(!controlsCreated)
+		return;
 	//LOGI("frameControls");
 	if (!glInit)
 	{
