@@ -319,6 +319,10 @@ void CL_CreateCmd( void )
 	active = ( cls.state == ca_active && !cl.refdef.paused && !cls.demoplayback );
 	clgame.dllFuncs.CL_CreateMove( cl.time - cl.oldtime, &cmd, active );
 
+	// after command generated in client,
+	// add motion events from engine controls
+	IN_EngineMove( cl.time - cl.oldtime, &cmd, active);
+
 	R_LightForPoint( cl.frame.local.client.origin, &color, false, false, 128.0f );
 	cmd.lightlevel = (color.r + color.g + color.b) / 3;
 
@@ -564,7 +568,6 @@ void CL_SendCmd( void )
 {
 	// we create commands even if a demo is playing,
 	CL_CreateCmd();
-
 	// clc_move, userinfo etc
 	CL_WritePacket();
 

@@ -796,6 +796,14 @@ struct sizebuf_s;
 struct modelstate_s;
 struct pmtrace_s;
 
+
+//
+// input.c
+//
+
+void IN_EngineMove(float frametime, usercmd_t *cmd, qboolean active);
+
+
 // shared calls
 qboolean CL_IsInGame( void );
 qboolean CL_IsInMenu( void );
@@ -912,6 +920,10 @@ void S_StopAllSounds( void );
 void BuildGammaTable( float gamma, float texGamma );
 byte TextureToTexGamma( byte b );
 byte TextureToGamma( byte b );
+
+#ifdef __ANDROID__
+#include "platform/android/android-main.h"
+#endif
 
 #ifdef __cplusplus
 }

@@ -434,7 +434,20 @@ void IN_Init( void )
 
 	IN_StartupMouse( );
 }
+/*
+================
+IN_EngineMove
 
+Called from cl_main.c after generating command in client
+================
+*/
+void IN_EngineMove( float frametime, usercmd_t *cmd, qboolean active )
+{
+#ifdef __ANDROID__
+	if(active)
+		Android_Move(cmd);
+#endif
+}
 /*
 ==================
 Host_InputFrame

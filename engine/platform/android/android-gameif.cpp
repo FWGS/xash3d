@@ -8,6 +8,7 @@ extern "C"
 #include "common.h"
 #include "client.h"
 #include "input.h"
+#include "android-main.h"
 }
 #include <pthread.h>
 
@@ -274,8 +275,7 @@ int PortableInMenu(void)
 
 // CALLED FROM GAME//////////////////////
 
-
-extern "C" void AndroidEvents()
+void Android_Events()
 {
 	pthread_mutex_lock(&events_mutex);
 	if (events_used != events_avail)
@@ -315,62 +315,78 @@ extern "C" void AndroidEvents()
 	pthread_mutex_unlock(&events_mutex);
 }
 
-static bool forwardHackActive = false;
-static bool backwardHackActive = false;
-extern cvar_t *cl_sidespeed;
-extern cvar_t *cl_forwardspeed;
+static uint moveflags = 0;
+#define F 1<<0
+#define B 1<<1
+#define L 1<<2
+#define R 1<<3
+//extern cvar_t *cl_sidespeed;
+//extern cvar_t *cl_forwardspeed;
 
-void IN_MobileMove ( float frametime, usercmd_t *cmd)
+void Android_Move ( usercmd_t *cmd )
 {
 
 	vec3_t viewangles;
 
-	//gEngfuncs.GetViewAngles( (float *)viewangles );
-
-	//cmd->forwardmove  += forwardmove * cl_forwardspeed->value;
-	//cmd->sidemove  += sidemove   * cl_sidespeed->value;
-
-	cmd->forwardmove  += forwardmove * 300;
-	cmd->sidemove  += sidemove   * 250;
-
-	if (forwardmove > 0.9 && !forwardHackActive)
+	if(!cmd) return;
+	if(moveflags & F)cmd->forwardmove-=400;
+	if(moveflags & B)cmd->forwardmove+=400;
+	if(moveflags & R)cmd->sidemove-=400;
+	if(moveflags & L)cmd->sidemove+=400;
+	cmd->forwardmove  += forwardmove * 400;// * cl_forwardspeed->value;
+	cmd->sidemove  += sidemove * 400;//   * cl_sidespeed->value;
+	if (forwardmove > 0.5 && !(moveflags & F))
 	{
-		//LOGI("Fwd hack on");
+		moveflags |= F;
 		Cmd_ExecuteString("+forward",src_command);
-		forwardHackActive = true;
 	}
-	else if (forwardmove < 0.8 && forwardHackActive)
+	else if (forwardmove < 0.5 && (moveflags & F))
 	{
-		//LOGI("Fwd hack off");
+		moveflags &= ~F;
 		Cmd_ExecuteString("-forward",src_command);
-		forwardHackActive = false;
 	}
-	else if (forwardmove < -0.9 && !backwardHackActive)
+	else if (forwardmove < -0.5 && !(moveflags & B))
 	{
+		moveflags |= B;
 		Cmd_ExecuteString("+back",src_command);
-		backwardHackActive = true;
 	}
-	else if (forwardmove > -0.8 && backwardHackActive)
+	else if (forwardmove > -0.5 && (moveflags & B))
 	{
+		moveflags &= ~B;
 		Cmd_ExecuteString("-back",src_command);
-		backwardHackActive = false;
 	}
-}
+	if (sidemove > 0.5 && !(moveflags & R))
+	{
+		moveflags |= R;
+		Cmd_ExecuteString("+moveright",src_command);
+	}
+	else if (sidemove < 0.5 && (moveflags & R))
+	{
+		moveflags &= ~R;
+		Cmd_ExecuteString("-moveright",src_command);
+	}
+	else if (sidemove < -0.5 && !(moveflags & L))
+	{
+		moveflags |= L;
+		Cmd_ExecuteString("+moveleft",src_command);
+	}
+	else if (sidemove > -0.5 && (moveflags & L))
+	{
+		moveflags &= ~L;
+		Cmd_ExecuteString("-moveleft",src_command);
+	}
 
-
-void IN_MobileAngles(float *viewangles)
-{
 	switch(look_pitch_mode)
 	{
 	case LOOK_MODE_MOUSE:
-		viewangles[0] += look_pitch_mouse * 200;
+		cl.refdef.cl_viewangles[0] += look_pitch_mouse * 200;
 		look_pitch_mouse = 0;
 		break;
 	case LOOK_MODE_ABSOLUTE:
-		viewangles[0] = look_pitch_abs * 80;
+		cl.refdef.cl_viewangles[0] = look_pitch_abs * 80;
 		break;
 	case LOOK_MODE_JOYSTICK:
-		viewangles[0] += look_pitch_joy * 6;
+		cl.refdef.cl_viewangles[0] += look_pitch_joy * 6;
 		break;
 	}
 
@@ -378,11 +394,11 @@ void IN_MobileAngles(float *viewangles)
 	switch(look_yaw_mode)
 	{
 	case LOOK_MODE_MOUSE:
-		viewangles[1] += look_yaw_mouse * 300;
+		cl.refdef.cl_viewangles[1] += look_yaw_mouse * 300;
 		look_yaw_mouse = 0;
 		break;
 	case LOOK_MODE_JOYSTICK:
-		viewangles[1] += look_yaw_joy * 6;
+		cl.refdef.cl_viewangles[1] += look_yaw_joy * 6;
 		break;
 	}
 }

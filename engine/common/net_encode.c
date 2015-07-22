@@ -1833,7 +1833,7 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 
 	if( !(dt && dt->bInitialized) ) // Broken  delta?
 	{
-		MsgDev("MSG_ReadDeltaEntity: broken delta\n")
+		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: broken delta\n");
 		return true;
 	}
 	pField = dt->pFields;
