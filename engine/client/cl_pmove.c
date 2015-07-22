@@ -841,10 +841,10 @@ void CL_PredictMovement( void )
 		current_command_mod = current_command & CL_UPDATE_MASK;
 
 		// we've caught up to the current command.
-		if( current_command > outgoing_command )
+		if( current_command >= outgoing_command )
 			break;
 
-		clgame.pmove->cmd = cl.cmds[frame];
+		clgame.pmove->cmd = cl.cmds[current_command_mod];
 
 		// motor!
 		clgame.dllFuncs.pfnPlayerMove( clgame.pmove, false ); // run frames
