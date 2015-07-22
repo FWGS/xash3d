@@ -1831,8 +1831,11 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 		dt = Delta_FindStruct( "custom_entity_state_t" );
 	}
 
-	ASSERT( dt && dt->bInitialized );
-
+	if( !(dt && dt->bInitialized) ) // Broken  delta?
+	{
+		MsgDev("MSG_ReadDeltaEntity: broken delta\n")
+		return true;
+	}
 	pField = dt->pFields;
 	ASSERT( pField );
 
