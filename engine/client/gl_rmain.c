@@ -1353,6 +1353,9 @@ void R_EndFrame( void )
 {
 	// flush any remaining 2D bits
 	R_Set2DMode( false );
+#ifdef __ANDROID__
+	Android_DrawControls();
+#endif
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow(host.hWnd);
 #elif defined __ANDROID__ // For direct android backend

@@ -148,6 +148,7 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
 
     return status;
 }
+
 void Java_in_celest_xash3d_XashActivity_onNativeResize(JNIEnv* env, jclass cls, jint width, jint height)
 {
 	gWidth=width, gHeight=height;
@@ -157,9 +158,16 @@ void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
 {
 }
 
+void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclass cls, jint code)
+{
+}
+
+void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint x, jint y)
+{
+}
+
 void Android_SwapBuffers()
 {
-	frameControls();
 	nanoGL_Flush();
 	(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gSwapBuffers);
 }

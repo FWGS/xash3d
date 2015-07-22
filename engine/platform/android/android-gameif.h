@@ -70,6 +70,6 @@ void PortableCommand(const char * cmd);
 void PortableMenuMouse(int action,float x,float y);
 
 
-void PortableInit(int argc,const char ** argv);
+//void PortableInit(int argc,const char ** argv);
 
 int PortableInMenu(void);

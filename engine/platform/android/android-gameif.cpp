@@ -256,7 +256,7 @@ void PortableLookYaw(int mode, float yaw)
 }
 
 
-
+/*
 typedef void (*pfnChangeGame)( const char *progname );
 extern "C" int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func );
 
@@ -264,7 +264,7 @@ extern "C" int EXPORT Host_Main( int argc, const char **argv, const char *progna
 void PortableInit(int argc,const char ** argv){
 	Host_Main(argc, argv, GAME_PATH, false, NULL );
 }
-
+*/
 
 
 int PortableInMenu(void)
@@ -315,66 +315,14 @@ void Android_Events()
 	pthread_mutex_unlock(&events_mutex);
 }
 
-static uint moveflags = 0;
-#define F 1<<0
-#define B 1<<1
-#define L 1<<2
-#define R 1<<3
-//extern cvar_t *cl_sidespeed;
-//extern cvar_t *cl_forwardspeed;
-
 void Android_Move ( usercmd_t *cmd )
 {
 
 	vec3_t viewangles;
 
 	if(!cmd) return;
-	if(moveflags & F)cmd->forwardmove-=400;
-	if(moveflags & B)cmd->forwardmove+=400;
-	if(moveflags & R)cmd->sidemove-=400;
-	if(moveflags & L)cmd->sidemove+=400;
-	cmd->forwardmove  += forwardmove * 400;// * cl_forwardspeed->value;
-	cmd->sidemove  += sidemove * 400;//   * cl_sidespeed->value;
-	if (forwardmove > 0.5 && !(moveflags & F))
-	{
-		moveflags |= F;
-		Cmd_ExecuteString("+forward",src_command);
-	}
-	else if (forwardmove < 0.5 && (moveflags & F))
-	{
-		moveflags &= ~F;
-		Cmd_ExecuteString("-forward",src_command);
-	}
-	else if (forwardmove < -0.5 && !(moveflags & B))
-	{
-		moveflags |= B;
-		Cmd_ExecuteString("+back",src_command);
-	}
-	else if (forwardmove > -0.5 && (moveflags & B))
-	{
-		moveflags &= ~B;
-		Cmd_ExecuteString("-back",src_command);
-	}
-	if (sidemove > 0.5 && !(moveflags & R))
-	{
-		moveflags |= R;
-		Cmd_ExecuteString("+moveright",src_command);
-	}
-	else if (sidemove < 0.5 && (moveflags & R))
-	{
-		moveflags &= ~R;
-		Cmd_ExecuteString("-moveright",src_command);
-	}
-	else if (sidemove < -0.5 && !(moveflags & L))
-	{
-		moveflags |= L;
-		Cmd_ExecuteString("+moveleft",src_command);
-	}
-	else if (sidemove > -0.5 && (moveflags & L))
-	{
-		moveflags &= ~L;
-		Cmd_ExecuteString("-moveleft",src_command);
-	}
+
+	IN_JoyMove( cmd, forwardmove, sidemove );
 
 	switch(look_pitch_mode)
 	{

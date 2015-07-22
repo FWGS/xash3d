@@ -801,7 +801,8 @@ struct pmtrace_s;
 // input.c
 //
 
-void IN_EngineMove(float frametime, usercmd_t *cmd, qboolean active);
+void IN_EngineMove( float frametime, usercmd_t *cmd, qboolean active );
+void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove );
 
 
 // shared calls
