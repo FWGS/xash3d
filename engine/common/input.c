@@ -548,7 +548,7 @@ void IN_Init( void )
 
 	cl_forwardspeed	= Cvar_Get( "cl_forwardspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default forward move speed" );
 	cl_backspeed	= Cvar_Get( "cl_backspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default back move speed"  );
-	cl_sidespeed	= Cvar_Get( "cl_sidespeed", "400", CVAR_CLIENTDLL, "Default side move speed"  );
+	cl_sidespeed	= Cvar_Get( "cl_sidespeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default side move speed"  );
 #ifdef USE_EVDEV
 	evdev_mousepath	= Cvar_Get( "evdev_mousepath", "", 0, "Path for evdev device node");
 	evdev_grab = Cvar_Get( "evdev_grab", "0", CVAR_ARCHIVE, "Enable event device grab" );
@@ -580,46 +580,48 @@ void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove )
 	if( moveflags & B ) cmd->forwardmove += cl_backspeed->value;
 	if( moveflags & R ) cmd->sidemove -= cl_sidespeed->value;
 	if( moveflags & L ) cmd->sidemove += cl_sidespeed->value;
-
+	
+	//cmd->forwardmove = cmd->sidemove = 0;
+	
 	cmd->forwardmove  += forwardmove * cl_forwardspeed->value;
 	cmd->sidemove  += sidemove * cl_sidespeed->value;
 
-	if ( forwardmove > 0.5 && !( moveflags & F ))
+	if ( forwardmove > 0.7 && !( moveflags & F ))
 	{
 		moveflags |= F;
 		Cmd_ExecuteString( "+forward", src_command );
 	}
-	else if ( forwardmove < 0.5 && ( moveflags & F ))
+	else if ( forwardmove < 0.7 && ( moveflags & F ))
 	{
 		moveflags &= ~F;
 		Cmd_ExecuteString( "-forward", src_command );
 	}
-	else if ( forwardmove < -0.5 && !( moveflags & B ))
+	else if ( forwardmove < -0.7 && !( moveflags & B ))
 	{
 		moveflags |= B;
 		Cmd_ExecuteString( "+back", src_command );
 	}
-	else if ( forwardmove > -0.5 && ( moveflags & B ))
+	else if ( forwardmove > -0.7 && ( moveflags & B ))
 	{
 		moveflags &= ~B;
 		Cmd_ExecuteString( "-back", src_command );
 	}
-	if ( sidemove > 0.5 && !( moveflags & R ))
+	if ( sidemove > 0.9 && !( moveflags & R ))
 	{
 		moveflags |= R;
 		Cmd_ExecuteString( "+moveright", src_command );
 	}
-	else if ( sidemove < 0.5 && ( moveflags & R ))
+	else if ( sidemove < 0.9 && ( moveflags & R ))
 	{
 		moveflags &= ~R;
 		Cmd_ExecuteString( "-moveright", src_command );
 	}
-	else if ( sidemove < -0.5 && !( moveflags & L ))
+	else if ( sidemove < -0.9 && !( moveflags & L ))
 	{
 		moveflags |= L;
 		Cmd_ExecuteString( "+moveleft", src_command );
 	}
-	else if ( sidemove > -0.5 && ( moveflags & L ))
+	else if ( sidemove > -0.9 && ( moveflags & L ))
 	{
 		moveflags &= ~L;
 		Cmd_ExecuteString( "-moveleft", src_command );
