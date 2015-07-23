@@ -733,7 +733,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #endif
 
 #if defined(__ANDROID__)
-	Q_strncpy(host.rootdir, GAMEPATH, sizeof(host.rootdir));
+	Q_strncpy(host.rootdir, getenv("XASH3D_BASEDIR"), sizeof(host.rootdir));
 #elif defined(XASH_SDL)
 	if( !(SDL_GetBasePath()) )
 		Sys_Error( "couldn't determine current directory" );

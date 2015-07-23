@@ -10,6 +10,9 @@ nicknekit
 #include <android/log.h>
 #include <jni.h>
 
+
+
+
 #ifdef XASH_SDL
 /* Include the SDL main definition header */
 #include "SDL_main.h"
@@ -17,7 +20,7 @@ nicknekit
 int SDL_main( int argc, char **argv )
 {
 	__android_log_print(ANDROID_LOG_DEBUG,"Xash","Starting xash engine...");
-	return Host_Main(argc, argv, GAME_PATH, false, NULL );
+	return Host_Main(argc, argv, getenv("XASH3D_GAMEDIR"), false, NULL );
 }
 
 /*******************************************************************************
@@ -83,6 +86,17 @@ int Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jclass cls, jobject 
     /* exit(status); */
 
     return status;
+}
+
+int Java_org_libsdl_app_SDLActivity_setenv
+  (JNIEnv* env, jclass clazz, jstring key, jstring value, jboolean overwrite)
+{
+    char* k = (char *) (*env)->GetStringUTFChars(env, key, NULL);
+    char* v = (char *) (*env)->GetStringUTFChars(env, value, NULL);
+    int err = setenv(k, v, overwrite);
+    (*env)->ReleaseStringUTFChars(env, key, k);
+    (*env)->ReleaseStringUTFChars(env, value, v);
+    return err;
 }
 #else
 
