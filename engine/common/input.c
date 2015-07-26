@@ -36,6 +36,9 @@ RECT	window_rect, real_rect;
 #endif
 uint	in_mouse_wheel;
 int	wnd_caption;
+#ifdef PANDORA
+int noshouldermb = 0;
+#endif
 
 static byte scan_to_key[128] = 
 { 
@@ -50,6 +53,10 @@ static byte scan_to_key[128] =
 	0,0,0,K_F11,K_F12,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
+
+#ifdef XASH_SDL
+convar_t *m_valvehack;
+#endif
 
 /*
 =======
@@ -113,6 +120,11 @@ void IN_StartupMouse( void )
 
 	in_mouse_buttons = 8;
 	in_mouseinitialized = true;
+
+#ifdef XASH_SDL
+	m_valvehack = Cvar_Get("m_valvehack", "0", CVAR_ARCHIVE, "Enable mouse hack for valve client.so");
+#endif
+
 #ifdef _WIN32
 	in_mouse_wheel = RegisterWindowMessage( "MSWHEEL_ROLLMSG" );
 #endif
@@ -172,7 +184,8 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 
 	if( oldstate == key_game )
 	{
-		clgame.dllFuncs.IN_DeactivateMouse();
+		if( cls.initialized )
+			clgame.dllFuncs.IN_DeactivateMouse();
 	}
 	else if( newstate == key_game )
 	{
@@ -180,7 +193,8 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 #ifdef XASH_SDL
 		SDL_WarpMouseInWindow( host.hWnd, host.window_center_x, host.window_center_y );
 #endif
-		clgame.dllFuncs.IN_ActivateMouse();
+		if( cls.initialized )
+			clgame.dllFuncs.IN_ActivateMouse();
 	}
 
 	if( newstate == key_menu && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
@@ -262,7 +276,7 @@ void IN_DeactivateMouse( void )
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
 
-	if( cls.key_dest == key_game )
+	if( cls.key_dest == key_game && cls.initialized )
 	{
 		clgame.dllFuncs.IN_DeactivateMouse();
 	}
@@ -307,16 +321,36 @@ IN_MouseEvent
 void IN_MouseEvent( int mstate )
 {
 	int	i;
-
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
-
 	if( cls.key_dest == key_game )
 	{
 #ifdef XASH_SDL
-		SDL_SetRelativeMouseMode( true );
+		static qboolean ignore; // igonre mouse warp event
+		if( m_valvehack->integer == 0 )
+			SDL_SetRelativeMouseMode( SDL_TRUE );
+		else
+		{
+			int x, y;
+			SDL_GetMouseState(&x, &y);
+			if( x < host.window_center_x / 2 || y < host.window_center_y / 2 ||  x > host.window_center_x + host.window_center_x/2 || y > host.window_center_y + host.window_center_y / 2 )
+			{
+				SDL_WarpMouseInWindow(host.hWnd, host.window_center_x, host.window_center_y);
+				ignore = 1; // next mouse event will be mouse warp
+				clgame.dllFuncs.IN_MouseEvent( mstate );
+				return;
+			}
+			if (!ignore)
+			{
+				clgame.dllFuncs.IN_MouseEvent( mstate );
+			}
+			else
+			{
+				SDL_GetRelativeMouseState( 0, 0 ); // reset relative state
+				ignore = 0;
+			}
+		}
 #endif
-		clgame.dllFuncs.IN_MouseEvent( mstate );
 		return;
 	}
 	else
@@ -362,6 +396,10 @@ IN_Init
 */
 void IN_Init( void )
 {
+#ifdef PANDORA
+	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
+#endif
+
 	IN_StartupMouse( );
 }
 

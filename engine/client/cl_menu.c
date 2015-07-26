@@ -660,6 +660,7 @@ for drawing playermodel previews
 */
 static void pfnRenderScene( const ref_params_t *fd )
 {
+	if ( !cls.initialized ) return;
 	// to avoid division by zero
 	if( !fd || fd->fov_x <= 0.0f || fd->fov_y <= 0.0f )
 		return;

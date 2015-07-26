@@ -608,6 +608,8 @@ void CL_SetTraceHull( int hull );
 
 static _inline cl_entity_t *CL_EDICT_NUM( int n )
 {
+	if( !clgame.entities )
+		return NULL;
 	if(( n >= 0 ) && ( n < clgame.maxEntities ))
 		return clgame.entities + n;
 

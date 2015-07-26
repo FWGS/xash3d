@@ -45,9 +45,6 @@ convar_t	*host_maxfps;
 convar_t	*host_framerate;
 convar_t	*con_gamemaps;
 convar_t	*build, *ver;
-#ifdef PANDORA
-int noshouldermb = 0;
-#endif
 
 static int num_decals;
 
@@ -555,7 +552,8 @@ void Host_Frame( float time )
 	Host_GetConsoleCommands ();
 
 	Host_ServerFrame (); // server frame
-	Host_ClientFrame (); // client frame
+	if ( host.type != HOST_DEDICATED )
+		Host_ClientFrame (); // client frame
 
 	host.framecount++;
 }
@@ -708,29 +706,23 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	char		szTemp[MAX_SYSPATH];
 	char		moduleName[64];
 	string		szRootPath;
-#ifdef _WIN32
-	MEMORYSTATUS	lpBuffer;
 
-	lpBuffer.dwLength = sizeof( MEMORYSTATUS );
-	GlobalMemoryStatus( &lpBuffer );
-#endif
-
-#ifndef __ANDROID__
-#ifdef XASH_SDL
+#if defined(__ANDROID__)
+	Q_strncpy(host.rootdir, GAMEPATH, sizeof(host.rootdir));
+#elif defined(XASH_SDL)
 	if( !(SDL_GetBasePath()) )
 		Sys_Error( "couldn't determine current directory" );
-
 	Q_strncpy(host.rootdir, SDL_GetBasePath(), sizeof(host.rootdir));
 #else
-	if( !getcwd(host.rootdir, sizeof(host.rootdir) ) host.rootdir[0] = 0;
-#endif
-	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
-		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
-#else
-	Q_strncpy(host.rootdir, GAMEPATH, sizeof(host.rootdir));
+	if( !getcwd(host.rootdir, sizeof(host.rootdir) ) )
+			host.rootdir[0] = 0;
 #endif
 
+	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
+		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
+
 #ifdef _WIN32
+	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
 	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 	host.hInst = GetModuleHandle( NULL );
 #endif
@@ -744,9 +736,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	// e.g. xash.exe +game xash -game xash
 	// so we clearing all cmd_args, but leave dbg states as well
 	Sys_ParseCommandLine( argc, argv );
-#ifdef _WIN32
-	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
-#endif
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
 
@@ -764,18 +753,14 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 	host.type = HOST_NORMAL; // predict state
 	host.con_showalways = true;
-#ifdef PANDORA
-	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
-#endif
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__)
 	if (chdir(host.rootdir) == 0)
 		MsgDev(D_INFO,"%s is working directory now",host.rootdir);
 	else
 		MsgDev(D_ERROR,"%s is not exists",host.rootdir);
-#else
+#elif defined(XASH_SDL)
 	// we can specified custom name, from Sys_NewInstance
-#if XASH_SDL
 	if( SDL_GetBasePath() && !host.change_game )
 	{
 		Q_strncpy( szTemp, SDL_GetBasePath(), sizeof(szTemp) );
@@ -784,35 +769,23 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #else
 	FS_FileBase( host.rootdir, SI.ModuleName );
 #endif
-	// We didn't need full path, only executable name
-	strcpy(moduleName, strrchr(argv[0], '/'));
-	//strrchr adds a / at begin of string =(
-	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
 
-	//argv[0] is always stands for program name
-	Q_strncpy(SI.ModuleName, argv[0], sizeof(SI.ModuleName));
+	strcpy(moduleName, strrchr(argv[0], '/')); 	// We didn't need full path, only executable name
+	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1); //strrchr adds a / at begin of string =(
+	Q_strncpy(SI.ModuleName, argv[0], sizeof(SI.ModuleName)); //argv[0] is always stands for program name
 
 	FS_ExtractFilePath( SI.ModuleName, szRootPath );
 	if( Q_stricmp( host.rootdir, szRootPath ))
 	{
 		Q_strncpy( host.rootdir, szRootPath, sizeof( host.rootdir ));
-#ifdef _WIN32
 		SetCurrentDirectory( host.rootdir );
-#else
-		chdir( host.rootdir );
-#endif
 	}
+
+	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
+
+#ifdef XASH_DEDICATED
+	host.type = HOST_DEDICATED; // hard code dedicated host type
 #endif
-
-	if( SI.ModuleName[0] == '#' ) host.type = HOST_DEDICATED; 
-
-	// determine host type
-	if( progname[0] == '#' )
-	{
-		Q_strncpy( SI.ModuleName, progname + 1, sizeof( SI.ModuleName ));
-		host.type = HOST_DEDICATED;
-	}
-	else Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName )); 
 
 	if( host.type == HOST_DEDICATED )
 	{
@@ -845,7 +818,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Con_CreateConsole();
 
 	// first text message into console or log 
-	MsgDev( D_NOTE, "Sys_LoadLibrary: Loading xash.dll - ok\n" );
+	MsgDev( D_NOTE, "Sys_LoadLibrary: Loading Engine Library - ok\n" );
 
 	// startup cmds and cvars subsystem
 	Cmd_Init();
@@ -909,34 +882,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		return 0;
 	}
 #endif
-
-/*#ifndef _WIN32
-#ifndef __ANDROID__
-	// Start of IO functions
-	FILE *fd = fopen("/proc/self/cmdline", "r");
-	char moduleName[64], cmdLine[512] = "", *arg;
-	size_t size = 0;
-	int i = 0;
-	for(i = 0; getdelim(&arg, &size, 0, fd) != -1; i++)
-	{
-		if(!i)
-		{
-			strcpy(moduleName, strrchr(arg, '/'));
-			//strrchr adds a / at begin of string =(
-			memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
-		}
-		else
-		{
-			strcat(cmdLine, arg);
-			strcat(cmdLine, " ");
-		}
-	}
-	free(arg);
-	fclose(fd);
-#endif
-#else
-	// TODO
-#endif*/
 
 	Host_InitCommon( argc, argv, progname, bChangeGame );
 
@@ -1042,7 +987,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	SDL_Event event;
 #endif
 	// main window message loop
-	while( !host.crashed )
+	while( !host.crashed && !host.shutdown_issued )
 	{
 #ifdef XASH_SDL
 		while( SDL_PollEvent( &event ) )
