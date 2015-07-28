@@ -63,6 +63,7 @@ typedef struct
 	qboolean		log_active;
 	char		log_path[MAX_SYSPATH];
 	FILE		*logfile;
+	int 		logfileno;
 } WinConData;
 
 static WinConData	s_wcd;
@@ -515,12 +516,13 @@ void Sys_InitLog( void )
 	printf( "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
 	printf( "=================================================================================\n" );
 
-
+	s_wcd.logfileno = -1;
 	// create log if needed
 	if( s_wcd.log_active )
 	{
 		s_wcd.logfile = fopen( s_wcd.log_path, mode );
 		if( !s_wcd.logfile ) MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_wcd.log_path );
+		else s_wcd.logfileno = fileno( s_wcd.logfile );
 
 		fprintf( s_wcd.logfile, "=================================================================================\n" );
 		fprintf( s_wcd.logfile, "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
@@ -578,4 +580,11 @@ void Sys_PrintLog( const char *pMsg )
 	if( !s_wcd.logfile ) return;
 	fputs( pMsg, s_wcd.logfile );
 	fflush( s_wcd.logfile );
+}
+
+
+int Sys_LogFileNo( void )
+{
+	if( s_wcd.logfileno ) fflush( s_wcd.logfile );
+	return s_wcd.logfileno;
 }

@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#define _GNU_SOURCE
 #include "port.h"
 #ifdef XASH_SDL
 #include <SDL_timer.h>
@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
-
+#include <dlfcn.h>
 #ifndef __ANDROID__
 extern char **environ;
 #endif
@@ -384,6 +384,13 @@ void Sys_WaitForQuit( void )
 #endif
 }
 
+/*
+================
+Sys_Crash
+
+Crash handler, called from system
+================
+*/
 #ifdef _WIN32
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
@@ -414,6 +421,84 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 	if( host.oldFilter )
 		return host.oldFilter( pInfo );
 	return EXCEPTION_CONTINUE_EXECUTION;
+}
+#elif !defined (__ANDROID__) // Android will have other handler
+// Posix signal handler
+#include <ucontext.h>
+
+int printframe( char *buf, int len, int i, void *addr )
+{
+	Dl_info dlinfo;
+	if( len <= 0 ) return 0; // overflow
+	if( dladdr( addr, &dlinfo ))
+	{
+		if( dlinfo.dli_sname )
+			return snprintf( buf, len, "% 2d: %p <%s+%lu> (%s)\n", i, addr, dlinfo.dli_sname,
+					(unsigned long)addr - (unsigned long)dlinfo.dli_saddr, dlinfo.dli_fname ); // print symbol, module and address
+		else
+			return snprintf( buf, len, "% 2d: %p (%s)\n", i, addr, dlinfo.dli_fname ); // print module and address
+	}
+	else
+		return snprintf( buf, len, "% 2d: %p\n", i, addr ); // print only address
+}
+
+void Sys_Crash( int signal, siginfo_t *si, void *context)
+{
+	void *trace[32];
+	char message[1024], stackframe[256];
+	int len, stacklen, logfd, i = 0;
+	ucontext_t *ucontext = (ucontext_t*)context;
+#if __i386__
+	void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
+#elif defined (__arm__) // arm not tested
+	void *pc = (void*)ucontext->uc_mcontext.arm_r10, void **bp = (void*)ucontext->uc_mcontext.arm_r10, **sp = (void*)ucontext->uc_mcontext.arm_sp;
+#endif
+	// Safe actions first, stack and memory may be corrupted
+	len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr);
+	write(2, message, len);
+	// Flush buffers before writing directly to descriptors
+	fflush( stdout );
+	fflush( stderr );
+	// Now get log fd and write trace directly to log
+	logfd = Sys_LogFileNo();
+	write( logfd, message, len );
+	write( 2, "Stack backtrace:\n", 17 );
+	write( logfd, "Stack backtrace:\n", 17 );
+	strncpy(message + len, "Stack backtrace:\n", 1024 - len);
+	len += 17;
+	do
+	{
+		int line = printframe( message + len, 1024 - len, ++i, pc);
+		write( 2, message + len, line );
+		write( logfd, message + len, line );
+		len += line;
+		pc = bp[1];
+		bp = (void**)bp[0];
+	}
+	while (bp && pc);
+	// Try to print stack
+	write( 2, "Stack dump:\n", 12 );
+	write( logfd, "Stack dump:\n", 12 );
+	strncpy(message + len, "Stack dump:\n", 1024 - len);
+	len += 12;
+	for( i = 0; i < 32; i++ )
+	{
+		int line = printframe( message + len, 1024 - len, i, sp[i] );
+		write( 2, message + len, line );
+		write( logfd, message + len, line );
+		len += line;
+	}
+	// Put MessageBox as Sys_Error
+	Msg( message );
+	MSGBOX( message );
+	// Log saved, now we can try save configs and close log correctly, it may crash
+	if( host.type == HOST_NORMAL )
+			CL_Crashed();
+	host.state = HOST_CRASHED;
+	error_on_exit = true;
+	host.crashed = true;
+	Con_DestroyConsole();
+	Sys_Quit();
 }
 #endif
 
@@ -456,6 +541,7 @@ void Sys_Error( const char *error, ... )
 	{
 		Con_ShowConsole( true );
 		Con_DisableInput();	// disable input line for dedicated server
+		MSGBOX( text );
 		Sys_Print( text );	// print error message
 		Sys_WaitForQuit();
 	}

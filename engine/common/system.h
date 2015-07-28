@@ -97,6 +97,9 @@ void Sys_ParseCommandLine( int argc , const char **argv);
 void Sys_MergeCommandLine();
 #ifdef _WIN32
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo );
+#else
+#include <signal.h>
+void Sys_Crash( int signal, siginfo_t *si, void * );
 #endif
 void Sys_SetClipboardData( const byte *buffer, size_t size );
 #define Sys_GetParmFromCmdLine( parm, out ) _Sys_GetParmFromCmdLine( parm, out, sizeof( out ))
@@ -110,6 +113,7 @@ void Sys_PrintLog( const char *pMsg );
 void Sys_InitLog( void );
 void Sys_CloseLog( void );
 void Sys_Quit( void );
+int Sys_LogFileNo( void );
 
 //
 // sys_con.c

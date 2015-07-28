@@ -298,6 +298,8 @@ typedef struct host_parm_s
     HANDLE		hMutex;
 #ifdef _WIN32
 	LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
+#else
+	struct sigaction oldFilter;
 #endif
 
 	host_state	state;		// global host state
