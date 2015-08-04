@@ -472,6 +472,7 @@ void Sys_Crash( int signal, siginfo_t *si, void *context)
 		write( 2, message + len, line );
 		write( logfd, message + len, line );
 		len += line;
+		if( !dladdr(bp,0) ) break; // Only when bp is in module
 		pc = bp[1];
 		bp = (void**)bp[0];
 	}
