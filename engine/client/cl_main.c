@@ -288,7 +288,7 @@ void CL_CreateCmd( void )
 
 	// build list of all solid entities per next frame (exclude clients)
 	CL_SetSolidEntities ();
-
+	CL_SetSolidPlayers ( cl.playernum );
 	VectorCopy( cl.refdef.cl_viewangles, angles );
 	VectorCopy( cl.frame.local.client.origin, cl.data.origin );
 	VectorCopy( cl.refdef.cl_viewangles, cl.data.viewangles );
