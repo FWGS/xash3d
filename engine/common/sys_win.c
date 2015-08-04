@@ -425,7 +425,7 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 #elif !defined (__ANDROID__) // Android will have other handler
 // Posix signal handler
 #include <ucontext.h>
-
+#include <sys/mman.h>
 int printframe( char *buf, int len, int i, void *addr )
 {
 	Dl_info dlinfo;
@@ -466,29 +466,33 @@ void Sys_Crash( int signal, siginfo_t *si, void *context)
 	write( logfd, "Stack backtrace:\n", 17 );
 	strncpy(message + len, "Stack backtrace:\n", 1024 - len);
 	len += 17;
+	long pagesize = sysconf(_SC_PAGESIZE);
 	do
 	{
 		int line = printframe( message + len, 1024 - len, ++i, pc);
 		write( 2, message + len, line );
 		write( logfd, message + len, line );
 		len += line;
-		if( !dladdr(bp,0) ) break; // Only when bp is in module
+		//if( !dladdr(bp,0) ) break; // Only when bp is in module
+		if( mprotect((char *)(((int) bp + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) == -1) break;
+		if( mprotect((char *)(((int) bp[0] + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) == -1) break;
 		pc = bp[1];
 		bp = (void**)bp[0];
 	}
-	while (bp && pc);
+	while (bp);
 	// Try to print stack
 	write( 2, "Stack dump:\n", 12 );
 	write( logfd, "Stack dump:\n", 12 );
 	strncpy(message + len, "Stack dump:\n", 1024 - len);
 	len += 12;
-	for( i = 0; i < 32; i++ )
-	{
-		int line = printframe( message + len, 1024 - len, i, sp[i] );
-		write( 2, message + len, line );
-		write( logfd, message + len, line );
-		len += line;
-	}
+	if( mprotect((char *)(((int) sp + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) != -1)
+		for( i = 0; i < 32; i++ )
+		{
+			int line = printframe( message + len, 1024 - len, i, sp[i] );
+			write( 2, message + len, line );
+			write( logfd, message + len, line );
+			len += line;
+		}
 	// Put MessageBox as Sys_Error
 	Msg( message );
 #ifdef XASH_SDL
