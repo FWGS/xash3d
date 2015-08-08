@@ -95,7 +95,9 @@ typedef enum
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	0.97f		// engine current version
+#define XASH_VERSION	0.15f		// engine current version
+// since this fork have own version, this is just left for compability
+#define BASED_VERSION	0.97f
 
 // PERFORMANCE INFO
 #define MIN_FPS         	15.0		// host minimum fps value for maxfps.
@@ -632,6 +634,7 @@ uint Sound_GetApproxWavePlayLen( const char *filepath );
 // build.c
 //
 int Q_buildnum( void );
+int Q_based_buildnum( void );
 
 //
 // host.c

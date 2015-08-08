@@ -23,7 +23,8 @@ static char mond[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 int Q_buildnum( void )
 {
 // do not touch this! Only author of Xash3D can increase buildnumbers!
-#if 0 
+// Xash3D SDL: HAHAHA! I TOUCHED THIS!
+#if 0
 	int m = 0, d = 0, y = 0;
 	static int b = 0;
 
@@ -44,10 +45,18 @@ int Q_buildnum( void )
 	{
 		b += 1;
 	}
-	b -= 38752; // Feb 13 2007
+	//b -= 38752; // Feb 13 2007
+
+	b -= 41728; // Apr 1 2015. Date of first release of crossplatform Xash3D
 
 	return b;
 #else
-	return 3030;
+	return 129;
 #endif
+}
+
+// Since this fork has own buildnumber, this is left for compability with original Xash3D.
+int Q_based_buildnum( void )
+{
+	return 3030;
 }
