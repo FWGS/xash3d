@@ -991,6 +991,11 @@ qboolean UI_LoadProgs( void )
 
 #ifdef _WIN32
 		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false )))
+#elif defined (__ANDROID__)
+		char menulib[256];
+		Q_strncpy( menulib, getenv("XASH3D_ENGLIBDIR"), 256 );
+		Q_strncat( menulib, "/" MENUDLL, 256 );
+		if(!( menu.hInstance = Com_LoadLibrary( menulib, false )))
 #else
 		// Attempt to try finding library by libdl magic on Linux
 		if(!( menu.hInstance = Com_LoadLibrary( MENUDLL, false )))

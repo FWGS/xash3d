@@ -511,7 +511,7 @@ void SV_ChangeLevel_f( void )
 	}
 
 	// bad changelevel position invoke enables in one-way transtion
-	if( sv.net_framenum < 15 )
+	if( sv.net_framenum < 30 )
 	{
 		if( sv_validate_changelevel->integer )
 		{
@@ -587,7 +587,7 @@ void SV_ChangeLevel2_f( void )
 	}
 
 	// bad changelevel position invoke enables in one-way transtion
-	if( sv.net_framenum < 15 )
+	if( sv.net_framenum < 30 )
 	{
 		if( sv_validate_changelevel->integer )
 		{
@@ -686,28 +686,6 @@ void SV_Kick_f( void )
 
 	// min case there is a funny zombie
 	svs.currentPlayer->lastmessage = host.realtime;
-}
-
-/*
-==================
-SV_Kill_f
-==================
-*/
-void SV_Kill_f( void )
-{
-	if( !SV_SetPlayer() || sv.background )
-		return;
-
-	if( !svs.currentPlayer || !SV_IsValidEdict( svs.currentPlayer->edict ))
-		return;
-
-	if( svs.currentPlayer->edict->v.health <= 0.0f )
-	{
-		SV_ClientPrintf( svs.currentPlayer, PRINT_HIGH, "Can't suicide -- allready dead!\n");
-		return;
-	}
-
-	svgame.dllFuncs.pfnClientKill( svs.currentPlayer->edict );	
 }
 
 /*
@@ -979,7 +957,6 @@ void SV_InitOperatorCommands( void )
 {
 	Cmd_AddCommand( "heartbeat", SV_Heartbeat_f, "send a heartbeat to the master server" );
 	Cmd_AddCommand( "kick", SV_Kick_f, "kick a player off the server by number or name" );
-	Cmd_AddCommand( "kill", SV_Kill_f, "die instantly" );
 	Cmd_AddCommand( "status", SV_Status_f, "print server status information" );
 	Cmd_AddCommand( "serverinfo", SV_ServerInfo_f, "print server settings" );
 	Cmd_AddCommand( "clientinfo", SV_ClientInfo_f, "print user infostring (player num required)" );

@@ -42,7 +42,7 @@ qboolean CL_IsPredicted( void )
 	if( !cl_predict->integer || !cl.frame.valid )
 		return false;
 
-	if(( cls.netchan.outgoing_sequence - cls.netchan.incoming_sequence ) >= ( CL_UPDATE_BACKUP - 1 ))
+	if(( cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged ) >= ( CL_UPDATE_BACKUP - 1 ))
 		return false;
 
 	return true;

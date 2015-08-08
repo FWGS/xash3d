@@ -4753,6 +4753,9 @@ void SV_SpawnEntities( const char *mapname, char *entities )
 
 void SV_UnloadProgs( void )
 {
+	if( !svgame.hInstance )
+		return;
+	
 	SV_DeactivateServer ();
 	Delta_Shutdown ();
 

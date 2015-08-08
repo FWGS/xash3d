@@ -1846,6 +1846,28 @@ static void SV_Noclip_f( sv_client_t *cl )
 
 /*
 ==================
+SV_Kill_f
+==================
+*/
+void SV_Kill_f( sv_client_t *cl )
+{
+	if( !SV_SetPlayer() || sv.background )
+		return;
+
+	if( !cl || !SV_IsValidEdict( cl->edict ))
+		return;
+
+	if( cl->edict->v.health <= 0.0f )
+	{
+		SV_ClientPrintf( cl, PRINT_HIGH, "Can't suicide -- allready dead!\n");
+		return;
+	}
+
+	svgame.dllFuncs.pfnClientKill( cl->edict );	
+}
+
+/*
+==================
 SV_Godmode_f
 ==================
 */
@@ -1926,6 +1948,7 @@ ucmd_t ucmds[] =
 { "lightstyles", SV_WriteLightstyles_f },
 { "getresourelist", SV_SendResourceList_f },
 { "continueloading", SV_ContinueLoading_f },
+{ "kill", SV_Kill_f },
 { NULL, NULL }
 };
 

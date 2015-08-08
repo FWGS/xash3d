@@ -733,7 +733,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #endif
 
 #if defined(__ANDROID__)
-	Q_strncpy(host.rootdir, GAMEPATH, sizeof(host.rootdir));
+	Q_strncpy(host.rootdir, getenv("XASH3D_BASEDIR"), sizeof(host.rootdir));
 #elif defined(XASH_SDL)
 	if( !(SDL_GetBasePath()) )
 		Sys_Error( "couldn't determine current directory" );
@@ -750,6 +750,16 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
 	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 	host.hInst = GetModuleHandle( NULL );
+#elif defined (__ANDROID__)
+//TODO
+#else
+	struct sigaction act;
+	act.sa_sigaction = Sys_Crash;
+	act.sa_flags = SA_SIGINFO | SA_ONSTACK;
+	sigaction(SIGSEGV, &act, &host.oldFilter);
+	sigaction(SIGABRT, &act, &host.oldFilter);
+	sigaction(SIGBUS, &act, &host.oldFilter);
+	sigaction(SIGILL, &act, &host.oldFilter);
 #endif
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialzation started
@@ -1031,12 +1041,12 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		while( SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
 #endif
-		#ifdef __ANDROID__
-		void AndroidEvents();
-		AndroidEvents();
-		#endif
+
 		newtime = Sys_DoubleTime ();
 		Host_Frame( newtime - oldtime );
+		#ifdef __ANDROID__
+		Android_Events();
+		#endif
 		oldtime = newtime;
 	}
 

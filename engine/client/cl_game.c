@@ -3961,9 +3961,7 @@ void CL_UnloadProgs( void )
 	CL_FreeParticles();
 	CL_ClearAllRemaps();
 	Mod_ClearUserData();
-#ifdef XASH_VGUI
-	VGui_Shutdown();
-#endif
+
 
 	// NOTE: HLFX 0.5 has strange bug: hanging on exit if no map was loaded
 	if( !( !Q_stricmp( GI->gamedir, "hlfx" ) && GI->version == 0.5f ))
@@ -3973,6 +3971,9 @@ void CL_UnloadProgs( void )
 	Cvar_FullSet( "host_clientloaded", "0", CVAR_INIT );
 
 	Com_FreeLibrary( clgame.hInstance );
+#ifdef XASH_VGUI
+	VGui_Shutdown();
+#endif
 	Mem_FreePool( &cls.mempool );
 	Mem_FreePool( &clgame.mempool );
 	Q_memset( &clgame, 0, sizeof( clgame ));

@@ -298,6 +298,8 @@ typedef struct host_parm_s
     HANDLE		hMutex;
 #ifdef _WIN32
 	LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
+#else
+	struct sigaction oldFilter;
 #endif
 
 	host_state	state;		// global host state
@@ -796,6 +798,15 @@ struct sizebuf_s;
 struct modelstate_s;
 struct pmtrace_s;
 
+
+//
+// input.c
+//
+
+void IN_EngineMove( float frametime, usercmd_t *cmd, qboolean active );
+void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove );
+
+
 // shared calls
 qboolean CL_IsInGame( void );
 qboolean CL_IsInMenu( void );
@@ -912,6 +923,10 @@ void S_StopAllSounds( void );
 void BuildGammaTable( float gamma, float texGamma );
 byte TextureToTexGamma( byte b );
 byte TextureToGamma( byte b );
+
+#ifdef __ANDROID__
+#include "platform/android/android-main.h"
+#endif
 
 #ifdef __cplusplus
 }

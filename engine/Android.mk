@@ -17,7 +17,7 @@ ifeq ($(TARGET_ARCH),x86)
 LOCAL_CFLAGS += $(CFLAGS_OPT_X86)
 endif
 
-LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -fsigned-char
+LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -DUSE_EVDEV -fsigned-char
 
 ifeq ($(XASH_SDL),1)
 LOCAL_CFLAGS += -DXASH_SDL
@@ -109,6 +109,7 @@ LOCAL_SRC_FILES := \
            common/hpak.c \
            common/infostring.c \
            common/input.c \
+           common/input_evdevkey.c \
            common/keys.c \
            common/library.c \
            common/mathlib.c \

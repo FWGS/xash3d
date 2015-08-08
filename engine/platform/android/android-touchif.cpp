@@ -29,7 +29,6 @@
 
 
 #include "android-gameif.h"
-
 #include "nanogl.h"
 
 extern "C"
@@ -429,9 +428,10 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 int inMenuLast = 1;
 int inAutomapLast = 0;
 static int glInit = 0;
-extern "C" void frameControls();
-void frameControls()
+extern "C" void Android_DrawControls()
 {
+	if(!controlsCreated)
+		return;
 	//LOGI("frameControls");
 	if (!glInit)
 	{
@@ -567,9 +567,6 @@ JAVA_FUNC(initTouchControls) ( JNIEnv* env,	jobject thiz,jstring graphics_dir,ji
 	android_screen_height = height;
 
 	initControls(android_screen_width,-android_screen_height,graphicpath.c_str(),(graphicpath + "/game_controls.xml").c_str());
-#ifdef XASH_SDL
-	SDL_SetSwapBufferCallBack(frameControls);
-#endif
 	return 0;
 }
 

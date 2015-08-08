@@ -288,7 +288,7 @@ void CL_CreateCmd( void )
 
 	// build list of all solid entities per next frame (exclude clients)
 	CL_SetSolidEntities ();
-
+	CL_SetSolidPlayers ( cl.playernum );
 	VectorCopy( cl.refdef.cl_viewangles, angles );
 	VectorCopy( cl.frame.local.client.origin, cl.data.origin );
 	VectorCopy( cl.refdef.cl_viewangles, cl.data.viewangles );
@@ -318,6 +318,10 @@ void CL_CreateCmd( void )
 
 	active = ( cls.state == ca_active && !cl.refdef.paused && !cls.demoplayback );
 	clgame.dllFuncs.CL_CreateMove( cl.time - cl.oldtime, &cmd, active );
+
+	// after command generated in client,
+	// add motion events from engine controls
+	IN_EngineMove( cl.time - cl.oldtime, &cmd, active);
 
 	R_LightForPoint( cl.frame.local.client.origin, &color, false, false, 128.0f );
 	cmd.lightlevel = (color.r + color.g + color.b) / 3;
@@ -564,7 +568,6 @@ void CL_SendCmd( void )
 {
 	// we create commands even if a demo is playing,
 	CL_CreateCmd();
-
 	// clc_move, userinfo etc
 	CL_WritePacket();
 
@@ -1102,11 +1105,12 @@ Call before entering a new level, or after changing dlls
 */
 void CL_PrepSound( void )
 {
-	int	i, sndcount;
+	int	i, sndcount, step;
 
 	MsgDev( D_NOTE, "CL_PrepSound: %s\n", clgame.mapname );
 	for( i = 0, sndcount = 0; i < MAX_SOUNDS && cl.sound_precache[i+1][0]; i++ )
 		sndcount++; // total num sounds
+	step = sndcount/10;
 
 	S_BeginRegistration();
 
@@ -1114,7 +1118,7 @@ void CL_PrepSound( void )
 	{
 		cl.sound_index[i+1] = S_RegisterSound( cl.sound_precache[i+1] );
 		Cvar_SetFloat( "scr_loading", scr_loading->value + 5.0f / sndcount );
-		if( cl_allow_levelshots->integer || host.developer > 3 || cl.background )
+		if( step && !( i % step ) && ( cl_allow_levelshots->integer || cl.background ))
 			SCR_UpdateScreen();
 	}
 
@@ -1152,7 +1156,7 @@ Call before entering a new level, or after changing dlls
 void CL_PrepVideo( void )
 {
 	string	name, mapname;
-	int	i, mdlcount;
+	int	i, mdlcount, step;
 	int	map_checksum; // dummy
 
 	if( !cl.model_precache[1][0] )
@@ -1175,13 +1179,14 @@ void CL_PrepVideo( void )
 
 	for( i = 0, mdlcount = 0; i < MAX_MODELS && cl.model_precache[i+1][0]; i++ )
 		mdlcount++; // total num models
+	step = mdlcount/10;
 
 	for( i = 0; i < MAX_MODELS && cl.model_precache[i+1][0]; i++ )
 	{
 		Q_strncpy( name, cl.model_precache[i+1], MAX_STRING );
 		Mod_RegisterModel( name, i+1 );
 		Cvar_SetFloat( "scr_loading", scr_loading->value + 75.0f / mdlcount );
-		if( cl_allow_levelshots->integer || host.developer > 3 || cl.background )
+		if( step && !( i % step ) && ( cl_allow_levelshots->integer || cl.background ) )
 			SCR_UpdateScreen();
 	}
 
@@ -1661,7 +1666,8 @@ void CL_InitLocal( void )
 	Cmd_AddCommand ("gametitle", NULL, "show game logo" );
 	Cmd_AddCommand ("god", NULL, "enable godmode" );
 	Cmd_AddCommand ("fov", NULL, "set client field of view" );
-		
+	Cmd_AddCommand ("kill", NULL, "kill player" );
+
 	// register our commands
 	Cmd_AddCommand ("pause", NULL, "pause the game (if the server allows pausing)" );
 	Cmd_AddCommand ("localservers", CL_LocalServers_f, "collect info about local servers" );

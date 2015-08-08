@@ -62,8 +62,12 @@ static byte scan_to_key[128] =
 #ifdef XASH_SDL
 convar_t *m_valvehack;
 convar_t *m_enginemouse;
-convar_t *m_enginesens;
 #endif
+
+convar_t *m_enginesens;
+convar_t *cl_forwardspeed;
+convar_t *cl_sidespeed;
+convar_t *cl_backspeed;
 
 /*
 =======
@@ -120,6 +124,100 @@ static int Host_MapKey( int key )
 IN_StartupMouse
 ===========
 */
+
+#ifdef USE_EVDEV
+
+#include <fcntl.h>
+#include <linux/input.h>
+
+int evdev_open, mouse_fd, evdev_dx, evdev_dy;
+
+convar_t	*evdev_mousepath;
+convar_t	*evdev_grab;
+
+
+int KeycodeFromEvdev(int keycode);
+
+/*
+===========
+Evdev_OpenMouse_f
+===========
+For shitty systems that cannot provide relative mouse axes
+*/
+void Evdev_OpenMouse_f ( void )
+{
+	/* Android users can try open all devices starting from last
+	by listing all of them in script as they cannot write udev rules
+	for example:
+		evdev_mousepath /dev/input/event10
+		evdev_mouseopen
+		evdev_mousepath /dev/input/event9
+		evdev_mouseopen
+		evdev_mousepath /dev/input/event8
+		evdev_mouseopen
+		etc
+	So we will not print annoying messages that it is already open
+	*/
+	if ( evdev_open ) return;
+#ifdef __ANDROID__ // use root to grant access to evdev
+	char chmodstr[ 255 ] = "su -c chmod 666 ";
+	strcat( chmodstr, evdev_mousepath->string );
+	system(chmodstr);
+#endif
+	mouse_fd = open ( evdev_mousepath->string, O_RDONLY | O_NONBLOCK );
+	if ( mouse_fd < 0 )
+	{
+		MsgDev( D_ERROR, "Could not open input device %s\n", evdev_mousepath->string );
+		return;
+	}
+	MsgDev( D_INFO, "Input device %s opened sucessfully\n", evdev_mousepath->string );
+	evdev_open = 1;
+}
+/*
+===========
+Evdev_OpenClose_f
+===========
+Allow open other mouse
+*/
+void Evdev_CloseMouse_f ( void )
+{
+	if ( !evdev_open ) return;
+	evdev_open = 0;
+	close( mouse_fd );
+}
+
+void IN_EvdevFrame ()
+{
+	if ( evdev_open )
+	{
+		struct input_event ev;
+		evdev_dx = evdev_dy = 0;
+		while ( read( mouse_fd, &ev, 16) == 16 )
+		{
+			if ( ev.type == EV_REL )
+			{
+				switch ( ev.code )
+				{
+					case REL_X: evdev_dx += ev.value;
+					break;
+					case REL_Y: evdev_dy += ev.value;
+					break;
+				}
+			}
+			else if ( ( ev.type == EV_KEY ) && (evdev_grab->value == 1.0 ) )
+			{
+				Key_Event ( KeycodeFromEvdev( ev.code ) , ev.value);
+			}
+		}
+		if( ( evdev_grab->value == 1 ) && ( cls.key_dest != key_game ) )
+		{
+			ioctl( mouse_fd, EVIOCGRAB, (void*) 0);
+			Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
+		}
+	}
+}
+#endif
+
 void IN_StartupMouse( void )
 {
 	if( host.type == HOST_DEDICATED ) return;
@@ -237,6 +335,14 @@ void IN_ActivateMouse( qboolean force )
 
 	if( CL_Active() && host.mouse_visible && !force )
 		return;	// VGUI controls
+#ifdef USE_EVDEV
+		if( evdev_open && ( evdev_grab->value == 1 ) && cls.key_dest == key_game )
+		{
+			ioctl( mouse_fd, EVIOCGRAB, (void*) 1);
+			Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
+		}
+		else
+#endif
 
 	if( cls.key_dest == key_menu && fullscreen && !fullscreen->integer)
 	{
@@ -289,6 +395,13 @@ Called when the window loses focus
 */
 void IN_DeactivateMouse( void )
 {
+#ifdef USE_EVDEV
+	if( evdev_open && ( evdev_grab->value == 1 ) )
+	{
+		ioctl( mouse_fd, EVIOCGRAB, (void*) 0);
+		Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
+	}
+#endif
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
 
@@ -296,7 +409,6 @@ void IN_DeactivateMouse( void )
 	{
 		clgame.dllFuncs.IN_DeactivateMouse();
 	}
-
 	in_mouseactive = false;
 #ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, false );
@@ -433,8 +545,111 @@ void IN_Init( void )
 #endif
 
 	IN_StartupMouse( );
+
+	cl_forwardspeed	= Cvar_Get( "cl_forwardspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default forward move speed" );
+	cl_backspeed	= Cvar_Get( "cl_backspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default back move speed"  );
+	cl_sidespeed	= Cvar_Get( "cl_sidespeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default side move speed"  );
+#ifdef USE_EVDEV
+	evdev_mousepath	= Cvar_Get( "evdev_mousepath", "", 0, "Path for evdev device node");
+	evdev_grab = Cvar_Get( "evdev_grab", "0", CVAR_ARCHIVE, "Enable event device grab" );
+	Cmd_AddCommand ("evdev_mouseopen", Evdev_OpenMouse_f, "Open device selected by evdev_mousepath");
+	Cmd_AddCommand ("evdev_mouseclose", Evdev_CloseMouse_f, "Close current evdev device");
+	evdev_open = 0;
+#endif
 }
 
+/*
+================
+IN_JoyMove
+
+Common function for engine joystick movement
+
+	-1 < forwardmove < 1,	-1 < sidemove < 1
+
+================
+*/
+static uint moveflags = 0;
+#define F 1<<0
+#define B 1<<1
+#define L 1<<2
+#define R 1<<3
+
+void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove )
+{
+	if( moveflags & F ) cmd->forwardmove -= cl_forwardspeed->value;
+	if( moveflags & B ) cmd->forwardmove += cl_backspeed->value;
+	if( moveflags & R ) cmd->sidemove -= cl_sidespeed->value;
+	if( moveflags & L ) cmd->sidemove += cl_sidespeed->value;
+	
+	//cmd->forwardmove = cmd->sidemove = 0;
+	
+	cmd->forwardmove  += forwardmove * cl_forwardspeed->value;
+	cmd->sidemove  += sidemove * cl_sidespeed->value;
+
+	if ( forwardmove > 0.7 && !( moveflags & F ))
+	{
+		moveflags |= F;
+		Cmd_ExecuteString( "+forward", src_command );
+	}
+	else if ( forwardmove < 0.7 && ( moveflags & F ))
+	{
+		moveflags &= ~F;
+		Cmd_ExecuteString( "-forward", src_command );
+	}
+	else if ( forwardmove < -0.7 && !( moveflags & B ))
+	{
+		moveflags |= B;
+		Cmd_ExecuteString( "+back", src_command );
+	}
+	else if ( forwardmove > -0.7 && ( moveflags & B ))
+	{
+		moveflags &= ~B;
+		Cmd_ExecuteString( "-back", src_command );
+	}
+	if ( sidemove > 0.9 && !( moveflags & R ))
+	{
+		moveflags |= R;
+		Cmd_ExecuteString( "+moveright", src_command );
+	}
+	else if ( sidemove < 0.9 && ( moveflags & R ))
+	{
+		moveflags &= ~R;
+		Cmd_ExecuteString( "-moveright", src_command );
+	}
+	else if ( sidemove < -0.9 && !( moveflags & L ))
+	{
+		moveflags |= L;
+		Cmd_ExecuteString( "+moveleft", src_command );
+	}
+	else if ( sidemove > -0.9 && ( moveflags & L ))
+	{
+		moveflags &= ~L;
+		Cmd_ExecuteString( "-moveleft", src_command );
+	}
+}
+
+/*
+================
+IN_EngineMove
+
+Called from cl_main.c after generating command in client
+================
+*/
+void IN_EngineMove( float frametime, usercmd_t *cmd, qboolean active )
+{
+#ifdef __ANDROID__
+	if(active)
+		Android_Move(cmd);
+#endif
+#ifdef USE_EVDEV
+	if(evdev_open)
+	{
+		cl.refdef.cl_viewangles[PITCH] += evdev_dy * m_enginesens->value;
+		cl.refdef.cl_viewangles[PITCH] = bound( -90, cl.refdef.cl_viewangles[PITCH], 90 );
+		cl.refdef.cl_viewangles[YAW] -= evdev_dx * m_enginesens->value;
+	}
+#endif
+}
 /*
 ==================
 Host_InputFrame
@@ -495,6 +710,9 @@ void Host_InputFrame( void )
 
 	IN_ActivateMouse( false );
 	IN_MouseMove();
+#ifdef USE_EVDEV
+	IN_EvdevFrame();
+#endif
 }
 
 /*
