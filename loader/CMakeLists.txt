@@ -21,37 +21,22 @@
 #
 
 cmake_minimum_required(VERSION 2.6.0)
-project (XASH3D)
+project (LOADER)
 
-#--------------
-# USER DEFINES \
-################\
+# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
+set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
+set (CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Os")
+set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g -O3")
 
-set (XASH3D_VERSION 0.96.3030)
-set (HL_SDK_DIR /opt/halflife CACHE PATH "Half Life 1 SDK directory")
+set (LOADER_LIBRARY loader)
 
-option(PANDORA "Set to ON if targeting an OpenPandora device." ${PANDORA})
-option(XASH_DEDICATED "Enable dedicated build." ${XASH_DEDICATED})
-option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux." ${XASH_DLL_LOADER})
-option(XASH_IPX "Enable IPX support for networking. Windows only." ${XASH_IPX})
-option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator." ${XASH_GLES})
-option(XASH_NONSTANDARD_LOAD "Enable loading game libraries. Windows only." ${XASH_NONSTANDARD_LOAD})
-option(XASH_SDL "Enable SDL for client." ${XASH_SDL})
-option(XASH_VGUI "Enable VGUI support." ${XASH_VGUI})
-option(XASH_X11 "Enable X11 support." ${XASH_VGUI})
+file (GLOB_RECURSE LOADER_SOURCES *.c)
+INCLUDE_DIRECTORIES(. wine/)
+add_library (${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
+target_link_libraries (${LOADER_LIBRARY} -lm)
 
-#-----------------
-# MAIN BUILD CODE \
-###################\
-
-if(NOT XASH_DEDICATED)
-	add_subdirectory (mainui)
-endif()
-if(XASH_DLL_LOADER)
-	add_subdirectory (loader)
-endif()
-if(XASH_VGUI)
-	add_subdirectory (vgui_support)
-endif()
-add_subdirectory (engine)
-add_subdirectory (game_launch)
+set_target_properties (${LOADER_SHARED} PROPERTIES
+	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
+	POSITION_INDEPENDENT_CODE 1)

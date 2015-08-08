@@ -83,6 +83,13 @@ endif()
 
 if(XASH_VGUI)
     add_definitions(-DXASH_VGUI)
+#    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+#        target_link_libraries(${XASH_ENGINE_LIBRARY} -L${HL_SDK_DIR}/linux/release/ ${HL_SDK_DIR}/linux/release/vgui.dylib)
+#    endif()
+#    if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+#        target_link_libraries(${XASH_ENGINE_LIBRARY} -L${HL_SDK_DIR}/linux/ -l:vgui.so)
+#    endif()
+#    INCLUDE_DIRECTORIES(${HL_SDK_DIR}/utils/vgui/include)
 endif()
 
 if(XASH_GLES)
@@ -91,7 +98,11 @@ endif()
 
 if(XASH_DLL_LOADER)
     add_definitions(-DDLL_LOADER)
-    target_link_libraries(${XASH_ENGINE_LIBRARY} libloader.so)
+
+    # Make GCC don't put full path to libloader.so
+    add_custom_command(TARGET xash PRE_LINK COMMAND
+	${CMAKE_COMMAND} -E copy $<TARGET_FILE:loader> $<TARGET_SONAME_FILE_DIR:xash>)
+    target_link_libraries(${XASH_ENGINE_LIBRARY} -L. -lloader)
 endif()
 if(XASH_DEDICATED)
     add_definitions(-DXASH_DEDICATED)
