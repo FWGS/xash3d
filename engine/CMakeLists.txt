@@ -23,12 +23,8 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (XASH_ENGINE)
 
-include(FindPkgConfig)
-pkg_search_module(SDL2 REQUIRED sdl2)
-pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
-
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w -msse -msse2 -O2")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -Os")
@@ -57,8 +53,6 @@ include_directories (. common/
     ../common
     ../pm_shared
     ${HL_SDK_DIR}/public
-    ${SDL2_INCLUDE_DIRS}
-    ${SDL2_IMAGE_INCLUDE_DIRS}
     )
 
 add_library (${XASH_ENGINE_LIBRARY} SHARED ${XASH_ENGINE_HEADERS} ${XASH_ENGINE_SOURCES})
@@ -77,7 +71,14 @@ if(XASH_NONSTANDART_LOAD)
 endif()
 
 if(XASH_SDL)
+    include(FindPkgConfig)
+    pkg_search_module(SDL2 REQUIRED sdl2)
+    pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
+
+    include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS})
+
     add_definitions(-DXASH_SDL)
+    target_link_libraries(${XASH_ENGINE_LIBRARY} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
 endif()
 
 if(XASH_VGUI)
@@ -86,7 +87,8 @@ if(XASH_VGUI)
         target_link_libraries(${XASH_ENGINE_LIBRARY} -L${HL_SDK_DIR}/linux/release/ ${HL_SDK_DIR}/linux/release/vgui.dylib)
     endif()
     if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        target_link_libraries(${XASH_ENGINE_LIBRARY} -L${HL_SDK_DIR}/linux/ -l:vgui.so)
+        add_custom_command(TARGET xash PRE_LINK COMMAND ${CMAKE_COMMAND} -E copy ${HL_SDK_DIR}/linux/vgui.so $<TARGET_SONAME_FILE_DIR:xash>)
+        target_link_libraries(${XASH_ENGINE_LIBRARY} -L. -l:vgui.so)
     endif()
     INCLUDE_DIRECTORIES(${HL_SDK_DIR}/utils/vgui/include)
 endif()
@@ -95,8 +97,12 @@ if(XASH_GLES)
     add_definitions(-DXASH_GLES)
 endif()
 
+if(XASH_DEDICATED)
+    add_definitions(-DXASH_DEDICATED)
+endif()
+
 target_link_libraries(${XASH_ENGINE_LIBRARY}
-    ${CMAKE_DL_LIBS} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
+    ${CMAKE_DL_LIBS})
 
 set_target_properties (${XASH_ENGINE_SHARED} PROPERTIES
     VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}

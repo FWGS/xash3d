@@ -910,7 +910,6 @@ FS_Rescan
 void FS_Rescan( void )
 {
 	MsgDev( D_NOTE, "FS_Rescan( %s )\n", GI->title );
-
 	FS_ClearSearchPath();
 
 	if( Q_stricmp( GI->basedir, GI->gamedir ))

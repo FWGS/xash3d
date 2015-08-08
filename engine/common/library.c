@@ -48,10 +48,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 
 		if(!pHandle)
 		{
-#ifndef _WIN32
-			char *error = dlerror();
 			MsgDev(D_ERROR, "loading library %s: %s", dllname, dlerror());
-#endif
 			return NULL;
 		}
 	}

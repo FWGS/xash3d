@@ -174,45 +174,10 @@ Sys_ParseCommandLine
 void Sys_ParseCommandLine( int argc, const char** argv )
 {
 	const char	*blank = "censored";
-	//static char	commandline[MAX_SYSPATH];
 	int		i;
 
 	host.argc = argc;
 	host.argv = argv;
-
-	/*Q_strncpy( commandline, lpCmdLine, Q_strlen( lpCmdLine ) + 1 );
-	lpCmdLine = commandline; // to prevent modify original commandline
-
-	while( *lpCmdLine && ( host.argc < MAX_NUM_ARGVS ))
-	{
-		while( *lpCmdLine && *lpCmdLine <= ' ' )
-			lpCmdLine++;
-		if( !*lpCmdLine ) break;
-
-		if( *lpCmdLine == '\"' )
-		{
-			// quoted string
-			lpCmdLine++;
-			host.argv[host.argc] = lpCmdLine;
-			host.argc++;
-			while( *lpCmdLine && ( *lpCmdLine != '\"' ))
-				lpCmdLine++;
-		}
-		else
-		{
-			// unquoted word
-			host.argv[host.argc] = lpCmdLine;
-			host.argc++;
-			while( *lpCmdLine && *lpCmdLine > ' ')
-				lpCmdLine++;
-		}
-
-		if( *lpCmdLine )
-		{
-			*lpCmdLine = 0;
-			lpCmdLine++;
-		}
-	}*/
 
 	if( !host.change_game ) return;
 

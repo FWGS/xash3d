@@ -13,8 +13,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifdef XASH_SDL
 #include <SDL_main.h>
 #include <SDL_messagebox.h>
+#endif
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #ifdef __APPLE__
  #include <dlfcn.h>
@@ -52,7 +57,10 @@ HINSTANCE	hEngine;
 
 void Sys_Error( const char *errorstring )
 {
+#ifdef XASH_SDL
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
+#endif
+	fprintf(stderr, "Xash Error: %s\n", errorstring);
 	exit( 1 );
 }
 

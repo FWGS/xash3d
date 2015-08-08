@@ -40,6 +40,9 @@ RECT	window_rect, real_rect;
 #endif
 uint	in_mouse_wheel;
 int	wnd_caption;
+#ifdef PANDORA
+int noshouldermb = 0;
+#endif
 
 static byte scan_to_key[128] = 
 { 
@@ -401,6 +404,10 @@ IN_Init
 */
 void IN_Init( void )
 {
+#ifdef PANDORA
+	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
+#endif
+
 	IN_StartupMouse( );
 }
 
