@@ -31,24 +31,41 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	int		pack_ind;
 	char	path [MAX_SYSPATH];
 
-	void *pHandle = LoadLibrary( dllname );
-
+	void *pHandle;
+	qboolean dll = host.enabledll && (Q_stristr(dllname, ".dll") != 0);
+#ifdef DLL_LOADER
+	if(dll)
+	{
+		pHandle = Loader_LoadLibrary( dllname );
+	}
+	else
+#endif
+#ifdef _WIN32
+	pHandle = LoadLibrary( dllname );
+#else
+	pHandle = dlopen( dllname, RTLD_LAZY );
+#endif
 	if(!pHandle)
 	{
 		search = FS_FindFile( dllname, &pack_ind, true );
 
-		if(!search)
-		{
-			pHandle = 0;
-		}
-
 		sprintf( path, "%s%s", search->filename, dllname );
 
-		pHandle = LoadLibrary( path );
-
+#ifdef DLL_LOADER
+		if(dll)
+		{
+			pHandle = Loader_LoadLibrary( path );
+		}
+		else
+#endif
+#ifdef _WIN32
+	pHandle = LoadLibrary( path );
+#else
+	pHandle = dlopen( path, RTLD_LAZY );
+#endif
 		if(!pHandle)
 		{
-			MsgDev(D_ERROR, "loading library %s: %s", dllname, dlerror());
+			MsgDev(D_ERROR, "loading library %s: %s\n", dllname, dlerror());
 			return NULL;
 		}
 	}
@@ -58,22 +75,49 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 
 void Com_FreeLibrary( void *hInstance )
 {
-	FreeLibrary( hInstance );
+#ifdef DLL_LOADER
+	void *wm;
+	if( host.enabledll && (wm = Loader_GetDllHandle( hInstance )) )
+		return Loader_FreeLibrary(hInstance);
+	else
+#endif
+#ifdef _WIN32
+	FreeLibrary( hInstance);
+#else
+	dlclose( hInstance );
+#endif
 }
 
 void *Com_GetProcAddress( void *hInstance, const char *name )
 {
+#ifdef DLL_LOADER
+	void *wm;
+	if( host.enabledll && (wm = Loader_GetDllHandle( hInstance )) )
+		return Loader_GetProcAddress(hInstance, name);
+	else
+#endif
+#ifdef _WIN32
 	return GetProcAddress( hInstance, name );
+#else
+	return dlsym( hInstance, name );
+#endif
 }
 
-dword Com_FunctionFromName( void *hInstance, const char *pName )
+void *Com_FunctionFromName( void *hInstance, const char *pName )
 {
-	dword function = (dword)GetProcAddress( hInstance, pName );
+	void *function;
+#ifdef DLL_LOADER
+	void *wm;
+	if( host.enabledll && (wm = Loader_GetDllHandle( hInstance )) )
+		return Loader_GetProcAddress(hInstance, pName);
+	else
+#endif
+	function = dlsym( hInstance, pName );	
 	if(!function)
 	{
 #ifdef __ANDROID__
 		// Shitty Android dlsym don't resolve weak symbols
-		function = (dword)dlsym_weak( hInstance, pName );
+		function = dlsym_weak( hInstance, pName );
 		if(!function)
 #endif
 #ifndef _WIN32
@@ -83,16 +127,22 @@ dword Com_FunctionFromName( void *hInstance, const char *pName )
 	return function;
 }
 
-const char *Com_NameForFunction( void *hInstance, dword function )
+const char *Com_NameForFunction( void *hInstance, void *function )
 {
-#ifdef _WIN32
-	
-#else
-	// Note: dladdr() is a glibc extension
-	Dl_info info;
-	dladdr((void*)function, &info);
-	return info.dli_sname;
+#ifdef DLL_LOADER
+	void *wm;
+	if( host.enabledll && (wm = Loader_GetDllHandle( hInstance )) )
+		return Loader_GetFuncName_int(wm, function);
+	else
 #endif
+	// Note: dladdr() is a glibc extension
+	{
+#ifndef _WIN32
+		Dl_info info;
+		dladdr((void*)function, &info);
+		return info.dli_sname;
+#endif
+	}
 }
 #else
 /*

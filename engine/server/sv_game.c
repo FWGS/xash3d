@@ -920,6 +920,7 @@ edict_t* SV_AllocPrivateData( edict_t *ent, string_t className )
 	ent->v.pContainingEntity = ent; // re-link
 	
 	// allocate edict private memory (passed by dlls)
+
 	SpawnEdict = (LINK_ENTITY_FUNC)Com_GetProcAddress( svgame.hInstance, pszClassName );
 
 	if( !SpawnEdict )
@@ -3142,7 +3143,7 @@ pfnFunctionFromName
 */
 dword pfnFunctionFromName( const char *pName )
 {
-	return Com_FunctionFromName( svgame.hInstance, pName );
+	return  Com_FunctionFromName( svgame.hInstance, pName );
 }
 
 /*
@@ -4770,7 +4771,6 @@ void SV_UnloadProgs( void )
 	Cmd_Unlink( CMD_EXTDLL );
 
 	Mod_ResetStudioAPI ();
-
 	Com_FreeLibrary( svgame.hInstance );
 	Mem_FreePool( &svgame.mempool );
 	Q_memset( &svgame, 0, sizeof( svgame ));
@@ -4781,12 +4781,16 @@ qboolean SV_LoadProgs( const char *name )
 	int			i, version;
 	static APIFUNCTION		GetEntityAPI;
 	static APIFUNCTION2		GetEntityAPI2;
-	static GIVEFNPTRSTODLL	GiveFnptrsToDll;
+#ifdef DLL_LOADER
+	static GIVEFNPTRSTODLL 	__attribute__((__stdcall__)) GiveFnptrsToDll_w32;
+#endif
+	static GIVEFNPTRSTODLL GiveFnptrsToDll;
 	static NEW_DLL_FUNCTIONS_FN	GiveNewDllFuncs;
 	static enginefuncs_t	gpEngfuncs;
 	static globalvars_t		gpGlobals;
 	static playermove_t		gpMove;
 	edict_t			*e;
+	qboolean dll;
 
 	if( svgame.hInstance ) SV_UnloadProgs();
 
@@ -4795,6 +4799,9 @@ qboolean SV_LoadProgs( const char *name )
 	svgame.globals = &gpGlobals;
 	svgame.mempool = Mem_AllocPool( "Server Edicts Zone" );
 	svgame.hInstance = Com_LoadLibrary( name, true );
+#ifdef DLL_LOADER
+	dll = host.enabledll && Loader_GetDllHandle( svgame.hInstance );
+#endif
 	if( !svgame.hInstance ) return false;
 
 	// make sure what new dll functions is cleared
@@ -4809,7 +4816,6 @@ qboolean SV_LoadProgs( const char *name )
 	GetEntityAPI = (APIFUNCTION)Com_GetProcAddress( svgame.hInstance, "GetEntityAPI" );
 	GetEntityAPI2 = (APIFUNCTION2)Com_GetProcAddress( svgame.hInstance, "GetEntityAPI2" );
 	GiveNewDllFuncs = (NEW_DLL_FUNCTIONS_FN)Com_GetProcAddress( svgame.hInstance, "GetNewDLLFunctions" );
-
 	if( !GetEntityAPI && !GetEntityAPI2 )
 	{
 		Com_FreeLibrary( svgame.hInstance );
@@ -4817,24 +4823,38 @@ qboolean SV_LoadProgs( const char *name )
 		svgame.hInstance = NULL;
 		return false;
 	}
-
-	GiveFnptrsToDll = (GIVEFNPTRSTODLL)Com_GetProcAddress( svgame.hInstance, "GiveFnptrsToDll" );
-
-	if( !GiveFnptrsToDll )
+#ifdef DLL_LOADER
+	if(dll)
 	{
-		Com_FreeLibrary( svgame.hInstance );
-		MsgDev( D_NOTE, "SV_LoadProgs: failed to get address of GiveFnptrsToDll proc\n" );
-		svgame.hInstance = NULL;
-		return false;
+		GiveFnptrsToDll_w32 = (GIVEFNPTRSTODLL)Com_GetProcAddress( svgame.hInstance, "GiveFnptrsToDll" );
+		if( !GiveFnptrsToDll_w32 )
+		{
+			Com_FreeLibrary(svgame.hInstance);
+			MsgDev( D_NOTE, "SV_LoadProgs: failed to get address of GiveFnptrsToDll proc\n" );
+			svgame.hInstance = NULL;
+			return false;
+		}
+		GiveFnptrsToDll_w32( &gpEngfuncs, svgame.globals );
 	}
+	else
+#endif
+	{
+		GiveFnptrsToDll = (GIVEFNPTRSTODLL)Com_GetProcAddress( svgame.hInstance, "GiveFnptrsToDll" );
+		
+		if( !GiveFnptrsToDll )
+		{
+			Com_FreeLibrary( svgame.hInstance );
+			MsgDev( D_NOTE, "SV_LoadProgs: failed to get address of GiveFnptrsToDll proc\n" );
+			svgame.hInstance = NULL;
+			return false;
+		}
+		
 
-	GiveFnptrsToDll( &gpEngfuncs, svgame.globals );
-
-	// get extended callbacks
+		GiveFnptrsToDll( &gpEngfuncs, svgame.globals );
+	}
 	if( GiveNewDllFuncs )
 	{
 		version = NEW_DLL_FUNCTIONS_VERSION;
-	
 		if( !GiveNewDllFuncs( &svgame.dllFuncs2, &version ))
 		{
 			if( version != NEW_DLL_FUNCTIONS_VERSION )
@@ -4844,7 +4864,6 @@ qboolean SV_LoadProgs( const char *name )
 	}
 
 	version = INTERFACE_VERSION;
-
 	if( GetEntityAPI2 )
 	{
 		if( !GetEntityAPI2( &svgame.dllFuncs, &version ))

@@ -13,14 +13,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+
 #ifdef XASH_SDL
 #include <SDL_main.h>
 #include <SDL_messagebox.h>
 #endif
-#include <cstdio>
-#include <cstring>
-#include <cstdlib>
-
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #ifdef __APPLE__
  #include <dlfcn.h>
  #include <errno.h>
@@ -33,11 +34,12 @@ GNU General Public License for more details.
  #include <dlfcn.h>
  #include <errno.h>
  #define XASHLIB                "libxash.so"
- #define LoadLibrary(x)          dlopen(x, RTLD_LAZY)
- #define FreeLibrary(x)          dlclose(x)
- #define GetProcAddress(x, y)    dlsym(x, y)
+ #define dlmount(x)         dlopen(x, RTLD_NOW)
  #define HINSTANCE               void*
 #elif _WIN32
+ #define dlmount(x) LoadLibraryA(x)
+ #define dlclose(x) FreeLibrary(x)
+ #define dlsym(x,y) GetProcAddress(x,y)
  #define XASHLIB                 "xash.dll"
  #include "windows.h" 
 #endif
@@ -66,7 +68,7 @@ void Sys_Error( const char *errorstring )
 
 void Sys_LoadEngine( void )
 {
-	if(( hEngine = LoadLibraryA( XASHLIB )) == NULL )
+	if(( hEngine = dlmount( XASHLIB )) == NULL )
 	{
 #ifndef _WIN32
 		printf("%s\n", dlerror());
@@ -74,7 +76,7 @@ void Sys_LoadEngine( void )
 		Sys_Error( "Unable to load the " XASHLIB );
 	}
 
-	if(( Xash_Main = (pfnInit)GetProcAddress( hEngine, "Host_Main" )) == NULL )
+	if(( Xash_Main = (pfnInit)dlsym( hEngine, "Host_Main" )) == NULL )
 	{
 #ifndef _WIN32
 		printf("%s\n", dlerror());
@@ -83,13 +85,13 @@ void Sys_LoadEngine( void )
 	}
 
 	// this is non-fatal for us but change game will not working
-	Xash_Shutdown = (pfnShutdown)GetProcAddress( hEngine, "Host_Shutdown" );
+	Xash_Shutdown = (pfnShutdown)dlsym( hEngine, "Host_Shutdown" );
 }
 
 void Sys_UnloadEngine( void )
 {
 	if( Xash_Shutdown ) Xash_Shutdown( );
-	if( hEngine ) FreeLibrary( hEngine );
+	if( hEngine ) dlclose( hEngine );
 
 	Xash_Main = NULL;
 	Xash_Shutdown = NULL;

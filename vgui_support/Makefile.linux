@@ -1,0 +1,28 @@
+CC = gcc -m32 -ggdb -Og
+CXX = g++ -m32 -ggdb -Og
+CFLAGS ?= -O1
+TOPDIR = $(PWD)/..
+XASHXT ?= $(TOPDIR)/../xashXT
+HLSDK ?= $(TOPDIR)/../halflife
+INCLUDES = -I/usr/include/SDL2 -I../common -I../engine -I../engine/common -I../engine/client -I../engine/client/vgui -I../pm_shared -I$(XASHXT)/common
+INCLUDES += -I$(HLSDK)/utils/vgui/include/
+DEFINES = -DXASH_VGUI
+%.o : %.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
+
+SRCS = $(wildcard *.cpp)
+OBJS = $(SRCS:.cpp=.o)
+
+libvgui_support.so : $(OBJS)
+	$(CXX) $(LDFLAGS) -o libvgui_support.so -shared $(OBJS) vgui.so
+
+.PHONY: depend clean
+
+clean : 
+	$(RM) $(OBJS) libvgui_support.so
+
+depend: $(SRCS)
+	touch Makefile.dep
+	makedepend -fMakefile.dep -- $(DEFINES) $(INCLUDES) -- $^
+
+include Makefile.dep

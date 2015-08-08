@@ -56,13 +56,13 @@ void BF_InitMasks( void )
 		{
 			endbit = startbit + nBitsLeft;
 
-			BitWriteMasks[startbit][nBitsLeft] = BIT( startbit ) - 1;
-			if( endbit < 32 ) BitWriteMasks[startbit][nBitsLeft] |= ~(BIT( endbit ) - 1 );
+			BitWriteMasks[startbit][nBitsLeft] = (uint)BIT( startbit ) - 1;
+			if( endbit < 32 ) BitWriteMasks[startbit][nBitsLeft] |= ~((uint)BIT( endbit ) - 1 );
 		}
 	}
 
 	for( maskBit = 0; maskBit < 32; maskBit++ )
-		ExtraMasks[maskBit] = BIT( maskBit ) - 1;
+		ExtraMasks[maskBit] = (uint)BIT( maskBit ) - 1;
 }
  
 void BF_InitExt( sizebuf_t *bf, const char *pDebugName, void *pData, int nBytes, int nMaxBits )
@@ -501,7 +501,7 @@ int BF_ReadSBitLong( sizebuf_t *bf, int numbits )
 	// NOTE: it does this wierdness here so it's bit-compatible with regular integer data in the buffer.
 	// (Some old code writes direct integers right into the buffer).
 	sign = BF_ReadOneBit( bf );
-	if( sign ) r = -( BIT( numbits - 1 ) - r );
+	if( sign ) r = -( (uint)BIT( numbits - 1 ) - r );
 
 	return r;
 }

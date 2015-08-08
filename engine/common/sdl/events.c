@@ -7,9 +7,16 @@
 
 int SDLash_EventFilter( SDL_Event* event)
 {
+	#ifdef XASH_VGUI
+	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
+	// switch ....
+	// CEnginePanel is visible by default, why?
+	VGUI_SurfaceWndProc(event);
+	#endif
 	switch ( event->type )
 	{
 		case SDL_MOUSEMOTION:
+		if(!host.mouse_visible)
 			IN_MouseEvent(0);
 			break;
 		case SDL_QUIT:
@@ -34,6 +41,7 @@ int SDLash_EventFilter( SDL_Event* event)
 
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEBUTTONDOWN:
+		//if(!host.mouse_visible)
 			SDLash_MouseEvent(event->button);
 			break;
 
@@ -66,9 +74,6 @@ int SDLash_EventFilter( SDL_Event* event)
 				}
 			}
 	}
-#ifdef XASH_VGUI
-	VGUI_SurfaceWndProc(event);
-#endif
 	return 0;
 }
 

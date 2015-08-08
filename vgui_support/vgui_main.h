@@ -16,6 +16,10 @@ GNU General Public License for more details.
 #define VGUI_MAIN_H
 #ifdef XASH_VGUI
 
+#define Assert(x)
+
+#include "system.h"
+#include "vgui_api.h"
 #include "utlvector.h"
 #include "utlrbtree.h"
 
@@ -28,6 +32,9 @@ GNU General Public License for more details.
 #include<VGUI_InputSignal.h>
 #include<VGUI_MouseCode.h>
 #include<VGUI_KeyCode.h>
+
+
+extern vguiapi_t *g_api;
 
 using namespace vgui;
 
@@ -129,7 +136,9 @@ public:
 	virtual bool isWithin( int x, int y ) { return true; }
 	virtual bool hasFocus( void );
 	// now it's not abstract class, yay
-	virtual void GetMousePos(int &x, int &y) { SDL_GetMouseState(&x, &y); }
+	virtual void GetMousePos(int &x, int &y) { 
+		g_api->GetCursorPos(&x, &y);
+		}
 protected:
 	virtual int createNewTextureID( void );
 	virtual void drawSetColor( int r, int g, int b, int a );
@@ -179,6 +188,7 @@ class CEnginePanel : public Panel
 public:
 	virtual SurfaceBase* getSurfaceBase( void );
 	virtual App* getApp( void );
+	virtual void setVisible(bool state);
 };
 
 //
@@ -187,6 +197,26 @@ public:
 void VGUI_InitCursors( void );
 void VGUI_CursorSelect( Cursor *cursor );
 void VGUI_ActivateCurrentCursor( void );
+void *VGui_GetPanel( void );
+void VGui_RunFrame( void );
+void VGui_Paint( void );
+void VGui_ViewportPaintBackground( int extents[4] );
+void VGUI_Mouse(VGUI_MouseAction action, int code);
+void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code);
+void VGUI_MouseMove(int x, int y);
+//
+// vgui_clip.cpp
+//
+void EnableScissor( qboolean enable );
+void SetScissorRect( int left, int top, int right, int bottom );
+qboolean ClipRect( const vpoint_t &inUL, const vpoint_t &inLR, vpoint_t *pOutUL, vpoint_t *pOutLR );
+
+extern FontCache *g_FontCache;
+
+
+extern CEnginePanel	*rootpanel;
+extern CEngineSurface	*surface;
+extern CEngineApp          *pApp;
 
 #endif
 #endif//VGUI_MAIN_H

@@ -587,6 +587,7 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num );
 void CL_LinkUserMessage( char *pszName, const int svc_num, int iSize );
 void CL_ParseTextMessage( sizebuf_t *msg );
 void CL_DrawHUD( int state );
+void CL_GetMousePosition ( int *x, int *y );
 void CL_InitEdicts( void );
 void CL_FreeEdicts( void );
 void CL_ClearWorld( void );
@@ -616,6 +617,8 @@ static _inline cl_entity_t *CL_EDICT_NUM( int n )
 	Host_Error( "CL_EDICT_NUM: bad number %i\n", n );
 	return NULL;	
 }
+
+extern rgba_t g_color_table[8];
 
 //
 // cl_parse.c

@@ -811,8 +811,10 @@ void *GL_GetProcAddress( const char *name )
 {
 #ifdef XASH_SDL
 	void *func = SDL_GL_GetProcAddress(name);
-#else
+#elif defined (XASH_GLES)
 	void *func = nanoGL_GetProcAddress(name);
+#else //No opengl implementation
+	void *func = NULL;
 #endif
 	if(!func)
 	{
@@ -1250,7 +1252,7 @@ void VID_StartupGamma( void )
 	// init gamma ramp
 	Q_memset( glState.stateRamp, 0, gammaTypeSize);
 
-#ifndef __ANDROID__
+#if !defined (__ANDROID__) && defined(XASH_SDL)
 	glConfig.deviceSupportsGamma = !SDL_GetWindowGammaRamp( host.hWnd, NULL, NULL, NULL);
 #else
 	// Android doesn't support hw gamma. (thanks, SDL!)
@@ -1563,12 +1565,14 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 #else
 	SDL_Surface *ico;
 
+#ifdef _WIN32
 	// find the icon file in the filesystem
 	if( FS_FileExists( GI->iconpath, true ))
 	{
 		char	localPath[MAX_SYSPATH];
 
 		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
+
 		ico = IMG_Load(localPath);
 
 		if( !ico )
@@ -1578,7 +1582,9 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			ico = NULL;
 		}
 	}
-	else ico = NULL;
+	else 
+#endif
+	ico = NULL;
 
 	// ico is NULL because there is no resource for standart icon. Sorry about that.
 	if(ico) SDL_SetWindowIcon(host.hWnd, ico);

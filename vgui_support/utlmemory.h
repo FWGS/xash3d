@@ -24,8 +24,8 @@
 #else
 #include <new>
 #endif
-#include "common.h"
-
+#include <stdlib.h>
+#include <math.h>
 //-----------------------------------------------------------------------------
 // Methods to invoke the constructor, copy constructor, and destructor
 //-----------------------------------------------------------------------------

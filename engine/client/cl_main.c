@@ -150,9 +150,9 @@ qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset )
 #ifdef PANDORA
                 if( !CL_LoadProgs( va( "%s/" CLIENTDLL, "." )))
 #else
-		if( !CL_LoadProgs( va( "%s/" CLIENTDLL, GI->dll_path )))
+		if( !CL_LoadProgs( va( "%s/%s", GI->dll_path, GI->client_lib)))
 #endif
-			Host_Error( "can't initialize " CLIENTDLL "\n" );
+			Host_Error( "can't initialize client library\n" );
 
 		// restore parms
 		clgame.maxEntities = maxEntities;
@@ -673,7 +673,7 @@ CL_Connect_f
 ================
 */
 
-#include <sys/mman.h>
+//#include <sys/mman.h>
 void CL_Connect_f( void )
 {
 	char server[ sizeof( cls.servername ) ];
@@ -1817,7 +1817,7 @@ void CL_Init( void )
 #ifdef PANDORA
 	if( CL_LoadProgs( va( "%s/" CLIENTDLL , "."/*GI->dll_path*/ )))
 #else
-	if( CL_LoadProgs( va( "%s/" CLIENTDLL , GI->dll_path )))
+	if( CL_LoadProgs( va( "%s/%s" , GI->dll_path, GI->client_lib )))
 #endif
 	{
 		cls.initialized = true;

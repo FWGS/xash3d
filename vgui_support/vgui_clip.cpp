@@ -13,8 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #ifdef XASH_VGUI
-#include "common.h"
-#include "vgui_draw.h"
+//#include "common.h"
+#define Assert(x)
+#include "vgui_api.h"
 #include "wrect.h"
 	
 //-----------------------------------------------------------------------------

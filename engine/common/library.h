@@ -154,8 +154,17 @@ dll_user_t *FS_FindLibrary( const char *dllname, qboolean directpath );
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table );
 void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolean directpath );
 void *Com_GetProcAddress( void *hInstance, const char *name );
-const char *Com_NameForFunction( void *hInstance, dword function );
-dword Com_FunctionFromName( void *hInstance, const char *pName );
+const char *Com_NameForFunction( void *hInstance, void *function );
+void *Com_FunctionFromName( void *hInstance, const char *pName );
 void Com_FreeLibrary( void *hInstance );
+
+#ifdef DLL_LOADER // wine-based dll loader
+void * Loader_LoadLibrary (const char *name);
+void * Loader_GetProcAddress (void *hndl, const char *name);
+void Loader_FreeLibrary(void *hndl);
+void *Loader_GetDllHandle( void *hndl );
+const char * Loader_GetFuncName( void *hndl, void *func);
+const char * Loader_GetFuncName_int( void *wm , void *func);
+#endif
 
 #endif//LIBRARY_H

@@ -178,7 +178,7 @@ typedef struct gameinfo_s
 	// .dll pathes
 	char		dll_path[64];	// e.g. "bin" or "cl_dlls"
 	char		game_dll[64];	// custom path for game.dll
-
+	char		client_lib[64];	// custom name of client library
 	// .ico path
 	char		iconpath[64];	// "game.ico" by default
 
@@ -356,6 +356,8 @@ typedef struct host_parm_s
 
 	soundlist_t	*soundList;	// used for keep ambient sounds, when renderer or sound is restarted
 	int		numsounds;
+	qboolean enabledll;
+	char vguiloader[64];
 } host_parm_t;
 
 extern host_parm_t	host;

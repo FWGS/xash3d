@@ -38,6 +38,8 @@ GNU General Public License for more details.
 char			cl_textbuffer[MAX_TEXTCHANNELS][512];
 client_textmessage_t	cl_textmessage[MAX_TEXTCHANNELS];
 
+rgba_t g_color_table[8];
+
 static dllfunc_t cdll_exports[] =
 {
 { "Initialize", (void **)&clgame.dllFuncs.pfnInitialize },
@@ -1446,9 +1448,10 @@ get actual screen info
 static int pfnGetScreenInfo( SCREENINFO *pscrinfo )
 {
 	// setup screen info
+	float scale_factor = Cvar_VariableValue( "hud_scale" );
 	clgame.scrInfo.iSize = sizeof( clgame.scrInfo );
 
-	float scale_factor = Cvar_VariableValue( "hud_scale" );
+	
 	if( scale_factor && scale_factor != 1.0f)
 	{
 		clgame.scrInfo.iWidth = scr_width->integer/scale_factor;
@@ -1867,7 +1870,7 @@ pfnGetMousePosition
 
 =============
 */
-static void pfnGetMousePosition( int *mx, int *my )
+void CL_GetMousePosition( int *mx, int *my )
 {
 #ifdef XASH_SDL
 	SDL_GetMouseState(mx, my);
@@ -3861,7 +3864,7 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetClientMaxspeed,
 	pfnCheckParm,
 	Key_Event,
-	pfnGetMousePosition,
+	CL_GetMousePosition,
 	pfnIsNoClipping,
 	CL_GetLocalPlayer,
 	pfnGetViewModel,
@@ -3889,13 +3892,8 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetLevelName,
 	pfnGetScreenFade,
 	pfnSetScreenFade,
-	#ifdef XASH_VGUI
-	VGui_GetPanel,
-	VGui_ViewportPaintBackground,
-	#else
-	NULL,
-	NULL,
-	#endif
+	NULL,	// VGui_GetPanel
+	NULL,	// VGui_ViewportPaintBackground
 	COM_LoadFile,
 	COM_ParseFile,
 	COM_FreeFile,
@@ -4006,7 +4004,9 @@ qboolean CL_LoadProgs( const char *name )
 	// vgui must startup BEFORE loading client.dll to avoid get error ERROR_NOACESS
 	// during LoadLibrary
 #ifdef XASH_VGUI
-	VGui_Startup ();
+	VGui_Startup (menu.globals->scrWidth, menu.globals->scrHeight);
+	gEngfuncs.VGui_GetPanel = VGui_GetPanel;
+	gEngfuncs.VGui_ViewportPaintBackground = VGui_ViewportPaintBackground;
 #endif
 	
 	clgame.hInstance = Com_LoadLibrary( name, false );

@@ -13,20 +13,17 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #ifdef XASH_VGUI
-#include "common.h"
-#include "vgui_draw.h"
 #include "vgui_main.h"
 
 int FontCache::s_pFontPageSize[FONT_PAGE_SIZE_COUNT] = { 16, 32, 64, 128 };
 
-FontCache::FontCache() : m_CharCache( 0, 256, CacheEntryLessFunc )
+FontCache::FontCache() : m_CharCache( 0, 256, CacheEntryLessFunc ), m_PageList(0, 0)
 {
 	CacheEntry_t listHead = { 0, 0 };
 
 	m_LRUListHeadIndex = m_CharCache.Insert( listHead );
 	m_CharCache[m_LRUListHeadIndex].nextEntry = m_LRUListHeadIndex;
 	m_CharCache[m_LRUListHeadIndex].prevEntry = m_LRUListHeadIndex;
-
 	for( int i = 0; i < FONT_PAGE_SIZE_COUNT; i++ )
 	{
 		m_pCurrPage[i] = -1;
@@ -56,11 +53,12 @@ bool FontCache::GetTextureForChar( Font *font, char ch, int *textureID, float **
 
 	HCacheEntry cacheHandle = m_CharCache.Find( cacheitem );
 
-	if( m_CharCache.IsValidIndex( cacheHandle ))
+	if( cacheHandle != 65535 && m_CharCache.IsValidIndex( cacheHandle ))
 	{
 		// we have an entry already, return that
 		int page = m_CharCache[cacheHandle].page;
 		*textureID = m_PageList[page].textureID;
+		//else return false;
 		*texCoords = m_CharCache[cacheHandle].texCoords;
 		return true;
 	}
@@ -78,12 +76,12 @@ bool FontCache::GetTextureForChar( Font *font, char ch, int *textureID, float **
 
 	// create a buffer and render the character into it
 	int nByteCount = s_pFontPageSize[FONT_PAGE_SIZE_COUNT-1] * s_pFontPageSize[FONT_PAGE_SIZE_COUNT-1] * 4;
-	byte * rgba = (byte *)Z_Malloc( nByteCount );
+	byte * rgba = (byte *)g_api->EngineMalloc(nByteCount);//(byte *)Z_Malloc( nByteCount );
 	font->getCharRGBA( (byte)ch, 0, 0, fontWide, fontTall, rgba );
 
 	// upload the new sub texture 
-	VGUI_BindTexture( m_PageList[page].textureID );
-	VGUI_UploadTextureBlock( m_PageList[page].textureID, drawX, drawY, rgba, fontWide, fontTall );
+	g_api->BindTexture( m_PageList[page].textureID );
+	g_api->UploadTextureBlock( m_PageList[page].textureID, drawX, drawY, rgba, fontWide, fontTall );
 
 	// set the cache info
 	cacheitem.page = page;
@@ -145,7 +143,7 @@ bool FontCache::AllocatePageForChar( int charWide, int charTall, int &pageIndex,
 		Page_t &newPage = m_PageList[pageIndex];
 		m_pCurrPage[nPageType] = pageIndex;
 
-		newPage.textureID = VGUI_GenerateTexture();
+		newPage.textureID = g_api->GenerateTexture();
 
 		newPage.fontHeight = s_pFontPageSize[nPageType];
 		newPage.wide = 256;
@@ -156,7 +154,7 @@ bool FontCache::AllocatePageForChar( int charWide, int charTall, int &pageIndex,
 		nNextX = charWide;
 
 		// create empty texture                    
-		VGUI_CreateTexture( newPage.textureID, 256, 256 );
+		g_api->CreateTexture( newPage.textureID, 256, 256 );
 	}
 
 	// output the position
