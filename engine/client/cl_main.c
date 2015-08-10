@@ -1808,6 +1808,7 @@ CL_Init
 */
 void CL_Init( void )
 {
+	qboolean loaded;
 	if( host.type == HOST_DEDICATED )
 		return; // nothing running on the client
 
@@ -1820,11 +1821,19 @@ void CL_Init( void )
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
-#ifdef PANDORA
-	if( CL_LoadProgs( va( "%s/" CLIENTDLL , "."/*GI->dll_path*/ )))
+	loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, GI->client_lib ));
+	if( !loaded )
+#if defined (__ANDROID__)
+		{
+			char clientlib[256];
+			Q_strncpy( clientlib, getenv("XASH3D_ENGLIBDIR"), 256 );
+			Q_strncat( clientlib, "/" "libclient.so", 256 );
+			loaded = CL_LoadProgs( clientlib );
+		}
 #else
-	if( CL_LoadProgs( va( "%s/%s" , GI->dll_path, GI->client_lib )))
+		loaded = CL_LoadProgs( CLIENTDLL );
 #endif
+	if( loaded )
 	{
 		cls.initialized = true;
 		cl.maxclients = 1; // allow to drawing player in menu
