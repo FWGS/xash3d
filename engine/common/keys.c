@@ -729,27 +729,27 @@ void Key_SetKeyDest( int key_dest )
 	switch( key_dest )
 	{
 	case key_game:
-#ifdef XASH_SDL
-		SDL_StopTextInput();
-#endif
+	#ifdef XASH_SDL
+		SDLash_EnableTextInput( false );
+	#endif
 		cls.key_dest = key_game;
 		break;
 	case key_menu:
-#ifdef XASH_SDL
-		SDL_StopTextInput();
-#endif		
+	#ifdef XASH_SDL
+		SDLash_EnableTextInput( false );
+	#endif
 		cls.key_dest = key_menu;
 		break;
 	case key_console:
-#ifdef XASH_SDL
-		SDL_StartTextInput();
-#endif		
+	#ifdef XASH_SDL
+		SDLash_EnableTextInput( true );
+	#endif
 		cls.key_dest = key_console;
 		break;
 	case key_message:
-#ifdef XASH_SDL
-		SDL_StartTextInput();
-#endif		
+	#ifdef XASH_SDL
+		SDLash_EnableTextInput( true );
+	#endif
 		cls.key_dest = key_message;
 		break;
 	default:
