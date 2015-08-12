@@ -11,7 +11,7 @@ endif
 TOPDIR = $(PWD)/..
 XASHXT ?= $(TOPDIR)/../xashXT
 HLSDK ?= $(TOPDIR)/../halflife/
-INCLUDES = -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui
+INCLUDES = -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui -Icommon/sdl
 DEFINES =
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
