@@ -3,14 +3,13 @@ compiler: gcc
 sudo: true
 before_script:
     - git clone -q --depth=1 https://github.com/SDLash3D/halflife halflife
-    - yes | sudo add-apt-repository ppa:zoogie/sdl2-snapshots
     - sudo apt-get update -qq
-    - sudo apt-get install -qq --force-yes gcc-multilib ia32-libs ia32-libs-multiarch libsdl2-dev:i386 libsdl2-image-dev:i386 libx11-dev:i386 
+    - sudo apt-get install -qq --force-yes gcc-multilib ia32-libs ia32-libs-multiarch
 script:
     - echo "BUILDING CLIENT VERSION"
-    - mkdir build-head && cd build-head
-    - cmake ../ -DXASH_SDL=yes -DXASH_VGUI=yes -DXASH_X11=yes -DXASH_DLL_LOADER=yes -DHL_SDK_DIR=../halflife -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
-    - make -j2 CFLAGS+="-m32" LDFLAGS+="-m32"
+#   - mkdir build-head && cd build-head
+#   - cmake ../ -DXASH_SDL=yes -DXASH_VGUI=yes -DXASH_X11=yes -DXASH_DLL_LOADER=yes -DHL_SDK_DIR=../halflife -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
+#   - make -j2 CFLAGS+="-m32" LDFLAGS+="-m32"
     - echo "BUILDING HEADLESS VERSION"
     - cd ../ && mkdir build-headless && cd build-headless
     - cmake ../ -DXASH_DEDICATED=yes -DXASH_SDL=no -DXASH_VGUI=no -DHL_SDK_DIR=../halflife -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
