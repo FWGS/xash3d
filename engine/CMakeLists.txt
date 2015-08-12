@@ -45,6 +45,7 @@ set (XASH_ENGINE_LIBRARY xash)
 file (GLOB_RECURSE XASH_ENGINE_SOURCES *.cpp *.c)
 file (GLOB_RECURSE XASH_ENGINE_HEADERS *.h)
 include_directories (. common/
+    common/sdl/
     common/imagelib/
     common/soundlib/
     client/
