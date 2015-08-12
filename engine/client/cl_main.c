@@ -1827,7 +1827,7 @@ void CL_Init( void )
 		{
 			char clientlib[256];
 			Q_strncpy( clientlib, getenv("XASH3D_ENGLIBDIR"), 256 );
-			Q_strncat( clientlib, "/" "libclient.so", 256 );
+			Q_strncat( clientlib, "/" CLIENTDLL, 256 );
 			loaded = CL_LoadProgs( clientlib );
 		}
 #else
