@@ -184,6 +184,29 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 	int i;
 	// Pass characters one by one to Con_CharEvent
 	for(i = 0; input.text[i]; ++i)
-		Con_CharEvent((int)input.text[i]);
+	{
+		Con_CharEvent( (int)input.text[i] );
+		if( cls.key_dest == key_menu )
+			UI_CharEvent ( (int)input.text[i] );
+	}
+}
+
+void SDLash_EnableTextInput( int enable )
+{
+	static qboolean isAlreadyEnabled = false;
+
+	if( enable )
+	{
+		if( !isAlreadyEnabled )
+		{
+			SDL_StartTextInput();
+		}
+		isAlreadyEnabled = true;
+	}
+	else
+	{
+		SDL_StopTextInput();
+		isAlreadyEnabled = false;
+	}
 }
 #endif // XASH_SDL
