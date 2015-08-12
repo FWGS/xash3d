@@ -36,16 +36,15 @@ GNU General Public License for more details.
 
     #ifdef __ANDROID__
     #define XASH_THREADS
-	#define MENUDLL "libmenu." OS_LIB_EXT
-	#define CLIENTDLL "libclient." OS_LIB_EXT
-	#define SERVERDLL "libserver." OS_LIB_EXT
-	#ifdef XASH3D_ANDROID_TEST
-	    #define APPPATH "/data/data/in.celest.xash3d.hl.test/"
-	#else
-	    #define APPPATH "/data/data/in.celest.xash3d.hl/"
-	#endif
-	#define LIBPATH APPPATH "lib"
-	#define ASSETSPATH APPPATH "assets"
+#ifdef LOAD_HARDFP
+	#define MENUDLL "libmenu_hardfp.so"
+	#define CLIENTDLL "libclient_hardfp.so"
+	#define SERVERDLL "libserver_hardfp.so"
+#else
+	#define MENUDLL "libmenu.so"
+	#define CLIENTDLL "libclient.so"
+	#define SERVERDLL "libserver.so"
+#endif
 	#define GAMEPATH "/sdcard/xash"
     #else
 	#define MENUDLL "libxashmenu." OS_LIB_EXT

@@ -10,10 +10,16 @@ LOCAL_MODULE := xash
 APP_PLATFORM := android-12
 
 LOCAL_CFLAGS += $(CFLAGS_OPT)
-ifeq ($(TARGET_ARCH),arm)
-LOCAL_CFLAGS += $(CFLAGS_OPT_ARM)
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a-hard)
+LOCAL_CFLAGS += $(CFLAGS_OPT_ARM) -mfloat-abi=hard -mhard-float -DLOAD_HARDFP -DSOFTFP_LINK
 endif
-ifeq ($(TARGET_ARCH),x86)
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+LOCAL_CFLAGS += $(CFLAGS_OPT_ARM) -mfloat-abi=softfp
+endif
+ifeq ($(TARGET_ARCH_ABI),armeabi)
+LOCAL_CFLAGS += $(CFLAGS_OPT_ARMv5)
+endif
+ifeq ($(TARGET_ARCH_ABI),x86)
 LOCAL_CFLAGS += $(CFLAGS_OPT_X86)
 endif
 
