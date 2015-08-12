@@ -161,6 +161,8 @@ typedef struct ui_enginefuncs_s
 	int	(*pfnIsMapValid)( char *filename );
 	void	(*pfnProcessImage)( int texnum, float gamma, int topColor, int bottomColor );
 	int	(*pfnCompareFileTime)( char *filename1, char *filename2, int *iCompare );
+
+	void (*pfnEnableTextInput)( int enable );
 } ui_enginefuncs_t;
 
 typedef struct

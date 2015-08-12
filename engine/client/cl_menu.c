@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "library.h"
 #include "input.h"
+#include "events.h"
 
 static MENUAPI	GetMenuAPI;
 static void UI_UpdateUserinfo( void );
@@ -877,6 +878,13 @@ static void pfnStartBackgroundTrack( const char *introTrack, const char *mainTra
 	}
 }
 
+#ifndef XASH_SDL
+static void pfnEnableTextInput( int enable )
+{
+	// stub
+}
+#endif
+
 // engine callbacks
 static ui_enginefuncs_t gEngfuncs = 
 {
@@ -960,6 +968,11 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnIsMapValid,
 	GL_ProcessTexture,
 	COM_CompareFileTime,
+	#ifdef XASH_SDL
+	SDLash_EnableTextInput
+	#else
+	pfnEnableTextInput
+	#endif
 };
 
 void UI_UnloadProgs( void )

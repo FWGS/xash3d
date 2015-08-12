@@ -497,20 +497,31 @@ UI_CursorMoved
 void UI_CursorMoved( menuFramework_s *menu )
 {
 	void (*callback)( void *self, int event );
+	menuCommon_s *curItem;
 
 	if( menu->cursor == menu->cursorPrev )
 		return;
 
 	if( menu->cursorPrev >= 0 && menu->cursorPrev < menu->numItems )
 	{
-		callback = ((menuCommon_s *)menu->items[menu->cursorPrev])->callback;
-		if( callback ) callback( menu->items[menu->cursorPrev], QM_LOSTFOCUS );
+		curItem = (menuCommon_s *)menu->items[menu->cursorPrev];
+
+		callback = curItem->callback;
+		if( callback ) callback( (void *)curItem, QM_LOSTFOCUS );
+
+		// Disable text editing
+		if( curItem->type == QMTYPE_FIELD ) g_engfuncs.pfnEnableTextInput( false );
 	}
 
 	if( menu->cursor >= 0 && menu->cursor < menu->numItems )
 	{
-		callback = ((menuCommon_s *)menu->items[menu->cursor])->callback;
-		if( callback ) callback( menu->items[menu->cursor], QM_GOTFOCUS );
+		curItem = (menuCommon_s *)menu->items[menu->cursor];
+
+		callback = curItem->callback;
+		if( callback ) callback( (void *)curItem, QM_GOTFOCUS );
+
+		// Enable text editing. It will open keyboard on Android.
+		if( curItem->type == QMTYPE_FIELD ) g_engfuncs.pfnEnableTextInput( true );
 	}
 }
 
