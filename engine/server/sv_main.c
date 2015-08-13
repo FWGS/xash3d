@@ -17,6 +17,8 @@ GNU General Public License for more details.
 #include "server.h"
 #include "net_encode.h"
 
+#include "errno.h"
+
 #define HEARTBEAT_SECONDS	300.0f 		// 300 seconds
 
 convar_t	*sv_zmax;
@@ -583,8 +585,9 @@ void Master_Add( void )
 	if( !NET_StringToAdr( MASTERSERVER_ADR, &adr ))
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", MASTERSERVER_ADR );
 
-	NET_SendPacket( NS_SERVER, 2, "\x4D\xFF", adr );
+	NET_SendPacket( NS_SERVER, 1, "q", adr );
 }
+
 
 /*
 ================
@@ -620,6 +623,14 @@ Informs all masters that this server is going down
 */
 void Master_Shutdown( void )
 {
+	netadr_t	adr;
+
+	NET_Config( true ); // allow remote
+
+	if( !NET_StringToAdr( MASTERSERVER_ADR, &adr ))
+		MsgDev( D_INFO, "Can't resolve adr: %s\n", MASTERSERVER_ADR );
+
+	NET_SendPacket( NS_SERVER, 2, "\x62\x0A", adr );
 }
 
 //============================================================================
