@@ -2008,9 +2008,9 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	char	*args;
 	char	*c, buf[MAX_SYSPATH];
 	int	len = sizeof( buf );
-	dword	challenge;
+	uint	challenge;
 	int	index, count = 0;
-	char	query[512];
+	char	query[512], ostype = 'u';
 	word	port;
 
 	BF_Clear( msg );
@@ -2030,12 +2030,9 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( !Q_strcmp( c, "connect" )) SV_DirectConnect( from );
 	else if( !Q_strcmp( c, "rcon" )) SV_RemoteCommand( from, msg );
 	else if( !Q_strcmp( c, "netinfo" )) SV_BuildNetAnswer( from );
-	else if( msg->pData[0] == 0xFF && msg->pData[1] == 0xFF && msg->pData[2] == 0xFF && msg->pData[3] == 0xFF && msg->pData[4] == 0x4E && msg->pData[5] == 0x0A )
+	else if( msg->pData[0] == 0xFF && msg->pData[1] == 0xFF && msg->pData[2] == 0xFF && msg->pData[3] == 0xFF && msg->pData[4] == 0x73 && msg->pData[5] == 0x0A )
 	{
-		challenge = *(dword *)&msg->pData[6];
-
-		port = Cvar_Get( "ip_hostport", "0", CVAR_INIT, "network server port" )->integer;
-		if( !port ) port = Cvar_Get( "port", va( "%i", PORT_SERVER ), CVAR_INIT, "network default port" )->integer;
+		Q_memcpy(&challenge, &msg->pData[6], sizeof(int));
 
 		for( index = 0; index < sv_maxclients->integer; index++ )
 		{
@@ -2043,9 +2040,39 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 				count++;
 		}
 
+		#ifdef _WIN32
+		ostype = 'w';
+		#else
+		ostype = 'l';
+		#endif
+
 		Q_snprintf( query, sizeof( query ),
-		"0\n\\protocol\\7\\challenge\\%ld\\players\\%d\\max\\%d\\bots\\0\\gamedir\\%s_xash\\map\\%s\\password\\0\\os\\w\\lan\\0\\region\\255\\gameport\\%d\\specport\\27015\\dedicated\\1\\appid\\70\\type\\d\\secure\\0\\version\\1.1.2.1\\product\\valve\n",
-		challenge, count, sv_maxclients->integer, GI->gamefolder, sv.name, port );
+		"0\n"
+		"\\protocol\\%d"			// protocol version
+		"\\challenge\\%u"			// challenge number that got after FF FF FF FF 73 0A
+		"\\players\\%d"				// current player number
+		"\\max\\%d"					// max_players
+		"\\bots\\0"					// bot number?
+		"\\gamedir\\%s"				// gamedir. _xash appended, because Xash3D is not compatible with GS in multiplayer
+		"\\map\\%s"					// current map
+		"\\type\\d"					// server type
+		"\\password\\0"				// is password set
+		"\\os\\%c"					// server OS?
+		"\\secure\\0"				// server anti-cheat? VAC?
+		"\\lan\\0"					// is LAN server?
+		"\\version\\%f"				// server version
+		"\\region\\255"				// server region
+		"\\product\\%s\n",			// product? Where is the difference with gamedir?
+		PROTOCOL_VERSION,
+		challenge,
+		count,
+		sv_maxclients->integer,
+		GI->gamefolder,
+		sv.name,
+		ostype,
+		XASH_VERSION,
+		GI->gamefolder
+		);
 
 		NET_SendPacket( NS_SERVER, Q_strlen( query ), query, from );
 	}
