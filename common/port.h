@@ -27,36 +27,36 @@ GNU General Public License for more details.
     #include <dlfcn.h>
 
     #ifdef __APPLE__
-	#include <sys/syslimits.h>
-	#define OS_LIB_EXT "dylib"
+		#include <sys/syslimits.h>
+		#define OS_LIB_EXT "dylib"
     #else
-	#include <linux/limits.h>
-	#define OS_LIB_EXT "so"
+		#include <linux/limits.h>
+		#define OS_LIB_EXT "so"
     #endif
 
     #ifdef __ANDROID__
-    #define XASH_THREADS
-#ifdef LOAD_HARDFP
-	#define MENUDLL "libmenu_hardfp.so"
-	#define CLIENTDLL "libclient_hardfp.so"
-	#define SERVERDLL "libserver_hardfp.so"
-#else
-	#define MENUDLL "libmenu.so"
-	#define CLIENTDLL "libclient.so"
-	#define SERVERDLL "libserver.so"
-#endif
-	#define GAMEPATH "/sdcard/xash"
+		#define XASH_THREADS
+		#ifdef LOAD_HARDFP
+			#define MENUDLL "libmenu_hardfp.so"
+			#define CLIENTDLL "libclient_hardfp.so"
+			#define SERVERDLL "libserver_hardfp.so"
+		#else
+			#define MENUDLL "libmenu.so"
+			#define CLIENTDLL "libclient.so"
+			#define SERVERDLL "libserver.so"
+		#endif
+		#define GAMEPATH "/sdcard/xash"
     #else
-	#define MENUDLL "libxashmenu." OS_LIB_EXT
-    #ifdef PANDORA
-	#define CLIENTDLL "client." OS_LIB_EXT
- 	#define SERVERDLL "hl." OS_LIB_EXT
-	#define LIBPATH "."
-	#define GAMEPATH "."
-    #else
-	#define CLIENTDLL "client." OS_LIB_EXT
+		#define MENUDLL "libxashmenu." OS_LIB_EXT
+		#define CLIENTDLL "client." OS_LIB_EXT
+		#ifdef PANDORA
+			#define SERVERDLL "hl." OS_LIB_EXT
+			#define LIBPATH "."
+			#define GAMEPATH "."
+		#endif
     #endif
-    #endif
+
+	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT
 
     #define TRUE	    1
     #define FALSE	    0
@@ -124,6 +124,7 @@ GNU General Public License for more details.
     #define OS_LIB_EXT "dll"
     #define MENUDLL "menu." OS_LIB_EXT
     #define CLIENTDLL "client." OS_LIB_EXT
+	#define VGUI_SUPPORT_DLL "vgui_support." OS_LIB_EXT
 #endif
 
 #endif
