@@ -27,7 +27,7 @@ project (XASH3D)
 # USER DEFINES \
 ################\
 
-set (XASH3D_VERSION 0.96.3030)
+set (XASH3D_VERSION 0.15)
 set (HL_SDK_DIR /opt/halflife CACHE PATH "Half Life 1 SDK directory")
 
 option(PANDORA "Set to ON if targeting an OpenPandora device." ${PANDORA})
