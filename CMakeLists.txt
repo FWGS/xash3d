@@ -44,6 +44,13 @@ option(XASH_X11 "Enable X11 support." ${XASH_VGUI})
 # MAIN BUILD CODE \
 ###################\
 
+# Build 32-bit Xash on 64-bit, because Xash3D not support this
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+	set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+endif()
+
 if(NOT XASH_DEDICATED)
 	add_subdirectory (mainui)
 endif()
