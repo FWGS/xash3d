@@ -65,7 +65,7 @@ GNU General Public License for more details.
     #define _stdcall
     #define __stdcall
     #define __cdecl
-    #define _inline	    inline
+	#define _inline	    static inline
     #define O_BINARY    0		//In Linux O_BINARY didn't exist
 
     // Windows functions to Linux equivalent
