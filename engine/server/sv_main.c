@@ -795,12 +795,17 @@ before Sys_Quit or Sys_Error
 void SV_Shutdown( qboolean reconnect )
 {
 	// already freed
-	if( !SV_Active( )) return;
+	if( !SV_Active( ))
+		return;
 
-	if( host.type == HOST_DEDICATED ) MsgDev( D_INFO, "SV_Shutdown: %s\n", host.finalmsg );
-	if( svs.clients ) SV_FinalMessage( host.finalmsg, reconnect );
+	if( host.type == HOST_DEDICATED )
+		MsgDev( D_INFO, "SV_Shutdown: %s\n", host.finalmsg );
 
-	Master_Shutdown();
+	if( svs.clients )
+		SV_FinalMessage( host.finalmsg, reconnect );
+
+	if( public_server->integer && sv_maxclients->integer != 1 )
+		Master_Shutdown();
 
 	if( !reconnect ) SV_UnloadProgs ();
 	else SV_DeactivateServer ();
