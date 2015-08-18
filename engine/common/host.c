@@ -698,6 +698,30 @@ static void Host_Crash_f( void )
 
 /*
 =================
+Host_InstallExceptionFilter
+=================
+*/
+void Host_InstallExceptionFilter( void )
+{
+#if defined(_WIN32)
+	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
+	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
+	host.hInst = GetModuleHandle( NULL );
+#elif defined (__ANDROID__)
+	// TODO
+#else
+	struct sigaction act;
+	act.sa_sigaction = Sys_Crash;
+	act.sa_flags = SA_SIGINFO | SA_ONSTACK;
+	sigaction( SIGSEGV, &act, &host.oldFilter );
+	sigaction( SIGABRT, &act, &host.oldFilter );
+	sigaction( SIGBUS,  &act, &host.oldFilter );
+	sigaction( SIGILL,  &act, &host.oldFilter );
+#endif
+}
+
+/*
+=================
 Host_InitCommon
 =================
 */
@@ -753,21 +777,8 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
-#if defined(_WIN32)
-	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
-	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
-	host.hInst = GetModuleHandle( NULL );
-#elif defined (__ANDROID__)
-	// TODO
-#else
-	struct sigaction act;
-	act.sa_sigaction = Sys_Crash;
-	act.sa_flags = SA_SIGINFO | SA_ONSTACK;
-	sigaction(SIGSEGV, &act, &host.oldFilter);
-	sigaction(SIGABRT, &act, &host.oldFilter);
-	sigaction(SIGBUS, &act, &host.oldFilter);
-	sigaction(SIGILL, &act, &host.oldFilter);
-#endif
+	// Install exception filter
+
 
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialzation started
@@ -798,51 +809,28 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 
 
-	host.type = HOST_NORMAL; // predict state
+#ifdef XASH_DEDICATED
+	host.type = HOST_DEDICATED; // predict state
+#else
+	if( !Sys_CheckParm("-dedicated") )
+		 host.type = HOST_DEDICATED;
+	else host.type = HOST_NORMAL;
+#endif
 	host.con_showalways = true;
 	host.mouse_visible = false;
 
-#if defined(_WIN32)
-	SetCurrentDirectory( host.rootdir );
-	GetModuleFileName( host.hInst, SI.ModuleName, sizeof(moduleName) );
-#else
-	if ( chdir( host.rootdir ) == 0 )
+	if ( SetCurrentDirectory( host.rootdir ) != 0)
 		MsgDev( D_INFO, "%s is working directory now", host.rootdir );
 	else
 		Sys_Error( "Changing working directory to %s failed.\nError:", host.rootdir, strerror( errno ) );
 
-	// We didn't need full path, only executable name
-	Q_strncpy(moduleName, strrchr(argv[0], '/'), sizeof(moduleName) );
-	// strrchr adds a / at begin of string =(
-	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
-	Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
-#endif
-
-	// TODO: Why we getting real executable name, if this will be anyway replaced with progname? (GAME_DIR, yes)
+	// set default gamedir
 	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
-
-#ifdef XASH_DEDICATED
-	host.type = HOST_DEDICATED; // hard code dedicated host type
-#endif
 
 	if( host.type == HOST_DEDICATED )
 	{
-		// check for duplicate dedicated server
-#ifdef XASH_SDL		
-		host.hMutex = SDL_CreateMutex( );
-
-		if( !host.hMutex )
-		{
-			MSGBOX( "Dedicated server already running" );
-			Sys_Quit();
-			return;
-		}
-#endif
 		Sys_MergeCommandLine( );
-#ifdef XASH_SDL	
-		SDL_DestroyMutex( host.hMutex );
-		host.hMutex = SDL_CreateSemaphore( 0 );
-#endif
+
 		if( host.developer < 3 ) host.developer = 3; // otherwise we see empty console
 	}
 	else

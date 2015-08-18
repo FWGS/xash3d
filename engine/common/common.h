@@ -305,7 +305,7 @@ typedef struct host_parm_s
 #endif
 
 	host_state	state;		// global host state
-	uint		type;		// running at
+	instance_t	type;		// running at
 	jmp_buf		abortframe;	// abort current frame
 	dword		errorframe;	// to prevent multiple host error
 	byte		*mempool;		// static mempool for misc allocations

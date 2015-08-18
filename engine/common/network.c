@@ -765,7 +765,7 @@ static void NET_OpenIP( void )
 
 		ip_sockets[NS_SERVER] = NET_IPSocket( net_ip->string, port );
 		if( !ip_sockets[NS_SERVER] && host.type == HOST_DEDICATED )
-			Host_Error( "couldn't allocate dedicated server IP port\n" );
+			Host_Error( "couldn't allocate dedicated server IP port. \nMaybe you're trying to run dedicated server twice?\n" );
 	}
 
 	// dedicated servers don't need client ports
