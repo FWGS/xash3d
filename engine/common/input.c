@@ -568,23 +568,36 @@ Common function for engine joystick movement
 
 ================
 */
-static uint moveflags = 0;
-#define F 1<<0
-#define B 1<<1
-#define L 1<<2
-#define R 1<<3
 
+#define F 1<<0	// Forward
+#define B 1<<1	// Back
+#define L 1<<2	// Left
+#define R 1<<3	// Right
+#define T 1<<4	// Forward stop
+#define S 1<<5	// Side stop
 void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove )
 {
-	if( moveflags & F ) cmd->forwardmove -= cl_forwardspeed->value;
-	if( moveflags & B ) cmd->forwardmove += cl_backspeed->value;
-	if( moveflags & R ) cmd->sidemove -= cl_sidespeed->value;
-	if( moveflags & L ) cmd->sidemove += cl_sidespeed->value;
+	static uint moveflags = T | S;
+		
+	if( forwardmove ) cmd->forwardmove  = forwardmove * cl_forwardspeed->value;
+	if( sidemove ) cmd->sidemove  = sidemove * cl_sidespeed->value;
 	
-	//cmd->forwardmove = cmd->sidemove = 0;
-	
-	cmd->forwardmove  += forwardmove * cl_forwardspeed->value;
-	cmd->sidemove  += sidemove * cl_sidespeed->value;
+	if( forwardmove )
+		moveflags &= ~T;
+	else if( !( moveflags & T ) )
+	{
+		Cmd_ExecuteString("-back", src_command );
+		Cmd_ExecuteString("-forward", src_command );
+		moveflags |= T;
+	}
+	if( sidemove )
+		moveflags &= ~S;
+	else if( !( moveflags & S ) )
+	{
+		Cmd_ExecuteString("-moveleft", src_command );
+		Cmd_ExecuteString("-moveright", src_command );
+		moveflags |= S;
+	}
 
 	if ( forwardmove > 0.7 && !( moveflags & F ))
 	{
@@ -596,7 +609,7 @@ void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove )
 		moveflags &= ~F;
 		Cmd_ExecuteString( "-forward", src_command );
 	}
-	else if ( forwardmove < -0.7 && !( moveflags & B ))
+	if ( forwardmove < -0.7 && !( moveflags & B ))
 	{
 		moveflags |= B;
 		Cmd_ExecuteString( "+back", src_command );
@@ -616,7 +629,7 @@ void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove )
 		moveflags &= ~R;
 		Cmd_ExecuteString( "-moveright", src_command );
 	}
-	else if ( sidemove < -0.9 && !( moveflags & L ))
+	if ( sidemove < -0.9 && !( moveflags & L ))
 	{
 		moveflags |= L;
 		Cmd_ExecuteString( "+moveleft", src_command );

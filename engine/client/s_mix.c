@@ -31,10 +31,6 @@ GNU General Public License for more details.
 #define SND_SCALE_SHIFT	(8 - SND_SCALE_BITS)
 #define SND_SCALE_LEVELS	(1 << SND_SCALE_BITS)
 
-#if defined(__ANDROID__) || defined (__APPLE__)
-#undef _inline
-#define _inline static inline
-#endif
 
 portable_samplepair_t	*g_curpaintbuffer;
 portable_samplepair_t	streambuffer[(PAINTBUFFER_SIZE+1)];

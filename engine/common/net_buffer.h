@@ -30,7 +30,7 @@ GNU General Public License for more details.
 // So PAD_NUMBER(0,4) is 0 and PAD_NUMBER(1,4) is 4
 #define PAD_NUMBER( num, boundary )	((( num ) + (( boundary ) - 1 )) / ( boundary )) * ( boundary )
 
-static _inline int BitByte( int bits )
+_inline int BitByte( int bits )
 {
 	return PAD_NUMBER( bits, 8 ) >> 3;
 }
@@ -91,14 +91,14 @@ qboolean BF_WriteBytes( sizebuf_t *bf, const void *pBuf, int nBytes );	// same a
 qboolean BF_WriteString( sizebuf_t *bf, const char *pStr );		// returns false if it overflows the buffer.
 
 // helper functions
-static _inline int BF_GetNumBytesWritten( sizebuf_t *bf ) { return BitByte( bf->iCurBit ); }
-static _inline int BF_GetRealBytesWritten( sizebuf_t *bf ) { return bf->iCurBit >> 3; }	// unpadded
-static _inline int BF_GetNumBitsWritten( sizebuf_t *bf ) { return bf->iCurBit; }
-static _inline int BF_GetMaxBits( sizebuf_t *bf ) { return bf->nDataBits; }
-static _inline int BF_GetMaxBytes( sizebuf_t *bf ) { return bf->nDataBits >> 3; }
-static _inline int BF_GetNumBitsLeft( sizebuf_t *bf ) { return bf->nDataBits - bf->iCurBit; }
-static _inline int BF_GetNumBytesLeft( sizebuf_t *bf ) { return BF_GetNumBitsLeft( bf ) >> 3; }
-static _inline byte *BF_GetData( sizebuf_t *bf ) { return bf->pData; }
+_inline int BF_GetNumBytesWritten( sizebuf_t *bf ) { return BitByte( bf->iCurBit ); }
+_inline int BF_GetRealBytesWritten( sizebuf_t *bf ) { return bf->iCurBit >> 3; }	// unpadded
+_inline int BF_GetNumBitsWritten( sizebuf_t *bf ) { return bf->iCurBit; }
+_inline int BF_GetMaxBits( sizebuf_t *bf ) { return bf->nDataBits; }
+_inline int BF_GetMaxBytes( sizebuf_t *bf ) { return bf->nDataBits >> 3; }
+_inline int BF_GetNumBitsLeft( sizebuf_t *bf ) { return bf->nDataBits - bf->iCurBit; }
+_inline int BF_GetNumBytesLeft( sizebuf_t *bf ) { return BF_GetNumBitsLeft( bf ) >> 3; }
+_inline byte *BF_GetData( sizebuf_t *bf ) { return bf->pData; }
 
 // Bit-read functions
 int BF_ReadOneBit( sizebuf_t *bf );

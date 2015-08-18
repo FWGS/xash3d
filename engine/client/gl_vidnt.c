@@ -987,7 +987,9 @@ GL_ContextError
 */
 static void GL_ContextError( void )
 {
+#ifdef XASH_SDL
 	MsgDev( D_ERROR, "GL_ContextError: %s\n", SDL_GetError() );
+#endif
 }
 
 /*

@@ -86,7 +86,7 @@ static qboolean	huffInit = false;
 Huff_PrepareTree
 ============
 */
-static _inline void Huff_PrepareTree( tree_t tree )
+_inline void Huff_PrepareTree( tree_t tree )
 {
 	byte	**node;
 	
@@ -108,7 +108,7 @@ static _inline void Huff_PrepareTree( tree_t tree )
 Huff_GetNode
 ============
 */
-static _inline void **Huff_GetNode( byte **tree )
+_inline void **Huff_GetNode( byte **tree )
 {
 	void	**node;
 	int	value;
@@ -130,7 +130,7 @@ static _inline void **Huff_GetNode( byte **tree )
 Huff_Swap
 ============
 */
-static _inline void Huff_Swap( void **tree1, void **tree2, void **tree3 )
+_inline void Huff_Swap( void **tree1, void **tree2, void **tree3 )
 {
 	void **a, **b;
 
@@ -170,7 +170,7 @@ static _inline void Huff_Swap( void **tree1, void **tree2, void **tree3 )
 Huff_SwapTrees
 ============
 */
-static _inline void Huff_SwapTrees( void **tree1, void **tree2 )
+_inline void Huff_SwapTrees( void **tree1, void **tree2 )
 {
 	void **temp;
 
@@ -206,7 +206,7 @@ static _inline void Huff_SwapTrees( void **tree1, void **tree2 )
 Huff_DeleteNode
 ============
 */
-static _inline void Huff_DeleteNode( void **tree1, void **tree2 )
+_inline void Huff_DeleteNode( void **tree1, void **tree2 )
 {
 	tree2[0] = tree1[262];
 	tree1[262] = tree2;
@@ -400,7 +400,7 @@ Huff_EmitBit
 Put one bit into buffer
 ============
 */
-static _inline void Huff_EmitBit( int bit, byte *buffer )
+_inline void Huff_EmitBit( int bit, byte *buffer )
 {
 	if(!(huffBitPos & 7)) buffer[huffBitPos >> 3] = 0;
 	buffer[huffBitPos >> 3] |= bit << (huffBitPos & 7);
@@ -414,7 +414,7 @@ Huff_GetBit
 Read one bit from buffer
 ============
 */
-static _inline int Huff_GetBit( byte *buffer )
+_inline int Huff_GetBit( byte *buffer )
 {
 	int bit = buffer[huffBitPos >> 3] >> (huffBitPos & 7);
 	huffBitPos++;
@@ -426,7 +426,7 @@ static _inline int Huff_GetBit( byte *buffer )
 Huff_EmitPathToByte
 ============
 */
-static _inline void Huff_EmitPathToByte( void **tree, void **subtree, byte *buffer )
+_inline void Huff_EmitPathToByte( void **tree, void **subtree, byte *buffer )
 {
 	if( tree[2] ) Huff_EmitPathToByte( tree[2], tree, buffer );
 	if( !subtree ) return;
@@ -444,7 +444,7 @@ Huff_GetByteFromTree
 Get one byte using dynamic or static tree
 ============
 */
-static _inline int Huff_GetByteFromTree( void **tree, byte *buffer )
+_inline int Huff_GetByteFromTree( void **tree, byte *buffer )
 {
 	if( !tree ) return 0;
 
