@@ -451,7 +451,7 @@ void Sys_Crash( int signal, siginfo_t *si, void *context)
 #if __i386__
 	void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
 #elif defined (__arm__) // arm not tested
-	void *pc = (void*)ucontext->uc_mcontext.arm_r10, void **bp = (void*)ucontext->uc_mcontext.arm_r10, **sp = (void*)ucontext->uc_mcontext.arm_sp;
+	void *pc = (void*)ucontext->uc_mcontext.arm_r10, **bp = (void*)ucontext->uc_mcontext.arm_r10, **sp = (void*)ucontext->uc_mcontext.arm_sp;
 #endif
 	// Safe actions first, stack and memory may be corrupted
 	len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr);
