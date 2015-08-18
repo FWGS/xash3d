@@ -1,0 +1,459 @@
+BEGIN GLenum SECOND PREFIXglGetError (void)END
+BEGIN const GLcharARB * SECOND PREFIXglGetString (GLenum name)END
+BEGIN void SECOND PREFIXglAccum (GLenum op, GLfloat value)END
+BEGIN void SECOND PREFIXglAlphaFunc (GLenum func, GLclampf ref)END
+BEGIN void SECOND PREFIXglBegin (GLenum mode)END
+BEGIN void SECOND PREFIXglBindTexture (GLenum target, GLuint texture)END
+BEGIN void SECOND PREFIXglBitmap (GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap)END
+BEGIN void SECOND PREFIXglBlendFunc (GLenum sfactor, GLenum dfactor)END
+BEGIN void SECOND PREFIXglCallList (GLuint list)END
+BEGIN void SECOND PREFIXglCallLists (GLsizei n, GLenum type, const GLvoid *lists)END
+BEGIN void SECOND PREFIXglClear (GLbitfield mask)END
+BEGIN void SECOND PREFIXglClearAccum (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)END
+BEGIN void SECOND PREFIXglClearColor (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)END
+BEGIN void SECOND PREFIXglClearDepth (GLclampd depth)END
+BEGIN void SECOND PREFIXglClearIndex (GLfloat c)END
+BEGIN void SECOND PREFIXglClearStencil (GLint s)END
+BEGIN GLboolean SECOND PREFIXglIsEnabled ( GLenum cap)END
+BEGIN GLboolean SECOND PREFIXglIsList ( GLuint list)END
+BEGIN GLboolean SECOND PREFIXglIsTexture ( GLuint texture)END
+BEGIN void SECOND PREFIXglClipPlane (GLenum plane, const GLdouble *equation)END
+BEGIN void SECOND PREFIXglColor3b (GLbyte red, GLbyte green, GLbyte blue)END
+BEGIN void SECOND PREFIXglColor3bv (const GLbyte *v)END
+BEGIN void SECOND PREFIXglColor3d (GLdouble red, GLdouble green, GLdouble blue)END
+BEGIN void SECOND PREFIXglColor3dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglColor3f (GLfloat red, GLfloat green, GLfloat blue)END
+BEGIN void SECOND PREFIXglColor3fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglColor3i (GLint red, GLint green, GLint blue)END
+BEGIN void SECOND PREFIXglColor3iv (const GLint *v)END
+BEGIN void SECOND PREFIXglColor3s (GLshort red, GLshort green, GLshort blue)END
+BEGIN void SECOND PREFIXglColor3sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglColor3ub (GLubyte red, GLubyte green, GLubyte blue)END
+BEGIN void SECOND PREFIXglColor3ubv (const GLubyte *v)END
+BEGIN void SECOND PREFIXglColor3ui (GLuint red, GLuint green, GLuint blue)END
+BEGIN void SECOND PREFIXglColor3uiv (const GLuint *v)END
+BEGIN void SECOND PREFIXglColor3us (GLushort red, GLushort green, GLushort blue)END
+BEGIN void SECOND PREFIXglColor3usv (const GLushort *v)END
+BEGIN void SECOND PREFIXglColor4b (GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha)END
+BEGIN void SECOND PREFIXglColor4bv (const GLbyte *v)END
+BEGIN void SECOND PREFIXglColor4d (GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha)END
+BEGIN void SECOND PREFIXglColor4dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglColor4f (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)END
+BEGIN void SECOND PREFIXglColor4fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglColor4i (GLint red, GLint green, GLint blue, GLint alpha)END
+BEGIN void SECOND PREFIXglColor4iv (const GLint *v)END
+BEGIN void SECOND PREFIXglColor4s (GLshort red, GLshort green, GLshort blue, GLshort alpha)END
+BEGIN void SECOND PREFIXglColor4sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglColor4ub (GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)END
+BEGIN void SECOND PREFIXglColor4ubv (const GLubyte *v)END
+BEGIN void SECOND PREFIXglColor4ui (GLuint red, GLuint green, GLuint blue, GLuint alpha)END
+BEGIN void SECOND PREFIXglColor4uiv (const GLuint *v)END
+BEGIN void SECOND PREFIXglColor4us (GLushort red, GLushort green, GLushort blue, GLushort alpha)END
+BEGIN void SECOND PREFIXglColor4usv (const GLushort *v)END
+BEGIN void SECOND PREFIXglColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)END
+BEGIN void SECOND PREFIXglColorMaterial (GLenum face, GLenum mode)END
+BEGIN void SECOND PREFIXglCopyPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum type)END
+BEGIN void SECOND PREFIXglCopyTexImage1D (GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLint border)END
+BEGIN void SECOND PREFIXglCopyTexImage2D (GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)END
+BEGIN void SECOND PREFIXglCopyTexSubImage1D (GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)END
+BEGIN void SECOND PREFIXglCopyTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)END
+BEGIN void SECOND PREFIXglCullFace (GLenum mode)END
+BEGIN void SECOND PREFIXglDeleteLists (GLuint list, GLsizei range)END
+BEGIN void SECOND PREFIXglDeleteTextures (GLsizei n, const GLuint *textures)END
+BEGIN void SECOND PREFIXglDepthFunc (GLenum func)END
+BEGIN void SECOND PREFIXglDepthMask (GLboolean flag)END
+BEGIN void SECOND PREFIXglDepthRange (GLclampd zNear, GLclampd zFar)END
+BEGIN void SECOND PREFIXglDisable (GLenum cap)END
+BEGIN void SECOND PREFIXglDisableClientState (GLenum array)END
+BEGIN void SECOND PREFIXglDrawArrays (GLenum mode, GLint first, GLsizei count)END
+BEGIN void SECOND PREFIXglDrawBuffer (GLenum mode)END
+BEGIN void SECOND PREFIXglDrawPixels (GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)END
+BEGIN void SECOND PREFIXglEdgeFlag (GLboolean flag)END
+BEGIN void SECOND PREFIXglEdgeFlagPointer (GLsizei stride, const GLvoid *pointer)END
+BEGIN void SECOND PREFIXglEdgeFlagv (const GLboolean *flag)END
+BEGIN void SECOND PREFIXglEnable (GLenum cap)END
+BEGIN void SECOND PREFIXglEnableClientState (GLenum array)END
+BEGIN void SECOND PREFIXglEnd (void)END
+BEGIN void SECOND PREFIXglEndList (void)END
+BEGIN void SECOND PREFIXglEvalCoord1d (GLdouble u)END
+BEGIN void SECOND PREFIXglEvalCoord1dv (const GLdouble *u)END
+BEGIN void SECOND PREFIXglEvalCoord1f (GLfloat u)END
+BEGIN void SECOND PREFIXglEvalCoord1fv (const GLfloat *u)END
+BEGIN void SECOND PREFIXglEvalCoord2d (GLdouble u, GLdouble v)END
+BEGIN void SECOND PREFIXglEvalCoord2dv (const GLdouble *u)END
+BEGIN void SECOND PREFIXglEvalCoord2f (GLfloat u, GLfloat v)END
+BEGIN void SECOND PREFIXglEvalCoord2fv (const GLfloat *u)END
+BEGIN void SECOND PREFIXglEvalMesh1 (GLenum mode, GLint i1, GLint i2)END
+BEGIN void SECOND PREFIXglEvalMesh2 (GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)END
+BEGIN void SECOND PREFIXglEvalPoint1 (GLint i)END
+BEGIN void SECOND PREFIXglEvalPoint2 (GLint i, GLint j)END
+BEGIN void SECOND PREFIXglFeedbackBuffer (GLsizei size, GLenum type, GLfloat *buffer)END
+BEGIN void SECOND PREFIXglFinish (void)END
+BEGIN void SECOND PREFIXglFlush (void)END
+BEGIN void SECOND PREFIXglFogf (GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglFogfv (GLenum pname, const GLfloat *params)END
+BEGIN void SECOND PREFIXglFogi (GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglFogiv (GLenum pname, const GLint *params)END
+BEGIN void SECOND PREFIXglFrontFace (GLenum mode)END
+BEGIN void SECOND PREFIXglFrustum (GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)END
+BEGIN void SECOND PREFIXglGenTextures (GLsizei n, GLuint *textures)END
+BEGIN void SECOND PREFIXglGetBooleanv (GLenum pname, GLboolean *params)END
+BEGIN void SECOND PREFIXglGetClipPlane (GLenum plane, GLdouble *equation)END
+BEGIN void SECOND PREFIXglGetDoublev (GLenum pname, GLdouble *params)END
+BEGIN void SECOND PREFIXglGetFloatv (GLenum pname, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetIntegerv (GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetLightfv (GLenum light, GLenum pname, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetLightiv (GLenum light, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetMapdv (GLenum target, GLenum query, GLdouble *v)END
+BEGIN void SECOND PREFIXglGetMapfv (GLenum target, GLenum query, GLfloat *v)END
+BEGIN void SECOND PREFIXglGetMapiv (GLenum target, GLenum query, GLint *v)END
+BEGIN void SECOND PREFIXglGetMaterialfv (GLenum face, GLenum pname, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetMaterialiv (GLenum face, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetPixelMapfv (GLenum map, GLfloat *values)END
+BEGIN void SECOND PREFIXglGetPixelMapuiv (GLenum map, GLuint *values)END
+BEGIN void SECOND PREFIXglGetPixelMapusv (GLenum map, GLushort *values)END
+BEGIN void SECOND PREFIXglGetPointerv (GLenum pname, GLvoid* *params)END
+BEGIN void SECOND PREFIXglGetPolygonStipple (GLubyte *mask)END
+BEGIN void SECOND PREFIXglGetTexEnvfv (GLenum target, GLenum pname, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetTexEnviv (GLenum target, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetTexGendv (GLenum coord, GLenum pname, GLdouble *params)END
+BEGIN void SECOND PREFIXglGetTexGenfv (GLenum coord, GLenum pname, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetTexGeniv (GLenum coord, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetTexImage (GLenum target, GLint level, GLenum format, GLenum type, GLvoid *pixels)END
+BEGIN void SECOND PREFIXglGetTexLevelParameterfv (GLenum target, GLint level, GLenum pname, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetTexLevelParameteriv (GLenum target, GLint level, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetTexParameterfv (GLenum target, GLenum pname, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetTexParameteriv (GLenum target, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglHint (GLenum target, GLenum mode)END
+BEGIN void SECOND PREFIXglIndexMask (GLuint mask)END
+BEGIN void SECOND PREFIXglIndexPointer (GLenum type, GLsizei stride, const GLvoid *pointer)END
+BEGIN void SECOND PREFIXglIndexd (GLdouble c)END
+BEGIN void SECOND PREFIXglIndexdv (const GLdouble *c)END
+BEGIN void SECOND PREFIXglIndexf (GLfloat c)END
+BEGIN void SECOND PREFIXglIndexfv (const GLfloat *c)END
+BEGIN void SECOND PREFIXglIndexi (GLint c)END
+BEGIN void SECOND PREFIXglIndexiv (const GLint *c)END
+BEGIN void SECOND PREFIXglIndexs (GLshort c)END
+BEGIN void SECOND PREFIXglIndexsv (const GLshort *c)END
+BEGIN void SECOND PREFIXglIndexub (GLubyte c)END
+BEGIN void SECOND PREFIXglIndexubv (const GLubyte *c)END
+BEGIN void SECOND PREFIXglInitNames (void)END
+BEGIN void SECOND PREFIXglInterleavedArrays (GLenum format, GLsizei stride, const GLvoid *pointer)END
+BEGIN void SECOND PREFIXglLightModelf (GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglLightModelfv (GLenum pname, const GLfloat *params)END
+BEGIN void SECOND PREFIXglLightModeli (GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglLightModeliv (GLenum pname, const GLint *params)END
+BEGIN void SECOND PREFIXglLightf (GLenum light, GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglLightfv (GLenum light, GLenum pname, const GLfloat *params)END
+BEGIN void SECOND PREFIXglLighti (GLenum light, GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglLightiv (GLenum light, GLenum pname, const GLint *params)END
+BEGIN void SECOND PREFIXglLineStipple (GLint factor, GLushort pattern)END
+BEGIN void SECOND PREFIXglLineWidth (GLfloat width)END
+BEGIN void SECOND PREFIXglListBase (GLuint base)END
+BEGIN void SECOND PREFIXglLoadIdentity (void)END
+BEGIN void SECOND PREFIXglLoadMatrixd (const GLdouble *m)END
+BEGIN void SECOND PREFIXglLoadMatrixf (const GLfloat *m)END
+BEGIN void SECOND PREFIXglLoadName (GLuint name)END
+BEGIN void SECOND PREFIXglLogicOp (GLenum opcode)END
+BEGIN void SECOND PREFIXglMap1d (GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points)END
+BEGIN void SECOND PREFIXglMap1f (GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points)END
+BEGIN void SECOND PREFIXglMap2d (GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder, GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble *points)END
+BEGIN void SECOND PREFIXglMap2f (GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points)END
+BEGIN void SECOND PREFIXglMapGrid1d (GLint un, GLdouble u1, GLdouble u2)END
+BEGIN void SECOND PREFIXglMapGrid1f (GLint un, GLfloat u1, GLfloat u2)END
+BEGIN void SECOND PREFIXglMapGrid2d (GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2)END
+BEGIN void SECOND PREFIXglMapGrid2f (GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2)END
+BEGIN void SECOND PREFIXglMaterialf (GLenum face, GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglMaterialfv (GLenum face, GLenum pname, const GLfloat *params)END
+BEGIN void SECOND PREFIXglMateriali (GLenum face, GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglMaterialiv (GLenum face, GLenum pname, const GLint *params)END
+BEGIN void SECOND PREFIXglMatrixMode (GLenum mode)END
+BEGIN void SECOND PREFIXglMultMatrixd (const GLdouble *m)END
+BEGIN void SECOND PREFIXglMultMatrixf (const GLfloat *m)END
+BEGIN void SECOND PREFIXglNewList (GLuint list, GLenum mode)END
+BEGIN void SECOND PREFIXglNormal3b (GLbyte nx, GLbyte ny, GLbyte nz)END
+BEGIN void SECOND PREFIXglNormal3bv (const GLbyte *v)END
+BEGIN void SECOND PREFIXglNormal3d (GLdouble nx, GLdouble ny, GLdouble nz)END
+BEGIN void SECOND PREFIXglNormal3dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglNormal3f (GLfloat nx, GLfloat ny, GLfloat nz)END
+BEGIN void SECOND PREFIXglNormal3fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglNormal3i (GLint nx, GLint ny, GLint nz)END
+BEGIN void SECOND PREFIXglNormal3iv (const GLint *v)END
+BEGIN void SECOND PREFIXglNormal3s (GLshort nx, GLshort ny, GLshort nz)END
+BEGIN void SECOND PREFIXglNormal3sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglOrtho (GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)END
+BEGIN void SECOND PREFIXglPassThrough (GLfloat token)END
+BEGIN void SECOND PREFIXglPixelMapfv (GLenum map, GLsizei mapsize, const GLfloat *values)END
+BEGIN void SECOND PREFIXglPixelMapuiv (GLenum map, GLsizei mapsize, const GLuint *values)END
+BEGIN void SECOND PREFIXglPixelMapusv (GLenum map, GLsizei mapsize, const GLushort *values)END
+BEGIN void SECOND PREFIXglPixelStoref (GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglPixelStorei (GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglPixelTransferf (GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglPixelTransferi (GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglPixelZoom (GLfloat xfactor, GLfloat yfactor)END
+BEGIN void SECOND PREFIXglPointSize (GLfloat size)END
+BEGIN void SECOND PREFIXglPolygonMode (GLenum face, GLenum mode)END
+BEGIN void SECOND PREFIXglPolygonOffset (GLfloat factor, GLfloat units)END
+BEGIN void SECOND PREFIXglPolygonStipple (const GLubyte *mask)END
+BEGIN void SECOND PREFIXglPopAttrib (void)END
+BEGIN void SECOND PREFIXglPopClientAttrib (void)END
+BEGIN void SECOND PREFIXglPopMatrix (void)END
+BEGIN void SECOND PREFIXglPopName (void)END
+BEGIN void SECOND PREFIXglPushAttrib (GLbitfield mask)END
+BEGIN void SECOND PREFIXglPushClientAttrib (GLbitfield mask)END
+BEGIN void SECOND PREFIXglPushMatrix (void)END
+BEGIN void SECOND PREFIXglPushName (GLuint name)END
+BEGIN void SECOND PREFIXglRasterPos2d (GLdouble x, GLdouble y)END
+BEGIN void SECOND PREFIXglRasterPos2dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglRasterPos2f (GLfloat x, GLfloat y)END
+BEGIN void SECOND PREFIXglRasterPos2fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglRasterPos2i (GLint x, GLint y)END
+BEGIN void SECOND PREFIXglRasterPos2iv (const GLint *v)END
+BEGIN void SECOND PREFIXglRasterPos2s (GLshort x, GLshort y)END
+BEGIN void SECOND PREFIXglRasterPos2sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglRasterPos3d (GLdouble x, GLdouble y, GLdouble z)END
+BEGIN void SECOND PREFIXglRasterPos3dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglRasterPos3f (GLfloat x, GLfloat y, GLfloat z)END
+BEGIN void SECOND PREFIXglRasterPos3fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglRasterPos3i (GLint x, GLint y, GLint z)END
+BEGIN void SECOND PREFIXglRasterPos3iv (const GLint *v)END
+BEGIN void SECOND PREFIXglRasterPos3s (GLshort x, GLshort y, GLshort z)END
+BEGIN void SECOND PREFIXglRasterPos3sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglRasterPos4d (GLdouble x, GLdouble y, GLdouble z, GLdouble w)END
+BEGIN void SECOND PREFIXglRasterPos4dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglRasterPos4f (GLfloat x, GLfloat y, GLfloat z, GLfloat w)END
+BEGIN void SECOND PREFIXglRasterPos4fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglRasterPos4i (GLint x, GLint y, GLint z, GLint w)END
+BEGIN void SECOND PREFIXglRasterPos4iv (const GLint *v)END
+BEGIN void SECOND PREFIXglRasterPos4s (GLshort x, GLshort y, GLshort z, GLshort w)END
+BEGIN void SECOND PREFIXglRasterPos4sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglReadBuffer (GLenum mode)END
+BEGIN void SECOND PREFIXglReadPixels (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)END
+BEGIN void SECOND PREFIXglRectd (GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)END
+BEGIN void SECOND PREFIXglRectdv (const GLdouble *v1, const GLdouble *v2)END
+BEGIN void SECOND PREFIXglRectf (GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)END
+BEGIN void SECOND PREFIXglRectfv (const GLfloat *v1, const GLfloat *v2)END
+BEGIN void SECOND PREFIXglRecti (GLint x1, GLint y1, GLint x2, GLint y2)END
+BEGIN void SECOND PREFIXglRectiv (const GLint *v1, const GLint *v2)END
+BEGIN void SECOND PREFIXglRects (GLshort x1, GLshort y1, GLshort x2, GLshort y2)END
+BEGIN void SECOND PREFIXglRectsv (const GLshort *v1, const GLshort *v2)END
+BEGIN void SECOND PREFIXglRotated (GLdouble angle, GLdouble x, GLdouble y, GLdouble z)END
+BEGIN void SECOND PREFIXglRotatef (GLfloat angle, GLfloat x, GLfloat y, GLfloat z)END
+BEGIN void SECOND PREFIXglScaled (GLdouble x, GLdouble y, GLdouble z)END
+BEGIN void SECOND PREFIXglScalef (GLfloat x, GLfloat y, GLfloat z)END
+BEGIN void SECOND PREFIXglScissor (GLint x, GLint y, GLsizei width, GLsizei height)END
+BEGIN void SECOND PREFIXglSelectBuffer (GLsizei size, GLuint *buffer)END
+BEGIN void SECOND PREFIXglShadeModel (GLenum mode)END
+BEGIN void SECOND PREFIXglStencilFunc (GLenum func, GLint ref, GLuint mask)END
+BEGIN void SECOND PREFIXglStencilMask (GLuint mask)END
+BEGIN void SECOND PREFIXglStencilOp (GLenum fail, GLenum zfail, GLenum zpass)END
+BEGIN void SECOND PREFIXglTexCoord1d (GLdouble s)END
+BEGIN void SECOND PREFIXglTexCoord1dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglTexCoord1f (GLfloat s)END
+BEGIN void SECOND PREFIXglTexCoord1fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglTexCoord1i (GLint s)END
+BEGIN void SECOND PREFIXglTexCoord1iv (const GLint *v)END
+BEGIN void SECOND PREFIXglTexCoord1s (GLshort s)END
+BEGIN void SECOND PREFIXglTexCoord1sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglTexCoord2d (GLdouble s, GLdouble t)END
+BEGIN void SECOND PREFIXglTexCoord2dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglTexCoord2f (GLfloat s, GLfloat t)END
+BEGIN void SECOND PREFIXglTexCoord2fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglTexCoord2i (GLint s, GLint t)END
+BEGIN void SECOND PREFIXglTexCoord2iv (const GLint *v)END
+BEGIN void SECOND PREFIXglTexCoord2s (GLshort s, GLshort t)END
+BEGIN void SECOND PREFIXglTexCoord2sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglTexCoord3d (GLdouble s, GLdouble t, GLdouble r)END
+BEGIN void SECOND PREFIXglTexCoord3dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglTexCoord3f (GLfloat s, GLfloat t, GLfloat r)END
+BEGIN void SECOND PREFIXglTexCoord3fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglTexCoord3i (GLint s, GLint t, GLint r)END
+BEGIN void SECOND PREFIXglTexCoord3iv (const GLint *v)END
+BEGIN void SECOND PREFIXglTexCoord3s (GLshort s, GLshort t, GLshort r)END
+BEGIN void SECOND PREFIXglTexCoord3sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglTexCoord4d (GLdouble s, GLdouble t, GLdouble r, GLdouble q)END
+BEGIN void SECOND PREFIXglTexCoord4dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglTexCoord4f (GLfloat s, GLfloat t, GLfloat r, GLfloat q)END
+BEGIN void SECOND PREFIXglTexCoord4fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglTexCoord4i (GLint s, GLint t, GLint r, GLint q)END
+BEGIN void SECOND PREFIXglTexCoord4iv (const GLint *v)END
+BEGIN void SECOND PREFIXglTexCoord4s (GLshort s, GLshort t, GLshort r, GLshort q)END
+BEGIN void SECOND PREFIXglTexCoord4sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglTexEnvf (GLenum target, GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglTexEnvfv (GLenum target, GLenum pname, const GLfloat *params)END
+BEGIN void SECOND PREFIXglTexEnvi (GLenum target, GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglTexEnviv (GLenum target, GLenum pname, const GLint *params)END
+BEGIN void SECOND PREFIXglTexGend (GLenum coord, GLenum pname, GLdouble param)END
+BEGIN void SECOND PREFIXglTexGendv (GLenum coord, GLenum pname, const GLdouble *params)END
+BEGIN void SECOND PREFIXglTexGenf (GLenum coord, GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglTexGenfv (GLenum coord, GLenum pname, const GLfloat *params)END
+BEGIN void SECOND PREFIXglTexGeni (GLenum coord, GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglTexGeniv (GLenum coord, GLenum pname, const GLint *params)END
+BEGIN void SECOND PREFIXglTexImage1D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels)END
+BEGIN void SECOND PREFIXglTexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)END
+BEGIN void SECOND PREFIXglTexParameterf (GLenum target, GLenum pname, GLfloat param)END
+BEGIN void SECOND PREFIXglTexParameterfv (GLenum target, GLenum pname, const GLfloat *params)END
+BEGIN void SECOND PREFIXglTexParameteri (GLenum target, GLenum pname, GLint param)END
+BEGIN void SECOND PREFIXglTexParameteriv (GLenum target, GLenum pname, const GLint *params)END
+BEGIN void SECOND PREFIXglTexSubImage1D (GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *pixels)END
+BEGIN void SECOND PREFIXglTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)END
+BEGIN void SECOND PREFIXglTranslated (GLdouble x, GLdouble y, GLdouble z)END
+BEGIN void SECOND PREFIXglTranslatef (GLfloat x, GLfloat y, GLfloat z)END
+BEGIN void SECOND PREFIXglVertex2d (GLdouble x, GLdouble y)END
+BEGIN void SECOND PREFIXglVertex2dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglVertex2f (GLfloat x, GLfloat y)END
+BEGIN void SECOND PREFIXglVertex2fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglVertex2i (GLint x, GLint y)END
+BEGIN void SECOND PREFIXglVertex2iv (const GLint *v)END
+BEGIN void SECOND PREFIXglVertex2s (GLshort x, GLshort y)END
+BEGIN void SECOND PREFIXglVertex2sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglVertex3d (GLdouble x, GLdouble y, GLdouble z)END
+BEGIN void SECOND PREFIXglVertex3dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglVertex3f (GLfloat x, GLfloat y, GLfloat z)END
+BEGIN void SECOND PREFIXglVertex3fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglVertex3i (GLint x, GLint y, GLint z)END
+BEGIN void SECOND PREFIXglVertex3iv (const GLint *v)END
+BEGIN void SECOND PREFIXglVertex3s (GLshort x, GLshort y, GLshort z)END
+BEGIN void SECOND PREFIXglVertex3sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglVertex4d (GLdouble x, GLdouble y, GLdouble z, GLdouble w)END
+BEGIN void SECOND PREFIXglVertex4dv (const GLdouble *v)END
+BEGIN void SECOND PREFIXglVertex4f (GLfloat x, GLfloat y, GLfloat z, GLfloat w)END
+BEGIN void SECOND PREFIXglVertex4fv (const GLfloat *v)END
+BEGIN void SECOND PREFIXglVertex4i (GLint x, GLint y, GLint z, GLint w)END
+BEGIN void SECOND PREFIXglVertex4iv (const GLint *v)END
+BEGIN void SECOND PREFIXglVertex4s (GLshort x, GLshort y, GLshort z, GLshort w)END
+BEGIN void SECOND PREFIXglVertex4sv (const GLshort *v)END
+BEGIN void SECOND PREFIXglViewport (GLint x, GLint y, GLsizei width, GLsizei height)END
+BEGIN void SECOND PREFIXglPointParameterfEXT( GLenum param, GLfloat value)END
+BEGIN void SECOND PREFIXglPointParameterfvEXT( GLenum param, const GLfloat *value)END
+BEGIN void SECOND PREFIXglLockArraysEXT (int a, int b)END
+BEGIN void SECOND PREFIXglUnlockArraysEXT (void)END
+BEGIN void SECOND PREFIXglActiveTextureARB( GLenum a)END
+BEGIN void SECOND PREFIXglClientActiveTextureARB( GLenum a)END
+BEGIN void SECOND PREFIXglGetCompressedTexImage( GLenum target, GLint lod, const void* data)END
+BEGIN void SECOND PREFIXglDrawRangeElements( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices)END
+BEGIN void SECOND PREFIXglDrawRangeElementsEXT( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices)END
+BEGIN void SECOND PREFIXglDrawElements(GLenum mode, GLsizei count, GLenum type, const void *indices)END
+BEGIN void SECOND PREFIXglVertexPointer(GLint size, GLenum type, GLsizei stride, const void *ptr)END
+BEGIN void SECOND PREFIXglNormalPointer(GLenum type, GLsizei stride, const void *ptr)END
+BEGIN void SECOND PREFIXglColorPointer(GLint size, GLenum type, GLsizei stride, const void *ptr)END
+BEGIN void SECOND PREFIXglTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void *ptr)END
+BEGIN void SECOND PREFIXglArrayElement(GLint i)END
+BEGIN void SECOND PREFIXglMultiTexCoord1f(GLenum a, GLfloat b)END
+BEGIN void SECOND PREFIXglMultiTexCoord2f(GLenum a, GLfloat b, GLfloat c)END
+BEGIN void SECOND PREFIXglMultiTexCoord3f(GLenum a, GLfloat b, GLfloat c, GLfloat d)END
+BEGIN void SECOND PREFIXglMultiTexCoord4f(GLenum a, GLfloat b, GLfloat c, GLfloat d, GLfloat e)END
+BEGIN void SECOND PREFIXglActiveTexture(GLenum a)END
+BEGIN void SECOND PREFIXglClientActiveTexture(GLenum a)END
+BEGIN void SECOND PREFIXglCompressedTexImage3DARB(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void *data)END
+BEGIN void SECOND PREFIXglCompressedTexImage2DARB(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border,  GLsizei imageSize, const void *data)END
+BEGIN void SECOND PREFIXglCompressedTexImage1DARB(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLint border, GLsizei imageSize, const void *data)END
+BEGIN void SECOND PREFIXglCompressedTexSubImage3DARB(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *data)END
+BEGIN void SECOND PREFIXglCompressedTexSubImage2DARB(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *data)END
+BEGIN void SECOND PREFIXglCompressedTexSubImage1DARB(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const void *data)END
+BEGIN void SECOND PREFIXglDeleteObjectARB(GLhandleARB obj)END
+BEGIN GLhandleARB SECOND PREFIXglGetHandleARB(GLenum pname)END
+BEGIN void SECOND PREFIXglDetachObjectARB(GLhandleARB containerObj, GLhandleARB attachedObj)END
+BEGIN GLhandleARB SECOND PREFIXglCreateShaderObjectARB(GLenum shaderType)END
+BEGIN void SECOND PREFIXglShaderSourceARB(GLhandleARB shaderObj, GLsizei count, const GLcharARB **string, const GLint *length)END
+BEGIN void SECOND PREFIXglCompileShaderARB(GLhandleARB shaderObj)END
+BEGIN GLhandleARB SECOND PREFIXglCreateProgramObjectARB(void)END
+BEGIN void SECOND PREFIXglAttachObjectARB(GLhandleARB containerObj, GLhandleARB obj)END
+BEGIN void SECOND PREFIXglLinkProgramARB(GLhandleARB programObj)END
+BEGIN void SECOND PREFIXglUseProgramObjectARB(GLhandleARB programObj)END
+BEGIN void SECOND PREFIXglValidateProgramARB(GLhandleARB programObj)END
+BEGIN void SECOND PREFIXglBindProgramARB(GLenum target, GLuint program)END
+BEGIN void SECOND PREFIXglDeleteProgramsARB(GLsizei n, const GLuint *programs)END
+BEGIN void SECOND PREFIXglGenProgramsARB(GLsizei n, GLuint *programs)END
+BEGIN void SECOND PREFIXglProgramStringARB(GLenum target, GLenum format, GLsizei len, const void *string)END
+BEGIN void SECOND PREFIXglProgramEnvParameter4fARB(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)END
+BEGIN void SECOND PREFIXglProgramLocalParameter4fARB(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)END
+BEGIN void SECOND PREFIXglGetProgramivARB( GLenum target, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglUniform1fARB(GLint location, GLfloat v0)END
+BEGIN void SECOND PREFIXglUniform2fARB(GLint location, GLfloat v0, GLfloat v1)END
+BEGIN void SECOND PREFIXglUniform3fARB(GLint location, GLfloat v0, GLfloat v1, GLfloat v2)END
+BEGIN void SECOND PREFIXglUniform4fARB(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)END
+BEGIN void SECOND PREFIXglUniform1iARB(GLint location, GLint v0)END
+BEGIN void SECOND PREFIXglUniform2iARB(GLint location, GLint v0, GLint v1)END
+BEGIN void SECOND PREFIXglUniform3iARB(GLint location, GLint v0, GLint v1, GLint v2)END
+BEGIN void SECOND PREFIXglUniform4iARB(GLint location, GLint v0, GLint v1, GLint v2, GLint v3)END
+BEGIN void SECOND PREFIXglUniform1fvARB(GLint location, GLsizei count, const GLfloat *value)END
+BEGIN void SECOND PREFIXglUniform2fvARB(GLint location, GLsizei count, const GLfloat *value)END
+BEGIN void SECOND PREFIXglUniform3fvARB(GLint location, GLsizei count, const GLfloat *value)END
+BEGIN void SECOND PREFIXglUniform4fvARB(GLint location, GLsizei count, const GLfloat *value)END
+BEGIN void SECOND PREFIXglUniform1ivARB(GLint location, GLsizei count, const GLint *value)END
+BEGIN void SECOND PREFIXglUniform2ivARB(GLint location, GLsizei count, const GLint *value)END
+BEGIN void SECOND PREFIXglUniform3ivARB(GLint location, GLsizei count, const GLint *value)END
+BEGIN void SECOND PREFIXglUniform4ivARB(GLint location, GLsizei count, const GLint *value)END
+BEGIN void SECOND PREFIXglUniformMatrix2fvARB(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)END
+BEGIN void SECOND PREFIXglUniformMatrix3fvARB(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)END
+BEGIN void SECOND PREFIXglUniformMatrix4fvARB(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)END
+BEGIN void SECOND PREFIXglGetObjectParameterfvARB(GLhandleARB obj, GLenum pname, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetObjectParameterivARB(GLhandleARB obj, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetInfoLogARB(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog)END
+BEGIN void SECOND PREFIXglGetAttachedObjectsARB(GLhandleARB containerObj, GLsizei maxCount, GLsizei *count, GLhandleARB *obj)END
+BEGIN GLint SECOND PREFIXglGetUniformLocationARB(GLhandleARB programObj, const GLcharARB *name)END
+BEGIN void SECOND PREFIXglGetActiveUniformARB(GLhandleARB programObj, GLuint index, GLsizei maxLength, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name)END
+BEGIN void SECOND PREFIXglGetUniformfvARB(GLhandleARB programObj, GLint location, GLfloat *params)END
+BEGIN void SECOND PREFIXglGetUniformivARB(GLhandleARB programObj, GLint location, GLint *params)END
+BEGIN void SECOND PREFIXglGetShaderSourceARB(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *source)END
+BEGIN void SECOND PREFIXglTexImage3D( GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const void *pixels)END
+BEGIN void SECOND PREFIXglTexSubImage3D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels)END
+BEGIN void SECOND PREFIXglCopyTexSubImage3D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)END
+BEGIN void SECOND PREFIXglBlendEquationEXT(GLenum a)END
+BEGIN void SECOND PREFIXglStencilOpSeparate(GLenum a, GLenum b, GLenum c, GLenum d)END
+BEGIN void SECOND PREFIXglStencilFuncSeparate(GLenum a, GLenum b, GLint c, GLuint d)END
+BEGIN void SECOND PREFIXglActiveStencilFaceEXT(GLenum a)END
+BEGIN void SECOND PREFIXglVertexAttribPointerARB(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer)END
+BEGIN void SECOND PREFIXglEnableVertexAttribArrayARB(GLuint index)END
+BEGIN void SECOND PREFIXglDisableVertexAttribArrayARB(GLuint index)END
+BEGIN void SECOND PREFIXglBindAttribLocationARB(GLhandleARB programObj, GLuint index, const GLcharARB *name)END
+BEGIN void SECOND PREFIXglGetActiveAttribARB(GLhandleARB programObj, GLuint index, GLsizei maxLength, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name)END
+BEGIN GLint SECOND PREFIXglGetAttribLocationARB(GLhandleARB programObj, const GLcharARB *name)END
+BEGIN void SECOND PREFIXglBindBufferARB(GLenum target, GLuint buffer)END
+BEGIN void SECOND PREFIXglDeleteBuffersARB(GLsizei n, const GLuint *buffers)END
+BEGIN void SECOND PREFIXglGenBuffersARB(GLsizei n, GLuint *buffers)END
+BEGIN GLboolean SECOND PREFIXglIsBufferARB(GLuint buffer)END
+BEGIN void* SECOND PREFIXglMapBufferARB(GLenum target, GLenum access)END
+BEGIN GLboolean SECOND PREFIXglUnmapBufferARB(GLenum target)END
+BEGIN void SECOND PREFIXglBufferDataARB(GLenum target, GLsizeiptrARB size, const void *data, GLenum usage)END
+BEGIN void SECOND PREFIXglBufferSubDataARB(GLenum target, GLintptrARB offset, GLsizeiptrARB size, const void *data)END
+BEGIN void SECOND PREFIXglGenQueriesARB(GLsizei n, GLuint *ids)END
+BEGIN void SECOND PREFIXglDeleteQueriesARB(GLsizei n, const GLuint *ids)END
+BEGIN GLboolean SECOND PREFIXglIsQueryARB(GLuint id)END
+BEGIN void SECOND PREFIXglBeginQueryARB(GLenum target, GLuint id)END
+BEGIN void SECOND PREFIXglEndQueryARB(GLenum target)END
+BEGIN void SECOND PREFIXglGetQueryivARB(GLenum target, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetQueryObjectivARB(GLuint id, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglGetQueryObjectuivARB(GLuint id, GLenum pname, GLuint *params)END
+BEGIN void SECOND  PREFIXglSelectTextureSGIS ( GLenum a)END
+BEGIN void SECOND  PREFIXglMTexCoord2fSGIS ( GLenum a, GLfloat b, GLfloat c)END
+BEGIN void SECOND  PREFIXglSwapInterval ( int interval)END
+BEGIN GLboolean SECOND PREFIXglIsRenderbuffer (GLuint renderbuffer)END
+BEGIN void SECOND PREFIXglBindRenderbuffer (GLenum target, GLuint renderbuffer)END
+BEGIN void SECOND PREFIXglDeleteRenderbuffers (GLsizei n, const GLuint *renderbuffers)END
+BEGIN void SECOND PREFIXglGenRenderbuffers (GLsizei n, GLuint *renderbuffers)END
+BEGIN void SECOND PREFIXglRenderbufferStorage (GLenum target, GLenum internalformat, GLsizei width, GLsizei height)END
+BEGIN void SECOND PREFIXglRenderbufferStorageMultisample (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)END
+BEGIN void SECOND PREFIXglGetRenderbufferParameteriv (GLenum target, GLenum pname, GLint *params)END
+BEGIN GLboolean PREFIXglIsFramebuffer (GLuint framebuffer)END
+BEGIN void SECOND PREFIXglBindFramebuffer (GLenum target, GLuint framebuffer)END
+BEGIN void SECOND PREFIXglDeleteFramebuffers (GLsizei n, const GLuint *framebuffers)END
+BEGIN void SECOND PREFIXglGenFramebuffers (GLsizei n, GLuint *framebuffers)END
+BEGIN GLenum SECOND PREFIXglCheckFramebufferStatus (GLenum target)END
+BEGIN void SECOND PREFIXglFramebufferTexture1D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)END
+BEGIN void SECOND PREFIXglFramebufferTexture2D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)END
+BEGIN void SECOND PREFIXglFramebufferTexture3D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint layer)END
+BEGIN void SECOND PREFIXglFramebufferTextureLayer (GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)END
+BEGIN void SECOND PREFIXglFramebufferRenderbuffer (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)END
+BEGIN void SECOND PREFIXglGetFramebufferAttachmentParameteriv (GLenum target, GLenum attachment, GLenum pname, GLint *params)END
+BEGIN void SECOND PREFIXglBlitFramebuffer (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)END
+BEGIN void SECOND PREFIXglGenerateMipmap (GLenum target)END
+BEGIN void SECOND PREFIXglGetCompressedTexImageARB (GLenum target, GLint level, GLvoid *img)END
+BEGIN void SECOND PREFIXglCopyTexSubImage3DEXT (GLenum a, GLint b, GLint c, GLint d, GLint e, GLint f, GLint g, GLsizei h, GLsizei i)END
+BEGIN void SECOND PREFIXglTexSubImage3DEXT(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels)END
+BEGIN void SECOND PREFIXglTexImage3DEXT(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels)END
+BEGIN void SECOND PREFIXglMultiTexCoord1fARB(GLenum target, GLfloat s)END
+BEGIN void SECOND PREFIXglMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)END
+BEGIN void SECOND PREFIXglMultiTexCoord3fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r)END
+BEGIN void SECOND PREFIXglMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)END
