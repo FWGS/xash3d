@@ -57,7 +57,7 @@ int szArgc;
 char **szArgv;
 HINSTANCE	hEngine;
 
-void Sys_Error( const char *errorstring )
+void Xash_Error( const char *errorstring )
 {
 #ifdef XASH_SDL
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
@@ -73,7 +73,7 @@ void Sys_LoadEngine( void )
 #ifndef _WIN32
 		printf("%s\n", dlerror());
 #endif
-		Sys_Error( "Unable to load the " XASHLIB );
+		Xash_Error( "Unable to load the " XASHLIB );
 	}
 
 	if(( Xash_Main = (pfnInit)dlsym( hEngine, "Host_Main" )) == NULL )
@@ -81,7 +81,7 @@ void Sys_LoadEngine( void )
 #ifndef _WIN32
 		printf("%s\n", dlerror());
 #endif
-		Sys_Error( XASHLIB " missed 'Host_Main' export" );
+		Xash_Error( XASHLIB " missed 'Host_Main' export" );
 	}
 
 	// this is non-fatal for us but change game will not working
@@ -99,8 +99,8 @@ void Sys_UnloadEngine( void )
 
 void Sys_ChangeGame( const char *progname )
 {
-	if( !progname || !progname[0] ) Sys_Error( "Sys_ChangeGame: NULL gamedir" );
-	if( Xash_Shutdown == NULL ) Sys_Error( "Sys_ChangeGame: missed 'Host_Shutdown' export\n" );
+	if( !progname || !progname[0] ) Xash_Error( "Sys_ChangeGame: NULL gamedir" );
+	if( Xash_Shutdown == NULL ) Xash_Error( "Sys_ChangeGame: missed 'Host_Shutdown' export\n" );
 	strncpy( szGameDir, progname, sizeof( szGameDir ) - 1 );
 
 	Sys_UnloadEngine ();
