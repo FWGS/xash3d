@@ -214,7 +214,16 @@ void IN_EvdevFrame ()
 			ioctl( mouse_fd, EVIOCGRAB, (void*) 0);
 			Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
 		}
+		if(clgame.dllFuncs.pfnLookEvent)
+			clgame.dllFuncs.pfnLookEvent( evdev_dx, evdev_dy );
+		else
+		{
+			cl.refdef.cl_viewangles[PITCH] += evdev_dy * m_enginesens->value;
+			cl.refdef.cl_viewangles[PITCH] = bound( -90, cl.refdef.cl_viewangles[PITCH], 90 );
+			cl.refdef.cl_viewangles[YAW] -= evdev_dx * m_enginesens->value;
+		}
 	}
+	
 }
 #endif
 
@@ -575,7 +584,7 @@ Common function for engine joystick movement
 #define R 1<<3	// Right
 #define T 1<<4	// Forward stop
 #define S 1<<5	// Side stop
-void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove )
+void IN_JoyAppendMove( usercmd_t *cmd, float forwardmove, float sidemove )
 {
 	static uint moveflags = T | S;
 		
@@ -641,27 +650,44 @@ void IN_JoyMove( usercmd_t *cmd, float forwardmove, float sidemove )
 	}
 }
 
+#ifdef XASH_SDL
+/*
+==========================
+SDL Joystick Code
+==========================
+*/
+
+void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
+{
+}
+
+#endif
+
 /*
 ================
-IN_EngineMove
+IN_EngineAppendMove
 
 Called from cl_main.c after generating command in client
 ================
 */
-void IN_EngineMove( float frametime, usercmd_t *cmd, qboolean active )
+void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 {
-#ifdef __ANDROID__
+	float forward = 0, side = 0;
+	if(clgame.dllFuncs.pfnLookEvent)
+		return;
 	if(active)
-		Android_Move(cmd);
-#endif
-#ifdef USE_EVDEV
-	if(evdev_open)
 	{
-		cl.refdef.cl_viewangles[PITCH] += evdev_dy * m_enginesens->value;
-		cl.refdef.cl_viewangles[PITCH] = bound( -90, cl.refdef.cl_viewangles[PITCH], 90 );
-		cl.refdef.cl_viewangles[YAW] -= evdev_dx * m_enginesens->value;
-	}
+#ifdef __ANDROID__
+		Android_Move( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
+#ifdef XASH_SDL
+		IN_SDL_JoyMove( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
+#endif
+		IN_JoyAppendMove( cmd, forward, side );
+
+	}
+
+
 }
 /*
 ==================
@@ -673,11 +699,30 @@ Called every frame, even if not generating commands
 void Host_InputFrame( void )
 {
 	qboolean	shutdownMouse = false;
+	float forward = 0, side = 0, pitch = 0, yaw = 0;
 
 	rand (); // keep the random time dependent
 
 	Sys_SendKeyEvents ();
 
+#ifdef __ANDROID__
+	Android_Events();
+#endif
+
+#ifdef USE_EVDEV
+	IN_EvdevFrame();
+#endif
+	if(clgame.dllFuncs.pfnLookEvent)
+	{
+#ifdef __ANDROID__
+		Android_Move( &forward, &side, &pitch, &yaw );
+#endif
+#ifdef XASH_SDL
+		IN_SDL_JoyMove( &forward, &side, &pitch, &yaw );
+#endif
+		clgame.dllFuncs.pfnLookEvent(yaw*50, pitch*50);
+		clgame.dllFuncs.pfnMoveEvent(forward, side);
+	}
 	Cbuf_Execute ();
 
 	if( host.state == HOST_RESTART )
@@ -723,9 +768,6 @@ void Host_InputFrame( void )
 
 	IN_ActivateMouse( false );
 	IN_MouseMove();
-#ifdef USE_EVDEV
-	IN_EvdevFrame();
-#endif
 }
 
 /*

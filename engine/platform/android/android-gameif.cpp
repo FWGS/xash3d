@@ -315,26 +315,24 @@ void Android_Events()
 	pthread_mutex_unlock(&events_mutex);
 }
 
-void Android_Move ( usercmd_t *cmd )
+void Android_Move ( float *forward, float *side, float *pitch, float *yaw )
 {
 
 	vec3_t viewangles;
 
-	if(!cmd) return;
-
-	IN_JoyMove( cmd, forwardmove, sidemove );
+	*forward += forwardmove, *side += sidemove;
 
 	switch(look_pitch_mode)
 	{
 	case LOOK_MODE_MOUSE:
-		cl.refdef.cl_viewangles[0] += look_pitch_mouse * 200;
+		*pitch += look_pitch_mouse * 200;
 		look_pitch_mouse = 0;
 		break;
 	case LOOK_MODE_ABSOLUTE:
-		cl.refdef.cl_viewangles[0] = look_pitch_abs * 80;
+		*pitch = look_pitch_abs * 80;
 		break;
 	case LOOK_MODE_JOYSTICK:
-		cl.refdef.cl_viewangles[0] += look_pitch_joy * 6;
+		*pitch += look_pitch_joy * 6;
 		break;
 	}
 
@@ -342,11 +340,11 @@ void Android_Move ( usercmd_t *cmd )
 	switch(look_yaw_mode)
 	{
 	case LOOK_MODE_MOUSE:
-		cl.refdef.cl_viewangles[1] += look_yaw_mouse * 300;
+		*yaw += look_yaw_mouse * 300;
 		look_yaw_mouse = 0;
 		break;
 	case LOOK_MODE_JOYSTICK:
-		cl.refdef.cl_viewangles[1] += look_yaw_joy * 6;
+		*yaw += look_yaw_joy * 6;
 		break;
 	}
 }
