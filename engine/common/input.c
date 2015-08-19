@@ -531,6 +531,73 @@ void IN_MouseEvent( int mstate )
 	in_mouse_oldbuttonstate = mstate;
 }
 
+#ifdef XASH_SDL
+/*
+==========================
+SDL Joystick Code
+==========================
+*/
+
+struct sdl_joydada_s
+{
+	qboolean open;
+	int num_axes;
+	char binding[10];
+	SDL_Joystick *joy;
+} joydata;
+
+
+convar_t *joy_index;
+convar_t *joy_binding;
+
+void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
+{
+	int i;
+	if(!joydata.joy) return;
+	// Extend cvar with zeroes
+	if(joy_binding->modified)
+	{
+		Q_strncpy(joydata.binding, joy_binding->string, 10);
+		Q_strncat(joydata.binding,"0000000000", joydata.num_axes);
+		joy_binding->modified = false;
+	}
+	for(i = 0; i < joydata.num_axes; i++)
+	{
+		signed short value = SDL_JoystickGetAxis( joydata.joy, i );
+		if( value <= 3200 && value >= -3200 ) continue;
+		switch(joy_binding->string[i])
+		{
+			case 'f': *forward -= 1.0/32768.0 * value;break;
+			case 's': *side += 1.0/32768.0 * value;break;
+			case 'p': *pitch += 1.0/32768.0 *value;break;
+			case 'y': *yaw -= 1.0/32768.0 * value;break;
+			default:break;
+		}
+	}
+}
+
+
+void IN_SDL_JoyInit( void )
+{
+	int num;
+	joy_binding = Cvar_Get("joy_binding","sfyp",CVAR_ARCHIVE,"Joystick binding (f/s/p/y)");
+	joy_binding->modified = true;
+	joy_index = Cvar_Get("joy_index","0",CVAR_ARCHIVE,"Joystick number to open");
+	if( ( num = SDL_NumJoysticks() ) )
+	{
+		MsgDev ( D_INFO, "%d joysticks found\n", num );
+		joydata.joy = SDL_JoystickOpen(joy_index->integer);
+		if(!joydata.joy)
+		{
+			MsgDev ( D_ERROR, "Failed to open joystick!\n");
+		}
+		joydata.num_axes = SDL_JoystickNumAxes(joydata.joy);
+		MsgDev ( D_INFO, "Joystick %s has %d axes\n", SDL_JoystickName(joydata.joy), joydata.num_axes );
+	}
+}
+
+#endif
+
 /*
 ===========
 IN_Shutdown
@@ -558,6 +625,9 @@ void IN_Init( void )
 	cl_forwardspeed	= Cvar_Get( "cl_forwardspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default forward move speed" );
 	cl_backspeed	= Cvar_Get( "cl_backspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default back move speed"  );
 	cl_sidespeed	= Cvar_Get( "cl_sidespeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default side move speed"  );
+#ifdef XASH_SDL
+	IN_SDL_JoyInit();
+#endif
 #ifdef USE_EVDEV
 	evdev_mousepath	= Cvar_Get( "evdev_mousepath", "", 0, "Path for evdev device node");
 	evdev_grab = Cvar_Get( "evdev_grab", "0", CVAR_ARCHIVE, "Enable event device grab" );
@@ -650,19 +720,6 @@ void IN_JoyAppendMove( usercmd_t *cmd, float forwardmove, float sidemove )
 	}
 }
 
-#ifdef XASH_SDL
-/*
-==========================
-SDL Joystick Code
-==========================
-*/
-
-void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
-{
-}
-
-#endif
-
 /*
 ================
 IN_EngineAppendMove
@@ -720,7 +777,7 @@ void Host_InputFrame( void )
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( &forward, &side, &pitch, &yaw );
 #endif
-		clgame.dllFuncs.pfnLookEvent(yaw*50, pitch*50);
+		clgame.dllFuncs.pfnLookEvent(yaw * 50, pitch * 50);
 		clgame.dllFuncs.pfnMoveEvent(forward, side);
 	}
 	Cbuf_Execute ();
