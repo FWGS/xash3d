@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #include "cl_tent.h"
 #include "gl_local.h"
 #include "input.h"
-#include "../cl_dll/kbutton.h"
+#include "kbutton.h"
 #include "vgui_draw.h"
 
 #define MAX_TOTAL_CMDS		16
@@ -914,9 +914,7 @@ CL_InternetServers_f
 void CL_InternetServers_f( void )
 {
 	netadr_t	adr;
-	char	part1query[12];
-	char	part2query[128];
-	string	fullquery;
+	char	fullquery[512];
 
 	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
 	NET_Config( true ); // allow remote
@@ -924,13 +922,12 @@ void CL_InternetServers_f( void )
 	if( !NET_StringToAdr( MASTERSERVER_ADR, &adr ) )
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", MASTERSERVER_ADR );
 
-	Q_snprintf( part1query, sizeof( part1query ), "%c%c0.0.0.0:0", 0x31, 0xFF );
-	Q_snprintf( part2query, sizeof( part2query ), "\\gamedir\\%s_xash\\nap\\%d", GI->gamedir, 70 );
+	Q_snprintf( fullquery, sizeof( fullquery ),
+		"\x31\xFF0.0.0.0:0\0"
+		"\\gamedir\\%s",
+		GI->gamedir);
 
-	Q_memcpy( fullquery, part1query, sizeof( part1query ));
-	Q_memcpy( fullquery + sizeof( part1query ), part2query, Q_strlen( part2query ));
-
-	NET_SendPacket( NS_CLIENT, sizeof( part1query ) + Q_strlen( part2query ) + 1, fullquery, adr );
+	NET_SendPacket( NS_CLIENT, Q_strlen( fullquery ) + 1, fullquery, adr );
 }
 
 /*
@@ -1366,11 +1363,6 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		// dropped the connection but it is still getting packets from us
 		CL_Disconnect();
 	}
-	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
-	{
-		// user out of band message (must be handled in CL_ConnectionlessPacket)
-		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, buf );
-	}
 	else if( msg->pData[0] == 0xFF && msg->pData[1] == 0xFF && msg->pData[2] == 0xFF && msg->pData[3] == 0xFF && msg->pData[4] == 0x66 && msg->pData[5] == 0x0A )
 	{
 		dataoffset = 6;
@@ -1378,12 +1370,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		while( 1 )
 		{
 			servadr.type = NA_IP;
-			servadr.ip[0] = msg->pData[dataoffset + 0];
-			servadr.ip[1] = msg->pData[dataoffset + 1];
-			servadr.ip[2] = msg->pData[dataoffset + 2];
-			servadr.ip[3] = msg->pData[dataoffset + 3];
+			Q_memcpy( servadr.ip, &msg->pData[dataoffset], sizeof(servadr.ip));
 
-			servadr.port = *(word *)&msg->pData[dataoffset + 4];
+			servadr.port = *(unsigned short *)&msg->pData[dataoffset + 4];
 
 			if( !servadr.port )
 				break;
@@ -1396,6 +1385,11 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 
 			dataoffset += 6;
 		}
+	}
+	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
+	{
+		// user out of band message (must be handled in CL_ConnectionlessPacket)
+		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, buf );
 	}
 	else MsgDev( D_ERROR, "bad connectionless packet from %s:\n%s\n", NET_AdrToString( from ), args );
 }

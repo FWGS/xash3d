@@ -23,11 +23,6 @@ GNU General Public License for more details.
 #define MAX_DUPLICATED_CHANNELS	4		// threshold for identical static channels (probably error)
 #define SND_CLIP_DISTANCE		(float)(GI->soundclip_dist)
 
-#if defined(__ANDROID__) || defined (__APPLE__)
-#undef _inline
-#define _inline static inline
-#endif
-
 dma_t		dma;
 byte		*sndpool;
 static soundfade_t	soundfade;

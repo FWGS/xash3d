@@ -634,7 +634,6 @@ uint Sound_GetApproxWavePlayLen( const char *filepath );
 // build.c
 //
 int Q_buildnum( void );
-int Q_based_buildnum( void );
 
 //
 // host.c

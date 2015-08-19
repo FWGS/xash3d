@@ -27,7 +27,7 @@ project (XASH3D)
 # USER DEFINES \
 ################\
 
-set (XASH3D_VERSION 0.96.3030)
+set (XASH3D_VERSION 0.15)
 set (HL_SDK_DIR /opt/halflife CACHE PATH "Half Life 1 SDK directory")
 
 option(PANDORA "Set to ON if targeting an OpenPandora device." ${PANDORA})
@@ -43,6 +43,13 @@ option(XASH_X11 "Enable X11 support." ${XASH_VGUI})
 #-----------------
 # MAIN BUILD CODE \
 ###################\
+
+# Build 32-bit Xash on 64-bit, because Xash3D not support this
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+	set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+endif()
 
 if(NOT XASH_DEDICATED)
 	add_subdirectory (mainui)

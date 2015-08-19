@@ -45,18 +45,12 @@ int Q_buildnum( void )
 	{
 		b += 1;
 	}
-	//b -= 38752; // Feb 13 2007
+	b -= 38752; // Feb 13 2007
 
-	b -= 41728; // Apr 1 2015. Date of first release of crossplatform Xash3D
+	//b -= 41728; // Apr 1 2015. Date of first release of crossplatform Xash3D
 
 	return b;
 #else
-	return 129;
-#endif
-}
-
-// Since this fork has own buildnumber, this is left for compability with original Xash3D.
-int Q_based_buildnum( void )
-{
 	return 3030;
+#endif
 }

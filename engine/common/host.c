@@ -951,7 +951,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	host_limitlocal = Cvar_Get( "host_limitlocal", "0", 0, "apply cl_cmdrate and rate to loopback connection" );
 	con_gamemaps = Cvar_Get( "con_mapfilter", "1", CVAR_ARCHIVE, "when true show only maps in game folder" );
 	build = Cvar_Get( "build", va( "%i", Q_buildnum()), CVAR_INIT, "returns a current build number" );
-	ver = Cvar_Get( "ver", va( "%i/%g.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ), BASED_VERSION, Q_based_buildnum( ) ), CVAR_INIT, "shows an engine version" );
+	ver = Cvar_Get( "ver", va( "%i/%g.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
 
 	// content control
 	Cvar_Get( "violence_hgibs", "1", CVAR_ARCHIVE, "show human gib entities" );
