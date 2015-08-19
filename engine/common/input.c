@@ -549,7 +549,11 @@ struct sdl_joydada_s
 
 convar_t *joy_index;
 convar_t *joy_binding;
-
+convar_t *joy_pitch;
+convar_t *joy_yaw;
+convar_t *joy_forward;
+convar_t *joy_side;
+convar_t *joy_enable;
 void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 {
 	int i;
@@ -567,10 +571,10 @@ void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 		if( value <= 3200 && value >= -3200 ) continue;
 		switch(joy_binding->string[i])
 		{
-			case 'f': *forward -= 1.0/32768.0 * value;break;
-			case 's': *side += 1.0/32768.0 * value;break;
-			case 'p': *pitch += 1.0/32768.0 *value;break;
-			case 'y': *yaw -= 1.0/32768.0 * value;break;
+			case 'f': *forward -= joy_forward->value/32768.0 * value;break;
+			case 's': *side += joy_side->value/32768.0 * value;break;
+			case 'p': *pitch += joy_pitch->value/32768.0 *value;break;
+			case 'y': *yaw -= joy_yaw->value/32768.0 * value;break;
 			default:break;
 		}
 	}
@@ -580,9 +584,17 @@ void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 void IN_SDL_JoyInit( void )
 {
 	int num;
-	joy_binding = Cvar_Get("joy_binding","sfyp",CVAR_ARCHIVE,"Joystick binding (f/s/p/y)");
+	joydata.joy = 0;
+	joy_binding = Cvar_Get( "joy_binding", "sfyp", CVAR_ARCHIVE, "Joystick binding (f/s/p/y)" );
 	joy_binding->modified = true;
-	joy_index = Cvar_Get("joy_index","0",CVAR_ARCHIVE,"Joystick number to open");
+	joy_index = Cvar_Get( "joy_index" ,"0" , CVAR_ARCHIVE, "Joystick number to open" );
+	joy_enable = Cvar_Get( "joy_enable" ,"1" , CVAR_ARCHIVE, "Enable joystick" );
+	joy_pitch = Cvar_Get( "joy_pitch" ,"1.0" , CVAR_ARCHIVE, "Joystick pitch sensitivity" );
+	joy_yaw = Cvar_Get( "joy_yaw" ,"1.0" , CVAR_ARCHIVE, "Joystick yaw sensitivity" );
+	joy_side = Cvar_Get( "joy_side" ,"1.0" , CVAR_ARCHIVE, "Joystick side sensitivity" );
+	joy_forward = Cvar_Get( "joy_forward" ,"1.0" , CVAR_ARCHIVE, "Joystick forward sensitivity" );
+	if (!joy_enable->integer) return;
+	
 	if( ( num = SDL_NumJoysticks() ) )
 	{
 		MsgDev ( D_INFO, "%d joysticks found\n", num );
@@ -771,11 +783,17 @@ void Host_InputFrame( void )
 #endif
 	if(clgame.dllFuncs.pfnLookEvent)
 	{
+		int dx, dy;
 #ifdef __ANDROID__
 		Android_Move( &forward, &side, &pitch, &yaw );
 #endif
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( &forward, &side, &pitch, &yaw );
+		if( in_mouseinitialized )
+		{
+			SDL_GetRelativeMouseState( &dx, &dy );
+			pitch +=dy, yaw +=dx;
+		}
 #endif
 		clgame.dllFuncs.pfnLookEvent(yaw * 50, pitch * 50);
 		clgame.dllFuncs.pfnMoveEvent(forward, side);
