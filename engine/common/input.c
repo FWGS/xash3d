@@ -62,6 +62,8 @@ static byte scan_to_key[128] =
 #ifdef XASH_SDL
 convar_t *m_valvehack;
 convar_t *m_enginemouse;
+convar_t *m_pitch;
+convar_t *m_yaw;
 #endif
 
 convar_t *m_enginesens;
@@ -239,6 +241,8 @@ void IN_StartupMouse( void )
 	m_valvehack = Cvar_Get("m_valvehack", "0", CVAR_ARCHIVE, "Enable mouse hack for client.so with different SDL binary");
 	m_enginemouse = Cvar_Get("m_enginemouse", "0", CVAR_ARCHIVE, "Read mouse events in engine instead of client");
 	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
+	m_pitch = Cvar_Get("m_pitch", "0.022", CVAR_ARCHIVE, "Mouse pitch value");
+	m_yaw = Cvar_Get("m_yaw", "0.022", CVAR_ARCHIVE, "Mouse yaw value");
 #endif
 
 	in_mouse_buttons = 8;
@@ -554,9 +558,32 @@ convar_t *joy_yaw;
 convar_t *joy_forward;
 convar_t *joy_side;
 convar_t *joy_enable;
+
+void IN_SDL_JoyOpen( void )
+{
+	int num;
+	//if (joydata.joy) SDL_JoystickClose ( joydata.joy );
+	joydata.joy = 0;
+	if (!joy_enable->integer) return;
+	if( ( num = SDL_NumJoysticks() ) )
+	{
+		MsgDev ( D_INFO, "%d joysticks found\n", num );
+		joydata.joy = SDL_JoystickOpen( joy_index->integer );
+		if(!joydata.joy)
+		{
+			MsgDev ( D_ERROR, "Failed to open joystick!\n");
+		}
+		joydata.num_axes = SDL_JoystickNumAxes( joydata.joy );
+		MsgDev ( D_INFO, "Joystick %s has %d axes\n", SDL_JoystickName( joydata.joy ), joydata.num_axes );
+	}
+	joy_enable->modified = false;
+}
+
 void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 {
 	int i;
+	if( joy_enable->modified )
+		IN_SDL_JoyOpen();
 	if(!joydata.joy) return;
 	// Extend cvar with zeroes
 	if(joy_binding->modified)
@@ -583,7 +610,6 @@ void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 
 void IN_SDL_JoyInit( void )
 {
-	int num;
 	joydata.joy = 0;
 	joy_binding = Cvar_Get( "joy_binding", "sfyp", CVAR_ARCHIVE, "Joystick binding (f/s/p/y)" );
 	joy_binding->modified = true;
@@ -593,19 +619,7 @@ void IN_SDL_JoyInit( void )
 	joy_yaw = Cvar_Get( "joy_yaw" ,"1.0" , CVAR_ARCHIVE, "Joystick yaw sensitivity" );
 	joy_side = Cvar_Get( "joy_side" ,"1.0" , CVAR_ARCHIVE, "Joystick side sensitivity" );
 	joy_forward = Cvar_Get( "joy_forward" ,"1.0" , CVAR_ARCHIVE, "Joystick forward sensitivity" );
-	if (!joy_enable->integer) return;
-	
-	if( ( num = SDL_NumJoysticks() ) )
-	{
-		MsgDev ( D_INFO, "%d joysticks found\n", num );
-		joydata.joy = SDL_JoystickOpen(joy_index->integer);
-		if(!joydata.joy)
-		{
-			MsgDev ( D_ERROR, "Failed to open joystick!\n");
-		}
-		joydata.num_axes = SDL_JoystickNumAxes(joydata.joy);
-		MsgDev ( D_INFO, "Joystick %s has %d axes\n", SDL_JoystickName(joydata.joy), joydata.num_axes );
-	}
+	IN_SDL_JoyOpen();
 }
 
 #endif
@@ -792,11 +806,11 @@ void Host_InputFrame( void )
 		if( in_mouseinitialized )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );
-			pitch +=dy, yaw +=dx;
+			pitch += dy * m_pitch->value, yaw += dx * m_yaw->value; //mouse speed
 		}
 #endif
-		clgame.dllFuncs.pfnLookEvent(yaw * 50, pitch * 50);
-		clgame.dllFuncs.pfnMoveEvent(forward, side);
+		clgame.dllFuncs.pfnLookEvent( yaw, pitch );
+		clgame.dllFuncs.pfnMoveEvent( forward, side );
 	}
 	Cbuf_Execute ();
 
