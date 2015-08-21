@@ -321,6 +321,10 @@ void Android_Move ( float *forward, float *side, float *pitch, float *yaw )
 	vec3_t viewangles;
 
 	*forward += forwardmove, *side += sidemove;
+	
+	// Filter dangerous touch events
+	if( look_pitch_mouse > 20.0 / 300.0 || look_pitch_mouse < -20.0 / 300.0 || look_yaw_mouse > 20.0 / 300 || look_yaw_mouse < -20.0 / 300.0 )
+		look_pitch_mouse = look_yaw_mouse = 0.0;
 
 	switch(look_pitch_mode)
 	{
