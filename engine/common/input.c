@@ -562,7 +562,7 @@ convar_t *joy_enable;
 void IN_SDL_JoyOpen( void )
 {
 	int num;
-	//if (joydata.joy) SDL_JoystickClose ( joydata.joy );
+	//if (joydata.joy) SDL_JoystickClose ( joydata.joy ); (crash in sdl on android if used)
 	joydata.joy = 0;
 	if (!joy_enable->integer) return;
 	if( ( num = SDL_NumJoysticks() ) )

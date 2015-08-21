@@ -750,7 +750,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
 	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 	host.hInst = GetModuleHandle( NULL );
-#elif defined (__ANDROID__)
+//#elif defined (__ANDROID__)
 //TODO
 #else
 	struct sigaction act;
