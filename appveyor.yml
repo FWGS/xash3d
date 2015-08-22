@@ -6,15 +6,11 @@ branches:
 
 os: Windows Server 2012
 
-init:
-  - git config --global core.autocrlf input
-
 clone_folder: c:\projects\xash\xash3d
 
 platform: x86
 
 configuration: Release
-
 
 build:
   parallel: true
