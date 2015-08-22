@@ -329,7 +329,7 @@ void Android_Move ( float *forward, float *side, float *pitch, float *yaw )
 	switch(look_pitch_mode)
 	{
 	case LOOK_MODE_MOUSE:
-		*pitch += look_pitch_mouse * 200;
+		*pitch += look_pitch_mouse * 90;
 		look_pitch_mouse = 0;
 		break;
 	case LOOK_MODE_ABSOLUTE:
@@ -344,7 +344,7 @@ void Android_Move ( float *forward, float *side, float *pitch, float *yaw )
 	switch(look_yaw_mode)
 	{
 	case LOOK_MODE_MOUSE:
-		*yaw += look_yaw_mouse * 300;
+		*yaw += look_yaw_mouse * 100;
 		look_yaw_mouse = 0;
 		break;
 	case LOOK_MODE_JOYSTICK:
