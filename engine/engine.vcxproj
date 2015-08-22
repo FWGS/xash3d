@@ -18,13 +18,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v120_xp</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -39,14 +39,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir);client;common;server;client/imagelib;client/vgui;client/soundlib;../../SDL2/include/;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
-    <LibraryPath>common/soundlib;../../SDL2/lib/x86/;../../halflife/utils/vgui/lib/win32_vc6;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;../../SDL2/include/;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
+    <LibraryPath>common/soundlib;..\Debug;../../halflife/utils/vgui/lib/win32_vc6;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
     <TargetName>xash</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir);client;common;server;client/imagelib;client/vgui;client/soundlib;../../SDL2/include/;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
-    <LibraryPath>common/soundlib;../../SDL2/lib/x86/;../../halflife/utils/vgui/lib/win32_vc6;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;../../SDL2/include/;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
+    <LibraryPath>common/soundlib;..\Release;../../halflife/utils/vgui/lib/win32_vc6;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
     <TargetName>xash</TargetName>
   </PropertyGroup>
@@ -55,7 +55,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>XASH_SDL;XASH_NONSTANDART_LOAD;XASH_VGUI;_MBCS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>XASH_VGUI;XASH_SDL;XASH_NONSTANDART_LOAD;XASH_VGUI;_MBCS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -123,12 +123,7 @@
     <ClCompile Include="client\s_stream.c" />
     <ClCompile Include="client\s_utils.c" />
     <ClCompile Include="client\s_vox.c" />
-    <ClCompile Include="client\vgui\vgui_clip.cpp" />
     <ClCompile Include="client\vgui\vgui_draw.c" />
-    <ClCompile Include="client\vgui\vgui_font.cpp" />
-    <ClCompile Include="client\vgui\vgui_input.cpp" />
-    <ClCompile Include="client\vgui\vgui_int.cpp" />
-    <ClCompile Include="client\vgui\vgui_surf.cpp" />
     <ClCompile Include="common\avikit.c" />
     <ClCompile Include="common\build.c" />
     <ClCompile Include="common\cmd.c" />
