@@ -1,0 +1,32 @@
+version: 1.0.{build}
+
+branches:
+  only:
+    - master
+
+os: Windows Server 2012
+
+init:
+  - git config --global core.autocrlf input
+
+clone_folder: c:\projects\xash\xash3d
+
+platform: x86
+
+configuration: Release
+
+
+build:
+  parallel: true                  # enable MSBuild parallel builds
+  project: xash.sln      # path to Visual Studio solution or project
+
+  verbosity: quiet
+
+before_build:
+  git clone -q --branch=master https://github.com/MrYadro/SDL2.git C:\projects\xash\SDL2
+  git clone -q --branch=master https://github.com/SDLash3D/halflife.git C:\projects\xash\halflife
+  git clone -q --branch=master https://github.com/SDLash3D/XashXT.git C:\projects\xash\XashXT
+
+after_build:
+
+build_script:
