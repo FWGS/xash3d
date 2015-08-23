@@ -37,7 +37,7 @@
     <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <CLRSupport>true</CLRSupport>
+    <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -51,7 +51,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>hl</TargetName>
+    <TargetName>xash</TargetName>
     <IncludePath>$(VC_IncludePath);..\engine;..\..\SDL2\include;..\..\halflife\dlls;..\..\halflife\public;..\..\halflife\common;$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);..\Debug;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
