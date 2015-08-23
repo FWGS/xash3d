@@ -14,6 +14,7 @@ build:
   verbosity: normal
 
 before_build:
+  - mkdir C:\projects\xash\SDL2
   - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.3-VC.zip
   - 7z x SDL2-devel-2.0.3-VC.zip
   - move SDL2-2.0.3\*.* C:\projects\xash\SDL2
@@ -21,6 +22,7 @@ before_build:
   - git clone -q --branch=master https://github.com/SDLash3D/XashXT.git C:\projects\xash\XashXT
 
 after_build:
+  - move C:\projects\xash\SDL2\lib\x86\*.* c:\projects\xash\xash3d\Debug\
   - 7z a -tzip xash3d-win-{build}.zip c:\projects\xash\xash3d\Debug\
   - curl --upload-file xash3d-win-{build}.zip https://transfer.sh/xash3d-win-{build}.zip
 
