@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include <SDL.h>
 #endif
 #include <stdarg.h>  // va_args
+#include <errno.h> // errno
 
 #include "common.h"
 #include "netchan.h"
@@ -697,6 +698,30 @@ static void Host_Crash_f( void )
 
 /*
 =================
+Host_InstallExceptionFilter
+=================
+*/
+void Host_InstallExceptionFilter( void )
+{
+#if defined(_WIN32)
+	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
+	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
+	host.hInst = GetModuleHandle( NULL );
+#elif defined (__ANDROID__)
+	// TODO
+#else
+	struct sigaction act;
+	act.sa_sigaction = Sys_Crash;
+	act.sa_flags = SA_SIGINFO | SA_ONSTACK;
+	sigaction( SIGSEGV, &act, &host.oldFilter );
+	sigaction( SIGABRT, &act, &host.oldFilter );
+	sigaction( SIGBUS,  &act, &host.oldFilter );
+	sigaction( SIGILL,  &act, &host.oldFilter );
+#endif
+}
+
+/*
+=================
 Host_InitCommon
 =================
 */
@@ -705,6 +730,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	char		dev_level[4];
 	char		szTemp[MAX_SYSPATH];
 	char		moduleName[64];
+	char		*baseDir;
 	string		szRootPath;
 
 	CRT_Init(); // init some CRT functions
@@ -717,7 +743,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.enabledll = !Sys_CheckParm( "-nodll" );
 #ifdef DLL_LOADER
 	if( host.enabledll )
-		Setup_LDT_Keeper(); // Must call before any thread creating
+		Setup_LDT_Keeper( ); // Must call before any thread creating
 #endif
 
 #ifdef XASH_SDL
@@ -727,48 +753,38 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 				SDL_INIT_JOYSTICK |
 				SDL_INIT_EVENTS ))
 	{
-		MsgDev(D_ERROR, "SDL_Init: %s", SDL_GetError());
+		Sys_Error( "SDL_Init: %s", SDL_GetError() );
 		return 0;
 	}
 #endif
 
-#if defined(__ANDROID__)
-	Q_strncpy(host.rootdir, getenv("XASH3D_BASEDIR"), sizeof(host.rootdir));
-#elif defined(XASH_SDL)
-	if( !(SDL_GetBasePath()) )
-		Sys_Error( "couldn't determine current directory" );
-	Q_strncpy(host.rootdir, SDL_GetBasePath(), sizeof(host.rootdir));
-#else
-	if( !getcwd(host.rootdir, sizeof(host.rootdir) ) )
+	if( baseDir = getenv( "XASH3D_BASEDIR" ) )
+	{
+		Q_strncpy( host.rootdir, baseDir, sizeof(host.rootdir) );
+	}
+	else
+	{
+		#if defined(XASH_SDL)
+		if( !(baseDir = SDL_GetBasePath()) )
+			Sys_Error( "couldn't determine current directory: %s", SDL_GetError() );
+		Q_strncpy( host.rootdir, baseDir, sizeof( host.rootdir ) );
+		#else
+		if( !getcwd(host.rootdir, sizeof(host.rootdir) ) )
 			host.rootdir[0] = 0;
-#endif
+		#endif
+	}
 
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
-#ifdef _WIN32
-	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
-	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
-	host.hInst = GetModuleHandle( NULL );
-#elif defined (__ANDROID__)
-//TODO
-#else
-	struct sigaction act;
-	act.sa_sigaction = Sys_Crash;
-	act.sa_flags = SA_SIGINFO | SA_ONSTACK;
-	sigaction(SIGSEGV, &act, &host.oldFilter);
-	sigaction(SIGABRT, &act, &host.oldFilter);
-	sigaction(SIGBUS, &act, &host.oldFilter);
-	sigaction(SIGILL, &act, &host.oldFilter);
-#endif
+	// Install exception filter
+
+
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialzation started
 	host.developer = host.old_developer = 0;
 
 
-#ifdef _WIN32
-	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
-#endif
 	// some commands may turn engine into infinity loop,
 	// e.g. xash.exe +game xash -game xash
 	// so we clearing all cmd_args, but leave dbg states as well
@@ -786,84 +802,35 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		}
 		else host.developer++; // -dev == 1, -dev -console == 2
 	}
+
 	if( !Sys_CheckParm( "-vguiloader" ) || !Sys_GetParmFromCmdLine( "-vguiloader", host.vguiloader ) )
 	{
-#ifdef _WIN32
-		Q_strcpy(host.vguiloader, "vgui_support.dll");
-#else
-		Q_strcpy(host.vguiloader, "libvgui_support.so");
-#endif
+		Q_strcpy(host.vguiloader, VGUI_SUPPORT_DLL);
 	}
 
-
-	host.type = HOST_NORMAL; // predict state
-	host.con_showalways = true;
-
-	host.mouse_visible = false;
-
-#ifdef PANDORA
-	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
-#endif
-
-#if defined(__ANDROID__)
-	if (chdir(host.rootdir) == 0)
-		MsgDev(D_INFO,"%s is working directory now",host.rootdir);
-	else
-		MsgDev(D_ERROR,"%s is not exists",host.rootdir);
-#elif defined(XASH_SDL)
-	// we can specified custom name, from Sys_NewInstance
-	if( SDL_GetBasePath() && !host.change_game )
-	{
-		Q_strncpy( szTemp, SDL_GetBasePath(), sizeof(szTemp) );
-		FS_FileBase( szTemp, SI.ModuleName );
-	}
-#else
-	FS_FileBase( host.rootdir, SI.ModuleName );
-
-
-#ifdef _WIN32
-	GetModuleFileName( host.hInst, moduleName, sizeof(moduleName) );
-#else
-	// We didn't need full path, only executable name
-	Q_strncpy(moduleName, strrchr(argv[0], '/'), sizeof(moduleName) );
-	//strrchr adds a / at begin of string =(
-	memmove(&moduleName[0], &moduleName[1], sizeof(moduleName) - 1);
-#endif
-	//argv[0] is always stands for program name1
-	Q_strncpy(SI.ModuleName, moduleName, sizeof(SI.ModuleName));
-
-	FS_ExtractFilePath( SI.ModuleName, szRootPath );
-	/*if( Q_stricmp( host.rootdir, szRootPath ))
-	{
-		Q_strncpy( host.rootdir, szRootPath, sizeof( host.rootdir ));
-		SetCurrentDirectory( host.rootdir );
-	}*/
-#endif
-	SetCurrentDirectory( host.rootdir );
-	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
 
 #ifdef XASH_DEDICATED
-	host.type = HOST_DEDICATED; // hard code dedicated host type
+	host.type = HOST_DEDICATED; // predict state
+#else
+	if( Sys_CheckParm("-dedicated") )
+		 host.type = HOST_DEDICATED;
+	else host.type = HOST_NORMAL;
 #endif
+	host.con_showalways = true;
+	host.mouse_visible = false;
+
+	if ( SetCurrentDirectory( host.rootdir ) != 0)
+		MsgDev( D_INFO, "%s is working directory now\n", host.rootdir );
+	else
+		Sys_Error( "Changing working directory to %s failed.\n", host.rootdir );
+
+	// set default gamedir
+	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
 
 	if( host.type == HOST_DEDICATED )
 	{
-		// check for duplicate dedicated server
-#ifdef XASH_SDL		
-		host.hMutex = SDL_CreateMutex(  );
-
-		if( !host.hMutex )
-		{
-			MSGBOX( "Dedicated server already running" );
-			Sys_Quit();
-			return;
-		}
-#endif
 		Sys_MergeCommandLine( );
-#ifdef XASH_SDL	
-		SDL_DestroyMutex( host.hMutex );
-		host.hMutex = SDL_CreateSemaphore( 0 );
-#endif
+
 		if( host.developer < 3 ) host.developer = 3; // otherwise we see empty console
 	}
 	else
