@@ -1,4 +1,4 @@
-# Xash3D Engine [![Build Status](https://travis-ci.org/SDLash3D/xash3d.svg)](https://travis-ci.org/SDLash3D/xash3d) [![Build Status](https://ci.appveyor.com/api/projects/status/github/MrYadro/xash3d?branch=master&svg=true)](https://ci.appveyor.com/project/MrYadro/xash3d/)
+# Xash3D Engine [![Build Status](https://travis-ci.org/SDLash3D/xash3d.svg)](https://travis-ci.org/SDLash3D/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/MrYadro/xash3d?branch=master&svg=true)](https://ci.appveyor.com/project/MrYadro/xash3d/) [![Join the chat at https://gitter.im/MrYadro/xash3d](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/MrYadro/xash3d?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Latest version of the library is available at:
 https://github.com/SDLash3D/xash3d
 
