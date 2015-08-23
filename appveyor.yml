@@ -17,7 +17,8 @@ before_build:
   - mkdir C:\projects\xash\SDL2
   - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.3-VC.zip
   - 7z x SDL2-devel-2.0.3-VC.zip -oc:\projects\xash
-  - ren c:\projects\xash\SDL2-2.0.3 c:\projects\xash\SDL2
+  - cd c:\projects\xash\
+  - ren SDL2-2.0.3 SDL2
   - git clone -q --branch=master https://github.com/SDLash3D/halflife.git C:\projects\xash\halflife
   - git clone -q --branch=master https://github.com/SDLash3D/XashXT.git C:\projects\xash\XashXT
 
