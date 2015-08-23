@@ -395,6 +395,8 @@ qboolean VGUI_SurfaceWndProc( Xash_Event *event )
 {
 /* When false returned, event passed to engine, else only to vgui*/
 /* NOTE: this disabled because VGUI shows it's cursor on engine start*/
+	if( !vgui.initialized )
+		return;
 #ifdef XASH_SDL
 	switch( event->type )
 	{
