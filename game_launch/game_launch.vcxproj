@@ -53,13 +53,13 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetName>xash</TargetName>
     <IncludePath>$(VC_IncludePath);..\engine;..\..\SDL2\include;..\..\halflife\dlls;..\..\halflife\public;..\..\halflife\common;$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);..\Debug;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x86);..\..\SDL2\lib\x86;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>xash</TargetName>
     <IncludePath>$(VC_IncludePath);..\engine;..\..\SDL2\include;..\..\halflife\dlls;..\..\halflife\public;..\..\halflife\common;$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);..\Release;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x86);..\..\SDL2\lib\x86;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
