@@ -21,3 +21,8 @@ before_build:
 after_build:
   - 7z a -tzip archive.zip c:\projects\xash\xash3d\Debug\
   - curl --upload-file archive.zip https://transfer.sh/archive.zip
+
+notifications:
+
+  - provider: Webhook
+    url: https://webhooks.gitter.im/e/29ef45a57585978bf71a
