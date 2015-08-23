@@ -5180,7 +5180,15 @@ static double exp_CImod(void)
 {
     FPU_DOUBLES(x,y);
 
-    dbgprintf("_CImod(%f)\n", x);
+    dbgprintf("_CImod(%f, %f)\n", x, y);
+    return fmod(x,y);
+}
+
+static double exp_CIfmod(void)
+{
+    FPU_DOUBLES(x,y);
+
+    dbgprintf("_CIfmod(%f, %f)\n", x, y);
     return fmod(x,y);
 }
 
@@ -5549,6 +5557,7 @@ static const struct exports exp_msvcrt[]={
     FF(_CIsin,-1)
     FF(_CIsqrt,-1)
     FF(_CImod,-1)
+    FF(_CIfmod,-1)
     FF(ldexp,-1)
     FF(frexp,-1)
     FF(sprintf,-1)

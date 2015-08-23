@@ -69,7 +69,9 @@ typedef struct cldll_func_s
 	int	(*pfnGetRenderInterface)( int version, render_api_t *renderfuncs, render_interface_t *callback );
 	void	(*pfnClipMoveToEntity)( struct physent_s *pe, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, struct pmtrace_s *tr );
 	// More extenstions for the extensions god! (SDL Xash port)
-	void (*pfnIN_TouchEvent)( int fingerID, float x, float y, float dx, float dy );
+	int (*pfnTouchEvent)( int fingerID, float x, float y, float dx, float dy );
+	void (*pfnMoveEvent)( float forwardmove, float sidemove );
+	void (*pfnLookEvent)( float relyaw, float relpitch );
 } cldll_func_t;
 
 #endif//CDLL_EXP_H

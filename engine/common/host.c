@@ -1041,12 +1041,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		while( SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
 #endif
-
 		newtime = Sys_DoubleTime ();
 		Host_Frame( newtime - oldtime );
-		#ifdef __ANDROID__
-		Android_Events();
-		#endif
+
 		oldtime = newtime;
 	}
 
