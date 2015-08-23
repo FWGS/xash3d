@@ -14,7 +14,7 @@ build:
   verbosity: normal
 
 before_build:
-  - git clone -q --branch=master https://github.com/MrYadro/SDL2.git C:\projects\xash\SDL2
+  - git clone -q --branch=master https://github.com/spurious/SDL-mirror.git C:\projects\xash\SDL2
   - git clone -q --branch=master https://github.com/SDLash3D/halflife.git C:\projects\xash\halflife
   - git clone -q --branch=master https://github.com/SDLash3D/XashXT.git C:\projects\xash\XashXT
 
