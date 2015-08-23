@@ -820,9 +820,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.mouse_visible = false;
 
 	if ( SetCurrentDirectory( host.rootdir ) != 0)
-		MsgDev( D_INFO, "%s is working directory now", host.rootdir );
+		MsgDev( D_INFO, "%s is working directory now\n", host.rootdir );
 	else
-		Sys_Error( "Changing working directory to %s failed.\nError:", host.rootdir, strerror( errno ) );
+		Sys_Error( "Changing working directory to %s failed.\n", host.rootdir );
 
 	// set default gamedir
 	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
