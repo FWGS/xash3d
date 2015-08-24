@@ -138,24 +138,6 @@
     <ClCompile Include="client\s_vox.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="client\vgui\vgui_clip.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="client\vgui\vgui_draw.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="client\vgui\vgui_font.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="client\vgui\vgui_input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="client\vgui\vgui_int.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="client\vgui\vgui_surf.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="common\avikit.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -328,6 +310,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="server\sv_world.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="client\vgui\vgui_draw.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -11,7 +11,7 @@ int SDLash_EventFilter( SDL_Event* event)
 	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
 	// switch ....
 	// CEnginePanel is visible by default, why?
-	VGUI_SurfaceWndProc(event);
+ 	VGUI_SurfaceWndProc(event);
 	#endif
 	switch ( event->type )
 	{

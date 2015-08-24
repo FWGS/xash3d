@@ -1,5 +1,4 @@
-# Xash3D Engine [![Build Status](https://travis-ci.org/SDLash3D/xash3d.svg)](https://travis-ci.org/SDLash3D/xash3d)
-
+# Xash3D Engine [![Build Status](https://travis-ci.org/SDLash3D/xash3d.svg)](https://travis-ci.org/SDLash3D/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/SDLash3D/xash3d?branch=master&svg=true)](https://ci.appveyor.com/project/SDLash3D/xash3d/) [![Join the chat at https://gitter.im/MrYadro/xash3d](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/SDLash3D/xash3d?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Latest version of the library is available at:
 https://github.com/SDLash3D/xash3d
 
@@ -12,7 +11,7 @@ The multiplayer part is not yet completed, multiplayer mods should work just
 fine, but bear in mind that some features may not work at all or work not
 exactly the way they do in Gold Source Engine.
 
-# How to build
+# How to build on Linux
 
 Xash3D Engine requires [Half-Life 1 SDK](https://github.com/SDLash3D/halflife).
 Clone it with git:
@@ -49,6 +48,36 @@ Copy script:
 Run:
 
     $HOME/Games/Xash3D/xash3d.sh
+
+# Building and running on Windows
+
+To build Xash3D under windows you will need to clone this repos next to you xash3d folder:
+
+    git clone https://github.com/SDLash3D/halflife.git
+    git clone https://github.com/SDLash3D/XashXT.git
+
+Download latest prebuilt SDL2 from
+
+https://www.libsdl.org/release/SDL2-devel-2.0.3-VC.zip
+
+Unzip and rename `SDL2-2.0.3` folder to `SDL2` and put it next to xash3d project folder.
+
+    ..\xash3d\
+    ..\halflife\
+    ..\xashXT\
+    ..\SDL2\
+    
+Open `xash.sln` with Visual Studio 2013 and make a build. After building, copy contents of `Debug` or `Release` folder to directory you choose. Copy `valve` folder and `vgui.dll` from your Half Life game installation folder and `SDL2.dll` form `\SDL2\lib\x86\` to it. Move `vgui_support.dll` into `valve` folder.
+
+    ..\valve\
+    ..\valve\vgui_support.dll
+    ..\menu.dll
+    ..\SDL2.dll
+    ..\vgui.dll
+    ..\xash.dll
+    ..\xash.exe
+
+Now you good to go, just run `xash.exe`.
 
 # License
 
