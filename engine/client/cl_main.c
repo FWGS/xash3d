@@ -923,7 +923,8 @@ void CL_InternetServers_f( void )
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", MASTERSERVER_ADR );
 
 	Q_snprintf( fullquery, sizeof( fullquery ),
-		"\x31\xFF0.0.0.0:0\0"
+		"\x31\xFF"
+		"0.0.0.0:0\0"
 		"\\gamedir\\%s",
 		GI->gamedir);
 

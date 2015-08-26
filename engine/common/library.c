@@ -982,7 +982,7 @@ void Com_FreeLibrary( void *hInstance )
 	Mem_Free( hInst );	// done
 }
 
-dword Com_FunctionFromName( void *hInstance, const char *pName )
+void *Com_FunctionFromName(void *hInstance, const char *pName)
 {
 	dll_user_t	*hInst = (dll_user_t *)hInstance;
 	int		i, index;
