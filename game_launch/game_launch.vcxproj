@@ -17,7 +17,7 @@
     <ResourceCompile Include="game.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="game.cpp" />
+    <ClCompile Include="xash.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F20B6957-99DB-4330-8791-23A852F3B158}</ProjectGuid>
