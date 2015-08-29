@@ -62,3 +62,8 @@ if(XASH_VGUI)
 endif()
 add_subdirectory (engine)
 add_subdirectory (game_launch)
+
+install(FILES "xash3d.sh"
+    DESTINATION bin
+    RENAME "xash3d"
+    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

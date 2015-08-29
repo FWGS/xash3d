@@ -54,3 +54,5 @@ endif()
 
 target_link_libraries(${XASH_LAUNCHER_EXECUTABLE}
 	${CMAKE_DL_LIBS})
+
+install( TARGETS ${XASH_LAUNCHER_EXECUTABLE} DESTINATION lib/xash3d )
