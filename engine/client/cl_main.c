@@ -44,6 +44,7 @@ convar_t	*cl_solid_players;
 convar_t	*cl_draw_beams;
 convar_t	*cl_cmdrate;
 convar_t	*cl_interp;
+convar_t	*hud_scale;
 
 //
 // userinfo
@@ -1296,7 +1297,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 			return;
 		}
 
-		Netchan_Setup( NS_CLIENT, &cls.netchan, from, Cvar_VariableValue( "net_qport" ));
+		Netchan_Setup( NS_CLIENT, &cls.netchan, from, net_qport->integer);
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "new" );
 		cls.state = ca_connected;
@@ -1638,7 +1639,7 @@ void CL_InitLocal( void )
 	cl_draw_beams = Cvar_Get( "cl_draw_beams", "1", CVAR_ARCHIVE, "Disable view beams" );
 	cl_lightstyle_lerping = Cvar_Get( "cl_lightstyle_lerping", "0", CVAR_ARCHIVE, "enables animated light lerping (perfomance option)" );
 
-	Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
+	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
 	Cvar_Get( "cl_updaterate", "60", CVAR_USERINFO|CVAR_ARCHIVE, "refresh rate of server messages" );
 	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicate what background map is running" );

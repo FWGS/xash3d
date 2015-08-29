@@ -52,7 +52,7 @@ static int num_decals;
 // these cvars will be duplicated on each client across network
 int Host_ServerState( void )
 {
-	return Cvar_VariableInteger( "host_serverstate" );
+	return host_serverstate->integer;
 }
 
 int Host_CompareFileTime( long ft1, long ft2 )

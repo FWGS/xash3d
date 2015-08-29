@@ -1143,7 +1143,7 @@ void CL_PlayDemo_f( void )
 
 	demo.starttime = CL_GetDemoPlaybackClock(); // for determining whether to read another message
 
-	Netchan_Setup( NS_CLIENT, &cls.netchan, net_from, Cvar_VariableValue( "net_qport" ));
+	Netchan_Setup( NS_CLIENT, &cls.netchan, net_from, net_qport->integer );
 
 	demo.framecount = 0;
 	cls.lastoutgoingcommand = -1;

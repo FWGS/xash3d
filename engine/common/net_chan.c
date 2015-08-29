@@ -1364,7 +1364,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	// send the qport if we are a client
 	if( chan->sock == NS_CLIENT )
 	{
-		BF_WriteWord( &send, Cvar_VariableValue( "net_qport" ));
+		BF_WriteWord( &send, net_qport->integer);
 	}	
 
 	if( send_reliable && send_reliable_fragment )
