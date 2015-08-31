@@ -279,7 +279,9 @@ void SV_DisconnectClient( edict_t *pClient )
 	// don't send to other clients
 	pClient->v.modelindex = 0;
 
-	if( pClient->pvPrivateData != NULL )
+	/* mittorn: pvPrivateData must be cleaned on edict remove
+	 * If it cleaned here, server will crash later */
+	/*if( pClient->pvPrivateData != NULL )
 	{
 		// NOTE: new interface can be missing
 		if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
@@ -288,7 +290,7 @@ void SV_DisconnectClient( edict_t *pClient )
 		// clear any dlls data but keep engine data
 		Mem_Free( pClient->pvPrivateData );
 		pClient->pvPrivateData = NULL;
-	}
+	}*/
 }
 
 /*
@@ -438,8 +440,16 @@ void SV_DropClient( sv_client_t *drop )
 		Mem_Free( drop->frames );	// fakeclients doesn't have frames
 	drop->frames = NULL;
 
+	SV_ClearCustomizationList( drop->customization, false );
+
 	// throw away any residual garbage in the channel.
 	Netchan_Clear( &drop->netchan );
+
+
+	// Clean client data on disconnect
+	Q_memset( drop->userinfo, 0, MAX_INFO_STRING );
+	Q_memset( drop->physinfo, 0, MAX_INFO_STRING );
+	drop->edict = 0;
 
 	// send notification to all other clients
 	SV_FullClientUpdate( drop, &sv.reliable_datagram );
