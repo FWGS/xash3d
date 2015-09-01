@@ -1,14 +1,21 @@
 #!/bin/bash
 
 SCRIPT_DIR=${PWD##*/}
+IS64BIT=$(getconf LONG_BIT)
+
+if [ "$IS64BIT" == "64" ]; then
+	LIBPREFIX="lib32"
+else
+	LIBPREFIX="lib"
+fi
 
 if [ "$SCRIPT_DIR" == "bin" ]; then
 # Xash3D SDL is installed in system, so run it from lib/xash3d/ directory with Steam HL basedir if XASH3D_BASEDIR is not set
 	if [ -z "$XASH3D_BASEDIR" ]; then
 		export XASH3D_BASEDIR="$HOME/.steam/steam/steamapps/common/Half-Life/"
 	fi
-	GAMEROOT=${PWD}/../lib/xash3d
-	echo "Xash3D SDL is installed in system. Running from ${PWD}/../lib/xash3d/"
+	GAMEROOT=${PWD}/../${LIBPREFIX}/xash3d
+	echo "Xash3D SDL is installed in system."
 else
 	GAMEROOT=$(dirname -- $(readlink -f -- $0))
 fi
