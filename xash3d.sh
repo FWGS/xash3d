@@ -3,11 +3,11 @@
 SCRIPT_DIR=${PWD##*/}
 IS64BIT=$(getconf LONG_BIT)
 
-#if [ "$IS64BIT" == "64" ]; then
-#	LIBPREFIX="lib32"
-#else
+if [ "$IS64BIT" == "64" ]; then
+	LIBPREFIX="lib32"
+else
 	LIBPREFIX="lib"
-#fi
+fi
 
 if [ "$SCRIPT_DIR" == "bin" ]; then
 # Xash3D SDL is installed in system, so run it from lib/xash3d/ directory with Steam HL basedir if XASH3D_BASEDIR is not set
