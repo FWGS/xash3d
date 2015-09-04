@@ -598,10 +598,10 @@ void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 		if( value <= 3200 && value >= -3200 ) continue;
 		switch(joy_binding->string[i])
 		{
-			case 'f': *forward -= joy_forward->value/32768.0 * value;break;
+			case 'f': *forward -= joy_forward->value/32768.0 * value;break; //must be form -1.0 to 1.0
 			case 's': *side += joy_side->value/32768.0 * value;break;
-			case 'p': *pitch += joy_pitch->value/32768.0 *value;break;
-			case 'y': *yaw -= joy_yaw->value/32768.0 * value;break;
+			case 'p': *pitch += joy_pitch->value/32768.0 *value * host.frametime;break; // abs axis rotate is frametime related
+			case 'y': *yaw -= joy_yaw->value/32768.0 * value * host.frametime;break;
 			default:break;
 		}
 	}
