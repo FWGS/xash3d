@@ -512,7 +512,8 @@ qboolean Host_FilterTime( float time )
 		if(( host.realtime - oldtime ) < minframetime )
 		{
 			// framerate is too high
-			Sys_Sleep( 2000 * ( minframetime - ( host.realtime - oldtime ) ) );
+			//Sys_Sleep( 2000 * ( minframetime - ( host.realtime - oldtime ) ) );
+			return false;
 		}
 	}
 
@@ -756,7 +757,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 				SDL_INIT_EVENTS ))
 	{
 		Sys_Error( "SDL_Init: %s", SDL_GetError() );
-		return 0;
 	}
 #endif
 
