@@ -575,11 +575,12 @@ void IN_SDL_JoyOpen( void )
 		}
 		joydata.num_axes = SDL_JoystickNumAxes( joydata.joy );
 		MsgDev ( D_INFO, "Joystick %s has %d axes\n", SDL_JoystickName( joydata.joy ), joydata.num_axes );
+		SDL_JoystickEventState( SDL_IGNORE );
 	}
 	joy_enable->modified = false;
 }
 
-void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
+void IN_SDL_JoyMove( float frametime, float *forward, float *side, float *pitch, float *yaw )
 {
 	int i;
 	if( joy_enable->modified )
@@ -592,6 +593,7 @@ void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 		Q_strncat(joydata.binding,"0000000000", joydata.num_axes);
 		joy_binding->modified = false;
 	}
+	SDL_JoystickUpdate();
 	for(i = 0; i < joydata.num_axes; i++)
 	{
 		signed short value = SDL_JoystickGetAxis( joydata.joy, i );
@@ -600,8 +602,8 @@ void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 		{
 			case 'f': *forward -= joy_forward->value/32768.0 * value;break; //must be form -1.0 to 1.0
 			case 's': *side += joy_side->value/32768.0 * value;break;
-			case 'p': *pitch += joy_pitch->value/32768.0 *value * host.frametime;break; // abs axis rotate is frametime related
-			case 'y': *yaw -= joy_yaw->value/32768.0 * value * host.frametime;break;
+			case 'p': *pitch += joy_pitch->value/32768.0 * (float)value * frametime;break; // abs axis rotate is frametime related
+			case 'y': *yaw -= joy_yaw->value/32768.0 * (float)value * frametime;break;
 			default:break;
 		}
 	}
@@ -764,7 +766,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		Android_Move( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
+		IN_SDL_JoyMove( frametime, &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
 		IN_JoyAppendMove( cmd, forward, side );
 
@@ -802,7 +804,7 @@ void Host_InputFrame( void )
 		Android_Move( &forward, &side, &pitch, &yaw );
 #endif
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( &forward, &side, &pitch, &yaw );
+		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
 		if( in_mouseinitialized )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );

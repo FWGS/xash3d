@@ -512,7 +512,7 @@ qboolean Host_FilterTime( float time )
 		if(( host.realtime - oldtime ) < minframetime )
 		{
 			// framerate is too high
-			return false;		
+			Sys_Sleep( 2000 * ( minframetime - ( host.realtime - oldtime ) ) );
 		}
 	}
 
@@ -544,11 +544,13 @@ void Host_Frame( float time )
 	if( setjmp( host.abortframe ))
 		return;
 
-	Host_InputFrame ();	// input frame
+
 
 	// decide the simulation time
 	if( !Host_FilterTime( time ))
 		return;
+
+	Host_InputFrame ();	// input frame
 
 	Host_GetConsoleCommands ();
 

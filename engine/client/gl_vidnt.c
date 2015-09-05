@@ -1273,7 +1273,7 @@ void VID_StartupGamma( void )
 	{
 		// force to set cvar
 		Cvar_FullSet( "gl_ignorehwgamma", "1", CVAR_GLCONFIG );
-		MsgDev( D_ERROR, "VID_StartupGamma: hardware gamma unsupported");
+		MsgDev( D_ERROR, "VID_StartupGamma: hardware gamma unsupported\n");
 	}
 
 	if( gl_ignorehwgamma->integer )
