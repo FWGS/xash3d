@@ -148,8 +148,8 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 		keynum = K_AUX31; break;
 	case SDLK_VOLUMEUP:
 		keynum = K_AUX32; break;
-#ifdef __ANDROID
-	case 1073741942:
+#ifdef __ANDROID__
+	case SDLK_MENU:
 		keynum = K_AUX30;
 #endif
 	}
