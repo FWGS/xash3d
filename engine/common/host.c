@@ -830,7 +830,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #ifdef XASH_DEDICATED
 	host.type = HOST_DEDICATED; // predict state
 #else
-	if( Sys_CheckParm("-dedicated") )
+	if( Sys_CheckParm("-dedicated") || progname[0] == '#' )
 		 host.type = HOST_DEDICATED;
 	else host.type = HOST_NORMAL;
 #endif
@@ -843,6 +843,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Sys_Error( "Changing working directory to %s failed.\n", host.rootdir );
 
 	// set default gamedir
+	if( progname[0] == '#' ) progname++;
 	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
 
 	if( host.type == HOST_DEDICATED )
