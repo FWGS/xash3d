@@ -1099,7 +1099,8 @@ void FS_CreateDefaultGameInfo( const char *filename )
 
 	Q_strncpy( defGI.title, "New Game", sizeof( defGI.title ));
 	Q_strncpy( defGI.gamedir, gs_basedir, sizeof( defGI.gamedir ));
-	Q_strncpy( defGI.basedir, SI.ModuleName, sizeof( defGI.basedir ));
+	//Q_strncpy( defGI.basedir, SI.ModuleName, sizeof( defGI.basedir ));
+	Q_strncpy( defGI.basedir, "valve", sizeof( defGI.basedir ));
 	Q_strncpy( defGI.sp_entity, "info_player_start", sizeof( defGI.sp_entity ));
 	Q_strncpy( defGI.mp_entity, "info_player_deathmatch", sizeof( defGI.mp_entity ));
 #ifdef PANDORA
@@ -1154,7 +1155,8 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	
 	Q_strncpy( GameInfo->title, "New Game", sizeof( GameInfo->title ));
 	Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
-	Q_strncpy( GameInfo->basedir, SI.ModuleName, sizeof( GameInfo->basedir ));
+	// TODO: Remove this ugly hack
+	Q_strncpy( GameInfo->basedir, "valve", sizeof( GameInfo->basedir ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
 	Q_strncpy( GameInfo->startmap, "newmap", sizeof( GameInfo->startmap ));
@@ -1265,7 +1267,8 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		else if( !Q_stricmp( token, "secure" ))
 		{
 			pfile = COM_ParseFile( pfile, token );
-			GameInfo->secure = Q_atoi( token );
+			MsgDev( D_WARN, "secure parameter in liblist.gam is deprecated.\n");
+			GameInfo->secure = 0;
 		}
 		else if( !Q_stricmp( token, "nomodels" ))
 		{
@@ -1491,7 +1494,8 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		else if( !Q_stricmp( token, "secure" ))
 		{
 			pfile = COM_ParseFile( pfile, token );
-			GameInfo->secure = Q_atoi( token );
+			MsgDev( D_WARN, "secure parameter in gameinfo.txt is deprecated.");
+			GameInfo->secure = 0;
 		}
 		else if( !Q_stricmp( token, "nomodels" ))
 		{
