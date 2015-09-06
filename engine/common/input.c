@@ -617,8 +617,8 @@ void IN_SDL_JoyInit( void )
 	joy_binding->modified = true;
 	joy_index = Cvar_Get( "joy_index" ,"0" , CVAR_ARCHIVE, "Joystick number to open" );
 	joy_enable = Cvar_Get( "joy_enable" ,"1" , CVAR_ARCHIVE, "Enable joystick" );
-	joy_pitch = Cvar_Get( "joy_pitch" ,"1.0" , CVAR_ARCHIVE, "Joystick pitch sensitivity" );
-	joy_yaw = Cvar_Get( "joy_yaw" ,"1.0" , CVAR_ARCHIVE, "Joystick yaw sensitivity" );
+	joy_pitch = Cvar_Get( "joy_pitch" ,"200.0" , CVAR_ARCHIVE, "Joystick pitch sensitivity" );
+	joy_yaw = Cvar_Get( "joy_yaw" ,"200.0" , CVAR_ARCHIVE, "Joystick yaw sensitivity" );
 	joy_side = Cvar_Get( "joy_side" ,"1.0" , CVAR_ARCHIVE, "Joystick side sensitivity" );
 	joy_forward = Cvar_Get( "joy_forward" ,"1.0" , CVAR_ARCHIVE, "Joystick forward sensitivity" );
 	IN_SDL_JoyOpen();
