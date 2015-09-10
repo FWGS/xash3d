@@ -512,7 +512,8 @@ qboolean Host_FilterTime( float time )
 		if(( host.realtime - oldtime ) < minframetime )
 		{
 			// framerate is too high
-			return false;		
+			//Sys_Sleep( 2000 * ( minframetime - ( host.realtime - oldtime ) ) );
+			return false;
 		}
 	}
 
@@ -544,11 +545,13 @@ void Host_Frame( float time )
 	if( setjmp( host.abortframe ))
 		return;
 
-	Host_InputFrame ();	// input frame
+
 
 	// decide the simulation time
 	if( !Host_FilterTime( time ))
 		return;
+
+	Host_InputFrame ();	// input frame
 
 	Host_GetConsoleCommands ();
 
@@ -754,7 +757,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 				SDL_INIT_EVENTS ))
 	{
 		Sys_Error( "SDL_Init: %s", SDL_GetError() );
-		return 0;
 	}
 #endif
 
@@ -828,7 +830,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #ifdef XASH_DEDICATED
 	host.type = HOST_DEDICATED; // predict state
 #else
-	if( Sys_CheckParm("-dedicated") )
+	if( Sys_CheckParm("-dedicated") || progname[0] == '#' )
 		 host.type = HOST_DEDICATED;
 	else host.type = HOST_NORMAL;
 #endif
@@ -841,6 +843,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Sys_Error( "Changing working directory to %s failed.\n", host.rootdir );
 
 	// set default gamedir
+	if( progname[0] == '#' ) progname++;
 	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
 
 	if( host.type == HOST_DEDICATED )

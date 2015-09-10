@@ -1,0 +1,3 @@
+[submodule "hlsdk"]
+	path = hlsdk
+	url = https://github.com/SDLash3D/halflife

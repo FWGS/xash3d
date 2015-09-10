@@ -144,12 +144,14 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 		keynum = K_KP_SLASH; break;
 	case SDLK_NUMLOCKCLEAR:
 		keynum = K_KP_NUMLOCK; break;
-	/*case SDLK_VOLUMEDOWN:
-		keynum = 'e';
-		break;
+	case SDLK_VOLUMEDOWN:
+		keynum = K_AUX31; break;
 	case SDLK_VOLUMEUP:
-		keynum = K_SPACE;
-		break;*/
+		keynum = K_AUX32; break;
+#ifdef __ANDROID__
+	case SDLK_MENU:
+		keynum = K_AUX30;
+#endif
 	}
 
 	if((key.keysym.sym >= SDLK_F1) && (key.keysym.sym <= SDLK_F12))

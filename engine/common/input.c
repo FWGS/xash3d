@@ -575,11 +575,12 @@ void IN_SDL_JoyOpen( void )
 		}
 		joydata.num_axes = SDL_JoystickNumAxes( joydata.joy );
 		MsgDev ( D_INFO, "Joystick %s has %d axes\n", SDL_JoystickName( joydata.joy ), joydata.num_axes );
+		SDL_JoystickEventState( SDL_IGNORE );
 	}
 	joy_enable->modified = false;
 }
 
-void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
+void IN_SDL_JoyMove( float frametime, float *forward, float *side, float *pitch, float *yaw )
 {
 	int i;
 	if( joy_enable->modified )
@@ -592,16 +593,17 @@ void IN_SDL_JoyMove( float *forward, float *side, float *pitch, float *yaw )
 		Q_strncat(joydata.binding,"0000000000", joydata.num_axes);
 		joy_binding->modified = false;
 	}
+	SDL_JoystickUpdate();
 	for(i = 0; i < joydata.num_axes; i++)
 	{
 		signed short value = SDL_JoystickGetAxis( joydata.joy, i );
 		if( value <= 3200 && value >= -3200 ) continue;
 		switch(joy_binding->string[i])
 		{
-			case 'f': *forward -= joy_forward->value/32768.0 * value;break;
+			case 'f': *forward -= joy_forward->value/32768.0 * value;break; //must be form -1.0 to 1.0
 			case 's': *side += joy_side->value/32768.0 * value;break;
-			case 'p': *pitch += joy_pitch->value/32768.0 *value;break;
-			case 'y': *yaw -= joy_yaw->value/32768.0 * value;break;
+			case 'p': *pitch += joy_pitch->value/32768.0 * (float)value * frametime;break; // abs axis rotate is frametime related
+			case 'y': *yaw -= joy_yaw->value/32768.0 * (float)value * frametime;break;
 			default:break;
 		}
 	}
@@ -615,8 +617,8 @@ void IN_SDL_JoyInit( void )
 	joy_binding->modified = true;
 	joy_index = Cvar_Get( "joy_index" ,"0" , CVAR_ARCHIVE, "Joystick number to open" );
 	joy_enable = Cvar_Get( "joy_enable" ,"1" , CVAR_ARCHIVE, "Enable joystick" );
-	joy_pitch = Cvar_Get( "joy_pitch" ,"1.0" , CVAR_ARCHIVE, "Joystick pitch sensitivity" );
-	joy_yaw = Cvar_Get( "joy_yaw" ,"1.0" , CVAR_ARCHIVE, "Joystick yaw sensitivity" );
+	joy_pitch = Cvar_Get( "joy_pitch" ,"200.0" , CVAR_ARCHIVE, "Joystick pitch sensitivity" );
+	joy_yaw = Cvar_Get( "joy_yaw" ,"200.0" , CVAR_ARCHIVE, "Joystick yaw sensitivity" );
 	joy_side = Cvar_Get( "joy_side" ,"1.0" , CVAR_ARCHIVE, "Joystick side sensitivity" );
 	joy_forward = Cvar_Get( "joy_forward" ,"1.0" , CVAR_ARCHIVE, "Joystick forward sensitivity" );
 	IN_SDL_JoyOpen();
@@ -764,7 +766,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		Android_Move( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
+		IN_SDL_JoyMove( frametime, &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
 		IN_JoyAppendMove( cmd, forward, side );
 
@@ -802,7 +804,7 @@ void Host_InputFrame( void )
 		Android_Move( &forward, &side, &pitch, &yaw );
 #endif
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( &forward, &side, &pitch, &yaw );
+		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
 		if( in_mouseinitialized )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );
