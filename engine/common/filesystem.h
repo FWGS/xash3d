@@ -82,10 +82,10 @@ typedef struct
 	int		filepos;
 	int		disksize;
 	int		size;		// uncompressed
-	char		type;
-	char		compression;	// probably not used
-	char		pad1;
-	char		pad2;
+	signed char		type;
+	signed char		compression;	// probably not used
+	signed char		pad1;
+	signed char		pad2;
 	char		name[16];		// must be null terminated
 } dlumpinfo_t;
 

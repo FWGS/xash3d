@@ -324,7 +324,7 @@ typedef struct host_parm_s
 	uint		framecount;	// global framecount
 
 	// list of unique decal indexes
-	char		draw_decals[MAX_DECALS][CS_SIZE];
+	signed char		draw_decals[MAX_DECALS][CS_SIZE];
 #ifdef XASH_SDL
     SDL_Window*		hWnd;		// main window
 #else

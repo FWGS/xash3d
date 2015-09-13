@@ -56,7 +56,7 @@ typedef struct stringlist_s
 typedef struct wadtype_s
 {
 	char		*ext;
-	char		type;
+	signed char		type;
 } wadtype_t;
 
 typedef struct file_s
@@ -230,7 +230,7 @@ int sel(const struct dirent *d)
 void listdirectory( stringlist_t *list, const char *path )
 {
 	int		i;
-	char		pattern[4096], *c;
+	signed char		pattern[4096], *c;
 #ifdef _WIN32
 	struct _finddata_t	n_file;
 #else
@@ -257,7 +257,7 @@ void listdirectory( stringlist_t *list, const char *path )
 	hFile = scandir( path, &n_file, NULL, NULL );
 	if( hFile < 1 )
 	{
-		MsgDev( D_ERROR, "listdirectory: scandir() failed, %s at %s", strerror(hFile), path );
+		MsgDev( D_INFO, "listdirectory: scandir() failed, %s at %s", strerror(hFile), path );
 		return;
 	}
 
@@ -1930,7 +1930,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 		else if( search->wad )
 		{
 			dlumpinfo_t	*lump;	
-			char		type = W_TypeFromExt( name );
+			signed char		type = W_TypeFromExt( name );
 			qboolean		anywadname = true;
 			string		wadname, wadfolder;
 			string		shortname;
@@ -2950,7 +2950,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 		else if( searchpath->wad )
 		{
 			string	wadpattern, wadname, temp2;
-			char	type = W_TypeFromExt( pattern );
+			signed char	type = W_TypeFromExt( pattern );
 			qboolean	anywadname = true;
 			string	wadfolder;
 
@@ -2960,7 +2960,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 			FS_FileBase( pattern, wadpattern );
 			wadfolder[0] = '\0';
 
-			if( Q_strlen( wadname ))
+			if( wadname[0] )
 			{
 				FS_FileBase( wadname, wadname );
 				Q_strncpy( wadfolder, wadname, sizeof( wadfolder ));
