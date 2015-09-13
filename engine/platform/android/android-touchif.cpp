@@ -471,7 +471,7 @@ extern "C" void Android_DrawControls()
 	setHideSticks(!showSticks);
 
 	//flush(); //draw out game from glshim
-	nanoGL_Flush();
+	//nanoGL_Flush();
 	
 	controlsContainer.draw();
 	
