@@ -1023,6 +1023,8 @@ void CL_CheckingResFile( char *pResFileName )
 
 	if( FS_FileExists( pResFileName, false ))
 		return;	// already existing
+	if( FS_FileExists( FS_ToLowerCase( pResFileName ), false ) )
+		return;
 
 	cls.downloadcount++;
 
@@ -1315,7 +1317,7 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 	if( svc_num < svc_lastmsg || svc_num >= ( MAX_USER_MESSAGES + svc_lastmsg ))
 	{
 		// out or range
-		Host_Error( "CL_ParseUserMessage: illegible server message %d\n", svc_num );
+		MsgDev( D_ERROR, "CL_ParseUserMessage: illegible server message %d (out or range)\n", svc_num );
 		return;
 	}
 
@@ -1327,7 +1329,10 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 	}
 
 	if( i == MAX_USER_MESSAGES ) // probably unregistered
-		Host_Error( "CL_ParseUserMessage: illegible server message %d\n", svc_num );
+	{
+		MsgDev( D_ERROR, "CL_ParseUserMessage: illegible server message %d (probably unregistered)\n", svc_num );
+		return;
+	}
 
 	// NOTE: some user messages handled into engine
 	if( !Q_strcmp( clgame.msg[i].name, "ScreenShake" ))
