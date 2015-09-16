@@ -755,7 +755,12 @@ FS_AddGameHierarchy
 void FS_AddGameHierarchy( const char *dir, int flags )
 {
 	// Add the common game directory
-	if( dir && *dir ) FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
+	if( dir && *dir )
+	{
+		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
+		FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	}
 }
 
 /*
@@ -1637,8 +1642,6 @@ void FS_Init( void )
 
 		// build list of game directories here
 		FS_AddGameDirectory( "./", 0 );
-		FS_AddGameDirectory( "./custom/", 0 );
-		FS_AddGameDirectory( "./downloaded/", 0 );
 
 		for( i = 0; i < dirs.numstrings; i++ )
 		{
@@ -1896,7 +1899,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 	// search through the path, one element at a time
 	for( search = fs_searchpaths; search; search = search->next )
 	{
-		if( gamedironly & !( search->flags & FS_GAMEDIR_PATH ))
+		if( gamedironly & !( search->flags & ( FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
 			continue;
 
 		// is the element a pak file?
@@ -2907,7 +2910,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 	// search through the path, one element at a time
 	for( searchpath = fs_searchpaths; searchpath; searchpath = searchpath->next )
 	{	
-		if( gamedironly && !( searchpath->flags & FS_GAMEDIR_PATH ))
+		if( gamedironly && !( searchpath->flags & (FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
 			continue;
 
 		// is the element a pak file?
