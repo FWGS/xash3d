@@ -1704,6 +1704,8 @@ void Con_DrawSolidConsole( float frac )
 
 	if( !con.curFont ) return; // nothing to draw
 
+	rows = ( lines - QCHAR_WIDTH ) / QCHAR_WIDTH; // rows of text to draw
+
 	if( host.developer )
 	{
 		// draw current version
@@ -1717,11 +1719,23 @@ void Con_DrawSolidConsole( float frac )
 
 		for( i = 0; i < stringLen; i++ )
 			width += Con_DrawCharacter( start + width, 0, curbuild[i], color );
+		width = 0;
+		if( scr_download->value > 0 )
+		{
+			while( width < scr_download->value * start / 100 )
+				width += Con_DrawCharacter( width, 0, '=', color );
+			rows--;
+		}
+		else if( scr_loading->value > 0 )
+		{
+			while( width < scr_loading->value * start / 100 )
+				width += Con_DrawCharacter( width, 0, '=', color );
+			rows--;
+		}
 	}
 
 	// draw the text
 	con.vislines = lines;
-	rows = ( lines - QCHAR_WIDTH ) / QCHAR_WIDTH; // rows of text to draw
 	y = lines - ( con.curFont->charHeight * 3 );
 
 	// draw from the bottom up
