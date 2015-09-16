@@ -2246,8 +2246,17 @@ Parse resource list
 */
 void SV_ParseResourceList( sv_client_t *cl, sizebuf_t *msg )
 {
-	Netchan_CreateFileFragments( true, &cl->netchan, BF_ReadString( msg ));
-	Netchan_FragSend( &cl->netchan );
+	// Fragment download is unstable
+	if( sv_allow_fragment->integer )
+	{
+		Netchan_CreateFileFragments( true, &cl->netchan, BF_ReadString( msg ));
+		Netchan_FragSend( &cl->netchan );
+	}
+	else
+	{
+		SV_ClientPrintf( cl, PRINT_HIGH, "Direct download not allowed on this sever\n" );
+		SV_DropClient( cl );
+	}
 }
 
 /*
