@@ -122,7 +122,7 @@ void SV_DirectConnect( netadr_t from )
 	// quick reject
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
-		if( cl->state == cs_free )
+		if( cl->state == cs_free || cl->state == cs_zombie )
 			continue;
 
 		if( NET_CompareBaseAdr( from, cl->netchan.remote_address ) && ( cl->netchan.qport == qport || from.port == cl->netchan.remote_address.port ))
@@ -169,7 +169,7 @@ void SV_DirectConnect( netadr_t from )
 	// if there is already a slot for this ip, reuse it
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
-		if( cl->state == cs_free )
+		if( cl->state == cs_free || cl->state == cs_zombie )
 			continue;
 
 		if( NET_CompareBaseAdr( from, cl->netchan.remote_address ) && ( cl->netchan.qport == qport || from.port == cl->netchan.remote_address.port ))
@@ -449,7 +449,7 @@ void SV_DropClient( sv_client_t *drop )
 	// Clean client data on disconnect
 	Q_memset( drop->userinfo, 0, MAX_INFO_STRING );
 	Q_memset( drop->physinfo, 0, MAX_INFO_STRING );
-	drop->edict = 0;
+	//drop->edict = 0;
 
 	// send notification to all other clients
 	SV_FullClientUpdate( drop, &sv.reliable_datagram );
@@ -1170,8 +1170,10 @@ void SV_New_f( sv_client_t *cl )
 		ent = EDICT_NUM( playernum + 1 );
 		cl->edict = ent;
 
-		// NOTE: custom resources download is disabled until is done
-		if( /*sv_maxclients->integer ==*/ 1 )
+		// NOTE: enable for testing
+		// Still have problems with download reject
+		// It's difficult to implement fastdl and forbid direct download
+		if( sv_maxclients->integer == 1 && sv_allow_download->integer == 1 )
 		{
 			Q_memset( &cl->lastcmd, 0, sizeof( cl->lastcmd ));
 
