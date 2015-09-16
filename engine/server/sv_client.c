@@ -1235,6 +1235,8 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	{
 		if( sv.model_precache[index][0] == '*' ) // internal bmodel
 			continue;
+		if( !FS_FileExists( sv.model_precache[index], true ) )
+			continue;
 
 		reslist.restype[rescount] = t_model;
 		Q_strcpy( reslist.resnames[rescount], sv.model_precache[index] );
@@ -1243,6 +1245,9 @@ void SV_SendResourceList_f( sv_client_t *cl )
 
 	for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
 	{
+		
+		if( !FS_FileExists( sv.sound_precache[index], true ) )
+			continue;
 		reslist.restype[rescount] = t_sound;
 		Q_strcpy( reslist.resnames[rescount], sv.sound_precache[index] );
 		rescount++;
@@ -1250,6 +1255,8 @@ void SV_SendResourceList_f( sv_client_t *cl )
 
 	for( index = 1; index < MAX_EVENTS && sv.event_precache[index][0]; index++ )
 	{
+		if( !FS_FileExists( sv.event_precache[index], true ) )
+			continue;
 		reslist.restype[rescount] = t_eventscript;
 		Q_strcpy( reslist.resnames[rescount], sv.event_precache[index] );
 		rescount++;
@@ -1257,6 +1264,8 @@ void SV_SendResourceList_f( sv_client_t *cl )
 
 	for( index = 1; index < MAX_CUSTOM && sv.files_precache[index][0]; index++ )
 	{
+		if( !FS_FileExists( sv.files_precache[index], true ) )
+			continue;
 		reslist.restype[rescount] = t_generic;
 		Q_strcpy( reslist.resnames[rescount], sv.files_precache[index] );
 		rescount++;
