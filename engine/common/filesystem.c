@@ -1637,6 +1637,8 @@ void FS_Init( void )
 
 		// build list of game directories here
 		FS_AddGameDirectory( "./", 0 );
+		FS_AddGameDirectory( "./custom/", 0 );
+		FS_AddGameDirectory( "./downloaded/", 0 );
 
 		for( i = 0; i < dirs.numstrings; i++ )
 		{

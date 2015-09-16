@@ -967,7 +967,8 @@ qboolean Netchan_CopyFileFragments( netchan_t *chan, sizebuf_t *msg )
 	BF_WriteBits( msg, BF_GetData( &p->frag_message ), BF_GetNumBitsWritten( &p->frag_message ));
 	BF_SeekToBit( msg, 0 ); // rewind buffer
 
-	Q_strncpy( filename, BF_ReadString( msg ), sizeof( filename ));
+	//Q_strncpy( filename, BF_ReadString( msg ), sizeof( filename ));
+	Q_snprintf( filename, sizeof( filename ), "downloaded/%s", BF_ReadString( msg ) );
 
 	if( Q_strlen( filename ) <= 0 )
 	{
