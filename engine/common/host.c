@@ -306,6 +306,14 @@ qboolean Host_IsLocalGame( void )
 	return false;
 }
 
+qboolean Host_IsLocalClient( void )
+{
+	// only the local client have the active server
+	if( CL_Active() && SV_Active())
+		return true;
+	return false;
+}
+
 /*
 =================
 Host_RegisterDecal

@@ -347,8 +347,12 @@ void CL_CreateCmd( void )
 	// so don't overwrite them
 	if( !cls.demoplayback )
 	{
-		cl.refdef.cmd = &cl.cmds[cls.netchan.outgoing_sequence & CL_UPDATE_MASK];
+		int frame = cls.netchan.outgoing_sequence & CL_UPDATE_MASK;
+
+		cl.refdef.cmd = &cl.cmds[frame];
 		*cl.refdef.cmd = cmd;
+
+		cl.runfuncs[frame] = TRUE;
 	}
 }
 
