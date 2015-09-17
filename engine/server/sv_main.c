@@ -58,6 +58,7 @@ convar_t	*sv_reconnect_limit;		// minimum seconds between connect messages
 convar_t	*sv_failuretime;
 convar_t	*sv_allow_upload;
 convar_t	*sv_allow_download;
+convar_t	*sv_allow_fragment;
 convar_t	*sv_allow_studio_attachment_angles;
 convar_t	*sv_allow_rotate_pushables;
 convar_t	*sv_validate_changelevel;

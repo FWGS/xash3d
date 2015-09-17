@@ -197,6 +197,7 @@ extern sizebuf_t		net_message;
 extern byte		net_message_buffer[NET_MAX_PAYLOAD];
 extern convar_t		*net_speeds;
 extern int		net_drop;
+extern byte 	*net_mempool;
 
 void Netchan_Init( void );
 void Netchan_Shutdown( void );

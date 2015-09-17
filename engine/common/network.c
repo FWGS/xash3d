@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include <netdb.h>
 // Errors handling
 #include <errno.h>
+#include <fcntl.h>
 #endif
 #include "port.h"
 #include "common.h"
@@ -106,6 +107,7 @@ void NET_FreeWinSock( void )
 }
 #else
 #define pHtons htons
+#define pConnect connect
 #define pInet_Addr inet_addr
 #define pRecvFrom recvfrom
 #define pSendTo sendto
@@ -1110,4 +1112,193 @@ void NET_Restart_f( void )
 {
 	NET_Shutdown();
 	NET_Init();
+}
+
+/*
+==============
+HTTP_Run
+
+Download next file block if download quered.
+Call every frame
+==============
+*/
+
+typedef struct httpfile_s
+{
+	char server[PATH_MAX];
+	char path[PATH_MAX];
+	file_t *file;
+	int socket;
+	int size;
+	int downloaded;
+	int id;
+	qboolean header;
+	struct httpfile_s *next;
+} httpfile_t;
+
+httpfile_t *first_file, *last_file;
+
+char header[BUFSIZ];
+int headersize;
+
+void HTTP_FreeFile( httpfile_t *file, qboolean error )
+{
+	if( file->file )FS_Close( file->file );
+	pCloseSocket( file->socket );
+	if( first_file == file )
+	{
+		if(last_file == first_file)
+			last_file = first_file = 0;
+		else
+			first_file = file->next;
+		Mem_Free( file );
+	}
+	else if( file->next )
+	{
+		httpfile_t *tmp =file->next;
+		Q_memcpy( file, file->next, sizeof(httpfile_t) );
+		Mem_Free(tmp);
+	}
+	else file->id = -1; // Tail file
+}
+
+void HTTP_Run( void )
+{
+	int res;
+	char buf[BUFSIZ+1];
+	char *begin = 0;
+	httpfile_t *curfile = first_file;
+	if( !curfile )
+		return;
+	if( curfile->id == -1) // Tail file
+		return;
+	if( !curfile->file )
+	{
+		struct sockaddr addr;
+		int querylength, sent=0;
+		curfile->file = FS_Open( va("downloaded/%s.incomplete", curfile->path), "w", true );
+		curfile->socket = pSocket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
+#ifdef _WIN32
+		int mode = 1;
+		pIoctlSocket( curfile->socket, FIONBIO, mode );
+#else
+		fcntl( curfile->socket, F_SETFL, fcntl( curfile->socket, F_GETFL, 0 ) | O_NONBLOCK );
+#endif
+		NET_StringToSockaddr("fastdlcstrike.lan-servers.com:80", &addr );
+		pConnect( curfile->socket, &addr, sizeof( struct sockaddr ) );
+
+		headersize = 0;
+		querylength = Q_snprintf( header, BUFSIZ, "GET /halflife/%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n", curfile->path, "fastdlcstrike.lan-servers.com", "vashu_mamu");
+		while( sent < querylength )
+		{
+			int res = pSend(curfile->socket, header + sent, querylength - sent, 0);
+			if( (res < 0) )
+			{
+				if(( errno != EWOULDBLOCK ))
+				{
+					MsgDev(D_ERROR, "Failed to send request!\n");
+					HTTP_FreeFile( curfile, true );
+					return;
+				}
+			}
+			else sent += res;
+		}
+		MsgDev( D_INFO, "Request sent!\n");
+		Q_memset( header, 0, BUFSIZ );
+
+	}
+	while( ( res = pRecv( curfile->socket, buf, BUFSIZ, 0 ) ) > 0)
+	{
+		//MsgDev(D_INFO,"res: %d\n", res);
+		if( !curfile->header )
+		{
+			buf[res] = 0;
+			Q_memcpy( header + headersize, buf, res );
+			//MsgDev( D_INFO, "%s", buf );
+			begin = Q_strstr( header, "\r\n\r\n" );
+			if( begin ) // Got full header
+			{
+				int cutheadersize = begin - header + 4;
+				//MsgDev(D_INFO, "Got response:%s\n", header);
+				if( !Q_strstr(header, "200 OK") )
+				{
+					*begin = 0;
+					MsgDev( D_ERROR, "Bad response:\n%s", header );
+					HTTP_FreeFile( curfile, true );
+					return;
+				}
+				char *length = Q_strstr(header, "Content-Length: ");
+				if(length)
+				{
+					int size = Q_atoi( length += 16 );
+					if( ( curfile->size != -1 ) && ( curfile->size != size ) )
+						MsgDev( D_WARN, "Server reports wrong file size!\n");
+					curfile->size = size;
+				}
+				if(curfile->size == -1)
+				{
+					MsgDev( D_ERROR, "File size is unknown!\n" );
+					HTTP_FreeFile( curfile, true );
+					return;
+				}
+				curfile->header = true;
+				begin += 4;
+				// Write remaining message part
+				curfile->downloaded += FS_Write( curfile->file, begin, res - cutheadersize - headersize );
+			}
+			headersize += res;
+		}
+		else
+		{
+			curfile->downloaded += FS_Write( curfile->file, buf, res);
+		}
+	}
+	if( curfile->size > 0 )
+		Cvar_SetFloat( "scr_download", (float)curfile->downloaded / curfile->size * 100 );
+	if( curfile->size > 0 && curfile->downloaded >= curfile->size )
+		HTTP_FreeFile( curfile, false );
+}
+
+
+
+void HTTP_AddDownload( char *server, char *path, int size )
+{
+	httpfile_t *httpfile = Mem_Alloc( net_mempool, sizeof( httpfile_t ) );
+	httpfile->size = size;
+	httpfile->downloaded = 0;
+	httpfile->socket = -1;
+	Q_strncpy ( httpfile->server, server, sizeof( httpfile->server ) );
+	Q_strncpy ( httpfile->path, path, sizeof( httpfile->path ) );
+	if( last_file )
+	{
+		httpfile->id = last_file->id + 1;
+		last_file->next= httpfile;
+		last_file = httpfile;
+	}
+	else
+	{
+		httpfile->id = 0;
+		last_file = first_file = httpfile;
+	}
+	httpfile->file = NULL;
+	httpfile->next = NULL;
+	httpfile->header = false;
+}
+
+void HTTP_Download_f( void )
+{
+	if( Cmd_Argc() < 2 )
+	{
+		Msg("Use download <fastdl_server> <gamedir_path>\n");
+		return;
+	}
+	HTTP_AddDownload( Cmd_Argv( 1 ), Cmd_Argv( 2 ), -1 );
+}
+
+HTTP_Init( void )
+{
+	first_file = last_file = NULL;
+	header[0] = 0;
+	headersize = 0;
+	Cmd_AddCommand("download_add", &HTTP_Download_f, "Add download to queue");
 }
