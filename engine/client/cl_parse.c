@@ -712,7 +712,32 @@ void CL_ParseClientData( sizebuf_t *msg )
 	frame->time = cl.mtime[0];				// mark network received time
 	frame->receivedtime = host.realtime;			// time now that we are parsing.  
 
+	if( cl.last_command_ack != -1 )
+	{
+		int last_predicted;
+		entity_state_t * ps;
+		entity_state_t * pps;
+		clientdata_t * pcd;
+		clientdata_t * ppcd;
+		weapon_data_t * wd;
+		weapon_data_t * pwd;
+
+		last_predicted = ( cl.last_incoming_sequence + (
+							   cls.netchan.incoming_acknowledged - cl.last_command_ack)) & CL_UPDATE_MASK;
+
+		pps = &cl.predict[last_predicted].playerstate;
+		ppcd = &cl.predict[last_predicted].client;
+		pwd = cl.predict[last_predicted].weapondata;
+
+		ps = &frame->playerstate[cl.playernum];
+		pcd = &frame->local.client;
+		wd = frame->local.weapondata;
+
+		clgame.dllFuncs.pfnTxferPredictionData( ps, pps, pcd, ppcd, wd, pwd );
+	}
+
 	// do this after all packets read for this frame?
+	cl.last_command_ack = cls.netchan.incoming_acknowledged;
 	cl.last_incoming_sequence = cls.netchan.incoming_sequence;
 
 	if( hltv->integer ) return;	// clientdata for spectators ends here

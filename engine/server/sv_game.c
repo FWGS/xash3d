@@ -1532,7 +1532,18 @@ edict_t* pfnFindClientInPVS( edict_t *pEdict )
 
 	mod = Mod_Handle( pEdict->v.modelindex );
 
-	VectorAdd( pEdict->v.origin, pEdict->v.view_ofs, view );
+	// portals & monitors
+	// NOTE: this specific break "radiaton tick" in normal half-life. use only as feature
+	if(( host.features & ENGINE_TRANSFORM_TRACE_AABB ) && mod && mod->type == mod_brush && !( mod->flags & MODEL_HAS_ORIGIN ))
+	{
+		// handle PVS origin for bmodels
+		VectorAverage( pEdict->v.mins, pEdict->v.maxs, view );
+		VectorAdd( view, pEdict->v.origin, view );
+	}
+	else
+	{
+		VectorAdd( pEdict->v.origin, pEdict->v.view_ofs, view );
+	}
 
 	if( pEdict->v.effects & EF_INVLIGHT )
 		view[2] -= 1.0f; // HACKHACK for barnacle

@@ -656,6 +656,7 @@ void Host_WriteOpenGLConfig( void );
 void Host_WriteVideoConfig( void );
 void Host_WriteConfig( void );
 qboolean Host_IsLocalGame( void );
+qboolean Host_IsLocalClient( void );
 void Host_ShutdownServer( void );
 void Host_Print( const char *txt );
 void Host_Error( const char *error, ... );
