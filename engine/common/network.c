@@ -1192,9 +1192,13 @@ void HTTP_Run( void )
 		while( sent < querylength )
 		{
 			int res = pSend(curfile->socket, header + sent, querylength - sent, 0);
-			if( (res < 0) )
+			if( res < 0 )
 			{
-				if(( errno != EWOULDBLOCK ))
+#ifdef _WIN32
+				if( pWSAGetLastError() != WSAEWOULDBLOCK )
+#else
+				if( errno != EWOULDBLOCK )
+#endif
 				{
 					MsgDev(D_ERROR, "Failed to send request!\n");
 					HTTP_FreeFile( curfile, true );
