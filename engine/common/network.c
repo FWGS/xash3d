@@ -1144,6 +1144,17 @@ int headersize;
 void HTTP_FreeFile( httpfile_t *file, qboolean error )
 {
 	if( file->file )FS_Close( file->file );
+	char incname[256];
+	Q_snprintf( incname, 256, "downloaded/%s.incomplete", file->path );
+	if( error )
+		MsgDev( D_INFO, "You may remove %s now\n", incname );
+	else
+	{
+		char name[256];
+		Q_snprintf( name, 256, "downloaded/%s", file->path );
+		FS_Rename( incname, name );
+		CL_ProcessFile( name );
+	}
 	pCloseSocket( file->socket );
 	if( first_file == file )
 	{
@@ -1178,6 +1189,7 @@ void HTTP_Run( void )
 		int querylength, sent=0;
 		curfile->file = FS_Open( va("downloaded/%s.incomplete", curfile->path), "w", true );
 		curfile->socket = pSocket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
+		// Now set non-blocking mode
 #ifdef _WIN32
 		int mode = 1;
 		pIoctlSocket( curfile->socket, FIONBIO, mode );
@@ -1261,6 +1273,13 @@ void HTTP_Run( void )
 		Cvar_SetFloat( "scr_download", (float)curfile->downloaded / curfile->size * 100 );
 	if( curfile->size > 0 && curfile->downloaded >= curfile->size )
 		HTTP_FreeFile( curfile, false );
+	else
+#ifdef _WIN32
+	if( pWSAGetLastError() != WSAEWOULDBLOCK )
+#else
+	if( errno != EWOULDBLOCK )
+#endif
+	MsgDev( D_ERROR, "Failed to download %s:\n%s\n", curfile->path, NET_ErrorString() );
 }
 
 
