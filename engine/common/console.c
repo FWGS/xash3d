@@ -1644,6 +1644,17 @@ void Con_DrawNotify( void )
 			v += con.curFont->charHeight;
 		}
 	}
+	x = con.curFont->charWidths[' '];
+	if( scr_download->value > 0 )
+	{
+		while( x < scr_download->value * scr_width->value / 100 )
+			x += Con_DrawCharacter( x, scr_height->value - con.curFont->charHeight * 2, '=', g_color_table[7] );
+	}
+	else if( scr_loading->value > 0 )
+	{
+		while( x < scr_loading->value * scr_width->value / 100 )
+			x += Con_DrawCharacter( x, scr_height->value - con.curFont->charHeight * 2, '=', g_color_table[7] );
+	}
 	
 	if( cls.key_dest == key_message )
 	{
@@ -1791,8 +1802,9 @@ Con_DrawConsole
 void Con_DrawConsole( void )
 {
 	// never draw console when changelevel in-progress
-	if( cls.state != ca_disconnected && ( cls.changelevel || cls.changedemo ))
-		return;
+	// mittorn: breaks console when downloading map, it may hang!
+	//if( cls.state != ca_disconnected && ( cls.changelevel || cls.changedemo ))
+	//	return;
 
 	// check for console width changes from a vid mode change
 	Con_CheckResize ();

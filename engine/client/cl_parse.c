@@ -1053,19 +1053,24 @@ void CL_CheckingResFile( char *pResFileName )
 
 	cls.downloadcount++;
 
-	Msg( "Starting downloads file: %s\n", pResFileName );
+	
+	if( cl_allow_fragment->value )
+	{
+		Msg( "Starting downloads file: %s\n", pResFileName );
+		if( cls.state == ca_disconnected ) return;
 
-	if( cls.state == ca_disconnected ) return;
+		BF_Init( &buf, "ClientPacket", data, sizeof( data ));
+		BF_WriteByte( &buf, clc_resourcelist );
+		BF_WriteString( &buf, pResFileName );
 
-	BF_Init( &buf, "ClientPacket", data, sizeof( data ));
-	BF_WriteByte( &buf, clc_resourcelist );
-	BF_WriteString( &buf, pResFileName );
+		if( !cls.netchan.remote_address.type )	// download in singleplayer ???
+			cls.netchan.remote_address.type = NA_LOOPBACK;
 
-	if( !cls.netchan.remote_address.type )	// download in singleplayer ???
-		cls.netchan.remote_address.type = NA_LOOPBACK;
-
-	// make sure message will be delivered
-	Netchan_Transmit( &cls.netchan, BF_GetNumBytesWritten( &buf ), BF_GetData( &buf ));
+		// make sure message will be delivered
+		Netchan_Transmit( &cls.netchan, BF_GetNumBytesWritten( &buf ), BF_GetData( &buf ));
+	}
+	else
+	HTTP_AddDownload( pResFileName, -1, true );
 
 }
 

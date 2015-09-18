@@ -490,6 +490,7 @@ extern convar_t	*cl_testlights;
 extern convar_t	*cl_solid_players;
 extern convar_t	*cl_idealpitchscale;
 extern convar_t	*cl_allow_levelshots;
+extern convar_t	*cl_allow_fragment;
 extern convar_t	*cl_lightstyle_lerping;
 extern convar_t	*cl_draw_particles;
 extern convar_t	*cl_levelshot_name;

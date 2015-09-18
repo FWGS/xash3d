@@ -1114,14 +1114,14 @@ void NET_Restart_f( void )
 	NET_Init();
 }
 
-
 typedef struct httpserver_s
 {
 	char host[256];
 	int port;
 	char path[PATH_MAX];
-	struct httpserver_s *next;
 	qboolean needfree;
+	struct httpserver_s *next;
+
 } httpserver_t;
 
 typedef struct httpfile_s
@@ -1134,6 +1134,7 @@ typedef struct httpfile_s
 	int downloaded;
 	int id;
 	int state;
+	qboolean process;
 	struct httpfile_s *next;
 } httpfile_t;
 
@@ -1178,14 +1179,16 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 			}
 			return;
 		}
-		MsgDev( D_INFO, "You may remove %s now\n", incname );
+		MsgDev( D_WARN, "Cannot download %s from any server\n"
+			"You may remove %s now\n", file->path, incname );
+		if( file->process )CL_ProcessFile( false, file->path );
 	}
 	else
 	{
 		char name[256];
 		Q_snprintf( name, 256, "downloaded/%s", file->path );
 		FS_Rename( incname, name );
-		CL_ProcessFile( name );
+		if( file->process )CL_ProcessFile( true, name );
 	}
 
 	if( first_file == file )
@@ -1237,10 +1240,11 @@ void HTTP_Run( void )
 
 	if( !curfile->file )
 	{
-		curfile->file = FS_Open( va("downloaded/%s.incomplete", curfile->path), "w", true );
+		MsgDev( D_INFO, "Starting download %s\n", curfile->path );
+		curfile->file = FS_Open( va("downloaded/%s.incomplete", curfile->path ), "w", true );
 		if( !curfile->file )
 		{
-			MsgDev( D_ERROR, "Cannot open %s!\n", va("downloaded/%s.incomplete"));
+			MsgDev( D_ERROR, "Cannot open %s!\n", va( "downloaded/%s.incomplete" ));
 			HTTP_FreeFile( curfile, true );
 			return;
 		}
@@ -1382,14 +1386,15 @@ void HTTP_Run( void )
 #else
 	if( errno != EWOULDBLOCK )
 #endif
-	MsgDev( D_ERROR, "Failed to download %s:\n%s\n", curfile->path, NET_ErrorString() );
+		MsgDev( D_WARN, "Problem downloading %s:\n%s\n", curfile->path, NET_ErrorString() );
 }
 
 
 
-void HTTP_AddDownload( char *path, int size )
+void HTTP_AddDownload( char *path, int size, qboolean process )
 {
 	httpfile_t *httpfile = Mem_Alloc( net_mempool, sizeof( httpfile_t ) );
+	MsgDev( D_INFO, "File %q queued to download\n", path );
 	httpfile->size = size;
 	httpfile->downloaded = 0;
 	httpfile->socket = -1;
@@ -1409,6 +1414,7 @@ void HTTP_AddDownload( char *path, int size )
 	httpfile->next = NULL;
 	httpfile->state = 0;
 	httpfile->server = first_server;
+	httpfile->process = process;
 }
 
 static void HTTP_Download_f( void )
@@ -1418,7 +1424,7 @@ static void HTTP_Download_f( void )
 		Msg("Use download <gamedir_path>\n");
 		return;
 	}
-	HTTP_AddDownload( Cmd_Argv( 1 ), -1 );
+	HTTP_AddDownload( Cmd_Argv( 1 ), -1, false );
 }
 
 void HTTP_Clear_f( void )
@@ -1475,6 +1481,7 @@ void HTTP_Init( void )
 
 	// Read servers from fastdl.txt
 	token = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
+	if( !token ) return;
 	while( ( token = Q_strstr( token, "http://" ) ) )
 	{
 		httpserver_t *server;
