@@ -1114,40 +1114,72 @@ void NET_Restart_f( void )
 	NET_Init();
 }
 
-/*
-==============
-HTTP_Run
 
-Download next file block if download quered.
-Call every frame
-==============
-*/
+typedef struct httpserver_s
+{
+	char host[256];
+	int port;
+	char path[PATH_MAX];
+	struct httpserver_s *next;
+	qboolean needfree;
+} httpserver_t;
 
 typedef struct httpfile_s
 {
-	char server[PATH_MAX];
+	httpserver_t *server;
 	char path[PATH_MAX];
 	file_t *file;
 	int socket;
 	int size;
 	int downloaded;
 	int id;
-	qboolean header;
+	int state;
 	struct httpfile_s *next;
 } httpfile_t;
 
 httpfile_t *first_file, *last_file;
+httpserver_t *first_server, *last_server;
+
+convar_t *http_useragent;
 
 char header[BUFSIZ];
-int headersize;
+int headersize, querylength, sent;
 
 void HTTP_FreeFile( httpfile_t *file, qboolean error )
 {
-	if( file->file )FS_Close( file->file );
 	char incname[256];
+
+	if( file->file )
+		FS_Close( file->file );
+	file->file = NULL;
+
+	if( file->socket != -1 )
+		pCloseSocket( file->socket );
+	file->socket = -1;
+
+	
 	Q_snprintf( incname, 256, "downloaded/%s.incomplete", file->path );
 	if( error )
+	{
+		// Switch to next fastdl server if present
+		// First node may be allocated by HTTP_AddDownload
+		if( file->server )
+		{
+			if( file->server->needfree )
+			{
+				httpserver_t *tmp = file->server;
+				file->server = file->server->next;
+				Mem_Free( tmp );
+			}
+			else 
+			{
+				file->server = file->server->next;
+				file->state = 0;
+			}
+			return;
+		}
 		MsgDev( D_INFO, "You may remove %s now\n", incname );
+	}
 	else
 	{
 		char name[256];
@@ -1155,9 +1187,11 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		FS_Rename( incname, name );
 		CL_ProcessFile( name );
 	}
-	pCloseSocket( file->socket );
+
 	if( first_file == file )
 	{
+		// Now only first_file is changing progress
+		Cvar_SetFloat( "scr_download", -1 );
 		if(last_file == first_file)
 			last_file = first_file = 0;
 		else
@@ -1172,22 +1206,49 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 	}
 	else file->id = -1; // Tail file
 }
+/*
+==============
+HTTP_Run
 
+Download next file block if download quered.
+Call every frame
+==============
+*/
 void HTTP_Run( void )
 {
 	int res;
 	char buf[BUFSIZ+1];
 	char *begin = 0;
 	httpfile_t *curfile = first_file;
+	httpserver_t *server;
+
 	if( !curfile )
 		return;
+
 	if( curfile->id == -1) // Tail file
 		return;
+
+	server = curfile->server;
+	if( !server )
+	{
+		HTTP_FreeFile( curfile, true );
+		return;
+	}
+
 	if( !curfile->file )
 	{
-		struct sockaddr addr;
-		int querylength, sent=0;
 		curfile->file = FS_Open( va("downloaded/%s.incomplete", curfile->path), "w", true );
+		if( !curfile->file )
+		{
+			MsgDev( D_ERROR, "Cannot open %s!\n", va("downloaded/%s.incomplete"));
+			HTTP_FreeFile( curfile, true );
+			return;
+		}
+		curfile->state = 1;
+	}
+
+	if( curfile->state < 2 )
+	{
 		curfile->socket = pSocket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 		// Now set non-blocking mode
 #ifdef _WIN32
@@ -1196,14 +1257,50 @@ void HTTP_Run( void )
 #else
 		fcntl( curfile->socket, F_SETFL, fcntl( curfile->socket, F_GETFL, 0 ) | O_NONBLOCK );
 #endif
-		NET_StringToSockaddr("fastdlcstrike.lan-servers.com:80", &addr );
-		pConnect( curfile->socket, &addr, sizeof( struct sockaddr ) );
+		curfile->state = 2;
+	}
 
+	if( curfile->state < 3 )
+	{
+		struct sockaddr addr;
+		NET_StringToSockaddr( va( "%s:%d", server->host, server->port ), &addr );
+		res = pConnect( curfile->socket, &addr, sizeof( struct sockaddr ) );
+		if( res )
+		{
+#ifdef _WIN32
+			if( pWSAGetLastError() == WSAEINPROGRESS )
+#else
+			if( errno == EINPROGRESS )
+#endif
+				curfile->state = 3;
+			else
+			{
+				MsgDev( D_ERROR, "Cannot connect to %s\n","" );
+				HTTP_FreeFile( curfile, true );
+				return;
+			}
+			return;
+		}
+		curfile->state = 3;
+	}
+	
+	if( curfile->state < 4)
+	{
+		querylength = Q_snprintf( header, BUFSIZ,
+			"GET %s%s HTTP/1.0\r\n"
+			"Host: %s\r\n"
+			"User-Agent: %s\r\n\r\n", server->path,
+			curfile->path, server->host, http_useragent->string );
 		headersize = 0;
-		querylength = Q_snprintf( header, BUFSIZ, "GET /halflife/%s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\n\r\n", curfile->path, "fastdlcstrike.lan-servers.com", "vashu_mamu");
+		sent = 0;
+		curfile->state = 4;
+	}
+
+	if( curfile->state < 5 )
+	{
 		while( sent < querylength )
 		{
-			int res = pSend(curfile->socket, header + sent, querylength - sent, 0);
+			int res = pSend( curfile->socket, header + sent, querylength - sent, 0 );
 			if( res < 0 )
 			{
 #ifdef _WIN32
@@ -1212,21 +1309,25 @@ void HTTP_Run( void )
 				if( errno != EWOULDBLOCK )
 #endif
 				{
-					MsgDev(D_ERROR, "Failed to send request!\n");
+					MsgDev(D_ERROR, "Failed to send request:\n%s\n", header);
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
+				return;
 			}
-			else sent += res;
+			else
+			{
+				sent += res;
+			}
 		}
 		MsgDev( D_INFO, "Request sent!\n");
 		Q_memset( header, 0, BUFSIZ );
-
+		curfile->state = 5;
 	}
 	while( ( res = pRecv( curfile->socket, buf, BUFSIZ, 0 ) ) > 0)
 	{
 		//MsgDev(D_INFO,"res: %d\n", res);
-		if( !curfile->header )
+		if( curfile->state < 6 )
 		{
 			buf[res] = 0;
 			Q_memcpy( header + headersize, buf, res );
@@ -1235,11 +1336,11 @@ void HTTP_Run( void )
 			if( begin ) // Got full header
 			{
 				int cutheadersize = begin - header + 4;
-				//MsgDev(D_INFO, "Got response:%s\n", header);
+				MsgDev(D_INFO, "Got response\n");
 				if( !Q_strstr(header, "200 OK") )
 				{
 					*begin = 0;
-					MsgDev( D_ERROR, "Bad response:\n%s", header );
+					MsgDev( D_ERROR, "Bad response:\n%s\n", header );
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
@@ -1247,17 +1348,19 @@ void HTTP_Run( void )
 				if(length)
 				{
 					int size = Q_atoi( length += 16 );
+					MsgDev( D_INFO, "File size is %d\n", size );
 					if( ( curfile->size != -1 ) && ( curfile->size != size ) )
-						MsgDev( D_WARN, "Server reports wrong file size!\n");
+						MsgDev( D_WARN, "Server reports wrong file size!\n" );
 					curfile->size = size;
 				}
 				if(curfile->size == -1)
 				{
+					// Usually fastdl's reports file size if link is correct
 					MsgDev( D_ERROR, "File size is unknown!\n" );
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
-				curfile->header = true;
+				curfile->state = 6;
 				begin += 4;
 				// Write remaining message part
 				curfile->downloaded += FS_Write( curfile->file, begin, res - cutheadersize - headersize );
@@ -1284,13 +1387,12 @@ void HTTP_Run( void )
 
 
 
-void HTTP_AddDownload( char *server, char *path, int size )
+void HTTP_AddDownload( char *path, int size )
 {
 	httpfile_t *httpfile = Mem_Alloc( net_mempool, sizeof( httpfile_t ) );
 	httpfile->size = size;
 	httpfile->downloaded = 0;
 	httpfile->socket = -1;
-	Q_strncpy ( httpfile->server, server, sizeof( httpfile->server ) );
 	Q_strncpy ( httpfile->path, path, sizeof( httpfile->path ) );
 	if( last_file )
 	{
@@ -1305,23 +1407,112 @@ void HTTP_AddDownload( char *server, char *path, int size )
 	}
 	httpfile->file = NULL;
 	httpfile->next = NULL;
-	httpfile->header = false;
+	httpfile->state = 0;
+	httpfile->server = first_server;
 }
 
-void HTTP_Download_f( void )
+static void HTTP_Download_f( void )
 {
 	if( Cmd_Argc() < 2 )
 	{
-		Msg("Use download <fastdl_server> <gamedir_path>\n");
+		Msg("Use download <gamedir_path>\n");
 		return;
 	}
-	HTTP_AddDownload( Cmd_Argv( 1 ), Cmd_Argv( 2 ), -1 );
+	HTTP_AddDownload( Cmd_Argv( 1 ), -1 );
 }
 
-HTTP_Init( void )
+void HTTP_Clear_f( void )
 {
+	last_file = NULL;
+	while( first_file )
+	{
+		httpfile_t *file = first_file;
+		first_file = first_file->next;
+		if( file->file ) FS_Close( file->file );
+		if( file->socket != -1 )pCloseSocket ( file->socket );
+		Mem_Free( file );
+	}
+}
+
+void HTTP_Cancel_f( void )
+{
+	first_file->state = 0;
+	HTTP_FreeFile( first_file, true );
+}
+
+void HTTP_Skip_f( void )
+{
+	
+	HTTP_FreeFile( first_file, true );
+}
+
+void HTTP_List_f( void )
+{
+	httpfile_t *file = first_file;
+	while( file )
+	{
+		Msg ( "\t%d %s %d %d\n", file->id, file->path, file->state, file->downloaded );
+		file = file->next;
+	}
+}
+
+void HTTP_Init( void )
+{
+	
+	char *serverfile, *token;
+	last_server = NULL;
+
 	first_file = last_file = NULL;
 	header[0] = 0;
 	headersize = 0;
-	Cmd_AddCommand("download_add", &HTTP_Download_f, "Add download to queue");
+
+	Cmd_AddCommand("http_download", &HTTP_Download_f, "Add file to download queue");
+	Cmd_AddCommand("http_skip", &HTTP_Skip_f, "Skip current download server");
+	Cmd_AddCommand("http_cancel", &HTTP_Cancel_f, "Cancel current download");
+	Cmd_AddCommand("http_clear", &HTTP_Clear_f, "Cancel all downloads");
+	Cmd_AddCommand("http_list", &HTTP_List_f, "List all queued downloads");
+	http_useragent = Cvar_Get( "http_useragent", "xash3d", CVAR_ARCHIVE, "User-Agent string" );
+
+	// Read servers from fastdl.txt
+	token = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
+	while( ( token = Q_strstr( token, "http://" ) ) )
+	{
+		httpserver_t *server;
+		// split buffer by lines
+		char *path, *port, *lineend;
+		token += 7;
+		lineend = Q_strchr( token, '\n' );
+		if( !lineend ) break;
+		*lineend++ = 0; // next line start
+		path = Q_strchr( token, '/' );
+		if( !path )
+		{
+			token = lineend;
+			continue;
+		}
+		*path++ = 0;
+	
+		server = Mem_Alloc( net_mempool, sizeof( httpserver_t ) );
+		Q_snprintf( server->path, sizeof( server->path ), "/%s", path );
+		port = Q_strchr( token, ':' );
+		if( port )
+		{
+			*port++ = 0;
+			server->port = Q_atoi( port );
+		}
+		else
+			server->port = 80;
+		Q_strncpy( server->host, token, sizeof( server->host ) );
+		server->needfree = false;
+		server->next = NULL;
+	
+		if( !last_server )
+			first_server = last_server = server;
+		else 
+		{
+			last_server->next = server;
+			last_server = server;
+		}
+		token = lineend;
+	}
 }

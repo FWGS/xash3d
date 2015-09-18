@@ -1068,11 +1068,6 @@ void Netchan_UpdateProgress( netchan_t *chan )
 	int	total = 0;
 	float	bestpercent = 0.0;
 
-	if( scr_download->integer != -1 )
-	{
-		Cvar_SetFloat( "scr_download", -1 );
-	}
-
 	if ( net_drawslider->integer != 1 )
 	{
 		// do show slider for file downloads.
@@ -1147,7 +1142,8 @@ void Netchan_UpdateProgress( netchan_t *chan )
 
 	}
 
-	Cvar_SetFloat( "scr_download", bestpercent );
+	if( bestpercent )
+		Cvar_SetFloat( "scr_download", bestpercent );
 }
 
 /*
