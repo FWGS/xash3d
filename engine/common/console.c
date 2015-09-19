@@ -24,6 +24,8 @@ GNU General Public License for more details.
 convar_t	*con_notifytime;
 convar_t	*scr_conspeed;
 convar_t	*con_fontsize;
+convar_t	*con_maxfrac;
+convar_t	*con_halffrac;
 
 #define CON_TIMES		5	// need for 4 lines
 #define COLOR_DEFAULT	'7'
@@ -676,6 +678,8 @@ void Con_Init( void )
 	scr_conspeed = Cvar_Get( "scr_conspeed", "600", 0, "console moving speed" );
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0, "notify time to live" );
 	con_fontsize = Cvar_Get( "con_fontsize", "1", CVAR_ARCHIVE, "console font number (0, 1 or 2)" );
+	con_maxfrac = Cvar_Get( "con_maxfrac", "1.0", CVAR_ARCHIVE, "console max height" );
+	con_halffrac = Cvar_Get( "con_halffrac", "0.5", CVAR_ARCHIVE, "console half height" );
 
 	Con_CheckResize();
 
@@ -1544,6 +1548,25 @@ void Con_DrawInput( void )
 	Field_DrawInputLine( x, y, &con.input );
 }
 
+qboolean Con_DrawProgress( void )
+{
+		int x = QCHAR_WIDTH;
+		int y = con.vislines - ( con.curFont->charHeight * 3 );
+		if( scr_download->value > 0 )
+		{
+			while( x < scr_download->value * (scr_width->value - QCHAR_WIDTH * 2)  / 100 )
+				x += Con_DrawCharacter( x, y, '=', g_color_table[7] );
+		}
+		else if( scr_loading->value > 0 )
+		{
+			while( x < scr_loading->value * (scr_width->value - QCHAR_WIDTH * 2) / 100 )
+				x += Con_DrawCharacter( x, y, '=', g_color_table[7] );
+		}
+		else return false;
+	return true;
+}
+
+
 /*
 ================
 Con_DrawDebugLines
@@ -1688,7 +1711,7 @@ Con_DrawConsole
 Draws the console with the solid background
 ================
 */
-void Con_DrawSolidConsole( float frac )
+void Con_DrawSolidConsole( float frac, qboolean fill )
 {
 	int	i, x, y;
 	int	rows;
@@ -1704,8 +1727,9 @@ void Con_DrawSolidConsole( float frac )
 		lines = scr_height->integer;
 
 	// draw the background
-	y = frac * scr_height->integer;
-
+	y = scr_height->integer;
+	if( !fill )
+		y *= frac;
 	if( y >= 1 )
 	{
 		GL_SetRenderMode( kRenderNormal );
@@ -1715,7 +1739,7 @@ void Con_DrawSolidConsole( float frac )
 
 	if( !con.curFont ) return; // nothing to draw
 
-	rows = ( lines - QCHAR_WIDTH ) / QCHAR_WIDTH - 1; // rows of text to draw
+	rows = ( lines - QCHAR_WIDTH ) / QCHAR_WIDTH; // rows of text to draw
 
 	if( host.developer )
 	{
@@ -1730,26 +1754,11 @@ void Con_DrawSolidConsole( float frac )
 
 		for( i = 0; i < stringLen; i++ )
 			width += Con_DrawCharacter( start + width, 0, curbuild[i], color );
-		width = con.curFont->charWidths[' '], start -= con.curFont->charWidths[' '];
-		if( scr_download->value > 0 )
-		{
-			while( width < scr_download->value * start / 100 )
-				width += Con_DrawCharacter( width, 0, '=', color );
-			rows--;
-			lines--;
-		}
-		else if( scr_loading->value > 0 )
-		{
-			while( width < scr_loading->value * start / 100 )
-				width += Con_DrawCharacter( width, 0, '=', color );
-			rows--;
-			lines--;
-		}
 	}
 
 	// draw the text
 	con.vislines = lines;
-	y = lines - ( con.curFont->charHeight * 3 );
+	y = lines - ( con.curFont->charHeight * (Con_DrawProgress()?4:3) );
 
 	// draw from the bottom up
 	if( con.display != con.current )
@@ -1799,6 +1808,7 @@ void Con_DrawSolidConsole( float frac )
 Con_DrawConsole
 ==================
 */
+
 void Con_DrawConsole( void )
 {
 	// never draw console when changelevel in-progress
@@ -1815,13 +1825,13 @@ void Con_DrawConsole( void )
 		{
 			if(( Cvar_VariableInteger( "cl_background" ) || Cvar_VariableInteger( "sv_background" )) && cls.key_dest != key_console )
 				con.displayFrac = con.finalFrac = 0.0f;
-			else con.displayFrac = con.finalFrac = 1.0f;
+			else con.displayFrac = con.finalFrac = con_maxfrac->value;
 		}
 		else
 		{
 			if( host.developer >= 4 )
 			{
-				con.displayFrac = 0.5f;	// keep console open
+				con.displayFrac = con_halffrac->value;	// keep console open
 			}
 			else
 			{
@@ -1842,26 +1852,26 @@ void Con_DrawConsole( void )
 	case ca_disconnected:
 		if( cls.key_dest != key_menu && host.developer )
 		{
-			Con_DrawSolidConsole( 1.0f );
+			Con_DrawSolidConsole( con_maxfrac->value, true );
 			Key_SetKeyDest( key_console );
 		}
 		break;
 	case ca_connected:
 	case ca_connecting:
 		// force to show console always for -dev 3 and higher 
-		if( con.displayFrac ) Con_DrawSolidConsole( con.displayFrac );
+		if( con.displayFrac ) Con_DrawSolidConsole( con.displayFrac, true );
 		break;
 	case ca_active:
 	case ca_cinematic: 
 		if( Cvar_VariableInteger( "cl_background" ) || Cvar_VariableInteger( "sv_background" ))
 		{
 			if( cls.key_dest == key_console ) 
-				Con_DrawSolidConsole( 1.0f );
+				Con_DrawSolidConsole( con_maxfrac->value, true );
 		}
 		else
 		{
 			if( con.displayFrac )
-				Con_DrawSolidConsole( con.displayFrac );
+				Con_DrawSolidConsole( con.displayFrac, false );
 			else if( cls.state == ca_active && ( cls.key_dest == key_game || cls.key_dest == key_message ))
 				Con_DrawNotify(); // draw notify lines
 		}
