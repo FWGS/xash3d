@@ -1535,6 +1535,9 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 		FS_Rescan_f();
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "continueloading" );
+		cls.downloadfileid = 0;
+		cls.downloadcount = 0;
+		return;
 	}
 
 	cls.downloadfileid++;
