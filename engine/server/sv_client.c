@@ -1173,7 +1173,7 @@ void SV_New_f( sv_client_t *cl )
 		// NOTE: enable for testing
 		// Still have problems with download reject
 		// It's difficult to implement fastdl and forbid direct download
-		if( sv_maxclients->integer == 1 && sv_allow_download->integer == 1 )
+		if( cl->netchan.remote_address.type == NA_LOOPBACK || sv_maxclients->integer == 1 || sv_allow_download->value == 1 )
 		{
 			Q_memset( &cl->lastcmd, 0, sizeof( cl->lastcmd ));
 
@@ -1185,7 +1185,7 @@ void SV_New_f( sv_client_t *cl )
 		{
 			// request resource list
 			BF_WriteByte( &cl->netchan.message, svc_stufftext );
-			BF_WriteString( &cl->netchan.message, va( "cmd getresourelist\n" ));
+			BF_WriteString( &cl->netchan.message, va( "cmd getresourcelist\n" ));
 		}
 	}
 }
@@ -1967,7 +1967,8 @@ ucmd_t ucmds[] =
 { "usermsgs", SV_UserMessages_f },
 { "userinfo", SV_UpdateUserinfo_f },
 { "lightstyles", SV_WriteLightstyles_f },
-{ "getresourelist", SV_SendResourceList_f },
+{ "getresourelist", SV_SendResourceList_f }, // compat
+{ "getresourcelist", SV_SendResourceList_f },
 { "continueloading", SV_ContinueLoading_f },
 { "kill", SV_Kill_f },
 { NULL, NULL }

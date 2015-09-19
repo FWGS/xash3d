@@ -1241,10 +1241,12 @@ void HTTP_Run( void )
 	if( !curfile->file )
 	{
 		MsgDev( D_INFO, "Starting download %s\n", curfile->path );
-		curfile->file = FS_Open( va("downloaded/%s.incomplete", curfile->path ), "w", true );
+		char name[PATH_MAX];
+		Q_snprintf( name, PATH_MAX, "downloaded/%s.incomplete", curfile->path );
+		curfile->file = FS_Open( name, "w", true );
 		if( !curfile->file )
 		{
-			MsgDev( D_ERROR, "Cannot open %s!\n", va( "downloaded/%s.incomplete" ));
+			MsgDev( D_ERROR, "Cannot open %s!\n", name );
 			HTTP_FreeFile( curfile, true );
 			return;
 		}
@@ -1394,7 +1396,7 @@ void HTTP_Run( void )
 void HTTP_AddDownload( char *path, int size, qboolean process )
 {
 	httpfile_t *httpfile = Mem_Alloc( net_mempool, sizeof( httpfile_t ) );
-	MsgDev( D_INFO, "File %q queued to download\n", path );
+	MsgDev( D_INFO, "File %s queued to download\n", path );
 	httpfile->size = size;
 	httpfile->downloaded = 0;
 	httpfile->socket = -1;
