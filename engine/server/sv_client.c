@@ -1246,7 +1246,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
 	{
 		
-		if( !FS_FileExists( sv.sound_precache[index], true ) )
+		if( !FS_FileExists( va( "sound/%s", sv.sound_precache[index] ), true ) )
 			continue;
 		reslist.restype[rescount] = t_sound;
 		Q_strcpy( reslist.resnames[rescount], sv.sound_precache[index] );

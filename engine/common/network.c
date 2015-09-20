@@ -1114,6 +1114,12 @@ void NET_Restart_f( void )
 	NET_Init();
 }
 
+/*
+=================================================
+HTTP downloader
+=================================================
+*/
+
 typedef struct httpserver_s
 {
 	char host[256];
@@ -1138,18 +1144,26 @@ typedef struct httpfile_s
 	struct httpfile_s *next;
 } httpfile_t;
 
+// file and server lists
 httpfile_t *first_file, *last_file;
 httpserver_t *first_server, *last_server;
 
 convar_t *http_useragent;
 
-char header[BUFSIZ];
+char header[BUFSIZ]; // query or response
 int headersize, querylength, sent;
 
+/*
+==============
+HTTP_FreeFile
+
+Skip to next server/file, free list node if necessary
+==============
+*/
 void HTTP_FreeFile( httpfile_t *file, qboolean error )
 {
 	char incname[256];
-
+	// Allways close file and socket
 	if( file->file )
 		FS_Close( file->file );
 	file->file = NULL;
@@ -1163,34 +1177,37 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 	if( error )
 	{
 		// Switch to next fastdl server if present
-		// First node may be allocated by HTTP_AddDownload
 		if( file->server )
 		{
 			if( file->server->needfree )
 			{
+				// First node may be allocated by HTTP_AddDownload
 				httpserver_t *tmp = file->server;
 				file->server = file->server->next;
+				file->state = 0;
 				Mem_Free( tmp );
 			}
 			else 
 			{
 				file->server = file->server->next;
-				file->state = 0;
+				file->state = 0; // Reset download state, HTTP_Run will open file again
 			}
 			return;
 		}
+		// Called because there was no servers to download, free file now
 		MsgDev( D_WARN, "Cannot download %s from any server\n"
-			"You may remove %s now\n", file->path, incname );
-		if( file->process )CL_ProcessFile( false, file->path );
+			"You may remove %s now\n", file->path, incname ); // Warn about trash file
+		if( file->process )CL_ProcessFile( false, file->path ); // Process file, increase counter
 	}
 	else
 	{
+		// Success, rename and process file
 		char name[256];
 		Q_snprintf( name, 256, "downloaded/%s", file->path );
 		FS_Rename( incname, name );
 		if( file->process )CL_ProcessFile( true, name );
 	}
-
+	// Now free list node
 	if( first_file == file )
 	{
 		// Now only first_file is changing progress
@@ -1203,12 +1220,15 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 	}
 	else if( file->next )
 	{
+		// i'm too lazy to search whole list, just copy the node
+		// it is not used now as only first file may be freed
 		httpfile_t *tmp =file->next;
 		Q_memcpy( file, file->next, sizeof(httpfile_t) );
 		Mem_Free(tmp);
 	}
 	else file->id = -1; // Tail file
 }
+
 /*
 ==============
 HTTP_Run
@@ -1222,7 +1242,7 @@ void HTTP_Run( void )
 	int res;
 	char buf[BUFSIZ+1];
 	char *begin = 0;
-	httpfile_t *curfile = first_file;
+	httpfile_t *curfile = first_file; // download is single-threaded now, but can be rewrited
 	httpserver_t *server;
 
 	if( !curfile )
@@ -1234,11 +1254,12 @@ void HTTP_Run( void )
 	server = curfile->server;
 	if( !server )
 	{
+		MsgDev( D_ERROR, "No servers to download %s!\n", curfile->path );
 		HTTP_FreeFile( curfile, true );
 		return;
 	}
 
-	if( !curfile->file )
+	if( !curfile->file ) // state == 0
 	{
 		MsgDev( D_INFO, "Starting download %s\n", curfile->path );
 		char name[PATH_MAX];
@@ -1253,20 +1274,23 @@ void HTTP_Run( void )
 		curfile->state = 1;
 	}
 
-	if( curfile->state < 2 )
+	if( curfile->state < 2 ) // Socket is not created
 	{
 		curfile->socket = pSocket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 		// Now set non-blocking mode
+		// You may skip this if not supported by system,
+		// but download will lock engine, maybe you will need to add manual returns
 #ifdef _WIN32
 		int mode = 1;
 		pIoctlSocket( curfile->socket, FIONBIO, mode );
 #else
+		// SOCK_NONBLOCK is not portable, so use fcntl
 		fcntl( curfile->socket, F_SETFL, fcntl( curfile->socket, F_GETFL, 0 ) | O_NONBLOCK );
 #endif
 		curfile->state = 2;
 	}
 
-	if( curfile->state < 3 )
+	if( curfile->state < 3 ) // Connection not enstabilished
 	{
 		struct sockaddr addr;
 		NET_StringToSockaddr( va( "%s:%d", server->host, server->port ), &addr );
@@ -1276,21 +1300,21 @@ void HTTP_Run( void )
 #ifdef _WIN32
 			if( pWSAGetLastError() == WSAEINPROGRESS )
 #else
-			if( errno == EINPROGRESS )
+			if( errno == EINPROGRESS ) // Should give EWOOLDBLOCK if try recv too soon
 #endif
 				curfile->state = 3;
 			else
 			{
 				MsgDev( D_ERROR, "Cannot connect to %s\n","" );
-				HTTP_FreeFile( curfile, true );
+				HTTP_FreeFile( curfile, true ); // Cannot connect
 				return;
 			}
-			return;
+			return; // skip to next frame
 		}
 		curfile->state = 3;
 	}
 	
-	if( curfile->state < 4)
+	if( curfile->state < 4 ) // Request not formatted
 	{
 		querylength = Q_snprintf( header, BUFSIZ,
 			"GET %s%s HTTP/1.0\r\n"
@@ -1302,7 +1326,7 @@ void HTTP_Run( void )
 		curfile->state = 4;
 	}
 
-	if( curfile->state < 5 )
+	if( curfile->state < 5 ) // Request not sent
 	{
 		while( sent < querylength )
 		{
@@ -1330,32 +1354,33 @@ void HTTP_Run( void )
 		Q_memset( header, 0, BUFSIZ );
 		curfile->state = 5;
 	}
-	while( ( res = pRecv( curfile->socket, buf, BUFSIZ, 0 ) ) > 0)
+	while( ( res = pRecv( curfile->socket, buf, BUFSIZ, 0 ) ) > 0) // if we got there, we are receiving data
 	{
 		//MsgDev(D_INFO,"res: %d\n", res);
-		if( curfile->state < 6 )
+		if( curfile->state < 6 ) // Response still not received
 		{
-			buf[res] = 0;
+			buf[res] = 0; // string break to search \r\n\r\n
 			Q_memcpy( header + headersize, buf, res );
 			//MsgDev( D_INFO, "%s", buf );
 			begin = Q_strstr( header, "\r\n\r\n" );
 			if( begin ) // Got full header
 			{
-				int cutheadersize = begin - header + 4;
-				MsgDev(D_INFO, "Got response\n");
+				int cutheadersize = begin - header + 4; // after that begin of data
+				MsgDev(D_INFO, "Got response!\n");
 				if( !Q_strstr(header, "200 OK") )
 				{
-					*begin = 0;
+					*begin = 0; // cut string to print out response
 					MsgDev( D_ERROR, "Bad response:\n%s\n", header );
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
+				// print size
 				char *length = Q_strstr(header, "Content-Length: ");
-				if(length)
+				if( length )
 				{
 					int size = Q_atoi( length += 16 );
 					MsgDev( D_INFO, "File size is %d\n", size );
-					if( ( curfile->size != -1 ) && ( curfile->size != size ) )
+					if( ( curfile->size != -1 ) && ( curfile->size != size ) ) // check size if specified, not used
 						MsgDev( D_WARN, "Server reports wrong file size!\n" );
 					curfile->size = size;
 				}
@@ -1366,23 +1391,47 @@ void HTTP_Run( void )
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
-				curfile->state = 6;
+				curfile->state = 6; // got response, let's start download
 				begin += 4;
 				// Write remaining message part
-				curfile->downloaded += FS_Write( curfile->file, begin, res - cutheadersize - headersize );
+				if( res - cutheadersize - headersize > 0 )
+				{
+					int ret = FS_Write( curfile->file, begin, res - cutheadersize - headersize );
+					if( ret != res - cutheadersize - headersize ) // could not write file
+					{
+						// close it and go to next
+						MsgDev( D_ERROR, "Write failed for %s!\n", curfile->path );
+						curfile->state = 0;
+						HTTP_FreeFile( curfile, true );
+						return;
+					}
+					curfile->downloaded += ret;
+				}
 			}
 			headersize += res;
 		}
-		else
+		else if( res > 0 )
 		{
-			curfile->downloaded += FS_Write( curfile->file, buf, res);
+			// data download
+			int ret = FS_Write( curfile->file, buf, res );
+			if ( ret != res )
+			{
+				// close it and go to next
+				MsgDev( D_ERROR, "Write failed for %s!\n", curfile->path );
+				curfile->state = 0;
+				HTTP_FreeFile( curfile, true );
+				return;
+			}
+			curfile->downloaded += ret;
 		}
 	}
+
 	if( curfile->size > 0 )
 		Cvar_SetFloat( "scr_download", (float)curfile->downloaded / curfile->size * 100 );
+
 	if( curfile->size > 0 && curfile->downloaded >= curfile->size )
-		HTTP_FreeFile( curfile, false );
-	else
+		HTTP_FreeFile( curfile, false ); // success
+	else // if it is not blocking, inform user about problem
 #ifdef _WIN32
 	if( pWSAGetLastError() != WSAEWOULDBLOCK )
 #else
@@ -1391,8 +1440,13 @@ void HTTP_Run( void )
 		MsgDev( D_WARN, "Problem downloading %s:\n%s\n", curfile->path, NET_ErrorString() );
 }
 
+/*
+===================
+HTTP_AddDownload
 
-
+Add new download to end of queue
+===================
+*/
 void HTTP_AddDownload( char *path, int size, qboolean process )
 {
 	httpfile_t *httpfile = Mem_Alloc( net_mempool, sizeof( httpfile_t ) );
@@ -1403,12 +1457,14 @@ void HTTP_AddDownload( char *path, int size, qboolean process )
 	Q_strncpy ( httpfile->path, path, sizeof( httpfile->path ) );
 	if( last_file )
 	{
+		// Add next to last download
 		httpfile->id = last_file->id + 1;
 		last_file->next= httpfile;
 		last_file = httpfile;
 	}
 	else
 	{
+		// It will be the only download
 		httpfile->id = 0;
 		last_file = first_file = httpfile;
 	}
@@ -1419,6 +1475,13 @@ void HTTP_AddDownload( char *path, int size, qboolean process )
 	httpfile->process = process;
 }
 
+/*
+===============
+HTTP_Download_f
+
+Console wrapper
+===============
+*/
 static void HTTP_Download_f( void )
 {
 	if( Cmd_Argc() < 2 )
@@ -1429,6 +1492,13 @@ static void HTTP_Download_f( void )
 	HTTP_AddDownload( Cmd_Argv( 1 ), -1, false );
 }
 
+/*
+============
+HTTP_Clear_f
+
+Clear all queue
+============
+*/
 void HTTP_Clear_f( void )
 {
 	last_file = NULL;
@@ -1438,35 +1508,72 @@ void HTTP_Clear_f( void )
 		first_file = first_file->next;
 		if( file->file ) FS_Close( file->file );
 		if( file->socket != -1 )pCloseSocket ( file->socket );
+		// There may be unreferenced servers at the beggining of list
+		while( file->server && file->server->needfree )
+		{
+			httpserver_t *tmp = file->server;
+			file->server = file->server->next;
+			Mem_Free( tmp );
+		}
 		Mem_Free( file );
 	}
 }
 
+/*
+==============
+HTTP_Cancel_f
+
+Stop current download, skip to next file
+==============
+*/
 void HTTP_Cancel_f( void )
 {
+	// If download even not started, it will be removed completely
 	first_file->state = 0;
 	HTTP_FreeFile( first_file, true );
 }
 
+/*
+=============
+HTTP_Skip_f
+
+Stop current download, skip to next server
+=============
+*/
 void HTTP_Skip_f( void )
 {
-	
 	HTTP_FreeFile( first_file, true );
 }
 
+/*
+=============
+HTTP_List_f
+
+Print all pending downloads to console
+=============
+*/
 void HTTP_List_f( void )
 {
 	httpfile_t *file = first_file;
 	while( file )
 	{
-		Msg ( "\t%d %s %d %d\n", file->id, file->path, file->state, file->downloaded );
+		if( file->id == -1 )
+		Msg ( "\t(empty)\n");
+		else if ( file->server )
+			Msg ( "\t%d %d %d http://%s:%d/%s%s\n", file->id, file->state,
+				file->server->host, file->server->port, file->server->path,
+				file->path, file->downloaded );
+		else Msg ( "\t%d %d %d (no server) %s\n", file->id, file->state, file->path );
 		file = file->next;
 	}
 }
-
+/*
+=============
+HTTP_Init
+=============
+*/
 void HTTP_Init( void )
 {
-	
 	char *serverfile, *token;
 	last_server = NULL;
 
@@ -1489,36 +1596,38 @@ void HTTP_Init( void )
 		httpserver_t *server;
 		// split buffer by lines
 		char *path, *port, *lineend;
-		token += 7;
+		token += 7; // http://
 		lineend = Q_strchr( token, '\n' );
-		if( !lineend ) break;
-		*lineend++ = 0; // next line start
+		if( !lineend ) break; // last line
+		*lineend++ = 0; // next line start, line break for path
 		path = Q_strchr( token, '/' );
-		if( !path )
+		if( !path ) // must be / if it is in root of server
 		{
 			token = lineend;
 			continue;
 		}
 		*path++ = 0;
-	
+
 		server = Mem_Alloc( net_mempool, sizeof( httpserver_t ) );
 		Q_snprintf( server->path, sizeof( server->path ), "/%s", path );
 		port = Q_strchr( token, ':' );
 		if( port )
 		{
-			*port++ = 0;
+			*port++ = 0; // line break for host
 			server->port = Q_atoi( port );
 		}
 		else
 			server->port = 80;
 		Q_strncpy( server->host, token, sizeof( server->host ) );
-		server->needfree = false;
+		server->needfree = false; // never free
 		server->next = NULL;
 	
 		if( !last_server )
+			// It will be the only server
 			first_server = last_server = server;
 		else 
 		{
+			// next to last server
 			last_server->next = server;
 			last_server = server;
 		}
