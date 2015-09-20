@@ -637,7 +637,7 @@ void Sys_Print( const char *pMsg )
 
 	if( host.type == HOST_NORMAL )
 		Con_Print( pMsg );
-
+#ifdef _WIN32
 	// if the message is REALLY long, use just the last portion of it
 	if( Q_strlen( pMsg ) > sizeof( buffer ) - 1 )
 		msg = pMsg + Q_strlen( pMsg ) - sizeof( buffer ) + 1;
@@ -687,6 +687,9 @@ void Sys_Print( const char *pMsg )
 
 	Sys_PrintLog( logbuf );
 	Con_WinPrint( buffer );
+#else
+	Sys_PrintLog( pMsg );
+#endif
 	if( host.rd.target )
 	{
 		if(( Q_strlen( pMsg ) + Q_strlen( host.rd.buffer )) > ( host.rd.buffersize - 1 ))
