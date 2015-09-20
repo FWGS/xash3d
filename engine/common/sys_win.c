@@ -687,6 +687,19 @@ void Sys_Print( const char *pMsg )
 
 	Sys_PrintLog( logbuf );
 	Con_WinPrint( buffer );
+	if( host.rd.target )
+	{
+		if(( Q_strlen( pMsg ) + Q_strlen( host.rd.buffer )) > ( host.rd.buffersize - 1 ))
+		{
+			if( host.rd.flush )
+			{
+				host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
+				*host.rd.buffer = 0;
+			}
+		}
+		Q_strcat( host.rd.buffer, pMsg );
+		return;
+	}
 }
 
 /*

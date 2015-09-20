@@ -1340,8 +1340,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( !Q_strcmp( c, "print" ))
 	{
 		// print command from somewhere
-		args = BF_ReadString( msg );
-		Msg( args );
+		Msg("remote: %s\n", BF_ReadString( msg ) );
 	}
 	else if( !Q_strcmp( c, "ping" ))
 	{
