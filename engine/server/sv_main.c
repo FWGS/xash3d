@@ -456,9 +456,11 @@ void SV_CheckTimeouts( void )
 
 		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint )
 		{
+#ifndef __ANDROID__ // process can be freezed on android, this is temporary fix
 			SV_BroadcastPrintf( PRINT_HIGH, "%s timed out\n", cl->name );
 			SV_DropClient( cl ); 
 			cl->state = cs_free; // don't bother with zombie state
+#endif
 		}
 	}
 
