@@ -257,7 +257,9 @@ void listdirectory( stringlist_t *list, const char *path )
 	hFile = scandir( path, &n_file, NULL, NULL );
 	if( hFile < 1 )
 	{
+#if 0
 		MsgDev( D_INFO, "listdirectory: scandir() failed, %s at %s", strerror(hFile), path );
+#endif
 		return;
 	}
 
