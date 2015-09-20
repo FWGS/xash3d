@@ -296,10 +296,14 @@ Just prints the rest of the line to the console
 void Cmd_Echo_f( void )
 {
 	int	i;
-	
+	static char buf[1024];
 	for( i = 1; i < Cmd_Argc(); i++ )
-		Sys_Print( Cmd_Argv( i ));
-	Sys_Print( "\n" );
+	{
+		Q_strncat( buf, Cmd_Argv( i ), 1024 );
+		Q_strncat( buf, " ", 1024 );
+	}
+	Q_strncat( buf, "\n", 1024 );
+	Sys_Print( buf );
 }
 
 /*
