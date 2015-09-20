@@ -1,6 +1,6 @@
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?= -Og -ggdb
+CFLAGS ?= -O0 -fno-strict-aliasing -ggdb
 LDFLAGS =
 LIBS = -lm
 LBITS := $(shell getconf LONG_BIT)

@@ -28,7 +28,7 @@ GNU General Public License for more details.
 
 // Pad a number so it lies on an N byte boundary.
 // So PAD_NUMBER(0,4) is 0 and PAD_NUMBER(1,4) is 4
-#define PAD_NUMBER( num, boundary )	((( num ) + (( boundary ) - 1 )) / ( boundary )) * ( boundary )
+#define PAD_NUMBER( num, boundary )	(((( num ) + (( boundary ) - 1 )) / ( boundary )) * ( boundary ))
 
 _inline int BitByte( int bits )
 {

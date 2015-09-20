@@ -389,9 +389,8 @@ typedef struct
 #ifdef ARRAYSIZE
 #undef ARRAYSIZE
 #endif
-#define ARRAYSIZE(p)	(sizeof(p)/sizeof(p[0]))
 
-#define ARRAYSIZE(p)	(sizeof(p)/sizeof(p[0]))
+#define ARRAYSIZE(p)	(sizeof(p)/sizeof((p)[0]))
 typedef struct 
 {
 	// Initialize/shutdown the game (one-time call after loading of game .dll )
