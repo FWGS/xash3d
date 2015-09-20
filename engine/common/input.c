@@ -323,7 +323,7 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 			clgame.dllFuncs.IN_ActivateMouse();
 	}
 
-	if( newstate == key_menu && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
+	if( ( newstate == key_menu || newstate == key_console ) && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
 	{
 #ifdef XASH_SDL
 		SDL_SetWindowGrab(host.hWnd, false);
@@ -392,11 +392,12 @@ void IN_ActivateMouse( qboolean force )
 	if( cls.key_dest == key_game )
 	{
 		clgame.dllFuncs.IN_ActivateMouse();
-	}
 #ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, true );
 	SDL_GetRelativeMouseState( 0, 0 ); // Reset mouse position
 #endif
+	}
+
 }
 
 /*
