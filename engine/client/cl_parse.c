@@ -1112,6 +1112,15 @@ void CL_ParseResourceList( sizebuf_t *msg )
 
 	for( i = 0; i < reslist.rescount; i++ )
 	{
+		// skip some types
+		if( reslist.restype[i] == t_model && !Q_strchr( download_types->string, 'm' ) )
+			continue;
+		if( reslist.restype[i] == t_sound && !Q_strchr( download_types->string, 's' ) )
+			continue;
+		if( reslist.restype[i] == t_eventscript && !Q_strchr( download_types->string, 'e' ) )
+			continue;
+		if( reslist.restype[i] == t_generic && !Q_strchr( download_types->string, 'c' ) )
+			continue;
 		if( reslist.restype[i] == t_sound )
 			CL_CheckingSoundResFile( reslist.resnames[i] );
 		else CL_CheckingResFile( reslist.resnames[i] );

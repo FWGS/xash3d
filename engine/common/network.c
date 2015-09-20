@@ -1560,10 +1560,10 @@ void HTTP_List_f( void )
 		if( file->id == -1 )
 		Msg ( "\t(empty)\n");
 		else if ( file->server )
-			Msg ( "\t%d %d %d http://%s:%d/%s%s\n", file->id, file->state,
+			Msg ( "\t%d %d http://%s:%d/%s%s\n", file->id, file->state,
 				file->server->host, file->server->port, file->server->path,
 				file->path, file->downloaded );
-		else Msg ( "\t%d %d %d (no server) %s\n", file->id, file->state, file->path );
+		else Msg ( "\t%d %d (no server) %s\n", file->id, file->state, file->path );
 		file = file->next;
 	}
 }

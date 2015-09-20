@@ -151,6 +151,7 @@ extern convar_t	*mod_allow_materials;
 extern convar_t	*host_limitlocal;
 extern convar_t	*host_maxfps;
 extern convar_t *net_qport;
+extern convar_t *download_types;
 
 /*
 ==============================================================

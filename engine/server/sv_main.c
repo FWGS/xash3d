@@ -502,6 +502,38 @@ void SV_ProcessFile( sv_client_t *cl, char *filename )
 	MsgDev( D_INFO, "Received file %s from %s\n", filename, cl->name );
 }
 
+void SV_DownloadResources_f( void )
+{
+	int index;
+	if( Q_strchr( download_types->string, 'm' ) )
+		for( index = 1; index < MAX_MODELS && sv.model_precache[index][0]; index++ )
+		{
+			if( sv.model_precache[index][0] == '*' ) // internal bmodel
+				continue;
+			if( !FS_FileExists( sv.model_precache[index], true ) )
+				HTTP_AddDownload( sv.model_precache[index], -1, false );
+		}
+	if( Q_strchr( download_types->string, 's' ) )
+		for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
+		{
+			char *sndname = va( "sound/%s", sv.sound_precache[index]);
+			if( !FS_FileExists( sndname, true ) )
+				HTTP_AddDownload( sndname, -1, false );
+		}
+	if( Q_strchr( download_types->string, 'e' ) )
+		for( index = 1; index < MAX_EVENTS && sv.event_precache[index][0]; index++ )
+		{
+			if( !FS_FileExists( sv.event_precache[index], true ) )
+				HTTP_AddDownload( sv.event_precache[index], -1, false );
+		}
+	if( Q_strchr( download_types->string, 'c' ) )
+		for( index = 1; index < MAX_CUSTOM && sv.files_precache[index][0]; index++ )
+		{
+			if( !FS_FileExists( sv.files_precache[index], true ) )
+				HTTP_AddDownload( sv.files_precache[index], -1, false );
+		}
+}
+
 /*
 =================
 SV_IsSimulating
@@ -748,6 +780,7 @@ void SV_Init( void )
 	mp_consistency = Cvar_Get( "mp_consistency", "1", CVAR_SERVERNOTIFY, "enbale consistency check in multiplayer" );
 	clockwindow = Cvar_Get( "clockwindow", "0.5", 0, "timewindow to execute client moves" );
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "force to ignore server visibility" );
+	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try download missing resourses to server");
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));

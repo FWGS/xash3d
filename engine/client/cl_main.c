@@ -1797,8 +1797,6 @@ void Host_ClientFrame( void )
 		SCR_RunCinematic();
 	}
 
-	HTTP_Run();
-
 	Con_RunConsole();
 
 	cls.framecount++;
@@ -1823,8 +1821,6 @@ void CL_Init( void )
 
 	R_Init();	// init renderer
 	S_Init();	// init sound
-
-	HTTP_Init();
 
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));

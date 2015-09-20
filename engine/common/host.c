@@ -45,6 +45,7 @@ convar_t	*host_cheats;
 convar_t	*host_maxfps;
 convar_t	*host_framerate;
 convar_t	*con_gamemaps;
+convar_t	*download_types;
 convar_t	*build, *ver;
 
 static int num_decals;
@@ -567,6 +568,8 @@ void Host_Frame( float time )
 	if ( host.type != HOST_DEDICATED )
 		Host_ClientFrame (); // client frame
 
+	HTTP_Run();
+
 	host.framecount++;
 }
 
@@ -944,6 +947,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	host_clientloaded = Cvar_Get( "host_clientloaded", "0", CVAR_INIT, "inidcates a loaded client.dll" );
 	host_limitlocal = Cvar_Get( "host_limitlocal", "0", 0, "apply cl_cmdrate and rate to loopback connection" );
 	con_gamemaps = Cvar_Get( "con_mapfilter", "1", CVAR_ARCHIVE, "when true show only maps in game folder" );
+	download_types = Cvar_Get( "download_types", "msec", CVAR_ARCHIVE, "list of types to download: Model, Sounds, Events, Custom" );
 	build = Cvar_Get( "build", va( "%i", Q_buildnum()), CVAR_INIT, "returns a current build number" );
 	ver = Cvar_Get( "ver", va( "%i/%g.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
 
@@ -977,6 +981,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	SV_Init();
 	CL_Init();
+
+	HTTP_Init();
 
 	if( host.type == HOST_DEDICATED )
 	{
