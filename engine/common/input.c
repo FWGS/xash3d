@@ -130,6 +130,7 @@ IN_StartupMouse
 #ifdef USE_EVDEV
 
 #include <fcntl.h>
+#include <errno.h>
 #include <linux/input.h>
 
 int evdev_open, mouse_fd, evdev_dx, evdev_dy;
@@ -162,14 +163,16 @@ void Evdev_OpenMouse_f ( void )
 	*/
 	if ( evdev_open ) return;
 #ifdef __ANDROID__ // use root to grant access to evdev
-	char chmodstr[ 255 ] = "su -c chmod 666 ";
+	char chmodstr[ 255 ] = "su 0 chmod 777";
 	strcat( chmodstr, evdev_mousepath->string );
-	system(chmodstr);
+	// allow write input via selinux, need for some lollipop devices
+	system("supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }" "allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"");
+	system( chmodstr );
 #endif
 	mouse_fd = open ( evdev_mousepath->string, O_RDONLY | O_NONBLOCK );
 	if ( mouse_fd < 0 )
 	{
-		MsgDev( D_ERROR, "Could not open input device %s\n", evdev_mousepath->string );
+		MsgDev( D_ERROR, "Could not open input device %s: %s\n", evdev_mousepath->string, strerror( errno ) );
 		return;
 	}
 	MsgDev( D_INFO, "Input device %s opened sucessfully\n", evdev_mousepath->string );
@@ -217,7 +220,7 @@ void IN_EvdevFrame ()
 			Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
 		}
 		if(clgame.dllFuncs.pfnLookEvent)
-			clgame.dllFuncs.pfnLookEvent( evdev_dx, evdev_dy );
+			clgame.dllFuncs.pfnLookEvent( -evdev_dx * m_yaw->value, evdev_dy * m_pitch->value );
 		else
 		{
 			cl.refdef.cl_viewangles[PITCH] += evdev_dy * m_enginesens->value;
@@ -806,11 +809,13 @@ void Host_InputFrame( void )
 #endif
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
+#ifndef __ANDROID__
 		if( in_mouseinitialized )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );
-			pitch += dy * m_pitch->value, yaw += dx * m_yaw->value; //mouse speed
+			pitch += dy * m_pitch->value, yaw -= dx * m_yaw->value; //mouse speed
 		}
+#endif
 #endif
 		clgame.dllFuncs.pfnLookEvent( yaw, pitch );
 		clgame.dllFuncs.pfnMoveEvent( forward, side );
