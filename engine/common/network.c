@@ -1270,7 +1270,7 @@ void HTTP_Run( void )
 		MsgDev( D_INFO, "Starting download %s\n", curfile->path );
 		char name[PATH_MAX];
 		Q_snprintf( name, PATH_MAX, "downloaded/%s.incomplete", curfile->path );
-		curfile->file = FS_Open( name, "w", true );
+		curfile->file = FS_Open( name, "wb", true );
 		if( !curfile->file )
 		{
 			MsgDev( D_ERROR, "Cannot open %s!\n", name );
