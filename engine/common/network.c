@@ -635,7 +635,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 	else 
 	{
 		char buf[32];
-		Q_strncpy( buf, data,  min( 32,length ))
+		Q_strncpy( buf, data,  min( 32,length ));
 		MsgDev( D_ERROR, "NET_SendPacket ( %d, %d, \"%s\", %i ): bad address type %i\n", sock, length, data, to.type, to.type );
 		return;
 	}
