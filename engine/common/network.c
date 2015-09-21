@@ -1622,7 +1622,11 @@ void HTTP_Init( void )
 		// split buffer by lines
 		char *path, *port, *lineend;
 		token += 7; // http://
-		lineend = Q_strchr( token, '\n' );
+		lineend = Q_strchr( token, '\r' );
+		if( !lineend )
+			lineend = Q_strchr( token, '\n' );
+		else
+			*lineend++ = 0; // if got CR, expect LF
 		if( !lineend ) break; // last line
 		*lineend++ = 0; // next line start, line break for path
 		path = Q_strchr( token, '/' );
