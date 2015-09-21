@@ -23,6 +23,8 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (XASH_ENGINE)
 
+include(FindPkgConfig)
+
 # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
@@ -72,7 +74,6 @@ if(XASH_NONSTANDART_LOAD)
 endif()
 
 if(XASH_SDL)
-    include(FindPkgConfig)
     pkg_search_module(SDL2 REQUIRED sdl2)
     pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
 
@@ -84,13 +85,6 @@ endif()
 
 if(XASH_VGUI)
     add_definitions(-DXASH_VGUI)
-#    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-#        target_link_libraries(${XASH_ENGINE_LIBRARY} -L${HL_SDK_DIR}/linux/release/ ${HL_SDK_DIR}/linux/release/vgui.dylib)
-#    endif()
-#    if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-#        target_link_libraries(${XASH_ENGINE_LIBRARY} -L${HL_SDK_DIR}/linux/ -l:vgui.so)
-#    endif()
-#    INCLUDE_DIRECTORIES(${HL_SDK_DIR}/utils/vgui/include)
 endif()
 
 if(XASH_GLES)
@@ -105,8 +99,19 @@ if(XASH_DLL_LOADER)
 	${CMAKE_COMMAND} -E copy $<TARGET_FILE:loader> $<TARGET_SONAME_FILE_DIR:xash>)
     target_link_libraries(${XASH_ENGINE_LIBRARY} -L. -lloader)
 endif()
+
 if(XASH_DEDICATED)
     add_definitions(-DXASH_DEDICATED)
+endif()
+
+if(XASH_AVI)
+    add_definitions(-DXASH_AVI)
+    pkg_search_module(LIBAVCODEC REQUIRED libavcodec)
+    pkg_search_module(LIBAVFORMAT REQUIRED libavformat)
+
+    include_directories(${LIBAVCODEC_INCLUDE_DIRS} ${LIBAVFORMAT_INCLUDE_DIRS})
+
+    target_link_libraries(${XASH_ENGINE_LIBRARY} ${LIBAVCODEC_LIBRARIES} ${LIBAVFORMAT_LIBRARIES})
 endif()
 
 target_link_libraries(${XASH_ENGINE_LIBRARY}
