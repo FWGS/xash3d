@@ -163,10 +163,13 @@ void Evdev_OpenMouse_f ( void )
 	*/
 	if ( evdev_open ) return;
 #ifdef __ANDROID__ // use root to grant access to evdev
-	char chmodstr[ 255 ] = "su 0 chmod 777";
+	char chmodstr[ 255 ] = "su 0 chmod 777 ";
 	strcat( chmodstr, evdev_mousepath->string );
+	system( chmodstr );
 	// allow write input via selinux, need for some lollipop devices
-	system("supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }" "allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"");
+	system( "su 0 supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }\" \"allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"" );
+	system( chmodstr );
+	system( "su 0 setenforce permissive" );
 	system( chmodstr );
 #endif
 	mouse_fd = open ( evdev_mousepath->string, O_RDONLY | O_NONBLOCK );
