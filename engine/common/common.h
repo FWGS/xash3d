@@ -909,6 +909,7 @@ cvar_t *Cvar_GetList( void );
 void Cmd_Null_f( void );
 
 void HTTP_AddDownload( char *path, int size, qboolean process );
+void HTTP_ResetProcessState ( void );
 void CL_ProcessFile( qboolean successfully_received, const char *filename );
 
 typedef struct autocomplete_list_s

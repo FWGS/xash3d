@@ -1573,6 +1573,25 @@ void HTTP_List_f( void )
 		file = file->next;
 	}
 }
+
+/*
+================
+HTTP_ResetProcessState
+
+When connected to new server, all old files should not increase counter
+================
+*/
+void HTTP_ResetProcessState( void )
+{
+	httpfile_t *file = first_file;
+	while( file )
+	{
+		file->process = false;
+		file = file->next;
+	}
+}
+
+
 /*
 =============
 HTTP_Init
