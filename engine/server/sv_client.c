@@ -1173,7 +1173,7 @@ void SV_New_f( sv_client_t *cl )
 		// NOTE: enable for testing
 		// Still have problems with download reject
 		// It's difficult to implement fastdl and forbid direct download
-		if( cl->netchan.remote_address.type == NA_LOOPBACK || sv_maxclients->integer == 1 || sv_allow_download->value == 1 )
+		if( sv_maxclients->integer == 1 || sv_allow_download->value == 0 )
 		{
 			Q_memset( &cl->lastcmd, 0, sizeof( cl->lastcmd ));
 
