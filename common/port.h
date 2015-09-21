@@ -124,7 +124,7 @@ GNU General Public License for more details.
     #define OS_LIB_EXT "dll"
     #define MENUDLL "menu." OS_LIB_EXT
     #define CLIENTDLL "client." OS_LIB_EXT
-	#define VGUI_SUPPORT_DLL "vgui_support." OS_LIB_EXT
+	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
 #endif
 
 #endif
