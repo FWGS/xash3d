@@ -846,7 +846,7 @@ void CL_PredictMovement( void )
 	int		ack, outgoing_command;
 	int		current_command;
 	int		current_command_mod;
-	local_state_t *from, *to;
+	local_state_t *from = 0, *to = 0;
 
 	if( cls.state != ca_active ) return;
 
@@ -912,8 +912,11 @@ void CL_PredictMovement( void )
 		frame++;
 	}
 
+	if( to )
+{
 	VectorCopy( to->playerstate.origin, cl.predicted_origin );
 	VectorCopy( to->client.velocity, cl.predicted_velocity );
 	VectorCopy( to->client.view_ofs, cl.predicted_viewofs );
 	VectorCopy( to->client.punchangle, cl.predicted_punchangle );
+}
 }
