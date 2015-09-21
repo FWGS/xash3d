@@ -1212,7 +1212,7 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		Q_snprintf( name, 256, "downloaded/%s", file->path );
 		FS_Rename( incname, name );
 		if( file->process )CL_ProcessFile( true, name );
-		else Msg ( "Successfully downloaded %s, prosessing disabled!\n");
+		else Msg ( "Successfully downloaded %s, prosessing disabled!\n", name );
 	}
 	// Now free list node
 	if( first_file == file )
