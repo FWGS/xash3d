@@ -632,7 +632,13 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 		if( !net_socket ) return;
 	}
 #endif
-	else Host_Error( "NET_SendPacket: bad address type %i\n", to.type );
+	else 
+	{
+		char buf[32];
+		Q_strncpy( buf, data,  min( 32,length ))
+		MsgDev( D_ERROR, "NET_SendPacket ( %d, %d, \"%s\", %i ): bad address type %i\n", sock, length, data, to.type, to.type );
+		return;
+	}
 
 	NET_NetadrToSockadr( &to, &addr );
 
