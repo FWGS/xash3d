@@ -424,7 +424,7 @@ destroy win32 console
 void Con_DestroyConsole( void )
 {
 	// last text message into console or log 
-	MsgDev( D_NOTE, "Sys_FreeLibrary: Unloading xash.dll\n" );
+	MsgDev( D_NOTE, "Sys_FreeLibrary: Unloading xash library\n" );
 
 	Sys_CloseLog();
 #ifdef _WIN32

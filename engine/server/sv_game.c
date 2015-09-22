@@ -2769,8 +2769,9 @@ pfnAlertMessage
 */
 static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 {
-	char	buffer[2048];	// must support > 1k messages
+	char	buffer0[2048];	// must support > 1k messages
 	va_list	args;
+	char *buffer = buffer0;
 
 	// check message for pass
 	switch( level )
@@ -2796,8 +2797,11 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	}
 
 	va_start( args, szFmt );
-	Q_vsnprintf( buffer, 2048, szFmt, args );
+	Q_vsnprintf( buffer0, 2048, szFmt, args );
 	va_end( args );
+
+	if( *buffer == '\n' ) // skip \n in line start
+		buffer++;
 
 	if( level == at_warning )
 	{
@@ -4697,7 +4701,7 @@ void SV_LoadFromFile( const char *mapname, char *entities )
 			}
 		}
 
-		MsgDev( D_INFO, "\n%i entities inhibited\n", inhibited );
+		MsgDev( D_INFO, "SV_LoadFromFile: %i entities inhibited\n", inhibited );
 	}
 
 	// reset world origin and angles for some reason

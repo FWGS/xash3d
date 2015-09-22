@@ -2700,7 +2700,7 @@ static void Mod_LoadBrushModel( model_t *mod, const void *buffer, qboolean *load
 		sample_size = 8;
 		break;
 	default:
-		MsgDev( D_ERROR, "%s has wrong version number (%i should be %i)", loadmodel->name, i, HLBSP_VERSION );
+		MsgDev( D_ERROR, "%s has wrong version number (%i should be %i)\n", loadmodel->name, i, HLBSP_VERSION );
 		return;
 	}
 
@@ -2713,7 +2713,7 @@ static void Mod_LoadBrushModel( model_t *mod, const void *buffer, qboolean *load
 	else if( world.lm_sample_size != sample_size )
 	{
 		// can't mixing world and bmodels with different sample sizes!
-		MsgDev( D_ERROR, "%s has wrong version number (%i should be %i)", loadmodel->name, i, world.version );
+		MsgDev( D_ERROR, "%s has wrong version number (%i should be %i)\n", loadmodel->name, i, world.version );
 		return;		
 	}
 	bmodel_version = i;	// share it

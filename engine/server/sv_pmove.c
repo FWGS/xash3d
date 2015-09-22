@@ -624,7 +624,6 @@ void SV_InitClientMove( void )
 
 	// initalize pmove
 	svgame.dllFuncs.pfnPM_Init( svgame.pmove );
-	MsgDev( D_NOTE, "svgame.dllFuncs.pfnPM_Init\n");
 }
 
 static void PM_CheckMovingGround( edict_t *ent, float frametime )

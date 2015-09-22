@@ -1501,7 +1501,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		else if( !Q_stricmp( token, "secure" ))
 		{
 			pfile = COM_ParseFile( pfile, token );
-			MsgDev( D_WARN, "secure parameter in gameinfo.txt is deprecated.");
+			MsgDev( D_WARN, "secure parameter in gameinfo.txt is deprecated.\n");
 			GameInfo->secure = 0;
 		}
 		else if( !Q_stricmp( token, "nomodels" ))
