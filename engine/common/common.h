@@ -910,6 +910,8 @@ void Cmd_Null_f( void );
 
 void HTTP_AddDownload( char *path, int size, qboolean process );
 void HTTP_ResetProcessState ( void );
+void HTTP_Init( void );
+void HTTP_Shutdown( void );
 void CL_ProcessFile( qboolean successfully_received, const char *filename );
 
 typedef struct autocomplete_list_s

@@ -1072,6 +1072,7 @@ void EXPORT Host_Shutdown( void )
 
 	Mod_Shutdown();
 	NET_Shutdown();
+	HTTP_Shutdown();
 	Host_FreeCommon();
 	Con_DestroyConsole();
 
