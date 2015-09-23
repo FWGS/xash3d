@@ -2810,10 +2810,14 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	else if( level == at_error  )
 	{
 		Sys_Print( va( "^1Error:^7 %s", buffer ));
-	} 
+	}
+	else if( level == at_aiconsole  )
+	{
+		Sys_Print( va( "server(ai): %s", buffer ));
+	}
 	else
 	{
-		Sys_Print( buffer );
+		Sys_Print( va( "server: %s", buffer ));
 	}
 }
 
