@@ -1132,6 +1132,7 @@ void CL_ParseResourceList( sizebuf_t *msg )
 
 	if( !cls.downloadcount )
 	{
+		HTTP_ClearCustomServers();
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "continueloading" );
 	}

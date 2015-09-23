@@ -714,6 +714,8 @@ Runs prediction code for user cmd
 void CL_RunUsercmd(local_state_t * from, local_state_t * to, usercmd_t * u, qboolean runfuncs, double * pfElapsed, unsigned int random_seed)
 {
 	usercmd_t cmd;
+	local_state_t temp;
+	usercmd_t split;
 	entity_state_t * fs;
 	entity_state_t * ts;
 	clientdata_t * fcd;
@@ -722,12 +724,9 @@ void CL_RunUsercmd(local_state_t * from, local_state_t * to, usercmd_t * u, qboo
 
 	while (u->msec > 50)
 	{
-		local_state_t temp;
-		usercmd_t split;
-
 		split = *u;
 		split.msec /= 2.0;
-		CL_RunUsercmd(from, &temp, &split, runfuncs, pfElapsed, random_seed);
+		CL_RunUsercmd( from, &temp, &split, runfuncs, pfElapsed, random_seed );
 
 		from = &temp;
 		u = &split;
@@ -906,7 +905,7 @@ void CL_PredictMovement( void )
 			cl.runfuncs[current_command_mod],
 			&time, cls.netchan.incoming_acknowledged + frame );
 
-		cl.runfuncs[current_command_mod] = FALSE;
+		cl.runfuncs[current_command_mod] = false;
 
 		from = to;
 		frame++;

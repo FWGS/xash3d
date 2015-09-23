@@ -1188,21 +1188,10 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 	if( error )
 	{
 		// Switch to next fastdl server if present
-		if( file->server )
+		if( file->server && ( file->state > 0 ) )
 		{
-			if( file->server->needfree )
-			{
-				// First node may be allocated by HTTP_AddDownload
-				httpserver_t *tmp = file->server;
-				file->server = file->server->next;
-				file->state = 0;
-				Mem_Free( tmp );
-			}
-			else 
-			{
-				file->server = file->server->next;
-				file->state = 0; // Reset download state, HTTP_Run will open file again
-			}
+			file->server = file->server->next;
+			file->state = 0; // Reset download state, HTTP_Run() will open file again
 			return;
 		}
 		// Called because there was no servers to download, free file now
@@ -1290,6 +1279,10 @@ void HTTP_Run( void )
 			return;
 		}
 		curfile->state = 1;
+		curfile->blocktime = 0;
+		curfile->downloaded = 0;
+		curfile->lastchecksize = 0;
+		curfile->checktime = 0;
 	}
 
 	if( curfile->state < 2 ) // Socket is not created
@@ -1545,6 +1538,91 @@ static void HTTP_Download_f( void )
 }
 
 /*
+========================
+HTTP_ClearCustomServers
+========================
+*/
+void HTTP_ClearCustomServers( void )
+{
+	while( first_server && first_server->needfree )
+	{
+		httpserver_t *tmp = first_server;
+		first_server = first_server->next;
+		Mem_Free( tmp );
+	}
+}
+
+/*
+==============
+HTTP_ParseURL
+==============
+*/
+httpserver_t *HTTP_ParseURL( const char *url )
+{
+	httpserver_t *server;
+	int i;
+	url = Q_strstr( url, "http://" );
+	if( !url ) return 0;
+	url += 7;
+	server = Mem_Alloc( net_mempool, sizeof( httpserver_t ) );
+	i = 0;
+	while( *url && ( *url != ':' ) && ( *url != '/' ) && ( *url != '\r' ) && ( *url != '\n' ) )
+	{
+		if( i > sizeof( server->host ) ) return;
+		server->host[i++] = *url++;
+	}
+	server->host[i] = 0;
+	if( *url == ':' )
+	{
+		server->port = Q_atoi( ++url );
+		while( *url && ( *url != '/' ) && ( *url != '\r' ) && ( *url != '\n' ) ) url++;
+	}
+	else
+		server->port = 80;
+	i=0;
+	while( *url && ( *url != '\r' ) && ( *url != '\n' ) )
+	{
+		if( i > sizeof( server->path) ) return;
+		server->path[i++] = *url++;
+	}
+	server->path[i] = 0;
+	server->next = NULL;
+	server->needfree = false;
+	return server;
+}
+
+/*
+=======================
+HTTP_AddCustomServer
+=======================
+*/
+void HTTP_AddCustomServer( const char *url )
+{
+	httpserver_t *server = HTTP_ParseURL( url );
+	if( !server )
+	{
+		MsgDev ( D_ERROR, "\"%s\" is not valid url!\n", url );
+		return ;
+	}
+	server->needfree = true;
+	server->next = first_server;
+	first_server = server;
+}
+
+/*
+=======================
+HTTP_AddCustomServer_f
+=======================
+*/
+void HTTP_AddCustomServer_f( void )
+{
+	if( Cmd_Argc() == 2 )
+	{
+		HTTP_AddCustomServer( Cmd_Argv( 1 ) );
+	}
+}
+
+/*
 ============
 HTTP_Clear_f
 
@@ -1560,13 +1638,6 @@ void HTTP_Clear_f( void )
 		first_file = first_file->next;
 		if( file->file ) FS_Close( file->file );
 		if( file->socket != -1 )pCloseSocket ( file->socket );
-		// There may be unreferenced servers at the beggining of list
-		while( file->server && file->server->needfree )
-		{
-			httpserver_t *tmp = file->server;
-			file->server = file->server->next;
-			Mem_Free( tmp );
-		}
 		Mem_Free( file );
 	}
 }
@@ -1637,7 +1708,6 @@ void HTTP_ResetProcessState( void )
 	}
 }
 
-
 /*
 =============
 HTTP_Init
@@ -1645,7 +1715,7 @@ HTTP_Init
 */
 void HTTP_Init( void )
 {
-	char *serverfile, *token;
+	char *serverfile, *line, token[1024];
 	last_server = NULL;
 
 	first_file = last_file = NULL;
@@ -1657,14 +1727,14 @@ void HTTP_Init( void )
 	Cmd_AddCommand("http_cancel", &HTTP_Cancel_f, "Cancel current download");
 	Cmd_AddCommand("http_clear", &HTTP_Clear_f, "Cancel all downloads");
 	Cmd_AddCommand("http_list", &HTTP_List_f, "List all queued downloads");
+	Cmd_AddCommand("http_addcustomserver", &HTTP_AddCustomServer_f, "Add custom fastdl server");
 	http_useragent = Cvar_Get( "http_useragent", "xash3d", CVAR_ARCHIVE, "User-Agent string" );
 	http_autoremove = Cvar_Get( "http_autoremove", "1", CVAR_ARCHIVE, "Remove broken files" );
 	http_timeout = Cvar_Get( "http_timeout", "45", CVAR_ARCHIVE, "Timeout for http downloader" );
 
 	// Read servers from fastdl.txt
-	token = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
-	if( !token ) return;
-	while( ( token = Q_strstr( token, "http://" ) ) )
+	//token = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
+	/*while( ( token = Q_strstr( token, "http://" ) ) )
 	{
 		httpserver_t *server;
 		// split buffer by lines
@@ -1709,8 +1779,24 @@ void HTTP_Init( void )
 			last_server = server;
 		}
 		token = lineend;
+	}*/
+	line = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
+	if( serverfile )
+	{
+		while( line = COM_ParseFile( line, token ) )
+		{
+			httpserver_t *server = HTTP_ParseURL( token );
+			if( !server ) continue;
+			if( !last_server )
+				last_server = first_server = server;
+			else
+			{
+				last_server->next = server;
+				last_server = server;
+			}
+		}
+		Mem_Free( serverfile );
 	}
-	Mem_Free( serverfile );
 }
 
 /*
