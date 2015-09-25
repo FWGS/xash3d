@@ -417,7 +417,10 @@ typedef struct
 
 	// internal images
 	int		fillImage;		// used for emulate FillRGBA to avoid wrong draw-sort
+
+	// ADDOLDPARTICLES
 	int		oldParticleImage;
+
 	int		particleImage;		// built-in particle and sparks image
 	int		pauseIcon;		// draw 'paused' when game in-pause
 	int		loadingBar;		// 'loading' progress bar
@@ -478,7 +481,10 @@ extern menu_static_t	menu;
 //
 // cvars
 //
-//extern convar_t *r_oldparticles;
+
+// ADDOLDPARTICLES
+extern convar_t *r_oldparticles;
+
 extern convar_t	*cl_predict;
 extern convar_t	*cl_smooth;
 extern convar_t	*cl_showfps;
