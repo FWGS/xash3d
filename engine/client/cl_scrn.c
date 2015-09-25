@@ -530,7 +530,9 @@ void SCR_RegisterTextures( void )
 	cls.fillImage = GL_LoadTexture( "*white", NULL, 0, TF_IMAGE, NULL ); // used for FillRGBA
 	cls.particleImage = GL_LoadTexture( "*particle", NULL, 0, TF_IMAGE, NULL );
 
+	// ADDOLDPARTICLES
 	cls.oldParticleImage = GL_LoadTexture("*oldparticle", NULL, 0, TF_IMAGE, NULL);
+
 	// register gfx.wad images
 	cls.pauseIcon = GL_LoadTexture( "gfx.wad/paused.lmp", NULL, 0, TF_IMAGE, NULL );
 	if( cl_allow_levelshots->integer )
