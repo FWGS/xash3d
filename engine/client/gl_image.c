@@ -44,6 +44,18 @@ static byte	r_particleTexture[8][8] =
 {0,0,0,0,0,0,0,0},
 };
 
+static byte	r_oldParticleTexture[8][8] =
+{
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,1,1,1,1,0,0},
+{0,0,1,1,1,1,0,0},
+{0,0,1,1,1,1,0,0},
+{0,0,1,1,1,1,0,0},
+{0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0},
+};
+
 const char *GL_Target( GLenum target )
 {
 	switch( target )
@@ -3888,6 +3900,32 @@ static rgbdata_t *R_InitParticleTexture( texFlags_t *flags )
 	return &r_image;
 }
 
+static rgbdata_t *R_OldParticleTexture(texFlags_t *flags)
+{
+	int	x, y;
+
+	// particle texture
+	r_image.width = r_image.height = 8;
+	r_image.buffer = data2D;
+	r_image.flags = (IMAGE_HAS_COLOR | IMAGE_HAS_ALPHA);
+	r_image.type = PF_RGBA_32;
+	r_image.size = r_image.width * r_image.height * 4;
+
+	*flags = TF_NOPICMIP | TF_NOMIPMAP;
+
+	for (x = 0; x < 8; x++)
+	{
+		for (y = 0; y < 8; y++)
+		{
+			data2D[(y * 8 + x) * 4 + 0] = 255;
+			data2D[(y * 8 + x) * 4 + 1] = 255;
+			data2D[(y * 8 + x) * 4 + 2] = 255;
+			data2D[(y * 8 + x) * 4 + 3] = r_oldParticleTexture[x][y] * 255;
+		}
+	}
+	return &r_image;
+}
+
 /*
 ==================
 R_InitParticleTexture2
@@ -4460,6 +4498,7 @@ static void R_InitBuiltinTextures( void )
 	{ "*gray", &tr.grayTexture, R_InitGrayTexture, TEX_SYSTEM },
 	{ "*black", &tr.blackTexture, R_InitBlackTexture, TEX_SYSTEM },
 	{ "*particle", &tr.particleTexture, R_InitParticleTexture, TEX_SYSTEM },
+	{ "*oldparticle", &tr.oldParticleTexture, R_OldParticleTexture, TEX_SYSTEM },
 	{ "*particle2", &tr.particleTexture2, R_InitParticleTexture2, TEX_SYSTEM },
 	{ "*cintexture", &tr.cinTexture, R_InitCinematicTexture, TEX_NOMIP },	// force linear filter
 	{ "*dlight", &tr.dlightTexture, R_InitDlightTexture, TEX_LIGHTMAP },
