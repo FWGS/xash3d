@@ -477,6 +477,7 @@ extern menu_static_t	menu;
 
 //
 // cvars
+//
 //extern convar_t *r_oldparticles;
 extern convar_t	*cl_predict;
 extern convar_t	*cl_smooth;
