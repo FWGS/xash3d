@@ -585,6 +585,7 @@ typedef struct
 	int		depth_bits;
 	int		stencil_bits;
 
+	qboolean		softwareGammaUpdate;
 	qboolean		deviceSupportsGamma;
 	int		prev_mode;
 } glconfig_t;
