@@ -27,9 +27,7 @@ GNU General Public License for more details.
 #define MAX_CMD_BUFFER		4000
 #define CONNECTION_PROBLEM_TIME	15.0	// 15 seconds
 
-// ADDOLDPARTICLES
 convar_t	*r_oldparticles;
-
 convar_t	*rcon_client_password;
 convar_t	*rcon_address;
 
@@ -1622,9 +1620,7 @@ void CL_InitLocal( void )
 	rcon_client_password = Cvar_Get( "rcon_password", "", 0, "remote control client password" );
 	rcon_address = Cvar_Get( "rcon_address", "", 0, "remote control address" );
 
-	// ADDOLDPARTICLES
 	r_oldparticles = Cvar_Get("r_oldparticles", "0", CVAR_ARCHIVE, "make some particle textures a simple square, like software rendering");
-
 	// userinfo
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );
 	name = Cvar_Get( "name", Sys_GetCurrentUser(), CVAR_USERINFO|CVAR_ARCHIVE|CVAR_PRINTABLEONLY, "player name" );
