@@ -759,8 +759,8 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	// Add the common game directory
 	if( dir && *dir )
 	{
-		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
 		FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
 		FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	}
 }
