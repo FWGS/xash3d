@@ -1186,10 +1186,10 @@ void SV_New_f( sv_client_t *cl )
 		else
 		{
 			// transfer fastdl servers list
-			if( sv_custom_fastdl->string && *sv_custom_fastdl->string )
+			if( sv_downloadurl->string && *sv_downloadurl->string )
 			{
 				BF_WriteByte( &cl->netchan.message, svc_stufftext );
-				BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", sv_custom_fastdl->string ));
+				BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", sv_downloadurl->string ));
 			}
 			// request resource list
 			BF_WriteByte( &cl->netchan.message, svc_stufftext );
