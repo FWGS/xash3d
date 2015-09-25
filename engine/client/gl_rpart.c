@@ -503,7 +503,6 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	GL_SetRenderMode( kRenderTransTexture );
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
-	// ADDOLDPARTICLES
 	if (r_oldparticles->integer == 1)
 	{
 		GL_Bind(GL_TEXTURE0, cls.oldParticleImage);
@@ -1225,7 +1224,6 @@ void CL_BulletImpactParticles( const vec3_t org )
 		CL_SparkleTracer( pos, dir, vel );
 	}
 
-	// ADDOLDPARTICLES
 	if (r_oldparticles->integer == 1)
 	{ 
 		for (i = 0; i < 12; i++)
