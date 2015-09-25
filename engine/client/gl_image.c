@@ -44,7 +44,6 @@ static byte	r_particleTexture[8][8] =
 {0,0,0,0,0,0,0,0},
 };
 
-// ADDOLDPARTICLES
 static byte	r_oldParticleTexture[8][8] =
 {
 {0,0,0,0,0,0,0,0},
