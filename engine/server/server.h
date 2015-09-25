@@ -525,6 +525,7 @@ void SV_UpdateServerInfo( void );
 //
 void SV_Status_f( void );
 void SV_Newgame_f( void );
+qboolean SV_SetPlayer( void );
 
 //
 // sv_custom.c
