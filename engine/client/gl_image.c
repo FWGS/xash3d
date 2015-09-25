@@ -4498,10 +4498,7 @@ static void R_InitBuiltinTextures( void )
 	{ "*gray", &tr.grayTexture, R_InitGrayTexture, TEX_SYSTEM },
 	{ "*black", &tr.blackTexture, R_InitBlackTexture, TEX_SYSTEM },
 	{ "*particle", &tr.particleTexture, R_InitParticleTexture, TEX_SYSTEM },
-
-	// ADDOLDPARTICLES
 	{ "*oldparticle", &tr.oldParticleTexture, R_OldParticleTexture, TEX_SYSTEM },
-
 	{ "*particle2", &tr.particleTexture2, R_InitParticleTexture2, TEX_SYSTEM },
 	{ "*cintexture", &tr.cinTexture, R_InitCinematicTexture, TEX_NOMIP },	// force linear filter
 	{ "*dlight", &tr.dlightTexture, R_InitDlightTexture, TEX_LIGHTMAP },
