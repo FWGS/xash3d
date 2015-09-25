@@ -44,7 +44,8 @@ static byte	r_particleTexture[8][8] =
 {0,0,0,0,0,0,0,0},
 };
 
-static byte	drawOldParticleTexture[8][8] =
+// ADDOLDPARTICLES
+static byte	r_oldParticleTexture[8][8] =
 {
 {0,0,0,0,0,0,0,0},
 {0,0,0,0,0,0,0,0},
@@ -3920,7 +3921,7 @@ static rgbdata_t *R_OldParticleTexture(texFlags_t *flags)
 			data2D[(y * 8 + x) * 4 + 0] = 255;
 			data2D[(y * 8 + x) * 4 + 1] = 255;
 			data2D[(y * 8 + x) * 4 + 2] = 255;
-			data2D[(y * 8 + x) * 4 + 3] = drawOldParticleTexture[x][y] * 255;
+			data2D[(y * 8 + x) * 4 + 3] = r_oldParticleTexture[x][y] * 255;
 		}
 	}
 	return &r_image;
@@ -4498,7 +4499,10 @@ static void R_InitBuiltinTextures( void )
 	{ "*gray", &tr.grayTexture, R_InitGrayTexture, TEX_SYSTEM },
 	{ "*black", &tr.blackTexture, R_InitBlackTexture, TEX_SYSTEM },
 	{ "*particle", &tr.particleTexture, R_InitParticleTexture, TEX_SYSTEM },
+
+	// ADDOLDPARTICLES
 	{ "*oldparticle", &tr.oldParticleTexture, R_OldParticleTexture, TEX_SYSTEM },
+
 	{ "*particle2", &tr.particleTexture2, R_InitParticleTexture2, TEX_SYSTEM },
 	{ "*cintexture", &tr.cinTexture, R_InitCinematicTexture, TEX_NOMIP },	// force linear filter
 	{ "*dlight", &tr.dlightTexture, R_InitDlightTexture, TEX_LIGHTMAP },
