@@ -168,6 +168,10 @@ typedef struct
 	int		acontTexture;
 	int		defaultTexture;   	// use for bad textures
 	int		particleTexture;	// particle texture
+
+	// ADDOLDPARTICLES
+	int		oldParticleTexture;
+
 	int		particleTexture2;	// unsmoothed particle texture
 	int		solidskyTexture;	// quake1 solid-sky layer
 	int		alphaskyTexture;	// quake1 alpha-sky layer
