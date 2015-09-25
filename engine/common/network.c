@@ -1165,6 +1165,22 @@ char header[BUFSIZ]; // query or response
 int headersize, querylength, sent;
 
 /*
+========================
+HTTP_ClearCustomServers
+========================
+*/
+void HTTP_ClearCustomServers( void )
+{
+	if( first_file ) return; // may be referenced
+	while( first_server && first_server->needfree )
+	{
+		httpserver_t *tmp = first_server;
+		first_server = first_server->next;
+		Mem_Free( tmp );
+	}
+}
+
+/*
 ==============
 HTTP_FreeFile
 
@@ -1219,7 +1235,10 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		// Now only first_file is changing progress
 		Cvar_SetFloat( "scr_download", -1 );
 		if(last_file == first_file)
+		{
 			last_file = first_file = 0;
+			HTTP_ClearCustomServers();
+		}
 		else
 			first_file = file->next;
 		Mem_Free( file );
@@ -1479,7 +1498,7 @@ void HTTP_Run( void )
 	curfile->checktime += frametime;
 	if( curfile->blocktime > http_timeout->value )
 	{
-		Msg( "HTTP: Timeout on receiving data\n%s\n", header );
+		Msg( "HTTP: Timeout on receiving data!\n");
 		HTTP_FreeFile( curfile, true );
 		return;
 	}
@@ -1538,21 +1557,6 @@ static void HTTP_Download_f( void )
 }
 
 /*
-========================
-HTTP_ClearCustomServers
-========================
-*/
-void HTTP_ClearCustomServers( void )
-{
-	while( first_server && first_server->needfree )
-	{
-		httpserver_t *tmp = first_server;
-		first_server = first_server->next;
-		Mem_Free( tmp );
-	}
-}
-
-/*
 ==============
 HTTP_ParseURL
 ==============
@@ -1562,13 +1566,13 @@ httpserver_t *HTTP_ParseURL( const char *url )
 	httpserver_t *server;
 	int i;
 	url = Q_strstr( url, "http://" );
-	if( !url ) return 0;
+	if( !url ) return NULL;
 	url += 7;
 	server = Mem_Alloc( net_mempool, sizeof( httpserver_t ) );
 	i = 0;
 	while( *url && ( *url != ':' ) && ( *url != '/' ) && ( *url != '\r' ) && ( *url != '\n' ) )
 	{
-		if( i > sizeof( server->host ) ) return;
+		if( i > sizeof( server->host ) ) return NULL;
 		server->host[i++] = *url++;
 	}
 	server->host[i] = 0;
@@ -1582,7 +1586,7 @@ httpserver_t *HTTP_ParseURL( const char *url )
 	i=0;
 	while( *url && ( *url != '\r' ) && ( *url != '\n' ) )
 	{
-		if( i > sizeof( server->path) ) return;
+		if( i > sizeof( server->path) ) return NULL;
 		server->path[i++] = *url++;
 	}
 	server->path[i] = 0;
