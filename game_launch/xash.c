@@ -26,7 +26,7 @@ GNU General Public License for more details.
  #include <dlfcn.h>
  #include <errno.h>
  #define XASHLIB                "xash.dylib"
- #define LoadLibrary(x)          dlopen(x, RTLD_LAZY)
+ #define dlmount(x)          dlopen(x, RTLD_LAZY)
  #define FreeLibrary(x)          dlclose(x)
  #define GetProcAddress(x, y)    dlsym(x, y)
  #define HINSTANCE               void*
