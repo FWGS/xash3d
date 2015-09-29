@@ -108,10 +108,11 @@ if(XASH_AVI)
     add_definitions(-DXASH_AVI)
     pkg_search_module(LIBAVCODEC REQUIRED libavcodec)
     pkg_search_module(LIBAVFORMAT REQUIRED libavformat)
+    pkg_search_module(LIBSWSCALE REQUIRED libswscale)
 
-    include_directories(${LIBAVCODEC_INCLUDE_DIRS} ${LIBAVFORMAT_INCLUDE_DIRS})
+    include_directories(${LIBAVCODEC_INCLUDE_DIRS} ${LIBAVFORMAT_INCLUDE_DIRS} ${LIBSWSCALE_INCLUDE_DIRS})
 
-    target_link_libraries(${XASH_ENGINE_LIBRARY} ${LIBAVCODEC_LIBRARIES} ${LIBAVFORMAT_LIBRARIES})
+    target_link_libraries(${XASH_ENGINE_LIBRARY} ${LIBAVCODEC_LIBRARIES} ${LIBAVFORMAT_LIBRARIES} ${LIBSWSCALE_LIBRARIES})
 endif()
 
 target_link_libraries(${XASH_ENGINE_LIBRARY}
