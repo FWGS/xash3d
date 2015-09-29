@@ -44,6 +44,7 @@ convar_t	*host_limitlocal;
 convar_t	*host_cheats;
 convar_t	*host_maxfps;
 convar_t	*host_framerate;
+convar_t	*host_sleeptime;
 convar_t	*con_gamemaps;
 convar_t	*download_types;
 convar_t	*build, *ver;
@@ -546,6 +547,41 @@ qboolean Host_FilterTime( float time )
 
 /*
 =================
+Host_Autosleep
+=================
+*/
+void Host_Autosleep( void )
+{
+	int sleeptime = host_sleeptime->value;
+
+	if( host.type == HOST_DEDICATED )
+	{
+		// let the dedicated server some sleep
+		Sys_Sleep( sleeptime );
+
+	}
+	else
+	{
+		if( host.state == HOST_NOFOCUS )
+		{
+			if( Host_ServerState() && CL_IsInGame( ))
+				Sys_Sleep( sleeptime ); // listenserver
+			else Sys_Sleep( 20 ); // sleep 20 ms otherwise
+		}
+		else if( host.state == HOST_SLEEP )
+		{
+			// completely sleep in minimized state
+			Sys_Sleep( 20 );
+		}
+		else
+		{
+			Sys_Sleep( sleeptime );
+		}
+	}
+}
+
+/*
+=================
 Host_Frame
 =================
 */
@@ -554,7 +590,7 @@ void Host_Frame( float time )
 	if( setjmp( host.abortframe ))
 		return;
 
-
+	Host_Autosleep();
 
 	// decide the simulation time
 	if( !Host_FilterTime( time ))
@@ -941,6 +977,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow cheat variables to enable" );
 	host_maxfps = Cvar_Get( "fps_max", "72", CVAR_ARCHIVE, "host fps upper limit" );
+	host_sleeptime = Cvar_Get( "sleeptime", "1", CVAR_ARCHIVE, "higher value means lower accuracy" );
 	host_framerate = Cvar_Get( "host_framerate", "0", 0, "locks frame timing to this value in seconds" );  
 	host_serverstate = Cvar_Get( "host_serverstate", "0", CVAR_INIT, "displays current server state" );
 	host_gameloaded = Cvar_Get( "host_gameloaded", "0", CVAR_INIT, "inidcates a loaded game.dll" );

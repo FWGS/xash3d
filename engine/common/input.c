@@ -828,26 +828,6 @@ void Host_InputFrame( void )
 	if( host.state == HOST_RESTART )
 		host.state = HOST_FRAME; // restart is finished
 
-	if( host.type == HOST_DEDICATED )
-	{
-		// let the dedicated server some sleep
-		Sys_Sleep( 1 );
-	}
-	else
-	{
-		if( host.state == HOST_NOFOCUS )
-		{
-			if( Host_ServerState() && CL_IsInGame( ))
-				Sys_Sleep( 1 ); // listenserver
-			else Sys_Sleep( 20 ); // sleep 20 ms otherwise
-		}
-		else if( host.state == HOST_SLEEP )
-		{
-			// completely sleep in minimized state
-			Sys_Sleep( 20 );
-		}
-	}
-
 	if( !in_mouseinitialized )
 		return;
 
