@@ -44,6 +44,7 @@ convar_t	*cl_solid_players;
 convar_t	*cl_draw_beams;
 convar_t	*cl_cmdrate;
 convar_t	*cl_interp;
+convar_t	*cl_allow_fragment;
 convar_t	*hud_scale;
 
 //
@@ -347,8 +348,12 @@ void CL_CreateCmd( void )
 	// so don't overwrite them
 	if( !cls.demoplayback )
 	{
-		cl.refdef.cmd = &cl.cmds[cls.netchan.outgoing_sequence & CL_UPDATE_MASK];
+		int frame = cls.netchan.outgoing_sequence & CL_UPDATE_MASK;
+
+		cl.refdef.cmd = &cl.cmds[frame];
 		*cl.refdef.cmd = cmd;
+
+		cl.runfuncs[frame] = TRUE;
 	}
 }
 
@@ -1335,8 +1340,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( !Q_strcmp( c, "print" ))
 	{
 		// print command from somewhere
-		args = BF_ReadString( msg );
-		Msg( args );
+		Msg("remote: %s\n", BF_ReadString( msg ) );
 	}
 	else if( !Q_strcmp( c, "ping" ))
 	{
@@ -1519,14 +1523,20 @@ A file has been received via the fragmentation/reassembly layer, put it in the r
 */
 void CL_ProcessFile( qboolean successfully_received, const char *filename )
 {
-	MsgDev( D_INFO, "Received %s, but file processing is not hooked up!!!\n", filename );
+	if( successfully_received)
+		MsgDev( D_INFO, "Received %s\n", filename );
+	else
+		MsgDev( D_WARN, "Failed to download %s", filename );
 
 	if( cls.downloadfileid == cls.downloadcount - 1 )
 	{
-		MsgDev( D_INFO, "All Files downloaded\n" );
-
+		MsgDev( D_INFO, "Download completed, resuming connection\n" );
+		FS_Rescan_f();
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "continueloading" );
+		cls.downloadfileid = 0;
+		cls.downloadcount = 0;
+		return;
 	}
 
 	cls.downloadfileid++;
@@ -1613,7 +1623,8 @@ void CL_InitLocal( void )
 	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0, "disable delta-compression for usercommnds" );
 	cl_idealpitchscale = Cvar_Get( "cl_idealpitchscale", "0.8", 0, "how much to look up/down slopes and stairs when not using freelook" );
 	cl_solid_players = Cvar_Get( "cl_solid_players", "1", 0, "Make all players not solid (can't traceline them)" );
-	cl_interp = Cvar_Get( "ex_interp", "0.1", 0, "Interpolate object positions starting this many seconds in past" ); 
+	cl_interp = Cvar_Get( "ex_interp", "0.1", 0, "Interpolate object positions starting this many seconds in past" );
+	cl_allow_fragment = Cvar_Get( "cl_allow_fragment", "0", CVAR_ARCHIVE, "Allow download files directly from servers" ); 
 	cl_timeout = Cvar_Get( "cl_timeout", "60", 0, "connect timeout (in-seconds)" );
 
 	rcon_client_password = Cvar_Get( "rcon_password", "", 0, "remote control client password" );
@@ -1784,7 +1795,7 @@ void Host_ClientFrame( void )
 
 		SCR_RunCinematic();
 	}
-	
+
 	Con_RunConsole();
 
 	cls.framecount++;

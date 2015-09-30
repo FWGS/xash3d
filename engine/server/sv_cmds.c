@@ -513,7 +513,7 @@ void SV_ChangeLevel_f( void )
 	// bad changelevel position invoke enables in one-way transtion
 	if( sv.net_framenum < 30 )
 	{
-		if( sv_validate_changelevel->integer )
+		if( sv_validate_changelevel->integer && host.type != HOST_DEDICATED )
 		{
 			MsgDev( D_INFO, "SV_ChangeLevel: a infinite changelevel detected.\n" );
 			MsgDev( D_INFO, "Changelevel will be disabled until a next save\\restore.\n" );

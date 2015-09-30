@@ -1245,6 +1245,8 @@ R_BeginFrame
 */
 void R_BeginFrame( qboolean clearScene )
 {
+	glConfig.softwareGammaUpdate = false;	// in case of possible fails
+
 	if(( gl_clear->integer || gl_overview->integer ) && clearScene && cls.state != ca_cinematic )
 	{
 		pglClear( GL_COLOR_BUFFER_BIT );
@@ -1261,8 +1263,10 @@ void R_BeginFrame( qboolean clearScene )
 		}
 		else
 		{
+			glConfig.softwareGammaUpdate = true;
 			BuildGammaTable( vid_gamma->value, vid_texgamma->value );
 			GL_RebuildLightmaps();
+			glConfig.softwareGammaUpdate = false;
 		}
 	}
 
@@ -1478,6 +1482,8 @@ static int GL_RenderGetParm( int parm, int arg )
 		return GL_MaxTextureUnits();
 	case PARM_CLIENT_ACTIVE:
 		return (cls.state == ca_active);
+	case PARM_REBUILD_GAMMA:
+		return glConfig.softwareGammaUpdate;
 	}
 	return 0;
 }

@@ -44,7 +44,9 @@ convar_t	*host_limitlocal;
 convar_t	*host_cheats;
 convar_t	*host_maxfps;
 convar_t	*host_framerate;
+convar_t	*host_sleeptime;
 convar_t	*con_gamemaps;
+convar_t	*download_types;
 convar_t	*build, *ver;
 
 static int num_decals;
@@ -306,6 +308,14 @@ qboolean Host_IsLocalGame( void )
 	return false;
 }
 
+qboolean Host_IsLocalClient( void )
+{
+	// only the local client have the active server
+	if( CL_Active() && SV_Active())
+		return true;
+	return false;
+}
+
 /*
 =================
 Host_RegisterDecal
@@ -537,6 +547,41 @@ qboolean Host_FilterTime( float time )
 
 /*
 =================
+Host_Autosleep
+=================
+*/
+void Host_Autosleep( void )
+{
+	int sleeptime = host_sleeptime->value;
+
+	if( host.type == HOST_DEDICATED )
+	{
+		// let the dedicated server some sleep
+		Sys_Sleep( sleeptime );
+
+	}
+	else
+	{
+		if( host.state == HOST_NOFOCUS )
+		{
+			if( Host_ServerState() && CL_IsInGame( ))
+				Sys_Sleep( sleeptime ); // listenserver
+			else Sys_Sleep( 20 ); // sleep 20 ms otherwise
+		}
+		else if( host.state == HOST_SLEEP )
+		{
+			// completely sleep in minimized state
+			Sys_Sleep( 20 );
+		}
+		else
+		{
+			Sys_Sleep( sleeptime );
+		}
+	}
+}
+
+/*
+=================
 Host_Frame
 =================
 */
@@ -545,7 +590,7 @@ void Host_Frame( float time )
 	if( setjmp( host.abortframe ))
 		return;
 
-
+	Host_Autosleep();
 
 	// decide the simulation time
 	if( !Host_FilterTime( time ))
@@ -558,6 +603,8 @@ void Host_Frame( float time )
 	Host_ServerFrame (); // server frame
 	if ( host.type != HOST_DEDICATED )
 		Host_ClientFrame (); // client frame
+
+	HTTP_Run();
 
 	host.framecount++;
 }
@@ -930,12 +977,14 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow cheat variables to enable" );
 	host_maxfps = Cvar_Get( "fps_max", "72", CVAR_ARCHIVE, "host fps upper limit" );
+	host_sleeptime = Cvar_Get( "sleeptime", "1", CVAR_ARCHIVE, "higher value means lower accuracy" );
 	host_framerate = Cvar_Get( "host_framerate", "0", 0, "locks frame timing to this value in seconds" );  
 	host_serverstate = Cvar_Get( "host_serverstate", "0", CVAR_INIT, "displays current server state" );
 	host_gameloaded = Cvar_Get( "host_gameloaded", "0", CVAR_INIT, "inidcates a loaded game.dll" );
 	host_clientloaded = Cvar_Get( "host_clientloaded", "0", CVAR_INIT, "inidcates a loaded client.dll" );
 	host_limitlocal = Cvar_Get( "host_limitlocal", "0", 0, "apply cl_cmdrate and rate to loopback connection" );
 	con_gamemaps = Cvar_Get( "con_mapfilter", "1", CVAR_ARCHIVE, "when true show only maps in game folder" );
+	download_types = Cvar_Get( "download_types", "msec", CVAR_ARCHIVE, "list of types to download: Model, Sounds, Events, Custom" );
 	build = Cvar_Get( "build", va( "%i", Q_buildnum()), CVAR_INIT, "returns a current build number" );
 	ver = Cvar_Get( "ver", va( "%i/%g.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
 
@@ -969,6 +1018,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	SV_Init();
 	CL_Init();
+
+	HTTP_Init();
 
 	if( host.type == HOST_DEDICATED )
 	{
@@ -1058,6 +1109,7 @@ void EXPORT Host_Shutdown( void )
 
 	Mod_Shutdown();
 	NET_Shutdown();
+	HTTP_Shutdown();
 	Host_FreeCommon();
 	Con_DestroyConsole();
 

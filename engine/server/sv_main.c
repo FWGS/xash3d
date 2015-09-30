@@ -58,6 +58,8 @@ convar_t	*sv_reconnect_limit;		// minimum seconds between connect messages
 convar_t	*sv_failuretime;
 convar_t	*sv_allow_upload;
 convar_t	*sv_allow_download;
+convar_t	*sv_allow_fragment;
+convar_t	*sv_downloadurl;
 convar_t	*sv_allow_studio_attachment_angles;
 convar_t	*sv_allow_rotate_pushables;
 convar_t	*sv_validate_changelevel;
@@ -268,7 +270,7 @@ void SV_UpdateServerInfo( void )
 {
 	if( !serverinfo->modified ) return;
 
-	Cvar_LookupVars( CVAR_SERVERINFO, NULL, NULL, pfnUpdateServerInfo ); 
+	Cvar_LookupVars( CVAR_SERVERINFO, NULL, NULL, (setpair_t)pfnUpdateServerInfo ); 
 
 	serverinfo->modified = false;
 }
@@ -436,15 +438,30 @@ void SV_CheckTimeouts( void )
 
 		if( cl->state == cs_zombie && cl->lastmessage < zombiepoint )
 		{
-			cl->state = cs_free; // can now be reused
+			if( cl->edict && !cl->edict->pvPrivateData )
+				cl->state = cs_free; // can now be reused
+			// Does not work too, as entity may be referenced
+			// But you may increase zombietime
+			if( cl->edict && cl->edict->pvPrivateData != NULL )
+			{
+				// NOTE: new interface can be missing
+				if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
+					svgame.dllFuncs2.pfnOnFreeEntPrivateData( cl->edict );
+
+				// clear any dlls data but keep engine data
+				Mem_Free( cl->edict->pvPrivateData );
+				cl->edict->pvPrivateData = NULL;
+			}
 			continue;
 		}
 
 		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint )
 		{
+#ifndef __ANDROID__ // process can be freezed on android, this is temporary fix
 			SV_BroadcastPrintf( PRINT_HIGH, "%s timed out\n", cl->name );
 			SV_DropClient( cl ); 
 			cl->state = cs_free; // don't bother with zombie state
+#endif
 		}
 	}
 
@@ -486,6 +503,38 @@ void SV_ProcessFile( sv_client_t *cl, char *filename )
 {
 	// some other file...
 	MsgDev( D_INFO, "Received file %s from %s\n", filename, cl->name );
+}
+
+void SV_DownloadResources_f( void )
+{
+	int index;
+	if( Q_strchr( download_types->string, 'm' ) )
+		for( index = 1; index < MAX_MODELS && sv.model_precache[index][0]; index++ )
+		{
+			if( sv.model_precache[index][0] == '*' ) // internal bmodel
+				continue;
+			if( !FS_FileExists( sv.model_precache[index], true ) )
+				HTTP_AddDownload( sv.model_precache[index], -1, false );
+		}
+	if( Q_strchr( download_types->string, 's' ) )
+		for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
+		{
+			char *sndname = va( "sound/%s", sv.sound_precache[index]);
+			if( !FS_FileExists( sndname, true ) )
+				HTTP_AddDownload( sndname, -1, false );
+		}
+	if( Q_strchr( download_types->string, 'e' ) )
+		for( index = 1; index < MAX_EVENTS && sv.event_precache[index][0]; index++ )
+		{
+			if( !FS_FileExists( sv.event_precache[index], true ) )
+				HTTP_AddDownload( sv.event_precache[index], -1, false );
+		}
+	if( Q_strchr( download_types->string, 'c' ) )
+		for( index = 1; index < MAX_CUSTOM && sv.files_precache[index][0]; index++ )
+		{
+			if( !FS_FileExists( sv.files_precache[index], true ) )
+				HTTP_AddDownload( sv.files_precache[index], -1, false );
+		}
 }
 
 /*
@@ -692,7 +741,7 @@ void SV_Init( void )
 	sv_newunit = Cvar_Get( "sv_newunit", "0", 0, "sets to 1 while new unit is loading" );
 	hostname = Cvar_Get( "hostname", "unnamed", CVAR_SERVERNOTIFY|CVAR_SERVERNOTIFY|CVAR_ARCHIVE, "host name" );
 	timeout = Cvar_Get( "timeout", "125", CVAR_SERVERNOTIFY, "connection timeout" );
-	zombietime = Cvar_Get( "zombietime", "2", CVAR_SERVERNOTIFY, "timeout for clients-zombie (who died but not respawned)" );
+	zombietime = Cvar_Get( "zombietime", "20", CVAR_SERVERNOTIFY, "timeout for clients-zombie (who died but not respawned)" );
 	sv_pausable = Cvar_Get( "pausable", "1", CVAR_SERVERNOTIFY, "allow players to pause or not" );
 	sv_allow_studio_attachment_angles = Cvar_Get( "sv_allow_studio_attachment_angles", "0", CVAR_ARCHIVE, "enable calc angles for attachment points (on studio models)" );
 	sv_allow_rotate_pushables = Cvar_Get( "sv_allow_rotate_pushables", "0", CVAR_ARCHIVE, "let the pushers rotate pushables with included origin-brush" );
@@ -725,7 +774,9 @@ void SV_Init( void )
 	sv_unlagpush = Cvar_Get( "sv_unlagpush", "0.0", 0, "unlag push bias" );
 	sv_unlagsamples = Cvar_Get( "sv_unlagsamples", "1", 0, "max samples to interpolate" );
 	sv_allow_upload = Cvar_Get( "sv_allow_upload", "1", 0, "allow uploading custom resources from clients" );
-	sv_allow_download = Cvar_Get( "sv_allow_download", "1", 0, "allow download missed resources to clients" );
+	sv_allow_download = Cvar_Get( "sv_allow_download", "0", CVAR_ARCHIVE, "allow download missed resources to clients" );
+	sv_allow_fragment = Cvar_Get( "sv_allow_fragment", "0", CVAR_ARCHIVE, "allow direct download from server" );
+	sv_downloadurl = Cvar_Get( "sv_downloadurl", "", CVAR_ARCHIVE, "custom fastdl server to pass to client" );
 	sv_send_logos = Cvar_Get( "sv_send_logos", "1", 0, "send custom player decals to other clients" );
 	sv_send_resources = Cvar_Get( "sv_send_resources", "1", 0, "send generic resources that specified in 'mapname.res'" );
 	sv_sendvelocity = Cvar_Get( "sv_sendvelocity", "1", CVAR_ARCHIVE, "force to send velocity for event_t structure across network" );
@@ -733,6 +784,7 @@ void SV_Init( void )
 	mp_consistency = Cvar_Get( "mp_consistency", "1", CVAR_SERVERNOTIFY, "enbale consistency check in multiplayer" );
 	clockwindow = Cvar_Get( "clockwindow", "0.5", 0, "timewindow to execute client moves" );
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "force to ignore server visibility" );
+	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try download missing resourses to server");
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));
