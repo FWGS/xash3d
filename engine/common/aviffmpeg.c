@@ -38,6 +38,7 @@ typedef struct movie_state_s
 	AVPacketList *video_packets;
 	AVPacketList *video_last_packet;
 	float video_fps;
+	  double          video_clock; // pts of last decoded frame / predicted pts of next decoded frame
 
 	int audio_stream;	// audio stream idx
 	AVPacketList *audio_packets;
@@ -51,14 +52,14 @@ qboolean AVI_GetVideoInfo( movie_state_t *Avi, long *xres, long *yres, float *du
 {
 	ASSERT( Avi != NULL );
 
-	if( !Avi->active && !Avi->video_stream )
+	if( !Avi->active && Avi->video_stream == -1 )
 		return false;
 
 	if( xres != NULL )
-		*xres = STREAM(Avi->video_stream)->codec->height;
+		*xres = STREAM(Avi->video_stream)->codec->width;
 
 	if( yres != NULL )
-		*yres = STREAM(Avi->video_stream)->codec->width;
+		*yres = STREAM(Avi->video_stream)->codec->height;
 
 	if( duration != NULL )
 		*duration = (float)Avi->avf_context->duration / AV_TIME_BASE;
@@ -79,7 +80,7 @@ long AVI_GetVideoFrameNumber( movie_state_t *Avi, float time )
 // gets the raw frame data
 byte *AVI_GetVideoFrame( movie_state_t *Avi, long frame )
 {
-	int i = 0, ret;
+	int i = 0, ret, pts = 0;
 	AVPacket *packet;
 
 	if( !Avi->active )
@@ -92,7 +93,7 @@ byte *AVI_GetVideoFrame( movie_state_t *Avi, long frame )
 	{
 		packet = Avi->video_last_packet;
 		Avi->video_last_packet = Avi->video_last_packet->next;
-		ret = avcodec_decode_video2( STREAM(i)->codec, Avi->frame, &i, packet );
+		ret = avcodec_decode_video2( STREAM(Avi->video_stream)->codec, Avi->frame, &i, packet );
 		if( ret < 0 )
 			return NULL;
 
@@ -113,7 +114,7 @@ qboolean AVI_GetAudioInfo( movie_state_t *Avi, wavdata_t *snd_info )
 {
 	ASSERT( Avi != NULL );
 
-	if( !Avi->active || !Avi->audio_stream || !snd_info )
+	if( !Avi->active || Avi->audio_stream == -1 || !snd_info )
 	{
 		return false;
 	}
@@ -260,17 +261,15 @@ void AVI_OpenVideo( movie_state_t *Avi, const char *filename, qboolean load_audi
 
 	ASSERT( Avi != NULL );
 
+	if( !avi_initialized || !filename )
+		return;
+
 	// default state: non-working
 	Avi->active = false;
 	Avi->quiet = quiet;
 	Avi->avf_context = Avi->audio_stream = Avi->video_stream = 0;
 	Avi->frame = avcodec_alloc_frame();
-
-	if( !avi_initialized )
-		return;
-
-	if( !filename )
-		return;
+	Avi->video_stream = Avi->audio_stream = -1;
 
 	if( (ret = avformat_open_input( &Avi->avf_context, filename, NULL, NULL )) < 0 )
 	{
@@ -294,7 +293,7 @@ void AVI_OpenVideo( movie_state_t *Avi, const char *filename, qboolean load_audi
 	// Find first video and audio stream
 	for( i = 0; i < Avi->avf_context->nb_streams; i++ )
 	{
-		if( Avi->avf_context->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && !Avi->video_stream )
+		if( Avi->avf_context->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && Avi->video_stream == -1 )
 		{
 			Avi->video_stream = i;
 			Avi->video_fps = (float)STREAM(i)->time_base.den / STREAM(i)->time_base.num;
@@ -318,7 +317,7 @@ void AVI_OpenVideo( movie_state_t *Avi, const char *filename, qboolean load_audi
 
 			continue;
 		}
-		if( Avi->avf_context->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO && !Avi->audio_stream && load_audio )
+		if( Avi->avf_context->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO && Avi->audio_stream == -1 && load_audio )
 		{
 			Avi->audio_stream = i;
 			AVCodec *pCodec = avcodec_find_decoder(STREAM(i)->codec->codec_id);
@@ -327,8 +326,7 @@ void AVI_OpenVideo( movie_state_t *Avi, const char *filename, qboolean load_audi
 		}
 	}
 
-	Avi->video_packets = NULL;
-	Avi->audio_packets = NULL;
+	Avi->video_packets = Avi->audio_packets = NULL;
 
 	// Get all packets and put them to queue
 	AVI_Demuxe( Avi );
