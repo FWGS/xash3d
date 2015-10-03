@@ -301,19 +301,19 @@ void AVI_OpenVideo( movie_state_t *Avi, const char *filename, qboolean load_audi
 			avcodec_open2(STREAM(i)->codec, pCodec, NULL);
 
 			Avi->sws_context = sws_getContext(
-				STREAM(Avi->video_stream)->codec->width,
-				STREAM(Avi->video_stream)->codec->height,
-				STREAM(Avi->video_stream)->codec->pix_fmt,
-				STREAM(Avi->video_stream)->codec->width,
-				STREAM(Avi->video_stream)->codec->height, PIX_FMT_RGB32,
+				STREAM(i)->codec->width,
+				STREAM(i)->codec->height,
+				STREAM(i)->codec->pix_fmt,
+				STREAM(i)->codec->width,
+				STREAM(i)->codec->height, PIX_FMT_RGB32,
 				SWS_FAST_BILINEAR, NULL, NULL, NULL);
 
-			int size = avpicture_get_size(PIX_FMT_RGB32, STREAM(Avi->video_stream)->codec->width,
-				STREAM(Avi->video_stream)->codec->height);
+			int size = avpicture_get_size(PIX_FMT_RGB32, STREAM(i)->codec->width,
+				STREAM(i)->codec->height);
 			Avi->frameGL = avcodec_alloc_frame();
 			avpicture_fill((AVPicture*)Avi->frameGL, (uint8_t*) av_malloc(size * sizeof(uint8_t)),
-				PIX_FMT_RGB32, STREAM(Avi->video_stream)->codec->width,
-				STREAM(Avi->video_stream)->codec->height);
+				PIX_FMT_RGB32, STREAM(i)->codec->width,
+				STREAM(i)->codec->height);
 
 			continue;
 		}
