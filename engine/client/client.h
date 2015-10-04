@@ -417,6 +417,7 @@ typedef struct
 	int		lastoutgoingcommand;	// sequence number of last outgoing command
 
 	// internal images
+	int		oldParticleImage;
 	int		fillImage;		// used for emulate FillRGBA to avoid wrong draw-sort
 	int		particleImage;		// built-in particle and sparks image
 	int		pauseIcon;		// draw 'paused' when game in-pause
@@ -478,6 +479,7 @@ extern menu_static_t	menu;
 //
 // cvars
 //
+extern convar_t *r_oldparticles;
 extern convar_t	*cl_predict;
 extern convar_t	*cl_smooth;
 extern convar_t	*cl_showfps;
