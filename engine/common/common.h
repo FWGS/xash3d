@@ -129,6 +129,7 @@ typedef enum
 #define FS_STATIC_PATH	1	// FS_ClearSearchPath will be ignore this path
 #define FS_NOWRITE_PATH	2	// default behavior - last added gamedir set as writedir. This flag disables it
 #define FS_GAMEDIR_PATH	4	// just a marker for gamedir path
+#define FS_CUSTOM_PATH	8	// map search allowed
 
 #define GI              SI.GameInfo
 #define FS_Gamedir()	SI.GameInfo->gamedir
@@ -150,6 +151,7 @@ extern convar_t	*mod_allow_materials;
 extern convar_t	*host_limitlocal;
 extern convar_t	*host_maxfps;
 extern convar_t *net_qport;
+extern convar_t *download_types;
 
 /*
 ==============================================================
@@ -655,6 +657,7 @@ void Host_WriteOpenGLConfig( void );
 void Host_WriteVideoConfig( void );
 void Host_WriteConfig( void );
 qboolean Host_IsLocalGame( void );
+qboolean Host_IsLocalClient( void );
 void Host_ShutdownServer( void );
 void Host_Print( const char *txt );
 void Host_Error( const char *error, ... );
@@ -904,6 +907,13 @@ struct cmdalias_s *Cmd_AliasGetList( void );
 char *Cmd_GetName( struct cmd_s *cmd );
 cvar_t *Cvar_GetList( void );
 void Cmd_Null_f( void );
+
+void HTTP_AddDownload( char *path, int size, qboolean process );
+void HTTP_ResetProcessState ( void );
+void HTTP_Init( void );
+void HTTP_Shutdown( void );
+void HTTP_Run( void );
+void CL_ProcessFile( qboolean successfully_received, const char *filename );
 
 typedef struct autocomplete_list_s
 {

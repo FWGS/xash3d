@@ -1532,7 +1532,18 @@ edict_t* pfnFindClientInPVS( edict_t *pEdict )
 
 	mod = Mod_Handle( pEdict->v.modelindex );
 
-	VectorAdd( pEdict->v.origin, pEdict->v.view_ofs, view );
+	// portals & monitors
+	// NOTE: this specific break "radiaton tick" in normal half-life. use only as feature
+	if(( host.features & ENGINE_TRANSFORM_TRACE_AABB ) && mod && mod->type == mod_brush && !( mod->flags & MODEL_HAS_ORIGIN ))
+	{
+		// handle PVS origin for bmodels
+		VectorAverage( pEdict->v.mins, pEdict->v.maxs, view );
+		VectorAdd( view, pEdict->v.origin, view );
+	}
+	else
+	{
+		VectorAdd( pEdict->v.origin, pEdict->v.view_ofs, view );
+	}
 
 	if( pEdict->v.effects & EF_INVLIGHT )
 		view[2] -= 1.0f; // HACKHACK for barnacle
@@ -2758,8 +2769,9 @@ pfnAlertMessage
 */
 static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 {
-	char	buffer[2048];	// must support > 1k messages
+	char	buffer0[2048];	// must support > 1k messages
 	va_list	args;
+	char *buffer = buffer0;
 
 	// check message for pass
 	switch( level )
@@ -2785,8 +2797,11 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	}
 
 	va_start( args, szFmt );
-	Q_vsnprintf( buffer, 2048, szFmt, args );
+	Q_vsnprintf( buffer0, 2048, szFmt, args );
 	va_end( args );
+
+	if( *buffer == '\n' ) // skip \n in line start
+		buffer++;
 
 	if( level == at_warning )
 	{
@@ -2795,10 +2810,14 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	else if( level == at_error  )
 	{
 		Sys_Print( va( "^1Error:^7 %s", buffer ));
-	} 
+	}
+	else if( level == at_aiconsole  )
+	{
+		Sys_Print( va( "server(ai): %s", buffer ));
+	}
 	else
 	{
-		Sys_Print( buffer );
+		Sys_Print( va( "server: %s", buffer ));
 	}
 }
 
@@ -4686,7 +4705,7 @@ void SV_LoadFromFile( const char *mapname, char *entities )
 			}
 		}
 
-		MsgDev( D_INFO, "\n%i entities inhibited\n", inhibited );
+		MsgDev( D_INFO, "SV_LoadFromFile: %i entities inhibited\n", inhibited );
 	}
 
 	// reset world origin and angles for some reason

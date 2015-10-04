@@ -263,13 +263,13 @@ void BF_WriteBitAngle( sizebuf_t *bf, float fAngle, int numbits )
 	int	d;
 
 	// clamp the angle before receiving
-	if( fAngle > 360.0f ) fAngle -= 360.0f; 
-	else if( fAngle < 0 ) fAngle += 360.0f;
+	fAngle = fmod( fAngle, 360.0f );
+	if( fAngle < 0 ) fAngle += 360.0f;
 
 	shift = ( 1 << numbits );
 	mask = shift - 1;
 
-	d = (int)( fAngle * shift ) / 360;
+	d = (int)( ( fAngle * shift ) / 360.0f );
 	d &= mask;
 
 	BF_WriteUBitLong( bf, (uint)d, numbits );

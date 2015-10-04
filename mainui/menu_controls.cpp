@@ -346,7 +346,7 @@ static const char *UI_Controls_KeyFunc( int key, int down )
 			return uiSoundLaunch;
 		}
 
-		if( down && ( key == K_ENTER || key == K_AUX1 || key == K_AUX13 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN ) // ENTER, A or SELECT
+		if( down && ( key == K_ENTER || key == K_AUX31 || key == K_AUX32 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN ) // ENTER, A or SELECT
 		{
 			if( !strlen( uiControls.keysBind[uiControls.keysList.curItem] ))
 			{
@@ -366,7 +366,7 @@ static const char *UI_Controls_KeyFunc( int key, int down )
 			return uiSoundKey;
 		}
 
-		if(( key == K_BACKSPACE || key == K_DEL ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN )
+		if(( key == K_BACKSPACE || key == K_DEL || key == K_AUX30 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN )
 		{
 			// delete bindings
 

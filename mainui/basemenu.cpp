@@ -884,7 +884,7 @@ bool UI_StartBackGroundMap( void )
 	first = FALSE;
 
 	// some map is already running
-	if( !uiStatic.bgmapcount || CVAR_GET_FLOAT( "host_serverstate" ) || gpGlobals->demoplayback )
+	if( !uiStatic.bgmapcount || CL_IsActive() || gpGlobals->demoplayback )
 		return FALSE;
 
 	int bgmapid = RANDOM_LONG( 0, uiStatic.bgmapcount - 1 );

@@ -257,7 +257,9 @@ void listdirectory( stringlist_t *list, const char *path )
 	hFile = scandir( path, &n_file, NULL, NULL );
 	if( hFile < 1 )
 	{
+#if 0
 		MsgDev( D_INFO, "listdirectory: scandir() failed, %s at %s", strerror(hFile), path );
+#endif
 		return;
 	}
 
@@ -755,7 +757,12 @@ FS_AddGameHierarchy
 void FS_AddGameHierarchy( const char *dir, int flags )
 {
 	// Add the common game directory
-	if( dir && *dir ) FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
+	if( dir && *dir )
+	{
+		FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
+		FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	}
 }
 
 /*
@@ -1032,8 +1039,10 @@ static qboolean FS_WriteGameInfo( const char *filepath, gameinfo_t *GameInfo )
 
 	switch( GameInfo->gamemode )
 	{
-	case 1: FS_Print( f, "gamemode\t\t\"singleplayer_only\"\n" ); break;
-	case 2: FS_Print( f, "gamemode\t\t\"multiplayer_only\"\n" ); break;
+	case 1:
+		FS_Print( f, "gamemode\t\t\"singleplayer_only\"\n" ); break;
+	case 2:
+		FS_Print( f, "gamemode\t\t\"multiplayer_only\"\n" ); break;
 	}
 
 	if( Q_strlen( GameInfo->sp_entity ))
@@ -1041,8 +1050,10 @@ static qboolean FS_WriteGameInfo( const char *filepath, gameinfo_t *GameInfo )
 	if( Q_strlen( GameInfo->mp_entity ))
 		FS_Printf( f, "mp_entity\t\t\"%s\"\n", GameInfo->mp_entity );
 
+#if DEPRECATED_SECURE
 	if( GameInfo->secure )
 		FS_Printf( f, "secure\t\t\"%i\"\n", GameInfo->secure );
+#endif
 
 	if( GameInfo->nomodels )
 		FS_Printf( f, "nomodels\t\t\"%i\"\n", GameInfo->nomodels );
@@ -1235,7 +1246,14 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 
 			if( !Q_stricmp( token, "singleplayer_only" ))
 			{
-				GameInfo->gamemode = 1;
+				// TODO: Remove this ugly hack too.
+				// This made because Half-Life have a multiplayer,
+				//  but for some reason it marked as singleplayer_only
+				if( !Q_stricmp( GameInfo->gamedir, "valve") )
+					GameInfo->gamemode = 0;
+				else
+					GameInfo->gamemode = 1;
+
 				Q_strncpy( GameInfo->type, "Single", sizeof( GameInfo->type ));
 			}
 			else if( !Q_stricmp( token, "multiplayer_only" ))
@@ -1486,7 +1504,10 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		else if( !Q_stricmp( token, "gamemode" ))
 		{
 			pfile = COM_ParseFile( pfile, token );
-			if( !Q_stricmp( token, "singleplayer_only" ))
+			// TODO: Remove this ugly hack too.
+			// This made because Half-Life have a multiplayer,
+			//  but for some reason it marked as singleplayer_only
+			if( !Q_stricmp( token, "singleplayer_only" ) && Q_stricmp( GameInfo->gamedir, "valve") )
 				GameInfo->gamemode = 1;
 			else if( !Q_stricmp( token, "multiplayer_only" ))
 				GameInfo->gamemode = 2;
@@ -1494,7 +1515,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		else if( !Q_stricmp( token, "secure" ))
 		{
 			pfile = COM_ParseFile( pfile, token );
-			MsgDev( D_WARN, "secure parameter in gameinfo.txt is deprecated.");
+			MsgDev( D_WARN, "secure parameter in gameinfo.txt is deprecated.\n");
 			GameInfo->secure = 0;
 		}
 		else if( !Q_stricmp( token, "nomodels" ))
@@ -1894,7 +1915,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 	// search through the path, one element at a time
 	for( search = fs_searchpaths; search; search = search->next )
 	{
-		if( gamedironly & !( search->flags & FS_GAMEDIR_PATH ))
+		if( gamedironly & !( search->flags & ( FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
 			continue;
 
 		// is the element a pak file?
@@ -2905,7 +2926,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 	// search through the path, one element at a time
 	for( searchpath = fs_searchpaths; searchpath; searchpath = searchpath->next )
 	{	
-		if( gamedironly && !( searchpath->flags & FS_GAMEDIR_PATH ))
+		if( gamedironly && !( searchpath->flags & (FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
 			continue;
 
 		// is the element a pak file?

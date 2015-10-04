@@ -121,7 +121,7 @@ void *Com_FunctionFromName( void *hInstance, const char *pName )
 		if(!function)
 #endif
 #ifndef _WIN32
-			MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s: %s", pName, dlerror());
+			MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s: %s\n", pName, dlerror());
 #endif
 	}
 	return function;

@@ -375,7 +375,8 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 
 	// NOTE: align transparency column will sucessfully removed
 	// after create sprite or lump image, it's just standard requiriments 
-	biTrueWidth = ((pix->width + 3) & ~3);
+	//biTrueWidth = pix->width;
+	biTrueWidth = ((pix->width + 3) & ~3); // What is this?
 	cbBmpBits = biTrueWidth * pix->height * pixel_size;
 	if( pixel_size == 1 ) cbPalBytes = 256 * sizeof( RGBQUAD );
 

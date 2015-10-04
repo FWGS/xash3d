@@ -424,7 +424,7 @@ destroy win32 console
 void Con_DestroyConsole( void )
 {
 	// last text message into console or log 
-	MsgDev( D_NOTE, "Sys_FreeLibrary: Unloading xash.dll\n" );
+	MsgDev( D_NOTE, "Sys_FreeLibrary: Unloading xash library\n" );
 
 	Sys_CloseLog();
 #ifdef _WIN32
@@ -570,15 +570,26 @@ void Sys_CloseLog( void )
 
 void Sys_PrintLog( const char *pMsg )
 {
+	time_t		crt_time;
+	const struct tm	*crt_tm;
+	char logtime[32];
+
 #ifdef __ANDROID__
 	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
 #endif
 
-	puts( pMsg );
+	time( &crt_time );
+	crt_tm = localtime( &crt_time );
+	strftime( logtime, sizeof( logtime ), "[%H:%M:%S]", crt_tm ); //short time
+
+	printf( "%s %s", logtime, pMsg );
 	fflush( stdout );
 
 	if( !s_wcd.logfile ) return;
-	fputs( pMsg, s_wcd.logfile );
+
+	strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
+
+	fprintf( s_wcd.logfile, "%s %s", logtime, pMsg );
 	fflush( s_wcd.logfile );
 }
 

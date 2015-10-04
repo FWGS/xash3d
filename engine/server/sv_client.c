@@ -122,7 +122,7 @@ void SV_DirectConnect( netadr_t from )
 	// quick reject
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
-		if( cl->state == cs_free )
+		if( cl->state == cs_free || cl->state == cs_zombie )
 			continue;
 
 		if( NET_CompareBaseAdr( from, cl->netchan.remote_address ) && ( cl->netchan.qport == qport || from.port == cl->netchan.remote_address.port ))
@@ -169,7 +169,7 @@ void SV_DirectConnect( netadr_t from )
 	// if there is already a slot for this ip, reuse it
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
-		if( cl->state == cs_free )
+		if( cl->state == cs_free || cl->state == cs_zombie )
 			continue;
 
 		if( NET_CompareBaseAdr( from, cl->netchan.remote_address ) && ( cl->netchan.qport == qport || from.port == cl->netchan.remote_address.port ))
@@ -449,7 +449,9 @@ void SV_DropClient( sv_client_t *drop )
 	// Clean client data on disconnect
 	Q_memset( drop->userinfo, 0, MAX_INFO_STRING );
 	Q_memset( drop->physinfo, 0, MAX_INFO_STRING );
-	drop->edict = 0;
+	//drop->edict = 0;
+	//Q_memset( &drop->edict->v, 0, sizeof( drop->edict->v ) );
+	drop->edict->v.frags = 0;
 
 	// send notification to all other clients
 	SV_FullClientUpdate( drop, &sv.reliable_datagram );
@@ -1170,8 +1172,10 @@ void SV_New_f( sv_client_t *cl )
 		ent = EDICT_NUM( playernum + 1 );
 		cl->edict = ent;
 
-		// NOTE: custom resources download is disabled until is done
-		if( /*sv_maxclients->integer ==*/ 1 )
+		// NOTE: enable for testing
+		// Still have problems with download reject
+		// It's difficult to implement fastdl and forbid direct download
+		if( sv_maxclients->integer == 1 || sv_allow_download->value == 0 )
 		{
 			Q_memset( &cl->lastcmd, 0, sizeof( cl->lastcmd ));
 
@@ -1181,9 +1185,15 @@ void SV_New_f( sv_client_t *cl )
 		}
 		else
 		{
+			// transfer fastdl servers list
+			if( sv_downloadurl->string && *sv_downloadurl->string )
+			{
+				BF_WriteByte( &cl->netchan.message, svc_stufftext );
+				BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", sv_downloadurl->string ));
+			}
 			// request resource list
 			BF_WriteByte( &cl->netchan.message, svc_stufftext );
-			BF_WriteString( &cl->netchan.message, va( "cmd getresourelist\n" ));
+			BF_WriteString( &cl->netchan.message, va( "cmd getresourcelist\n" ));
 		}
 	}
 }
@@ -1233,6 +1243,8 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	{
 		if( sv.model_precache[index][0] == '*' ) // internal bmodel
 			continue;
+		if( !FS_FileExists( sv.model_precache[index], true ) )
+			continue;
 
 		reslist.restype[rescount] = t_model;
 		Q_strcpy( reslist.resnames[rescount], sv.model_precache[index] );
@@ -1241,6 +1253,9 @@ void SV_SendResourceList_f( sv_client_t *cl )
 
 	for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
 	{
+		
+		if( !FS_FileExists( va( "sound/%s", sv.sound_precache[index] ), true ) )
+			continue;
 		reslist.restype[rescount] = t_sound;
 		Q_strcpy( reslist.resnames[rescount], sv.sound_precache[index] );
 		rescount++;
@@ -1248,6 +1263,8 @@ void SV_SendResourceList_f( sv_client_t *cl )
 
 	for( index = 1; index < MAX_EVENTS && sv.event_precache[index][0]; index++ )
 	{
+		if( !FS_FileExists( sv.event_precache[index], true ) )
+			continue;
 		reslist.restype[rescount] = t_eventscript;
 		Q_strcpy( reslist.resnames[rescount], sv.event_precache[index] );
 		rescount++;
@@ -1255,6 +1272,8 @@ void SV_SendResourceList_f( sv_client_t *cl )
 
 	for( index = 1; index < MAX_CUSTOM && sv.files_precache[index][0]; index++ )
 	{
+		if( !FS_FileExists( sv.files_precache[index], true ) )
+			continue;
 		reslist.restype[rescount] = t_generic;
 		Q_strcpy( reslist.resnames[rescount], sv.files_precache[index] );
 		rescount++;
@@ -1956,7 +1975,8 @@ ucmd_t ucmds[] =
 { "usermsgs", SV_UserMessages_f },
 { "userinfo", SV_UpdateUserinfo_f },
 { "lightstyles", SV_WriteLightstyles_f },
-{ "getresourelist", SV_SendResourceList_f },
+{ "getresourelist", SV_SendResourceList_f }, // compat
+{ "getresourcelist", SV_SendResourceList_f },
 { "continueloading", SV_ContinueLoading_f },
 { "kill", SV_Kill_f },
 { NULL, NULL }
@@ -2235,8 +2255,17 @@ Parse resource list
 */
 void SV_ParseResourceList( sv_client_t *cl, sizebuf_t *msg )
 {
-	Netchan_CreateFileFragments( true, &cl->netchan, BF_ReadString( msg ));
-	Netchan_FragSend( &cl->netchan );
+	// Fragment download is unstable
+	if( sv_allow_fragment->integer )
+	{
+		Netchan_CreateFileFragments( true, &cl->netchan, BF_ReadString( msg ));
+		Netchan_FragSend( &cl->netchan );
+	}
+	else
+	{
+		SV_ClientPrintf( cl, PRINT_HIGH, "Direct download not allowed on this sever\n" );
+		SV_DropClient( cl );
+	}
 }
 
 /*

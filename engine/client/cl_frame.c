@@ -39,7 +39,7 @@ qboolean CL_IsPlayerIndex( int idx )
 
 qboolean CL_IsPredicted( void )
 {
-	if( !cl_predict->integer || !cl.frame.valid )
+	if( !cl_predict->integer || !cl.frame.valid || cl.background )
 		return false;
 
 	if(( cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged ) >= ( CL_UPDATE_BACKUP - 1 ))
@@ -68,6 +68,116 @@ FRAME PARSING
 
 =========================================================================
 */
+
+qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, position_history_t **ph0, position_history_t **ph1, int *ph0Index )
+{
+	qboolean	extrapolate;
+	int	i, i0, i1, imod;
+	float	at;
+
+	imod = ent->current_position - 1;
+	i0 = (imod + 1) & HISTORY_MASK;
+	i1 = imod & HISTORY_MASK;
+
+	extrapolate = true;
+
+	if( ent->ph[i0].animtime >= targettime )
+	{
+		for( i = 0; i < HISTORY_MAX - 2; i++ )
+		{
+			at = ent->ph[imod & HISTORY_MASK].animtime;
+			if( at == 0.0f ) break;
+
+			if( at < targettime )
+			{
+				i0 = (imod + 1) & HISTORY_MASK;
+				i1 = imod & HISTORY_MASK;
+				extrapolate = false;
+				break;
+			}
+			imod--;
+		}
+	}
+
+	if( ph0 != NULL ) *ph0 = &ent->ph[i0];
+	if( ph1 != NULL ) *ph1 = &ent->ph[i1];
+	if( ph0Index != NULL ) *ph0Index = i0;
+
+	return extrapolate;
+}
+
+int CL_InterpolateModel( cl_entity_t *e )
+{
+	position_history_t	*ph0, *ph1;
+	vec3_t		origin, angles, delta;
+	float		t, t1, t2, frac;
+	int		i;
+
+	VectorCopy( e->curstate.origin, e->origin );
+	VectorCopy( e->curstate.angles, e->angles );
+
+	if( e->model == NULL )
+		return 1;
+
+	t = cl.time - cl_interp->value;
+
+	if( !CL_FindInterpolationUpdates( e, t, &ph0, &ph1, NULL ))
+		return 0;
+
+	if( ph0 == NULL || ph1 == NULL )
+		return 0;
+
+	t1 = ph0->animtime;
+	t2 = ph1->animtime;
+
+	if( t - t2 < 0.0f )
+		return 0;
+
+	if( t2 == 0.0f || VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ))
+	{
+		VectorCopy( ph0->origin, e->origin );
+		VectorCopy( ph0->angles, e->angles );
+		return 0;
+	}
+
+	if( t2 == t1 )
+	{
+		VectorCopy( ph0->origin, e->origin );
+		VectorCopy( ph0->angles, e->angles );
+		return 1;
+	}
+
+	VectorSubtract( ph0->origin, ph1->origin, delta );
+	frac = (t - t2) / (t1 - t2);
+
+	if( frac < 0.0f )
+		return 0;
+
+	if( frac > 1.0f )
+		frac = 1.0f;
+
+	VectorMA( ph1->origin, frac, delta, origin );
+
+	for( i = 0; i < 3; i++ )
+	{
+		float	d, ang1, ang2;
+
+		ang1 = ph0->angles[i];
+		ang2 = ph1->angles[i];
+		d = ang1 - ang2;
+
+		if( d > 180.0f ) d -= 360.0f;
+		else if( d < -180.0f ) d += 360.0f;
+
+		angles[i] = ang2 + d * frac;
+	}
+
+	VectorCopy( origin, e->origin );
+	VectorCopy( angles, e->angles );
+
+	return 1;
+}
+
 void CL_UpdateEntityFields( cl_entity_t *ent )
 {
 	// parametric rockets code
@@ -84,11 +194,10 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 		VectorAngles( dir, ent->curstate.angles ); // re-aim projectile		
 	}
 
-	VectorCopy( ent->curstate.origin, ent->origin );
-	VectorCopy( ent->curstate.angles, ent->angles );
-
 	ent->model = Mod_Handle( ent->curstate.modelindex );
 	ent->curstate.msg_time = cl.time;
+
+	CL_InterpolateModel( ent );
 
 	if( ent->player && RP_LOCALCLIENT( ent )) // stupid Half-Life bug
 		ent->angles[PITCH] = -ent->angles[PITCH] / 3.0f;
@@ -527,6 +636,26 @@ void CL_UpdateBmodelVars( cl_entity_t *ent, entity_state_t *newstate, qboolean n
 		VectorCopy( ent->curstate.angles, ent->latched.prevangles );
 }
 
+/*
+==================
+CL_UpdatePositions
+
+Store another position into interpolation circular buffer
+==================
+*/
+void CL_UpdatePositions( cl_entity_t *ent )
+{
+	position_history_t	*ph;
+
+	ent->current_position = (ent->current_position + 1) & HISTORY_MASK;
+
+	ph = &ent->ph[ent->current_position];
+
+	VectorCopy( ent->curstate.origin, ph->origin );
+	VectorCopy( ent->curstate.angles, ph->angles );
+	ph->animtime = ent->curstate.animtime;
+}
+
 void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t *old, qboolean unchanged )
 {
 	cl_entity_t	*ent;
@@ -597,6 +726,8 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 
 	// set right current state
 	ent->curstate = *state;
+
+	CL_UpdatePositions( ent );
 }
 
 /*
@@ -814,23 +945,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 	}
 
 	// update local player states
-	if( player != NULL )
-	{
-		entity_state_t	*ps, *pps;
-		clientdata_t	*pcd, *ppcd;
-		weapon_data_t	*wd, *pwd;
-
-		pps = &player->curstate;
-		ppcd = &newframe->local.client;
-		pwd = newframe->local.weapondata;
-
-		ps = &cl.predict[cl.predictcount & CL_UPDATE_MASK].playerstate;
-		pcd = &cl.predict[cl.predictcount & CL_UPDATE_MASK].client;
-		wd = cl.predict[cl.predictcount & CL_UPDATE_MASK].weapondata;
-		
-		clgame.dllFuncs.pfnTxferPredictionData( ps, pps, pcd, ppcd, wd, pwd ); 
-		clgame.dllFuncs.pfnTxferLocalOverrides( &player->curstate, pcd );
-	}
+	clgame.dllFuncs.pfnTxferLocalOverrides( &player->curstate, &newframe->local.client );
 
 	// update state for all players
 	for( i = 0; i < cl.maxclients; i++ )
@@ -842,7 +957,6 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 	}
 
 	cl.frame = *newframe;
-	cl.predict[cl.predictcount & CL_UPDATE_MASK] = cl.frame.local;
 }
 
 /*

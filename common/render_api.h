@@ -63,6 +63,7 @@ GNU General Public License for more details.
 #define PARM_CACHEFRAME	28
 #define PARM_MAX_IMAGE_UNITS	29
 #define PARM_CLIENT_ACTIVE	30
+#define PARM_REBUILD_GAMMA	31	// if true lightmaps rebuilding for gamma change
 
 enum
 {
