@@ -504,13 +504,9 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
 	if (r_oldparticles->integer == 1)
-	{
 		GL_Bind(GL_TEXTURE0, cls.oldParticleImage);
-	}
 	else
-	{
 		GL_Bind(GL_TEXTURE0, cls.particleImage);
-	}
 
 	// add the 4 corner vertices.
 	pglBegin( GL_QUADS );
