@@ -531,6 +531,7 @@ void SCR_RegisterTextures( void )
 	cls.particleImage = GL_LoadTexture( "*particle", NULL, 0, TF_IMAGE, NULL );
 
 	// register gfx.wad images
+	cls.oldParticleImage = GL_LoadTexture("*oldparticle", NULL, 0, TF_IMAGE, NULL);
 	cls.pauseIcon = GL_LoadTexture( "gfx.wad/paused.lmp", NULL, 0, TF_IMAGE, NULL );
 	if( cl_allow_levelshots->integer )
 		cls.loadingBar = GL_LoadTexture( "gfx.wad/lambda.lmp", NULL, 0, TF_IMAGE|TF_LUMINANCE, NULL );
