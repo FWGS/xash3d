@@ -1112,3 +1112,7 @@ extern void ( *ldrpglMultiTexCoord1fARB)(GLenum target, GLfloat s);
 extern void ( *ldrpglMultiTexCoord2fARB)(GLenum target, GLfloat s, GLfloat t);
 extern void ( *ldrpglMultiTexCoord3fARB)(GLenum target, GLfloat s, GLfloat t, GLfloat r);
 extern void ( *ldrpglMultiTexCoord4fARB)(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
+extern void ( *ldrpglBindVertexArray)(GLuint array);
+extern void ( *ldrpglDeleteVertexArrays)(GLsizei n,  const GLuint *arrays);
+extern void ( *ldrpglGenVertexArrays)(GLsizei n, GLuint *arrays);
+extern GLboolean ( *ldrpglIsVertexArray)(GLuint array);

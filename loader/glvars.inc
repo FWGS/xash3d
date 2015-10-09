@@ -460,4 +460,8 @@ void ( *ldrpglMultiTexCoord1fARB)(GLenum target, GLfloat s) = NULL;
 void ( *ldrpglMultiTexCoord2fARB)(GLenum target, GLfloat s, GLfloat t) = NULL;
 void ( *ldrpglMultiTexCoord3fARB)(GLenum target, GLfloat s, GLfloat t, GLfloat r) = NULL;
 void ( *ldrpglMultiTexCoord4fARB)(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) = NULL;
+void ( *ldrpglBindVertexArray)(GLuint array) = NULL;
+void ( *ldrpglDeleteVertexArrays)(GLsizei n, const GLuint *arrays) = NULL;
+void ( *ldrpglGenVertexArrays)(GLsizei n, GLuint *arrays) = NULL;
+GLboolean ( *ldrpglIsVertexArray)(GLuint array) = NULL;
 //#include "glfuncs.inc"
