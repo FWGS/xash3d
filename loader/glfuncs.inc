@@ -2292,4 +2292,19 @@ void STDCALL expglMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloa
 {
     ldrpglMultiTexCoord4fARB (target, s, t, r, q);
 }
-
+void STDCALL expglBindVertexArray(GLuint array)
+{
+    ldrpglBindVertexArray(array);
+}
+void STDCALL expglDeleteVertexArrays(GLsizei n, const GLuint *arrays)
+{
+    ldrpglDeleteVertexArrays(n, arrays);
+}
+void STDCALL expglGenVertexArrays(GLsizei n, GLuint *arrays)
+{
+    ldrpglGenVertexArrays(n, arrays);
+}
+GLboolean STDCALL expglIsVertexArray(GLuint array)
+{
+    return ldrpglIsVertexArray(array);
+}

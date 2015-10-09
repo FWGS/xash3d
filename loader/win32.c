@@ -4206,7 +4206,7 @@ static int exp_snprintf( char *str, int size, const char *format, ... )
       va_end(va);
       return x;
 }
-
+typedef void (*INITTERMFUNC)();
 #if 0
 static int exp_initterm(int v1, int v2)
 {
@@ -4215,7 +4215,7 @@ static int exp_initterm(int v1, int v2)
 }
 #else
 /* merged from wine - 2002.04.21 */
-typedef void (*INITTERMFUNC)();
+
 static int exp_initterm(INITTERMFUNC *start, INITTERMFUNC *end)
 {
     dbgprintf("_initterm(0x%x, 0x%x) %p\n", start, end, *start);
@@ -6320,6 +6320,11 @@ static const struct glfuncs glfunctions[]={
     GLFF(glMultiTexCoord2fARB)
     GLFF(glMultiTexCoord3fARB)
     GLFF(glMultiTexCoord4fARB)
+    GLFF(glBindVertexArray)
+    GLFF(glDeleteVertexArrays)
+    GLFF(glGenVertexArrays)
+    GLFF(glIsVertexArray)
+    
 };
 
 static WIN_BOOL WINAPI ext_stubs(void)

@@ -1039,6 +1039,7 @@ WIN_BOOL PE_InitDLL( WINE_MODREF *wm, DWORD type, LPVOID lpReserved )
 	extend_stack_for_dll_alloca();
         retv = entry( wm->module, type, lpReserved );
     }
+    TRACE("Exited DllMain()\n");
 
     return retv;
 }
