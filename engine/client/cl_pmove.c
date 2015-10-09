@@ -152,12 +152,11 @@ void CL_AddLinksToPmove( void )
 		if( !check || check == &clgame.entities[0] )
 			continue;
 
-		if( clgame.pmove->numvisent < MAX_PHYSENTS )
-		{
-			pe = &clgame.pmove->visents[clgame.pmove->numvisent];
-			if( CL_CopyEntityToPhysEnt( pe, check ))
-				clgame.pmove->numvisent++;
-		}
+		if( check->curstate.solid == SOLID_TRIGGER )
+			continue;
+
+		if( ( check->curstate.owner > 0) && cl.playernum == check->curstate.owner -1 )
+			continue;
 
 		// players will be added later
 		if( check->player ) continue;
@@ -167,6 +166,16 @@ void CL_AddLinksToPmove( void )
 			continue;
 
 		solid = check->curstate.solid;
+		
+		if( solid == SOLID_NOT && ( check->curstate.skin == CONTENTS_NONE || check->curstate.modelindex == 0 ))
+			continue;
+
+		if( clgame.pmove->numvisent < MAX_PHYSENTS )
+		{
+			pe = &clgame.pmove->visents[clgame.pmove->numvisent];
+			if( CL_CopyEntityToPhysEnt( pe, check ))
+				clgame.pmove->numvisent++;
+		}
 
 		if( solid == SOLID_BSP || solid == SOLID_BBOX || solid == SOLID_SLIDEBOX || solid == SOLID_CUSTOM )
 		{
@@ -448,7 +457,13 @@ static int pfnHullPointContents( struct hull_s *hull, int num, float *p )
 {
 	return PM_HullPointContents( hull, num, p );
 }
-
+#ifdef DLL_LOADER
+static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t *trace, float *start, float *end, int traceFlags, int ignore_pe)
+{
+	*trace = PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, ignore_pe, NULL );
+	return trace;
+}
+#endif
 static pmtrace_t pfnPlayerTrace( float *start, float *end, int traceFlags, int ignore_pe )
 {
 	return PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, ignore_pe, NULL );
@@ -560,7 +575,13 @@ static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, f
 		iparam1, iparam2,
 		bparam1, bparam2 );
 }
-
+#ifdef DLL_LOADER
+static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t* trace, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
+{
+	*trace = PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, -1, pmFilter );
+	return trace;
+}
+#endif
 static pmtrace_t pfnPlayerTraceEx( float *start, float *end, int traceFlags, pfnIgnore pmFilter )
 {
 	return PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, -1, pmFilter );
@@ -666,6 +687,13 @@ void CL_InitClientMove( void )
 	clgame.pmove->PM_TestPlayerPositionEx = pfnTestPlayerPositionEx;
 	clgame.pmove->PM_TraceLineEx = pfnTraceLineEx;
 	clgame.pmove->PM_TraceSurface = pfnTraceSurface;
+	#ifdef DLL_LOADER // w32-compatible ABI
+	if( host.enabledll && Loader_GetDllHandle( clgame.hInstance ) )
+	{
+		clgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
+		clgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
+	}
+#endif
 
 	// initalize pmove
 	clgame.dllFuncs.pfnPlayerMoveInit( clgame.pmove );
