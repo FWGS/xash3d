@@ -169,7 +169,7 @@ void SV_DirectConnect( netadr_t from )
 	// if there is already a slot for this ip, reuse it
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
-		if( cl->state == cs_free )
+		if( cl->state == cs_free || cl->state == cs_zombie )
 			continue;
 
 		if( NET_CompareBaseAdr( from, cl->netchan.remote_address ) && ( cl->netchan.qport == qport || from.port == cl->netchan.remote_address.port ))
@@ -239,7 +239,6 @@ gotnewcl:
 		SV_DropClient( newcl );
 		return;
 	}
-
 	// get the game a chance to reject this connection or modify the userinfo
 	if( !( SV_ClientConnect( ent, userinfo )))
 	{
@@ -252,6 +251,7 @@ gotnewcl:
 		SV_DropClient( newcl );
 		return;
 	}
+
 	// parse some info from the info strings
 	SV_UserinfoChanged( newcl, userinfo );
 
