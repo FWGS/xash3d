@@ -230,7 +230,7 @@ gotnewcl:
 
 	// prevent memory leak and client crashes.
 	// This should not happend, need to test it,
-	if( cl->edict->pvPrivateData )
+	if( ( sv_maxclients->integer > 1 ) && cl->edict->pvPrivateData )
 	{
 		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nTry again later.\n" );
 
