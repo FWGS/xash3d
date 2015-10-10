@@ -16,6 +16,7 @@ typedef double GLclampd;
 typedef int GLintptrARB;
 typedef int GLsizeiptrARB;
 typedef char GLcharARB;
+typedef char GLchar;
 typedef unsigned int GLhandleARB;
 #define STDCALL __attribute__((__stdcall__))
 #define GL_MODELVIEW	0x1700
@@ -1116,3 +1117,10 @@ extern void ( *ldrpglBindVertexArray)(GLuint array);
 extern void ( *ldrpglDeleteVertexArrays)(GLsizei n,  const GLuint *arrays);
 extern void ( *ldrpglGenVertexArrays)(GLsizei n, GLuint *arrays);
 extern GLboolean ( *ldrpglIsVertexArray)(GLuint array);
+extern void ( *ldrpglDebugMessageControlARB)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint* ids, GLboolean enabled);
+extern void ( *ldrpglDebugMessageInsertARB)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* buf);
+extern void ( *ldrpglDebugMessageCallbackARB)(GLvoid *callback, GLvoid *userParam);
+extern GLuint ( *ldrpglGetDebugMessageLogARB)(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog);
+extern void ( *ldrpglVertexAttrib2f)(GLuint index, GLfloat v0, GLfloat v1);
+extern void ( *ldrpglVertexAttrib2fv)(GLuint index, const GLfloat *v);
+extern void ( *ldrpglVertexAttrib3fv)(GLuint index, const GLfloat *v);

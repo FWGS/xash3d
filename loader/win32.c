@@ -6324,6 +6324,13 @@ static const struct glfuncs glfunctions[]={
     GLFF(glDeleteVertexArrays)
     GLFF(glGenVertexArrays)
     GLFF(glIsVertexArray)
+    GLFF(glDebugMessageControlARB)
+    GLFF(glDebugMessageInsertARB)
+    GLFF(glDebugMessageCallbackARB)
+    GLFF(glGetDebugMessageLogARB)
+    GLFF(glVertexAttrib2f)
+    GLFF(glVertexAttrib2fv)
+    GLFF(glVertexAttrib3fv)
     
 };
 
