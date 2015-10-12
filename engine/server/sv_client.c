@@ -293,7 +293,7 @@ void SV_DisconnectClient( edict_t *pClient )
 
 	/* mittorn: pvPrivateData must be cleaned on edict remove
 	 * If it cleaned here, server will crash later */
-	/*if( pClient->pvPrivateData != NULL )
+	if( pClient->pvPrivateData != NULL )
 	{
 		// NOTE: new interface can be missing
 		if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
@@ -302,7 +302,9 @@ void SV_DisconnectClient( edict_t *pClient )
 		// clear any dlls data but keep engine data
 		Mem_Free( pClient->pvPrivateData );
 		pClient->pvPrivateData = NULL;
-	}*/
+	}
+	// HACK: invalidate serial number
+	pClient->serialnumber++;
 }
 
 /*

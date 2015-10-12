@@ -836,6 +836,7 @@ void SV_InitEdict( edict_t *pEdict )
 
 void SV_FreeEdict( edict_t *pEdict )
 {
+	MsgDev(D_NOTE, "SV_FreeEdict %p\n", pEdict);
 	ASSERT( pEdict );
 	ASSERT( pEdict->free == false );
 
