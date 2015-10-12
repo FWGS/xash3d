@@ -438,10 +438,11 @@ void SV_CheckTimeouts( void )
 
 		if( cl->state == cs_zombie && cl->lastmessage < zombiepoint )
 		{
-			if( cl->edict && !cl->edict->pvPrivateData )
+			//if( cl->edict && !cl->edict->pvPrivateData )
 				cl->state = cs_free; // can now be reused
 			// Does not work too, as entity may be referenced
 			// But you may increase zombietime
+			#if 0
 			if( cl->edict && cl->edict->pvPrivateData != NULL )
 			{
 				// NOTE: new interface can be missing
@@ -452,6 +453,7 @@ void SV_CheckTimeouts( void )
 				Mem_Free( cl->edict->pvPrivateData );
 				cl->edict->pvPrivateData = NULL;
 			}
+			#endif
 			continue;
 		}
 
@@ -741,7 +743,7 @@ void SV_Init( void )
 	sv_newunit = Cvar_Get( "sv_newunit", "0", 0, "sets to 1 while new unit is loading" );
 	hostname = Cvar_Get( "hostname", "unnamed", CVAR_SERVERNOTIFY|CVAR_SERVERNOTIFY|CVAR_ARCHIVE, "host name" );
 	timeout = Cvar_Get( "timeout", "125", CVAR_SERVERNOTIFY, "connection timeout" );
-	zombietime = Cvar_Get( "zombietime", "20", CVAR_SERVERNOTIFY, "timeout for clients-zombie (who died but not respawned)" );
+	zombietime = Cvar_Get( "zombietime", "2", CVAR_SERVERNOTIFY, "timeout for clients-zombie (who died but not respawned)" );
 	sv_pausable = Cvar_Get( "pausable", "1", CVAR_SERVERNOTIFY, "allow players to pause or not" );
 	sv_allow_studio_attachment_angles = Cvar_Get( "sv_allow_studio_attachment_angles", "0", CVAR_ARCHIVE, "enable calc angles for attachment points (on studio models)" );
 	sv_allow_rotate_pushables = Cvar_Get( "sv_allow_rotate_pushables", "0", CVAR_ARCHIVE, "let the pushers rotate pushables with included origin-brush" );

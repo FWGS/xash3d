@@ -227,7 +227,7 @@ gotnewcl:
 	// initailize netchan here because SV_DropClient will clear network buffer
 	Netchan_Setup( NS_SERVER, &newcl->netchan, from, qport );
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
-
+#if 0
 	// prevent memory leak and client crashes.
 	// This should not happend, need to test it,
 	if( ( sv_maxclients->integer > 1 ) && cl->edict->pvPrivateData )
@@ -239,6 +239,7 @@ gotnewcl:
 		SV_DropClient( newcl );
 		return;
 	}
+#endif
 	// get the game a chance to reject this connection or modify the userinfo
 	if( !( SV_ClientConnect( ent, userinfo )))
 	{

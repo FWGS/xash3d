@@ -190,7 +190,7 @@ qboolean SV_RunThink( edict_t *ent )
 {
 	float	thinktime;
 
-	if(!( ent->v.flags & FL_SPECTATOR ))
+	if(!( ent->v.flags & FL_KILLME ))
 	{
 		thinktime = ent->v.nextthink;
 		if( thinktime <= 0.0f || thinktime > sv.time + host.frametime )
@@ -205,7 +205,7 @@ qboolean SV_RunThink( edict_t *ent )
 		svgame.dllFuncs.pfnThink( ent );
 	}
 
-	if( ent->v.flags & FL_SPECTATOR )
+	if( ent->v.flags & FL_KILLME )
 		SV_FreeEdict( ent );
 
 	return !ent->free;
