@@ -105,6 +105,39 @@ void SCR_DrawFPS( void )
 
 /*
 ==============
+SCR_DrawPos
+
+Draw local player position, angles and velocity
+==============
+*/
+void SCR_DrawPos( void )
+{
+	static char	msg[MAX_SYSPATH];
+	float speed;
+	cl_entity_t *pPlayer;
+	rgba_t color;
+
+	if( cls.state != ca_active ) return;
+	if( !cl_showpos->integer || cl.background ) return;
+
+	pPlayer = CL_GetLocalPlayer();
+	speed = VectorLength( cl.frame.local.client.velocity );
+
+	Q_snprintf( msg, MAX_SYSPATH,
+	"pos: %.2f %.2f %.2f\n"
+	"ang: %.2f %.2f %.2f\n"
+	"velocity: %.2f", pPlayer->origin[0], pPlayer->origin[1], pPlayer->origin[2],
+					pPlayer->angles[0], pPlayer->angles[1], pPlayer->angles[2],
+					speed );
+
+	MakeRGBA( color, 255, 255, 255, 255 );
+
+	Con_DrawString( scr_width->integer / 2, 4, msg, color );
+
+}
+
+/*
+==============
 SCR_NetSpeeds
 
 same as r_speeds but for network channel
