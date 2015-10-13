@@ -227,19 +227,40 @@ gotnewcl:
 	// initailize netchan here because SV_DropClient will clear network buffer
 	Netchan_Setup( NS_SERVER, &newcl->netchan, from, qport );
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
-#if 0
 	// prevent memory leak and client crashes.
 	// This should not happend, need to test it,
-	if( ( sv_maxclients->integer > 1 ) && cl->edict->pvPrivateData )
-	{
-		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nTry again later.\n" );
 
-		MsgDev( D_ERROR, "SV_DirectConnect: private data not freed!\n");
-		Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
-		SV_DropClient( newcl );
-		return;
+
+	if( ( sv_clientclean->value == 1 ) && ( sv_maxclients->integer > 1 ) && ent->pvPrivateData )
+	{
+		// Force this client data
+		if( sv_clientclean->integer & 1 )
+		{
+			if( ent->pvPrivateData != NULL )
+			{
+				// NOTE: new interface can be missing
+				if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
+					svgame.dllFuncs2.pfnOnFreeEntPrivateData( ent );
+
+				// clear any dlls data but keep engine data
+				Mem_Free( ent->pvPrivateData );
+				ent->pvPrivateData = NULL;
+			}
+			// HACK: invalidate serial number
+			ent->serialnumber++;
+		}
+		// "3" enables both clean and disconnect
+		if( sv_clientclean->integer & 2 )
+		{
+			Netchan_OutOfBandPrint( NS_SERVER, from, "print\nTry again later.\n" );
+
+			MsgDev( D_ERROR, "SV_DirectConnect: private data not freed!\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
+			SV_DropClient( newcl );
+			return;
+		}
 	}
-#endif
+
 	// get the game a chance to reject this connection or modify the userinfo
 	if( !( SV_ClientConnect( ent, userinfo )))
 	{
