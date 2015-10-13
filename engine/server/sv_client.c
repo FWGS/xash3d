@@ -231,7 +231,7 @@ gotnewcl:
 	// This should not happend, need to test it,
 
 
-	if( ( sv_clientclean->value == 1 ) && ( sv_maxclients->integer > 1 ) && ent->pvPrivateData )
+	if( ( sv_maxclients->integer > 1 ) && ent->pvPrivateData )
 	{
 		// Force this client data
 		if( sv_clientclean->integer & 1 )
