@@ -204,7 +204,7 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 				continue;
 		}
 
-		if( check->v.owner == pl || check->v.solid == SOLID_TRIGGER )
+		if( ( ( check->v.owner > 0) && check->v.owner == pl ) || check->v.solid == SOLID_TRIGGER )
 			continue; // player or player's own missile
 
 		if( svgame.pmove->numvisent < MAX_PHYSENTS )
