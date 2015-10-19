@@ -292,11 +292,11 @@ typedef struct
 	net_response_t		resp;
 	net_api_response_func_t	pfnFunc;
 	double			timeout;
-	double			timesend;	// time when request was sended
+	double			timesend;	// time when request was sent
 	int			flags;	// FNETAPI_MULTIPLE_RESPONSE etc
 } net_request_t;
 
-// new versions of client dlls have a sanigle export with all callbacks
+// new versions of client dlls have a single export with all callbacks
 typedef void (*CL_EXPORT_FUNCS)( void *pv );
 
 typedef struct

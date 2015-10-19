@@ -17,7 +17,6 @@ GNU General Public License for more details.
 #include "client.h"
 #include "keydefs.h"
 #include "protocol.h"		// get the protocol version
-#include "con_nprint.h"
 #include "gl_local.h"
 #include "qfont.h"
 

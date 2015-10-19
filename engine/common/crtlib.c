@@ -439,7 +439,7 @@ qboolean Q_stricmpext( const char *pattern, const char *text )
 				return false;
 		}
 	}
-	return ( *text == '\0' );
+	return true;
 }
 
 const char* Q_timestamp( int format )
@@ -693,9 +693,4 @@ void _Q_memmove( void *dest, const void *src, size_t count, const char *filename
 	if( src == NULL || count <= 0 ) return; // nothing to move
 	if( dest == NULL ) Sys_Error( "memmove: dest == NULL (called at %s:%i)\n", filename, fileline );
 	memmove( dest, src, count );
-}
-
-void CRT_Init( void )
-{
-	Memory_Init();
 }

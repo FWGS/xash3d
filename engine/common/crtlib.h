@@ -208,7 +208,5 @@ void Mem_PrintStats( void );
 #define Mem_EmptyPool( pool ) _Mem_EmptyPool( pool, __FILE__, __LINE__ )
 #define Mem_IsAllocated( mem ) Mem_IsAllocatedExt( NULL, mem )
 #define Mem_Check() _Mem_Check( __FILE__, __LINE__ )
-
-void CRT_Init( void ); // must be call first
 	
 #endif//STDLIB_H

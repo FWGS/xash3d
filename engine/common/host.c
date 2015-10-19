@@ -783,8 +783,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	char		*baseDir;
 	string		szRootPath;
 
-	CRT_Init(); // init some CRT functions
-
 	// some commands may turn engine into infinity loop,
 	// e.g. xash.exe +game xash -game xash
 	// so we clearing all cmd_args, but leave dbg states as well

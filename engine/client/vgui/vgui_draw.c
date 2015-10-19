@@ -246,7 +246,7 @@ void VGUI_InitKeyTranslationTable( void )
 	bInitted = true;
 
 	// set virtual key translation table
-	memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ));	
+	Q_memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ));	
 
 	s_pVirtualKeyTrans['0'] = KEY_0;
 	s_pVirtualKeyTrans['1'] = KEY_1;

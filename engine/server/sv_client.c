@@ -1099,7 +1099,7 @@ void SV_PutClientInServer( edict_t *ent )
 	sv.paused = false;
 
 	if( sv_maxclients->integer == 1 ) // singleplayer profiler
-		MsgDev( D_INFO, "level loaded at %.2f sec\n", Sys_DoubleTime() - svs.timestart );
+		MsgDev( D_INFO, "Level loaded in %.2f sec\n", Sys_DoubleTime() - svs.timestart );
 }
 
 /*
@@ -1888,7 +1888,7 @@ void SV_Kill_f( sv_client_t *cl )
 
 	if( cl->edict->v.health <= 0.0f )
 	{
-		SV_ClientPrintf( cl, PRINT_HIGH, "Can't suicide -- allready dead!\n");
+		SV_ClientPrintf( cl, PRINT_HIGH, "Can't suicide -- already dead!\n");
 		return;
 	}
 
@@ -2154,7 +2154,7 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 
 	if( numcmds < 0 || numcmds > 28 )
 	{
-		MsgDev( D_ERROR, "%s sending too many commands %i\n", cl->name, numcmds );
+		MsgDev( D_ERROR, "%s sent too many commands: %i\n", cl->name, numcmds );
 		SV_DropClient( cl );
 		return;
 	}

@@ -74,6 +74,7 @@
 #define K_KP_PLUS		174
 #define K_CAPSLOCK		175
 #define K_KP_NUMLOCK	176
+#define K_WIN			177
 	
 //
 // joystick buttons

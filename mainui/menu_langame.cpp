@@ -460,7 +460,7 @@ void UI_LanGame_Menu( void )
 	if ( gMenu.m_gameinfo.gamemode == GAME_SINGLEPLAYER_ONLY )
 		return;
 
-	// stop demos to allow open network sockets
+	// stop demos to allow network sockets to open
 	if ( gpGlobals->demoplayback && CVAR_GET_FLOAT( "cl_background" ))
 	{
 		uiStatic.m_iOldMenuDepth = uiStatic.menuDepth;
