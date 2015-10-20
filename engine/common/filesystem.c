@@ -83,8 +83,6 @@ char		gs_basedir[MAX_SYSPATH];	// initial dir before loading gameinfo.txt (used 
 qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ paths 
 
 static void FS_InitMemory( void );
-const char *FS_FileExtension( const char *in );
-static searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
 static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
@@ -1921,7 +1919,7 @@ Return the searchpath where the file was found (or NULL)
 and the file index in the package if relevant
 ====================
 */
-static searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
+searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 {
 	searchpath_t	*search;
 	char		*pEnvPath;
