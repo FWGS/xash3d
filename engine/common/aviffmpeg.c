@@ -38,11 +38,14 @@ typedef struct movie_state_s
 	AVPacketList *video_packets;
 	AVPacketList *video_last_packet;
 	float video_fps;
-	  double          video_clock; // pts of last decoded frame / predicted pts of next decoded frame
+	double          video_clock; // pts of last decoded frame / predicted pts of next decoded frame
+	int64_t		video_pts;
 
 	int audio_stream;	// audio stream idx
 	AVPacketList *audio_packets;
 	AVPacketList *audio_last_packet;
+	double	audio_clock;
+	int		audio_pts;
 } movie_state_t;
 
 static qboolean		avi_initialized = false;
@@ -158,6 +161,10 @@ fs_offset_t AVI_GetAudioChunk( movie_state_t *Avi, char *audiodata, long offset,
 	if( !Avi->audio_last_packet )
 		return NULL;
 
+
+	if( Avi->audio_last_packet->pkt.pts != Avi->video_last_packet->pkt.pts)
+		return NULL;
+
 	for(;;)
 	{
 		packet = Avi->audio_last_packet;
@@ -174,9 +181,13 @@ fs_offset_t AVI_GetAudioChunk( movie_state_t *Avi, char *audiodata, long offset,
 	}
 
 
-	Q_memcpy( audiodata, Avi->frame->data[0],
-	Avi->frame->linesize[0] > 8192 ? 8192 : Avi->frame->linesize[0]);
+	int data_size = av_samples_get_buffer_size(NULL,
+						   STREAM(Avi->audio_stream)->codec->channels,
+						   Avi->frame->nb_samples,
+						   STREAM(Avi->audio_stream)->codec->sample_fmt,
+						   1);
 
+	Q_memcpy(audiodata, Avi->frame->data[0], data_size > length ? 8192 : data_size);
 	return ret;
 }
 
@@ -334,6 +345,7 @@ void AVI_OpenVideo( movie_state_t *Avi, const char *filename, qboolean load_audi
 	// fast access to latest decoded packet
 	Avi->video_last_packet = Avi->video_packets;
 	Avi->audio_last_packet = Avi->audio_packets;
+	Avi->frame->pts = 0;
 
 	Avi->ignore_hwgamma = ignore_hwgamma;
 	Avi->active = true;
@@ -391,6 +403,8 @@ qboolean AVI_Initailize( void )
 
 	av_register_all();
 	avcodec_register_all();
+
+	avi[0].video_stream = avi[0].audio_stream = avi[1].video_stream = avi[1].audio_stream = -1;
 
 	avi_initialized = true;
 	MsgDev( D_NOTE, "AVI_Initailize: done\n" );
