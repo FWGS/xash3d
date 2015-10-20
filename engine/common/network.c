@@ -296,13 +296,13 @@ static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
 	struct hostent	*h;
 	char		*colon;
 	char		copy[MAX_SYSPATH];
-	int		val;
 	
 	Q_memset( sadr, 0, sizeof( *sadr ));
 
 #ifdef XASH_IPX
 	if((Q_strlen( s ) >= 23 ) && ( s[8] == ':' ) && ( s[21] == ':' )) // check for an IPX address
 	{
+		int val;
 		((struct sockaddr_ipx *)sadr)->sa_family = AF_IPX;
 		copy[2] = 0;
 		DO( 0, sa_netnum[0] );

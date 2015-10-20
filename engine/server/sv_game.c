@@ -4812,7 +4812,9 @@ qboolean SV_LoadProgs( const char *name )
 	static globalvars_t		gpGlobals;
 	static playermove_t		gpMove;
 	edict_t			*e;
+#ifdef DLL_LOADER
 	qboolean dll;
+#endif
 
 	if( svgame.hInstance ) SV_UnloadProgs();
 

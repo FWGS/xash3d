@@ -268,7 +268,8 @@ typedef enum
 typedef enum
 {
 	NS_CLIENT,
-	NS_SERVER
+	NS_SERVER,
+	NS_MULTICAST
 } netsrc_t;
 
 #include "netadr.h"
@@ -373,6 +374,8 @@ extern sysinfo_t	SI;
 //
 // filesystem.c
 //
+int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive );
+int matchpattern_with_separator( const char *in, const char *pattern, qboolean caseinsensitive, const char *separators, qboolean wildcard_least_one );
 void FS_Init( void );
 void FS_Path( void );
 char *FS_ToLowerCase( const char *path );
@@ -404,7 +407,6 @@ fs_offset_t FS_Write( file_t *file, const void *data, size_t datasize );
 fs_offset_t FS_Read( file_t *file, void *buffer, size_t buffersize );
 int FS_VPrintf( file_t *file, const char *format, va_list ap );
 int FS_Seek( file_t *file, fs_offset_t offset, int whence );
-int FS_Gets( file_t *file, byte *string, size_t bufsize );
 int FS_Printf( file_t *file, const char *format, ... );
 fs_offset_t FS_FileSize( const char *filename, qboolean gamedironly );
 fs_offset_t FS_FileTime( const char *filename, qboolean gamedironly );
@@ -422,13 +424,13 @@ int FS_Close( file_t *file );
 int FS_Getc( file_t *file );
 qboolean FS_Eof( file_t *file );
 fs_offset_t FS_FileLength( file_t *f );
+void FS_Rescan( void );
 
 //
 // network.c
 //
 void NET_Init( void );
 void NET_Shutdown( void );
-void NET_Sleep( int msec );
 void NET_Config( qboolean net_enable );
 qboolean NET_IsLocalAddress( netadr_t adr );
 char *NET_AdrToString( const netadr_t a );

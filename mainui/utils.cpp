@@ -1412,7 +1412,7 @@ void UI_Field_Paste( void )
 	pasteLen = strlen( str );
 	for( i = 0; i < pasteLen; i++ )
 		UI_CharEvent( str[i] );
-	FREE( str );
+	SDL_FREE( str );
 }
 
 /*

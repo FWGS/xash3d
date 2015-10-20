@@ -657,7 +657,8 @@ void SCR_Init( void )
 
 	if( host.state != HOST_RESTART && !UI_LoadProgs( ))
 	{
-		Msg( "^1Error: ^7can't initialize menu.dll\n" ); // there is non fatal for us
+		Msg( "^1Error: ^7can't initialize menu library\n" ); // this is not fatal for us
+		// console still can't be toggled in-game without extra cmd-line switch
 		if( !host.developer ) host.developer = 1; // we need console, because menu is missing
 	}
 
@@ -685,6 +686,8 @@ void SCR_Shutdown( void )
 	Cmd_RemoveCommand( "timerefresh" );
 	Cmd_RemoveCommand( "skyname" );
 	Cmd_RemoveCommand( "viewpos" );
+	Cmd_RemoveCommand( "sizeup" );
+	Cmd_RemoveCommand( "sizedown" );
 	UI_SetActiveMenu( false );
 
 	if( host.state != HOST_RESTART )

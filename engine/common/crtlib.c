@@ -316,7 +316,7 @@ char *Q_strchr( const char *s, char c )
 		if( *++s == c )
 			return (char *)s;
 	}
-	return 0;
+	return NULL;
 }
 
 char *Q_strrchr( const char *s, char c )
@@ -330,7 +330,7 @@ char *Q_strrchr( const char *s, char c )
 		if( *--s == c )
 			return (char *)s;
 	}
-	return 0;
+	return NULL;
 }
 
 int Q_strnicmp( const char *s1, const char *s2, int n )

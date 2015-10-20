@@ -1529,7 +1529,7 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 	if( cls.downloadfileid == cls.downloadcount - 1 )
 	{
 		MsgDev( D_INFO, "Download completed, resuming connection\n" );
-		FS_Rescan_f();
+		FS_Rescan();
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "continueloading" );
 		cls.downloadfileid = 0;

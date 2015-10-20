@@ -346,7 +346,6 @@ Called when the window gains focus or changes in some way
 */
 void IN_ActivateMouse( qboolean force )
 {
-	int		width, height;
 	static int	oldstate;
 
 	if( !in_mouseinitialized )

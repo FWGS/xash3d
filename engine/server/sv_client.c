@@ -2041,7 +2041,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	uint	challenge;
 	int	index, count = 0;
 	char	query[512], ostype = 'u';
-	word	port;
 
 	BF_Clear( msg );
 	BF_ReadLong( msg );// skip the -1 marker
