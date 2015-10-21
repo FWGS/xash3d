@@ -306,8 +306,8 @@ qboolean Cmd_GetMusicList( const char *s, char *completedname, int length )
 	{
 		const char *ext = FS_FileExtension( t->filenames[i] ); 
 
-		if( Q_stricmp( ext, "wav" ) || Q_stricmp( ext, "mp3" ))
-			continue;
+		if( !Q_stricmp( ext, "wav" ) || !Q_stricmp( ext, "mp3" ));
+		else continue;
 
 		FS_FileBase( t->filenames[i], matchbuf );
 		Msg( "%16s\n", matchbuf );
@@ -877,6 +877,7 @@ autocomplete_list_t cmd_list[] =
 { "gl_texturemode", Cmd_GetTextureModes },
 { "map_background", Cmd_GetMapList },
 { "changelevel", Cmd_GetMapList },
+{ "changelevel2", Cmd_GetMapList },
 { "playdemo", Cmd_GetDemoList, },
 { "playvol", Cmd_GetSoundList },
 { "hpkval", Cmd_GetCustomList },

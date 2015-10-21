@@ -846,7 +846,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.con_showalways = true;
 	host.mouse_visible = false;
 
-	// What is Windows code doing here?
 	if ( SetCurrentDirectory( host.rootdir ) != 0)
 		MsgDev( D_INFO, "%s is working directory now\n", host.rootdir );
 	else
