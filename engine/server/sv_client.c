@@ -1990,7 +1990,7 @@ void SV_EntList_f( sv_client_t *cl )
 
 		// filter by string
 		if( Cmd_Argc() > 1 )
-			if( Q_stricmp( STRING( ent->v.classname ), Cmd_Argv( 1 )) && Q_stricmp( STRING( ent->v.targetname ), Cmd_Argv( 1 ) ) )
+			if( !Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.classname ) ) && !Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.targetname ) ) )
 				continue;
 
 		SV_ClientPrintf( cl, PRINT_LOW, "%5i origin: %.f %.f %.f", i, ent->v.origin[0], ent->v.origin[1], ent->v.origin[2] );
@@ -2049,7 +2049,7 @@ void SV_EntInfo_f( sv_client_t *cl )
 		for( i = svgame.globals->maxClients + 1; i < svgame.numEntities; i++ )
 		{
 			ent = EDICT_NUM( i );
-			if( !Q_stricmp( STRING( ent->v.targetname ), Cmd_Argv( 1 ) ) )
+			if( Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.targetname ) ) )
 				break;
 		}
 	}
@@ -2113,7 +2113,8 @@ void SV_EntFire_f( sv_client_t *cl )
 
 	if( Cmd_Argc() < 3 )
 	{
-		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_info <index||name> <command> [<value>]\n" );
+		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_fire <index||name> <command> [<values>]\n"
+			"Use ent_fire 0 help to get command list\n" );
 		return;
 	}
 	if( Q_isdigit( Cmd_Argv( 1 ) ) )
@@ -2232,36 +2233,94 @@ void SV_EntFire_f( sv_client_t *cl )
 	else if( !Q_stricmp( Cmd_Argv( 2 ), "help" ) )
 	{
 		SV_ClientPrintf( cl, PRINT_LOW, "Availiavle commands:\n"
-		"Set fields:\n"
-		"        (Only set entity field, does not call any functions)\n"
-		"    health\n"
-		"    gravity\n"
-		"    movetype\n"
-		"    solid\n"
-		"    rendermode\n"
-		"    rendercolor\n"
-		"    renderfx\n"
-		"    renderamt\n"
-		"Actions\n"
-		"    rename: set entity targetname\n"
-		"    settarget: set entity target (only targetnames)\n"
-		"    setmodel: set entity model (does not update)\n"
-		"    set: set <key> <value> by server library\n"
-		"        See game FGD to get list.\n"
-		"        command takes two arguments\n"
-		"    touch: touch entity by current player.\n"
-		"    use: use entity by current player.\n"
-		"Flags:\n"
-		"        (Set/clear specified flag bit, arg is bit number)\n"
-		"    setflag\n"
-		"    clearflag\n"
-		"    setspawnflag\n"
-		"    clearspawnflag\n"
+			"Set fields:\n"
+			"        (Only set entity field, does not call any functions)\n"
+			"    health\n"
+			"    gravity\n"
+			"    movetype\n"
+			"    solid\n"
+			"    rendermode\n"
+			"    rendercolor\n"
+			"    renderfx\n"
+			"    renderamt\n"
+			"Actions\n"
+			"    rename: set entity targetname\n"
+			"    settarget: set entity target (only targetnames)\n"
+			"    setmodel: set entity model (does not update)\n"
+			"    set: set <key> <value> by server library\n"
+			"        See game FGD to get list.\n"
+			"        command takes two arguments\n"
+			"    touch: touch entity by current player.\n"
+			"    use: use entity by current player.\n"
+			"Flags:\n"
+			"        (Set/clear specified flag bit, arg is bit number)\n"
+			"    setflag\n"
+			"    clearflag\n"
+			"    setspawnflag\n"
+			"    clearspawnflag\n"
 		);
 	}
 	else
 		SV_ClientPrintf( cl, PRINT_LOW, "Unknown command %s!\nUse \"ent_fire 0 help\" to list commands.\n", Cmd_Argv( 2 ) );
 }
+
+/*
+===============
+SV_EntCreate_f
+
+Print specified entity information to client
+===============
+*/
+void SV_EntCreate_f( sv_client_t *cl )
+{
+	edict_t	*ent = NULL;
+	int	i;
+
+	if( !sv_enttools_enable->value || sv.background )
+		return;
+
+	if( Cmd_Argc() < 2 )
+	{
+		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_create <classname>\n" );
+		return;
+	}
+
+	ent = SV_AllocPrivateData( 0, ALLOC_STRING( Cmd_Argv( 1 ) ) );
+	if( !ent )
+	{
+		SV_ClientPrintf( cl, PRINT_LOW, "Invalid entity!\n" );
+		return;
+	}
+	ent->v.origin[2] = cl->edict->v.origin[2] + 25;
+	ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
+	ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
+	//ent->v.spawnflags |= ( 1 << 30 ); //SF_NORESPAWN
+	SV_LinkEdict( ent, false );
+	for( i=2; i < Cmd_Argc() - 1; i++ )
+	{
+		KeyValueData	pkvd;
+		pkvd.szClassName = (char*)STRING( ent->v.classname );
+		pkvd.szKeyName = Cmd_Argv( i );
+		i++;
+		if( !Q_stricmp( "model", pkvd.szKeyName  ) && Q_strstr( Cmd_Argv( i ), ".bsp" ) )
+		{
+			i++;
+			continue;
+		}
+		pkvd.szValue = Cmd_Argv( i );
+		svgame.dllFuncs.pfnKeyValue( ent, &pkvd );
+		if( pkvd.fHandled )
+			SV_ClientPrintf( cl, PRINT_LOW, "value \"%s\" set to \"%s\"!\n", pkvd.szKeyName, pkvd.szValue );
+	}
+	svgame.dllFuncs.pfnSpawn( ent );
+	// Now drop entity to floor.
+	// Otherwise given weapon may crash server if player touch it before.
+	pfnDropToFloor( ent );
+	svgame.dllFuncs.pfnThink( ent );
+	pfnDropToFloor( ent );
+
+}
+
 
 /*
 ==================
@@ -2312,6 +2371,7 @@ ucmd_t ucmds[] =
 { "ent_list", SV_EntList_f },
 { "ent_info", SV_EntInfo_f },
 { "ent_fire", SV_EntFire_f },
+{ "ent_create", SV_EntCreate_f },
 { NULL, NULL }
 };
 

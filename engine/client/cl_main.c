@@ -1678,6 +1678,7 @@ void CL_InitLocal( void )
 	Cmd_AddCommand ("ent_list", NULL, "List entities on server" );
 	Cmd_AddCommand ("ent_fire", NULL, "Fire entity command (be careful)" );
 	Cmd_AddCommand ("ent_info", NULL, "Dump entity information" );
+	Cmd_AddCommand ("ent_create", NULL, "Create entuty with specified values (be careful)" );
 
 	// register our commands
 	Cmd_AddCommand ("pause", NULL, "pause the game (if the server allows pausing)" );
