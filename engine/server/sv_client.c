@@ -1977,7 +1977,7 @@ Print list of entities to client
 */
 void SV_EntList_f( sv_client_t *cl )
 {
-	edict_t	*ent;
+	edict_t	*ent = NULL;
 	int	i;
 
 	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value || sv.background )
@@ -2023,7 +2023,7 @@ Print specified entity information to client
 */
 void SV_EntInfo_f( sv_client_t *cl )
 {
-	edict_t	*ent;
+	edict_t	*ent = NULL;
 	int	i = 0;
 
 	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value || sv.background )
@@ -2083,6 +2083,13 @@ void SV_EntInfo_f( sv_client_t *cl )
 
 	SV_ClientPrintf( cl, PRINT_LOW, "movetype: %d\n", ent->v.movetype );
 
+	SV_ClientPrintf( cl, PRINT_LOW, "rendermode: %d\n", ent->v.rendermode );
+	SV_ClientPrintf( cl, PRINT_LOW, "renderfx: %d\n", ent->v.renderfx );
+	SV_ClientPrintf( cl, PRINT_LOW, "renderamt: %f\n", ent->v.renderamt );
+	SV_ClientPrintf( cl, PRINT_LOW, "rendercolor: %f %f %f\n", ent->v.rendercolor[0], ent->v.rendercolor[1], ent->v.rendercolor[2] );
+
+	SV_ClientPrintf( cl, PRINT_LOW, "maxspeed: %f\n", ent->v.maxspeed );
+
 	if( ent->v.solid )
 		SV_ClientPrintf( cl, PRINT_LOW, "solid: %d\n", ent->v.solid );
 	SV_ClientPrintf( cl, PRINT_LOW, "flags: 0x%x\n", ent->v.flags );
@@ -2098,7 +2105,7 @@ Print specified entity information to client
 */
 void SV_EntFire_f( sv_client_t *cl )
 {
-	edict_t	*ent;
+	edict_t	*ent = NULL;
 	int	i = 0;
 
 	if( !sv_enttools_enable->value || sv.background )
@@ -2170,6 +2177,38 @@ void SV_EntFire_f( sv_client_t *cl )
 	{
 		ent->v.owner = cl->edict;
 	}
+	else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeenemy" ) )
+	{
+		ent->v.enemy = cl->edict;
+	}
+	else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeaiment" ) )
+	{
+		ent->v.aiment = cl->edict;
+	}
+	else if( !Q_stricmp( Cmd_Argv( 2 ), "rendercolor" ) )
+	{
+		if( Cmd_Argc() != 6 )
+			return;
+		ent->v.rendercolor[0] = Q_atof( Cmd_Argv( 3 ) );
+		ent->v.rendercolor[1] = Q_atof( Cmd_Argv( 4 ) );
+		ent->v.rendercolor[2] = Q_atof( Cmd_Argv( 5 ) );
+	}
+	else if( !Q_stricmp( Cmd_Argv( 2 ), "renderamt" ) )
+	{
+		ent->v.renderamt = Q_atof( Cmd_Argv( 3 ) );
+	}
+	else if( !Q_stricmp( Cmd_Argv( 2 ), "renderfx" ) )
+	{
+		ent->v.renderfx = Q_atoi( Cmd_Argv( 3 ) );
+	}
+	else if( !Q_stricmp( Cmd_Argv( 2 ), "rendermode" ) )
+	{
+		ent->v.rendermode = Q_atoi( Cmd_Argv( 3 ) );
+	}
+	else if( !Q_stricmp( Cmd_Argv( 2 ), "setmodel" ) )
+	{
+		ent->v.model = ALLOC_STRING( Cmd_Argv( 3 ) );
+	}
 	else if( !Q_stricmp( Cmd_Argv( 2 ), "setflag" ) )
 	{
 		ent->v.flags |= 1 << Q_atoi( Cmd_Argv ( 3 ) );
@@ -2183,15 +2222,45 @@ void SV_EntFire_f( sv_client_t *cl )
 	else if( !Q_stricmp( Cmd_Argv( 2 ), "setspawnflag" ) )
 	{
 		ent->v.spawnflags |= 1 << Q_atoi( Cmd_Argv ( 3 ) );
-		SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.flags );
+		SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.spawnflags );
 	}
 	else if( !Q_stricmp( Cmd_Argv( 2 ), "clearspawnflag" ) )
 	{
 		ent->v.spawnflags &= ~( 1 << Q_atoi( Cmd_Argv ( 3 ) ) );
 		SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.flags );
 	}
+	else if( !Q_stricmp( Cmd_Argv( 2 ), "help" ) )
+	{
+		SV_ClientPrintf( cl, PRINT_LOW, "Availiavle commands:\n"
+		"Set fields:\n"
+		"        (Only set entity field, does not call any functions)\n"
+		"    health\n"
+		"    gravity\n"
+		"    movetype\n"
+		"    solid\n"
+		"    rendermode\n"
+		"    rendercolor\n"
+		"    renderfx\n"
+		"    renderamt\n"
+		"Actions\n"
+		"    rename: set entity targetname\n"
+		"    settarget: set entity target (only targetnames)\n"
+		"    setmodel: set entity model (does not update)\n"
+		"    set: set <key> <value> by server library\n"
+		"        See game FGD to get list.\n"
+		"        command takes two arguments\n"
+		"    touch: touch entity by current player.\n"
+		"    use: use entity by current player.\n"
+		"Flags:\n"
+		"        (Set/clear specified flag bit, arg is bit number)\n"
+		"    setflag\n"
+		"    clearflag\n"
+		"    setspawnflag\n"
+		"    clearspawnflag\n"
+		);
+	}
 	else
-		SV_ClientPrintf( cl, PRINT_LOW, "Unknown command %s!\n", Cmd_Argv( 2 ) );
+		SV_ClientPrintf( cl, PRINT_LOW, "Unknown command %s!\nUse \"ent_fire 0 help\" to list commands.\n", Cmd_Argv( 2 ) );
 }
 
 /*
