@@ -526,7 +526,7 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed );
 qboolean SV_IsPlayerIndex( int idx );
 void SV_InitClientMove( void );
 void SV_UpdateServerInfo( void );
-
+void SV_EndRedirect( void );
 //
 // sv_cmds.c
 //

@@ -868,6 +868,9 @@ void SV_Shutdown( qboolean reconnect )
 	if( !SV_Active( ))
 		return;
 
+	// rcon will be disconnected
+	SV_EndRedirect();
+
 	if( host.type == HOST_DEDICATED )
 		MsgDev( D_INFO, "SV_Shutdown: %s\n", host.finalmsg );
 

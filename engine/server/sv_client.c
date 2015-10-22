@@ -475,11 +475,13 @@ void SV_DropClient( sv_client_t *drop )
 		Mem_Free( drop->frames );	// fakeclients doesn't have frames
 	drop->frames = NULL;
 
+	if( NET_CompareBaseAdr( drop->netchan.remote_address, host.rd.address ) )
+		SV_EndRedirect();
+
 	SV_ClearCustomizationList( drop->customization, false );
 
 	// throw away any residual garbage in the channel.
 	Netchan_Clear( &drop->netchan );
-
 
 	// Clean client data on disconnect
 	Q_memset( drop->userinfo, 0, MAX_INFO_STRING );
@@ -549,7 +551,8 @@ void SV_FlushRedirect( netadr_t adr, int dest, char *buf )
 
 void SV_EndRedirect( void )
 {
-	host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
+	if( host.rd.flush )
+		host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
 
 	host.rd.target = 0;
 	host.rd.buffer = NULL;
@@ -2319,7 +2322,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 
 	if( Cmd_Argc() < 2 )
 	{
-		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_create <classname>\n" );
+		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_create <classname> <key1> <value1> <key2> <value2> ...\n" );
 		return;
 	}
 
