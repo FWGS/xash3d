@@ -142,7 +142,7 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 
 void SV_GetTrueOrigin( sv_client_t *cl, int edictnum, vec3_t origin )
 {
-	if( !cl->local_weapons || !cl->lag_compensation || !sv_unlag->integer )
+	if( !cl->lag_compensation || !sv_unlag->integer )
 		return;
 
 	// don't allow unlag in singleplayer
@@ -159,7 +159,7 @@ void SV_GetTrueOrigin( sv_client_t *cl, int edictnum, vec3_t origin )
 
 void SV_GetTrueMinMax( sv_client_t *cl, int edictnum, vec3_t mins, vec3_t maxs )
 {
-	if( !cl->local_weapons || !cl->lag_compensation || !sv_unlag->integer )
+	if( !cl->lag_compensation || !sv_unlag->integer )
 		return;
 
 	// don't allow unlag in singleplayer
@@ -850,7 +850,7 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 		return;
 
 	// unlag disabled for current client
-	if( !cl->local_weapons || !cl->lag_compensation )
+	if( !cl->lag_compensation )
 		return;
 
 	has_update = true;
@@ -1007,7 +1007,7 @@ void SV_RestoreMoveInterpolant( sv_client_t *cl )
 		return;
 
 	// unlag disabled for current client
-	if( !cl->local_weapons || !cl->lag_compensation )
+	if( !cl->lag_compensation )
 		return;
 
 	for( i = 0, check = svs.clients; i < sv_maxclients->integer; i++, check++ )
