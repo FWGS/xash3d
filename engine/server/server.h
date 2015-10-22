@@ -417,6 +417,8 @@ extern	convar_t		*sv_allow_godmode;
 extern	convar_t		*sv_allow_noclip;
 extern	convar_t		*sv_enttools_enable;
 extern	convar_t		*sv_enttools_players;
+extern	convar_t		*sv_enttools_maxfire;
+extern	convar_t		*sv_enttools_godplayer;
 extern	convar_t		*sv_clienttrace;
 extern	convar_t		*sv_send_resources;
 extern	convar_t		*sv_send_logos;

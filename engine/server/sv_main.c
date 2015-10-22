@@ -68,6 +68,8 @@ convar_t	*sv_allow_noclip;
 convar_t	*sv_allow_impulse;
 convar_t	*sv_enttools_enable;
 convar_t	*sv_enttools_players;
+convar_t	*sv_enttools_maxfire;
+convar_t	*sv_enttools_godplayer;
 convar_t	*sv_validate_changelevel;
 convar_t	*sv_clienttrace;
 convar_t	*sv_send_resources;
@@ -116,7 +118,8 @@ void SV_CalcPings( void )
 	int		i, j;
 	int		total, count;
 
-	if( !svs.clients ) return;
+	//if( !svs.clients )
+	return;
 
 	// clamp fps counter
 	for( i = 0; i < sv_maxclients->integer; i++ )
@@ -755,8 +758,10 @@ void SV_Init( void )
 	sv_allow_rotate_pushables = Cvar_Get( "sv_allow_rotate_pushables", "0", CVAR_ARCHIVE, "let the pushers rotate pushables with included origin-brush" );
 	sv_allow_godmode = Cvar_Get( "sv_allow_godmode", "1", CVAR_LATCH, "allow players to be a god when sv_cheats is \"1\"" );
 	sv_allow_noclip = Cvar_Get( "sv_allow_noclip", "1", CVAR_LATCH, "allow players to use noclip when sv_cheats is \"1\"" );
-	sv_enttools_enable = Cvar_Get( "sv_enttools_enable", "0", CVAR_LATCH, "Enable powerful and dangerous entity tools" );
-	sv_enttools_players = Cvar_Get( "sv_enttools_players", "0", CVAR_LATCH, "Allow use ent_fire by players" );
+	sv_enttools_enable = Cvar_Get( "sv_enttools_enable", "0", CVAR_ARCHIVE | CVAR_PROTECTED, "Enable powerful and dangerous entity tools" );
+	sv_enttools_players = Cvar_Get( "sv_enttools_players", "0", CVAR_ARCHIVE | CVAR_PROTECTED, "Allow use ent_fire by players" );
+	sv_enttools_maxfire = Cvar_Get( "sv_enttools_maxfire", "5", CVAR_ARCHIVE | CVAR_PROTECTED, "Limit ent_fire actions count to prevent flooding" );
+	sv_enttools_godplayer = Cvar_Get( "sv_enttools_godplayer", "", CVAR_PROTECTED, "Allow specified player to use enttools without sv_enttools_enable" );
 	sv_validate_changelevel = Cvar_Get( "sv_validate_changelevel", "1", CVAR_ARCHIVE, "test change level for level-designer errors" );
 	sv_clienttrace = Cvar_Get( "sv_clienttrace", "1", CVAR_SERVERNOTIFY, "scaling factor for client hitboxes" );
 	sv_wallbounce = Cvar_Get( "sv_wallbounce", "1.0", CVAR_PHYSICINFO, "bounce factor for client with MOVETYPE_BOUNCE" );
