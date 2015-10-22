@@ -67,7 +67,8 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 	if( ed->v.flags & ( FL_CLIENT|FL_FAKECLIENT ))
 	{
 		// client or bot
-		SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
+		if ( svs.currentPlayer )
+			SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
 		Q_strncpy( pe->name, "player", sizeof( pe->name ));
 		pe->player = pe->info;
 	}
@@ -189,7 +190,12 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 	physent_t	*pe;
 
 	pl = EDICT_NUM( svgame.pmove->player_index + 1 );
-	ASSERT( SV_IsValidEdict( pl ));
+	//ASSERT( SV_IsValidEdict( pl ));
+	if( !SV_IsValidEdict( pl ) )
+	{
+		MsgDev( D_ERROR, "SV_AddLinksToPmove: you have broken clients!\n");
+		return;
+	}
 
 	// touch linked edicts
 	for( l = node->solid_edicts.next; l != &node->solid_edicts; l = next )
