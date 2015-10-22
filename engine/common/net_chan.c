@@ -710,7 +710,7 @@ void Netchan_CheckForCompletion( netchan_t *chan, int stream, int intotalbuffers
 	if( c == intotalbuffers )
 	{
 		chan->incomingready[stream] = true;
-		MsgDev( D_NOTE, "\nincoming is complete %i bytes waiting\n", size );
+		MsgDev( D_NOTE, "\nincoming is complete, %i bytes waiting\n", size );
 	}
 }
 
@@ -1172,7 +1172,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	// check for message overflow
 	if( BF_CheckOverflow( &chan->message ))
 	{
-		MsgDev( D_ERROR, "%s:outgoing message overflow\n", NET_AdrToString( chan->remote_address ));
+		MsgDev( D_ERROR, "%s: outgoing message overflow\n", NET_AdrToString( chan->remote_address ));
 		return;
 	}
 

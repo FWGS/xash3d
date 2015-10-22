@@ -274,13 +274,19 @@ void Key_SetBinding( int keynum, const char *binding )
 {
 	if( keynum == -1 ) return;
 
-	// free old bindings
+	// free old binding
 	if( keys[keynum].binding )
 	{
+		// GoldSrc doesn't touch ESC
+		if( keynum == K_ESCAPE ) return;
+
 		Mem_Free((char *)keys[keynum].binding );
 		keys[keynum].binding = NULL;
 	}
-		
+
+	// don't bind to empty string
+	if( !binding[0] ) return;
+
 	// allocate memory for new binding
 	keys[keynum].binding = copystring( binding );
 }
@@ -337,6 +343,11 @@ void Key_Unbind_f( void )
 		Msg( "\"%s\" isn't a valid key\n", Cmd_Argv( 1 ));
 		return;
 	}
+	if( b == K_ESCAPE )
+	{
+		Msg( "Can't unbind ESCAPE key\n" );
+		return;
+	}
 	Key_SetBinding( b, "" );
 }
 
@@ -351,7 +362,7 @@ void Key_Unbindall_f( void )
 	
 	for( i = 0; i < 256; i++ )
 	{
-		if( keys[i].binding )
+		if( i != K_ESCAPE && keys[i].binding )
 			Key_SetBinding( i, "" );
 	}
 }
@@ -486,7 +497,7 @@ void Key_Init( void )
 	Cmd_AddCommand( "bindlist", Key_Bindlist_f, "display current key bindings" );
 	Cmd_AddCommand( "makehelp", Key_EnumCmds_f, "write help.txt that contains all console cvars and cmds" ); 
 
-	// setup default binding. "unbindall" from config.cfg will be reset it
+	// setup default binding. "unbindall" from config.cfg will reset it
 	for( kn = keynames; kn->name; kn++ ) Key_SetBinding( kn->keynum, kn->binding ); 
 }
 
@@ -579,27 +590,17 @@ void Key_Event( int key, qboolean down )
 	// console key is hardcoded, so the user can never unbind it
 	if( key == '`' || key == '~' )
 	{
-		// we are in typing mode. So don't switch to console
-#ifdef _WIN32
-		if( (word)GetKeyboardLayout( 0 ) == (word)0x419 )
-		{
-#endif
-			if( cls.key_dest != key_game )
-				return;
-#ifdef _WIN32
-		}
-#endif
+		// we are in typing mode, so don't switch to console
+		if( cls.key_dest == key_message || !down )
+			return;
 
-		if( !down ) return;
-    		Con_ToggleConsole_f();
+		Con_ToggleConsole_f();
 		return;
 	}
 
-	// escape is always handled special
+	// escape is always handled specially
 	if( key == K_ESCAPE && down )
 	{
-		kb = keys[key].binding;
-
 		switch( cls.key_dest )
 		{
 		case key_game:

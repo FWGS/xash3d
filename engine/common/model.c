@@ -159,8 +159,8 @@ void Mod_PrintBSPFileSizes_f( void )
 
 	Msg( "=== Total BSP file data space used: %s ===\n", Q_memprint( totalmemory ));
 	Msg( "World size ( %g %g %g ) units\n", world.size[0], world.size[1], world.size[2] );
-	Msg( "original name: ^1%s\n", worldmodel->name );
-	Msg( "internal name: %s\n", (world.message[0]) ? va( "^2%s", world.message ) : "none" );
+	Msg( "Original name: ^1%s\n", worldmodel->name );
+	Msg( "Internal name: %s\n", (world.message[0]) ? va( "^2%s", world.message ) : "none" );
 }
 
 /*
@@ -560,10 +560,10 @@ void Mod_ClearAll( qboolean keep_playermodel )
 			continue;
 
 		Mod_FreeModel( mod );
-		memset( mod, 0, sizeof( *mod ));
+		Q_memset( mod, 0, sizeof( *mod ));
 	}
 
-	// g-cont. may be just leave unchanged?
+	// g-cont. may just leave unchanged?
 	if( !keep_playermodel ) cm_nummodels = 0;
 }
 
@@ -1140,7 +1140,7 @@ static void Mod_LoadDeluxemap( void )
 
 	Q_snprintf( path, sizeof( path ), "maps/%s.dlit", modelname );
 
-	// make sure what deluxemap is actual
+	// make sure that deluxemap is actual
 	if( !COM_CompareFileTime( path, loadmodel->name, &iCompare ))
 	{
 		world.deluxedata = NULL;
@@ -1148,8 +1148,8 @@ static void Mod_LoadDeluxemap( void )
 		return;
           }
 
-	if( iCompare < 0 ) // this may happens if level-designer used -onlyents key for hlcsg
-		MsgDev( D_WARN, "Mod_LoadDeluxemap: %s probably is out of date\n", path );
+	if( iCompare < 0 ) // this may happen if level-designer used -onlyents key for hlcsg
+		MsgDev( D_WARN, "Mod_LoadDeluxemap: %s is probably out of date\n", path );
 
 	in = FS_LoadFile( path, &world.vecdatasize, false );
 
@@ -1231,7 +1231,7 @@ static void Mod_LoadLighting( const dlump_t *l )
 		break;
 	}
 
-	// try to loading deluxemap too
+	// also try to load deluxemap
 	Mod_LoadDeluxemap ();
 }
 
@@ -1348,7 +1348,7 @@ static void Mod_BuildPolygon( mextrasurf_t *info, msurface_t *surf, int numVerts
 	VectorCopy( surf->texinfo->vecs[0], tangent );
 	VectorNegate( surf->texinfo->vecs[1], binormal );
 
-	VectorNormalize( normal ); // g-cont. this is even needed?
+	VectorNormalize( normal ); // g-cont. is this even needed?
 	VectorNormalize( tangent );
 	VectorNormalize( binormal );
 
@@ -1895,7 +1895,7 @@ static void Mod_LoadSurfaces( const dlump_t *l )
 				out->samples = loadmodel->lightdata + (in->lightofs / 3);
 			else out->samples = loadmodel->lightdata + in->lightofs;
 
-			// if deluxemap is present setup it too
+			// also setup deluxemap if present
 			if( world.deluxedata )
 				info->deluxemap = world.deluxedata + (in->lightofs / 3);
 		}
@@ -2712,7 +2712,7 @@ static void Mod_LoadBrushModel( model_t *mod, const void *buffer, qboolean *load
 	}
 	else if( world.lm_sample_size != sample_size )
 	{
-		// can't mixing world and bmodels with different sample sizes!
+		// can't mix world and bmodels with different sample sizes!
 		MsgDev( D_ERROR, "%s has wrong version number (%i should be %i)\n", loadmodel->name, i, world.version );
 		return;		
 	}

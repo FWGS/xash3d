@@ -246,7 +246,7 @@ void VGUI_InitKeyTranslationTable( void )
 	bInitted = true;
 
 	// set virtual key translation table
-	memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ));	
+	Q_memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ));	
 
 	s_pVirtualKeyTrans['0'] = KEY_0;
 	s_pVirtualKeyTrans['1'] = KEY_1;
@@ -391,13 +391,14 @@ enum VGUI_MouseCode VGUI_MapMouseButton( byte button)
 
 
 
-qboolean VGUI_SurfaceWndProc( Xash_Event *event )
+void VGUI_SurfaceWndProc( Xash_Event *event )
 {
-/* When false returned, event passed to engine, else only to vgui*/
-/* NOTE: this disabled because VGUI shows it's cursor on engine start*/
-	if( !vgui.initialized )
-		return;
 #ifdef XASH_SDL
+/* When false returned, event passed to engine, else only to vgui*/
+/* NOTE: this disabled because VGUI shows its cursor on engine start*/
+	if( !vgui.initialized )
+		return /*false*/;
+
 	switch( event->type )
 	{
 	/*case :
@@ -405,31 +406,37 @@ qboolean VGUI_SurfaceWndProc( Xash_Event *event )
 		break;*/
 	case SDL_MOUSEMOTION:
 		vgui.MouseMove(event->motion.x, event->motion.y);
-		return false;
+		//return false;
+		break;
 	case SDL_MOUSEBUTTONDOWN:
 		//if(event->button.clicks == 1)
 		vgui.Mouse(MA_PRESSED, VGUI_MapMouseButton(event->button.button));
 	//	else
 	//	vgui.Mouse(MA_DOUBLE, VGUI_MapMouseButton(event->button.button));
-		return true;
+		//return true;
+		break;
 	case SDL_MOUSEBUTTONUP:
 		vgui.Mouse(MA_RELEASED, VGUI_MapMouseButton(event->button.button));
-		return true;
+		//return true;
+		break;
 	case SDL_MOUSEWHEEL:
 		vgui.Mouse(MA_WHEEL, event->wheel.y);
-		return true;
+		//return true;
+		break;
 	case SDL_KEYDOWN:
 		if(!( event->key.keysym.sym & ( 1 << 30 )))
 			vgui.Key( KA_PRESSED, VGUI_MapKey( event->key.keysym.sym ));
 		vgui.Key( KA_TYPED, VGUI_MapKey( event->key.keysym.sym ));
-		return false;
+		//return false;
+		break;
 	case SDL_KEYUP:
 		vgui.Key( KA_RELEASED, VGUI_MapKey( event->key.keysym.sym ) );
-		return false;
+		//return false;
+		break;
 	}
 	
 #endif
-	return false;
+	//return false;
 }
 
 

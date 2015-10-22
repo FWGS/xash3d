@@ -565,12 +565,12 @@ qboolean Cmd_GetCustomList( const char *s, char *completedname, int length )
 
 /*
 =====================================
-Cmd_GetTexturemodes
+Cmd_GetTextureModes
 
 Prints or complete sound filename
 =====================================
 */
-qboolean Cmd_GetTexturemodes( const char *s, char *completedname, int length )
+qboolean Cmd_GetTextureModes( const char *s, char *completedname, int length )
 {
 	int	i, numtexturemodes;
 	string	texturemodes[6];	// keep an actual ( sizeof( gl_texturemode) / sizeof( gl_texturemode[0] ))
@@ -586,7 +586,7 @@ qboolean Cmd_GetTexturemodes( const char *s, char *completedname, int length )
 	"GL_NEAREST_MIPMAP_NEAREST",
 	};
 
-	// compare gamelist with current keyword
+	// compare texture filtering mode list with current keyword
 	for( i = 0, numtexturemodes = 0; i < 6; i++ )
 	{
 		if(( *s == '*' ) || !Q_strnicmp( gl_texturemode[i], s, Q_strlen( s )))
@@ -631,7 +631,7 @@ qboolean Cmd_GetGamesList( const char *s, char *completedname, int length )
 	string	gamedirs[MAX_MODS];
 	string	matchbuf;
 
-	// stand-alone games doesn't have cmd "game"
+	// stand-alone games don't have cmd "game"
 	if( !Cmd_Exists( "game" ))
 		return false;
 
@@ -678,8 +678,8 @@ qboolean Cmd_CheckMapsList_R( qboolean fRefresh, qboolean onlyingamedir )
 
 	if( FS_FileSize( "maps.lst", onlyingamedir ) > 0 && !fRefresh )
 	{
-		MsgDev( D_NOTE, "maps.lst is exist: %s\n", onlyingamedir ? "basedir" : "gamedir" );
-		return true; // exist 
+		MsgDev( D_NOTE, "maps.lst found: %s\n", onlyingamedir ? "basedir" : "gamedir" );
+		return true; // exists
 	}
 
 	t = FS_Search( "maps/*.bsp", false, onlyingamedir );
@@ -810,6 +810,63 @@ qboolean Cmd_CheckMapsList_R( qboolean fRefresh, qboolean onlyingamedir )
 	return false;
 }
 
+/*
+=====================================
+Cmd_GetCdCommands
+
+Prints or complete CD command name
+=====================================
+*/
+qboolean Cmd_GetCdCommands( const char *s, char *completedname, int length )
+{
+	int i, numcdcommands;
+	string	cdcommands[8];
+	string	matchbuf;
+
+	const char *cd_command[] =
+	{
+	"info",
+	"loop",
+	"off",
+	"on",
+	"pause",
+	"play",
+	"resume",
+	"stop",
+	};
+
+	// compare CD command list with current keyword
+	for( i = 0, numcdcommands = 0; i < 8; i++ )
+	{
+		if(( *s == '*' ) || !Q_strnicmp( cd_command[i], s, Q_strlen( s )))
+			Q_strcpy( cdcommands[numcdcommands++], cd_command[i] );
+	}
+
+	if( !numcdcommands ) return false;
+	Q_strncpy( matchbuf, cdcommands[0], MAX_STRING );
+	if( completedname && length ) Q_strncpy( completedname, matchbuf, length );
+	if( numcdcommands == 1 ) return true;
+
+	for( i = 0; i < numcdcommands; i++ )
+	{
+		Q_strncpy( matchbuf, cdcommands[i], MAX_STRING );
+		Msg( "%16s\n", matchbuf );
+	}
+
+	Msg( "\n^3 %i commands found.\n", numcdcommands );
+
+	// cut shortestMatch to the amount common with s
+	if( completedname && length )
+	{
+		for( i = 0; matchbuf[i]; i++ )
+		{
+			if( Q_tolower( completedname[i] ) != Q_tolower( matchbuf[i] ))
+				completedname[i] = 0;
+		}
+	}
+	return true;
+}
+
 qboolean Cmd_CheckMapsList( qboolean fRefresh )
 {
 	return Cmd_CheckMapsList_R( fRefresh, true );
@@ -817,9 +874,10 @@ qboolean Cmd_CheckMapsList( qboolean fRefresh )
 
 autocomplete_list_t cmd_list[] =
 {
-{ "gl_texturemode", Cmd_GetTexturemodes },
+{ "gl_texturemode", Cmd_GetTextureModes },
 { "map_background", Cmd_GetMapList },
 { "changelevel", Cmd_GetMapList },
+{ "changelevel2", Cmd_GetMapList },
 { "playdemo", Cmd_GetDemoList, },
 { "playvol", Cmd_GetSoundList },
 { "hpkval", Cmd_GetCustomList },
@@ -834,7 +892,8 @@ autocomplete_list_t cmd_list[] =
 { "load", Cmd_GetSavesList },
 { "play", Cmd_GetSoundList },
 { "map", Cmd_GetMapList },
-{ NULL }, // termiantor
+{ "cd", Cmd_GetCdCommands },
+{ NULL }, // terminator
 };
 
 /*
@@ -847,31 +906,31 @@ with the archive flag set to true.
 */
 static void Cmd_WriteCvar(const char *name, const char *string, const char *desc, void *f )
 {
-	if( !desc || !*desc ) return; // ignore cvars without description (fantom variables)
+	if( !desc || !*desc ) return; // ignore cvars without description (phantom variables)
 	FS_Printf( f, "%s \"%s\"\n", name, string );
 }
 
 static void Cmd_WriteServerCvar(const char *name, const char *string, const char *desc, void *f )
 {
-	if( !desc || !*desc ) return; // ignore cvars without description (fantom variables)
+	if( !desc || !*desc ) return; // ignore cvars without description (phantom variables)
 	FS_Printf( f, "set %s \"%s\"\n", name, string );
 }
 
 static void Cmd_WriteOpenGLCvar( const char *name, const char *string, const char *desc, void *f )
 {
-	if( !desc || !*desc ) return; // ignore cvars without description (fantom variables)
+	if( !desc || !*desc ) return; // ignore cvars without description (phantom variables)
 	FS_Printf( f, "setgl %s \"%s\"\n", name, string );
 }
 
 static void Cmd_WriteRenderCvar( const char *name, const char *string, const char *desc, void *f )
 {
-	if( !desc || !*desc ) return; // ignore cvars without description (fantom variables)
+	if( !desc || !*desc ) return; // ignore cvars without description (phantom variables)
 	FS_Printf( f, "setr %s \"%s\"\n", name, string );
 }
 
 static void Cmd_WriteHelp(const char *name, const char *unused, const char *desc, void *f )
 {
-	if( !desc ) return;				// ignore fantom cmds
+	if( !desc ) return;				// ignore phantom cmds
 	if( !Q_strcmp( desc, "" )) return;		// blank description
 	if( name[0] == '+' || name[0] == '-' ) return;	// key bindings	
 	FS_Printf( f, "%s\t\t\t\"%s\"\n", name, desc );
@@ -955,7 +1014,7 @@ void Host_WriteServerConfig( const char *name )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
 		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
-		FS_Printf( f, "//\t\t\tserver.cfg - server temporare config\n" );
+		FS_Printf( f, "//\t\t\tserver.cfg - server temporary config\n" );
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteServerVariables( f );
 		FS_Close( f );
@@ -987,7 +1046,7 @@ void Host_WriteOpenGLConfig( void )
 		Cmd_WriteOpenGLVariables( f );
 		FS_Close( f );	
 	}                                                
-	else MsgDev( D_ERROR, "can't update opengl.cfg.\n" );
+	else MsgDev( D_ERROR, "Can't update opengl.cfg.\n" );
 }
 
 /*
@@ -1012,7 +1071,7 @@ void Host_WriteVideoConfig( void )
 		Cmd_WriteRenderVariables( f );
 		FS_Close( f );	
 	}                                                
-	else MsgDev( D_ERROR, "can't update video.cfg.\n" );
+	else MsgDev( D_ERROR, "Can't update video.cfg.\n" );
 }
 
 void Key_EnumCmds_f( void )

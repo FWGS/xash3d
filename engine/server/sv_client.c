@@ -1037,13 +1037,6 @@ void SV_PutClientInServer( edict_t *ent )
 			ent->v.flags |= (FL_GODMODE|FL_NOTARGET);
 
 		client->pViewEntity = NULL; // reset pViewEntity
-
-		if( svgame.globals->cdAudioTrack )
-		{
-			BF_WriteByte( &client->netchan.message, svc_stufftext );
-			BF_WriteString( &client->netchan.message, va( "cd loop %3d\n", svgame.globals->cdAudioTrack ));
-			svgame.globals->cdAudioTrack = 0;
-		}
 	}
 	else
 	{
@@ -1099,7 +1092,7 @@ void SV_PutClientInServer( edict_t *ent )
 	sv.paused = false;
 
 	if( sv_maxclients->integer == 1 ) // singleplayer profiler
-		MsgDev( D_INFO, "level loaded at %.2f sec\n", Sys_DoubleTime() - svs.timestart );
+		MsgDev( D_INFO, "Level loaded in %.2f sec\n", Sys_DoubleTime() - svs.timestart );
 }
 
 /*
@@ -1164,6 +1157,13 @@ void SV_New_f( sv_client_t *cl )
 
 	// refresh userinfo on spawn
 	SV_RefreshUserinfo();
+
+	if( svgame.globals->cdAudioTrack )
+	{
+		BF_WriteByte( &cl->netchan.message, svc_stufftext );
+		BF_WriteString( &cl->netchan.message, va( "cd loop %d\n", svgame.globals->cdAudioTrack ));
+		svgame.globals->cdAudioTrack = 0;
+	}
 
 	// game server
 	if( sv.state == ss_active )
@@ -1888,7 +1888,7 @@ void SV_Kill_f( sv_client_t *cl )
 
 	if( cl->edict->v.health <= 0.0f )
 	{
-		SV_ClientPrintf( cl, PRINT_HIGH, "Can't suicide -- allready dead!\n");
+		SV_ClientPrintf( cl, PRINT_HIGH, "Can't suicide -- already dead!\n");
 		return;
 	}
 
@@ -2041,7 +2041,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	uint	challenge;
 	int	index, count = 0;
 	char	query[512], ostype = 'u';
-	word	port;
 
 	BF_Clear( msg );
 	BF_ReadLong( msg );// skip the -1 marker
@@ -2154,7 +2153,7 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 
 	if( numcmds < 0 || numcmds > 28 )
 	{
-		MsgDev( D_ERROR, "%s sending too many commands %i\n", cl->name, numcmds );
+		MsgDev( D_ERROR, "%s sent too many commands: %i\n", cl->name, numcmds );
 		SV_DropClient( cl );
 		return;
 	}

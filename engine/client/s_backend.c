@@ -75,7 +75,7 @@ qboolean SNDDMA_Init( void *hInst )
 		return false;
 	}
 
-	memset(&desired, 0, sizeof(desired));
+	Q_memset(&desired, 0, sizeof(desired));
 	switch (s_khz->integer) {
 	case 48:
 		desired.freq = 48000;

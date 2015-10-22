@@ -1047,7 +1047,7 @@ void CL_CheckingResFile( char *pResFileName )
 	byte	data[32];
 
 	if( FS_FileExists( pResFileName, false ))
-		return;	// already existing
+		return;	// already exists
 	if( FS_FileExists( FS_ToLowerCase( pResFileName ), false ) )
 		return;
 
@@ -1056,7 +1056,7 @@ void CL_CheckingResFile( char *pResFileName )
 	
 	if( cl_allow_fragment->value )
 	{
-		Msg( "Starting downloads file: %s\n", pResFileName );
+		Msg( "Starting file download: %s\n", pResFileName );
 		if( cls.state == ca_disconnected ) return;
 
 		BF_Init( &buf, "ClientPacket", data, sizeof( data ));

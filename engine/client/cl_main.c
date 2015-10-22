@@ -156,7 +156,7 @@ qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset )
 #else
 		if( !CL_LoadProgs( va( "%s/%s", GI->dll_path, GI->client_lib)))
 #endif
-			Host_Error( "can't initialize client library\n" );
+			Host_Error( "Can't initialize client library\n" );
 
 		// restore parms
 		clgame.maxEntities = maxEntities;
@@ -1296,7 +1296,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	{
 		if( cls.state == ca_connected )
 		{
-			MsgDev( D_INFO, "dup connect received. ignored\n");
+			MsgDev( D_INFO, "Dup connect received. Ignored.\n");
 			return;
 		}
 
@@ -1395,7 +1395,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		// user out of band message (must be handled in CL_ConnectionlessPacket)
 		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, buf );
 	}
-	else MsgDev( D_ERROR, "bad connectionless packet from %s:\n%s\n", NET_AdrToString( from ), args );
+	else MsgDev( D_ERROR, "Bad connectionless packet from %s:\n%s\n", NET_AdrToString( from ), args );
 }
 
 /*
@@ -1405,18 +1405,14 @@ CL_GetMessage
 Handles recording and playback of demos, on top of NET_ code
 ====================
 */
-int CL_GetMessage( byte *data, size_t *length )
+static qboolean CL_GetMessage( byte *data, size_t *length )
 {
 	if( cls.demoplayback )
 	{
-		if( CL_DemoReadMessage( data, length ))
-			return true;
-		return false;
+		return CL_DemoReadMessage( data, length );
 	}
 
-	if( NET_GetPacket( NS_CLIENT, &net_from, data, length ))
-		return true;
-	return false;
+	return NET_GetPacket( NS_CLIENT, &net_from, data, length );
 }
 
 /*
@@ -1533,7 +1529,7 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 	if( cls.downloadfileid == cls.downloadcount - 1 )
 	{
 		MsgDev( D_INFO, "Download completed, resuming connection\n" );
-		FS_Rescan_f();
+		FS_Rescan();
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "continueloading" );
 		cls.downloadfileid = 0;
@@ -1620,24 +1616,25 @@ void CL_InitLocal( void )
 	cls.state = ca_disconnected;
 
 	// register our variables
-	cl_predict = Cvar_Get( "cl_predict", "0", CVAR_ARCHIVE, "disables client movement prediction" );
+	cl_predict = Cvar_Get( "cl_predict", "0", CVAR_ARCHIVE, "enable client movement prediction" );
 	cl_crosshair = Cvar_Get( "crosshair", "1", CVAR_ARCHIVE, "show weapon chrosshair" );
-	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0, "disable delta-compression for usercommnds" );
+	cl_nodelta = Cvar_Get ("cl_nodelta", "0", 0, "disable delta-compression for usercommands" );
 	cl_idealpitchscale = Cvar_Get( "cl_idealpitchscale", "0.8", 0, "how much to look up/down slopes and stairs when not using freelook" );
-	cl_solid_players = Cvar_Get( "cl_solid_players", "1", 0, "Make all players not solid (can't traceline them)" );
-	cl_interp = Cvar_Get( "ex_interp", "0.1", 0, "Interpolate object positions starting this many seconds in past" );
-	cl_allow_fragment = Cvar_Get( "cl_allow_fragment", "0", CVAR_ARCHIVE, "Allow download files directly from servers" ); 
-	cl_timeout = Cvar_Get( "cl_timeout", "60", 0, "connect timeout (in-seconds)" );
+	cl_solid_players = Cvar_Get( "cl_solid_players", "1", 0, "make all players non-solid (can't traceline them)" );
+	cl_interp = Cvar_Get( "ex_interp", "0.1", 0, "interpolate object positions starting this many seconds in past" );
+	//Cvar_Get( "ex_maxerrordistance", "0", 0, "" );
+	cl_allow_fragment = Cvar_Get( "cl_allow_fragment", "0", CVAR_ARCHIVE, "allow downloading files directly from game server" ); 
+	cl_timeout = Cvar_Get( "cl_timeout", "60", 0, "connect timeout (in seconds)" );
 
 	rcon_client_password = Cvar_Get( "rcon_password", "", 0, "remote control client password" );
 	rcon_address = Cvar_Get( "rcon_address", "", 0, "remote control address" );
 	
-	r_oldparticles = Cvar_Get("r_oldparticles", "0", CVAR_ARCHIVE, "make some particle textures a simple square, like software rendering");
+	r_oldparticles = Cvar_Get("r_oldparticles", "0", CVAR_ARCHIVE, "make some particle textures a simple square, like with software rendering");
 
 	// userinfo
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );
 	name = Cvar_Get( "name", Sys_GetCurrentUser(), CVAR_USERINFO|CVAR_ARCHIVE|CVAR_PRINTABLEONLY, "player name" );
-	model = Cvar_Get( "model", "player", CVAR_USERINFO|CVAR_ARCHIVE, "player model ('player' it's a single player model)" );
+	model = Cvar_Get( "model", "player", CVAR_USERINFO|CVAR_ARCHIVE, "player model ('player' is a singleplayer model)" );
 	topcolor = Cvar_Get( "topcolor", "0", CVAR_USERINFO|CVAR_ARCHIVE, "player top color" );
 	bottomcolor = Cvar_Get( "bottomcolor", "0", CVAR_USERINFO|CVAR_ARCHIVE, "player bottom color" );
 	rate = Cvar_Get( "rate", "25000", CVAR_USERINFO|CVAR_ARCHIVE, "player network rate" );
@@ -1646,51 +1643,47 @@ void CL_InitLocal( void )
 	cl_showpos = Cvar_Get( "cl_showpos", "0", CVAR_ARCHIVE, "show local player position and velocity" );
 	cl_smooth = Cvar_Get ("cl_smooth", "0", CVAR_ARCHIVE, "smooth up stair climbing and interpolate position in multiplayer" );
 	cl_cmdbackup = Cvar_Get( "cl_cmdbackup", "10", CVAR_ARCHIVE, "how many additional history commands are sent" );
-	cl_cmdrate = Cvar_Get( "cl_cmdrate", "30", CVAR_ARCHIVE, "Max number of command packets sent to server per second" );
-	cl_draw_particles = Cvar_Get( "cl_draw_particles", "1", CVAR_ARCHIVE, "Disable any particle effects" );
-	cl_draw_beams = Cvar_Get( "cl_draw_beams", "1", CVAR_ARCHIVE, "Disable view beams" );
-	cl_lightstyle_lerping = Cvar_Get( "cl_lightstyle_lerping", "0", CVAR_ARCHIVE, "enables animated light lerping (perfomance option)" );
+	cl_cmdrate = Cvar_Get( "cl_cmdrate", "30", CVAR_ARCHIVE, "max number of command packets sent to server per second" );
+	cl_draw_particles = Cvar_Get( "cl_draw_particles", "1", CVAR_ARCHIVE, "disable particle effects" );
+	cl_draw_beams = Cvar_Get( "cl_draw_beams", "1", CVAR_ARCHIVE, "disable view beams" );
+	cl_lightstyle_lerping = Cvar_Get( "cl_lightstyle_lerping", "0", CVAR_ARCHIVE, "enable animated light lerping (perfomance option)" );
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
 	Cvar_Get( "cl_updaterate", "60", CVAR_USERINFO|CVAR_ARCHIVE, "refresh rate of server messages" );
-	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicate what background map is running" );
+	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicates that background map is running" );
 
 	// these two added to shut up CS 1.5 about 'unknown' commands
-	Cvar_Get( "lightgamma", "1", CVAR_ARCHIVE, "ambient lighting level (legacy, unused)" );
-	Cvar_Get( "direct", "1", CVAR_ARCHIVE, "direct lighting level (legacy, unused)" );
+	Cvar_Get( "lightgamma", "1", 0, "ambient lighting level (legacy, unused)" );
+	Cvar_Get( "direct", "1", 0, "direct lighting level (legacy, unused)" );
 	Cvar_Get( "voice_serverdebug", "0", 0, "debug voice (legacy, unused)" );
 
-	// interpolation cvars
-	Cvar_Get( "ex_interp", "0", 0, "" );
-	Cvar_Get( "ex_maxerrordistance", "0", 0, "" );
-
 	// server commands
-	Cmd_AddCommand ("noclip", NULL, "enable or disable no clipping mode" );
+	Cmd_AddCommand ("noclip", NULL, "toggle noclipping mode" );
 	Cmd_AddCommand ("notarget", NULL, "notarget mode (monsters do not see you)" );
-	Cmd_AddCommand ("fullupdate", NULL, "re-init HUD on start demo recording" );
+	Cmd_AddCommand ("fullupdate", NULL, "re-init HUD on start of demo recording" );
 	Cmd_AddCommand ("give", NULL, "give specified item or weapon" );
 	Cmd_AddCommand ("drop", NULL, "drop current/specified item or weapon" );
 	Cmd_AddCommand ("gametitle", NULL, "show game logo" );
-	Cmd_AddCommand ("god", NULL, "enable godmode" );
+	Cmd_AddCommand ("god", NULL, "toggle godmode" );
 	Cmd_AddCommand ("fov", NULL, "set client field of view" );
-	Cmd_AddCommand ("kill", NULL, "kill player" );
+	Cmd_AddCommand ("kill", NULL, "commit suicide" );
 
 	// register our commands
 	Cmd_AddCommand ("pause", NULL, "pause the game (if the server allows pausing)" );
 	Cmd_AddCommand ("localservers", CL_LocalServers_f, "collect info about local servers" );
 	Cmd_AddCommand ("internetservers", CL_InternetServers_f, "collect info about internet servers" );
-	Cmd_AddCommand ("cd", CL_PlayCDTrack_f, "Play cd-track (not real cd-player of course)" );
+	Cmd_AddCommand ("cd", CL_PlayCDTrack_f, "play cd-track (not real cd-player of course)" );
 
 	Cmd_AddCommand ("userinfo", CL_Userinfo_f, "print current client userinfo" );
 	Cmd_AddCommand ("physinfo", CL_Physinfo_f, "print current client physinfo" );
 	Cmd_AddCommand ("disconnect", CL_Disconnect_f, "disconnect from server" );
 	Cmd_AddCommand ("record", CL_Record_f, "record a demo" );
-	Cmd_AddCommand ("playdemo", CL_PlayDemo_f, "playing a demo" );
+	Cmd_AddCommand ("playdemo", CL_PlayDemo_f, "play a demo" );
 	Cmd_AddCommand ("killdemo", CL_DeleteDemo_f, "delete a specified demo file and demoshot" );
 	Cmd_AddCommand ("startdemos", CL_StartDemos_f, "start playing back the selected demos sequentially" );
 	Cmd_AddCommand ("demos", CL_Demos_f, "restart looping demos defined by the last startdemos command" );
-	Cmd_AddCommand ("movie", CL_PlayVideo_f, "playing a movie" );
+	Cmd_AddCommand ("movie", CL_PlayVideo_f, "play a movie" );
 	Cmd_AddCommand ("stop", CL_Stop_f, "stop playing or recording a demo" );
 	Cmd_AddCommand ("info", NULL, "collect info about local servers with specified protocol" );
 	Cmd_AddCommand ("escape", CL_Escape_f, "escape from game to menu" );
@@ -1704,9 +1697,9 @@ void CL_InitLocal( void )
 	Cmd_AddCommand ("snapshot", CL_SnapShot_f, "takes a snapshot of the next rendered frame" );
 	Cmd_AddCommand ("envshot", CL_EnvShot_f, "takes a six-sides cubemap shot with specified name" );
 	Cmd_AddCommand ("skyshot", CL_SkyShot_f, "takes a six-sides envmap (skybox) shot with specified name" );
-	Cmd_AddCommand ("levelshot", CL_LevelShot_f, "same as \"screenshot\", used for create plaque images" );
-	Cmd_AddCommand ("saveshot", CL_SaveShot_f, "used for create save previews with LoadGame menu" );
-	Cmd_AddCommand ("demoshot", CL_DemoShot_f, "used for create demo previews with PlayDemo menu" );
+	Cmd_AddCommand ("levelshot", CL_LevelShot_f, "same as \"screenshot\", used to create plaque images" );
+	Cmd_AddCommand ("saveshot", CL_SaveShot_f, "used to create save previews with LoadGame menu" );
+	Cmd_AddCommand ("demoshot", CL_DemoShot_f, "used to create demo previews with PlayDemo menu" );
 
 	Cmd_AddCommand ("connect", CL_Connect_f, "connect to a server by hostname" );
 	Cmd_AddCommand ("reconnect", CL_Reconnect_f, "reconnect to current level" );

@@ -234,7 +234,7 @@ typedef struct dds_caps_s
 
 typedef struct dds_s
 {
-	uint		dwIdent;		// must matched with DDSHEADER
+	uint		dwIdent;		// must match DDSHEADER
 	uint		dwSize;
 	uint		dwFlags;		// determines what fields are valid
 	uint		dwHeight;

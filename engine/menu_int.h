@@ -163,6 +163,7 @@ typedef struct ui_enginefuncs_s
 	int	(*pfnCompareFileTime)( char *filename1, char *filename2, int *iCompare );
 
 	void (*pfnEnableTextInput)( int enable );
+	void (*pfnSDL_free)( void *mem );
 } ui_enginefuncs_t;
 
 typedef struct

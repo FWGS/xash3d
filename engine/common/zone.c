@@ -64,7 +64,7 @@ typedef struct mempool_s
 	uint		sentinel2;	// should always be MEMHEADER_SENTINEL1
 } mempool_t;
 
-mempool_t *poolchain = NULL; // critical stuff
+mempool_t *poolchain; // critical stuff
 
 void *_Mem_Alloc( byte *poolptr, size_t size, const char *filename, int fileline )
 {
@@ -461,14 +461,4 @@ void Mem_PrintList( size_t minallocationsize )
 			if( mem->size >= minallocationsize )
 				Msg( "%10lu bytes allocated at %s:%i\n", (dword)mem->size, mem->filename, mem->fileline );
 	}
-}
-
-/*
-========================
-Memory_Init
-========================
-*/
-void Memory_Init( void )
-{
-	poolchain = NULL; // init mem chain
 }

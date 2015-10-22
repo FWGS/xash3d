@@ -20,9 +20,6 @@ GNU General Public License for more details.
 #include "event_api.h"
 #include "usercmd.h"
 #include "pm_movevars.h"
-#include "entity_state.h"
-#include "weaponinfo.h"
-#include "event_args.h"
 #include "protocol.h"
 #include "client.h"
 
