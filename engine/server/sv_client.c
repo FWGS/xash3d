@@ -1938,7 +1938,7 @@ SV_Kill_f
 */
 void SV_Kill_f( sv_client_t *cl )
 {
-	if( !SV_SetPlayer() || sv.background )
+	if( sv.background )
 		return;
 
 	if( !cl || !SV_IsValidEdict( cl->edict ))
