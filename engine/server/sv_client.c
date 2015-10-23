@@ -2135,6 +2135,9 @@ void SV_EntFire_f( sv_client_t *cl )
 	if( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
 		return;
 
+	Msg( "Player %i: %s called ent_fire: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
+		Cmd_Argv( 1 ), Cmd_Argv( 2 ), Cmd_Argv( 3 ), Cmd_Argv( 4 ), Cmd_Argv( 5 ) );
+
 	if( Cmd_Argc() < 3 )
 	{
 		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_fire <index||pattern> <command> [<values>]\n"
@@ -2208,6 +2211,23 @@ void SV_EntFire_f( sv_client_t *cl )
 		{
 			svgame.dllFuncs.pfnUse( ent, cl->edict );
 		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "movehere" ) )
+		{
+				ent->v.origin[2] = cl->edict->v.origin[2] + 25;
+				ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
+				ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "drop2floor" ) )
+		{
+				pfnDropToFloor( ent );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "moveup" ) )
+		{
+			float dist = 25;
+			if( Cmd_Argc() == 4 )
+				dist = Q_atof( Cmd_Argv( 3 ) );
+			ent->v.origin[2] +=  dist;
+		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeowner" ) )
 		{
 			ent->v.owner = cl->edict;
@@ -2219,6 +2239,22 @@ void SV_EntFire_f( sv_client_t *cl )
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeaiment" ) )
 		{
 			ent->v.aiment = cl->edict;
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "hullmin" ) )
+		{
+			if( Cmd_Argc() != 6 )
+				return;
+			ent->v.mins[0] = Q_atof( Cmd_Argv( 3 ) );
+			ent->v.mins[1] = Q_atof( Cmd_Argv( 4 ) );
+			ent->v.mins[2] = Q_atof( Cmd_Argv( 5 ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "hullmax" ) )
+		{
+			if( Cmd_Argc() != 6 )
+				return;
+			ent->v.maxs[0] = Q_atof( Cmd_Argv( 3 ) );
+			ent->v.maxs[1] = Q_atof( Cmd_Argv( 4 ) );
+			ent->v.maxs[2] = Q_atof( Cmd_Argv( 5 ) );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "rendercolor" ) )
 		{
@@ -2274,9 +2310,12 @@ void SV_EntFire_f( sv_client_t *cl )
 				"    movetype\n"
 				"    solid\n"
 				"    rendermode\n"
-				"    rendercolor\n"
+				"    rendercolor (vector)\n"
 				"    renderfx\n"
 				"    renderamt\n"
+				"    renderamt\n"
+				"    hullmin (vector)\n"
+				"    hullmax (vector)\n"
 				"Actions\n"
 				"    rename: set entity targetname\n"
 				"    settarget: set entity target (only targetnames)\n"
@@ -2286,6 +2325,9 @@ void SV_EntFire_f( sv_client_t *cl )
 				"        command takes two arguments\n"
 				"    touch: touch entity by current player.\n"
 				"    use: use entity by current player.\n"
+				"    movehere: place entity in player fov.\n"
+				"    drop2floor: place entity to nearest floor surface\n"
+				"    moveup: move entity to 25 units up\n"
 				"Flags:\n"
 				"        (Set/clear specified flag bit, arg is bit number)\n"
 				"    setflag\n"
@@ -2317,8 +2359,12 @@ void SV_EntCreate_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	int	i;
 
+
 	if( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
 		return;
+	// log all dangerous actions
+	Msg( "Player %i: %s called ent_create: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
+		Cmd_Argv( 1 ), Cmd_Argv( 2 ), Cmd_Argv( 3 ), Cmd_Argv( 4 ), Cmd_Argv( 5 ), Cmd_Argv( 6 ), Cmd_Argv( 7 ) );
 
 	if( Cmd_Argc() < 2 )
 	{
@@ -2353,6 +2399,18 @@ void SV_EntCreate_f( sv_client_t *cl )
 		if( pkvd.fHandled )
 			SV_ClientPrintf( cl, PRINT_LOW, "value \"%s\" set to \"%s\"!\n", pkvd.szKeyName, pkvd.szValue );
 	}
+	if( !ent->v.targetname )
+	{
+		char newname[256];
+		// Generate name based on nick name and index
+		Q_snprintf( newname, 256,  "%s_%i_e%i", cl->name, cl->userid, NUM_FOR_EDICT( ent ) );
+		// i know, it may break strict aliasing rules
+		// but we will not lose anything in this case.
+		Q_strnlwr( newname, newname, 256 );
+		ent->v.targetname = ALLOC_STRING( newname );
+	}
+		
+	SV_ClientPrintf( cl, PRINT_LOW, "Created %i: %s, targetname %s\n", NUM_FOR_EDICT( ent ), Cmd_Argv( 1 ), STRING( ent->v.targetname ) );
 	svgame.dllFuncs.pfnSpawn( ent );
 	// Now drop entity to floor.
 	// Otherwise given weapon may crash server if player touch it before.
