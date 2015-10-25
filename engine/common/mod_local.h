@@ -39,8 +39,8 @@ GNU General Public License for more details.
 
 #define LM_SAMPLE_SIZE		world.lm_sample_size	// lightmap resoultion
 
-#define SURF_INFO( surf, mod )	((mextrasurf_t *)mod->cache.data + (surf - mod->surfaces)) 
-#define INFO_SURF( surf, mod )	(mod->surfaces + (surf - (mextrasurf_t *)mod->cache.data)) 
+#define SURF_INFO( surf, mod )	((mextrasurf_t *)mod->cache.data + ((surf) - mod->surfaces)) 
+#define INFO_SURF( surf, mod )	(mod->surfaces + ((surf) - (mextrasurf_t *)mod->cache.data)) 
 
 // model flags (stored in model_t->flags)
 #define MODEL_CONVEYOR		BIT( 0 )

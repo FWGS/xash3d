@@ -70,7 +70,7 @@ int RankForContents( int contents );
 		BoxOnPlaneSide(( emins ), ( emaxs ), ( p )))
 
 
-#define check_angles( x )	( (int)x == 90 || (int)x == 180 || (int)x == 270 || (int)x == -90 || (int)x == -180 || (int)x == -270 )
+#define check_angles( x )	( (int)(x) == 90 || (int)(x) == 180 || (int)(x) == 270 || (int)(x) == -90 || (int)(x) == -180 || (int)(x) == -270 )
 
 #include "bspfile.h"
 #include "pm_shared.h"
