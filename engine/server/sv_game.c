@@ -2524,6 +2524,8 @@ void pfnMessageBegin( int msg_dest, int msg_num, const float *pOrigin, edict_t *
 	svgame.msg_realsize = 0;
 	svgame.msg_dest = msg_dest;
 	svgame.msg_ent = ed;
+
+	MsgDev( D_AICONSOLE, "^3MessageBegin( %i, %i )\n", msg_dest, msg_num );
 }
 
 /*
@@ -2622,6 +2624,7 @@ void pfnMessageEnd( void )
 	svgame.msg_dest = bound( MSG_BROADCAST, svgame.msg_dest, MSG_SPEC );
 
 	SV_Send( svgame.msg_dest, org, svgame.msg_ent );
+	MsgDev( D_AICONSOLE, "^3MessageEnd( )\n");
 }
 
 /*
@@ -2634,6 +2637,7 @@ void pfnWriteByte( int iValue )
 {
 	if( iValue == -1 ) iValue = 0xFF; // convert char to byte 
 	BF_WriteByte( &sv.multicast, (byte)iValue );
+	MsgDev( D_AICONSOLE, "^3    WriteByte( %i )\n", iValue );
 	svgame.msg_realsize++;
 }
 
@@ -2646,6 +2650,7 @@ pfnWriteChar
 void pfnWriteChar( int iValue )
 {
 	BF_WriteChar( &sv.multicast, (char)iValue );
+	MsgDev( D_AICONSOLE, "^3    WriteChar( %i )\n", iValue );
 	svgame.msg_realsize++;
 }
 
@@ -2658,6 +2663,7 @@ pfnWriteShort
 void pfnWriteShort( int iValue )
 {
 	BF_WriteShort( &sv.multicast, (short)iValue );
+	MsgDev( D_AICONSOLE, "^3    WriteShort( %i )\n", iValue );
 	svgame.msg_realsize += 2;
 }
 
@@ -2670,6 +2676,7 @@ pfnWriteLong
 void pfnWriteLong( int iValue )
 {
 	BF_WriteLong( &sv.multicast, iValue );
+	MsgDev( D_AICONSOLE, "^3    WriteLong( %i )\n", iValue );
 	svgame.msg_realsize += 4;
 }
 
@@ -2685,6 +2692,7 @@ void pfnWriteAngle( float flValue )
 	int	iAngle = ((int)(( flValue ) * 256 / 360) & 255);
 
 	BF_WriteChar( &sv.multicast, iAngle );
+	MsgDev( D_AICONSOLE, "^3    WriteAngle( %f )\n", flValue );
 	svgame.msg_realsize += 1;
 }
 
@@ -2697,6 +2705,7 @@ pfnWriteCoord
 void pfnWriteCoord( float flValue )
 {
 	BF_WriteCoord( &sv.multicast, flValue );
+	MsgDev( D_AICONSOLE, "^3    WriteCoord( %f )\n", flValue );
 	svgame.msg_realsize += 2;
 }
 
@@ -2740,7 +2749,7 @@ void pfnWriteString( const char *src )
 		}
 		else if( src[0] == '\\' && src[1] == 't' )
 		{
-			*dst++ = '\t';
+			*dst++ = '    ';
 			src += 2;
 			len -= 1;
 		}
@@ -2750,6 +2759,8 @@ void pfnWriteString( const char *src )
 
 	*dst = '\0'; // string end (not included in count)
 	BF_WriteString( &sv.multicast, string );
+
+	MsgDev( D_AICONSOLE, "^3    WriteString( %s )\n", string );
 
 	// NOTE: some messages with constant string length can be marked as known sized
 	svgame.msg_realsize += len;
@@ -2766,6 +2777,7 @@ void pfnWriteEntity( int iValue )
 	if( iValue < 0 || iValue >= svgame.numEntities )
 		Host_Error( "BF_WriteEntity: invalid entnumber %i\n", iValue );
 	BF_WriteShort( &sv.multicast, (short)iValue );
+	MsgDev( D_AICONSOLE, "^3    WriteEntity( %s )\n", iValue );
 	svgame.msg_realsize += 2;
 }
 
@@ -3129,6 +3141,8 @@ int pfnRegUserMsg( const char *pszName, int iSize )
 		BF_WriteString( &sv.multicast, svgame.msg[i].name );
 		SV_Send( MSG_ALL, NULL, NULL );
 	}
+
+	MsgDev( D_NOTE, "^3Added user message: %s (size == %i)\n", pszName, iSize );
 
 	return svgame.msg[i].number;
 }
