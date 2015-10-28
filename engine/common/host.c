@@ -48,6 +48,7 @@ convar_t	*host_sleeptime;
 convar_t	*con_gamemaps;
 convar_t	*download_types;
 convar_t	*build, *ver;
+convar_t	*host_mapdesign_fatal;
 
 static int num_decals;
 
@@ -678,7 +679,7 @@ void Host_Error( const char *error, ... )
 		{
 			UI_SetActiveMenu( false );
 			Key_SetKeyDest( key_console );
-			Msg( "Host_Error: %s", hosterror1 );
+			Msg( "^1Host_Error: ^7%s", hosterror1 );
 		}
 		else MSGBOX2( hosterror1 );
 	}
@@ -745,7 +746,26 @@ static void Host_Crash_f( void )
 {
 	*(int *)0 = 0xffffffff;
 }
+/*
+=================
+Host_MapDesignError
 
+Stop mappers for making bad maps
+but allow to ignore errors when need
+=================
+*/
+void Host_MapDesignError( const char *format, ... )
+{
+	char str[256];
+	va_list		argptr;
+	va_start( argptr, format );
+	Q_vsnprintf( str, 256, format, argptr );
+	va_end( argptr );
+	if( host_mapdesign_fatal->value )
+		Host_Error( "Map Design Error: %s\n", str );
+	else
+		Msg( "^1Map Design Error: ^3%s", str );
+}
 /*
 =================
 Host_InstallExceptionFilter
@@ -987,6 +1007,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	download_types = Cvar_Get( "download_types", "msec", CVAR_ARCHIVE, "list of types to download: Model, Sounds, Events, Custom" );
 	build = Cvar_Get( "build", va( "%i", Q_buildnum()), CVAR_INIT, "returns a current build number" );
 	ver = Cvar_Get( "ver", va( "%i/%g.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
+	host_mapdesign_fatal = Cvar_Get( "host_mapdesign_fatal", "1", CVAR_ARCHIVE, "make map design errors fatal" );
 
 	// content control
 	Cvar_Get( "violence_hgibs", "1", CVAR_ARCHIVE, "show human gib entities" );

@@ -182,7 +182,10 @@ hull_t *SV_HullForBsp( edict_t *ent, const vec3_t mins, const vec3_t maxs, float
 	model = Mod_Handle( ent->v.modelindex );
 
 	if( !model || model->type != mod_brush )
-		Host_Error( "Entity %i SOLID_BSP with a non bsp model %i\n", NUM_FOR_EDICT( ent ), (model) ? model->type : mod_bad );
+	{
+		Host_MapDesignError( "Entity %i SOLID_BSP with a non bsp model %i\n", NUM_FOR_EDICT( ent ), (model) ? model->type : mod_bad );
+		return;
+	}
 
 	VectorSubtract( maxs, mins, size );
 
@@ -247,11 +250,11 @@ hull_t *SV_HullForEntity( edict_t *ent, vec3_t mins, vec3_t maxs, vec3_t offset 
 	hull_t	*hull;
 	vec3_t	hullmins, hullmaxs;
 
-	if( ent->v.solid == SOLID_BSP && ( Mod_GetType( ent->v.modelindex ) == mod_brush ) )
+	if( ent->v.solid == SOLID_BSP )
 	{
 		if( ent->v.movetype != MOVETYPE_PUSH && ent->v.movetype != MOVETYPE_PUSHSTEP )
 		{
-			MsgDev( D_ERROR, "'%s' has SOLID_BSP without MOVETYPE_PUSH or MOVETYPE_PUSHSTEP\n", SV_ClassName( ent ) );
+			Host_MapDesignError( "'%s' has SOLID_BSP without MOVETYPE_PUSH or MOVETYPE_PUSHSTEP\n", SV_ClassName( ent ) );
 		}
 		hull = SV_HullForBsp( ent, mins, maxs, offset );
 	}
@@ -724,7 +727,7 @@ void SV_WaterLinks( const vec3_t origin, int *pCont, areanode_t *node )
 			hull = SV_HullForBsp( touch, vec3_origin, vec3_origin, offset );
 		else
 		{
-			MsgDev( D_ERROR, "Water must have BSP model!\n" );
+			Host_MapDesignError( "Water must have BSP model!\n" );
 			hull = SV_HullForBox( touch->v.mins, touch->v.maxs );
 		}
 
@@ -1146,7 +1149,10 @@ static void SV_ClipToLinks( areanode_t *node, moveclip_t *clip )
 			continue;
 
 		if( touch->v.solid == SOLID_TRIGGER )
-			Host_Error( "trigger in clipping list\n" );
+		{
+			Host_MapDesignError( "trigger in clipping list\n" );
+			touch->v.solid = SOLID_NOT;
+		}
 
 		// custom user filter
 		if( svgame.dllFuncs2.pfnShouldCollide )

@@ -661,6 +661,7 @@ qboolean Host_IsLocalClient( void );
 void Host_ShutdownServer( void );
 void Host_Print( const char *txt );
 void Host_Error( const char *error, ... );
+void Host_MapDesignError( const char *error, ... );
 void Host_PrintEngineFeatures( void );
 void Host_InitDecals( void );
 void Host_Credits( void );

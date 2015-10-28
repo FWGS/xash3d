@@ -1722,7 +1722,7 @@ static void SV_Physics_Entity( edict_t *ent )
 		SV_Physics_Pusher( ent );
 		break;
 	case MOVETYPE_WALK:
-		MsgDev( D_ERROR, "SV_Physics: bad movetype %i for %s, reset to MOVETYPE_NONE\n", ent->v.movetype, STRING( ent->v.classname ) );
+		Host_MapDesignError( "SV_Physics: bad movetype %i for %s, reset to MOVETYPE_NONE\n", ent->v.movetype, STRING( ent->v.classname ) );
 		ent->v.movetype = MOVETYPE_NONE;
 		break;
 	}

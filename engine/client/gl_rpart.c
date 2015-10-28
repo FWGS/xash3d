@@ -246,7 +246,7 @@ particle_t *CL_AllocParticle( void (*callback)( particle_t*, float ))
 
 	if( !cl_free_particles )
 	{
-		MsgDev( D_INFO, "Overflow %d particles\n", GI->max_particles );
+		MsgDev( D_NOTE, "Overflow %d particles\n", GI->max_particles );
 		return NULL;
 	}
 
