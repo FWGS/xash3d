@@ -67,7 +67,8 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 	if( ed->v.flags & ( FL_CLIENT|FL_FAKECLIENT ))
 	{
 		// client or bot
-		SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
+		if ( svs.currentPlayer )
+			SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
 		Q_strncpy( pe->name, "player", sizeof( pe->name ));
 		pe->player = pe->info;
 	}
@@ -189,7 +190,12 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 	physent_t	*pe;
 
 	pl = EDICT_NUM( svgame.pmove->player_index + 1 );
-	ASSERT( SV_IsValidEdict( pl ));
+	//ASSERT( SV_IsValidEdict( pl ));
+	if( !SV_IsValidEdict( pl ) )
+	{
+		MsgDev( D_ERROR, "SV_AddLinksToPmove: you have broken clients!\n");
+		return;
+	}
 
 	// touch linked edicts
 	for( l = node->solid_edicts.next; l != &node->solid_edicts; l = next )
@@ -204,7 +210,7 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 				continue;
 		}
 
-		if( check->v.owner == pl || check->v.solid == SOLID_TRIGGER )
+		if( ( ( check->v.owner > 0) && check->v.owner == pl ) || check->v.solid == SOLID_TRIGGER )
 			continue; // player or player's own missile
 
 		if( svgame.pmove->numvisent < MAX_PHYSENTS )
@@ -235,7 +241,8 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 		if( check->v.flags & FL_CLIENT )
 		{
 			// trying to get interpolated values
-			SV_GetTrueMinMax( svs.currentPlayer, ( NUM_FOR_EDICT( check ) - 1), mins, maxs );
+			if( svs.currentPlayer )
+				SV_GetTrueMinMax( svs.currentPlayer, ( NUM_FOR_EDICT( check ) - 1), mins, maxs );
 		}
 
 		if( !BoundsIntersect( pmove_mins, pmove_maxs, mins, maxs ))

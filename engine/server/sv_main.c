@@ -60,8 +60,16 @@ convar_t	*sv_allow_upload;
 convar_t	*sv_allow_download;
 convar_t	*sv_allow_fragment;
 convar_t	*sv_downloadurl;
+convar_t	*sv_clientclean;
 convar_t	*sv_allow_studio_attachment_angles;
 convar_t	*sv_allow_rotate_pushables;
+convar_t	*sv_allow_godmode;
+convar_t	*sv_allow_noclip;
+convar_t	*sv_allow_impulse;
+convar_t	*sv_enttools_enable;
+convar_t	*sv_enttools_players;
+convar_t	*sv_enttools_maxfire;
+convar_t	*sv_enttools_godplayer;
 convar_t	*sv_validate_changelevel;
 convar_t	*sv_clienttrace;
 convar_t	*sv_send_resources;
@@ -110,7 +118,8 @@ void SV_CalcPings( void )
 	int		i, j;
 	int		total, count;
 
-	if( !svs.clients ) return;
+	//if( !svs.clients )
+	return;
 
 	// clamp fps counter
 	for( i = 0; i < sv_maxclients->integer; i++ )
@@ -438,10 +447,11 @@ void SV_CheckTimeouts( void )
 
 		if( cl->state == cs_zombie && cl->lastmessage < zombiepoint )
 		{
-			if( cl->edict && !cl->edict->pvPrivateData )
+			//if( cl->edict && !cl->edict->pvPrivateData )
 				cl->state = cs_free; // can now be reused
 			// Does not work too, as entity may be referenced
 			// But you may increase zombietime
+			#if 0
 			if( cl->edict && cl->edict->pvPrivateData != NULL )
 			{
 				// NOTE: new interface can be missing
@@ -452,6 +462,7 @@ void SV_CheckTimeouts( void )
 				Mem_Free( cl->edict->pvPrivateData );
 				cl->edict->pvPrivateData = NULL;
 			}
+			#endif
 			continue;
 		}
 
@@ -741,10 +752,16 @@ void SV_Init( void )
 	sv_newunit = Cvar_Get( "sv_newunit", "0", 0, "sets to 1 while new unit is loading" );
 	hostname = Cvar_Get( "hostname", "unnamed", CVAR_SERVERNOTIFY|CVAR_SERVERNOTIFY|CVAR_ARCHIVE, "host name" );
 	timeout = Cvar_Get( "timeout", "125", CVAR_SERVERNOTIFY, "connection timeout" );
-	zombietime = Cvar_Get( "zombietime", "20", CVAR_SERVERNOTIFY, "timeout for clients-zombie (who died but not respawned)" );
+	zombietime = Cvar_Get( "zombietime", "2", CVAR_SERVERNOTIFY, "timeout for clients-zombie (who died but not respawned)" );
 	sv_pausable = Cvar_Get( "pausable", "1", CVAR_SERVERNOTIFY, "allow players to pause or not" );
 	sv_allow_studio_attachment_angles = Cvar_Get( "sv_allow_studio_attachment_angles", "0", CVAR_ARCHIVE, "enable calc angles for attachment points (on studio models)" );
 	sv_allow_rotate_pushables = Cvar_Get( "sv_allow_rotate_pushables", "0", CVAR_ARCHIVE, "let the pushers rotate pushables with included origin-brush" );
+	sv_allow_godmode = Cvar_Get( "sv_allow_godmode", "1", CVAR_LATCH, "allow players to be a god when sv_cheats is \"1\"" );
+	sv_allow_noclip = Cvar_Get( "sv_allow_noclip", "1", CVAR_LATCH, "allow players to use noclip when sv_cheats is \"1\"" );
+	sv_enttools_enable = Cvar_Get( "sv_enttools_enable", "0", CVAR_ARCHIVE | CVAR_PROTECTED, "Enable powerful and dangerous entity tools" );
+	sv_enttools_players = Cvar_Get( "sv_enttools_players", "0", CVAR_ARCHIVE | CVAR_PROTECTED, "Allow use ent_fire by players" );
+	sv_enttools_maxfire = Cvar_Get( "sv_enttools_maxfire", "5", CVAR_ARCHIVE | CVAR_PROTECTED, "Limit ent_fire actions count to prevent flooding" );
+	sv_enttools_godplayer = Cvar_Get( "sv_enttools_godplayer", "", CVAR_PROTECTED, "Allow specified player to use enttools without sv_enttools_enable" );
 	sv_validate_changelevel = Cvar_Get( "sv_validate_changelevel", "1", CVAR_ARCHIVE, "test change level for level-designer errors" );
 	sv_clienttrace = Cvar_Get( "sv_clienttrace", "1", CVAR_SERVERNOTIFY, "scaling factor for client hitboxes" );
 	sv_wallbounce = Cvar_Get( "sv_wallbounce", "1.0", CVAR_PHYSICINFO, "bounce factor for client with MOVETYPE_BOUNCE" );
@@ -755,7 +772,7 @@ void SV_Init( void )
 	sv_rollspeed = Cvar_Get( "sv_rollspeed", "200", CVAR_PHYSICINFO, "how much strafing is necessary to tilt the view" );
 	sv_airaccelerate = Cvar_Get("sv_airaccelerate", "10", CVAR_PHYSICINFO, "player accellerate in air" );
 	sv_maxvelocity = Cvar_Get( "sv_maxvelocity", "2000", CVAR_PHYSICINFO, "max world velocity" );
-          sv_gravity = Cvar_Get( "sv_gravity", "800", CVAR_PHYSICINFO, "world gravity" );
+	sv_gravity = Cvar_Get( "sv_gravity", "800", CVAR_PHYSICINFO, "world gravity" );
 	sv_maxspeed = Cvar_Get( "sv_maxspeed", "320", CVAR_PHYSICINFO, "maximum speed a player can accelerate to when on ground");
 	sv_accelerate = Cvar_Get( "sv_accelerate", "10", CVAR_PHYSICINFO, "rate at which a player accelerates to sv_maxspeed" );
 	sv_friction = Cvar_Get( "sv_friction", "4", CVAR_PHYSICINFO, "how fast you slow down" );
@@ -777,6 +794,7 @@ void SV_Init( void )
 	sv_allow_download = Cvar_Get( "sv_allow_download", "0", CVAR_ARCHIVE, "allow download missed resources to clients" );
 	sv_allow_fragment = Cvar_Get( "sv_allow_fragment", "0", CVAR_ARCHIVE, "allow direct download from server" );
 	sv_downloadurl = Cvar_Get( "sv_downloadurl", "", CVAR_ARCHIVE, "custom fastdl server to pass to client" );
+	sv_clientclean = Cvar_Get( "sv_clientclean", "0", CVAR_ARCHIVE, "client cleaning mode (0-3), useful for bots" );
 	sv_send_logos = Cvar_Get( "sv_send_logos", "1", 0, "send custom player decals to other clients" );
 	sv_send_resources = Cvar_Get( "sv_send_resources", "1", 0, "send generic resources that specified in 'mapname.res'" );
 	sv_sendvelocity = Cvar_Get( "sv_sendvelocity", "1", CVAR_ARCHIVE, "force to send velocity for event_t structure across network" );
@@ -849,6 +867,9 @@ void SV_Shutdown( qboolean reconnect )
 	// already freed
 	if( !SV_Active( ))
 		return;
+
+	// rcon will be disconnected
+	SV_EndRedirect();
 
 	if( host.type == HOST_DEDICATED )
 		MsgDev( D_INFO, "SV_Shutdown: %s\n", host.finalmsg );

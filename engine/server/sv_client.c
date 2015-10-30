@@ -227,6 +227,39 @@ gotnewcl:
 	// initailize netchan here because SV_DropClient will clear network buffer
 	Netchan_Setup( NS_SERVER, &newcl->netchan, from, qport );
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
+	// prevent memory leak and client crashes.
+	// This should not happend, need to test it,
+
+
+	if( ( sv_maxclients->integer > 1 ) && ent->pvPrivateData )
+	{
+		// Force this client data
+		if( sv_clientclean->integer & 1 )
+		{
+			if( ent->pvPrivateData != NULL )
+			{
+				// NOTE: new interface can be missing
+				if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
+					svgame.dllFuncs2.pfnOnFreeEntPrivateData( ent );
+
+				// clear any dlls data but keep engine data
+				Mem_Free( ent->pvPrivateData );
+				ent->pvPrivateData = NULL;
+			}
+			// HACK: invalidate serial number
+			ent->serialnumber++;
+		}
+		// "3" enables both clean and disconnect
+		if( sv_clientclean->integer & 2 )
+		{
+			Netchan_OutOfBandPrint( NS_SERVER, from, "print\nTry again later.\n" );
+
+			MsgDev( D_ERROR, "SV_DirectConnect: private data not freed!\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
+			SV_DropClient( newcl );
+			return;
+		}
+	}
 
 	// get the game a chance to reject this connection or modify the userinfo
 	if( !( SV_ClientConnect( ent, userinfo )))
@@ -281,7 +314,7 @@ void SV_DisconnectClient( edict_t *pClient )
 
 	/* mittorn: pvPrivateData must be cleaned on edict remove
 	 * If it cleaned here, server will crash later */
-	/*if( pClient->pvPrivateData != NULL )
+	if( pClient->pvPrivateData != NULL )
 	{
 		// NOTE: new interface can be missing
 		if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
@@ -290,7 +323,9 @@ void SV_DisconnectClient( edict_t *pClient )
 		// clear any dlls data but keep engine data
 		Mem_Free( pClient->pvPrivateData );
 		pClient->pvPrivateData = NULL;
-	}*/
+	}
+	// HACK: invalidate serial number
+	pClient->serialnumber++;
 }
 
 /*
@@ -440,11 +475,13 @@ void SV_DropClient( sv_client_t *drop )
 		Mem_Free( drop->frames );	// fakeclients doesn't have frames
 	drop->frames = NULL;
 
+	if( NET_CompareBaseAdr( drop->netchan.remote_address, host.rd.address ) )
+		SV_EndRedirect();
+
 	SV_ClearCustomizationList( drop->customization, false );
 
 	// throw away any residual garbage in the channel.
 	Netchan_Clear( &drop->netchan );
-
 
 	// Clean client data on disconnect
 	Q_memset( drop->userinfo, 0, MAX_INFO_STRING );
@@ -514,7 +551,8 @@ void SV_FlushRedirect( netadr_t adr, int dest, char *buf )
 
 void SV_EndRedirect( void )
 {
-	host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
+	if( host.rd.flush )
+		host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
 
 	host.rd.target = 0;
 	host.rd.buffer = NULL;
@@ -812,16 +850,33 @@ recalc ping on current client
 int SV_CalcPing( sv_client_t *cl )
 {
 	float		ping = 0;
-	int		i, count;
+	int		i, count, back;
 	client_frame_t	*frame;
 
 	// bots don't have a real ping
 	if( cl->fakeclient )
 		return 5;
 
-	count = 0;
+	// client has no frame data
+	if( !cl->frames )
+		return 5;
 
-	for( i = 0; i < SV_UPDATE_BACKUP; i++ )
+	count = 0;
+	
+	if ( SV_UPDATE_BACKUP <= 31 )
+	{
+		back = SV_UPDATE_BACKUP / 2;
+		if ( back <= 0 )
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		back = 16;
+	}
+
+	for( i = 0; i < back; i++ )
 	{
 		frame = &cl->frames[(cl->netchan.incoming_acknowledged - (i + 1)) & SV_UPDATE_MASK];
 
@@ -948,19 +1003,17 @@ if this person needs ping data.
 */
 qboolean SV_ShouldUpdatePing( sv_client_t *cl )
 {
-	if( !cl->hltv_proxy )
-	{
-		SV_CalcPing( cl );
-		return cl->lastcmd.buttons & IN_SCORE;	// they are viewing the scoreboard.  Send them pings.
-	}
-
 	if( host.realtime > cl->next_checkpingtime )
 	{
+		SV_CalcPing( cl );
 		cl->next_checkpingtime = host.realtime + 2.0;
 		return true;
+		//return cl->lastcmd.buttons & IN_SCORE;	// they are viewing the scoreboard.  Send them pings.
 	}
+	else if ( cl->next_checkpingtime - host.realtime > 2.0 )
+		cl->next_checkpingtime = host.realtime + 2.0;
 
-	return false;
+	return true;
 }
 
 /*
@@ -1017,7 +1070,12 @@ void SV_PutClientInServer( edict_t *ent )
 	sv_client_t	*client;
 
 	client = SV_ClientFromEdict( ent, true );
-	ASSERT( client != NULL );
+
+	if( client == NULL )
+	{
+		MsgDev( D_ERROR, "SV_AddEntitiesToPacket: you have broken clients!\n");
+		return;
+	}
 
 	if( !sv.loadgame )
 	{	
@@ -1858,7 +1916,7 @@ static void SV_Noclip_f( sv_client_t *cl )
 {
 	edict_t	*pEntity = cl->edict;
 
-	if( !Cvar_VariableInteger( "sv_cheats" ) || sv.background )
+	if( !Cvar_VariableInteger( "sv_cheats" ) || sv.background || !sv_allow_noclip->value )
 		return;
 
 	if( pEntity->v.movetype != MOVETYPE_NOCLIP )
@@ -1880,7 +1938,7 @@ SV_Kill_f
 */
 void SV_Kill_f( sv_client_t *cl )
 {
-	if( !SV_SetPlayer() || sv.background )
+	if( sv.background )
 		return;
 
 	if( !cl || !SV_IsValidEdict( cl->edict ))
@@ -1904,7 +1962,7 @@ static void SV_Godmode_f( sv_client_t *cl )
 {
 	edict_t	*pEntity = cl->edict;
 
-	if( !Cvar_VariableInteger( "sv_cheats" ) || sv.background )
+	if( !Cvar_VariableInteger( "sv_cheats" ) || sv.background || !sv_allow_noclip->value )
 		return;
 
 	pEntity->v.flags = pEntity->v.flags ^ FL_GODMODE;
@@ -1932,6 +1990,436 @@ static void SV_Notarget_f( sv_client_t *cl )
 		SV_ClientPrintf( cl, PRINT_HIGH, "notarget OFF\n" );
 	else SV_ClientPrintf( cl, PRINT_HIGH, "notarget ON\n" );
 }
+
+/*
+===============
+SV_EntList_f
+
+Print list of entities to client
+===============
+*/
+void SV_EntList_f( sv_client_t *cl )
+{
+	edict_t	*ent = NULL;
+	int	i;
+
+	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+		return;
+
+	for( i = 0; i < svgame.numEntities; i++ )
+	{
+		ent = EDICT_NUM( i );
+		if( !SV_IsValidEdict( ent )) continue;
+
+		// filter by string
+		if( Cmd_Argc() > 1 )
+			if( !Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.classname ) ) && !Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.targetname ) ) )
+				continue;
+
+		SV_ClientPrintf( cl, PRINT_LOW, "%5i origin: %.f %.f %.f", i, ent->v.origin[0], ent->v.origin[1], ent->v.origin[2] );
+
+		if( ent->v.classname )
+			SV_ClientPrintf( cl, PRINT_LOW, ", class: %s", STRING( ent->v.classname ));
+
+		if( ent->v.globalname )
+			SV_ClientPrintf( cl, PRINT_LOW, ", global: %s", STRING( ent->v.globalname ));
+
+		if( ent->v.targetname )
+			SV_ClientPrintf( cl, PRINT_LOW, ", name: %s", STRING( ent->v.targetname ));
+
+		if( ent->v.target )
+			SV_ClientPrintf( cl, PRINT_LOW, ", target: %s", STRING( ent->v.target ));
+
+		if( ent->v.model )
+			SV_ClientPrintf( cl, PRINT_LOW, ", model: %s", STRING( ent->v.model ));
+
+		SV_ClientPrintf( cl, PRINT_LOW, "\n" );
+	}
+}
+
+/*
+===============
+SV_EntInfo_f
+
+Print specified entity information to client
+===============
+*/
+void SV_EntInfo_f( sv_client_t *cl )
+{
+	edict_t	*ent = NULL;
+	int	i = 0;
+
+	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+		return;
+
+	if( Cmd_Argc() != 2 )
+	{
+		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_info <index>\n" );
+		return;
+	}
+
+	if( Q_isdigit( Cmd_Argv( 1 ) ) )
+	{
+		i = Q_atoi( Cmd_Argv( 1 ) );
+
+		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+			return;
+
+		ent = EDICT_NUM( i );
+	}
+	else
+	{
+		for( i = svgame.globals->maxClients + 1; i < svgame.numEntities; i++ )
+		{
+			ent = EDICT_NUM( i );
+			if( Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.targetname ) ) )
+				break;
+		}
+	}
+
+	ent = EDICT_NUM( i );
+	if( !SV_IsValidEdict( ent )) return;
+
+	SV_ClientPrintf( cl, PRINT_LOW, "origin: %.f %.f %.f\n", ent->v.origin[0], ent->v.origin[1], ent->v.origin[2] );
+
+	SV_ClientPrintf( cl, PRINT_LOW, "angles: %.f %.f %.f\n", ent->v.angles[0], ent->v.angles[1], ent->v.angles[2] );
+
+	if( ent->v.classname )
+		SV_ClientPrintf( cl, PRINT_LOW, "class: %s\n", STRING( ent->v.classname ));
+
+	if( ent->v.globalname )
+		SV_ClientPrintf( cl, PRINT_LOW, "global: %s\n", STRING( ent->v.globalname ));
+
+	if( ent->v.targetname )
+		SV_ClientPrintf( cl, PRINT_LOW, "name: %s\n", STRING( ent->v.targetname ));
+
+	if( ent->v.target )
+		SV_ClientPrintf( cl, PRINT_LOW, "target: %s\n", STRING( ent->v.target ));
+
+	if( ent->v.model )
+		SV_ClientPrintf( cl, PRINT_LOW, "model: %s\n", STRING( ent->v.model ));
+
+	SV_ClientPrintf( cl, PRINT_LOW, "health: %.f\n", ent->v.health );
+
+	if( ent->v.gravity != 1.0f )
+		SV_ClientPrintf( cl, PRINT_LOW, "gravity: %.2f\n", ent->v.gravity );
+
+	SV_ClientPrintf( cl, PRINT_LOW, "movetype: %d\n", ent->v.movetype );
+
+	SV_ClientPrintf( cl, PRINT_LOW, "rendermode: %d\n", ent->v.rendermode );
+	SV_ClientPrintf( cl, PRINT_LOW, "renderfx: %d\n", ent->v.renderfx );
+	SV_ClientPrintf( cl, PRINT_LOW, "renderamt: %f\n", ent->v.renderamt );
+	SV_ClientPrintf( cl, PRINT_LOW, "rendercolor: %f %f %f\n", ent->v.rendercolor[0], ent->v.rendercolor[1], ent->v.rendercolor[2] );
+
+	SV_ClientPrintf( cl, PRINT_LOW, "maxspeed: %f\n", ent->v.maxspeed );
+
+	if( ent->v.solid )
+		SV_ClientPrintf( cl, PRINT_LOW, "solid: %d\n", ent->v.solid );
+	SV_ClientPrintf( cl, PRINT_LOW, "flags: 0x%x\n", ent->v.flags );
+	SV_ClientPrintf( cl, PRINT_LOW, "spawnflags: 0x%x\n", ent->v.spawnflags );
+}
+
+/*
+===============
+SV_EntInfo_f
+
+Print specified entity information to client
+===============
+*/
+void SV_EntFire_f( sv_client_t *cl )
+{
+	edict_t	*ent = NULL;
+	int	i = 1, count = 0;
+	qboolean number; // true if user specified entity number, not pattern
+
+	if( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+		return;
+
+	Msg( "Player %i: %s called ent_fire: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
+		Cmd_Argv( 1 ), Cmd_Argv( 2 ), Cmd_Argv( 3 ), Cmd_Argv( 4 ), Cmd_Argv( 5 ) );
+
+	if( Cmd_Argc() < 3 )
+	{
+		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_fire <index||pattern> <command> [<values>]\n"
+			"Use ent_fire 0 help to get command list\n" );
+		return;
+	}
+
+	if( number = Q_isdigit( Cmd_Argv( 1 ) ) )
+	{
+		i = Q_atoi( Cmd_Argv( 1 ) );
+
+		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+			return;
+
+		ent = EDICT_NUM( i );
+	}
+	else if( !sv_enttools_players->value )
+		i = svgame.globals->maxClients + 1;
+
+	for( ; ( i <  svgame.numEntities ) && ( count < sv_enttools_maxfire->integer ); i++ )
+	{
+		ent = EDICT_NUM( i );
+		if( !SV_IsValidEdict( ent ))
+		{
+			// SV_ClientPrintf( cl, PRINT_LOW, "Got invalid entity\n" );
+			if( number )
+				break;
+			continue;
+		}
+		
+		// if user specified not a number, try find such entity
+		if( !number )
+		{
+			if( !Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.targetname ) ) && !Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.classname ) ))
+				continue;
+		}
+
+		SV_ClientPrintf( cl, PRINT_LOW, "entity %i\n", i );
+
+		count++;
+
+		if( !Q_stricmp( Cmd_Argv( 2 ), "health" ) )
+			ent->v.health = Q_atoi( Cmd_Argv ( 3 ) );
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "gravity" ) )
+			ent->v.gravity = Q_atof( Cmd_Argv ( 3 ) );
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "movetype" ) )
+			ent->v.movetype = Q_atoi( Cmd_Argv ( 3 ) );
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "solid" ) )
+			ent->v.solid = Q_atoi( Cmd_Argv ( 3 ) );
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "rename" ) )
+			ent->v.targetname = ALLOC_STRING( Cmd_Argv ( 3 ) );
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "settarget" ) )
+			ent->v.target = ALLOC_STRING( Cmd_Argv ( 3 ) );
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "set" ) )
+		{
+			KeyValueData	pkvd;
+			if( Cmd_Argc() != 5 )
+				return;
+			pkvd.szClassName = (char*)STRING( ent->v.classname );
+			pkvd.szKeyName = Cmd_Argv( 3 );
+			pkvd.szValue = Cmd_Argv( 4 );
+			svgame.dllFuncs.pfnKeyValue( ent, &pkvd );
+			if( pkvd.fHandled )
+				SV_ClientPrintf( cl, PRINT_LOW, "value set successfully!\n" );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "touch" ) )
+		{
+			svgame.dllFuncs.pfnTouch( ent, cl->edict );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "use" ) )
+		{
+			svgame.dllFuncs.pfnUse( ent, cl->edict );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "movehere" ) )
+		{
+				ent->v.origin[2] = cl->edict->v.origin[2] + 25;
+				ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
+				ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "drop2floor" ) )
+		{
+				pfnDropToFloor( ent );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "moveup" ) )
+		{
+			float dist = 25;
+			if( Cmd_Argc() == 4 )
+				dist = Q_atof( Cmd_Argv( 3 ) );
+			ent->v.origin[2] +=  dist;
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeowner" ) )
+		{
+			ent->v.owner = cl->edict;
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeenemy" ) )
+		{
+			ent->v.enemy = cl->edict;
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeaiment" ) )
+		{
+			ent->v.aiment = cl->edict;
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "hullmin" ) )
+		{
+			if( Cmd_Argc() != 6 )
+				return;
+			ent->v.mins[0] = Q_atof( Cmd_Argv( 3 ) );
+			ent->v.mins[1] = Q_atof( Cmd_Argv( 4 ) );
+			ent->v.mins[2] = Q_atof( Cmd_Argv( 5 ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "hullmax" ) )
+		{
+			if( Cmd_Argc() != 6 )
+				return;
+			ent->v.maxs[0] = Q_atof( Cmd_Argv( 3 ) );
+			ent->v.maxs[1] = Q_atof( Cmd_Argv( 4 ) );
+			ent->v.maxs[2] = Q_atof( Cmd_Argv( 5 ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "rendercolor" ) )
+		{
+			if( Cmd_Argc() != 6 )
+				return;
+			ent->v.rendercolor[0] = Q_atof( Cmd_Argv( 3 ) );
+			ent->v.rendercolor[1] = Q_atof( Cmd_Argv( 4 ) );
+			ent->v.rendercolor[2] = Q_atof( Cmd_Argv( 5 ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "renderamt" ) )
+		{
+			ent->v.renderamt = Q_atof( Cmd_Argv( 3 ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "renderfx" ) )
+		{
+			ent->v.renderfx = Q_atoi( Cmd_Argv( 3 ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "rendermode" ) )
+		{
+			ent->v.rendermode = Q_atoi( Cmd_Argv( 3 ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "setmodel" ) )
+		{
+			ent->v.model = ALLOC_STRING( Cmd_Argv( 3 ) );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "setflag" ) )
+		{
+			ent->v.flags |= 1 << Q_atoi( Cmd_Argv ( 3 ) );
+			SV_ClientPrintf( cl, PRINT_LOW, "flags set to 0x%x\n", ent->v.flags );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "clearflag" ) )
+		{
+			ent->v.flags &= ~( 1 << Q_atoi( Cmd_Argv ( 3 ) ) );
+			SV_ClientPrintf( cl, PRINT_LOW, "flags set to 0x%x\n", ent->v.flags );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "setspawnflag" ) )
+		{
+			ent->v.spawnflags |= 1 << Q_atoi( Cmd_Argv ( 3 ) );
+			SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.spawnflags );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "clearspawnflag" ) )
+		{
+			ent->v.spawnflags &= ~( 1 << Q_atoi( Cmd_Argv ( 3 ) ) );
+			SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.flags );
+		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "help" ) )
+		{
+			SV_ClientPrintf( cl, PRINT_LOW, "Availiavle commands:\n"
+				"Set fields:\n"
+				"        (Only set entity field, does not call any functions)\n"
+				"    health\n"
+				"    gravity\n"
+				"    movetype\n"
+				"    solid\n"
+				"    rendermode\n"
+				"    rendercolor (vector)\n"
+				"    renderfx\n"
+				"    renderamt\n"
+				"    renderamt\n"
+				"    hullmin (vector)\n"
+				"    hullmax (vector)\n"
+				"Actions\n"
+				"    rename: set entity targetname\n"
+				"    settarget: set entity target (only targetnames)\n"
+				"    setmodel: set entity model (does not update)\n"
+				"    set: set <key> <value> by server library\n"
+				"        See game FGD to get list.\n"
+				"        command takes two arguments\n"
+				"    touch: touch entity by current player.\n"
+				"    use: use entity by current player.\n"
+				"    movehere: place entity in player fov.\n"
+				"    drop2floor: place entity to nearest floor surface\n"
+				"    moveup: move entity to 25 units up\n"
+				"Flags:\n"
+				"        (Set/clear specified flag bit, arg is bit number)\n"
+				"    setflag\n"
+				"    clearflag\n"
+				"    setspawnflag\n"
+				"    clearspawnflag\n"
+			);
+			return;
+		}
+		else
+		{
+			SV_ClientPrintf( cl, PRINT_LOW, "Unknown command %s!\nUse \"ent_fire 0 help\" to list commands.\n", Cmd_Argv( 2 ) );
+			return;
+		}
+		if( number )
+			break;
+	}
+}
+
+/*
+===============
+SV_EntCreate_f
+
+Create new entity with specified name.
+===============
+*/
+void SV_EntCreate_f( sv_client_t *cl )
+{
+	edict_t	*ent = NULL;
+	int	i;
+
+
+	if( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+		return;
+	// log all dangerous actions
+	Msg( "Player %i: %s called ent_create: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
+		Cmd_Argv( 1 ), Cmd_Argv( 2 ), Cmd_Argv( 3 ), Cmd_Argv( 4 ), Cmd_Argv( 5 ), Cmd_Argv( 6 ), Cmd_Argv( 7 ) );
+
+	if( Cmd_Argc() < 2 )
+	{
+		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_create <classname> <key1> <value1> <key2> <value2> ...\n" );
+		return;
+	}
+
+	ent = SV_AllocPrivateData( 0, ALLOC_STRING( Cmd_Argv( 1 ) ) );
+	if( !ent )
+	{
+		SV_ClientPrintf( cl, PRINT_LOW, "Invalid entity!\n" );
+		return;
+	}
+	ent->v.origin[2] = cl->edict->v.origin[2] + 25;
+	ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
+	ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
+	//ent->v.spawnflags |= ( 1 << 30 ); //SF_NORESPAWN
+	SV_LinkEdict( ent, false );
+	for( i=2; i < Cmd_Argc() - 1; i++ )
+	{
+		KeyValueData	pkvd;
+		pkvd.szClassName = (char*)STRING( ent->v.classname );
+		pkvd.szKeyName = Cmd_Argv( i );
+		i++;
+		/*if( !Q_stricmp( "model", pkvd.szKeyName  ) && Q_strstr( Cmd_Argv( i ), ".bsp" ) )
+		{
+			i++;
+			continue;
+		}*/
+		pkvd.szValue = Cmd_Argv( i );
+		svgame.dllFuncs.pfnKeyValue( ent, &pkvd );
+		if( pkvd.fHandled )
+			SV_ClientPrintf( cl, PRINT_LOW, "value \"%s\" set to \"%s\"!\n", pkvd.szKeyName, pkvd.szValue );
+	}
+	if( !ent->v.targetname )
+	{
+		char newname[256];
+		// Generate name based on nick name and index
+		Q_snprintf( newname, 256,  "%s_%i_e%i", cl->name, cl->userid, NUM_FOR_EDICT( ent ) );
+		// i know, it may break strict aliasing rules
+		// but we will not lose anything in this case.
+		Q_strnlwr( newname, newname, 256 );
+		ent->v.targetname = ALLOC_STRING( newname );
+	}
+		
+	SV_ClientPrintf( cl, PRINT_LOW, "Created %i: %s, targetname %s\n", NUM_FOR_EDICT( ent ), Cmd_Argv( 1 ), STRING( ent->v.targetname ) );
+	svgame.dllFuncs.pfnSpawn( ent );
+	// Now drop entity to floor.
+	// Otherwise given weapon may crash server if player touch it before.
+	pfnDropToFloor( ent );
+	svgame.dllFuncs.pfnThink( ent );
+	pfnDropToFloor( ent );
+
+}
+
 
 /*
 ==================
@@ -1979,6 +2467,10 @@ ucmd_t ucmds[] =
 { "getresourcelist", SV_SendResourceList_f },
 { "continueloading", SV_ContinueLoading_f },
 { "kill", SV_Kill_f },
+{ "ent_list", SV_EntList_f },
+{ "ent_info", SV_EntInfo_f },
+{ "ent_fire", SV_EntFire_f },
+{ "ent_create", SV_EntCreate_f },
 { NULL, NULL }
 };
 

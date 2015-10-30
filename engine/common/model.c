@@ -214,7 +214,7 @@ byte *Mod_CompressVis( const byte *in, size_t *size )
 
 	if( !worldmodel )
 	{
-		Host_Error( "Mod_CompressVis: no worldmodel\n" );
+		Host_MapDesignError( "Mod_CompressVis: no worldmodel\n" );
 		return NULL;
 	}
 	
@@ -254,7 +254,7 @@ byte *Mod_DecompressVis( const byte *in )
 
 	if( !worldmodel )
 	{
-		Host_Error( "Mod_DecompressVis: no worldmodel\n" );
+		Host_MapDesignError( "Mod_DecompressVis: no worldmodel\n" );
 		return NULL;
 	}
 
@@ -603,8 +603,17 @@ static void Mod_LoadSubmodels( const dlump_t *l )
 	if( l->filelen % sizeof( *in )) Host_Error( "Mod_LoadBModel: funny lump size\n" );
 	count = l->filelen / sizeof( *in );
 
-	if( count < 1 ) Host_Error( "Map %s without models\n", loadmodel->name );
-	if( count > MAX_MAP_MODELS ) Host_Error( "Map %s has too many models\n", loadmodel->name );
+	if( count < 1 )
+	{
+		Host_MapDesignError( "Map %s without models\n", loadmodel->name );
+		return;
+	}
+	if( count > MAX_MAP_MODELS )
+	{
+		Host_MapDesignError( "Map %s has too many models\n", loadmodel->name );
+		// recover: cut models count
+		count = MAX_MAP_MODELS;
+	}
 
 	// allocate extradata
 	out = Mem_Alloc( loadmodel->mempool, count * sizeof( *out ));
@@ -958,7 +967,10 @@ load_wad_textures:
 			altanims[altmax] = tx;
 			altmax++;
 		}
-		else Host_Error( "Mod_LoadTextures: bad animating texture %s\n", tx->name );
+		else 
+		{
+			Host_MapDesignError( "Mod_LoadTextures: bad animating texture %s\n", tx->name );
+		}
 
 		for( j = i + 1; j < loadmodel->numtextures; j++ )
 		{
@@ -984,14 +996,18 @@ load_wad_textures:
 				if( num + 1 > altmax )
 					altmax = num + 1;
 			}
-			else Host_Error( "Mod_LoadTextures: bad animating texture %s\n", tx->name );
+			else Host_MapDesignError( "Mod_LoadTextures: bad animating texture %s\n", tx->name );
 		}
 
 		// link them all together
 		for( j = 0; j < max; j++ )
 		{
 			tx2 = anims[j];
-			if( !tx2 ) Host_Error( "Mod_LoadTextures: missing frame %i of %s\n", j, tx->name );
+			if( !tx2 )
+			{
+				Host_MapDesignError( "Mod_LoadTextures: missing frame %i of %s\n", j, tx->name );
+				continue;
+			}
 			tx2->anim_total = max * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j + 1) * ANIM_CYCLE;
@@ -1002,7 +1018,11 @@ load_wad_textures:
 		for( j = 0; j < altmax; j++ )
 		{
 			tx2 = altanims[j];
-			if( !tx2 ) Host_Error( "Mod_LoadTextures: missing frame %i of %s\n", j, tx->name );
+			if( !tx2 )
+			{
+				Host_MapDesignError( "Mod_LoadTextures: missing frame %i of %s\n", j, tx->name );
+				continue;
+			}
 			tx2->anim_total = altmax * ANIM_CYCLE;
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j+1) * ANIM_CYCLE;
@@ -1033,7 +1053,10 @@ load_wad_textures:
 			anims[max] = tx;
 			max++;
 		}
-		else Host_Error( "Mod_LoadTextures: bad detail texture %s\n", tx->name );
+		else
+		{
+			Host_MapDesignError( "Mod_LoadTextures: bad detail texture %s\n", tx->name );
+		}
 
 		for( j = i + 1; j < loadmodel->numtextures; j++ )
 		{
@@ -1052,14 +1075,18 @@ load_wad_textures:
 				if( num+1 > max )
 					max = num + 1;
 			}
-			else Host_Error( "Mod_LoadTextures: bad detail texture %s\n", tx->name );
+			else Host_MapDesignError( "Mod_LoadTextures: bad detail texture %s\n", tx->name );
 		}
 
 		// link them all together
 		for( j = 0; j < max; j++ )
 		{
 			tx2 = anims[j];
-			if( !tx2 ) Host_Error( "Mod_LoadTextures: missing frame %i of %s\n", j, tx->name );
+			if( !tx2 ) 
+			{
+				Host_MapDesignError( "Mod_LoadTextures: missing frame %i of %s\n", j, tx->name );
+				continue;
+			}
 			tx2->anim_total = -( max * ANIM_CYCLE ); // to differentiate from animations
 			tx2->anim_min = j * ANIM_CYCLE;
 			tx2->anim_max = (j + 1) * ANIM_CYCLE;
@@ -1260,7 +1287,10 @@ static void Mod_CalcSurfaceExtents( msurface_t *surf )
 		e = loadmodel->surfedges[surf->firstedge + i];
 
 		if( e >= loadmodel->numedges || e <= -loadmodel->numedges )
-			Host_Error( "Mod_CalcSurfaceBounds: bad edge\n" );
+		{
+			Host_MapDesignError( "Mod_CalcSurfaceBounds: bad edge\n" );
+			continue;
+		}
 
 		if( e >= 0 ) v = &loadmodel->vertexes[loadmodel->edges[e].v[0]];
 		else v = &loadmodel->vertexes[loadmodel->edges[-e].v[1]];
@@ -1305,7 +1335,10 @@ static void Mod_CalcSurfaceBounds( msurface_t *surf, mextrasurf_t *info )
 		e = loadmodel->surfedges[surf->firstedge + i];
 
 		if( e >= loadmodel->numedges || e <= -loadmodel->numedges )
-			Host_Error( "Mod_CalcSurfaceBounds: bad edge\n" );
+		{
+			Host_MapDesignError( "Mod_CalcSurfaceBounds: bad edge\n" );
+			return;
+		}
 
 		if( e >= 0 ) v = &loadmodel->vertexes[loadmodel->edges[e].v[0]];
 		else v = &loadmodel->vertexes[loadmodel->edges[-e].v[1]];
@@ -2024,8 +2057,9 @@ static void Mod_LoadMarkSurfaces( const dlump_t *l )
 	{
 		j = in[i];
 		if( j < 0 ||  j >= loadmodel->numsurfaces )
-			Host_Error( "Mod_LoadMarkFaces: bad surface number in '%s'\n", loadmodel->name );
-		out[i] = loadmodel->surfaces + j;
+			Host_MapDesignError( "Mod_LoadMarkFaces: bad surface number in '%s'\n", loadmodel->name );
+		else
+			out[i] = loadmodel->surfaces + j;
 	}
 }
 
@@ -2141,7 +2175,7 @@ static void Mod_LoadLeafs( const dlump_t *l )
 	}
 
 	if( loadmodel->leafs[0].contents != CONTENTS_SOLID )
-		Host_Error( "Mod_LoadLeafs: Map %s has leaf 0 is not CONTENTS_SOLID\n", loadmodel->name );
+		Host_MapDesignError( "Mod_LoadLeafs: Map %s has leaf 0 is not CONTENTS_SOLID\n", loadmodel->name );
 }
 
 /*
@@ -2907,7 +2941,7 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 
 	if( !mod )
 	{
-		if( crash ) Host_Error( "Mod_ForName: NULL model\n" );
+		if( crash ) Host_MapDesignError( "Mod_ForName: NULL model\n" );
 		else MsgDev( D_ERROR, "Mod_ForName: NULL model\n" );
 		return NULL;		
 	}
@@ -2932,7 +2966,7 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 		{
 			Q_memset( mod, 0, sizeof( model_t ));
 
-			if( crash ) Host_Error( "Mod_ForName: %s couldn't load\n", tempname );
+			if( crash ) Host_MapDesignError( "Mod_ForName: %s couldn't load\n", tempname );
 			else MsgDev( D_ERROR, "Mod_ForName: %s couldn't load\n", tempname );
 
 			return NULL;
@@ -2963,7 +2997,7 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 		break;
 	default:
 		Mem_Free( buf );
-		if( crash ) Host_Error( "Mod_ForName: %s unknown format\n", tempname );
+		if( crash ) Host_MapDesignError( "Mod_ForName: %s unknown format\n", tempname );
 		else MsgDev( D_ERROR, "Mod_ForName: %s unknown format\n", tempname );
 		return NULL;
 	}
@@ -2973,7 +3007,7 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 		Mod_FreeModel( mod );
 		Mem_Free( buf );
 
-		if( crash ) Host_Error( "Mod_ForName: %s couldn't load\n", tempname );
+		if( crash ) Host_MapDesignError( "Mod_ForName: %s couldn't load\n", tempname );
 		else MsgDev( D_ERROR, "Mod_ForName: %s couldn't load\n", tempname );
 
 		return NULL;
@@ -3194,7 +3228,11 @@ void Mod_LoadCacheFile( const char *filename, cache_user_t *cu )
 	name[j] = '\0';
 
 	buf = FS_LoadFile( name, &size, false );
-	if( !buf || !size ) Host_Error( "LoadCacheFile: ^1can't load %s^7\n", filename );
+	if( !buf || !size )
+	{
+		Host_MapDesignError( "LoadCacheFile: ^1can't load %s^7\n", filename );
+		return;
+	}
 	cu->data = Mem_Alloc( com_studiocache, size );
 	Q_memcpy( cu->data, buf, size );
 	Mem_Free( buf );

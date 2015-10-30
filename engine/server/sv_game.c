@@ -868,6 +868,14 @@ void SV_FreeEdict( edict_t *pEdict )
 	pEdict->v.takedamage = 0;
 	pEdict->v.modelindex = 0;
 	pEdict->v.nextthink = -1;
+	// reset vars
+	pEdict->v.colormap = 0;
+	pEdict->v.takedamage = 0;
+	pEdict->v.frame = 0;
+	pEdict->v.scale = 0;
+	pEdict->v.gravity = 0;
+	VectorClear(pEdict->v.angles);
+	VectorClear(pEdict->v.origin);
 	pEdict->free = true;
 }
 

@@ -784,8 +784,8 @@ R_SetupFrame
 static void R_SetupFrame( void )
 {
 	vec3_t	viewOrg, viewAng;
-
-	if( RP_NORMALPASS() && cl.thirdperson )
+	// already done in client
+	/*if( RP_NORMALPASS() && cl.thirdperson )
 	{
 		vec3_t	cam_ofs, vpn;
 
@@ -799,10 +799,9 @@ static void R_SetupFrame( void )
 		VectorMA( RI.refdef.vieworg, -cam_ofs[ROLL], vpn, viewOrg );
 	}
 	else
-	{
-		VectorCopy( RI.refdef.vieworg, viewOrg );
-		VectorCopy( RI.refdef.viewangles, viewAng );
-	}
+	{*/
+	VectorCopy( RI.refdef.vieworg, viewOrg );
+	VectorCopy( RI.refdef.viewangles, viewAng );
 
 	// build the transformation matrix for the given view angles
 	VectorCopy( viewOrg, RI.vieworg );
