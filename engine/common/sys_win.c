@@ -83,7 +83,7 @@ char *Sys_GetClipboardData( void )
 #ifdef XASH_SDL
 	return SDL_GetClipboardText();
 #else
-	return 0;
+	return NULL;
 #endif
 }
 
@@ -183,11 +183,11 @@ void Sys_ParseCommandLine( int argc, const char** argv )
 
 	for( i = 0; i < host.argc; i++ )
 	{
-		// we wan't return to first game
+		// we don't want to return to first game
 		if( !Q_stricmp( "-game", host.argv[i] )) host.argv[i] = (char *)blank;
 		// probably it's timewaster, because engine rejected second change
 		if( !Q_stricmp( "+game", host.argv[i] )) host.argv[i] = (char *)blank;
-		// you sure what is map exists in new game?
+		// you sure that map exists in new game?
 		if( !Q_stricmp( "+map", host.argv[i] )) host.argv[i] = (char *)blank;
 		// just stupid action
 		if( !Q_stricmp( "+load", host.argv[i] )) host.argv[i] = (char *)blank;
@@ -500,7 +500,7 @@ void Sys_Crash( int signal, siginfo_t *si, void *context)
 	//SDL_MouseQuit();
 	MSGBOX( message );
 #endif
-	// Log saved, now we can try save configs and close log correctly, it may crash
+	// Log saved, now we can try to save configs and close log correctly, it may crash
 	if( host.type == HOST_NORMAL )
 			CL_Crashed();
 	host.state = HOST_CRASHED;
@@ -525,9 +525,9 @@ void Sys_Error( const char *error, ... )
 	char	text[MAX_SYSPATH];
          
 	if( host.state == HOST_ERR_FATAL )
-		return; // don't multiple executes
+		return; // don't execute more than once
 
-	// make sure what console received last message
+	// make sure that console received last message
 	if( host.change_game ) Sys_Sleep( 200 );
 
 	error_on_exit = true;
@@ -614,7 +614,7 @@ Sys_Quit
 */
 void Sys_Quit( void )
 {
-	MsgDev(D_INFO, "Shutting down...");
+	MsgDev(D_INFO, "Shutting down...\n");
 	Host_Shutdown();
 	exit( error_on_exit );
 }

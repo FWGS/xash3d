@@ -327,13 +327,13 @@ void CL_LevelShot_f( void )
 	if( cls.scrshot_request != scrshot_plaque ) return;
 	cls.scrshot_request = scrshot_inactive;
 
-	// check for exist
+	// check for existence
 	if( cls.demoplayback && ( cls.demonum != -1 ))
 	{
 		Q_sprintf( cls.shotname, "levelshots/%s_%s.bmp", cls.demoname, glState.wideScreen ? "16x9" : "4x3" );
 		Q_snprintf( filename, sizeof( filename ), "demos/%s.dem", cls.demoname );
 
-		// make sure what levelshot is newer than demo
+		// make sure that levelshot is newer than demo
 		ft1 = FS_FileTime( filename, false );
 		ft2 = FS_FileTime( cls.shotname, true );
 	}
@@ -341,12 +341,12 @@ void CL_LevelShot_f( void )
 	{
 		Q_sprintf( cls.shotname, "levelshots/%s_%s.bmp", clgame.mapname, glState.wideScreen ? "16x9" : "4x3" );
 
-		// make sure what levelshot is newer than bsp
+		// make sure that levelshot is newer than bsp
 		ft1 = FS_FileTime( cl.worldmodel->name, false );
 		ft2 = FS_FileTime( cls.shotname, true );
 	}
 
-	// missing levelshot or level never than levelshot
+	// missing levelshot or level newer than levelshot
 	if( ft2 == -1 || ft1 > ft2 )
 		cls.scrshot_action = scrshot_plaque;	// build new frame for levelshot
 	else cls.scrshot_action = scrshot_inactive;	// disable - not needs

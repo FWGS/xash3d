@@ -80,11 +80,9 @@ char		fs_basedir[MAX_SYSPATH];	// base directory of game
 char		fs_falldir[MAX_SYSPATH];	// game falling directory
 char		fs_gamedir[MAX_SYSPATH];	// game current directory
 char		gs_basedir[MAX_SYSPATH];	// initial dir before loading gameinfo.txt (used for compilers too)
-qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ pathes 
+qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ paths 
 
 static void FS_InitMemory( void );
-const char *FS_FileExtension( const char *in );
-searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
 static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
@@ -103,28 +101,40 @@ FILEMATCH COMMON SYSTEM
 */
 int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive )
 {
-	int	c1, c2;
+	return matchpattern_with_separator( in, pattern, caseinsensitive, "/\\:", false );
+}
 
+// wildcard_least_one: if true * matches 1 or more characters
+//                     if false * matches 0 or more characters
+int matchpattern_with_separator( const char *in, const char *pattern, qboolean caseinsensitive, const char *separators, qboolean wildcard_least_one )
+{
+	int c1, c2;
 	while( *pattern )
 	{
 		switch( *pattern )
 		{
-		case 0:   return 1; // end of pattern
+		case 0:
+			return 1; // end of pattern
 		case '?': // match any single character
-			if( *in == 0 || *in == '/' || *in == '\\' || *in == ':' )
+			if( *in == 0 || Q_strchr( separators, *in ))
 				return 0; // no match
 			in++;
 			pattern++;
 			break;
 		case '*': // match anything until following string
-			if( !*in ) return 1; // match
+			if( wildcard_least_one )
+			{
+				if( *in == 0 || Q_strchr( separators, *in ))
+					return 0; // no match
+				in++;
+			}
 			pattern++;
 			while( *in )
 			{
-				if( *in == '/' || *in == '\\' || *in == ':' )
+				if( Q_strchr(separators, *in ))
 					break;
 				// see if pattern matches at this offset
-				if( matchpattern( in, pattern, caseinsensitive ))
+				if( matchpattern_with_separator(in, pattern, caseinsensitive, separators, wildcard_least_one ))
 					return 1;
 				// nope, advance to next offset
 				in++;
@@ -141,24 +151,25 @@ int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive 
 				c2 = *pattern;
 				if( c2 >= 'A' && c2 <= 'Z' )
 					c2 += 'a' - 'A';
-				if( c1 != c2) return 0; // no match
+				if( c1 != c2 )
+					return 0; // no match
 			}
 			in++;
 			pattern++;
 			break;
 		}
 	}
-
-	if( *in ) return 0; // reached end of pattern but not end of input
+	if( *in )
+		return 0; // reached end of pattern but not end of input
 	return 1; // success
 }
 
-void stringlistinit( stringlist_t *list )
+static void stringlistinit( stringlist_t *list )
 {
 	Q_memset( list, 0, sizeof( *list ));
 }
 
-void stringlistfreecontents( stringlist_t *list )
+static void stringlistfreecontents( stringlist_t *list )
 {
 	int	i;
 
@@ -171,10 +182,11 @@ void stringlistfreecontents( stringlist_t *list )
 
 	list->numstrings = 0;
 	list->maxstrings = 0;
-	if( list->strings ) Mem_Free( list->strings );
+	Z_Free( list->strings );
+	list->strings = NULL;
 }
 
-void stringlistappend( stringlist_t *list, char *text )
+static void stringlistappend( stringlist_t *list, const char *text )
 {
 	size_t	textlen;
 	char	**oldstrings;
@@ -185,7 +197,7 @@ void stringlistappend( stringlist_t *list, char *text )
 		list->maxstrings += 4096;
 		list->strings = Mem_Alloc( fs_mempool, list->maxstrings * sizeof( *list->strings ));
 		if( list->numstrings ) Q_memcpy( list->strings, oldstrings, list->numstrings * sizeof( *list->strings ));
-		if( oldstrings ) Mem_Free( oldstrings );
+		Z_Free( oldstrings );
 	}
 
 	textlen = Q_strlen( text ) + 1;
@@ -194,7 +206,7 @@ void stringlistappend( stringlist_t *list, char *text )
 	list->numstrings++;
 }
 
-void stringlistsort( stringlist_t *list )
+static void stringlistsort( stringlist_t *list )
 {
 	int	i, j;
 	char	*temp;
@@ -227,7 +239,7 @@ int sel(const struct dirent *d)
 #endif
 
 
-void listdirectory( stringlist_t *list, const char *path )
+static void listdirectory( stringlist_t *list, const char *path )
 {
 	int		i;
 	signed char		pattern[4096], *c;
@@ -838,7 +850,7 @@ void FS_ClearSearchPath( void )
 
 		if( search->flags & FS_STATIC_PATH )
 		{
-			// skip read-only pathes
+			// skip read-only paths
 			if( search->next )
 				fs_searchpaths = search->next->next;
 			else break;
@@ -856,7 +868,7 @@ void FS_ClearSearchPath( void )
 			W_Close( search->wad );
 		}
 
-		if( search ) Mem_Free( search );
+		Z_Free( search );
 	}
 }
 
@@ -926,7 +938,7 @@ void FS_Rescan( void )
 	FS_AddGameHierarchy( GI->gamedir, FS_GAMEDIR_PATH );
 }
 
-void FS_Rescan_f( void )
+static void FS_Rescan_f( void )
 {
 	FS_Rescan();
 }
@@ -1247,8 +1259,9 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 			if( !Q_stricmp( token, "singleplayer_only" ))
 			{
 				// TODO: Remove this ugly hack too.
-				// This made because Half-Life have a multiplayer,
-				//  but for some reason it marked as singleplayer_only
+				// This was made because Half-Life has multiplayer,
+				// but for some reason it's marked as singleplayer_only.
+				// Old WON version is fine.
 				if( !Q_stricmp( GameInfo->gamedir, "valve") )
 					GameInfo->gamemode = 0;
 				else
@@ -1505,8 +1518,9 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		{
 			pfile = COM_ParseFile( pfile, token );
 			// TODO: Remove this ugly hack too.
-			// This made because Half-Life have a multiplayer,
-			//  but for some reason it marked as singleplayer_only
+			// This was made because Half-Life has multiplayer,
+			// but for some reason it's marked as singleplayer_only.
+			// Old WON version is fine.
 			if( !Q_stricmp( token, "singleplayer_only" ) && Q_stricmp( GameInfo->gamedir, "valve") )
 				GameInfo->gamemode = 1;
 			else if( !Q_stricmp( token, "multiplayer_only" ))
@@ -1564,8 +1578,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->falldir )))
 		GameInfo->falldir[0] = '\0';
 
-	if( afile != NULL )
-		Mem_Free( afile );
+	Z_Free( afile );
 
 	return true;
 }
@@ -1587,7 +1600,7 @@ void FS_LoadGameInfo( const char *rootfolder )
 	if( rootfolder ) Q_strcpy( gs_basedir, rootfolder );
 	MsgDev( D_NOTE, "FS_LoadGameInfo( %s )\n", gs_basedir );
 
-	// clear any old pathes
+	// clear any old paths
 	FS_ClearSearchPath();
 
 	// validate gamedir
@@ -1619,9 +1632,9 @@ void FS_Init( void )
 	
 	FS_InitMemory();
 
-	Cmd_AddCommand( "fs_rescan", FS_Rescan_f, "rescan filesystem search pathes" );
-	Cmd_AddCommand( "fs_path", FS_Path_f, "show filesystem search pathes" );
-	Cmd_AddCommand( "fs_clearpaths", FS_ClearPaths_f, "clear filesystem search pathes" );
+	Cmd_AddCommand( "fs_rescan", FS_Rescan_f, "rescan filesystem search paths" );
+	Cmd_AddCommand( "fs_path", FS_Path_f, "show filesystem search paths" );
+	Cmd_AddCommand( "fs_clearpaths", FS_ClearPaths_f, "clear filesystem search paths" );
 
 	// ignore commandlineoption "-game" for other stuff
 	if( host.type == HOST_NORMAL || host.type == HOST_DEDICATED )
@@ -2115,7 +2128,6 @@ file_t *FS_Open( const char *filepath, const char *mode, qboolean gamedironly )
 
 		FS_CreatePath( real_path );// Create directories up to the file
 		return FS_SysOpen( real_path, mode );
-
 	}
 	
 	// else, we look at the various search paths and open the file in read-only mode
@@ -2344,37 +2356,6 @@ int FS_UnGetc( file_t *file, byte c )
 		return EOF;
 
 	file->ungetc = c;
-	return c;
-}
-
-/*
-====================
-FS_Gets
-
-Same as fgets
-====================
-*/
-int FS_Gets( file_t *file, byte *string, size_t bufsize )
-{
-	int	c, end = 0;
-
-	while( 1 )
-	{
-		c = FS_Getc( file );
-		if( c == '\r' || c == '\n' || c < 0 )
-			break;
-		if( end < bufsize - 1 )
-			string[end++] = c;
-	}
-	string[end] = 0;
-
-	// remove \n following \r
-	if( c == '\r' )
-	{
-		c = FS_Getc( file );
-		if( c != '\n' ) FS_UnGetc( file, (byte)c );
-	}
-
 	return c;
 }
 

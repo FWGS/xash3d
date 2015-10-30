@@ -297,7 +297,7 @@ pmtrace_t PM_PlayerTraceExt( playermove_t *pmove, vec3_t start, vec3_t end, int 
 	vec3_t	temp, mins, maxs;
 	int	i, j, hullcount;
 	qboolean	rotated, transform_bbox;
-	hull_t	*hull = 0;
+	hull_t	*hull = NULL;
 
 	Q_memset( &trace_total, 0, sizeof( trace_total ));
 	VectorCopy( end, trace_total.endpos );
@@ -505,7 +505,7 @@ int PM_TestPlayerPosition( playermove_t *pmove, vec3_t pos, pmtrace_t *ptrace, p
 	vec3_t	pos_l, offset;
 	vec3_t	mins, maxs;
 	pmtrace_t trace;
-	hull_t	*hull = 0;
+	hull_t	*hull = NULL;
 	physent_t *pe;
 
 	trace = PM_PlayerTraceExt( pmove, pmove->origin, pmove->origin, 0, pmove->numphysent, pmove->physents, -1, pmFilter );

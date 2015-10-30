@@ -309,7 +309,7 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 				}
 			}
 
-			// move code from StudioSetupTransform here
+			// moved code from StudioSetupTransform here
 			if( host.features & ENGINE_COMPUTE_STUDIO_LERP )
 			{
 				ent->origin[0] += ( ent->curstate.origin[0] - ent->latched.prevorigin[0] ) * f;

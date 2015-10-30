@@ -111,7 +111,7 @@ qboolean SV_SetPlayer( void )
 
 	if( !svs.clients )
 	{
-		Msg( "^3no server running.\n" );
+		Msg( "^3No server running.\n" );
 		return false;
           }
 
@@ -418,7 +418,7 @@ void SV_DeleteSave_f( void )
 {
 	if( Cmd_Argc() != 2 )
 	{
-		Msg( "Usage: delsave <name>\n" );
+		Msg( "Usage: killsave <name>\n" );
 		return;
 	}
 
@@ -473,13 +473,13 @@ void SV_ChangeLevel_f( void )
 
 	if( flags & MAP_INVALID_VERSION )
 	{
-		Msg( "SV_ChangeLevel: map %s is invalid or not supported\n", mapname );
+		Msg( "SV_ChangeLevel: Map %s is invalid or not supported\n", mapname );
 		return;
 	}
 	
 	if(!( flags & MAP_IS_EXIST ))
 	{
-		Msg( "SV_ChangeLevel: map %s doesn't exist\n", mapname );
+		Msg( "SV_ChangeLevel: Map %s doesn't exist\n", mapname );
 		return;
 	}
 
@@ -489,15 +489,15 @@ void SV_ChangeLevel_f( void )
 		{
 			// NOTE: we find valid map but specified landmark it's doesn't exist
 			// run simple changelevel like in q1, throw warning
-			MsgDev( D_INFO, "SV_ChangeLevel: map %s is exist but doesn't contain\n", mapname );
-			MsgDev( D_INFO, "landmark with name %s. Run classic quake changelevel\n", Cmd_Argv( 2 ));
+			MsgDev( D_INFO, "SV_ChangeLevel: map %s exists but doesn't contain\n", mapname );
+			MsgDev( D_INFO, "landmark with name %s. Run classic Quake changelevel.\n", Cmd_Argv( 2 ));
 			c = 2; // reduce args
 		}
 	}
 
 	if( c >= 3 && !Q_stricmp( sv.name, Cmd_Argv( 1 )))
 	{
-		MsgDev( D_INFO, "SV_ChangeLevel: can't changelevel with same map. Ignored.\n" );
+		MsgDev( D_INFO, "SV_ChangeLevel: Can't changelevel with same map. Ignored.\n" );
 		return;	
 	}
 
@@ -505,7 +505,7 @@ void SV_ChangeLevel_f( void )
 	{
 		if( sv_validate_changelevel->integer )
 		{
-			MsgDev( D_INFO, "SV_ChangeLevel: map %s doesn't have a valid spawnpoint. Ignored.\n", mapname );
+			MsgDev( D_INFO, "SV_ChangeLevel: Map %s doesn't have a valid spawnpoint. Ignored.\n", mapname );
 			return;	
 		}
 	}
@@ -515,8 +515,8 @@ void SV_ChangeLevel_f( void )
 	{
 		if( sv_validate_changelevel->integer && host.type != HOST_DEDICATED )
 		{
-			MsgDev( D_INFO, "SV_ChangeLevel: a infinite changelevel detected.\n" );
-			MsgDev( D_INFO, "Changelevel will be disabled until a next save\\restore.\n" );
+			MsgDev( D_INFO, "SV_ChangeLevel: An infinite changelevel detected.\n" );
+			MsgDev( D_INFO, "Changelevel will be disabled until the next save\\restore.\n" );
 			return; // lock with svs.spawncount here
 		}
 	}
@@ -555,7 +555,7 @@ void SV_ChangeLevel2_f( void )
 
 	if( c < 2 )
 	{
-		Msg( "Usage: changelevel <map> [landmark]\n" );
+		Msg( "Usage: changelevel2 <map> [landmark]\n" );
 		return;
 	}
 
@@ -570,19 +570,19 @@ void SV_ChangeLevel2_f( void )
 
 	if( flags & MAP_INVALID_VERSION )
 	{
-		Msg( "SV_ChangeLevel: map %s is invalid or not supported\n", mapname );
+		Msg( "SV_ChangeLevel: Map %s is invalid or not supported.\n", mapname );
 		return;
 	}
 	
 	if(!( flags & MAP_IS_EXIST ))
 	{
-		Msg( "SV_ChangeLevel: map %s doesn't exist\n", mapname );
+		Msg( "SV_ChangeLevel: Map %s doesn't exist.\n", mapname );
 		return;
 	}
 
 	if( c >= 3 && !Q_stricmp( sv.name, Cmd_Argv( 1 )))
 	{
-		MsgDev( D_INFO, "SV_ChangeLevel: can't changelevel with same map. Ignored.\n" );
+		MsgDev( D_INFO, "SV_ChangeLevel: Can't changelevel with same map. Ignored.\n" );
 		return;	
 	}
 
@@ -591,8 +591,8 @@ void SV_ChangeLevel2_f( void )
 	{
 		if( sv_validate_changelevel->integer )
 		{
-			MsgDev( D_INFO, "SV_ChangeLevel: a infinite changelevel detected.\n" );
-			MsgDev( D_INFO, "Changelevel will be disabled until a next save\\restore.\n" );
+			MsgDev( D_INFO, "SV_ChangeLevel: An infinite changelevel detected.\n" );
+			MsgDev( D_INFO, "Changelevel will be disabled until the next save\\restore.\n" );
 			return; // lock with svs.spawncount here
 		}
 	}
@@ -674,7 +674,7 @@ void SV_Kick_f( void )
 
 	if( !svs.clients || sv.background )
 	{
-		Msg( "^3no server running.\n" );
+		Msg( "^3No server running.\n" );
 		return;
 	}
 
@@ -726,7 +726,7 @@ void SV_Status_f( void )
 
 	if( !svs.clients || sv.background )
 	{
-		Msg( "^3no server running.\n" );
+		Msg( "^3No server running.\n" );
 		return;
 	}
 
@@ -782,7 +782,7 @@ void SV_ConSay_f( void )
 
 	if( !svs.clients || sv.background )
 	{
-		Msg( "^3no server running.\n" );
+		Msg( "^3No server running.\n" );
 		return;
 	}
 
@@ -870,7 +870,7 @@ void SV_KillServer_f( void )
 ===============
 SV_PlayersOnly_f
 
-disable plhysics but players
+disable physics, except for players
 ===============
 */
 void SV_PlayersOnly_f( void )
@@ -879,8 +879,8 @@ void SV_PlayersOnly_f( void )
 	sv.hostflags = sv.hostflags ^ SVF_PLAYERSONLY;
 
 	if(!( sv.hostflags & SVF_PLAYERSONLY ))
-		SV_BroadcastPrintf( D_INFO, "Resume server physic\n" );
-	else SV_BroadcastPrintf( D_INFO, "Freeze server physic\n" );
+		SV_BroadcastPrintf( D_INFO, "Resume server physics\n" );
+	else SV_BroadcastPrintf( D_INFO, "Freeze server physics\n" );
 }
 
 /*
@@ -895,13 +895,13 @@ void SV_EdictsInfo_f( void )
 
 	if( sv.state != ss_active )
 	{
-		Msg( "^3no server running.\n" );
+		Msg( "^3No server running.\n" );
 		return;
 	}
 
 	active = pfnNumberOfEntities(); 
-	Msg( "%5i edicts is used\n", active );
-	Msg( "%5i edicts is free\n", svgame.globals->maxEntities - active );
+	Msg( "%5i used edicts\n", active );
+	Msg( "%5i free edicts\n", svgame.globals->maxEntities - active );
 	Msg( "%5i total\n", svgame.globals->maxEntities );
 }
 
@@ -918,7 +918,7 @@ void SV_EntityInfo_f( void )
 
 	if( sv.state != ss_active )
 	{
-		Msg( "^3no server running.\n" );
+		Msg( "^3No server running.\n" );
 		return;
 	}
 
@@ -960,16 +960,16 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "status", SV_Status_f, "print server status information" );
 	Cmd_AddCommand( "serverinfo", SV_ServerInfo_f, "print server settings" );
 	Cmd_AddCommand( "clientinfo", SV_ClientInfo_f, "print user infostring (player num required)" );
-	Cmd_AddCommand( "playersonly", SV_PlayersOnly_f, "freezes time, except for players" );
+	Cmd_AddCommand( "playersonly", SV_PlayersOnly_f, "freezes physics, except for players" );
 
 	Cmd_AddCommand( "map", SV_Map_f, "start new level" );
 	Cmd_AddCommand( "newgame", SV_NewGame_f, "begin new game" );
-	Cmd_AddCommand( "endgame", SV_EndGame_f, "end current game" );
+	Cmd_AddCommand( "endgame", SV_EndGame_f, "end current game, takes ending message" );
 	Cmd_AddCommand( "killgame", SV_KillGame_f, "end current game" );
-	Cmd_AddCommand( "hazardcourse", SV_HazardCourse_f, "starting a Hazard Course" );
-	Cmd_AddCommand( "changelevel", SV_ChangeLevel_f, "changing level" );
-	Cmd_AddCommand( "changelevel2", SV_ChangeLevel2_f, "changing level, in half-life style" );
-	Cmd_AddCommand( "restart", SV_Restart_f, "restarting current level" );
+	Cmd_AddCommand( "hazardcourse", SV_HazardCourse_f, "start a Hazard Course" );
+	Cmd_AddCommand( "changelevel", SV_ChangeLevel_f, "change level" );
+	Cmd_AddCommand( "changelevel2", SV_ChangeLevel2_f, "change level, in Half-Life style" );
+	Cmd_AddCommand( "restart", SV_Restart_f, "restart current level" );
 	Cmd_AddCommand( "reload", SV_Reload_f, "continue from latest save or restart level" );
 	Cmd_AddCommand( "entpatch", SV_EntPatch_f, "write entity patch to allow external editing" );
 	Cmd_AddCommand( "edicts_info", SV_EdictsInfo_f, "show info about edicts" );

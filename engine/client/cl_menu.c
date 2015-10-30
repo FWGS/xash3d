@@ -742,6 +742,19 @@ static void pfnMemFree( void *mem, const char *filename, const int fileline )
 
 /*
 =========
+pfnSDL_free
+
+=========
+*/
+static void pfnSDL_free( void *mem )
+{
+#ifdef XASH_SDL
+	SDL_free( mem );
+#endif
+}
+
+/*
+=========
 pfnGetGameInfo
 
 =========
@@ -810,16 +823,20 @@ pfnCheckGameDll
 */
 int pfnCheckGameDll( void )
 {
-	void	*hInst;
+	//void	*hInst;
 
-	if( SV_Active( )) return true;
+	//if( SV_Active( )) return true;
 
+	// UCyborg: Does this have issues? I see it's used
+	// to grey out menu options to start new game if
+	// server library can't be loaded. Commented out the
+	// rest with double slashes so compiler doesn't complain.
 	/*if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
 		return true;
 	}*/ return true;
-	return false;
+	//return false;
 }
 
 /*
@@ -969,10 +986,11 @@ static ui_enginefuncs_t gEngfuncs =
 	GL_ProcessTexture,
 	COM_CompareFileTime,
 	#ifdef XASH_SDL
-	SDLash_EnableTextInput
+	SDLash_EnableTextInput,
 	#else
-	pfnEnableTextInput
+	pfnEnableTextInput,
 	#endif
+	pfnSDL_free
 };
 
 void UI_UnloadProgs( void )

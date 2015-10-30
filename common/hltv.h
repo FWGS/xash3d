@@ -37,11 +37,14 @@
 #define DRC_CMD_SOUND		7	// plays a particular sound
 #define DRC_CMD_STATUS		8	// status info about broadcast
 #define DRC_CMD_BANNER		9	// banner file name for HLTV gui
-#define DRC_CMD_FADE		10	// send screen fade command
-#define DRC_CMD_SHAKE		11	// send screen shake command
-#define DRC_CMD_STUFFTEXT		12	// like the normal svc_stufftext but as director command
+#define DRC_CMD_STUFFTEXT		10	// like the normal svc_stufftext but as director command
+#define DRC_CMD_CHASE		11	//	chase a certain player
+#define DRC_CMD_INEYE		12	// view player through own eyes
+#define DRC_CMD_MAP		13	//	show overview map
+#define DRC_CMD_CAMPATH		14	// define camera waypoint
+#define DRC_CMD_WAYPOINTS		15	// start moving camera, inetranl message
 
-#define DRC_CMD_LAST		12
+#define DRC_CMD_LAST		15
 
 // HLTV_EVENT event flags
 #define DRC_FLAG_PRIO_MASK		0x0F	// priorities between 0 and 15 (15 most important)
@@ -53,7 +56,9 @@
 #define DRC_FLAG_FINAL		(1<<9)	// is a final scene
 #define DRC_FLAG_NO_RANDOM		(1<<10)	// don't randomize event data
 
-#define MAX_DIRECTOR_CMD_PARAMETERS	4
-#define MAX_DIRECTOR_CMD_STRING	128
+// DRC_CMD_WAYPOINT flags
+#define DRC_FLAG_STARTPATH		1	// end with speed 0.0
+#define DRC_FLAG_SLOWSTART		2	// start with speed 0.0
+#define DRC_FLAG_SLOWEND		4	//end with speed 0.0
 
 #endif//HLTV_H

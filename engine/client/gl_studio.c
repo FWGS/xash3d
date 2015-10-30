@@ -3468,7 +3468,7 @@ static void R_StudioLoadTexture( model_t *mod, studiohdr_t *phdr, mstudiotexture
 		Q_snprintf( texname, sizeof( texname ), "#%s/%s.mdl", mdlname, name );
 		ptexture->index = GL_LoadTexture( texname, (byte *)ptexture, size, flags, filter );
 	}
-	else MsgDev( D_NOTE, "loading HQ: %s\n", texname );
+	else MsgDev( D_NOTE, "Loading HQ: %s\n", texname );
   
 	if( !ptexture->index )
 	{

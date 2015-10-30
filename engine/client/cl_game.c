@@ -806,7 +806,7 @@ const char *CL_SoundFromIndex( int index )
 	sfx_t	*sfx = NULL;
 	int	hSound;
 
-	// make sure what we in-bounds
+	// make sure that we're within bounds
 	index = bound( 0, index, MAX_SOUNDS );
 	hSound = cl.sound_index[index];
 
@@ -1108,18 +1108,15 @@ void CL_InitEdicts( void )
 
 void CL_FreeEdicts( void )
 {
-	if( clgame.entities )
-		Mem_Free( clgame.entities );
+	Z_Free( clgame.entities );
 	clgame.entities = NULL;
 
-	if( clgame.static_entities )
-		Mem_Free( clgame.static_entities );
+	Z_Free( clgame.static_entities );
 	clgame.static_entities = NULL;
 
-	if( cls.packet_entities )
-		Z_Free( cls.packet_entities );
-
+	Z_Free( cls.packet_entities );
 	cls.packet_entities = NULL;
+
 	cls.num_client_entities = 0;
 	cls.next_client_entities = 0;
 	clgame.numStatics = 0;
@@ -4085,8 +4082,7 @@ qboolean CL_LoadProgs( const char *name )
 		return false;
 	}
 
-	Cvar_Get( "cl_nopred", "1", CVAR_ARCHIVE|CVAR_USERINFO, "disable client movement predicting" );
-	Cvar_Get( "cl_lw", "0", CVAR_ARCHIVE|CVAR_USERINFO, "enable client weapon predicting" );
+	Cvar_Get( "cl_lw", "0", CVAR_ARCHIVE|CVAR_USERINFO, "enable client weapon prediction" );
 	Cvar_Get( "cl_lc", "0", CVAR_ARCHIVE|CVAR_USERINFO, "enable lag compensation" );
 	Cvar_FullSet( "host_clientloaded", "1", CVAR_INIT );
 

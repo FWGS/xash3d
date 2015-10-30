@@ -17,7 +17,6 @@ GNU General Public License for more details.
 #include "client.h"
 #include "keydefs.h"
 #include "protocol.h"		// get the protocol version
-#include "con_nprint.h"
 #include "gl_local.h"
 #include "qfont.h"
 
@@ -1013,7 +1012,6 @@ void Con_CompleteCommand( field_t *field )
 	field_t		temp;
 	string		filename;
 	autocomplete_list_t	*list;
-	char buffer[1024];
 	int		i;
 	qboolean nextcmd;
 
@@ -1133,6 +1131,8 @@ Field_Paste
 */
 void Field_Paste( field_t *edit )
 {
+// I guess we don't have the ability to paste without SDL.
+#ifdef XASH_SDL
 	char	*cbd;
 	int	i, pasteLen;
 
@@ -1143,7 +1143,8 @@ void Field_Paste( field_t *edit )
 	pasteLen = Q_strlen( cbd );
 	for( i = 0; i < pasteLen; i++ )
 		Field_CharEvent( edit, cbd[i] );
-	Mem_Free( cbd );
+	SDL_free( cbd );
+#endif
 }
 
 /*

@@ -96,9 +96,7 @@ qboolean NET_OpenWinSock( void )
 {
 	// initialize the Winsock function vectors (we do this instead of statically linking
 	// so we can run on Win 3.1, where there isn't necessarily Winsock)
-	if( Sys_LoadLibrary( &winsock_dll ))
-		return true;
-	return false;
+	return Sys_LoadLibrary( &winsock_dll );
 }
 
 void NET_FreeWinSock( void )
@@ -142,7 +140,9 @@ typedef struct
 
 static loopback_t	loopbacks[2];
 static int	ip_sockets[2];
+#ifdef XASH_IPX
 static int	ipx_sockets[2];
+#endif
 
 #ifdef _WIN32
 static WSADATA winsockdata;
@@ -150,7 +150,9 @@ static WSADATA winsockdata;
 static qboolean winsockInitialized = false;
 static const char *net_src[2] = { "client", "server" };
 static qboolean noip = false;
+#ifdef XASH_IPX
 static qboolean noipx = false;
+#endif
 static convar_t *net_ip;
 static convar_t *net_hostport;
 static convar_t *net_clientport;
@@ -294,13 +296,13 @@ static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
 	struct hostent	*h;
 	char		*colon;
 	char		copy[MAX_SYSPATH];
-	int		val;
 	
 	Q_memset( sadr, 0, sizeof( *sadr ));
 
 #ifdef XASH_IPX
 	if((Q_strlen( s ) >= 23 ) && ( s[8] == ':' ) && ( s[21] == ':' )) // check for an IPX address
 	{
+		int val;
 		((struct sockaddr_ipx *)sadr)->sa_family = AF_IPX;
 		copy[2] = 0;
 		DO( 0, sa_netnum[0] );
@@ -773,7 +775,7 @@ static void NET_OpenIP( void )
 
 		ip_sockets[NS_SERVER] = NET_IPSocket( net_ip->string, port );
 		if( !ip_sockets[NS_SERVER] && host.type == HOST_DEDICATED )
-			Host_Error( "couldn't allocate dedicated server IP port. \nMaybe you're trying to run dedicated server twice?\n" );
+			Host_Error( "Couldn't allocate dedicated server IP port.\nMaybe you're trying to run dedicated server twice?\n" );
 	}
 
 	// dedicated servers don't need client ports
@@ -923,13 +925,13 @@ void NET_GetLocalAddress( void )
 
 		if( pGetSockName( ip_sockets[NS_SERVER], (struct sockaddr *)&address, &namelen ) != 0 )
 		{
-			MsgDev( D_ERROR, "Could not get TCP/IP address, TCP/IP disabled\nReason:  %s\n", NET_ErrorString( ));
+			MsgDev( D_ERROR, "Could not get TCP/IP address, TCP/IP disabled\nReason: %s\n", NET_ErrorString( ));
 			noip = true;
 		}
 		else
 		{
 			net_local.port = address.sin_port;
-			Msg( "Server IP address %s\n", NET_AdrToString( net_local ));
+			Msg( "Server IP address: %s\n", NET_AdrToString( net_local ));
 		}
 	}
 }
@@ -991,36 +993,6 @@ void NET_Config( qboolean multiplayer )
 	NET_ClearLoopback ();
 }
 
-// sleeps msec or until net socket is ready
-void NET_Sleep( int msec )
-{
-	struct timeval	timeout;
-	fd_set		fdset;
-	int		i = 0;
-
-	if( host.type == HOST_NORMAL )
-		return; // we're not a dedicated server, just run full speed
-
-	FD_ZERO( &fdset );
-
-	if( ip_sockets[NS_SERVER] )
-	{
-		FD_SET( ip_sockets[NS_SERVER], &fdset ); // network socket
-		i = ip_sockets[NS_SERVER];
-	}
-#ifdef XASH_IPX
-	if( ipx_sockets[NS_SERVER] )
-	{
-		FD_SET( ipx_sockets[NS_SERVER], &fdset ); // network socket
-		if( ipx_sockets[NS_SERVER] > i )
-			i = ipx_sockets[NS_SERVER];
-	}
-#endif
-	timeout.tv_sec = msec / 1000;
-	timeout.tv_usec = (msec % 1000) * 1000;
-	pSelect( i+1, &fdset, NULL, NULL, &timeout );
-}
-
 /*
 =================
 NET_ShowIP_f
@@ -1062,7 +1034,7 @@ void NET_Init( void )
 #ifdef _WIN32
 	if( !NET_OpenWinSock())	// loading wsock32.dll
 	{
-		MsgDev( D_WARN, "NET_Init: wsock32.dll can't loaded\n" );
+		MsgDev( D_WARN, "NET_Init: failed to load wsock32.dll\n" );
 		return;
 	}
 
@@ -1075,7 +1047,7 @@ void NET_Init( void )
 #endif
 
 	net_showpackets = Cvar_Get( "net_showpackets", "0", 0, "show network packets" );
-	Cmd_AddCommand( "net_showip", NET_ShowIP_f,  "show hostname and ip's" );
+	Cmd_AddCommand( "net_showip", NET_ShowIP_f,  "show hostname and IPs" );
 	Cmd_AddCommand( "net_restart", NET_Restart_f, "restart the network subsystem" );
 
 	if( Sys_CheckParm( "-noip" )) noip = true;
