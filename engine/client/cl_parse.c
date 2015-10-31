@@ -1619,7 +1619,8 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 		case svc_weaponanim:
 			param1 = BF_ReadByte( msg );	// iAnim
 			param2 = BF_ReadByte( msg );	// body
-			CL_WeaponAnim( param1, param2 );
+			if( !cl_lw->value )
+				CL_WeaponAnim( param1, param2 );
 			break;
 		case svc_bspdecal:
 			CL_ParseStaticDecal( msg );

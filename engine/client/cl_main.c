@@ -47,6 +47,7 @@ convar_t	*cl_draw_beams;
 convar_t	*cl_cmdrate;
 convar_t	*cl_interp;
 convar_t	*cl_allow_fragment;
+convar_t	*cl_lw;
 convar_t	*hud_scale;
 
 //
@@ -298,14 +299,14 @@ void CL_CreateCmd( void )
 	VectorCopy( cl.refdef.cl_viewangles, cl.data.viewangles );
 
 	cl.data.iWeaponBits = cl.frame.local.client.weapons;
-	cl.data.fov = cl.frame.local.client.fov;
+	cl.data.fov = cl.scr_fov;
 
 	clgame.dllFuncs.pfnUpdateClientData( &cl.data, cl.time );
 
 	// grab changes
 	VectorCopy( cl.data.viewangles, cl.refdef.cl_viewangles );
 	cl.frame.local.client.weapons = cl.data.iWeaponBits;
-	cl.frame.local.client.fov = cl.data.fov;
+	cl.scr_fov = cl.data.fov;
 
 	// allways dump the first ten messages,
 	// because it may contain leftover inputs
@@ -795,6 +796,7 @@ void CL_ClearState( void )
 	Cvar_FullSet( "cl_background", "0", CVAR_READ_ONLY );
 	cl.refdef.movevars = &clgame.movevars;
 	cl.maxclients = 1; // allow to drawing player in menu
+	cl.scr_fov = 90.0f;
 
 	Cvar_SetFloat( "scr_download", 0.0f );
 	Cvar_SetFloat( "scr_loading", 0.0f );

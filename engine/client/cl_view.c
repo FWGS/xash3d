@@ -36,7 +36,7 @@ void V_SetupRefDef( void )
 	clent = CL_GetLocalPlayer ();
 
 	clgame.entities->curstate.scale = clgame.movevars.waveHeight;
-	clgame.viewent.curstate.modelindex = cl.frame.local.client.viewmodel;
+	clgame.viewent.curstate.modelindex = cl.predicted_viewmodel;
 	clgame.viewent.model = Mod_Handle( clgame.viewent.curstate.modelindex );
 	clgame.viewent.curstate.number = cl.playernum + 1;
 	clgame.viewent.curstate.entityType = ET_NORMAL;
@@ -82,7 +82,7 @@ void V_SetupRefDef( void )
 	cl.refdef.viewport[1] = (scr_height->integer - sb_lines - cl.refdef.viewport[3]) / 2;
 
 	// calc FOV
-	cl.refdef.fov_x = cl.data.fov; // this is a final fov value
+	cl.refdef.fov_x = cl.scr_fov; // this is a final fov value
 	cl.refdef.fov_y = V_CalcFov( &cl.refdef.fov_x, cl.refdef.viewport[2], cl.refdef.viewport[3] );
 
 	// adjust FOV for widescreen
