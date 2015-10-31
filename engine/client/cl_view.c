@@ -36,7 +36,7 @@ void V_SetupRefDef( void )
 	clent = CL_GetLocalPlayer ();
 
 	clgame.entities->curstate.scale = clgame.movevars.waveHeight;
-	clgame.viewent.curstate.modelindex = cl.predicted_viewmodel;
+	clgame.viewent.curstate.modelindex = cl.frame.local.client.viewmodel;
 	clgame.viewent.model = Mod_Handle( clgame.viewent.curstate.modelindex );
 	clgame.viewent.curstate.number = cl.playernum + 1;
 	clgame.viewent.curstate.entityType = ET_NORMAL;
