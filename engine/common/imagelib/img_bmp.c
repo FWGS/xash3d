@@ -380,7 +380,7 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	cbBmpBits = biTrueWidth * pix->height * pixel_size;
 	if( pixel_size == 1 ) cbPalBytes = 256 * sizeof( RGBQUAD );
 
-	memset(&bmfh, 0, sizeof(bmfh));
+	Q_memset( &bmfh, 0, sizeof( bmfh ));
 	// Bogus file header check
 	bmfh.bfType = MAKEWORD( 'B', 'M' );
 	bmfh.bfSize = sizeof( bmfh ) + sizeof( bmih ) + cbBmpBits + cbPalBytes;

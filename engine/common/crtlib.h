@@ -74,16 +74,17 @@ typedef enum
 	CVAR_SPONLY	= BIT(6),	// this cvar cannot be changed by clients connected to a multiplayer server.
 	CVAR_PRINTABLEONLY	= BIT(7),	// this cvar's string cannot contain unprintable characters ( player name )
 	CVAR_UNLOGGED	= BIT(8),	// if this is a FCVAR_SERVER, don't log changes to the log file / console
-	CVAR_SERVERINFO	= BIT(9),	// added to serverinfo when changed
-	CVAR_PHYSICINFO	= BIT(10),// added to physinfo when changed
-	CVAR_RENDERINFO	= BIT(11),// save to a seperate config called opengl.cfg
-	CVAR_CHEAT	= BIT(12),// can not be changed if cheats are disabled
-	CVAR_INIT		= BIT(13),// don't allow change from console at all, but can be set from the command line
-	CVAR_LATCH	= BIT(14),// save changes until server restart
-	CVAR_READ_ONLY	= BIT(15),// display only, cannot be set by user at all
-	CVAR_LATCH_VIDEO	= BIT(16),// save changes until render restart
-	CVAR_USER_CREATED	= BIT(17),// created by a set command (dll's used)
-	CVAR_GLCONFIG	= BIT(18),// set to cause it to be saved to opengl.cfg
+	CVAR_NOEXTRAWHITESPACE = BIT(9), // strip trailing/leading white space from this cvar
+	CVAR_SERVERINFO	= BIT(10),	// added to serverinfo when changed
+	CVAR_PHYSICINFO	= BIT(11),// added to physinfo when changed
+	CVAR_RENDERINFO	= BIT(12),// save to a seperate config called opengl.cfg
+	CVAR_CHEAT	= BIT(13),// can not be changed if cheats are disabled
+	CVAR_INIT		= BIT(14),// don't allow change from console at all, but can be set from the command line
+	CVAR_LATCH	= BIT(15),// save changes until server restart
+	CVAR_READ_ONLY	= BIT(16),// display only, cannot be set by user at all
+	CVAR_LATCH_VIDEO	= BIT(17),// save changes until render restart
+	CVAR_USER_CREATED	= BIT(18),// created by a set command (dll's used)
+	CVAR_GLCONFIG	= BIT(19),// set to cause it to be saved to opengl.cfg
 } cvar_flags_t;
 
 #include "cvardef.h"
@@ -121,7 +122,7 @@ void Cbuf_Clear( void );
 void Cbuf_AddText( const char *text );
 void Cbuf_InsertText( const char *text );
 void Cbuf_Execute (void);
-uint Cmd_Argc( void );
+int Cmd_Argc( void );
 char *Cmd_Args( void );
 char *Cmd_Argv( int arg );
 void Cmd_Init( void );
@@ -135,8 +136,8 @@ void Cmd_LookupCmds( char *buffer, void *ptr, setpair_t callback );
 qboolean Cmd_GetMapList( const char *s, char *completedname, int length );
 qboolean Cmd_GetDemoList( const char *s, char *completedname, int length );
 qboolean Cmd_GetMovieList( const char *s, char *completedname, int length );
-void Cmd_TokenizeString( char *text );
-void Cmd_ExecuteString( char *text, cmd_source_t src );
+void Cmd_TokenizeString( const char *text );
+void Cmd_ExecuteString( const char *text, cmd_source_t src );
 void Cmd_ForwardToServer( void );
 
 //
@@ -188,7 +189,6 @@ void _Q_memmove( void *dest, const void *src, size_t count, const char *filename
 //
 // zone.c
 //
-void Memory_Init( void );
 void *_Mem_Realloc( byte *poolptr, void *memptr, size_t size, const char *filename, int fileline );
 void *_Mem_Alloc( byte *poolptr, size_t size, const char *filename, int fileline );
 byte *_Mem_AllocPool( const char *name, const char *filename, int fileline );
@@ -208,7 +208,5 @@ void Mem_PrintStats( void );
 #define Mem_EmptyPool( pool ) _Mem_EmptyPool( pool, __FILE__, __LINE__ )
 #define Mem_IsAllocated( mem ) Mem_IsAllocatedExt( NULL, mem )
 #define Mem_Check() _Mem_Check( __FILE__, __LINE__ )
-
-void CRT_Init( void ); // must be call first
 	
 #endif//STDLIB_H

@@ -57,7 +57,7 @@ void VGui_Startup( int width, int height );
 void VGui_Shutdown( void );
 void VGui_Paint();
 void VGui_RunFrame();
-qboolean VGUI_SurfaceWndProc( Xash_Event *event );
+void VGUI_SurfaceWndProc( Xash_Event *event );
 void *VGui_GetPanel();
 void VGui_ViewportPaintBackground();
 

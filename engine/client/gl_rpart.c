@@ -538,7 +538,7 @@ void CL_DrawParticles( void )
 	if( !cl_draw_particles->integer )
 		return;
 
-	// don't evaluate particles when executes many times
+	// don't evaluate particles when executed many times
 	// at same frame e.g. mirror rendering
 	if( framecount != tr.realframecount )
 	{

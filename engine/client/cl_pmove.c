@@ -40,7 +40,7 @@ void CL_ClipPMoveToEntity( physent_t *pe, const vec3_t start, vec3_t mins, vec3_
 	}
 	else
 	{
-		// function is missed, so we didn't hit anything
+		// function is missing, so we didn't hit anything
 		tr->allsolid = false;
 	}
 }
