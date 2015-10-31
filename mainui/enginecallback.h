@@ -98,7 +98,7 @@ inline HIMAGE PIC_Load( const char *szPicName, const byte *ucRawImage, long ulRa
 #define CHECK_MAP_LIST	(*g_engfuncs.pfnCreateMapsList)
 #define HOST_ENDGAME	(*g_engfuncs.pfnHostEndGame)
 #define GET_CLIPBOARD	(*g_engfuncs.pfnGetClipboardData)
-#define SDL_FREE( x )	(*g_engfuncs.pfnSDL_free)
+#define SDL_FREE( x )	(*g_engfuncs.pfnSDL_free)( x )
 #define FS_SEARCH		(*g_engfuncs.pfnGetFilesList)
 #define MAP_IS_VALID	(*g_engfuncs.pfnIsMapValid)
 
