@@ -537,6 +537,7 @@ qboolean SV_SetPlayer( void );
 //
 // sv_custom.c
 //
+void SV_ClearCustomizationList( customization_t *pHead );
 void SV_SendResources( sizebuf_t *msg );
 int SV_TransferConsistencyInfo( void );
 

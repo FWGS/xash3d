@@ -127,17 +127,18 @@ returns username for current profile
 */
 char *Sys_GetCurrentUser( void )
 {
-	static string	s_userName;
-	dword		size = sizeof( s_userName );
-
 #if defined(_WIN32)
-	if( !GetUserName( s_userName, &size ) || !s_userName[0] )
-#elif !defined(__ANDROID__)
-	if( !getlogin_r( s_userName, size || !s_userName[0] ) )
-#endif
-		Q_strcpy( s_userName, "player" );
+	static string	s_userName;
+	dword			size = sizeof( s_userName );
 
-	return s_userName;
+	if( GetUserName( s_userName, &size ))
+		return s_userName;
+	return "Player";
+#elif !defined(__ANDROID__)
+	return cuserid( NULL );
+#else
+	return "Player";
+#endif
 }
 
 /*

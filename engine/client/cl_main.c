@@ -1311,8 +1311,6 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		cls.nextcmdtime = host.realtime;	// we can send a cmd right away
 
 		CL_StartupDemoHeader ();
-
-		UI_SetActiveMenu( false );
 	}
 	else if( !Q_strcmp( c, "info" ))
 	{

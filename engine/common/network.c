@@ -1283,8 +1283,8 @@ void HTTP_Run( void )
 		// You may skip this if not supported by system,
 		// but download will lock engine, maybe you will need to add manual returns
 #ifdef _WIN32
-		int mode = 1;
-		pIoctlSocket( curfile->socket, FIONBIO, mode );
+		dword mode = 1;
+		pIoctlSocket( curfile->socket, FIONBIO, &mode );
 #else
 		// SOCK_NONBLOCK is not portable, so use fcntl
 		fcntl( curfile->socket, F_SETFL, fcntl( curfile->socket, F_GETFL, 0 ) | O_NONBLOCK );
