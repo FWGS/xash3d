@@ -33,7 +33,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_MUSICVOLUME		5
 #define ID_INTERP			6
 #define ID_NODSP			7
-#define ID_MSGHINT			8
+#define ID_MUTEFOCUSLOST	8
+#define ID_MSGHINT			9
 
 typedef struct
 {
@@ -58,6 +59,7 @@ typedef struct
 	menuSlider_s	suitVolume;
 	menuCheckBox_s	lerping;
 	menuCheckBox_s	noDSP;
+	menuCheckBox_s	muteFocusLost;
 } uiAudio_t;
 
 static uiAudio_t		uiAudio;
@@ -79,6 +81,9 @@ static void UI_Audio_GetConfig( void )
 	if( CVAR_GET_FLOAT( "dsp_off" ))
 		uiAudio.noDSP.enabled = 1;
 
+	if( CVAR_GET_FLOAT("snd_mute_losefocus" ))
+		uiAudio.muteFocusLost.enabled = 1;
+
 	// save initial values
 	uiAudioInitial.soundVolume = uiAudio.soundVolume.curValue;
 	uiAudioInitial.musicVolume = uiAudio.musicVolume.curValue;
@@ -97,6 +102,7 @@ static void UI_Audio_SetConfig( void )
 	CVAR_SET_FLOAT( "suitvolume", uiAudio.suitVolume.curValue );
 	CVAR_SET_FLOAT( "s_lerping", uiAudio.lerping.enabled );
 	CVAR_SET_FLOAT( "dsp_off", uiAudio.noDSP.enabled );
+	CVAR_SET_FLOAT( "snd_mute_losefocus", uiAudio.muteFocusLost.enabled );
 }
 
 /*
@@ -111,6 +117,7 @@ static void UI_Audio_UpdateConfig( void )
 	CVAR_SET_FLOAT( "suitvolume", uiAudio.suitVolume.curValue );
 	CVAR_SET_FLOAT( "s_lerping", uiAudio.lerping.enabled );
 	CVAR_SET_FLOAT( "dsp_off", uiAudio.noDSP.enabled );
+	CVAR_SET_FLOAT( "snd_mute_losefocus", uiAudio.muteFocusLost.enabled );
 }
 
 /*
@@ -126,6 +133,7 @@ static void UI_Audio_Callback( void *self, int event )
 	{
 	case ID_INTERP:
 	case ID_NODSP:
+	case ID_MUTEFOCUSLOST:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -243,6 +251,15 @@ static void UI_Audio_Init( void )
 	uiAudio.noDSP.generic.callback = UI_Audio_Callback;
 	uiAudio.noDSP.generic.statusText = "this disables sound processing (like echo, flanger etc)";
 
+	uiAudio.muteFocusLost.generic.id = ID_MUTEFOCUSLOST;
+	uiAudio.muteFocusLost.generic.type = QMTYPE_CHECKBOX;
+	uiAudio.muteFocusLost.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_ACT_ONRELEASE | QMF_MOUSEONLY | QMF_DROPSHADOW;
+	uiAudio.muteFocusLost.generic.name = "Mute when inactive";
+	uiAudio.muteFocusLost.generic.x = 320;
+	uiAudio.muteFocusLost.generic.y = 570;
+	uiAudio.muteFocusLost.generic.callback = UI_Audio_Callback;
+	uiAudio.muteFocusLost.generic.statusText = "silence the audio when game window loses focus";
+
 	UI_Audio_GetConfig();
 
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.background );
@@ -253,6 +270,7 @@ static void UI_Audio_Init( void )
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.suitVolume );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.lerping );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.noDSP );
+	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.muteFocusLost );
 }
 
 /*

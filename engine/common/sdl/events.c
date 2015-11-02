@@ -5,7 +5,13 @@
 #include "client.h"
 #include "vgui_draw.h"
 
-int SDLash_EventFilter( SDL_Event* event)
+extern convar_t *vid_fullscreen;
+extern convar_t *snd_mute_losefocus;
+static qboolean lostFocusOnce;
+static float oldVolume;
+static float oldMusicVolume;
+
+void SDLash_EventFilter( SDL_Event* event)
 {
 	#ifdef XASH_VGUI
 	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
@@ -20,7 +26,7 @@ int SDLash_EventFilter( SDL_Event* event)
 			IN_MouseEvent(0);
 			break;
 		case SDL_QUIT:
-			Host_Shutdown();
+			Sys_Quit();
 			break;
 
 		case SDL_KEYDOWN:
@@ -61,21 +67,45 @@ int SDLash_EventFilter( SDL_Event* event)
 			{
 				switch( event->window.event )
 				{
+				case SDL_WINDOWEVENT_MOVED:
+					if(!vid_fullscreen->integer)
+					{
+						Cvar_SetFloat("r_xpos", (float)event->window.data1);
+						Cvar_SetFloat("r_ypos", (float)event->window.data2);
+					}
+					break;
 				case SDL_WINDOWEVENT_MINIMIZED:
 					host.state = HOST_SLEEP;
 					break;
-				case SDL_WINDOWEVENT_FOCUS_LOST:
-				case SDL_WINDOWEVENT_LEAVE:
-					host.state = HOST_NOFOCUS;
-					IN_DeactivateMouse();
-					break;
-				default:
+				case SDL_WINDOWEVENT_FOCUS_GAINED:
 					host.state = HOST_FRAME;
 					IN_ActivateMouse(true);
+					if(lostFocusOnce && snd_mute_losefocus && snd_mute_losefocus->integer)
+					{
+						Cvar_SetFloat("volume", oldVolume);
+						Cvar_SetFloat("musicvolume", oldMusicVolume);
+					}
+					break;
+				case SDL_WINDOWEVENT_FOCUS_LOST:
+					host.state = HOST_NOFOCUS;
+					IN_DeactivateMouse();
+					if(snd_mute_losefocus && snd_mute_losefocus->integer)
+					{
+						lostFocusOnce = true;
+						oldVolume = Cvar_VariableValue("volume");
+						oldMusicVolume = Cvar_VariableValue("musicvolume");
+						Cvar_SetFloat("volume", 0);
+						Cvar_SetFloat("musicvolume", 0);
+					}
+					break;
+				case SDL_WINDOWEVENT_CLOSE:
+					Sys_Quit();
+					break;
+				default:
+					break;
 				}
 			}
 	}
-	return 0;
 }
 
 #ifdef PANDORA
