@@ -478,7 +478,7 @@ void SV_DropClient( sv_client_t *drop )
 	if( NET_CompareBaseAdr( drop->netchan.remote_address, host.rd.address ) )
 		SV_EndRedirect();
 
-	SV_ClearCustomizationList( drop->customization, false );
+	SV_ClearCustomizationList( &drop->customization );
 
 	// throw away any residual garbage in the channel.
 	Netchan_Clear( &drop->netchan );

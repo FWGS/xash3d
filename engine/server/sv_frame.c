@@ -513,7 +513,7 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 	{
 		Q_memset( &nullwd, 0, sizeof( nullwd ));
 
-		for( i = 0; i < 32; i++ )
+		for( i = 0; i < 64; i++ )
 		{
 			if( cl->delta_sequence == -1 ) from_wd = &nullwd;
 			else from_wd = &cl->frames[cl->delta_sequence & SV_UPDATE_MASK].weapondata[i];

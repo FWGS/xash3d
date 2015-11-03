@@ -575,7 +575,7 @@ void CL_ParseServerData( sizebuf_t *msg )
 	cls.serverProtocol = i;
 
 	if( i != PROTOCOL_VERSION )
-		Host_Error( "Server use invalid protocol (%i should be %i)\n", i, PROTOCOL_VERSION );
+		Host_Error( "Server uses invalid protocol (%i should be %i)\n", i, PROTOCOL_VERSION );
 
 	cl.servercount = BF_ReadLong( msg );
 	cl.checksum = BF_ReadLong( msg );
@@ -616,8 +616,6 @@ void CL_ParseServerData( sizebuf_t *msg )
 #endif
 	if( !cls.changedemo )
 		UI_SetActiveMenu( cl.background );
-	else if( !cls.demoplayback )
-		Key_SetKeyDest( key_menu );
 
 	cl.refdef.viewentity = cl.playernum + 1; // always keep viewent an actual
 

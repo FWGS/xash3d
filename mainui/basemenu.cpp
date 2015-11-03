@@ -1240,12 +1240,13 @@ void UI_SetActiveMenu( int fActive )
 	if( !uiStatic.initialized )
 		return;
 
-	// don't continue firing if we leave game
-	KEY_ClearStates();
 	uiStatic.framecount = 0;
 
 	if( fActive )
 	{
+		// don't continue firing if we leave game
+		KEY_ClearStates();
+
 		KEY_SetDest( KEY_MENU );
 		UI_Main_Menu();
 	}
