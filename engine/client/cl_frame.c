@@ -505,7 +505,7 @@ void CL_WeaponAnim( int iAnim, int body )
 		view->curstate.modelindex = cl.frame.local.client.viewmodel;
 	else
 		view->curstate.modelindex = cl.predicted_viewmodel;
-/*
+
 	// anim is changed. update latchedvars
 	if( iAnim != view->curstate.sequence )
 	{
@@ -520,9 +520,10 @@ void CL_WeaponAnim( int iAnim, int body )
 		view->latched.prevanimtime = view->curstate.animtime;
 		view->latched.sequencetime = 0.0f;
 	}
-*/
-	view->curstate.animtime = 0; // start immediately
+
+	view->curstate.animtime = cl.time; // start immediately
 	view->curstate.framerate = 1.0f;
+	view->curstate.sequence = iAnim;
 	view->latched.prevframe = 0.0f;
 	view->curstate.scale = 1.0f;
 	view->curstate.frame = 0.0f;

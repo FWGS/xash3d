@@ -889,18 +889,28 @@ void CL_PredictMovement( void )
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );
 
 	ASSERT( cl.refdef.cmd != NULL );
-
-	if( !CL_IsPredicted( ))
+	if( !cl_predict->value )
 	{
+		//simulate predict
 		local_state_t t1, t2;
 		Q_memset( &t1, 0, sizeof( local_state_t ));
-		//Q_memset( &t2, 0, sizeof( local_state_t ));
+		Q_memset( &t2, 0, sizeof( local_state_t ));
 		t1.client = cl.frame.local.client;
 		Q_memcpy( t1.weapondata, cl.frame.local.weapondata, sizeof( t1.weapondata ));
 		t1.playerstate = cl.frame.playerstate[cl.playernum];
 		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, true, cl.time, cls.lastoutgoingcommand );
 		cl.predicted_viewmodel = t2.client.viewmodel;
 		return;
+	}
+
+	if( !CL_IsPredicted( ))
+	{
+		local_state_t t1, t2;
+		Q_memset( &t1, 0, sizeof( local_state_t ));
+		//Q_memset( &t2, 0, sizeof( local_state_t ));
+		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, false, cl.time, cls.lastoutgoingcommand );
+		return;
+		//Q_memset( &t2, 0, sizeof( local_state_t ));
 	}
 
 	ack = cls.netchan.incoming_acknowledged;
