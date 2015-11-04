@@ -677,6 +677,7 @@ void SV_Info( netadr_t from )
 	char	string[MAX_INFO_STRING];
 	int	i, count = 0;
 	int	version;
+	char *gamedir = GI->gamefolder;
 
 	// ignore in single player
 	if( sv_maxclients->integer == 1 )
@@ -684,6 +685,9 @@ void SV_Info( netadr_t from )
 
 	version = Q_atoi( Cmd_Argv( 1 ));
 	string[0] = '\0';
+
+	if( *sv_fakegamedir->string )
+		gamedir = sv_fakegamedir->string;
 
 	if( version != PROTOCOL_VERSION )
 	{
@@ -702,7 +706,7 @@ void SV_Info( netadr_t from )
 		Info_SetValueForKey( string, "coop", va( "%i", svgame.globals->coop ));
 		Info_SetValueForKey( string, "numcl", va( "%i", count ));
 		Info_SetValueForKey( string, "maxcl", va( "%i", sv_maxclients->integer ));
-		Info_SetValueForKey( string, "gamedir", GI->gamefolder );
+		Info_SetValueForKey( string, "gamedir", gamedir );
 	}
 
 	Netchan_OutOfBandPrint( NS_SERVER, from, "info\n%s", string );
@@ -1246,8 +1250,13 @@ void SV_New_f( sv_client_t *cl )
 			// transfer fastdl servers list
 			if( sv_downloadurl->string && *sv_downloadurl->string )
 			{
-				BF_WriteByte( &cl->netchan.message, svc_stufftext );
-				BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", sv_downloadurl->string ));
+				char *data = sv_downloadurl->string;
+				char token[256];
+				while( data = COM_ParseFile( data, token ) )
+				{
+					BF_WriteByte( &cl->netchan.message, svc_stufftext );
+					BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", sv_downloadurl->string ));
+				}
 			}
 			// request resource list
 			BF_WriteByte( &cl->netchan.message, svc_stufftext );
@@ -1290,6 +1299,11 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	int		rescount = 0;
 	resourcelist_t	reslist;	// g-cont. what about stack???
 	size_t		msg_size;
+	char *resfile;
+	char *mapresfile;
+	char mapresfilename[256];
+	char token[256];
+	char *pfile;
 
 	Q_memset( &reslist, 0, sizeof( resourcelist_t ));
 
@@ -1336,6 +1350,32 @@ void SV_SendResourceList_f( sv_client_t *cl )
 		Q_strcpy( reslist.resnames[rescount], sv.files_precache[index] );
 		rescount++;
 	}
+
+	// load common reslist file form gamedir root
+	resfile = pfile = COM_LoadFile("reslist.txt", false, 0 );
+	while( pfile = COM_ParseFile( pfile, token ) )
+	{
+		if( !FS_FileExists( token, true ) )
+			continue;
+		reslist.restype[rescount] = t_generic;
+		Q_strcpy( reslist.resnames[rescount], token );
+		rescount++;
+	}
+	COM_FreeFile(resfile);
+	// maps/<name>.res
+	Q_strncpy( mapresfilename, sv.worldmodel->name, sizeof( mapresfilename ));
+	FS_StripExtension( mapresfilename );
+	FS_DefaultExtension( mapresfilename, ".res" );
+	mapresfile = pfile = COM_LoadFile( mapresfilename, false, 0 );
+	while( pfile = COM_ParseFile( pfile, token ) )
+	{
+		if( !FS_FileExists( token, true ) )
+			continue;
+		reslist.restype[rescount] = t_generic;
+		Q_strcpy( reslist.resnames[rescount], token );
+		rescount++;
+	}
+	COM_FreeFile( mapresfile );
 
 	msg_size = BF_GetRealBytesWritten( &cl->netchan.message ); // start
 
@@ -2533,12 +2573,15 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	uint	challenge;
 	int	index, count = 0;
 	char	query[512], ostype = 'u';
+	char *gamedir = GI->gamefolder;
 
 	BF_Clear( msg );
 	BF_ReadLong( msg );// skip the -1 marker
 
 	args = BF_ReadStringLine( msg );
 	Cmd_TokenizeString( args );
+	if( *sv_fakegamedir->string )
+		gamedir = sv_fakegamedir->string;
 
 	c = Cmd_Argv( 0 );
 	MsgDev( D_NOTE, "SV_ConnectionlessPacket: %s : %s\n", NET_AdrToString( from ), c );
@@ -2588,7 +2631,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		challenge,
 		count,
 		sv_maxclients->integer,
-		GI->gamefolder,
+		gamedir,
 		sv.name,
 		ostype,
 		XASH_VERSION,
