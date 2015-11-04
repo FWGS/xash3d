@@ -1361,7 +1361,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 		Q_strcpy( reslist.resnames[rescount], token );
 		rescount++;
 	}
-	FS_FreeFile(resfile);
+	Mem_Free( resfile );
 	// maps/<name>.res
 	Q_strncpy( mapresfilename, sv.worldmodel->name, sizeof( mapresfilename ));
 	FS_StripExtension( mapresfilename );
@@ -1375,7 +1375,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 		Q_strcpy( reslist.resnames[rescount], token );
 		rescount++;
 	}
-	FS_FreeFile( mapresfile );
+	Mem_Free( mapresfile );
 
 	msg_size = BF_GetRealBytesWritten( &cl->netchan.message ); // start
 
