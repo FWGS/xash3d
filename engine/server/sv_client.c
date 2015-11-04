@@ -1352,7 +1352,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	}
 
 	// load common reslist file form gamedir root
-	resfile = pfile = COM_LoadFile("reslist.txt", false, 0 );
+	resfile = pfile = FS_LoadFile("reslist.txt", 0, true );
 	while( pfile = COM_ParseFile( pfile, token ) )
 	{
 		if( !FS_FileExists( token, true ) )
@@ -1361,12 +1361,12 @@ void SV_SendResourceList_f( sv_client_t *cl )
 		Q_strcpy( reslist.resnames[rescount], token );
 		rescount++;
 	}
-	COM_FreeFile(resfile);
+	FS_FreeFile(resfile);
 	// maps/<name>.res
 	Q_strncpy( mapresfilename, sv.worldmodel->name, sizeof( mapresfilename ));
 	FS_StripExtension( mapresfilename );
 	FS_DefaultExtension( mapresfilename, ".res" );
-	mapresfile = pfile = COM_LoadFile( mapresfilename, false, 0 );
+	mapresfile = pfile = FS_LoadFile( mapresfilename, 0, true );
 	while( pfile = COM_ParseFile( pfile, token ) )
 	{
 		if( !FS_FileExists( token, true ) )
@@ -1375,7 +1375,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 		Q_strcpy( reslist.resnames[rescount], token );
 		rescount++;
 	}
-	COM_FreeFile( mapresfile );
+	FS_FreeFile( mapresfile );
 
 	msg_size = BF_GetRealBytesWritten( &cl->netchan.message ); // start
 
