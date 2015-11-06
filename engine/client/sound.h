@@ -297,7 +297,6 @@ void DSP_ClearState( void );
 
 qboolean S_Init( void );
 void S_Shutdown( void );
-void S_Activate( qboolean active, void *hInst );
 void S_SoundList_f( void );
 void S_SoundInfo_f( void );
 

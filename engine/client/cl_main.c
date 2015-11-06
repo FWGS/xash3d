@@ -1755,8 +1755,6 @@ void Host_ClientFrame( void )
 		menu.globals->demorecording = cls.demorecording;
 	}
 
-	// if in the debugger last frame, don't timeout
-	if( host.frametime > 5.0f ) cls.netchan.last_received = Sys_DoubleTime();
 #ifdef XASH_VGUI
 	VGui_RunFrame ();
 #endif

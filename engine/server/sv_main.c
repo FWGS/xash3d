@@ -412,8 +412,7 @@ void SV_ReadPackets( void )
 SV_CheckTimeouts
 
 If a packet has not been received from a client for timeout->value
-seconds, drop the conneciton.  Server frames are used instead of
-realtime to avoid dropping the local client while debugging.
+seconds, drop the conneciton.
 
 When a client is normally dropped, the sv_client_t goes into a zombie state
 for a few seconds to make sure any final reliable message gets resent
@@ -425,12 +424,12 @@ void SV_CheckTimeouts( void )
 	sv_client_t	*cl;
 	float		droppoint;
 	float		zombiepoint;
-	int		i, numclients = 0;
+	int		i, numclients;
 
 	droppoint = host.realtime - timeout->value;
 	zombiepoint = host.realtime - zombietime->value;
 
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, numclients = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
 		if( cl->state >= cs_connected )
 		{
@@ -466,13 +465,11 @@ void SV_CheckTimeouts( void )
 			continue;
 		}
 
-		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint )
+		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint && !NET_IsLocalAddress( cl->netchan.remote_address ))
 		{
-#ifndef __ANDROID__ // process can be freezed on android, this is temporary fix
 			SV_BroadcastPrintf( PRINT_HIGH, "%s timed out\n", cl->name );
 			SV_DropClient( cl ); 
 			cl->state = cs_free; // don't bother with zombie state
-#endif
 		}
 	}
 
