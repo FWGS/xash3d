@@ -932,7 +932,6 @@ extern const char *svc_strings[256];
 // soundlib shared exports
 qboolean S_Init( void );
 void S_Shutdown( void );
-void S_Activate( qboolean active, void *hInst );
 void S_StopSound( int entnum, int channel, const char *soundname );
 int S_GetCurrentStaticSounds( soundlist_t *pout, int size );
 void S_StopAllSounds( void );

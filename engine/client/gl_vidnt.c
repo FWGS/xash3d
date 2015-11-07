@@ -1524,8 +1524,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		wndFlags |= SDL_WINDOW_FULLSCREEN;
 	}
 
-	host.hWnd = SDL_CreateWindow(wndname, SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED, width, height, wndFlags);
+	host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
+		r_ypos->integer, width, height, wndFlags);
 
 	// host.hWnd must be filled in IN_WndProc
 	if( !host.hWnd )

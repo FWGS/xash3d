@@ -49,6 +49,7 @@ convar_t		*snd_foliage_db_loss;
 convar_t		*snd_gain;
 convar_t		*snd_gain_max;
 convar_t		*snd_gain_min;
+convar_t		*snd_mute_losefocus;
 convar_t		*s_refdist;
 convar_t		*s_refdb;
 convar_t		*dsp_off;		// set to 1 to disable all dsp processing
@@ -1780,6 +1781,7 @@ qboolean S_Init( void )
 	snd_foliage_db_loss = Cvar_Get( "snd_foliage_db_loss", "4", 0, "foliage loss factor" ); 
 	snd_gain_max = Cvar_Get( "snd_gain_max", "1", 0, "gain maximal threshold" );
 	snd_gain_min = Cvar_Get( "snd_gain_min", "0.01", 0, "gain minimal threshold" );
+	snd_mute_losefocus = Cvar_Get( "snd_mute_losefocus", "1", CVAR_ARCHIVE, "silence the audio when game window loses focus" );
 	s_refdist = Cvar_Get( "s_refdist", "36", 0, "soundlevel reference distance" );
 	s_refdb = Cvar_Get( "s_refdb", "60", 0, "soundlevel refernce dB" );
 	snd_gain = Cvar_Get( "snd_gain", "1", 0, "sound default gain" );
@@ -1830,6 +1832,7 @@ void S_Shutdown( void )
 	if( !dma.initialized ) return;
 
 	Cmd_RemoveCommand( "play" );
+	Cmd_RemoveCommand( "playvol" );
 	Cmd_RemoveCommand( "stopsound" );
 	Cmd_RemoveCommand( "music" );
 	Cmd_RemoveCommand( "soundlist" );
