@@ -900,6 +900,9 @@ void CL_PredictMovement( void )
 		t1.playerstate = cl.frame.playerstate[cl.playernum];
 		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, true, cl.time, cls.lastoutgoingcommand );
 		cl.predicted_viewmodel = t2.client.viewmodel;
+		cl.scr_fov = to->client.fov;
+		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+			cl.scr_fov = 90.0f;
 		return;
 	}
 
@@ -955,6 +958,9 @@ void CL_PredictMovement( void )
 	if( to )
 {
 	cl.predicted_viewmodel = to->client.viewmodel;
+	cl.scr_fov = to->client.fov;
+	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+		cl.scr_fov = 90.0f;
 	VectorCopy( to->playerstate.origin, cl.predicted_origin );
 	VectorCopy( to->client.velocity, cl.predicted_velocity );
 	VectorCopy( to->client.view_ofs, cl.predicted_viewofs );

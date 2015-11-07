@@ -436,6 +436,7 @@ extern "C" void Android_DrawControls()
 	if(!controlsCreated)
 		return;
 	//LOGI("frameControls");
+	nanoGL_Flush();
 	if (!glInit)
 	{
 		controlsContainer.initGL();
@@ -471,7 +472,7 @@ extern "C" void Android_DrawControls()
 	setHideSticks(!showSticks);
 
 	//flush(); //draw out game from glshim
-	//nanoGL_Flush();
+	nanoGL_Flush();
 	
 	controlsContainer.draw();
 	
