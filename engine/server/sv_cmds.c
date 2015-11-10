@@ -109,11 +109,11 @@ qboolean SV_SetPlayer( void )
 	sv_client_t	*cl;
 	int		i, idnum;
 
-	if( !svs.clients )
+	if( !svs.clients || sv.background )
 	{
 		Msg( "^3No server running.\n" );
 		return false;
-          }
+	}
 
 	if( sv_maxclients->integer == 1 || Cmd_Argc() < 2 )
 	{
@@ -668,17 +668,17 @@ void SV_Kick_f( void )
 {
 	if( Cmd_Argc() != 2 )
 	{
-		Msg( "Usage: kick <userid>\n" );
-		return;
-	}
-
-	if( !svs.clients || sv.background )
-	{
-		Msg( "^3No server running.\n" );
+		Msg( "Usage: kick <userid> | <name>\n" );
 		return;
 	}
 
 	if( !SV_SetPlayer( )) return;
+
+	if( NET_IsLocalAddress( svs.currentPlayer->netchan.remote_address ))
+	{
+		Msg( "The local player cannot be kicked!\n" );
+		return;
+	}
 
 	SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked\n", svs.currentPlayer->name );
 	SV_ClientPrintf( svs.currentPlayer, PRINT_HIGH, "You were kicked from the game\n" );
