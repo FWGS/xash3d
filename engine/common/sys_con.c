@@ -553,7 +553,7 @@ void Sys_CloseLog( void )
 	printf( "=================================================================================");
 	printf( "\n\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
 	printf( "=================================================================================");
-
+	printf( "\n" );
 
 	if( s_wcd.logfile )
 	{
@@ -561,7 +561,7 @@ void Sys_CloseLog( void )
 		fprintf( s_wcd.logfile, "=================================================================================");
 		fprintf( s_wcd.logfile, "\n\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
 		fprintf( s_wcd.logfile, "=================================================================================");
-		if( host.change_game ) fprintf( s_wcd.logfile, "\n" ); // just for tabulate
+		fprintf( s_wcd.logfile, "\n" );
 
 		fclose( s_wcd.logfile );
 		s_wcd.logfile = NULL;
