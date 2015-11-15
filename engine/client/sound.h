@@ -323,6 +323,7 @@ void SND_CloseMouth( channel_t *ch );
 void S_StreamSoundTrack( void );
 void S_StreamBackgroundTrack( void );
 qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position );
+void S_StopBackgroundTrack( void );
 void S_PrintBackgroundTrackState( void );
 void S_FadeMusicVolume( float fadePercent );
 

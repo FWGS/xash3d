@@ -9,6 +9,12 @@ INCLUDES = -I. -I$(PWD)
 #INCLUDES += -I$(HLSDK)/utils/vgui/include/
 #DEFINES = -DXASH_VGUI -DXASH_SDL
 
+DEFINES = -DNOEXEC
+
+ifneq ($(STATIC),1)
+	DEFINES += -DSDL
+endif
+
 %.o : %.c
 	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
 
@@ -17,6 +23,10 @@ OBJS = $(SRCS:.c=.o)
 
 libloader.so : $(OBJS)
 	$(CC) $(LDFLAGS) -o libloader.so -shared $(OBJS) -lm
+
+
+libloader.a: $(OBJS)
+	$(AR) rcs libloader.a $(OBJS)
 
 .PHONY: depend clean
 

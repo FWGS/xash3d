@@ -3208,6 +3208,7 @@ POINT mousepos;
 static int WINAPI expGetCursorPos(LPPOINT cp)
 {
     //dbgprintf("GetCursorPos(0x%x) => 0x%x\n", cursor, cursor);
+#ifdef SDL
     int x ,y;
     SDL_GetRelativeMouseState(&x, &y);
     mousepos.x += x;
@@ -3215,6 +3216,7 @@ static int WINAPI expGetCursorPos(LPPOINT cp)
     cp->x=mousepos.x;
     cp->y=mousepos.y;
     return 1;
+#endif
 }
 
 static WIN_BOOL WINAPI expSetCursorPos(int x, int y)
@@ -5281,7 +5283,9 @@ static DWORD WINAPI expGetLocaleInfoA(DWORD locale, DWORD lctype, char* lpLCData
 
 static void expSDL_GetRelativeMouseState(int *x, int *y)
 {
-	return SDL_GetRelativeMouseState(x,y);
+#ifdef SDL
+    SDL_GetRelativeMouseState(x,y);
+#endif
 }
 
 static int expSDL_NumJoysticks(void)
