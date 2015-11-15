@@ -184,6 +184,8 @@ typedef struct gameinfo_s
 	// .dll pathes
 	char		dll_path[64];	// e.g. "bin" or "cl_dlls"
 	char		game_dll[64];	// custom path for game.dll
+	char		game_dll_linux[64];	// custom path for game.dll
+	char		game_dll_osx[64];	// custom path for game.dll
 	char		client_lib[64];	// custom name of client library
 	// .ico path
 	char		iconpath[64];	// "game.ico" by default
@@ -220,6 +222,8 @@ typedef struct sysinfo_s
 	gameinfo_t	*GameInfo;	// current GameInfo
 	gameinfo_t	*games[MAX_MODS];	// environment games (founded at each engine start)
 	int		numgames;
+	char gamedll[256];
+	char clientlib[256];
 } sysinfo_t;
 
 typedef enum

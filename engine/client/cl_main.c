@@ -1823,7 +1823,7 @@ void CL_Init( void )
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
-	loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, GI->client_lib ));
+	loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, SI.clientlib ));
 	if( !loaded )
 #if defined (__ANDROID__)
 		{
