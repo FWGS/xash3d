@@ -1612,7 +1612,7 @@ void FS_LoadGameInfo( const char *rootfolder )
 #elif defined(__APPLE__)
 		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
 #elif defined(__ANDROID__) || defined(PANDORA)
-		Q_strncpy( SI.gamedll, GI->dll_path, sizeof( SI.gamedll ) );
+		Q_strncpy( SI.gamedll, getenv("XASH3D_GAMELIBDIR"), sizeof( SI.gamedll ) );
 		Q_strncat( SI.gamedll, "/" SERVERDLL, sizeof( SI.gamedll ) );
 #else
 		Q_strncpy( SI.gamedll, GI->game_dll_linux, sizeof( SI.gamedll ) );
