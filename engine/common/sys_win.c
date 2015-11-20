@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include <dlfcn.h>
 #ifndef __ANDROID__
 extern char **environ;
+#include <pwd.h>
 #endif
 
 #else
@@ -135,7 +136,12 @@ char *Sys_GetCurrentUser( void )
 		return s_userName;
 	return "Player";
 #elif !defined(__ANDROID__)
-	return cuserid( NULL );
+	uid_t uid = geteuid();
+	struct passwd *pw = getpwuid( uid );
+
+	if ( pw ) return pw->pw_name;
+
+	return "Player";
 #else
 	return "Player";
 #endif
