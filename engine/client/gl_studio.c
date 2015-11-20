@@ -2107,6 +2107,8 @@ static void R_StudioDrawPoints( void )
 
 				if( g_nFaceFlags & STUDIO_NF_CHROME || ( g_nForceFaceFlags & STUDIO_NF_CHROME ))
 					pglTexCoord2f( g_chrome[ptricmds[1]][0] * s, g_chrome[ptricmds[1]][1] * t );
+				else if( g_nFaceFlags & STUDIO_NF_UV_COORDS )
+					pglTexCoord2f( ptricmds[2] * (1.0f / 32768.0f), ptricmds[3] * (1.0f / 32768.0f));
 				else pglTexCoord2f( ptricmds[2] * s, ptricmds[3] * t );
 
 				if(!( g_nForceFaceFlags & STUDIO_NF_CHROME ))
@@ -3466,7 +3468,7 @@ static void R_StudioLoadTexture( model_t *mod, studiohdr_t *phdr, mstudiotexture
 		Q_snprintf( texname, sizeof( texname ), "#%s/%s.mdl", mdlname, name );
 		ptexture->index = GL_LoadTexture( texname, (byte *)ptexture, size, flags, filter );
 	}
-	else MsgDev( D_NOTE, "loading HQ: %s\n", texname );
+	else MsgDev( D_NOTE, "Loading HQ: %s\n", texname );
   
 	if( !ptexture->index )
 	{

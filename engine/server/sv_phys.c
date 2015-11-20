@@ -190,7 +190,7 @@ qboolean SV_RunThink( edict_t *ent )
 {
 	float	thinktime;
 
-	if(!( ent->v.flags & FL_SPECTATOR ))
+	if(!( ent->v.flags & FL_KILLME ))
 	{
 		thinktime = ent->v.nextthink;
 		if( thinktime <= 0.0f || thinktime > sv.time + host.frametime )
@@ -205,8 +205,11 @@ qboolean SV_RunThink( edict_t *ent )
 		svgame.dllFuncs.pfnThink( ent );
 	}
 
-	if( ent->v.flags & FL_SPECTATOR )
+	if( ent->v.flags & FL_KILLME )
+	{
+		MsgDev( D_NOTE, "SV_RunThink: FreeEdict\n");
 		SV_FreeEdict( ent );
+	}
 
 	return !ent->free;
 }
@@ -1719,13 +1722,14 @@ static void SV_Physics_Entity( edict_t *ent )
 		SV_Physics_Pusher( ent );
 		break;
 	case MOVETYPE_WALK:
-		Host_Error( "SV_Physics: bad movetype %i\n", ent->v.movetype );
+		Host_MapDesignError( "SV_Physics: bad movetype %i for %s, reset to MOVETYPE_NONE\n", ent->v.movetype, STRING( ent->v.classname ) );
+		ent->v.movetype = MOVETYPE_NONE;
 		break;
 	}
 
 	// g-cont. don't alow free entities during loading because
 	// this produce a corrupted baselines
-	if( sv.state == ss_active && ent->v.flags & FL_KILLME )
+	if( sv.state == ss_active && ( ent->v.flags & FL_KILLME ) )
 		SV_FreeEdict( ent );
 }
 

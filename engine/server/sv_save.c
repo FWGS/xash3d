@@ -641,7 +641,7 @@ int SV_IsValidSave( void )
 			
 		if( pl->v.deadflag != false || pl->v.health <= 0.0f )
 		{
-			Msg( "Can't savegame with a dead player\n" );
+			Msg( "Can't savegame with a dead player.\n" );
 			return 0;
 		}
 
@@ -2132,6 +2132,7 @@ qboolean SV_LoadGame( const char *pName )
 	sv.background = false;
 
 	SCR_BeginLoadingPlaque ( false );
+	S_StopBackgroundTrack();
 
 	MsgDev( D_INFO, "Loading game from %s...\n", name );
 	SV_ClearSaveDir();

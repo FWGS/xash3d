@@ -144,20 +144,4 @@ extern "C" void InitAPI(vguiapi_t * api)
 	g_api->MouseMove = VGUI_MouseMove;
 	g_api->Key = VGUI_Key;
 }
-
-#ifdef _WIN32
-#include "windows.h"
-// Required DLL entry point
-qboolean WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-if (fdwReason == DLL_PROCESS_ATTACH)
-{
-}
-else if (fdwReason == DLL_PROCESS_DETACH)
-{
-}
-return TRUE;
-}
-#endif
-
 #endif

@@ -25,6 +25,39 @@ GNU General Public License for more details.
 #include "platform/android/dlsym-weak.h"
 #endif
 
+
+#ifdef NO_LIBDL
+
+#ifndef DLL_LOADER
+#error Enable at least one dll backend!!!
+#endif
+
+void *dlsym(void *handle, const char *symbol )
+{
+	MsgDev( D_NOTE, "dlsym( %p, \"%s\" ): stub\n", handle, symbol );
+	return NULL;
+}
+void *dlopen(const char *name, int flag )
+{
+	MsgDev( D_NOTE, "dlopen( \"%s\", %d ): stub\n", name, flag );
+	return NULL;
+}
+int dlclose(void *handle)
+{
+	MsgDev( D_NOTE, "dlsym( %p ): stub\n", handle );
+	return 0;
+}
+char *dlerror( void )
+{
+	return "Loading ELF libraries not supported in this build!\n";
+}
+int dladdr( const void *addr, Dl_info *info )
+{
+	return 0;
+}
+#endif
+
+
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
 	searchpath_t	*search;
@@ -121,7 +154,7 @@ void *Com_FunctionFromName( void *hInstance, const char *pName )
 		if(!function)
 #endif
 #ifndef _WIN32
-			MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s: %s", pName, dlerror());
+			MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s: %s\n", pName, dlerror());
 #endif
 	}
 	return function;

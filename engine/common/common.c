@@ -429,7 +429,7 @@ void Con_Printf( char *szFmt, ... )
 		return;
 
 	va_start( args, szFmt );
-	Q_vsnprintf( buffer, 16384, szFmt, args );
+	Q_vsnprintf( buffer, sizeof( buffer ), szFmt, args );
 	va_end( args );
 
 	Sys_Print( buffer );
@@ -450,7 +450,7 @@ void Con_DPrintf( char *szFmt, ... )
 		return;
 
 	va_start( args, szFmt );
-	Q_vsnprintf( buffer, 16384, szFmt, args );
+	Q_vsnprintf( buffer, sizeof( buffer ), szFmt, args );
 	va_end( args );
 
 	Sys_Print( buffer );

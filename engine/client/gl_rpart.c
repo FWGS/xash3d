@@ -246,7 +246,7 @@ particle_t *CL_AllocParticle( void (*callback)( particle_t*, float ))
 
 	if( !cl_free_particles )
 	{
-		MsgDev( D_INFO, "Overflow %d particles\n", GI->max_particles );
+		MsgDev( D_NOTE, "Overflow %d particles\n", GI->max_particles );
 		return NULL;
 	}
 
@@ -503,7 +503,10 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	GL_SetRenderMode( kRenderTransTexture );
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
-	GL_Bind( GL_TEXTURE0, cls.particleImage );
+	if (r_oldparticles->integer == 1)
+		GL_Bind(GL_TEXTURE0, cls.oldParticleImage);
+	else
+		GL_Bind(GL_TEXTURE0, cls.particleImage);
 
 	// add the 4 corner vertices.
 	pglBegin( GL_QUADS );
@@ -535,7 +538,7 @@ void CL_DrawParticles( void )
 	if( !cl_draw_particles->integer )
 		return;
 
-	// don't evaluate particles when executes many times
+	// don't evaluate particles when executed many times
 	// at same frame e.g. mirror rendering
 	if( framecount != tr.realframecount )
 	{
@@ -1217,19 +1220,42 @@ void CL_BulletImpactParticles( const vec3_t org )
 		CL_SparkleTracer( pos, dir, vel );
 	}
 
-	for( i = 0; i < 12; i++ )
-	{
-		p = CL_AllocParticle( NULL );
-		if( !p ) return;
-            
-		p->die += 1.0f;
-		p->color = 0; // black
-
-		p->type = pt_grav;
-		for( j = 0; j < 3; j++ )
+	if (r_oldparticles->integer == 1)
+	{ 
+		for (i = 0; i < 12; i++)
 		{
-			p->org[j] = org[j] + Com_RandomFloat( -2.0f, 3.0f );
-			p->vel[j] = Com_RandomFloat( -70.0f, 70.0f );
+			p = CL_AllocParticle(NULL);
+			if (!p) return;
+
+			p->die += 1.0f;
+			// Randomly make each particle one of three colors: dark grey, medium grey or light grey.
+			int greyColors = (rand() % 3 + 1) * 32;
+			p->color = CL_LookupColor(greyColors, greyColors, greyColors);
+
+			p->type = pt_grav;
+			for (j = 0; j < 3; j++)
+			{
+				p->org[j] = org[j] + Com_RandomFloat(-2.0f, 3.0f);
+				p->vel[j] = Com_RandomFloat(-70.0f, 70.0f);
+			}
+		}
+	}
+	else
+	{
+		for (i = 0; i < 12; i++)
+		{
+			p = CL_AllocParticle(NULL);
+			if (!p) return;
+
+			p->die += 1.0f;
+			p->color = 0; // black
+
+			p->type = pt_grav;
+			for (j = 0; j < 3; j++)
+			{
+				p->org[j] = org[j] + Com_RandomFloat(-2.0f, 3.0f);
+				p->vel[j] = Com_RandomFloat(-70.0f, 70.0f);
+			}
 		}
 	}
 }

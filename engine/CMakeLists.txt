@@ -105,8 +105,10 @@ if(XASH_DLL_LOADER)
 	${CMAKE_COMMAND} -E copy $<TARGET_FILE:loader> $<TARGET_SONAME_FILE_DIR:xash>)
     target_link_libraries(${XASH_ENGINE_LIBRARY} -L. -lloader)
 endif()
+
 if(XASH_DEDICATED)
     add_definitions(-DXASH_DEDICATED)
+    target_link_libraries(${XASH_ENGINE_LIBRARY} -lrt)
 endif()
 
 target_link_libraries(${XASH_ENGINE_LIBRARY}

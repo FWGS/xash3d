@@ -72,7 +72,12 @@ static void SV_AddEntitiesToPacket( edict_t *pViewEnt, edict_t *pClient, client_
 
 	cl = SV_ClientFromEdict( pClient, true );
 
-	ASSERT( cl != NULL );
+	//ASSERT( cl != NULL );
+	if( cl == NULL )
+	{
+		//MsgDev( D_ERROR, "SV_AddEntitiesToPacket: you have broken clients!\n");
+		return;
+	}
 
 	if( pClient && !( sv.hostflags & SVF_PORTALPASS ))
 	{
@@ -508,7 +513,7 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 	{
 		Q_memset( &nullwd, 0, sizeof( nullwd ));
 
-		for( i = 0; i < 32; i++ )
+		for( i = 0; i < 64; i++ )
 		{
 			if( cl->delta_sequence == -1 ) from_wd = &nullwd;
 			else from_wd = &cl->frames[cl->delta_sequence & SV_UPDATE_MASK].weapondata[i];
@@ -538,6 +543,11 @@ void SV_WriteEntitiesToClient( sv_client_t *cl, sizebuf_t *msg )
 	int		i, send_pings;
 
 	clent = cl->edict;
+	if(	!SV_IsValidEdict( clent ) )
+	{
+		SV_DropClient ( cl );
+		return;
+	}
 	viewent = cl->pViewEntity;	// himself or trigger_camera
 
 	frame = &cl->frames[cl->netchan.outgoing_sequence & SV_UPDATE_MASK];

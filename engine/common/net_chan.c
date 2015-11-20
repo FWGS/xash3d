@@ -710,7 +710,7 @@ void Netchan_CheckForCompletion( netchan_t *chan, int stream, int intotalbuffers
 	if( c == intotalbuffers )
 	{
 		chan->incomingready[stream] = true;
-		MsgDev( D_NOTE, "\nincoming is complete %i bytes waiting\n", size );
+		MsgDev( D_NOTE, "\nincoming is complete, %i bytes waiting\n", size );
 	}
 }
 
@@ -967,7 +967,8 @@ qboolean Netchan_CopyFileFragments( netchan_t *chan, sizebuf_t *msg )
 	BF_WriteBits( msg, BF_GetData( &p->frag_message ), BF_GetNumBitsWritten( &p->frag_message ));
 	BF_SeekToBit( msg, 0 ); // rewind buffer
 
-	Q_strncpy( filename, BF_ReadString( msg ), sizeof( filename ));
+	//Q_strncpy( filename, BF_ReadString( msg ), sizeof( filename ));
+	Q_snprintf( filename, sizeof( filename ), "downloaded/%s", BF_ReadString( msg ) );
 
 	if( Q_strlen( filename ) <= 0 )
 	{
@@ -1067,11 +1068,6 @@ void Netchan_UpdateProgress( netchan_t *chan )
 	int	total = 0;
 	float	bestpercent = 0.0;
 
-	if( scr_download->integer != -1 )
-	{
-		Cvar_SetFloat( "scr_download", -1 );
-	}
-
 	if ( net_drawslider->integer != 1 )
 	{
 		// do show slider for file downloads.
@@ -1146,7 +1142,8 @@ void Netchan_UpdateProgress( netchan_t *chan )
 
 	}
 
-	Cvar_SetFloat( "scr_download", bestpercent );
+	if( bestpercent )
+		Cvar_SetFloat( "scr_download", bestpercent );
 }
 
 /*
@@ -1175,7 +1172,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	// check for message overflow
 	if( BF_CheckOverflow( &chan->message ))
 	{
-		MsgDev( D_ERROR, "%s:outgoing message overflow\n", NET_AdrToString( chan->remote_address ));
+		MsgDev( D_ERROR, "%s: outgoing message overflow\n", NET_AdrToString( chan->remote_address ));
 		return;
 	}
 

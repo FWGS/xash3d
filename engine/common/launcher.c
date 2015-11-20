@@ -1,6 +1,6 @@
 /*
-lightstyle.h - lighstyle description
-Copyright (C) 2011 Uncle Mike
+launcher.c - direct xash3d launcher
+Copyright (C) 2015 Mittorn
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,17 +13,16 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef LIGHTSTYLE_H
-#define LIGHTSTYLE_H
+#ifdef SINGLE_BINARY
 
-typedef struct
+#include <stdlib.h>
+
+int main( int argc, char** argv )
 {
-	char		pattern[256];
-	float		map[256];
-	int		length;
-	float		value;
-	qboolean		interp;		// allow to interpolate this lightstyle
-	float		time;		// local time warranties that new style begins from the start, not mid or end of the sequence
-} lightstyle_t;
+	char *gamedir = getenv("XASH3D_GAMEDIR");
+	if(!gamedir)
+		gamedir = "valve";
+	return Host_Main( argc, argv, gamedir, 0, NULL );
+}
 
-#endif//LIGHTSTYLE_H
+#endif

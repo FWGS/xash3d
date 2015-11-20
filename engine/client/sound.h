@@ -297,7 +297,6 @@ void DSP_ClearState( void );
 
 qboolean S_Init( void );
 void S_Shutdown( void );
-void S_Activate( qboolean active, void *hInst );
 void S_SoundList_f( void );
 void S_SoundInfo_f( void );
 
@@ -324,6 +323,7 @@ void SND_CloseMouth( channel_t *ch );
 void S_StreamSoundTrack( void );
 void S_StreamBackgroundTrack( void );
 qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position );
+void S_StopBackgroundTrack( void );
 void S_PrintBackgroundTrackState( void );
 void S_FadeMusicVolume( float fadePercent );
 

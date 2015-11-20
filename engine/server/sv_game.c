@@ -401,7 +401,7 @@ void SV_CreateDecal( sizebuf_t *msg, const float *origin, int decalIndex, int en
 	if( msg == &sv.signon && sv.state != ss_loading )
 		return;
 
-	// this can happens if serialized map contain 4096 static decals...
+	// this can happen if serialized map contains 4096 static decals...
 	if(( BF_GetNumBytesWritten( msg ) + 20 ) >= BF_GetMaxBytes( msg ))
 		return;
 
@@ -435,7 +435,7 @@ void SV_CreateStudioDecal( sizebuf_t *msg, const float *origin, const float *sta
 	ASSERT( origin );
 	ASSERT( start );
 
-	// this can happens if serialized map contain 4096 static decals...
+	// this can happen if serialized map contains 4096 static decals...
 	if(( BF_GetNumBytesWritten( msg ) + 30 ) >= BF_GetMaxBytes( msg ))
 		return;
 
@@ -472,7 +472,7 @@ void SV_CreateStaticEntity( sizebuf_t *msg, sv_static_entity_t *ent )
 {
 	int	index, i;
 
-	// this can happens if serialized map contain too many static entities...
+	// this can happen if serialized map contains too many static entities...
 	if(( BF_GetNumBytesWritten( msg ) + 64 ) >= BF_GetMaxBytes( msg ))
 		return;
 
@@ -868,6 +868,14 @@ void SV_FreeEdict( edict_t *pEdict )
 	pEdict->v.takedamage = 0;
 	pEdict->v.modelindex = 0;
 	pEdict->v.nextthink = -1;
+	// reset vars
+	pEdict->v.colormap = 0;
+	pEdict->v.takedamage = 0;
+	pEdict->v.frame = 0;
+	pEdict->v.scale = 0;
+	pEdict->v.gravity = 0;
+	VectorClear(pEdict->v.angles);
+	VectorClear(pEdict->v.origin);
 	pEdict->free = true;
 }
 
@@ -1532,7 +1540,18 @@ edict_t* pfnFindClientInPVS( edict_t *pEdict )
 
 	mod = Mod_Handle( pEdict->v.modelindex );
 
-	VectorAdd( pEdict->v.origin, pEdict->v.view_ofs, view );
+	// portals & monitors
+	// NOTE: this specific break "radiaton tick" in normal half-life. use only as feature
+	if(( host.features & ENGINE_TRANSFORM_TRACE_AABB ) && mod && mod->type == mod_brush && !( mod->flags & MODEL_HAS_ORIGIN ))
+	{
+		// handle PVS origin for bmodels
+		VectorAverage( pEdict->v.mins, pEdict->v.maxs, view );
+		VectorAdd( view, pEdict->v.origin, view );
+	}
+	else
+	{
+		VectorAdd( pEdict->v.origin, pEdict->v.view_ofs, view );
+	}
 
 	if( pEdict->v.effects & EF_INVLIGHT )
 		view[2] -= 1.0f; // HACKHACK for barnacle
@@ -2758,8 +2777,9 @@ pfnAlertMessage
 */
 static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 {
-	char	buffer[2048];	// must support > 1k messages
+	char	buffer0[2048];	// must support > 1k messages
 	va_list	args;
+	char *buffer = buffer0;
 
 	// check message for pass
 	switch( level )
@@ -2785,8 +2805,11 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	}
 
 	va_start( args, szFmt );
-	Q_vsnprintf( buffer, 2048, szFmt, args );
+	Q_vsnprintf( buffer0, 2048, szFmt, args );
 	va_end( args );
+
+	if( *buffer == '\n' ) // skip \n in line start
+		buffer++;
 
 	if( level == at_warning )
 	{
@@ -2795,10 +2818,14 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	else if( level == at_error  )
 	{
 		Sys_Print( va( "^1Error:^7 %s", buffer ));
-	} 
+	}
+	else if( level == at_aiconsole  )
+	{
+		Sys_Print( va( "server(ai): %s", buffer ));
+	}
 	else
 	{
-		Sys_Print( buffer );
+		Sys_Print( va( "server: %s", buffer ));
 	}
 }
 
@@ -3143,7 +3170,7 @@ pfnFunctionFromName
 */
 dword pfnFunctionFromName( const char *pName )
 {
-	return  Com_FunctionFromName( svgame.hInstance, pName );
+	return Com_FunctionFromName( svgame.hInstance, pName );
 }
 
 /*
@@ -4686,7 +4713,7 @@ void SV_LoadFromFile( const char *mapname, char *entities )
 			}
 		}
 
-		MsgDev( D_INFO, "\n%i entities inhibited\n", inhibited );
+		MsgDev( D_INFO, "SV_LoadFromFile: %i entities inhibited\n", inhibited );
 	}
 
 	// reset world origin and angles for some reason
@@ -4793,7 +4820,9 @@ qboolean SV_LoadProgs( const char *name )
 	static globalvars_t		gpGlobals;
 	static playermove_t		gpMove;
 	edict_t			*e;
+#ifdef DLL_LOADER
 	qboolean dll;
+#endif
 
 	if( svgame.hInstance ) SV_UnloadProgs();
 

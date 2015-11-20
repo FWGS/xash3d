@@ -40,7 +40,7 @@ RECT	window_rect, real_rect;
 #endif
 uint	in_mouse_wheel;
 int	wnd_caption;
-convar_t *fullscreen = 0;
+extern convar_t *vid_fullscreen;
 #ifdef PANDORA
 int noshouldermb = 0;
 #endif
@@ -130,6 +130,7 @@ IN_StartupMouse
 #ifdef USE_EVDEV
 
 #include <fcntl.h>
+#include <errno.h>
 #include <linux/input.h>
 
 int evdev_open, mouse_fd, evdev_dx, evdev_dy;
@@ -162,14 +163,19 @@ void Evdev_OpenMouse_f ( void )
 	*/
 	if ( evdev_open ) return;
 #ifdef __ANDROID__ // use root to grant access to evdev
-	char chmodstr[ 255 ] = "su -c chmod 666 ";
+	char chmodstr[ 255 ] = "su 0 chmod 777 ";
 	strcat( chmodstr, evdev_mousepath->string );
-	system(chmodstr);
+	system( chmodstr );
+	// allow write input via selinux, need for some lollipop devices
+	system( "su 0 supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }\" \"allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"" );
+	system( chmodstr );
+	system( "su 0 setenforce permissive" );
+	system( chmodstr );
 #endif
 	mouse_fd = open ( evdev_mousepath->string, O_RDONLY | O_NONBLOCK );
 	if ( mouse_fd < 0 )
 	{
-		MsgDev( D_ERROR, "Could not open input device %s\n", evdev_mousepath->string );
+		MsgDev( D_ERROR, "Could not open input device %s: %s\n", evdev_mousepath->string, strerror( errno ) );
 		return;
 	}
 	MsgDev( D_INFO, "Input device %s opened sucessfully\n", evdev_mousepath->string );
@@ -217,7 +223,7 @@ void IN_EvdevFrame ()
 			Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
 		}
 		if(clgame.dllFuncs.pfnLookEvent)
-			clgame.dllFuncs.pfnLookEvent( evdev_dx, evdev_dy );
+			clgame.dllFuncs.pfnLookEvent( -evdev_dx * m_yaw->value, evdev_dy * m_pitch->value );
 		else
 		{
 			cl.refdef.cl_viewangles[PITCH] += evdev_dy * m_enginesens->value;
@@ -247,7 +253,6 @@ void IN_StartupMouse( void )
 
 	in_mouse_buttons = 8;
 	in_mouseinitialized = true;
-	fullscreen = Cvar_FindVar( "fullscreen" );
 
 #ifdef _WIN32
 	in_mouse_wheel = RegisterWindowMessage( "MSWHEEL_ROLLMSG" );
@@ -323,7 +328,7 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 			clgame.dllFuncs.IN_ActivateMouse();
 	}
 
-	if( newstate == key_menu && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
+	if( ( newstate == key_menu || newstate == key_console ) && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
 	{
 #ifdef XASH_SDL
 		SDL_SetWindowGrab(host.hWnd, false);
@@ -340,7 +345,6 @@ Called when the window gains focus or changes in some way
 */
 void IN_ActivateMouse( qboolean force )
 {
-	int		width, height;
 	static int	oldstate;
 
 	if( !in_mouseinitialized )
@@ -357,7 +361,7 @@ void IN_ActivateMouse( qboolean force )
 		else
 #endif
 
-	if( cls.key_dest == key_menu && fullscreen && !fullscreen->integer)
+	if( cls.key_dest == key_menu && vid_fullscreen && !vid_fullscreen->integer)
 	{
 		// check for mouse leave-entering
 		if( !in_mouse_suspended && !UI_MouseInRect( ))
@@ -392,11 +396,12 @@ void IN_ActivateMouse( qboolean force )
 	if( cls.key_dest == key_game )
 	{
 		clgame.dllFuncs.IN_ActivateMouse();
-	}
 #ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, true );
 	SDL_GetRelativeMouseState( 0, 0 ); // Reset mouse position
 #endif
+	}
+
 }
 
 /*
@@ -805,11 +810,13 @@ void Host_InputFrame( void )
 #endif
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
+#ifndef __ANDROID__
 		if( in_mouseinitialized )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );
-			pitch += dy * m_pitch->value, yaw += dx * m_yaw->value; //mouse speed
+			pitch += dy * m_pitch->value, yaw -= dx * m_yaw->value; //mouse speed
 		}
+#endif
 #endif
 		clgame.dllFuncs.pfnLookEvent( yaw, pitch );
 		clgame.dllFuncs.pfnMoveEvent( forward, side );
@@ -818,26 +825,6 @@ void Host_InputFrame( void )
 
 	if( host.state == HOST_RESTART )
 		host.state = HOST_FRAME; // restart is finished
-
-	if( host.type == HOST_DEDICATED )
-	{
-		// let the dedicated server some sleep
-		Sys_Sleep( 1 );
-	}
-	else
-	{
-		if( host.state == HOST_NOFOCUS )
-		{
-			if( Host_ServerState() && CL_IsInGame( ))
-				Sys_Sleep( 1 ); // listenserver
-			else Sys_Sleep( 20 ); // sleep 20 ms otherwise
-		}
-		else if( host.state == HOST_SLEEP )
-		{
-			// completely sleep in minimized state
-			Sys_Sleep( 20 );
-		}
-	}
 
 	if( !in_mouseinitialized )
 		return;
@@ -851,7 +838,7 @@ void Host_InputFrame( void )
 	if( cl.refdef.paused && cls.key_dest == key_game )
 		shutdownMouse = true; // release mouse during pause or console typeing
 	
-	if( shutdownMouse && !fullscreen->integer )
+	if( shutdownMouse && !vid_fullscreen->integer )
 	{
 		IN_DeactivateMouse();
 		return;

@@ -40,7 +40,7 @@ static qboolean		draw_details = false;
 static msurface_t		*skychain = NULL;
 static gllightmapstate_t	gl_lms;
 
-static void LM_UploadBlock( int lightmapnum );
+static void LM_UploadBlock( qboolean dynamic );
 
 byte *Mod_GetCurrentVis( void )
 {
@@ -599,7 +599,7 @@ static int LM_AllocBlock( int w, int h, int *x, int *y )
 	return true;
 }
 
-static void LM_UploadBlock( int dynamic )
+static void LM_UploadBlock( qboolean dynamic )
 {
 	int	i;
 
@@ -715,6 +715,9 @@ void DrawGLPoly( glpoly_t *p, float xScale, float yScale )
 	float		tOffset, cy;
 	cl_entity_t	*e = RI.currententity;
 	int		i, hasScale = false;
+	
+	if( !p )
+		return;
 
 	// special hack for non-lightmapped surfaces
 	if( p->flags & SURF_DRAWTILED )
@@ -2188,5 +2191,5 @@ void GL_BuildLightmaps( void )
 	}
 
 	if( !gl_keeptjunctions->integer )
-		MsgDev( D_INFO, "Eliminate %i vertexes\n", nColinElim );
+		MsgDev( D_INFO, "Eliminated %i vertices\n", nColinElim );
 }

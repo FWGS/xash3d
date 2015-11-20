@@ -2292,4 +2292,47 @@ void STDCALL expglMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloa
 {
     ldrpglMultiTexCoord4fARB (target, s, t, r, q);
 }
-
+void STDCALL expglBindVertexArray(GLuint array)
+{
+    ldrpglBindVertexArray(array);
+}
+void STDCALL expglDeleteVertexArrays(GLsizei n, const GLuint *arrays)
+{
+    ldrpglDeleteVertexArrays(n, arrays);
+}
+void STDCALL expglGenVertexArrays(GLsizei n, GLuint *arrays)
+{
+    ldrpglGenVertexArrays(n, arrays);
+}
+GLboolean STDCALL expglIsVertexArray(GLuint array)
+{
+    return ldrpglIsVertexArray(array);
+}
+void STDCALL expglDebugMessageControlARB(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint* ids, GLboolean enabled)
+{
+    ldrpglDebugMessageControlARB(source, type, severity, count, ids, enabled);
+}
+void STDCALL expglDebugMessageInsertARB(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* buf)
+{
+    ldrpglDebugMessageInsertARB(source, type, id, severity, length, buf);
+}
+void STDCALL expglDebugMessageCallbackARB(GLvoid *callback, GLvoid *userParam)
+{
+    ldrpglDebugMessageCallbackARB(callback, userParam);
+}
+GLuint STDCALL expglGetDebugMessageLogARB(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog)
+{
+    return ldrpglGetDebugMessageLogARB(count, bufsize, sources, types, ids, severities, lengths, messageLog);
+}
+void STDCALL expglVertexAttrib2f(GLuint index, GLfloat v0, GLfloat v1)
+{
+    ldrpglVertexAttrib2f(index, v0, v1);
+}
+void STDCALL expglVertexAttrib2fv(GLuint index, const GLfloat *v)
+{
+    ldrpglVertexAttrib2fv(index, v);
+}
+void STDCALL expglVertexAttrib3fv(GLuint index, const GLfloat *v)
+{
+    ldrpglVertexAttrib3fv(index, v);
+}

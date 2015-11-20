@@ -58,8 +58,18 @@ convar_t	*sv_reconnect_limit;		// minimum seconds between connect messages
 convar_t	*sv_failuretime;
 convar_t	*sv_allow_upload;
 convar_t	*sv_allow_download;
+convar_t	*sv_allow_fragment;
+convar_t	*sv_downloadurl;
+convar_t	*sv_clientclean;
 convar_t	*sv_allow_studio_attachment_angles;
 convar_t	*sv_allow_rotate_pushables;
+convar_t	*sv_allow_godmode;
+convar_t	*sv_allow_noclip;
+convar_t	*sv_allow_impulse;
+convar_t	*sv_enttools_enable;
+convar_t	*sv_enttools_players;
+convar_t	*sv_enttools_maxfire;
+convar_t	*sv_enttools_godplayer;
 convar_t	*sv_validate_changelevel;
 convar_t	*sv_clienttrace;
 convar_t	*sv_send_resources;
@@ -75,6 +85,7 @@ convar_t	*deathmatch;
 convar_t	*teamplay;
 convar_t	*skill;
 convar_t	*coop;
+convar_t	*sv_skipshield; // HACK for shield
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -108,7 +119,8 @@ void SV_CalcPings( void )
 	int		i, j;
 	int		total, count;
 
-	if( !svs.clients ) return;
+	//if( !svs.clients )
+	return;
 
 	// clamp fps counter
 	for( i = 0; i < sv_maxclients->integer; i++ )
@@ -268,7 +280,7 @@ void SV_UpdateServerInfo( void )
 {
 	if( !serverinfo->modified ) return;
 
-	Cvar_LookupVars( CVAR_SERVERINFO, NULL, NULL, pfnUpdateServerInfo ); 
+	Cvar_LookupVars( CVAR_SERVERINFO, NULL, NULL, (setpair_t)pfnUpdateServerInfo ); 
 
 	serverinfo->modified = false;
 }
@@ -401,8 +413,7 @@ void SV_ReadPackets( void )
 SV_CheckTimeouts
 
 If a packet has not been received from a client for timeout->value
-seconds, drop the conneciton.  Server frames are used instead of
-realtime to avoid dropping the local client while debugging.
+seconds, drop the conneciton.
 
 When a client is normally dropped, the sv_client_t goes into a zombie state
 for a few seconds to make sure any final reliable message gets resent
@@ -414,12 +425,12 @@ void SV_CheckTimeouts( void )
 	sv_client_t	*cl;
 	float		droppoint;
 	float		zombiepoint;
-	int		i, numclients = 0;
+	int		i, numclients;
 
 	droppoint = host.realtime - timeout->value;
 	zombiepoint = host.realtime - zombietime->value;
 
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, numclients = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
 		if( cl->state >= cs_connected )
 		{
@@ -436,11 +447,26 @@ void SV_CheckTimeouts( void )
 
 		if( cl->state == cs_zombie && cl->lastmessage < zombiepoint )
 		{
-			cl->state = cs_free; // can now be reused
+			//if( cl->edict && !cl->edict->pvPrivateData )
+				cl->state = cs_free; // can now be reused
+			// Does not work too, as entity may be referenced
+			// But you may increase zombietime
+			#if 0
+			if( cl->edict && cl->edict->pvPrivateData != NULL )
+			{
+				// NOTE: new interface can be missing
+				if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
+					svgame.dllFuncs2.pfnOnFreeEntPrivateData( cl->edict );
+
+				// clear any dlls data but keep engine data
+				Mem_Free( cl->edict->pvPrivateData );
+				cl->edict->pvPrivateData = NULL;
+			}
+			#endif
 			continue;
 		}
 
-		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint )
+		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint && !NET_IsLocalAddress( cl->netchan.remote_address ))
 		{
 			SV_BroadcastPrintf( PRINT_HIGH, "%s timed out\n", cl->name );
 			SV_DropClient( cl ); 
@@ -486,6 +512,38 @@ void SV_ProcessFile( sv_client_t *cl, char *filename )
 {
 	// some other file...
 	MsgDev( D_INFO, "Received file %s from %s\n", filename, cl->name );
+}
+
+void SV_DownloadResources_f( void )
+{
+	int index;
+	if( Q_strchr( download_types->string, 'm' ) )
+		for( index = 1; index < MAX_MODELS && sv.model_precache[index][0]; index++ )
+		{
+			if( sv.model_precache[index][0] == '*' ) // internal bmodel
+				continue;
+			if( !FS_FileExists( sv.model_precache[index], true ) )
+				HTTP_AddDownload( sv.model_precache[index], -1, false );
+		}
+	if( Q_strchr( download_types->string, 's' ) )
+		for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
+		{
+			char *sndname = va( "sound/%s", sv.sound_precache[index]);
+			if( !FS_FileExists( sndname, true ) )
+				HTTP_AddDownload( sndname, -1, false );
+		}
+	if( Q_strchr( download_types->string, 'e' ) )
+		for( index = 1; index < MAX_EVENTS && sv.event_precache[index][0]; index++ )
+		{
+			if( !FS_FileExists( sv.event_precache[index], true ) )
+				HTTP_AddDownload( sv.event_precache[index], -1, false );
+		}
+	if( Q_strchr( download_types->string, 'c' ) )
+		for( index = 1; index < MAX_CUSTOM && sv.files_precache[index][0]; index++ )
+		{
+			if( !FS_FileExists( sv.files_precache[index], true ) )
+				HTTP_AddDownload( sv.files_precache[index], -1, false );
+		}
 }
 
 /*
@@ -628,7 +686,7 @@ void Master_Shutdown( void )
 	NET_Config( true ); // allow remote
 
 	if( !NET_StringToAdr( MASTERSERVER_ADR, &adr ))
-		MsgDev( D_INFO, "Can't resolve adr: %s\n", MASTERSERVER_ADR );
+		MsgDev( D_INFO, "Can't resolve addr: %s\n", MASTERSERVER_ADR );
 
 	NET_SendPacket( NS_SERVER, 2, "\x62\x0A", adr );
 }
@@ -660,14 +718,14 @@ void SV_Init( void )
 	Cvar_Get ("motdfile", "motd.txt", 0, "name of 'message of the day' file" );
 	Cvar_Get ("sv_language", "0", 0, "game language (currently unused)" );
 	Cvar_Get ("suitvolume", "0.25", CVAR_ARCHIVE, "HEV suit volume" );
-	Cvar_Get ("sv_background", "0", CVAR_READ_ONLY, "indicate what background map is running" );
+	Cvar_Get ("sv_background", "0", CVAR_READ_ONLY, "indicates that background map is running" );
 	Cvar_Get( "gamedir", GI->gamefolder, CVAR_SERVERINFO|CVAR_SERVERNOTIFY|CVAR_INIT, "game folder" );
-	Cvar_Get( "sv_alltalk", "1", 0, "allow to talking for all players (legacy, unused)" );
+	Cvar_Get( "sv_alltalk", "1", 0, "allow talking for all players (legacy, unused)" );
 	Cvar_Get( "sv_airmove", "1", CVAR_SERVERNOTIFY, "enable airmovement (legacy, unused)" );
 	Cvar_Get( "mp_autocrosshair", "0", 0, "allow auto crosshair in multiplayer (legacy, unused)" );
-	Cvar_Get( "sv_allow_PhysX", "1", CVAR_ARCHIVE, "allow XashXT to usage PhysX engine" ); //XashXT cvar
-	Cvar_Get( "sv_precache_meshes", "1", CVAR_ARCHIVE, "cache SOLID_CUSTOM meshes before level loading" ); // Paranoia 2 cvar
-	Cvar_Get( "mp_allowmonsters", "0", CVAR_SERVERNOTIFY | CVAR_LATCH, "allow auto monsters in multiplayer" );
+	Cvar_Get( "sv_allow_PhysX", "1", CVAR_ARCHIVE, "allow XashXT to use PhysX engine" ); // XashXT cvar
+	Cvar_Get( "sv_precache_meshes", "1", CVAR_ARCHIVE, "cache SOLID_CUSTOM meshes before level loads" ); // Paranoia 2 cvar
+	Cvar_Get( "mp_allowmonsters", "0", CVAR_SERVERNOTIFY | CVAR_LATCH, "allow monsters in multiplayer" );
 		
 	// half-life shared variables
 	sv_zmax = Cvar_Get ("sv_zmax", "4096", CVAR_PHYSICINFO, "zfar server value" );
@@ -696,6 +754,12 @@ void SV_Init( void )
 	sv_pausable = Cvar_Get( "pausable", "1", CVAR_SERVERNOTIFY, "allow players to pause or not" );
 	sv_allow_studio_attachment_angles = Cvar_Get( "sv_allow_studio_attachment_angles", "0", CVAR_ARCHIVE, "enable calc angles for attachment points (on studio models)" );
 	sv_allow_rotate_pushables = Cvar_Get( "sv_allow_rotate_pushables", "0", CVAR_ARCHIVE, "let the pushers rotate pushables with included origin-brush" );
+	sv_allow_godmode = Cvar_Get( "sv_allow_godmode", "1", CVAR_LATCH, "allow players to be a god when sv_cheats is \"1\"" );
+	sv_allow_noclip = Cvar_Get( "sv_allow_noclip", "1", CVAR_LATCH, "allow players to use noclip when sv_cheats is \"1\"" );
+	sv_enttools_enable = Cvar_Get( "sv_enttools_enable", "0", CVAR_ARCHIVE | CVAR_PROTECTED, "Enable powerful and dangerous entity tools" );
+	sv_enttools_players = Cvar_Get( "sv_enttools_players", "0", CVAR_ARCHIVE | CVAR_PROTECTED, "Allow use ent_fire by players" );
+	sv_enttools_maxfire = Cvar_Get( "sv_enttools_maxfire", "5", CVAR_ARCHIVE | CVAR_PROTECTED, "Limit ent_fire actions count to prevent flooding" );
+	sv_enttools_godplayer = Cvar_Get( "sv_enttools_godplayer", "", CVAR_PROTECTED, "Allow specified player to use enttools without sv_enttools_enable" );
 	sv_validate_changelevel = Cvar_Get( "sv_validate_changelevel", "1", CVAR_ARCHIVE, "test change level for level-designer errors" );
 	sv_clienttrace = Cvar_Get( "sv_clienttrace", "1", CVAR_SERVERNOTIFY, "scaling factor for client hitboxes" );
 	sv_wallbounce = Cvar_Get( "sv_wallbounce", "1.0", CVAR_PHYSICINFO, "bounce factor for client with MOVETYPE_BOUNCE" );
@@ -704,9 +768,9 @@ void SV_Init( void )
 	sv_wateraccelerate = Cvar_Get( "sv_wateraccelerate", "10", CVAR_PHYSICINFO, "rate at which a player accelerates to sv_maxspeed while in the water" );
 	sv_rollangle = Cvar_Get( "sv_rollangle", "0", CVAR_PHYSICINFO, "how much to tilt the view when strafing" );
 	sv_rollspeed = Cvar_Get( "sv_rollspeed", "200", CVAR_PHYSICINFO, "how much strafing is necessary to tilt the view" );
-	sv_airaccelerate = Cvar_Get("sv_airaccelerate", "10", CVAR_PHYSICINFO, "player accellerate in air" );
+	sv_airaccelerate = Cvar_Get("sv_airaccelerate", "10", CVAR_PHYSICINFO, "player accelleration in air" );
 	sv_maxvelocity = Cvar_Get( "sv_maxvelocity", "2000", CVAR_PHYSICINFO, "max world velocity" );
-          sv_gravity = Cvar_Get( "sv_gravity", "800", CVAR_PHYSICINFO, "world gravity" );
+	sv_gravity = Cvar_Get( "sv_gravity", "800", CVAR_PHYSICINFO, "world gravity" );
 	sv_maxspeed = Cvar_Get( "sv_maxspeed", "320", CVAR_PHYSICINFO, "maximum speed a player can accelerate to when on ground");
 	sv_accelerate = Cvar_Get( "sv_accelerate", "10", CVAR_PHYSICINFO, "rate at which a player accelerates to sv_maxspeed" );
 	sv_friction = Cvar_Get( "sv_friction", "4", CVAR_PHYSICINFO, "how fast you slow down" );
@@ -725,14 +789,19 @@ void SV_Init( void )
 	sv_unlagpush = Cvar_Get( "sv_unlagpush", "0.0", 0, "unlag push bias" );
 	sv_unlagsamples = Cvar_Get( "sv_unlagsamples", "1", 0, "max samples to interpolate" );
 	sv_allow_upload = Cvar_Get( "sv_allow_upload", "1", 0, "allow uploading custom resources from clients" );
-	sv_allow_download = Cvar_Get( "sv_allow_download", "1", 0, "allow download missed resources to clients" );
+	sv_allow_download = Cvar_Get( "sv_allow_download", "0", CVAR_ARCHIVE, "allow clients to download missing resources" );
+	sv_allow_fragment = Cvar_Get( "sv_allow_fragment", "0", CVAR_ARCHIVE, "allow direct download from server" );
+	sv_downloadurl = Cvar_Get( "sv_downloadurl", "", CVAR_ARCHIVE, "custom fastdl server to pass to client" );
+	sv_clientclean = Cvar_Get( "sv_clientclean", "0", CVAR_ARCHIVE, "client cleaning mode (0-3), useful for bots" );
 	sv_send_logos = Cvar_Get( "sv_send_logos", "1", 0, "send custom player decals to other clients" );
-	sv_send_resources = Cvar_Get( "sv_send_resources", "1", 0, "send generic resources that specified in 'mapname.res'" );
+	sv_send_resources = Cvar_Get( "sv_send_resources", "1", 0, "send generic resources that are specified in 'mapname.res'" );
 	sv_sendvelocity = Cvar_Get( "sv_sendvelocity", "1", CVAR_ARCHIVE, "force to send velocity for event_t structure across network" );
 	sv_quakehulls = Cvar_Get( "sv_quakehulls", "0", CVAR_ARCHIVE, "using quake style hull select instead of half-life style hull select" );
-	mp_consistency = Cvar_Get( "mp_consistency", "1", CVAR_SERVERNOTIFY, "enbale consistency check in multiplayer" );
+	mp_consistency = Cvar_Get( "mp_consistency", "1", CVAR_SERVERNOTIFY, "enable consistency check in multiplayer" );
 	clockwindow = Cvar_Get( "clockwindow", "0.5", 0, "timewindow to execute client moves" );
-	sv_novis = Cvar_Get( "sv_novis", "0", 0, "force to ignore server visibility" );
+	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
+	sv_skipshield = Cvar_Get("sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
+	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));
@@ -797,6 +866,9 @@ void SV_Shutdown( qboolean reconnect )
 	// already freed
 	if( !SV_Active( ))
 		return;
+
+	// rcon will be disconnected
+	SV_EndRedirect();
 
 	if( host.type == HOST_DEDICATED )
 		MsgDev( D_INFO, "SV_Shutdown: %s\n", host.finalmsg );

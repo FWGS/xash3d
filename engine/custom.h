@@ -50,6 +50,8 @@ typedef struct resourceinfo_s
 				// or is it a server startup resource.
 #define RES_REQUESTED	(1<<3)	// Already requested a download of this one
 #define RES_PRECACHED	(1<<4)	// Already precached
+#define RES_ALWAYS		(1<<5)	// Download always even if available on client
+#define RES_CHECKFILE	(1<<7)	// Check file on client
 
 typedef struct resource_s
 {

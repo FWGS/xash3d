@@ -20,9 +20,6 @@ GNU General Public License for more details.
 #include "event_api.h"
 #include "usercmd.h"
 #include "pm_movevars.h"
-#include "entity_state.h"
-#include "weaponinfo.h"
-#include "event_args.h"
 #include "protocol.h"
 #include "client.h"
 
@@ -1720,7 +1717,10 @@ void MSG_WriteDeltaEntity( entity_state_t *from, entity_state_t *to, sizebuf_t *
 	startBit = msg->iCurBit;
 
 	if( to->number < 0 || to->number >= GI->max_edicts )
-		Host_Error( "MSG_WriteDeltaEntity: Bad entity number: %i\n", to->number );
+	{
+		MsgDev( D_ERROR, "MSG_WriteDeltaEntity: Bad entity number: %i\n", to->number );
+		return;
+	}
 
 	BF_WriteWord( msg, to->number );
 	BF_WriteUBitLong( msg, 0, 2 ); // alive
@@ -1785,7 +1785,11 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	int		i, fRemoveType;
 
 	if( number < 0 || number >= clgame.maxEntities )
-		Host_Error( "MSG_ReadDeltaEntity: bad delta entity number: %i\n", number );
+	{
+		// broken packet, try to skip it
+		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: bad delta entity number: %i\n", number );
+		return false;
+	}
 
 	*to = *from;
 	to->number = number;
@@ -1809,7 +1813,8 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 			return false;
 		}
 
-		Host_Error( "MSG_ReadDeltaEntity: unknown update type %i\n", fRemoveType );
+		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: unknown update type %i\n", fRemoveType );
+		return;
 	}
 
 	if( BF_ReadOneBit( msg ))

@@ -659,7 +659,7 @@ void R_ShowTextures( void )
 
 	if( showHelp )
 	{
-		CL_CenterPrint( "use '<-' and '->' keys for view all the textures", 0.25f );
+		CL_CenterPrint( "use '<-' and '->' keys to view all the textures", 0.25f );
 		showHelp = false;
 	}
 

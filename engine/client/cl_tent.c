@@ -317,7 +317,7 @@ TEMPENTITY *CL_TempEntAlloc( const vec3_t org, model_t *pmodel )
 
 	if( !cl_free_tents )
 	{
-		MsgDev( D_INFO, "Overflow %d temporary ents!\n", GI->max_tents );
+		MsgDev( D_NOTE, "Overflow %d temporary ents!\n", GI->max_tents );
 		return NULL;
 	}
 

@@ -3208,6 +3208,7 @@ POINT mousepos;
 static int WINAPI expGetCursorPos(LPPOINT cp)
 {
     //dbgprintf("GetCursorPos(0x%x) => 0x%x\n", cursor, cursor);
+#ifdef SDL
     int x ,y;
     SDL_GetRelativeMouseState(&x, &y);
     mousepos.x += x;
@@ -3215,6 +3216,7 @@ static int WINAPI expGetCursorPos(LPPOINT cp)
     cp->x=mousepos.x;
     cp->y=mousepos.y;
     return 1;
+#endif
 }
 
 static WIN_BOOL WINAPI expSetCursorPos(int x, int y)
@@ -4206,7 +4208,7 @@ static int exp_snprintf( char *str, int size, const char *format, ... )
       va_end(va);
       return x;
 }
-
+typedef void (*INITTERMFUNC)();
 #if 0
 static int exp_initterm(int v1, int v2)
 {
@@ -4215,7 +4217,7 @@ static int exp_initterm(int v1, int v2)
 }
 #else
 /* merged from wine - 2002.04.21 */
-typedef void (*INITTERMFUNC)();
+
 static int exp_initterm(INITTERMFUNC *start, INITTERMFUNC *end)
 {
     dbgprintf("_initterm(0x%x, 0x%x) %p\n", start, end, *start);
@@ -5281,7 +5283,9 @@ static DWORD WINAPI expGetLocaleInfoA(DWORD locale, DWORD lctype, char* lpLCData
 
 static void expSDL_GetRelativeMouseState(int *x, int *y)
 {
-	return SDL_GetRelativeMouseState(x,y);
+#ifdef SDL
+    SDL_GetRelativeMouseState(x,y);
+#endif
 }
 
 static int expSDL_NumJoysticks(void)
@@ -6320,6 +6324,18 @@ static const struct glfuncs glfunctions[]={
     GLFF(glMultiTexCoord2fARB)
     GLFF(glMultiTexCoord3fARB)
     GLFF(glMultiTexCoord4fARB)
+    GLFF(glBindVertexArray)
+    GLFF(glDeleteVertexArrays)
+    GLFF(glGenVertexArrays)
+    GLFF(glIsVertexArray)
+    GLFF(glDebugMessageControlARB)
+    GLFF(glDebugMessageInsertARB)
+    GLFF(glDebugMessageCallbackARB)
+    GLFF(glGetDebugMessageLogARB)
+    GLFF(glVertexAttrib2f)
+    GLFF(glVertexAttrib2fv)
+    GLFF(glVertexAttrib3fv)
+    
 };
 
 static WIN_BOOL WINAPI ext_stubs(void)

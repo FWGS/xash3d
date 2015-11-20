@@ -63,6 +63,7 @@ extern "C" {
 typedef unsigned long	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
+typedef struct searchpath_s searchpath_t;
 typedef off_t		fs_offset_t;
 typedef struct file_s	file_t;		// normal file
 typedef struct wfile_s	wfile_t;		// wad file
@@ -95,7 +96,7 @@ typedef enum
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	0.15f		// engine current version
+#define XASH_VERSION	0.16f		// engine current version
 // since this fork have own version, this is just left for compability
 #define BASED_VERSION	0.97f
 
@@ -129,6 +130,7 @@ typedef enum
 #define FS_STATIC_PATH	1	// FS_ClearSearchPath will be ignore this path
 #define FS_NOWRITE_PATH	2	// default behavior - last added gamedir set as writedir. This flag disables it
 #define FS_GAMEDIR_PATH	4	// just a marker for gamedir path
+#define FS_CUSTOM_PATH	8	// map search allowed
 
 #define GI              SI.GameInfo
 #define FS_Gamedir()	SI.GameInfo->gamedir
@@ -150,6 +152,7 @@ extern convar_t	*mod_allow_materials;
 extern convar_t	*host_limitlocal;
 extern convar_t	*host_maxfps;
 extern convar_t *net_qport;
+extern convar_t *download_types;
 
 /*
 ==============================================================
@@ -181,6 +184,8 @@ typedef struct gameinfo_s
 	// .dll pathes
 	char		dll_path[64];	// e.g. "bin" or "cl_dlls"
 	char		game_dll[64];	// custom path for game.dll
+	char		game_dll_linux[64];	// custom path for game.dll
+	char		game_dll_osx[64];	// custom path for game.dll
 	char		client_lib[64];	// custom name of client library
 	// .ico path
 	char		iconpath[64];	// "game.ico" by default
@@ -217,6 +222,8 @@ typedef struct sysinfo_s
 	gameinfo_t	*GameInfo;	// current GameInfo
 	gameinfo_t	*games[MAX_MODS];	// environment games (founded at each engine start)
 	int		numgames;
+	char gamedll[256];
+	char clientlib[256];
 } sysinfo_t;
 
 typedef enum
@@ -266,7 +273,8 @@ typedef enum
 typedef enum
 {
 	NS_CLIENT,
-	NS_SERVER
+	NS_SERVER,
+	NS_MULTICAST
 } netsrc_t;
 
 #include "netadr.h"
@@ -371,6 +379,8 @@ extern sysinfo_t	SI;
 //
 // filesystem.c
 //
+int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive );
+int matchpattern_with_separator( const char *in, const char *pattern, qboolean caseinsensitive, const char *separators, qboolean wildcard_least_one );
 void FS_Init( void );
 void FS_Path( void );
 char *FS_ToLowerCase( const char *path );
@@ -389,6 +399,7 @@ const char *FS_FileWithoutPath( const char *in );
 wfile_t *W_Open( const char *filename, const char *mode );
 byte *W_LoadLump( wfile_t *wad, const char *lumpname, size_t *lumpsizeptr, const char type );
 void W_Close( wfile_t *wad );
+searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 qboolean FS_WriteFile( const char *filename, const void *data, fs_offset_t len );
@@ -402,7 +413,6 @@ fs_offset_t FS_Write( file_t *file, const void *data, size_t datasize );
 fs_offset_t FS_Read( file_t *file, void *buffer, size_t buffersize );
 int FS_VPrintf( file_t *file, const char *format, va_list ap );
 int FS_Seek( file_t *file, fs_offset_t offset, int whence );
-int FS_Gets( file_t *file, byte *string, size_t bufsize );
 int FS_Printf( file_t *file, const char *format, ... );
 fs_offset_t FS_FileSize( const char *filename, qboolean gamedironly );
 fs_offset_t FS_FileTime( const char *filename, qboolean gamedironly );
@@ -420,13 +430,13 @@ int FS_Close( file_t *file );
 int FS_Getc( file_t *file );
 qboolean FS_Eof( file_t *file );
 fs_offset_t FS_FileLength( file_t *f );
+void FS_Rescan( void );
 
 //
 // network.c
 //
 void NET_Init( void );
 void NET_Shutdown( void );
-void NET_Sleep( int msec );
 void NET_Config( qboolean net_enable );
 qboolean NET_IsLocalAddress( netadr_t adr );
 char *NET_AdrToString( const netadr_t a );
@@ -655,9 +665,11 @@ void Host_WriteOpenGLConfig( void );
 void Host_WriteVideoConfig( void );
 void Host_WriteConfig( void );
 qboolean Host_IsLocalGame( void );
+qboolean Host_IsLocalClient( void );
 void Host_ShutdownServer( void );
 void Host_Print( const char *txt );
 void Host_Error( const char *error, ... );
+void Host_MapDesignError( const char *error, ... );
 void Host_PrintEngineFeatures( void );
 void Host_InitDecals( void );
 void Host_Credits( void );
@@ -905,6 +917,13 @@ char *Cmd_GetName( struct cmd_s *cmd );
 cvar_t *Cvar_GetList( void );
 void Cmd_Null_f( void );
 
+void HTTP_AddDownload( char *path, int size, qboolean process );
+void HTTP_ResetProcessState ( void );
+void HTTP_Init( void );
+void HTTP_Shutdown( void );
+void HTTP_Run( void );
+void CL_ProcessFile( qboolean successfully_received, const char *filename );
+
 typedef struct autocomplete_list_s
 {
 	const char *name;
@@ -917,7 +936,6 @@ extern const char *svc_strings[256];
 // soundlib shared exports
 qboolean S_Init( void );
 void S_Shutdown( void );
-void S_Activate( qboolean active, void *hInst );
 void S_StopSound( int entnum, int channel, const char *soundname );
 int S_GetCurrentStaticSounds( soundlist_t *pout, int size );
 void S_StopAllSounds( void );

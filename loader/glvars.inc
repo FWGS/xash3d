@@ -460,4 +460,15 @@ void ( *ldrpglMultiTexCoord1fARB)(GLenum target, GLfloat s) = NULL;
 void ( *ldrpglMultiTexCoord2fARB)(GLenum target, GLfloat s, GLfloat t) = NULL;
 void ( *ldrpglMultiTexCoord3fARB)(GLenum target, GLfloat s, GLfloat t, GLfloat r) = NULL;
 void ( *ldrpglMultiTexCoord4fARB)(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q) = NULL;
+void ( *ldrpglBindVertexArray)(GLuint array) = NULL;
+void ( *ldrpglDeleteVertexArrays)(GLsizei n, const GLuint *arrays) = NULL;
+void ( *ldrpglGenVertexArrays)(GLsizei n, GLuint *arrays) = NULL;
+GLboolean ( *ldrpglIsVertexArray)(GLuint array) = NULL;
+void ( *ldrpglDebugMessageControlARB)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint* ids, GLboolean enabled) = NULL;
+void ( *ldrpglDebugMessageInsertARB)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* buf) = NULL;
+void ( *ldrpglDebugMessageCallbackARB)(GLvoid *callback, GLvoid *userParam) = NULL;
+GLuint ( *ldrpglGetDebugMessageLogARB)(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog) = NULL;
+void ( *ldrpglVertexAttrib2f)(GLuint index, GLfloat v0, GLfloat v1) = NULL;
+void ( *ldrpglVertexAttrib2fv)(GLuint index, const GLfloat *v) = NULL;
+void ( *ldrpglVertexAttrib3fv)(GLuint index, const GLfloat *v) = NULL;
 //#include "glfuncs.inc"

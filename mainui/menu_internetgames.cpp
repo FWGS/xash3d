@@ -124,12 +124,6 @@ static void UI_InternetGames_GetGamesList( void )
 	{
 		if( i >= UI_MAX_SERVERS ) break;
 		info = uiStatic.serverNames[i];
-#if 1
-		// NOTE: Xash3D is support hot switching between games in multiplayer
-		// but this feature not detail tested and may be bugly
-		if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )))
-			continue;	// filter by game
-#endif 
 		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "host" ), GAME_LENGTH );
 		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, GAME_LENGTH );
 		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "map" ), MAPNAME_LENGTH );
@@ -460,7 +454,7 @@ void UI_InternetGames_Menu( void )
 	if ( gMenu.m_gameinfo.gamemode == GAME_SINGLEPLAYER_ONLY )
 		return;
 
-	// stop demos to allow open network sockets
+	// stop demos to allow network sockets to open
 	if ( gpGlobals->demoplayback && CVAR_GET_FLOAT( "cl_background" ))
 	{
 		uiStatic.m_iOldMenuDepth = uiStatic.menuDepth;

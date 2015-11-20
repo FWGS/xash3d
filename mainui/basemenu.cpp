@@ -884,7 +884,7 @@ bool UI_StartBackGroundMap( void )
 	first = FALSE;
 
 	// some map is already running
-	if( !uiStatic.bgmapcount || CVAR_GET_FLOAT( "host_serverstate" ) || gpGlobals->demoplayback )
+	if( !uiStatic.bgmapcount || CL_IsActive() || gpGlobals->demoplayback )
 		return FALSE;
 
 	int bgmapid = RANDOM_LONG( 0, uiStatic.bgmapcount - 1 );
@@ -1240,12 +1240,13 @@ void UI_SetActiveMenu( int fActive )
 	if( !uiStatic.initialized )
 		return;
 
-	// don't continue firing if we leave game
-	KEY_ClearStates();
 	uiStatic.framecount = 0;
 
 	if( fActive )
 	{
+		// don't continue firing if we leave game
+		KEY_ClearStates();
+
 		KEY_SetDest( KEY_MENU );
 		UI_Main_Menu();
 	}
@@ -1269,6 +1270,9 @@ void UI_AddServerToList( netadr_t adr, const char *info )
 
 	if( uiStatic.numServers == UI_MAX_SERVERS )
 		return;	// full
+
+	if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )))
+		return;
 
 	// ignore if duplicated
 	for( i = 0; i < uiStatic.numServers; i++ )

@@ -200,7 +200,7 @@ char *SV_EntityScript( void )
 	{
 		if( ft1 > ft2 )
 		{
-			MsgDev( D_INFO, "^1Entity patch is older than bsp. Ignored.\n", entfilename );			
+			MsgDev( D_INFO, "^1Entity patch is older than BSP. Ignored.\n", entfilename );			
 		}
 		else if(( ents = FS_LoadFile( entfilename, NULL, true )) != NULL )
 		{
@@ -358,7 +358,7 @@ void SV_ActivateServer( void )
 
 	if( sv_maxclients->integer > 1 && public_server->integer )
 	{
-		MsgDev( D_INFO, "Add your server, to master server list\n" );
+		MsgDev( D_INFO, "Adding your server to master server list\n" );
 		Master_Add( );
 	}
 }
@@ -597,12 +597,12 @@ void SV_InitGame( void )
 		// init game after host error
 		if( !svgame.hInstance )
 		{
-			if( !SV_LoadProgs( GI->game_dll ))
+			if( !SV_LoadProgs( SI.gamedll ))
 			{
-				MsgDev( D_ERROR, "SV_InitGame: can't initialize %s\n", GI->game_dll );
-				return; // can't loading
+				MsgDev( D_ERROR, "SV_InitGame: can't initialize \"%s\"\n", SI.gamedll );
+				return; // can't load
 			}
-			MsgDev( D_INFO, "Server loaded\n", GI->game_dll );
+			MsgDev( D_INFO, "Server loaded\n" );
 		}
 
 		// make sure the client is down
@@ -700,7 +700,7 @@ void SV_InitGameProgs( void )
 	if( svgame.hInstance ) return; // already loaded
 
 	// just try to initialize
-	SV_LoadProgs( GI->game_dll );
+	SV_LoadProgs( SI.gamedll );
 }
 
 void SV_FreeGameProgs( void )

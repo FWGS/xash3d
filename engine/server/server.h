@@ -410,8 +410,15 @@ extern	convar_t		*sv_unlagpush;
 extern	convar_t		*sv_unlagsamples;
 extern	convar_t		*sv_allow_upload;
 extern	convar_t		*sv_allow_download;
+extern	convar_t		*sv_allow_fragment;
 extern	convar_t		*sv_allow_studio_attachment_angles;
 extern	convar_t		*sv_allow_rotate_pushables;
+extern	convar_t		*sv_allow_godmode;
+extern	convar_t		*sv_allow_noclip;
+extern	convar_t		*sv_enttools_enable;
+extern	convar_t		*sv_enttools_players;
+extern	convar_t		*sv_enttools_maxfire;
+extern	convar_t		*sv_enttools_godplayer;
 extern	convar_t		*sv_clienttrace;
 extern	convar_t		*sv_send_resources;
 extern	convar_t		*sv_send_logos;
@@ -420,6 +427,9 @@ extern	convar_t		*sv_skyspeed;
 extern	convar_t		*sv_skyangle;
 extern	convar_t		*sv_quakehulls;
 extern	convar_t		*sv_validate_changelevel;
+extern	convar_t		*sv_downloadurl;
+extern	convar_t		*sv_clientclean;
+extern 	convar_t		*sv_skipshield; // HACK for shield
 extern	convar_t		*mp_consistency;
 extern	convar_t		*public_server;
 extern	convar_t		*physinfo;
@@ -517,16 +527,18 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed );
 qboolean SV_IsPlayerIndex( int idx );
 void SV_InitClientMove( void );
 void SV_UpdateServerInfo( void );
-
+void SV_EndRedirect( void );
 //
 // sv_cmds.c
 //
 void SV_Status_f( void );
 void SV_Newgame_f( void );
+qboolean SV_SetPlayer( void );
 
 //
 // sv_custom.c
 //
+void SV_ClearCustomizationList( customization_t *pHead );
 void SV_SendResources( sizebuf_t *msg );
 int SV_TransferConsistencyInfo( void );
 
