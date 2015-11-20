@@ -47,6 +47,7 @@ convar_t	*cl_draw_beams;
 convar_t	*cl_cmdrate;
 convar_t	*cl_interp;
 convar_t	*cl_allow_fragment;
+convar_t	*cl_trace_events;
 convar_t	*hud_scale;
 
 //
@@ -1628,6 +1629,8 @@ void CL_InitLocal( void )
 	rcon_address = Cvar_Get( "rcon_address", "", 0, "remote control address" );
 	
 	r_oldparticles = Cvar_Get("r_oldparticles", "0", CVAR_ARCHIVE, "make some particle textures a simple square, like with software rendering");
+
+	cl_trace_events = Cvar_Get("cl_trace_events", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable client event tracing (good for developers)");
 
 	// userinfo
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );

@@ -2529,7 +2529,7 @@ void pfnMessageBegin( int msg_dest, int msg_num, const float *pOrigin, edict_t *
 
 	// remove engine messages.
 	// also remove ReqState, because it's spamming
-	gIsUserMsg = (msg_num > svc_lastmsg) && Q_strcmp( svgame.msg_name, "ReqState" );
+	gIsUserMsg = (sv_trace_messages->value > 0.0f) && (msg_num > svc_lastmsg) && Q_strcmp( svgame.msg_name, "ReqState" );
 
 	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3MessageBegin( %i, %s )\n", msg_dest, svgame.msg_name );
 }

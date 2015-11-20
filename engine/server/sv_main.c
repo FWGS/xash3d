@@ -86,6 +86,7 @@ convar_t	*teamplay;
 convar_t	*skill;
 convar_t	*coop;
 convar_t	*sv_skipshield; // HACK for shield
+convar_t	*sv_trace_messages;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -801,6 +802,7 @@ void SV_Init( void )
 	clockwindow = Cvar_Get( "clockwindow", "0.5", 0, "timewindow to execute client moves" );
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
 	sv_skipshield = Cvar_Get("sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
+	sv_trace_messages = Cvar_Get("sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)");
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
