@@ -30,7 +30,11 @@ GNU General Public License for more details.
 		#include <sys/syslimits.h>
 		#define OS_LIB_EXT "dylib"
     #else
-		#include <linux/limits.h>
+		#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+			#include <limits.h>
+		#else
+			#include <linux/limits.h>
+		#endif
 		#define OS_LIB_EXT "so"
     #endif
 

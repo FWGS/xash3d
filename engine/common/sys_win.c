@@ -431,7 +431,9 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 }
 #else //if !defined (__ANDROID__) // Android will have other handler
 // Posix signal handler
+#ifdef HAVE_UCONTEXT_H
 #include <ucontext.h>
+#endif
 #include <sys/mman.h>
 int printframe( char *buf, int len, int i, void *addr )
 {
@@ -456,12 +458,24 @@ void Sys_Crash( int signal, siginfo_t *si, void *context)
 	int len, stacklen, logfd, i = 0;
 	ucontext_t *ucontext = (ucontext_t*)context;
 #if __i386__
-	void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
+	#ifdef __FreeBSD__
+		void *pc = (void*)ucontext->uc_mcontext.mc_eip, **bp = (void**)ucontext->uc_mcontext.mc_ebp, **sp = (void**)ucontext->uc_mcontext.mc_esp;
+	#elif __NetBSD__
+		void *pc = (void*)ucontext->uc_mcontext.__gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.__gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.__gregs[REG_ESP];
+	#elif __OpenBSD__
+		void *pc = (void*)sc_eip, **bp = (void**)sc_ebp, **sp = (void**)sc_esp;
+	#else
+		void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
+	#endif
 #elif defined (__arm__) // arm not tested
 	void *pc = (void*)ucontext->uc_mcontext.arm_pc, **bp = (void*)ucontext->uc_mcontext.arm_r10, **sp = (void*)ucontext->uc_mcontext.arm_sp;
 #endif
 	// Safe actions first, stack and memory may be corrupted
-	len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr);
+	#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+		len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr);
+	#else
+		len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr);
+	#endif
 	write(2, message, len);
 	// Flush buffers before writing directly to descriptors
 	fflush( stdout );
