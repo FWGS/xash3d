@@ -610,7 +610,7 @@ static mstudioanim_t *Mod_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t 
 	}
 
 	// check for already loaded
-	if( !paSequences[pseqdesc->seqgroup].data )))
+	if( !paSequences[pseqdesc->seqgroup].data )
 	{
 		string	filepath, modelname, modelpath;
 
