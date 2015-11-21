@@ -158,8 +158,11 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
 #elif !defined __ANDROID__
 	//signal(SIGCHLD, SIG_IGN);
-	const char* xdgOpen = "/usr/bin/xdg-open"; //TODO: find xdg-open in PATH
-	
+	#if defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
+		const char* xdgOpen = "/usr/local/bin/xdg-open"; //TODO: find xdg-open in PATH
+	#else
+		const char* xdgOpen = "/usr/bin/xdg-open";
+	#endif
 	const char* argv[] = {xdgOpen, path, NULL};
 	pid_t id = fork();
 	if (id == 0) {
