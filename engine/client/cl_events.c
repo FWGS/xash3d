@@ -135,6 +135,18 @@ qboolean CL_FireEvent( event_info_t *ei )
 	if( !ei || !ei->index )
 		return false;
 
+	if( cl_trace_events->value > 0.0f )
+	{
+		MsgDev( D_INFO, "^3EVENT  %s\n"    // event name
+					"     %f %f\n" // float params
+					"     %i %i\n" // int params
+					"     %s %s\n", // bool params
+					cl.event_precache[ bound( 1, ei->index, MAX_EVENTS )], ei->args.fparam1, ei->args.fparam2,
+					ei->args.iparam1, ei->args.iparam2,
+					ei->args.bparam1 ? "TRUE" : "FALSE", ei->args.bparam2 ? "TRUE" : "FALSE" );
+
+	}
+
 	// get the func pointer
 	for( i = 0; i < MAX_EVENTS; i++ )
 	{
@@ -450,6 +462,7 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 		return;		
 	}
 
+
 	flags |= FEV_CLIENT; // it's a client event
 	flags &= ~(FEV_NOTHOST|FEV_HOSTONLY|FEV_GLOBAL);
 
@@ -460,10 +473,10 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 	args.entindex = invokerIndex;
 
 // TODO: restore checks when predicting will be done
-//	if( !angles || VectorIsNull( angles ))
+	//if( !angles || VectorIsNull( angles ))
 		VectorCopy( cl.refdef.cl_viewangles, args.angles );
 
-//	if( !origin || VectorIsNull( origin ))
+	//if( !origin || VectorIsNull( origin ))
 		VectorCopy( cl.frame.local.client.origin, args.origin );
 
 	VectorCopy( cl.frame.local.client.velocity, args.velocity );
