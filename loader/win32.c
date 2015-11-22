@@ -71,10 +71,12 @@ for DLL to know too much about its environment.
 #ifdef	HAVE_KSTAT
 #include <kstat.h>
 #endif
-//#if HAVE_MALLOC_H
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
-//#endif
-
+#endif
+#ifdef HAVE_EXECINFO_H
+#include <execinfo.h>
+#endif
 
 #include <sys/mman.h>
 
@@ -359,7 +361,12 @@ void* mreq_private(int size, int to_zero, int type);
 void* mreq_private(int size, int to_zero, int type)
 {
     int nsize = size + sizeof(alloc_header);
+#ifdef HAVE_MEMALIGN
     alloc_header* header = memalign(16, nsize);
+#else
+    alloc_header* header;
+    posix_memalign((void**)&header, 16, nsize);
+#endif
     if (!header)
         return 0;
     if (to_zero)

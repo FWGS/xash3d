@@ -184,7 +184,7 @@ hull_t *SV_HullForBsp( edict_t *ent, const vec3_t mins, const vec3_t maxs, float
 	if( !model || model->type != mod_brush )
 	{
 		Host_MapDesignError( "Entity %i SOLID_BSP with a non bsp model %i\n", NUM_FOR_EDICT( ent ), (model) ? model->type : mod_bad );
-		return;
+		return NULL;
 	}
 
 	VectorSubtract( maxs, mins, size );

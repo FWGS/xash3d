@@ -35,7 +35,12 @@ set (LOADER_LIBRARY loader)
 file (GLOB_RECURSE LOADER_SOURCES *.c)
 INCLUDE_DIRECTORIES(. wine/)
 add_library (${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
-target_link_libraries (${LOADER_LIBRARY} -lm)
+
+IF (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD" OR CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
+       target_link_libraries (${LOADER_LIBRARY} -lm -pthread -lexecinfo)
+ELSE ()
+       target_link_libraries (${LOADER_LIBRARY} -lm)
+ENDIF ()
 
 set_target_properties (${LOADER_SHARED} PROPERTIES
 	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
