@@ -721,6 +721,8 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	string		fullpath;
 	int		i;
 
+	MsgDev(D_NOTE, "FS_AddGameDirectory( %s, %i )", dir, flags );
+
 	if(!( flags & FS_NOWRITE_PATH ))
 		Q_strncpy( fs_gamedir, dir, sizeof( fs_gamedir ));
 
@@ -759,6 +761,7 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	search->flags = flags;
 	search->next = fs_searchpaths;
 	fs_searchpaths = search;
+
 }
 
 /*
@@ -771,6 +774,22 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	// Add the common game directory
 	if( dir && *dir )
 	{
+		// add recursively new game directories
+		if( Q_strcmp( dir, GI->gamedir ) )
+		{
+			int i;
+			for( i = 0; i < SI.numgames; i++ )
+			{
+				if( !Q_strcmp( dir, SI.games[i]->gamedir) )
+					break;
+			}
+
+			// if gamedir not equals basedir, add new hierarchy
+			if( Q_strcmp(SI.games[i]->gamedir, SI.games[i]->basedir))
+				FS_AddGameHierarchy( SI.games[i]->basedir, flags );
+		}
+
+
 		FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
 		FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
