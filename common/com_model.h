@@ -18,9 +18,6 @@ GNU General Public License for more details.
 
 #include "bspfile.h"	// we need some declarations from it
 
-typedef vec_t		vec2_t[2];
-typedef vec_t		vec4_t[4];
-
 /*
 ==============================================================================
 
