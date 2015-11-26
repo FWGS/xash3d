@@ -1255,7 +1255,7 @@ void SV_New_f( sv_client_t *cl )
 				while( data = COM_ParseFile( data, token ) )
 				{
 					BF_WriteByte( &cl->netchan.message, svc_stufftext );
-					BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", sv_downloadurl->string ));
+					BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", token ));
 				}
 			}
 			// request resource list
