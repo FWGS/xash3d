@@ -1,4 +1,3 @@
-#include "glvars.h"
 // helper opengl functions
 GLenum ( *ldrpglGetError )(void) = NULL;
 const GLcharARB * ( *ldrpglGetString )(GLenum name) = NULL;
