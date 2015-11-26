@@ -597,9 +597,9 @@ void SV_InitGame( void )
 		// init game after host error
 		if( !svgame.hInstance )
 		{
-			if( !SV_LoadProgs( GI->game_dll ))
+			if( !SV_LoadProgs( SI.gamedll ))
 			{
-				MsgDev( D_ERROR, "SV_InitGame: can't initialize %s\n", GI->game_dll );
+				MsgDev( D_ERROR, "SV_InitGame: can't initialize \"%s\"\n", SI.gamedll );
 				return; // can't load
 			}
 			MsgDev( D_INFO, "Server loaded\n" );
@@ -700,7 +700,7 @@ void SV_InitGameProgs( void )
 	if( svgame.hInstance ) return; // already loaded
 
 	// just try to initialize
-	SV_LoadProgs( GI->game_dll );
+	SV_LoadProgs( SI.gamedll );
 }
 
 void SV_FreeGameProgs( void )

@@ -86,6 +86,8 @@ convar_t	*deathmatch;
 convar_t	*teamplay;
 convar_t	*skill;
 convar_t	*coop;
+convar_t	*sv_skipshield; // HACK for shield
+convar_t	*sv_trace_messages;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -413,8 +415,7 @@ void SV_ReadPackets( void )
 SV_CheckTimeouts
 
 If a packet has not been received from a client for timeout->value
-seconds, drop the conneciton.  Server frames are used instead of
-realtime to avoid dropping the local client while debugging.
+seconds, drop the conneciton.
 
 When a client is normally dropped, the sv_client_t goes into a zombie state
 for a few seconds to make sure any final reliable message gets resent
@@ -426,12 +427,12 @@ void SV_CheckTimeouts( void )
 	sv_client_t	*cl;
 	float		droppoint;
 	float		zombiepoint;
-	int		i, numclients = 0;
+	int		i, numclients;
 
 	droppoint = host.realtime - timeout->value;
 	zombiepoint = host.realtime - zombietime->value;
 
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, numclients = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
 		if( cl->state >= cs_connected )
 		{
@@ -467,13 +468,11 @@ void SV_CheckTimeouts( void )
 			continue;
 		}
 
-		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint )
+		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint && !NET_IsLocalAddress( cl->netchan.remote_address ))
 		{
-#ifndef __ANDROID__ // process can be freezed on android, this is temporary fix
 			SV_BroadcastPrintf( PRINT_HIGH, "%s timed out\n", cl->name );
 			SV_DropClient( cl ); 
 			cl->state = cs_free; // don't bother with zombie state
-#endif
 		}
 	}
 
@@ -804,6 +803,8 @@ void SV_Init( void )
 	mp_consistency = Cvar_Get( "mp_consistency", "1", CVAR_SERVERNOTIFY, "enable consistency check in multiplayer" );
 	clockwindow = Cvar_Get( "clockwindow", "0.5", 0, "timewindow to execute client moves" );
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
+	sv_skipshield = Cvar_Get("sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
+	sv_trace_messages = Cvar_Get("sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)");
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files

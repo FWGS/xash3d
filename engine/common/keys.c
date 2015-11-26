@@ -652,14 +652,15 @@ void Key_Event( int key, qboolean down )
 	// distribute the key down event to the apropriate handler
 	if( cls.key_dest == key_game )
 	{
-		if(host.mouse_visible)
-			return;
-		if( cls.state == ca_cinematic && ( key != K_ESCAPE || !down ))
+		if( cls.state == ca_cinematic )
 		{
 			// only escape passed when cinematic is playing
 			// HLFX 0.6 bug: crash in vgui3.dll while press +attack during movie playback
-			return;
+			if( key != K_ESCAPE || !down )
+				return;
 		}
+		else if( host.mouse_visible )
+			return;
 
 		// send the bound action
 		kb = keys[key].binding;

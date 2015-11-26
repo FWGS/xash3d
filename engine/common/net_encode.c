@@ -1814,7 +1814,7 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 		}
 
 		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: unknown update type %i\n", fRemoveType );
-		return;
+		return false;
 	}
 
 	if( BF_ReadOneBit( msg ))

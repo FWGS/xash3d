@@ -721,6 +721,8 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	string		fullpath;
 	int		i;
 
+	MsgDev(D_NOTE, "FS_AddGameDirectory( %s, %i )", dir, flags );
+
 	if(!( flags & FS_NOWRITE_PATH ))
 		Q_strncpy( fs_gamedir, dir, sizeof( fs_gamedir ));
 
@@ -759,6 +761,7 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	search->flags = flags;
 	search->next = fs_searchpaths;
 	fs_searchpaths = search;
+
 }
 
 /*
@@ -771,6 +774,22 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	// Add the common game directory
 	if( dir && *dir )
 	{
+		// add recursively new game directories
+		if( Q_strcmp( dir, GI->gamedir ) )
+		{
+			int i;
+			for( i = 0; i < SI.numgames; i++ )
+			{
+				if( !Q_strcmp( dir, SI.games[i]->gamedir) )
+					break;
+			}
+
+			// if gamedir not equals basedir, add new hierarchy
+			if( Q_strcmp(SI.games[i]->gamedir, SI.games[i]->basedir))
+				FS_AddGameHierarchy( SI.games[i]->basedir, flags );
+		}
+
+
 		FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
 		FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
@@ -1045,6 +1064,10 @@ static qboolean FS_WriteGameInfo( const char *filepath, gameinfo_t *GameInfo )
 		FS_Printf( f, "dllpath\t\t\"%s\"\n", GameInfo->dll_path );	
 	if( Q_strlen( GameInfo->game_dll ))
 		FS_Printf( f, "gamedll\t\t\"%s\"\n", GameInfo->game_dll );
+	if( Q_strlen( GameInfo->game_dll_linux ))
+		FS_Printf( f, "gamedll_linux\t\t\"%s\"\n", GameInfo->game_dll_linux );
+	if( Q_strlen( GameInfo->game_dll_osx ))
+		FS_Printf( f, "gamedll_osx\t\t\"%s\"\n", GameInfo->game_dll_osx );
 
 	if( Q_strlen( GameInfo->iconpath ))
 		FS_Printf( f, "icon\t\t\"%s\"\n", GameInfo->iconpath );
@@ -1133,7 +1156,9 @@ void FS_CreateDefaultGameInfo( const char *filename )
 #else
 	Q_strncpy( defGI.dll_path, "cl_dlls", sizeof( defGI.dll_path ));
 	Q_strncpy( defGI.dll_path, CLIENTDLL, sizeof( defGI.client_lib ));
-	Q_strncpy( defGI.game_dll, "dlls/hl." OS_LIB_EXT, sizeof( defGI.game_dll ));
+	Q_strncpy( defGI.game_dll, "dlls/hl.dll" , sizeof( defGI.game_dll ));
+	Q_strncpy( defGI.game_dll_osx, "dlls/hl.dylib", sizeof(defGI.game_dll_osx));
+	Q_strncpy( defGI.game_dll_linux, "dlls/hl.so", sizeof(defGI.game_dll_linux));
 #endif
 	Q_strncpy( defGI.startmap, "newmap", sizeof( defGI.startmap ));
 	Q_strncpy( defGI.iconpath, "game.ico", sizeof( defGI.iconpath ));
@@ -1154,13 +1179,6 @@ void FS_CreateDefaultGameInfo( const char *filename )
 static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, gameinfo_t *GameInfo )
 {
 	char	*afile, *pfile;
-#ifdef _WIN32
-	const char* gameDll = "gamedll";
-#elif defined(__APPLE__)
-	const char* gameDll = "gamedll_osx";
-#else
-	const char* gameDll = "gamedll_linux";
-#endif
 	string	token;
 
 	if( !GameInfo ) return false;	
@@ -1183,16 +1201,11 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
 	Q_strncpy( GameInfo->startmap, "newmap", sizeof( GameInfo->startmap ));
-#if defined(__ANDROID__) || defined(PANDORA)
-	Q_strncpy( GameInfo->dll_path, getenv("XASH3D_GAMELIBDIR"), sizeof( GameInfo->dll_path ));
-	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
-	Q_strncpy( GameInfo->game_dll, GameInfo->dll_path, sizeof( GameInfo->game_dll ));
-	Q_strncat( GameInfo->game_dll,"/" SERVERDLL, sizeof( GameInfo->game_dll ));
-#else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
-#endif
+	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll_osx, "dlls/hl.dylib", sizeof( GameInfo->game_dll_osx ));
+	Q_strncpy( GameInfo->game_dll_linux, "dlls/hl.so", sizeof( GameInfo->game_dll_linux ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
 	VectorSet( GameInfo->client_mins[0],   0,   0,  0  );
@@ -1238,13 +1251,18 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->update_url );
 		}
-		else if( !Q_stricmp( token, gameDll ))
+		else if( !Q_stricmp( token, "gamedll" ))
 		{
-			// already set up for __ANDROID__. Just ignore a path in game config
-#if !defined(__ANDROID__) && !defined(PANDORA)
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
 			COM_FixSlashes( GameInfo->game_dll );
-#endif
+		}
+		else if( !Q_stricmp( token, "gamedll_linux" ))
+		{
+			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
+		}
+		else if( !Q_stricmp( token, "gamedll_osx" ))
+		{
+			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
 		}
 		else if( !Q_stricmp( token, "icon" ))
 		{
@@ -1384,7 +1402,9 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncat( GameInfo->game_dll,"/" SERVERDLL, sizeof( GameInfo->game_dll ));
 #else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll_osx, "dlls/hl.dylib", sizeof( GameInfo->game_dll_osx ));
+	Q_strncpy( GameInfo->game_dll_linux, "dlls/hl.so", sizeof( GameInfo->game_dll_linux ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 #endif
 	Q_strncpy( GameInfo->startmap, "", sizeof( GameInfo->startmap ));
@@ -1435,23 +1455,23 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		}
 		else if( !Q_stricmp( token, "gamedll" ))
 		{
-			// already set up for __ANDROID__. Just ignore a path in game config
-#if !defined(__ANDROID__) && !defined(PANDORA)
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
-#endif
+		}
+		else if( !Q_stricmp( token, "gamedll_osx" ))
+		{
+			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
+		}
+		else if( !Q_stricmp( token, "gamedll_linux" ))
+		{
+			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
 		}
 		else if( !Q_stricmp( token, "clientlib" ))
 		{
-			// already set up for __ANDROID__. Just ignore a path in game config
-#if !defined(__ANDROID__) && !defined(PANDORA)
 			pfile = COM_ParseFile( pfile, GameInfo->client_lib );
-#endif
 		}
 		else if( !Q_stricmp( token, "dllpath" ))
 		{
-#ifndef __ANDROID__
 			pfile = COM_ParseFile( pfile, GameInfo->dll_path );
-#endif
 		}
 		else if( !Q_stricmp( token, "startmap" ))
 		{
@@ -1614,6 +1634,28 @@ void FS_LoadGameInfo( const char *rootfolder )
 		Sys_Error( "Couldn't find game directory '%s'\n", gs_basedir );
 
 	SI.GameInfo = SI.games[i];
+	if( !Sys_GetParmFromCmdLine( "-dll", SI.gamedll ) )
+	{
+#ifdef _WIN32
+		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
+#elif defined(__APPLE__)
+		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
+#elif defined(__ANDROID__) || defined(PANDORA)
+		Q_strncpy( SI.gamedll, getenv("XASH3D_GAMELIBDIR"), sizeof( SI.gamedll ) );
+		Q_strncat( SI.gamedll, "/" SERVERDLL, sizeof( SI.gamedll ) );
+#else
+		Q_strncpy( SI.gamedll, GI->game_dll_linux, sizeof( SI.gamedll ) );
+#endif
+	}
+	if( !Sys_GetParmFromCmdLine( "-clientlib", SI.clientlib ) )
+	{
+#ifdef __ANDROID__
+		Q_strncpy( SI.clientlib, CLIENTDLL, sizeof( SI.clientlib ) );
+#else
+		Q_strncpy( SI.clientlib, GI->client_lib, sizeof( SI.clientlib ) );
+#endif
+	}
+
 	FS_Rescan(); // create new filesystem
 
 	Host_InitDecals ();	// reload decals
@@ -1685,7 +1727,7 @@ void FS_Init( void )
 		}
 
 		stringlistfreecontents( &dirs );
-	}	
+	}
 
 	MsgDev( D_NOTE, "FS_Init: done\n" );
 }

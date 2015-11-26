@@ -71,10 +71,12 @@ for DLL to know too much about its environment.
 #ifdef	HAVE_KSTAT
 #include <kstat.h>
 #endif
-//#if HAVE_MALLOC_H
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
-//#endif
-
+#endif
+#ifdef HAVE_EXECINFO_H
+#include <execinfo.h>
+#endif
 
 #include <sys/mman.h>
 
@@ -359,7 +361,12 @@ void* mreq_private(int size, int to_zero, int type);
 void* mreq_private(int size, int to_zero, int type)
 {
     int nsize = size + sizeof(alloc_header);
+#ifdef HAVE_MEMALIGN
     alloc_header* header = memalign(16, nsize);
+#else
+    alloc_header* header;
+    posix_memalign((void**)&header, 16, nsize);
+#endif
     if (!header)
         return 0;
     if (to_zero)
@@ -3208,6 +3215,7 @@ POINT mousepos;
 static int WINAPI expGetCursorPos(LPPOINT cp)
 {
     //dbgprintf("GetCursorPos(0x%x) => 0x%x\n", cursor, cursor);
+#ifdef SDL
     int x ,y;
     SDL_GetRelativeMouseState(&x, &y);
     mousepos.x += x;
@@ -3215,6 +3223,7 @@ static int WINAPI expGetCursorPos(LPPOINT cp)
     cp->x=mousepos.x;
     cp->y=mousepos.y;
     return 1;
+#endif
 }
 
 static WIN_BOOL WINAPI expSetCursorPos(int x, int y)
@@ -5281,7 +5290,9 @@ static DWORD WINAPI expGetLocaleInfoA(DWORD locale, DWORD lctype, char* lpLCData
 
 static void expSDL_GetRelativeMouseState(int *x, int *y)
 {
-	return SDL_GetRelativeMouseState(x,y);
+#ifdef SDL
+    SDL_GetRelativeMouseState(x,y);
+#endif
 }
 
 static int expSDL_NumJoysticks(void)

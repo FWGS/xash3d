@@ -40,7 +40,7 @@ RECT	window_rect, real_rect;
 #endif
 uint	in_mouse_wheel;
 int	wnd_caption;
-convar_t *fullscreen = 0;
+extern convar_t *vid_fullscreen;
 #ifdef PANDORA
 int noshouldermb = 0;
 #endif
@@ -253,7 +253,6 @@ void IN_StartupMouse( void )
 
 	in_mouse_buttons = 8;
 	in_mouseinitialized = true;
-	fullscreen = Cvar_FindVar( "fullscreen" );
 
 #ifdef _WIN32
 	in_mouse_wheel = RegisterWindowMessage( "MSWHEEL_ROLLMSG" );
@@ -362,7 +361,7 @@ void IN_ActivateMouse( qboolean force )
 		else
 #endif
 
-	if( cls.key_dest == key_menu && fullscreen && !fullscreen->integer)
+	if( cls.key_dest == key_menu && vid_fullscreen && !vid_fullscreen->integer)
 	{
 		// check for mouse leave-entering
 		if( !in_mouse_suspended && !UI_MouseInRect( ))
@@ -839,7 +838,7 @@ void Host_InputFrame( void )
 	if( cl.refdef.paused && cls.key_dest == key_game )
 		shutdownMouse = true; // release mouse during pause or console typeing
 	
-	if( shutdownMouse && !fullscreen->integer )
+	if( shutdownMouse && !vid_fullscreen->integer )
 	{
 		IN_DeactivateMouse();
 		return;

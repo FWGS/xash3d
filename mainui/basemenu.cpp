@@ -1271,6 +1271,9 @@ void UI_AddServerToList( netadr_t adr, const char *info )
 	if( uiStatic.numServers == UI_MAX_SERVERS )
 		return;	// full
 
+	if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )))
+		return;
+
 	// ignore if duplicated
 	for( i = 0; i < uiStatic.numServers; i++ )
 	{

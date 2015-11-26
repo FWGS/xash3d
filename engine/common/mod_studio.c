@@ -207,10 +207,14 @@ hull_t *Mod_HullForStudio( model_t *model, float frame, int sequence, vec3_t ang
 	mstudiocache_t	*bonecache;
 	mstudiobbox_t	*phitbox;
 	int		i, j;
+	qboolean bSkipShield = 0;
 
 	ASSERT( numhitboxes );
 
 	*numhitboxes = 0; // assume error
+
+	if((sv_skipshield->integer == 1 && pEdict && pEdict->v.gamestate == 1) || sv_skipshield->integer == 2)
+		bSkipShield = 1;
 
 	if( mod_studiocache->integer )
 	{
@@ -260,7 +264,7 @@ hull_t *Mod_HullForStudio( model_t *model, float frame, int sequence, vec3_t ang
 	}
 
 	// tell trace code about hitbox count
-	*numhitboxes = mod_studiohdr->numhitboxes;
+	*numhitboxes = (bSkipShield == true) ? mod_studiohdr->numhitboxes - 1 : mod_studiohdr->numhitboxes;
 
 	if( mod_studiocache->integer )
 	{
@@ -590,7 +594,6 @@ StudioGetAnim
 static mstudioanim_t *Mod_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
 	mstudioseqgroup_t	*pseqgroup;
-	cache_user_t	*paSequences;
 	size_t		filesize;
           byte		*buf;
 
@@ -598,7 +601,7 @@ static mstudioanim_t *Mod_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t 
 	if( pseqdesc->seqgroup == 0 )
 		return (mstudioanim_t *)((byte *)mod_studiohdr + pseqgroup->data + pseqdesc->animindex);
 
-	paSequences = (cache_user_t *)m_pSubModel->submodels;
+	cache_user_t *paSequences = (cache_user_t *)m_pSubModel->submodels;
 
 	if( paSequences == NULL )
 	{
@@ -607,7 +610,7 @@ static mstudioanim_t *Mod_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t 
 	}
 
 	// check for already loaded
-	if( !Mod_CacheCheck(( cache_user_t *)&( paSequences[pseqdesc->seqgroup] )))
+	if( !paSequences[pseqdesc->seqgroup].data )
 	{
 		string	filepath, modelname, modelpath;
 
