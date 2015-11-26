@@ -1259,7 +1259,7 @@ void HTTP_Run( void )
 
 	if( !curfile->file ) // state == 0
 	{
-		Msg( "HTTP: Starting download %s\n", curfile->path );
+		Msg( "HTTP: Starting download %s from %s\n", curfile->path, server->host );
 		char name[PATH_MAX];
 		Q_snprintf( name, PATH_MAX, "downloaded/%s.incomplete", curfile->path );
 		curfile->file = FS_Open( name, "wb", true );
