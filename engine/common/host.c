@@ -816,7 +816,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
-	if(Sys_CheckParm( "-noch" ))
+	if( !Sys_CheckParm( "-noch" ) )
 	{
 #ifdef _WIN32
 		SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
