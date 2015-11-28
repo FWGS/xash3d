@@ -1514,8 +1514,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
 #ifdef XASH_SDL
 	static string	wndname;
-	Uint32 wndFlags = SDL_WINDOW_INPUT_GRABBED |
-		SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
+	Uint32 wndFlags = SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
 
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
 
