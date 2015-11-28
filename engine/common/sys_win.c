@@ -611,8 +611,9 @@ void Sys_Error( const char *error, ... )
 	{
 		Con_ShowConsole( true );
 		Con_DisableInput();	// disable input line for dedicated server
-		MSGBOX( text );
+
 		Sys_Print( text );	// print error message
+		MSGBOX( text );
 		Sys_WaitForQuit();
 	}
 	else
@@ -658,6 +659,7 @@ void Sys_Break( const char *error, ... )
 		Con_ShowConsole( true );
 		Con_DisableInput();	// disable input line for dedicated server
 		Sys_Print( text );
+		MSGBOX( text );
 		Sys_WaitForQuit();
 	}
 	else
