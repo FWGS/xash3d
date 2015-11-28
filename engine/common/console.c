@@ -694,6 +694,11 @@ void Con_Init( void )
 		con.historyLines[i].widthInChars = con.linewidth;
 	}
 
+	for( i = 0; i < con.matchCount; i++ )
+	{
+			con.cmds[i] = NULL;
+	}
+
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f, "opens or closes the console" );
 	Cmd_AddCommand( "con_color", Con_SetColor_f, "set a custom console color" );
 	Cmd_AddCommand( "clear", Con_Clear_f, "clear console history" );
@@ -1994,6 +1999,7 @@ void Con_CharEvent( int key )
 void Con_VidInit( void )
 {
 	Con_CheckResize();
+	Con_InvalidateFonts();
 
 	// loading console image
 	if( host.developer )
@@ -2070,6 +2076,7 @@ void Con_Close( void )
 {
 	Con_ClearField( &con.input );
 	Con_ClearNotify();
+	Con_ClearTyping();
 	con.finalFrac = 0.0f; // none visible
 	con.displayFrac = 0.0f;
 }

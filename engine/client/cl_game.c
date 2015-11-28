@@ -1090,6 +1090,8 @@ void CL_ClearWorld( void )
 void CL_InitEdicts( void )
 {
 	ASSERT( clgame.entities == NULL );
+	if( !clgame.mempool )
+		return; // Host_Error without client
 
 	CL_UPDATE_BACKUP = ( cl.maxclients == 1 ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
 	cls.num_client_entities = CL_UPDATE_BACKUP * 64;

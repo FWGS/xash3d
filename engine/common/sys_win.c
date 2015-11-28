@@ -401,6 +401,8 @@ Sys_Crash
 Crash handler, called from system
 ================
 */
+#define DEBUG_BREAK
+/// TODO: implement on windows too
 #ifdef _WIN32
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
@@ -438,6 +440,41 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 #include <ucontext.h>
 #endif
 #include <sys/mman.h>
+
+#ifdef GDB_BREAK
+#include <fcntl.h>
+qboolean Sys_DebuggerPresent( void )
+{
+    char buf[1024];
+    qboolean debugger_present = false;
+
+    int status_fd = open( "/proc/self/status", O_RDONLY );
+    if ( status_fd == -1 )
+        return 0;
+
+    ssize_t num_read = read( status_fd, buf, sizeof( buf ) );
+
+    if ( num_read > 0 )
+    {
+        static const char TracerPid[] = "TracerPid:";
+        char *tracer_pid;
+
+        buf[num_read] = 0;
+        tracer_pid    = Q_strstr( buf, TracerPid );
+        if ( tracer_pid )
+            debugger_present = !!Q_atoi( tracer_pid + sizeof( TracerPid ));
+    }
+
+    return debugger_present;
+}
+
+#undef DEBUG_BREAK
+#define DEBUG_BREAK \
+	if( Sys_DebuggerPresent() ) \
+		asm volatile("int $3;")
+		//raise( SIGINT )
+#endif
+
 int printframe( char *buf, int len, int i, void *addr )
 {
 	Dl_info dlinfo;
@@ -547,7 +584,7 @@ void Sys_Error( const char *error, ... )
 {
 	va_list	argptr;
 	char	text[MAX_SYSPATH];
-         
+	DEBUG_BREAK;
 	if( host.state == HOST_ERR_FATAL )
 		return; // don't execute more than once
 
@@ -598,7 +635,7 @@ void Sys_Break( const char *error, ... )
 {
 	va_list	argptr;
 	char	text[MAX_SYSPATH];
-
+	DEBUG_BREAK;
 	if( host.state == HOST_ERR_FATAL )
 		return; // don't multiple executes
 

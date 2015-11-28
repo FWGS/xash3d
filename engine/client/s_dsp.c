@@ -5388,6 +5388,7 @@ void FreeDsps( void )
 	idsp_room = 0;
 	
 	DSP_FreeAll();
+	PSET_FreeAll();
 }
 
 // alloc dsp processors
@@ -5403,6 +5404,9 @@ qboolean AllocDsps( void )
 	dsp_stereo = Cvar_Get( "dsp_stereo", "0", 0, "set to 1 for true stereo processing.  2x perf hits" );
 
 	// alloc dsp room channel (mono, stereo if dsp_stereo is 1)
+
+	if( dsp_room->integer < 0 )
+		Cvar_Set( "dsp_room", "0" );
 
 	// dsp room is mono, 300ms fade time
 	idsp_room = DSP_Alloc( dsp_room->integer, 300, dsp_stereo->integer * 2 );
