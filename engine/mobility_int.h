@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 #define MOBILITY_API_VERSION 1
-#define MOBILITY_CLIENT_EXPORT "HUD_GetMobilityInterface"
+#define MOBILITY_CLIENT_EXPORT "HUD_MobilityInterface"
 
 #define VIBRATE_NORMAL (1 << 0) // just vibrate for given "life"
 
@@ -96,12 +96,17 @@ struct mobile_engfuncs_t
 	// simulate button touching
 	void (*Touch_EmitButton)( int hButton );
 
+	// temporarily disable touch controls
+	void (*Touch_Disable)( qboolean disable );
+
 	// To be continued...
 };
 
+extern mobile_engfuncs_t *gMobileEngfuncs;
+
 // function exported from client
 // returns 0 on no error otherwise error
-typedef int (*pfnGetMobilityInterface)( mobile_engfuncs_t *gMobileEngfuncs );
+typedef int (*pfnMobilityInterface)( mobile_engfuncs_t *gMobileEngfuncs );
 
 #ifdef __cplusplus
 }
