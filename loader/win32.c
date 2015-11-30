@@ -4351,6 +4351,11 @@ static int expprintf(const char* format, ...)
     return r;
 }
 
+static int exp_errno()
+{
+    return errno;
+}
+
 static char* expgetenv(const char* varname)
 {
     char* v = getenv(varname);
@@ -4568,6 +4573,10 @@ static double expatof(const char *s)
 static char exptoupper(char c)
 {
     return toupper(c);
+}
+static char exptolower(char c)
+{
+    return tolower(c);
 }
 #else
 
@@ -5337,7 +5346,8 @@ struct glfuncs
 
 #define UNDEFF(X, Y) \
     {#X, Y, (void*)-1},
-
+#define WRFF(X) \
+    {#X, -1, (void*)&X},
 static const struct exports exp_kernel32[]=
 {
     FF(GetVolumeInformationA,-1)
@@ -5523,15 +5533,37 @@ static const struct exports exp_msvcrt[]={
     {"??2@YAPAXI@Z", -1, expnew},
     {"_adjust_fdiv", -1, (void*)&_adjust_fdiv},
     {"_winver",-1,(void*)&_winver},
+    {"_write",-1,(void*)&write},
+    {"_open",-1,(void*)&open},
+    {"_close",-1,(void*)&close},
+    {"_getcwd",-1,(void*)&getcwd},
+    {"_wgetcwd",-1,(void*)&getcwd},
+    {"_stat",-1,(void*)&stat},
+    {"_unlink",-1,(void*)&unlink},
+    FF(_errno, -1)
     FF(strrchr, -1)
     FF(strchr, -1)
     FF(strlen, -1)
     FF(strcpy, -1)
     FF(strncpy, -1)
+    //FF(strncat, -1)
     FF(wcscpy, -1)
     FF(strcmp, -1)
     FF(strncmp, -1)
     FF(strcat, -1)
+    //FF(strtol, -1)
+    //FF(strspn, -1)
+    //FF(strpbrk, -1)
+    //FF(strerror, -1)
+    WRFF(strncat)
+    WRFF(strtol)
+    WRFF(strspn)
+    WRFF(strpbrk)
+    WRFF(strerror)
+    WRFF(exit)
+    WRFF(ctime)
+    WRFF(abort)
+    
     FF(_stricmp,-1)
     FF(_strnicmp,-1)
     FF(_strdup,-1)
@@ -5540,6 +5572,7 @@ static const struct exports exp_msvcrt[]={
     FF(isspace, -1)
     FF(isalpha, -1)
     FF(isdigit, -1)
+    WRFF(isupper)
     FF(memmove, -1)
     FF(memcmp, -1)
     FF(memset, -1)
@@ -5556,6 +5589,7 @@ static const struct exports exp_msvcrt[]={
     FF(atan2, -1)
     FF(acos, -1)
     FF(toupper, -1)
+    FF(tolower, -1)
     FF(atoi, -1)
     FF(atof, -1)
     FF(tan, -1)
@@ -5576,6 +5610,9 @@ static const struct exports exp_msvcrt[]={
     FF(fopen,-1)
     FF(fclose,-1)
     FF(fwrite,-1)
+    WRFF(fgets)
+    //FF(feof,-1)
+    WRFF(feof)
     FF(_mkdir,-1)
     FF(fprintf,-1)
     FF(printf,-1)
