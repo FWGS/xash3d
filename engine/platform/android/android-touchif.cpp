@@ -337,15 +337,6 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 		tcWeaponWheel = new touchcontrols::TouchControls("weapon_wheel",false,false);
 
 		tcGameMain->signal_settingsButton.connect(  sigc::ptr_fun(&gameSettingsButton) );
-
-		//Menu
-		/*
-		tcMenuMain->addControl(new touchcontrols::Button("down_arrow",touchcontrols::RectF(20,13,23,16),"arrow_down",SDL_SCANCODE_DOWN));
-		tcMenuMain->addControl(new touchcontrols::Button("up_arrow",touchcontrols::RectF(20,10,23,13),"arrow_up",SDL_SCANCODE_UP));
-		tcMenuMain->addControl(new touchcontrols::Button("left_arrow",touchcontrols::RectF(17,13,20,16),"arrow_left",SDL_SCANCODE_LEFT));
-		tcMenuMain->addControl(new touchcontrols::Button("right_arrow",touchcontrols::RectF(23,13,26,16),"arrow_right",SDL_SCANCODE_RIGHT));
-		tcMenuMain->addControl(new touchcontrols::Button("enter",touchcontrols::RectF(0,12,4,16),"enter",SDL_SCANCODE_RETURN));
-		*/
 		touchcontrols::MultitouchMouse *mouseMenu = new touchcontrols::MultitouchMouse("mouse",touchcontrols::RectF(0,0,X,Y),"");
 		//mouseMenu->setHideGraphics(true);
 		tcMenuMain->addControl(mouseMenu);
