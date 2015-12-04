@@ -1246,7 +1246,11 @@ void R_DecalRemoveAll( int textureIndex )
 	{
 		pdecal = &gDecalPool[i];
 
-		if( !textureIndex || pdecal->texture == textureIndex )
+		// don't remove permanent decals
+		if( pdecal->flags & FDECAL_PERMANENT )
+			continue;
+
+		if( !textureIndex || (pdecal->texture == textureIndex) )
 			R_DecalUnlink( pdecal );
 	}
 }
