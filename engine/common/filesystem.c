@@ -721,6 +721,8 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	string		fullpath;
 	int		i;
 
+	MsgDev(D_NOTE, "FS_AddGameDirectory( %s, %i )", dir, flags );
+
 	if(!( flags & FS_NOWRITE_PATH ))
 		Q_strncpy( fs_gamedir, dir, sizeof( fs_gamedir ));
 
@@ -759,6 +761,7 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	search->flags = flags;
 	search->next = fs_searchpaths;
 	fs_searchpaths = search;
+
 }
 
 /*
@@ -771,6 +774,22 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	// Add the common game directory
 	if( dir && *dir )
 	{
+		// add recursively new game directories
+		if( Q_strcmp( dir, GI->gamedir ) )
+		{
+			int i;
+			for( i = 0; i < SI.numgames; i++ )
+			{
+				if( !Q_strcmp( dir, SI.games[i]->gamedir) )
+					break;
+			}
+
+			// if gamedir not equals basedir, add new hierarchy
+			if( Q_strcmp(SI.games[i]->gamedir, SI.games[i]->basedir))
+				FS_AddGameHierarchy( SI.games[i]->basedir, flags );
+		}
+
+
 		FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
 		FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
@@ -1045,6 +1064,10 @@ static qboolean FS_WriteGameInfo( const char *filepath, gameinfo_t *GameInfo )
 		FS_Printf( f, "dllpath\t\t\"%s\"\n", GameInfo->dll_path );	
 	if( Q_strlen( GameInfo->game_dll ))
 		FS_Printf( f, "gamedll\t\t\"%s\"\n", GameInfo->game_dll );
+	if( Q_strlen( GameInfo->game_dll_linux ))
+		FS_Printf( f, "gamedll_linux\t\t\"%s\"\n", GameInfo->game_dll_linux );
+	if( Q_strlen( GameInfo->game_dll_osx ))
+		FS_Printf( f, "gamedll_osx\t\t\"%s\"\n", GameInfo->game_dll_osx );
 
 	if( Q_strlen( GameInfo->iconpath ))
 		FS_Printf( f, "icon\t\t\"%s\"\n", GameInfo->iconpath );
@@ -1133,7 +1156,9 @@ void FS_CreateDefaultGameInfo( const char *filename )
 #else
 	Q_strncpy( defGI.dll_path, "cl_dlls", sizeof( defGI.dll_path ));
 	Q_strncpy( defGI.dll_path, CLIENTDLL, sizeof( defGI.client_lib ));
-	Q_strncpy( defGI.game_dll, "dlls/hl." OS_LIB_EXT, sizeof( defGI.game_dll ));
+	Q_strncpy( defGI.game_dll, "dlls/hl.dll" , sizeof( defGI.game_dll ));
+	Q_strncpy( defGI.game_dll_osx, "dlls/hl.dylib", sizeof(defGI.game_dll_osx));
+	Q_strncpy( defGI.game_dll_linux, "dlls/hl.so", sizeof(defGI.game_dll_linux));
 #endif
 	Q_strncpy( defGI.startmap, "newmap", sizeof( defGI.startmap ));
 	Q_strncpy( defGI.iconpath, "game.ico", sizeof( defGI.iconpath ));
@@ -1178,7 +1203,9 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	Q_strncpy( GameInfo->startmap, "newmap", sizeof( GameInfo->startmap ));
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll_osx, "dlls/hl.dylib", sizeof( GameInfo->game_dll_osx ));
+	Q_strncpy( GameInfo->game_dll_linux, "dlls/hl.so", sizeof( GameInfo->game_dll_linux ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
 	VectorSet( GameInfo->client_mins[0],   0,   0,  0  );
@@ -1375,7 +1402,9 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncat( GameInfo->game_dll,"/" SERVERDLL, sizeof( GameInfo->game_dll ));
 #else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll_osx, "dlls/hl.dylib", sizeof( GameInfo->game_dll_osx ));
+	Q_strncpy( GameInfo->game_dll_linux, "dlls/hl.so", sizeof( GameInfo->game_dll_linux ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 #endif
 	Q_strncpy( GameInfo->startmap, "", sizeof( GameInfo->startmap ));

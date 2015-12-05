@@ -1060,6 +1060,9 @@ void Host_WriteVideoConfig( void )
 {
 	file_t	*f;
 
+	if( host.type == HOST_DEDICATED )
+		return;
+
 	MsgDev( D_NOTE, "Host_WriteVideoConfig()\n" );
 	f = FS_Open( "video.cfg", "w", false );
 	if( f )

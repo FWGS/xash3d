@@ -640,7 +640,6 @@ StudioGetAnim
 mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
 	mstudioseqgroup_t	*pseqgroup;
-	cache_user_t	*paSequences;
 	size_t		filesize;
           byte		*buf;
 
@@ -650,7 +649,7 @@ mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc
 	if( pseqdesc->seqgroup == 0 )
 		return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
 
-	paSequences = (cache_user_t *)m_pSubModel->submodels;
+	cache_user_t *paSequences = (cache_user_t *)m_pSubModel->submodels;
 
 	if( paSequences == NULL )
 	{
@@ -659,7 +658,7 @@ mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc
 	}
 
 	// check for already loaded
-	if( !Mod_CacheCheck(( cache_user_t *)&( paSequences[pseqdesc->seqgroup] )))
+	if( !paSequences[pseqdesc->seqgroup].data )
 	{
 		string	filepath, modelname, modelpath;
 

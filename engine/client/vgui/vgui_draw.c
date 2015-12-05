@@ -234,6 +234,7 @@ void VGui_Shutdown( void )
 		vgui.Shutdown();
 	if(lib)
 		Com_FreeLibrary(lib);
+	lib = NULL;
 	vgui.initialized = false;
 }
 

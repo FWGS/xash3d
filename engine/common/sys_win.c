@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include <dlfcn.h>
 #ifndef __ANDROID__
 extern char **environ;
+#include <pwd.h>
 #endif
 
 #else
@@ -135,7 +136,12 @@ char *Sys_GetCurrentUser( void )
 		return s_userName;
 	return "Player";
 #elif !defined(__ANDROID__)
-	return cuserid( NULL );
+	uid_t uid = geteuid();
+	struct passwd *pw = getpwuid( uid );
+
+	if ( pw ) return pw->pw_name;
+
+	return "Player";
 #else
 	return "Player";
 #endif
@@ -152,8 +158,11 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
 #elif !defined __ANDROID__
 	//signal(SIGCHLD, SIG_IGN);
-	const char* xdgOpen = "/usr/bin/xdg-open"; //TODO: find xdg-open in PATH
-	
+	#if defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
+		const char* xdgOpen = "/usr/local/bin/xdg-open"; //TODO: find xdg-open in PATH
+	#else
+		const char* xdgOpen = "/usr/bin/xdg-open";
+	#endif
 	const char* argv[] = {xdgOpen, path, NULL};
 	pid_t id = fork();
 	if (id == 0) {
@@ -392,6 +401,8 @@ Sys_Crash
 Crash handler, called from system
 ================
 */
+#define DEBUG_BREAK
+/// TODO: implement on windows too
 #ifdef _WIN32
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
@@ -425,8 +436,45 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 }
 #else //if !defined (__ANDROID__) // Android will have other handler
 // Posix signal handler
+#ifdef HAVE_UCONTEXT_H
 #include <ucontext.h>
+#endif
 #include <sys/mman.h>
+
+#ifdef GDB_BREAK
+#include <fcntl.h>
+qboolean Sys_DebuggerPresent( void )
+{
+    char buf[1024];
+    qboolean debugger_present = false;
+
+    int status_fd = open( "/proc/self/status", O_RDONLY );
+    if ( status_fd == -1 )
+        return 0;
+
+    ssize_t num_read = read( status_fd, buf, sizeof( buf ) );
+
+    if ( num_read > 0 )
+    {
+        static const char TracerPid[] = "TracerPid:";
+        char *tracer_pid;
+
+        buf[num_read] = 0;
+        tracer_pid    = Q_strstr( buf, TracerPid );
+        if ( tracer_pid )
+            debugger_present = !!Q_atoi( tracer_pid + sizeof( TracerPid ));
+    }
+
+    return debugger_present;
+}
+
+#undef DEBUG_BREAK
+#define DEBUG_BREAK \
+	if( Sys_DebuggerPresent() ) \
+		asm volatile("int $3;")
+		//raise( SIGINT )
+#endif
+
 int printframe( char *buf, int len, int i, void *addr )
 {
 	Dl_info dlinfo;
@@ -450,12 +498,24 @@ void Sys_Crash( int signal, siginfo_t *si, void *context)
 	int len, stacklen, logfd, i = 0;
 	ucontext_t *ucontext = (ucontext_t*)context;
 #if __i386__
-	void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
+	#ifdef __FreeBSD__
+		void *pc = (void*)ucontext->uc_mcontext.mc_eip, **bp = (void**)ucontext->uc_mcontext.mc_ebp, **sp = (void**)ucontext->uc_mcontext.mc_esp;
+	#elif __NetBSD__
+		void *pc = (void*)ucontext->uc_mcontext.__gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.__gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.__gregs[REG_ESP];
+	#elif __OpenBSD__
+		void *pc = (void*)sc_eip, **bp = (void**)sc_ebp, **sp = (void**)sc_esp;
+	#else
+		void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
+	#endif
 #elif defined (__arm__) // arm not tested
 	void *pc = (void*)ucontext->uc_mcontext.arm_pc, **bp = (void*)ucontext->uc_mcontext.arm_r10, **sp = (void*)ucontext->uc_mcontext.arm_sp;
 #endif
 	// Safe actions first, stack and memory may be corrupted
-	len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr);
+	#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+		len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr);
+	#else
+		len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr);
+	#endif
 	write(2, message, len);
 	// Flush buffers before writing directly to descriptors
 	fflush( stdout );
@@ -524,7 +584,7 @@ void Sys_Error( const char *error, ... )
 {
 	va_list	argptr;
 	char	text[MAX_SYSPATH];
-         
+	DEBUG_BREAK;
 	if( host.state == HOST_ERR_FATAL )
 		return; // don't execute more than once
 
@@ -551,8 +611,9 @@ void Sys_Error( const char *error, ... )
 	{
 		Con_ShowConsole( true );
 		Con_DisableInput();	// disable input line for dedicated server
-		MSGBOX( text );
+
 		Sys_Print( text );	// print error message
+		MSGBOX( text );
 		Sys_WaitForQuit();
 	}
 	else
@@ -575,7 +636,7 @@ void Sys_Break( const char *error, ... )
 {
 	va_list	argptr;
 	char	text[MAX_SYSPATH];
-
+	DEBUG_BREAK;
 	if( host.state == HOST_ERR_FATAL )
 		return; // don't multiple executes
 
@@ -598,6 +659,7 @@ void Sys_Break( const char *error, ... )
 		Con_ShowConsole( true );
 		Con_DisableInput();	// disable input line for dedicated server
 		Sys_Print( text );
+		MSGBOX( text );
 		Sys_WaitForQuit();
 	}
 	else

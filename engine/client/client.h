@@ -503,6 +503,7 @@ extern convar_t	*cl_draw_particles;
 extern convar_t	*cl_levelshot_name;
 extern convar_t	*cl_draw_beams;
 extern convar_t	*cl_lw;
+extern convar_t *cl_trace_events;
 extern convar_t *hud_scale;
 extern convar_t	*scr_centertime;
 extern convar_t	*scr_viewsize;

@@ -48,6 +48,7 @@ convar_t	*cl_cmdrate;
 convar_t	*cl_interp;
 convar_t	*cl_allow_fragment;
 convar_t	*cl_lw;
+convar_t	*cl_trace_events;
 convar_t	*hud_scale;
 
 //
@@ -1632,6 +1633,8 @@ void CL_InitLocal( void )
 	
 	r_oldparticles = Cvar_Get("r_oldparticles", "0", CVAR_ARCHIVE, "make some particle textures a simple square, like with software rendering");
 
+	cl_trace_events = Cvar_Get("cl_trace_events", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable client event tracing (good for developers)");
+
 	// userinfo
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );
 	name = Cvar_Get( "name", Sys_GetCurrentUser(), CVAR_USERINFO|CVAR_ARCHIVE|CVAR_PRINTABLEONLY, "player name" );
@@ -1828,16 +1831,22 @@ void CL_Init( void )
 
 	loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, SI.clientlib ));
 	if( !loaded )
+	{
 #if defined (__ANDROID__)
+		char clientlib[256];
+		Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_GAMELIBDIR"));
+		loaded = CL_LoadProgs( clientlib );
+
+		if( !loaded )
 		{
-			char clientlib[256];
-			Q_strncpy( clientlib, getenv("XASH3D_ENGLIBDIR"), 256 );
-			Q_strncat( clientlib, "/" CLIENTDLL, 256 );
+			Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_ENGLIBDIR"));
 			loaded = CL_LoadProgs( clientlib );
 		}
 #else
 		loaded = CL_LoadProgs( CLIENTDLL );
 #endif
+	}
+
 	if( loaded )
 	{
 		cls.initialized = true;
