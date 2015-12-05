@@ -1017,8 +1017,10 @@ qboolean UI_LoadProgs( void )
 		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false )))
 #elif defined (__ANDROID__)
 		char menulib[256];
-		Q_strncpy( menulib, getenv("XASH3D_ENGLIBDIR"), 256 );
-		Q_strncat( menulib, "/" MENUDLL, 256 );
+		Q_snprintf( menulib, 256, "%s/%s", getenv("XASH3D_GAMELIBDIR"), MENUDLL );
+		if(!!( menu.hInstance = Com_LoadLibrary( menulib, false )))
+			goto success;
+		Q_snprintf( menulib, 256, "%s/%s", getenv("XASH3D_ENGLIBDIR"), MENUDLL );
 		if(!( menu.hInstance = Com_LoadLibrary( menulib, false )))
 #else
 		// Attempt to try finding library by libdl magic on Linux
@@ -1028,7 +1030,7 @@ qboolean UI_LoadProgs( void )
 			FS_AllowDirectPaths( false );
 			return false;
 		}
-
+success:
 		FS_AllowDirectPaths( false );
 	}
 
