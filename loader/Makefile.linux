@@ -9,7 +9,7 @@ INCLUDES = -I. -I$(PWD)
 #INCLUDES += -I$(HLSDK)/utils/vgui/include/
 #DEFINES = -DXASH_VGUI -DXASH_SDL
 
-DEFINES = -DNOEXEC
+#DEFINES = -DNOEXEC
 
 ifneq ($(STATIC),1)
 	DEFINES += -DSDL
