@@ -122,6 +122,8 @@ void openGLStart()
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
 	glMatrixMode(GL_MODELVIEW);
+	glDepthMask(GL_FALSE);
+	glDisable(GL_DEPTH_TEST);
 
 }
 
