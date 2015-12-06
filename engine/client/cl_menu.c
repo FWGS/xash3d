@@ -888,13 +888,6 @@ static void pfnStartBackgroundTrack( const char *introTrack, const char *mainTra
 	S_StartBackgroundTrack( introTrack, mainTrack, 0 );
 }
 
-#ifndef XASH_SDL
-static void pfnEnableTextInput( int enable )
-{
-	// stub
-}
-#endif
-
 // engine callbacks
 static ui_enginefuncs_t gEngfuncs = 
 {

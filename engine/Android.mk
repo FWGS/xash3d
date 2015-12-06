@@ -54,6 +54,7 @@ LOCAL_SRC_FILES := \
            client/cl_game.c \
            client/cl_main.c \
            client/cl_menu.c \
+           client/cl_mobile.c \
            client/cl_parse.c \
            client/cl_pmove.c \
            client/cl_remap.c \

@@ -812,6 +812,12 @@ void pfnPIC_DrawHoles( int x, int y, int width, int height, const wrect_t *prc )
 void pfnPIC_DrawAdditive( int x, int y, int width, int height, const wrect_t *prc );
 
 //
+// cl_mobile.c
+//
+void Mobile_Init( void );
+void Mobile_Destroy( void );
+
+//
 // cl_video.c
 //
 void SCR_InitCinematic( void );

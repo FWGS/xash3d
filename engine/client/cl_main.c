@@ -1846,6 +1846,8 @@ void CL_Init( void )
 
 	if( loaded )
 	{
+		Mobile_Init();
+
 		cls.initialized = true;
 		cl.maxclients = 1; // allow to drawing player in menu
 		cls.olddemonum = -1;
@@ -1870,6 +1872,7 @@ void CL_Shutdown( void )
 
 	CL_CloseDemoHeader();
 	IN_Shutdown ();
+	Mobile_Destroy();
 	SCR_Shutdown ();
 	if( cls.initialized ) 
 	{
