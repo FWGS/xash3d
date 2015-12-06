@@ -157,7 +157,7 @@ void Mobile_Init( void )
 	gButtons[TOUCH_ACT_INVNEXT	].pszCommand = "invnext";
 	gButtons[TOUCH_ACT_INVPREV	].pszCommand = "invprev";
 	gButtons[TOUCH_ACT_RELOAD	].pszCommand = "+reload";
-	gButtons[TOUCH_ACT_CROUCH	].pszCommand = "+crouch";
+	gButtons[TOUCH_ACT_CROUCH	].pszCommand = "+duck";
 	gButtons[TOUCH_ACT_SHOOT	].pszCommand = "+attack";
 	gButtons[TOUCH_ACT_LIGHT	].pszCommand = "impulse 100";
 	gButtons[TOUCH_ACT_JUMP		].pszCommand = "+jump";
