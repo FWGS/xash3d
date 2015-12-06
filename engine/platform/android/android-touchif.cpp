@@ -27,16 +27,13 @@
 #include "JNITouchControlsUtils.h"
 
 
-
+extern "C"
+{
+#include "wrect.h"
+#include "mobility_int.h"
 #include "android-gameif.h"
 #include "nanogl.h"
 
-extern "C"
-{
-#ifdef XASH_SDL
-void SDL_SetSwapBufferCallBack(void (*pt2Func)(void));
-//#include "SDL_keycode.h"
-#endif
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,"JNI", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "JNI", __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR,"JNI", __VA_ARGS__))
@@ -76,6 +73,8 @@ touchcontrols::TouchControls *tcMenuMain=0;
 touchcontrols::TouchControls *tcGameMain=0;
 touchcontrols::TouchControls *tcGameWeapons=0;
 touchcontrols::TouchControls *tcWeaponWheel=0;
+
+int ScaleX, ScaleY;
 
 //So can hide and show these buttons
 touchcontrols::Button *nextWeapon=0;
@@ -168,7 +167,7 @@ void gameButton(int state,int code)
 	if (code == KEY_SHOOT)
 	{
 		shooting = state;
-		PortableAction(state,PORT_ACT_ATTACK);
+		PortableAction(state,TOUCH_ACT_SHOOT);
 	}
 	else if (code == KEY_SHOW_WEAPONS)
 	{
@@ -250,10 +249,7 @@ float pitch_sens,yaw_sens;
 void left_stick(float joy_x, float joy_y,float mouse_x, float mouse_y)
 {
 	joy_x *=10;
-	//float strafe = joy_x*joy_x;
 	float strafe = joy_x;
-	//if (joy_x < 0)
-	//	strafe *= -1;
 
 	PortableMove(joy_y * 15 * forward_sens,-strafe * strafe_sens);
 }
@@ -313,8 +309,8 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 	touchcontrols::GLScaleHeight = (float)height;
 	int X = 26;
 	int Y = (int)(26.0f*(-height)/width);
-	touchcontrols::ScaleX = X;
-	touchcontrols::ScaleY = Y;
+	touchcontrols::ScaleX = ScaleX = X;
+	touchcontrols::ScaleY = ScaleY = Y;
 
 
 	LOGI("initControls %d x %d,x path = %s, settings = %s",width,height,graphics_path,settings_file);
@@ -351,23 +347,44 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 
 		//Game
 		tcGameMain->setAlpha(gameControlsAlpha);
-		tcGameMain->addControl(new touchcontrols::Button("attack",touchcontrols::RectF(X-6,7,X-3,10),"shoot",KEY_SHOOT));
-		tcGameMain->addControl(new touchcontrols::Button("attack_alt",touchcontrols::RectF(X-6,4,X-3,7),"shoot_alt",PORT_ACT_ATTACK_ALT));
-		tcGameMain->addControl(new touchcontrols::Button("use",touchcontrols::RectF(X-3,6,X,9),"use",PORT_ACT_USE));
-		tcGameMain->addControl(new touchcontrols::Button("quick_save",touchcontrols::RectF(X-4,0,X-2,2),"save",PORT_ACT_QUICKSAVE));
-		tcGameMain->addControl(new touchcontrols::Button("quick_load",touchcontrols::RectF(X-6,0,X-4,2),"load",PORT_ACT_QUICKLOAD));
-		tcGameMain->addControl(new touchcontrols::Button("flashlight",touchcontrols::RectF(X-2,0,X,2),"flash_light_filled",PORT_ACT_LIGHT));
-		tcGameMain->addControl(new touchcontrols::Button("jump",touchcontrols::RectF(X-3,3,X,6),"jump",PORT_ACT_JUMP));
-		tcGameMain->addControl(new touchcontrols::Button("crouch",touchcontrols::RectF(X-3,Y-3,X,Y),"crouch",PORT_ACT_DOWN));
 
-		tcGameMain->addControl(new touchcontrols::Button("show_weapons",touchcontrols::RectF(11,Y-2,13,Y),"show_weapons",KEY_SHOW_WEAPONS));
 
-		nextWeapon = new touchcontrols::Button("next_weapon",touchcontrols::RectF(0,2,3,5),"next_weap",PORT_ACT_NEXT_WEP);
+		tcGameMain->addControl(new touchcontrols::Button("attack",
+			touchcontrols::RectF(X-6, 7, X-3, 10), "shoot", TOUCH_ACT_SHOOT));
+
+		tcGameMain->addControl(new touchcontrols::Button("attack_alt",
+			touchcontrols::RectF(X-6, 4, X-3, 7), "shoot_alt", TOUCH_ACT_SHOOT_ALT));
+
+		tcGameMain->addControl(new touchcontrols::Button("use",
+			touchcontrols::RectF(X-3, 6, X, 9),   "use", TOUCH_ACT_USE));
+
+		tcGameMain->addControl(new touchcontrols::Button("quick_save",
+			touchcontrols::RectF(X-4, 0, X-2, 2), "save", TOUCH_ACT_QUICKSAVE));
+
+		tcGameMain->addControl(new touchcontrols::Button("quick_load",
+			touchcontrols::RectF(X-6, 0, X-4, 2), "load", TOUCH_ACT_QUICKLOAD));
+
+		tcGameMain->addControl(new touchcontrols::Button("flashlight",
+			touchcontrols::RectF(X-2, 0, X, 2),   "flash_light_filled", TOUCH_ACT_LIGHT));
+
+		tcGameMain->addControl(new touchcontrols::Button("jump",
+			touchcontrols::RectF(X-3, 3, X, 6),   "jump", TOUCH_ACT_JUMP));
+
+		tcGameMain->addControl(new touchcontrols::Button("crouch",
+			touchcontrols::RectF(X-3, Y-3, X, Y), "crouch", TOUCH_ACT_CROUCH));
+
+		tcGameMain->addControl(new touchcontrols::Button("show_weapons",
+			touchcontrols::RectF(11, Y-2, 13, Y), "show_weapons", TOUCH_ACT_SHOW_NUMBERS));
+
+		tcGameMain->addControl(new touchcontrols::Button("reload",
+			touchcontrols::RectF(0, 5, 3, 8),     "reload", TOUCH_ACT_RELOAD));
+
+
+		nextWeapon = new touchcontrols::Button("next_weapon",touchcontrols::RectF(0,8,3,11),"next_weap", TOUCH_ACT_INVNEXT);
+		prevWeapon = new touchcontrols::Button("prev_weapon",touchcontrols::RectF(0,2,3,5),"prev_weap", TOUCH_ACT_INVPREV);
+
 		tcGameMain->addControl(nextWeapon);
-		prevWeapon = new touchcontrols::Button("prev_weapon",touchcontrols::RectF(0,8,3,11),"prev_weap",PORT_ACT_PREV_WEP);
 		tcGameMain->addControl(prevWeapon);
-
-		tcGameMain->addControl(new touchcontrols::Button("reload",touchcontrols::RectF(0,5,3,8),"reload",PORT_ACT_RELOAD));
 
 
 		touchJoyLeft = new touchcontrols::TouchJoy("stick",touchcontrols::RectF(0,7,8,Y),"strafe_arrow");
@@ -381,22 +398,22 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 		touchJoyRight->signal_double_tap.connect(sigc::ptr_fun(&right_double_tap) );
 
 		tcGameMain->signal_button.connect(  sigc::ptr_fun(&gameButton) );
-#define BY Y-2
-		//Weapons
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,BY,3,Y),"key_1",'1'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon2",touchcontrols::RectF(3,BY,5,Y),"key_2",'2'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon3",touchcontrols::RectF(5,BY,7,Y),"key_3",'3'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon4",touchcontrols::RectF(7,BY,9,Y),"key_4",'4'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon5",touchcontrols::RectF(9,BY,11,Y),"key_5",'5'));
 
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon6",touchcontrols::RectF(15,BY,17,Y),"key_6",'6'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon7",touchcontrols::RectF(17,BY,19,Y),"key_7",'7'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon8",touchcontrols::RectF(19,BY,21,Y),"key_8",'8'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon9",touchcontrols::RectF(21,BY,23,Y),"key_9",'9'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon0",touchcontrols::RectF(23,BY,25,Y),"key_0",'0'));
+		// Weapon
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,Y-2,3,Y),"key_1",'1'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon2",touchcontrols::RectF(3,Y-2,5,Y),"key_2",'2'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon3",touchcontrols::RectF(5,Y-2,7,Y),"key_3",'3'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon4",touchcontrols::RectF(7,Y-2,9,Y),"key_4",'4'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon5",touchcontrols::RectF(9,Y-2,11,Y),"key_5",'5'));
+
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon6",touchcontrols::RectF(15,Y-2,17,Y),"key_6",'6'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon7",touchcontrols::RectF(17,Y-2,19,Y),"key_7",'7'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon8",touchcontrols::RectF(19,Y-2,21,Y),"key_8",'8'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon9",touchcontrols::RectF(21,Y-2,23,Y),"key_9",'9'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon0",touchcontrols::RectF(23,Y-2,25,Y),"key_0",'0'));
 		tcGameWeapons->signal_button.connect(  sigc::ptr_fun(&selectWeaponButton) );
 		tcGameWeapons->setAlpha(0.8);
-#undef BY
+
 		//Weapon wheel
 		touchcontrols::WheelSelect *wheel = new touchcontrols::WheelSelect("weapon_wheel",touchcontrols::RectF(7,2,19,Y-2),"weapon_wheel",10);
 		wheel->signal_selected.connect(sigc::ptr_fun(&weaponWheel) );
@@ -416,8 +433,6 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 	else
 		LOGI("NOT creating controls");
 }
-
-//extern void flush(); //in glshim/arc/gl/gl.c
 
 int inMenuLast = 1;
 int inAutomapLast = 0;
@@ -460,15 +475,29 @@ extern "C" void Android_DrawControls()
 
 	weaponCycle(showWeaponCycle);
 	setHideSticks(!showSticks);
-
-	//flush(); //draw out game from glshim
-	//nanoGL_Flush();
 	
 	controlsContainer.draw();
-	
-	//flush(); //draw out controls from glshim
-	// glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	// glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Android_AddButton( touchbutton_t *button )
+{
+	touchcontrols::RectF rect = touchcontrols::RectF( button->sRect.left,
+		button->sRect.top, button->sRect.right, button->sRect.bottom );
+
+	touchcontrols::Button *butt = new touchcontrols::Button(button->pszCommand,
+		rect,
+		button->pszImageName,
+		button->hButton);
+
+	tcGameMain->addControl( butt );
+
+	button->object = (void*)butt;
+}
+
+
+void Android_TouchDisable( bool disable )
+{
+
 }
 
 
@@ -496,10 +525,10 @@ void setTouchSettings(float alpha,float strafe,float fwd,float pitch,float yaw,i
 	switch ((other>>4) & 0xF)
 	{
 	case 1:
-		left_double_action = PORT_ACT_ATTACK;
+		left_double_action = TOUCH_ACT_SHOOT;
 		break;
 	case 2:
-		left_double_action = PORT_ACT_JUMP;
+		left_double_action = TOUCH_ACT_JUMP;
 		break;
 	default:
 		left_double_action = 0;
@@ -508,10 +537,10 @@ void setTouchSettings(float alpha,float strafe,float fwd,float pitch,float yaw,i
 	switch ((other>>8) & 0xF)
 	{
 	case 1:
-		right_double_action = PORT_ACT_ATTACK;
+		right_double_action = TOUCH_ACT_SHOOT;
 		break;
 	case 2:
-		right_double_action = PORT_ACT_JUMP;
+		right_double_action = TOUCH_ACT_JUMP;
 		break;
 	default:
 		right_double_action = 0;
