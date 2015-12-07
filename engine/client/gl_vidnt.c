@@ -1536,6 +1536,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
+#ifndef NO_ICO
 #if defined(__ANDROID__)
 	// TODO: Find a way to change icon in runtime in Android
 #elif defined(_WIN32)
@@ -1589,6 +1590,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 	// ico is NULL because there is no resource for standart icon. Sorry about that.
 	if(ico) SDL_SetWindowIcon(host.hWnd, ico);
+#endif
 #endif
 
 	SDL_ShowWindow( host.hWnd );
@@ -1672,8 +1674,9 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 	}
 	else
 	{
+		int error;
 		SDL_SetWindowSize(host.hWnd, vidmode[vid_mode].width, vidmode[vid_mode].height );
-		int error = SDL_SetWindowFullscreen(host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN : false);
+		error = SDL_SetWindowFullscreen(host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN : false);
 		if( error )
 		{
 			MsgDev(D_ERROR, "Cannot change resolution: %s", SDL_GetError());
@@ -1713,11 +1716,12 @@ qboolean VID_SetMode( void )
 	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
 	{
 		SDL_DisplayMode mode;
+		int iScreenWidth, iScreenHeight;
 
 		SDL_GetDesktopDisplayMode(0, &mode);
 
-		int	iScreenWidth = mode.w;
-		int	iScreenHeight = mode.h;
+		iScreenWidth = mode.w;
+		iScreenHeight = mode.h;
 
 		if( R_DescribeVIDMode( iScreenWidth, iScreenHeight ))
 		{

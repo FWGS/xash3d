@@ -641,7 +641,8 @@ mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc
 {
 	mstudioseqgroup_t	*pseqgroup;
 	size_t		filesize;
-          byte		*buf;
+	byte		*buf;
+	cache_user_t	*paSequences;
 
 	ASSERT( m_pSubModel );	
 
@@ -649,7 +650,7 @@ mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc
 	if( pseqdesc->seqgroup == 0 )
 		return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
 
-	cache_user_t *paSequences = (cache_user_t *)m_pSubModel->submodels;
+	paSequences = (cache_user_t *)m_pSubModel->submodels;
 
 	if( paSequences == NULL )
 	{
