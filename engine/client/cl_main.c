@@ -1846,8 +1846,6 @@ void CL_Init( void )
 
 	if( loaded )
 	{
-		Mobile_Init();
-
 		cls.initialized = true;
 		cl.maxclients = 1; // allow to drawing player in menu
 		cls.olddemonum = -1;

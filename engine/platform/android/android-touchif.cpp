@@ -395,17 +395,17 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 		tcGameMain->signal_button.connect(  sigc::ptr_fun(&gameButton) );
 
 		// Weapon
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,Y-2,3,Y),"key_1", TOUCH_ACT_1));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon2",touchcontrols::RectF(3,Y-2,5,Y),"key_2", TOUCH_ACT_2));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon3",touchcontrols::RectF(5,Y-2,7,Y),"key_3", TOUCH_ACT_3));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon4",touchcontrols::RectF(7,Y-2,9,Y),"key_4", TOUCH_ACT_4));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon5",touchcontrols::RectF(9,Y-2,11,Y),"key_5", TOUCH_ACT_5));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,Y-2,3,Y),"key_1", '1'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon2",touchcontrols::RectF(3,Y-2,5,Y),"key_2", '2'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon3",touchcontrols::RectF(5,Y-2,7,Y),"key_3", '3'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon4",touchcontrols::RectF(7,Y-2,9,Y),"key_4", '4'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon5",touchcontrols::RectF(9,Y-2,11,Y),"key_5", '5'));
 
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon6",touchcontrols::RectF(15,Y-2,17,Y),"key_6", TOUCH_ACT_6));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon7",touchcontrols::RectF(17,Y-2,19,Y),"key_7", TOUCH_ACT_7));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon8",touchcontrols::RectF(19,Y-2,21,Y),"key_8", TOUCH_ACT_8));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon9",touchcontrols::RectF(21,Y-2,23,Y),"key_9", TOUCH_ACT_9));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon0",touchcontrols::RectF(23,Y-2,25,Y),"key_0", TOUCH_ACT_0));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon6",touchcontrols::RectF(15,Y-2,17,Y),"key_6", '6'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon7",touchcontrols::RectF(17,Y-2,19,Y),"key_7", '7'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon8",touchcontrols::RectF(19,Y-2,21,Y),"key_8", '8'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon9",touchcontrols::RectF(21,Y-2,23,Y),"key_9", '9'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon0",touchcontrols::RectF(23,Y-2,25,Y),"key_0", '0'));
 		tcGameWeapons->signal_button.connect(  sigc::ptr_fun(&selectWeaponButton) );
 		tcGameWeapons->setAlpha(0.8);
 
@@ -482,6 +482,10 @@ void Android_AddButton( touchbutton_t *button )
 	touchcontrols::RectF rect = touchcontrols::RectF( button->sRect.left,
 		button->sRect.top, button->sRect.right, button->sRect.bottom );
 
+	LOGI("New button: %i %i %i %i %s %i", button->sRect.left,
+		button->sRect.top, button->sRect.right, button->sRect.bottom, button->pszImageName,
+		button->hButton);
+
 	touchcontrols::Button *butt = new touchcontrols::Button(button->pszCommand,
 		rect,
 		button->pszImageName,
@@ -505,6 +509,10 @@ void Android_TouchDisable( bool disable )
 
 }
 
+void Android_RemoveButton( touchbutton_t *button )
+{
+
+}
 
 void setTouchSettings(float alpha,float strafe,float fwd,float pitch,float yaw,int other)
 {

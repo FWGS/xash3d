@@ -100,7 +100,7 @@ typedef struct mobile_engfuncs_s
 	// xsize, ysize -- size
 	// hButton -- integer given by Touch_RegiserButton
 	// pszImage -- path to image for button. May be in any format that supported by Xash3D
-	touchbutton_t *(*Touch_AddCustomButton)( int xpos, int ypos, int xsize, int ysize, int hButton, const char *pszImageName);
+	touchbutton_t *(*Touch_AddCustomButton)( int x1, int y1, int x2, int y2, int hButton, const char *pszImageName);
 
 	// get touchbutton_t struct for button ID
 	// even for predefined buttons

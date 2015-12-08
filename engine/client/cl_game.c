@@ -4101,6 +4101,7 @@ qboolean CL_LoadProgs( const char *name )
 	{
 		MsgDev( D_WARN, "CL_LoadProgs: couldn't get render API\n" );
 	}
+	Mobile_Init(); // Xash3D extension: mobile interface
 
 	// initialize game
 	clgame.dllFuncs.pfnInit();

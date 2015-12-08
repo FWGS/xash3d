@@ -117,8 +117,8 @@ static void DoCommand(int state,const char * cmd)
 	char cmdfull[50];
 
 	cmdfull[0] = state ? '+' : '-';
-	strcpy(cmdfull + 1, cmd, strlen(cmd));
-	cmdfull[strlen(cmd) + 2] = '\0'
+	strcpy(cmdfull + 1, cmd);
+	cmdfull[strlen(cmd) + 2] = '\0';
 
 	PostCommand(cmdfull);
 }

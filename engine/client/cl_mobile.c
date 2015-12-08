@@ -70,11 +70,11 @@ static int Touch_RegisterButton( const char *cmdname )
 	int i;
 	for( i = TOUCH_ACT_USER; i < TOUCH_ACT_MAX; i++ )
 	{
-		if( gButtons[i].hButton < 0 )
+		if( gButtons[i].object == 0 )
 		{
 			gButtons[i].hButton = i;
-			gButtons[i].pszCommand = Mem_Alloc( cls.mempool, strlen(cmdname));
-			Q_strncpy( gButtons[i].pszCommand, cmdname, strlen(cmdname) );
+			gButtons[i].pszCommand = Mem_Alloc( cls.mempool, strlen(cmdname) + 1 );
+			Q_strncpy( gButtons[i].pszCommand, cmdname, strlen(cmdname) + 1 );
 			return i;
 		}
 	}
@@ -87,8 +87,8 @@ static touchbutton_t *Touch_AddCustomButton(int x1, int y1, int x2, int y2, int 
 {
 	SET_BUTTON_SRECT(hButton, x1, y1, x2, y2);
 
-	gButtons[hButton].pszImageName = Mem_Alloc( cls.mempool, strlen(pszImageName));
-	Q_strncpy( gButtons[hButton].pszImageName, pszImageName, strlen(pszImageName) );
+	gButtons[hButton].pszImageName = Mem_Alloc( cls.mempool, strlen(pszImageName) + 1);
+	Q_strncpy( gButtons[hButton].pszImageName, pszImageName, strlen(pszImageName) + 1 );
 
 #if defined(__ANDROID__)
 	Android_AddButton( &gButtons[hButton] );
@@ -101,12 +101,12 @@ static touchbutton_t *Touch_GetButtonByID( int hButton )
 {
 	ASSERT( hButton > 0 && hButton <= TOUCH_ACT_MAX );
 
-	return hButton;
+	return &gButtons[hButton];
 }
 
 static void Touch_RemoveButton( touchbutton_t *pButton )
 {
-	pButton->hButton = -1;
+	Android_RemoveButton( pButton );
 }
 
 static void Touch_EmitButton( int hButton )
