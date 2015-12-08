@@ -479,6 +479,7 @@ void IN_MouseEvent( int mstate )
 			{
 				SDL_SetRelativeMouseMode( SDL_FALSE );
 				SDL_ShowCursor( SDL_TRUE );
+			}
 			else
 				SDL_SetRelativeMouseMode( SDL_TRUE );
 		}

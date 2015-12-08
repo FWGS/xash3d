@@ -42,13 +42,13 @@
     <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
     <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;..\..\halflife\utils\vgui\lib\win32_vc6;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
-    <TargetName>xash</TargetName>
+    <TargetName>xash_sdl</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
     <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;..\..\halflife\utils\vgui\lib\win32_vc6;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
-    <TargetName>xash</TargetName>
+    <TargetName>xash_sdl</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

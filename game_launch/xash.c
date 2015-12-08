@@ -45,7 +45,11 @@ GNU General Public License for more details.
  #define dlmount(x) LoadLibraryA(x)
  #define dlclose(x) FreeLibrary(x)
  #define dlsym(x,y) GetProcAddress(x,y)
- #define XASHLIB                 "xash.dll"
+#ifdef XASH_SDL
+ #define XASHLIB                 "xash_sdl.dll"
+#else
+ #define XASHLIB                 "xash_dedicated.dll"
+#endif
  #include "windows.h" 
 #endif
 
