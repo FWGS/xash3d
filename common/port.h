@@ -128,8 +128,6 @@ GNU General Public License for more details.
 	#define CLIENTDLL "client." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
 	#if _MSC_VER == 1200
-		#define cosf cos
-		#define sinf sin
 		#define vsnprintf _vsnprintf
 		#define NO_ICO
 	#endif

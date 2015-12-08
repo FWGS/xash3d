@@ -188,14 +188,16 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 		iTotalWidth += abcA;
 		int iWide = abcB;
 
-		if( !isspace( ch ))
+		//if( !iswspace( ch ))
 		{
 			// get the character texture from the cache
 			int iTexId = 0;
 			float *texCoords = NULL;
 
 			if( !g_FontCache->GetTextureForChar( _hCurrentFont, ch, &iTexId, &texCoords ))
+			{
 				continue;
+			}
 
 			Assert( texCoords != NULL );
 
