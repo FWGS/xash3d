@@ -775,18 +775,20 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	if( dir && *dir )
 	{
 		// add recursively new game directories
-		if( Q_strcmp( dir, GI->gamedir ) )
+		if( Q_strnicmp( dir, GI->gamedir, 64 ) )
 		{
 			int i;
 			for( i = 0; i < SI.numgames; i++ )
 			{
-				if( !Q_strcmp( dir, SI.games[i]->gamedir) )
-					break;
+				ASSERT(SI.games[i]);
+				MsgDev( D_NOTE, "%d %s %s\n", i, SI.games[i]->gamedir, SI.games[i]->basedir );
+				if( !Q_strnicmp( dir, SI.games[i]->gamedir, 64 ) )
+				{
+					if( Q_strnicmp( SI.games[i]->gamedir, SI.games[i]->basedir, 64 ) )
+						FS_AddGameHierarchy( SI.games[i]->basedir, flags );
+				}
 			}
 
-			// if gamedir not equals basedir, add new hierarchy
-			if( Q_strcmp(SI.games[i]->gamedir, SI.games[i]->basedir))
-				FS_AddGameHierarchy( SI.games[i]->basedir, flags );
 		}
 
 
