@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "cdll_int.h"
 #include "menu_int.h"
+#include "mobility_int.h"
 #include "cl_entity.h"
 #include "com_model.h"
 #include "mod_local.h"
@@ -814,6 +815,7 @@ void pfnPIC_DrawAdditive( int x, int y, int width, int height, const wrect_t *pr
 //
 // cl_mobile.c
 //
+extern touchbutton_t gButtons[TOUCH_ACT_MAX];
 void Mobile_Init( void );
 void Mobile_Destroy( void );
 

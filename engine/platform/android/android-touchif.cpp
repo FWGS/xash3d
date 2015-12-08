@@ -32,6 +32,7 @@ extern "C"
 #include "wrect.h"
 #include "mobility_int.h"
 #include "android-gameif.h"
+#include "common.h"
 #include "nanogl.h"
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,"JNI", __VA_ARGS__))
@@ -164,24 +165,19 @@ static jmethodID swapBuffersMethod = 0;
 static unsigned int reload_time_down;
 void gameButton(int state,int code)
 {
-	if (code == KEY_SHOOT)
+	if (code == TOUCH_ACT_SHOW_NUMBERS)
 	{
-		shooting = state;
-		PortableAction(state,TOUCH_ACT_SHOOT);
+		if( state == 1 && !tcGameWeapons->enabled)
+		{
+			tcGameWeapons->animateIn(5);
+		}
+		return;
 	}
-	else if (code == KEY_SHOW_WEAPONS)
-	{
-		if (state == 1)
-			if (!tcGameWeapons->enabled)
-			{
 
-				tcGameWeapons->animateIn(5);
-			}
-	}
-	else
-	{
-		PortableAction(state, code);
-	}
+	if (code == TOUCH_ACT_SHOOT)
+		shooting = state;
+
+	PortableAction(state, code);
 }
 
 
@@ -190,7 +186,6 @@ void weaponWheelSelected(int enabled)
 {
 	if (enabled)
 		tcWeaponWheel->fade(touchcontrols::FADE_IN,5); //fade in
-
 }
 
 void menuMouse(int action,float x, float y,float dx, float dy)
@@ -400,17 +395,17 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 		tcGameMain->signal_button.connect(  sigc::ptr_fun(&gameButton) );
 
 		// Weapon
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,Y-2,3,Y),"key_1",'1'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon2",touchcontrols::RectF(3,Y-2,5,Y),"key_2",'2'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon3",touchcontrols::RectF(5,Y-2,7,Y),"key_3",'3'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon4",touchcontrols::RectF(7,Y-2,9,Y),"key_4",'4'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon5",touchcontrols::RectF(9,Y-2,11,Y),"key_5",'5'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,Y-2,3,Y),"key_1", TOUCH_ACT_1));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon2",touchcontrols::RectF(3,Y-2,5,Y),"key_2", TOUCH_ACT_2));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon3",touchcontrols::RectF(5,Y-2,7,Y),"key_3", TOUCH_ACT_3));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon4",touchcontrols::RectF(7,Y-2,9,Y),"key_4", TOUCH_ACT_4));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon5",touchcontrols::RectF(9,Y-2,11,Y),"key_5", TOUCH_ACT_5));
 
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon6",touchcontrols::RectF(15,Y-2,17,Y),"key_6",'6'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon7",touchcontrols::RectF(17,Y-2,19,Y),"key_7",'7'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon8",touchcontrols::RectF(19,Y-2,21,Y),"key_8",'8'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon9",touchcontrols::RectF(21,Y-2,23,Y),"key_9",'9'));
-		tcGameWeapons->addControl(new touchcontrols::Button("weapon0",touchcontrols::RectF(23,Y-2,25,Y),"key_0",'0'));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon6",touchcontrols::RectF(15,Y-2,17,Y),"key_6", TOUCH_ACT_6));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon7",touchcontrols::RectF(17,Y-2,19,Y),"key_7", TOUCH_ACT_7));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon8",touchcontrols::RectF(19,Y-2,21,Y),"key_8", TOUCH_ACT_8));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon9",touchcontrols::RectF(21,Y-2,23,Y),"key_9", TOUCH_ACT_9));
+		tcGameWeapons->addControl(new touchcontrols::Button("weapon0",touchcontrols::RectF(23,Y-2,25,Y),"key_0", TOUCH_ACT_0));
 		tcGameWeapons->signal_button.connect(  sigc::ptr_fun(&selectWeaponButton) );
 		tcGameWeapons->setAlpha(0.8);
 
@@ -428,7 +423,10 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 		controlsContainer.addControlGroup(tcWeaponWheel);
 		controlsCreated = 1;
 
+#if 0
+		// global settings
 		tcGameMain->setXMLFile(settings_file);
+#endif
 	}
 	else
 		LOGI("NOT creating controls");
@@ -494,6 +492,13 @@ void Android_AddButton( touchbutton_t *button )
 	button->object = (void*)butt;
 }
 
+void Android_TouchInit( touchbutton_t *button )
+{
+	char custom_settings_file[MAX_SYSPATH];
+	sprintf(custom_settings_file, "%s/%s/game_controls.xml", getenv( "XASH3D_BASEDIR" ), GI->gamedir);
+	tcGameMain->setXMLFile(custom_settings_file);
+}
+
 
 void Android_TouchDisable( bool disable )
 {
@@ -508,18 +513,18 @@ void setTouchSettings(float alpha,float strafe,float fwd,float pitch,float yaw,i
 	if (tcGameMain)
 		tcGameMain->setAlpha(gameControlsAlpha);
 
-	showWeaponCycle = other & 0x1?true:false;
-	turnMouseMode   = other & 0x2?true:false;
-	invertLook      = other & 0x4?true:false;
-	precisionShoot  = other & 0x8?true:false;
-	showSticks      = other & 0x1000?true:false;
-	enableWeaponWheel  = other & 0x2000?true:false;
+	showWeaponCycle = other & 0x1;
+	turnMouseMode   = other & 0x2;
+	invertLook      = other & 0x4;
+	precisionShoot  = other & 0x8;
+	showSticks      = other & 0x1000;
+	enableWeaponWheel  = other & 0x2000;
 
 	if (tcWeaponWheel)
 		tcWeaponWheel->setEnabled(enableWeaponWheel);
 
 
-	hideTouchControls = other & 0x80000000?true:false;
+	hideTouchControls = other & 0x80000000;
 
 
 	switch ((other>>4) & 0xF)

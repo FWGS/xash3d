@@ -37,7 +37,6 @@ extern "C" {
 #define TOUCH_ACT_QUICKSAVE_NAME	"save"
 #define TOUCH_ACT_QUICKLOAD_NAME	"load"
 #define TOUCH_ACT_SHOW_NUMBERS_NAME "show_weapons"
-#define TOUCH_ACT_NUMBER_NAME(x)	"key_##x"
 
 // these controls are added by engine.
 enum {
@@ -53,17 +52,18 @@ enum {
 	TOUCH_ACT_QUICKSAVE,
 	TOUCH_ACT_QUICKLOAD,
 	TOUCH_ACT_SHOW_NUMBERS,
-	/*TOUCH_ACT_1,
+	TOUCH_ACT_0,
+	TOUCH_ACT_1,
 	TOUCH_ACT_2,
 	TOUCH_ACT_3,
 	TOUCH_ACT_4,
 	TOUCH_ACT_5,
-	TOUCH_ACT_6,			always binded to real keyboard numbers
+	TOUCH_ACT_6,			// numbers always binded to real keyboard numbers
 	TOUCH_ACT_7,
 	TOUCH_ACT_8,
 	TOUCH_ACT_9,
-	TOUCH_ACT_0,*/
-	TOUCH_ACT_USER = 32,
+	TOUCH_ACT_LAST,
+	TOUCH_ACT_USER = 24,
 	TOUCH_ACT_MAX = 64
 };
 
@@ -80,7 +80,9 @@ typedef struct touchbutton_s
 
 typedef struct mobile_engfuncs_s
 {
-	int version; // indicates version of API. Should be equal to MOBILITY_API_VERSION
+	// indicates version of API. Should be equal to MOBILITY_API_VERSION
+	// version changes when existing functions are changes
+	int version;
 
 	// vibration control
 	// life -- time to vibrate in ms
@@ -112,6 +114,12 @@ typedef struct mobile_engfuncs_s
 
 	// temporarily disable touch controls
 	void (*Touch_Disable)( int disable );
+
+	// add to weapon wheel custom commands
+	// cmds -- array of commands
+	// segments -- sizeof(cmds)
+	// pszImage -- path to image
+	void (*Touch_SetWeaponWheel)( const char **cmds, int segments, const char *pszImageName );
 
 	// To be continued...
 } mobile_engfuncs_t;

@@ -22,9 +22,6 @@ extern "C"
 #include <jni.h>
 }
 
-touchbutton_t *gpButtons;
-
-
 #include "MultitouchMouse.h"
 
 
@@ -119,20 +116,29 @@ static void DoCommand(int state,const char * cmd)
 {
 	char cmdfull[50];
 
-	if (state)
-		sprintf(cmdfull,"+%s",cmd);
-	else
-		sprintf(cmdfull,"-%s",cmd);
+	cmdfull[0] = state ? '+' : '-';
+	strcpy(cmdfull + 1, cmd, strlen(cmd));
+	cmdfull[strlen(cmd) + 2] = '\0'
+
 	PostCommand(cmdfull);
 }
 void PortableAction(int state, int action)
 {
 	LOGI("PortableAction %d   %d",state,action);
 
-	if( gpButtons[action].pszCommand[0] == '+' )
-		DoCommand( state, gpButtons[action].pszCommand + 1);
-	else if( state )
-		PostCommand( gpButtons[action].pszCommand );
+	if( action >= TOUCH_ACT_0 && action <= TOUCH_ACT_9)
+	{
+		PortableKeyEvent( state, action - TOUCH_ACT_0 + '0', 0 );
+	}
+
+	if( gButtons[action].pszCommand )
+	{
+		if( gButtons[action].pszCommand[0] == '+' )
+			DoCommand( state, gButtons[action].pszCommand + 1);
+		else if( state )
+			PostCommand( gButtons[action].pszCommand );
+		return;
+	}
 	return;
 }
 
@@ -271,11 +277,6 @@ void Android_Events()
 	pthread_mutex_unlock(&events_mutex);
 }
 
-void Android_TouchInit( touchbutton_t *buttons )
-{
-	gpButtons = buttons;
-}
-
 void Android_Vibrate( float life, char flags )
 {
 	long time = (long)life;
@@ -288,8 +289,6 @@ void Android_Vibrate( float life, char flags )
 
 	if (mid == 0)
 		return;
-
-	LOGI("Android_Vibrate %d   %c", time, flags);
 
 	env->CallVoidMethod(obj, mid, time);
 }
