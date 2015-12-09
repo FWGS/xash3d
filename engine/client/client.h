@@ -490,6 +490,7 @@ extern convar_t	*cl_showfps;
 extern convar_t *cl_showpos;
 extern convar_t	*cl_envshot_size;
 extern convar_t	*cl_timeout;
+extern convar_t	*cl_charset;
 extern convar_t	*cl_nodelta;
 extern convar_t	*cl_interp;
 extern convar_t	*cl_crosshair;
