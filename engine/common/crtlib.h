@@ -126,6 +126,7 @@ int Cmd_Argc( void );
 char *Cmd_Args( void );
 char *Cmd_Argv( int arg );
 void Cmd_Init( void );
+void Cmd_Shutdown( void );
 void Cmd_Unlink( int group );
 void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *cmd_desc );
 void Cmd_AddGameCommand( const char *cmd_name, xcommand_t function );

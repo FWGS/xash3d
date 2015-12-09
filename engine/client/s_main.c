@@ -359,7 +359,7 @@ channel_t *SND_PickStaticChannel( int entnum, sfx_t *sfx, const vec3_t pos )
 	channel_t	*ch = NULL;
 	int	i, dupe = 0;
 
-#if 1	
+#if 0	
 	// TODO: remove this code when predicting is will be done
 	// check for duplicate sounds
 	for( i = 0; i < total_channels; i++ )

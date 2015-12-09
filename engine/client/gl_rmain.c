@@ -1215,7 +1215,7 @@ void R_RenderScene( const ref_params_t *fd )
 	RI.refdef = *fd;
 
 	if( !cl.worldmodel && RI.drawWorld )
-		Host_Error( "R_RenderView: NULL worldmodel\n" );
+		Host_Error( "R_RenderScene: NULL worldmodel\n" );
 
 	R_PushDlights();
 

@@ -170,6 +170,9 @@ void CL_AddLinksToPmove( void )
 		if( solid == SOLID_NOT && ( check->curstate.skin == CONTENTS_NONE || check->curstate.modelindex == 0 ))
 			continue;
 
+		if( check->curstate.health <= 0 )
+			continue; // dead players are not solid
+
 		if( clgame.pmove->numvisent < MAX_PHYSENTS )
 		{
 			pe = &clgame.pmove->visents[clgame.pmove->numvisent];
@@ -889,15 +892,31 @@ void CL_PredictMovement( void )
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );
 
 	ASSERT( cl.refdef.cmd != NULL );
+	if( !cl_predict->value )
+	{
+		//simulate predict
+		local_state_t t1, t2;
+		Q_memset( &t1, 0, sizeof( local_state_t ));
+		Q_memset( &t2, 0, sizeof( local_state_t ));
+		t1.client = cl.frame.local.client;
+		Q_memcpy( t1.weapondata, cl.frame.local.weapondata, sizeof( t1.weapondata ));
+		t1.playerstate = cl.frame.playerstate[cl.playernum];
+		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, true, cl.time, cls.lastoutgoingcommand );
+		cl.predicted_viewmodel = t2.client.viewmodel;
+		cl.scr_fov = t2.client.fov;
+		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+			cl.scr_fov = 90.0f;
+		return;
+	}
 
 	if( !CL_IsPredicted( ))
 	{
 		local_state_t t1, t2;
 		Q_memset( &t1, 0, sizeof( local_state_t ));
-		Q_memset( &t2, 0, sizeof( local_state_t ));
-
+		//Q_memset( &t2, 0, sizeof( local_state_t ));
 		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, false, cl.time, cls.lastoutgoingcommand );
 		return;
+		//Q_memset( &t2, 0, sizeof( local_state_t ));
 	}
 
 	ack = cls.netchan.incoming_acknowledged;
@@ -941,6 +960,10 @@ void CL_PredictMovement( void )
 
 	if( to )
 {
+	cl.predicted_viewmodel = to->client.viewmodel;
+	cl.scr_fov = to->client.fov;
+	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+		cl.scr_fov = 90.0f;
 	VectorCopy( to->playerstate.origin, cl.predicted_origin );
 	VectorCopy( to->client.velocity, cl.predicted_velocity );
 	VectorCopy( to->client.view_ofs, cl.predicted_viewofs );

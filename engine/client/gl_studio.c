@@ -3303,10 +3303,17 @@ void R_RunViewmodelEvents( void )
 	if( !Mod_Extradata( clgame.viewent.model ))
 		return;
 
+	if( cl_lw->value && cl.frame.local.client.viewmodel != cl.predicted_viewmodel )
+		return;
+
 	RI.currententity = &clgame.viewent;
 	RI.currentmodel = RI.currententity->model;
 	if( !RI.currentmodel ) return;
 
+	if( !cl.weaponstarttime )
+		cl.weaponstarttime = cl.time;
+	RI.currententity->curstate.animtime = cl.weaponstarttime;
+	RI.currententity->curstate.sequence = cl.weaponseq;
 	pStudioDraw->StudioDrawModel( STUDIO_EVENTS );
 
 	RI.currententity = NULL;
@@ -3333,6 +3340,9 @@ void R_DrawViewModel( void )
 	if( !Mod_Extradata( clgame.viewent.model ))
 		return;
 
+	if( cl_lw->value && cl.frame.local.client.viewmodel != cl.predicted_viewmodel )
+		return;
+
 	RI.currententity = &clgame.viewent;
 	RI.currentmodel = RI.currententity->model;
 	if( !RI.currentmodel ) return;
@@ -3345,7 +3355,13 @@ void R_DrawViewModel( void )
 	// backface culling for left-handed weapons
 	if( r_lefthand->integer == 1 || g_iBackFaceCull )
 		GL_FrontFace( !glState.frontFace );
-
+	RI.currententity->curstate.scale = 1.0f;
+	RI.currententity->curstate.frame = 0;
+	RI.currententity->curstate.framerate = 1.0f;
+	if( !cl.weaponstarttime )
+		cl.weaponstarttime = cl.time;
+	RI.currententity->curstate.animtime = cl.weaponstarttime;
+	RI.currententity->curstate.sequence = cl.weaponseq;
 	pStudioDraw->StudioDrawModel( STUDIO_RENDER );
 
 	// restore depth range

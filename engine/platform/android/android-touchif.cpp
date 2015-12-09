@@ -122,6 +122,8 @@ void openGLStart()
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
 	glMatrixMode(GL_MODELVIEW);
+	glDepthMask(GL_FALSE);
+	glDisable(GL_DEPTH_TEST);
 
 }
 
@@ -428,6 +430,7 @@ extern "C" void Android_DrawControls()
 	if(!controlsCreated)
 		return;
 	//LOGI("frameControls");
+	nanoGL_Flush();
 	if (!glInit)
 	{
 		controlsContainer.initGL();
@@ -461,6 +464,8 @@ extern "C" void Android_DrawControls()
 
 	weaponCycle(showWeaponCycle);
 	setHideSticks(!showSticks);
+
+	nanoGL_Flush();
 	
 	controlsContainer.draw();
 }

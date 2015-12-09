@@ -778,6 +778,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Sys_ParseCommandLine( argc, argv );
 	
 	host.enabledll = !Sys_CheckParm( "-nodll" );
+
+	host.shutdown_issued = false;
+	host.crashed = false;
 #ifdef DLL_LOADER
 	if( host.enabledll )
 		Setup_LDT_Keeper( ); // Must call before creating any thread
@@ -813,7 +816,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
-	if(Sys_CheckParm( "-noch" ))
+	if( !Sys_CheckParm( "-noch" ) )
 	{
 #ifdef _WIN32
 		SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
@@ -897,6 +900,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	// startup cmds and cvars subsystem
 	Cmd_Init();
 	Cvar_Init();
+
 
 	// share developer level across all dlls
 	Q_snprintf( dev_level, sizeof( dev_level ), "%i", host.developer );
@@ -1093,6 +1097,7 @@ void EXPORT Host_Shutdown( void )
 	Mod_Shutdown();
 	NET_Shutdown();
 	HTTP_Shutdown();
+	Cmd_Shutdown();
 	Host_FreeCommon();
 	Con_DestroyConsole();
 

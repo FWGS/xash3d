@@ -496,9 +496,15 @@ Set new weapon animation
 */
 void CL_WeaponAnim( int iAnim, int body )
 {
+	cl.weaponstarttime = 0;
+	cl.weaponseq = iAnim;
+
 	cl_entity_t	*view = &clgame.viewent;
 
-	view->curstate.modelindex = cl.frame.local.client.viewmodel;
+	if( cl_predict->value || !cl_lw->value )
+		view->curstate.modelindex = cl.frame.local.client.viewmodel;
+	else
+		view->curstate.modelindex = cl.predicted_viewmodel;
 
 	// anim is changed. update latchedvars
 	if( iAnim != view->curstate.sequence )
@@ -515,7 +521,7 @@ void CL_WeaponAnim( int iAnim, int body )
 		view->latched.sequencetime = 0.0f;
 	}
 
-	view->curstate.animtime = cl.time;	// start immediately
+	view->curstate.animtime = cl.time; // start immediately
 	view->curstate.framerate = 1.0f;
 	view->curstate.sequence = iAnim;
 	view->latched.prevframe = 0.0f;

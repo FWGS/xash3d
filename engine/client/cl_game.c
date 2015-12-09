@@ -1090,6 +1090,8 @@ void CL_ClearWorld( void )
 void CL_InitEdicts( void )
 {
 	ASSERT( clgame.entities == NULL );
+	if( !clgame.mempool )
+		return; // Host_Error without client
 
 	CL_UPDATE_BACKUP = ( cl.maxclients == 1 ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
 	cls.num_client_entities = CL_UPDATE_BACKUP * 64;
@@ -4082,7 +4084,8 @@ qboolean CL_LoadProgs( const char *name )
 		return false;
 	}
 
-	Cvar_Get( "cl_lw", "0", CVAR_ARCHIVE|CVAR_USERINFO, "enable client weapon prediction" );
+	Cvar_Get( "cl_nopred", "1", CVAR_ARCHIVE|CVAR_USERINFO, "disable client movement predicting" );
+	cl_lw = Cvar_Get( "cl_lw", "0", CVAR_ARCHIVE|CVAR_USERINFO, "enable client weapon predicting" );
 	Cvar_Get( "cl_lc", "0", CVAR_ARCHIVE|CVAR_USERINFO, "enable lag compensation" );
 	Cvar_FullSet( "host_clientloaded", "1", CVAR_INIT );
 
