@@ -214,13 +214,26 @@ void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 
 void SDLash_InputEvent(SDL_TextInputEvent input)
 {
-	int i;
+	int i, f, t;
+
+	// Try convert to selected charset
+	unsigned char buf[32];
+	const char *in = input.text;
+	char *out = buf;
+	SDL_iconv_t cd;
+	Q_memset( &buf, 0, sizeof( buf ) );
+	cd = SDL_iconv_open( cl_charset->string, "utf-8" );
+	f = strlen( input.text );
+	t = 1024;
+	t = SDL_iconv( cd, &in, &f, &out, &t );
+	if(t<0)
+	Q_strncpy( buf, input.text, 32 );
 	// Pass characters one by one to Con_CharEvent
-	for(i = 0; input.text[i]; ++i)
+	for(i = 0; buf[i]; ++i)
 	{
-		Con_CharEvent( (int)input.text[i] );
+		Con_CharEvent( (uint)buf[i] );
 		if( cls.key_dest == key_menu )
-			UI_CharEvent ( (int)input.text[i] );
+			UI_CharEvent ( (uint)buf[i] );
 	}
 }
 
