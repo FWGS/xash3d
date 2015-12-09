@@ -215,25 +215,40 @@ void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 void SDLash_InputEvent(SDL_TextInputEvent input)
 {
 	int i, f, t;
-
+#if 0
 	// Try convert to selected charset
 	unsigned char buf[32];
+
 	const char *in = input.text;
 	char *out = buf;
 	SDL_iconv_t cd;
 	Q_memset( &buf, 0, sizeof( buf ) );
 	cd = SDL_iconv_open( cl_charset->string, "utf-8" );
-	f = strlen( input.text );
-	t = 1024;
-	t = SDL_iconv( cd, &in, &f, &out, &t );
-	if(t<0)
-	Q_strncpy( buf, input.text, 32 );
-	// Pass characters one by one to Con_CharEvent
-	for(i = 0; buf[i]; ++i)
+	if( cd != (SDL_iconv_t)-1 )
 	{
-		Con_CharEvent( (uint)buf[i] );
+		f = strlen( input.text );
+		t = 32;
+		t = SDL_iconv( cd, &in, &f, &out, &t );
+	}
+	if( ( t < 0 ) || ( cd == (SDL_iconv_t)-1 ) )
+	Q_strncpy( buf, input.text, 32 );
+#endif
+	// Pass characters one by one to Con_CharEvent
+	for(i = 0; input.text[i]; ++i)
+	{
+		int ch;
+
+		if( !Q_stricmp( cl_charset->string, "utf-8" ) )
+			ch = (unsigned char)input.text[i];
+		else
+			ch = Con_UtfProcessChar( (unsigned char)input.text[i] );
+
+		if( !ch )
+			continue;
+		
+		Con_CharEvent( ch );
 		if( cls.key_dest == key_menu )
-			UI_CharEvent ( (uint)buf[i] );
+			UI_CharEvent ( ch );
 	}
 }
 
