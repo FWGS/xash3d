@@ -273,8 +273,10 @@ void right_stick(float joy_x, float joy_y,float mouse_x, float mouse_y)
 void selectWeaponButton(int state, int code)
 {
 	PortableKeyEvent(state, code, 0);
-	if (state == 0)
-		tcGameWeapons->animateOut(5);
+
+	// don't drop weapon buttons
+	//if (state == 0)
+	//	tcGameWeapons->animateOut(5);
 }
 
 void weaponCycle(bool v)
@@ -512,6 +514,12 @@ void Android_TouchDisable( bool disable )
 void Android_RemoveButton( touchbutton_t *button )
 {
 
+}
+
+void Android_EmitButton( int hButton )
+{
+	gameButton( 1, hButton );
+	gameButton( 0, hButton );
 }
 
 void setTouchSettings(float alpha,float strafe,float fwd,float pitch,float yaw,int other)
