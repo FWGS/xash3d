@@ -48,6 +48,7 @@ convar_t	*cl_cmdrate;
 convar_t	*cl_interp;
 convar_t	*cl_allow_fragment;
 convar_t	*cl_trace_events;
+convar_t	*cl_charset;
 convar_t	*hud_scale;
 
 //
@@ -1624,6 +1625,7 @@ void CL_InitLocal( void )
 	//Cvar_Get( "ex_maxerrordistance", "0", 0, "" );
 	cl_allow_fragment = Cvar_Get( "cl_allow_fragment", "0", CVAR_ARCHIVE, "allow downloading files directly from game server" ); 
 	cl_timeout = Cvar_Get( "cl_timeout", "60", 0, "connect timeout (in seconds)" );
+	cl_charset = Cvar_Get( "cl_charset", "cp1251", CVAR_ARCHIVE, "1-byte charset to use (iconv style)" );
 
 	rcon_client_password = Cvar_Get( "rcon_password", "", 0, "remote control client password" );
 	rcon_address = Cvar_Get( "rcon_address", "", 0, "remote control address" );
