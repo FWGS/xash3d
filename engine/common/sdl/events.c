@@ -218,16 +218,21 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 
 	// Try convert to selected charset
 	unsigned char buf[32];
+
 	const char *in = input.text;
 	char *out = buf;
 	SDL_iconv_t cd;
 	Q_memset( &buf, 0, sizeof( buf ) );
 	cd = SDL_iconv_open( cl_charset->string, "utf-8" );
-	f = strlen( input.text );
-	t = 1024;
-	t = SDL_iconv( cd, &in, &f, &out, &t );
-	if(t<0)
+	if( cd != (SDL_iconv_t)-1 )
+	{
+		f = strlen( input.text );
+		t = 32;
+		t = SDL_iconv( cd, &in, &f, &out, &t );
+	}
+	if( ( t < 0 ) || ( cd == (SDL_iconv_t)-1 ) )
 	Q_strncpy( buf, input.text, 32 );
+
 	// Pass characters one by one to Con_CharEvent
 	for(i = 0; buf[i]; ++i)
 	{
