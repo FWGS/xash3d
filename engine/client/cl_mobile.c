@@ -31,15 +31,14 @@ GNU General Public License for more details.
 
 touchbutton_t gButtons[TOUCH_ACT_MAX];
 mobile_engfuncs_t *gMobileEngfuncs;
-
 static inline void SET_BUTTON_SRECT( int handle, int x1, int y1, int x2, int y2 )
 {
 #ifdef BELOKOCONTROLS
 // translates engine position to beloko touch controls position style
-	gButtons[handle].sRect.left = x1 / ScaleX;
-	gButtons[handle].sRect.top = y1 / ScaleY;
-	gButtons[handle].sRect.right = x2 / ScaleX;
-	gButtons[handle].sRect.bottom = y2 / ScaleY;
+	gButtons[handle].sRect.left = x1 / 26;
+	gButtons[handle].sRect.top = y1 / (26*(glState.height)/glState.width);
+	gButtons[handle].sRect.right = x2 / 26;
+	gButtons[handle].sRect.bottom = y2 / (26*(glState.height)/glState.width);
 #else
 	gButtons[handle].sRect.left = x1;
 	gButtons[handle].sRect.top  = y1;
@@ -106,12 +105,16 @@ static touchbutton_t *Touch_GetButtonByID( int hButton )
 
 static void Touch_RemoveButton( touchbutton_t *pButton )
 {
+#if defined(__ANDROID__)
 	Android_RemoveButton( pButton );
+#endif
 }
 
 static void Touch_EmitButton( int hButton )
 {
-
+#if defined(__ANDROID__)
+	Android_EmitButton( hButton );
+#endif
 }
 
 static void Touch_Disable( qboolean disable )
@@ -151,6 +154,7 @@ void Mobile_Init( void )
 
 	Q_memset( gButtons, 0, sizeof( touchbutton_t ) * TOUCH_ACT_MAX );
 
+	gButtons[TOUCH_ACT_SHOW_NUMBERS].pszCommand = "";
 	gButtons[TOUCH_ACT_QUICKSAVE].pszCommand = "savequick";
 	gButtons[TOUCH_ACT_QUICKLOAD].pszCommand = "loadquick";
 	gButtons[TOUCH_ACT_SHOOT_ALT].pszCommand = "+attack2";
@@ -161,7 +165,13 @@ void Mobile_Init( void )
 	gButtons[TOUCH_ACT_SHOOT	].pszCommand = "+attack";
 	gButtons[TOUCH_ACT_LIGHT	].pszCommand = "impulse 100";
 	gButtons[TOUCH_ACT_JUMP		].pszCommand = "+jump";
+	gButtons[TOUCH_ACT_CHAT		].pszCommand = "messagemode";
 	gButtons[TOUCH_ACT_USE		].pszCommand = "+use";
+
+	gButtons[TOUCH_ACT_USERALIAS1].pszCommand = "_useralias1";
+	gButtons[TOUCH_ACT_USERALIAS2].pszCommand = "_useralias2";
+	gButtons[TOUCH_ACT_USERALIAS3].pszCommand = "_useralias3";
+
 
 #if defined(__ANDROID__)
 	Android_TouchInit(gButtons);

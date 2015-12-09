@@ -20,6 +20,7 @@ extern "C"
 #include <pthread.h>
 #include <android/log.h>
 #include <jni.h>
+
 }
 
 #include "MultitouchMouse.h"
@@ -125,11 +126,6 @@ static void DoCommand(int state,const char * cmd)
 void PortableAction(int state, int action)
 {
 	LOGI("PortableAction %d   %d",state,action);
-
-	if( action >= TOUCH_ACT_0 && action <= TOUCH_ACT_9)
-	{
-		PortableKeyEvent( state, action - TOUCH_ACT_0 + '0', 0 );
-	}
 
 	if( gButtons[action].pszCommand )
 	{

@@ -24,20 +24,6 @@ extern "C" {
 #define MOBILITY_CLIENT_EXPORT "HUD_MobilityInterface"
 
 #define VIBRATE_NORMAL (1 << 0) // just vibrate for given "life"
-
-#define TOUCH_ACT_SHOOT_NAME		"shoot"
-#define TOUCH_ACT_SHOOT_ALT_NAME	"shoot_alt"
-#define TOUCH_ACT_USE_NAME			"use"
-#define TOUCH_ACT_JUMP_NAME			"jump"
-#define TOUCH_ACT_CROUCH_NAME		"crouch"
-#define TOUCH_ACT_RELOAD_NAME		"reload"
-#define TOUCH_ACT_INVPREV_NAME		"prev_weap"
-#define TOUCH_ACT_INVNEXT_NAME		"next_weap"
-#define TOUCH_ACT_LIGHT_NAME		"flash_light_filled"
-#define TOUCH_ACT_QUICKSAVE_NAME	"save"
-#define TOUCH_ACT_QUICKLOAD_NAME	"load"
-#define TOUCH_ACT_SHOW_NUMBERS_NAME "show_weapons"
-
 // these controls are added by engine.
 enum {
 	TOUCH_ACT_SHOOT = 0,
@@ -52,7 +38,11 @@ enum {
 	TOUCH_ACT_QUICKSAVE,
 	TOUCH_ACT_QUICKLOAD,
 	TOUCH_ACT_SHOW_NUMBERS,
-	TOUCH_ACT_0,
+	TOUCH_ACT_CHAT,
+	TOUCH_ACT_USERALIAS1,
+	TOUCH_ACT_USERALIAS2,
+	TOUCH_ACT_USERALIAS3,
+	/*TOUCH_ACT_0,
 	TOUCH_ACT_1,
 	TOUCH_ACT_2,
 	TOUCH_ACT_3,
@@ -61,7 +51,7 @@ enum {
 	TOUCH_ACT_6,			// numbers always binded to real keyboard numbers
 	TOUCH_ACT_7,
 	TOUCH_ACT_8,
-	TOUCH_ACT_9,
+	TOUCH_ACT_9,*/
 	TOUCH_ACT_LAST,
 	TOUCH_ACT_USER = 24,
 	TOUCH_ACT_MAX = 64
@@ -70,7 +60,7 @@ enum {
 typedef struct touchbutton_s
 {
 	wrect_t sRect;	// position and size
-	int iType;			// button type. Unused. All buttons in "tap" mode
+	int iType;			// button type.
 	int iState;
 	int hButton;		// button handle
 	char *pszCommand;	// command executed by button

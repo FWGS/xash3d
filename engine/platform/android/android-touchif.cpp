@@ -26,6 +26,7 @@
 #include "TouchControlsContainer.h"
 #include "JNITouchControlsUtils.h"
 
+#include <pthread.h>
 
 extern "C"
 {
@@ -34,6 +35,7 @@ extern "C"
 #include "android-gameif.h"
 #include "common.h"
 #include "nanogl.h"
+#include "client.h"
 
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,"JNI", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "JNI", __VA_ARGS__))
@@ -43,7 +45,7 @@ extern "C"
 
 int android_screen_width;
 int android_screen_height;
-
+std::string graphicpath;
 
 #define KEY_SHOW_WEAPONS 0x1000
 #define KEY_SHOOT        0x1001
@@ -70,18 +72,16 @@ bool sniperMode = false;
 static int controlsCreated = 0;
 touchcontrols::TouchControlsContainer controlsContainer;
 
-touchcontrols::TouchControls *tcMenuMain=0;
-touchcontrols::TouchControls *tcGameMain=0;
-touchcontrols::TouchControls *tcGameWeapons=0;
-touchcontrols::TouchControls *tcWeaponWheel=0;
-
-int ScaleX, ScaleY;
+touchcontrols::TouchControls *tcMenuMain=0, *tcGameMain=0, *tcGameWeapons=0, *tcWeaponWheel=0;
 
 //So can hide and show these buttons
 touchcontrols::Button *nextWeapon=0;
 touchcontrols::Button *prevWeapon=0;
 touchcontrols::TouchJoy *touchJoyLeft;
 touchcontrols::TouchJoy *touchJoyRight;
+
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+volatile int ScaleX, ScaleY;
 
 extern JNIEnv* env_;
 
@@ -165,9 +165,13 @@ static jmethodID swapBuffersMethod = 0;
 static unsigned int reload_time_down;
 void gameButton(int state,int code)
 {
-	if (code == TOUCH_ACT_SHOW_NUMBERS)
+	if (code == TOUCH_ACT_SHOW_NUMBERS && state == 1)
 	{
-		if( state == 1 && !tcGameWeapons->enabled)
+		if( tcGameWeapons->enabled )
+		{
+			tcGameWeapons->animateOut(5);
+		}
+		else
 		{
 			tcGameWeapons->animateIn(5);
 		}
@@ -299,8 +303,39 @@ void setHideSticks(bool v)
 	if (touchJoyRight) touchJoyRight->setHideGraphics(v);
 }
 
+void Android_AddInternalButton( int x1, int y1, int x2, int y2, const char *image, int hButton )
+{
+	LOGI("Internal button: %i %i %i %i %s %i",
+		x1, y1, x2, y2, image, hButton);
 
-void initControls(int width, int height,const char * graphics_path,const char *settings_file)
+	gButtons[hButton].hButton = hButton;
+	gButtons[hButton].sRect.left = x1;
+	gButtons[hButton].sRect.top = y1;
+	gButtons[hButton].sRect.right = x2;
+	gButtons[hButton].sRect.bottom = y2;
+	gButtons[hButton].pszImageName = (char*)image;
+
+	Android_AddButton( &gButtons[hButton] );
+}
+
+void Android_AddButton( touchbutton_t *button )
+{
+	touchcontrols::Button *butt = new touchcontrols::Button(button->pszCommand,
+		touchcontrols::RectF( button->sRect.left, button->sRect.top, button->sRect.right, button->sRect.bottom ),
+		button->pszImageName,
+		button->hButton);
+
+	tcGameMain->addControl( butt );
+
+	button->object = (void*)butt;
+
+	LOGI("New button: %i %i %i %i %s %i", button->sRect.left,
+		button->sRect.top, button->sRect.right, button->sRect.bottom, button->pszImageName,
+		button->hButton);
+}
+
+
+void initControls(int width, int height,const char * graphics_path)
 {
 	touchcontrols::GLScaleWidth = (float)width;
 	touchcontrols::GLScaleHeight = (float)height;
@@ -310,7 +345,7 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 	touchcontrols::ScaleY = ScaleY = Y;
 
 
-	LOGI("initControls %d x %d,x path = %s, settings = %s",width,height,graphics_path,settings_file);
+	LOGI("initControls %d x %d,x path = %s",width,height,graphics_path);
 
 	if (!controlsCreated)
 	{
@@ -344,57 +379,8 @@ void initControls(int width, int height,const char * graphics_path,const char *s
 
 		//Game
 		tcGameMain->setAlpha(gameControlsAlpha);
-
-
-		tcGameMain->addControl(new touchcontrols::Button("attack",
-			touchcontrols::RectF(X-6, 7, X-3, 10), "shoot", TOUCH_ACT_SHOOT));
-
-		tcGameMain->addControl(new touchcontrols::Button("attack_alt",
-			touchcontrols::RectF(X-6, 4, X-3, 7), "shoot_alt", TOUCH_ACT_SHOOT_ALT));
-
-		tcGameMain->addControl(new touchcontrols::Button("use",
-			touchcontrols::RectF(X-3, 6, X, 9),   "use", TOUCH_ACT_USE));
-
-		tcGameMain->addControl(new touchcontrols::Button("quick_save",
-			touchcontrols::RectF(X-4, 0, X-2, 2), "save", TOUCH_ACT_QUICKSAVE));
-
-		tcGameMain->addControl(new touchcontrols::Button("quick_load",
-			touchcontrols::RectF(X-6, 0, X-4, 2), "load", TOUCH_ACT_QUICKLOAD));
-
-		tcGameMain->addControl(new touchcontrols::Button("flashlight",
-			touchcontrols::RectF(X-2, 0, X, 2),   "flash_light_filled", TOUCH_ACT_LIGHT));
-
-		tcGameMain->addControl(new touchcontrols::Button("jump",
-			touchcontrols::RectF(X-3, 3, X, 6),   "jump", TOUCH_ACT_JUMP));
-
-		tcGameMain->addControl(new touchcontrols::Button("crouch",
-			touchcontrols::RectF(X-3, Y-3, X, Y), "crouch", TOUCH_ACT_CROUCH));
-
-		tcGameMain->addControl(new touchcontrols::Button("show_weapons",
-			touchcontrols::RectF(11, Y-2, 13, Y), "show_weapons", TOUCH_ACT_SHOW_NUMBERS));
-
-		tcGameMain->addControl(new touchcontrols::Button("reload",
-			touchcontrols::RectF(0, 5, 3, 8),     "reload", TOUCH_ACT_RELOAD));
-
-
-		nextWeapon = new touchcontrols::Button("next_weapon",touchcontrols::RectF(0,8,3,11),"next_weap", TOUCH_ACT_INVNEXT);
-		prevWeapon = new touchcontrols::Button("prev_weapon",touchcontrols::RectF(0,2,3,5),"prev_weap", TOUCH_ACT_INVPREV);
-
-		tcGameMain->addControl(nextWeapon);
-		tcGameMain->addControl(prevWeapon);
-
-
-		touchJoyLeft = new touchcontrols::TouchJoy("stick",touchcontrols::RectF(0,7,8,Y),"strafe_arrow");
-		tcGameMain->addControl(touchJoyLeft);
-		touchJoyLeft->signal_move.connect(sigc::ptr_fun(&left_stick) );
-		touchJoyLeft->signal_double_tap.connect(sigc::ptr_fun(&left_double_tap) );
-
-		touchJoyRight = new touchcontrols::TouchJoy("touch",touchcontrols::RectF(17,4,26,Y),"look_arrow");
-		tcGameMain->addControl(touchJoyRight);
-		touchJoyRight->signal_move.connect(sigc::ptr_fun(&right_stick) );
-		touchJoyRight->signal_double_tap.connect(sigc::ptr_fun(&right_double_tap) );
-
-		tcGameMain->signal_button.connect(  sigc::ptr_fun(&gameButton) );
+		// Android_TouchInit will fill this later
+		tcGameMain->signal_button.connect( sigc::ptr_fun(&gameButton) );
 
 		// Weapon
 		tcGameWeapons->addControl(new touchcontrols::Button("weapon1",touchcontrols::RectF(1,Y-2,3,Y),"key_1", '1'));
@@ -479,41 +465,63 @@ extern "C" void Android_DrawControls()
 	controlsContainer.draw();
 }
 
-void Android_AddButton( touchbutton_t *button )
+void Android_TouchInit( touchbutton_t *buttons )
 {
-	touchcontrols::RectF rect = touchcontrols::RectF( button->sRect.left,
-		button->sRect.top, button->sRect.right, button->sRect.bottom );
+	pthread_mutex_lock(&lock);
+	int X = ScaleX;
+	int Y = ScaleY;
+	Android_AddInternalButton(X-6, 7,   X-3, 10, "shoot",     TOUCH_ACT_SHOOT);
+	Android_AddInternalButton(X-6, 4,   X-3, 7,  "shoot_alt", TOUCH_ACT_SHOOT_ALT);
+	Android_AddInternalButton(X-3, 6,   X,   9,  "use",       TOUCH_ACT_USE);
+	Android_AddInternalButton(X-3, 3,   X,   6,  "jump",      TOUCH_ACT_JUMP);
+	Android_AddInternalButton(X-3, Y-3, X,   Y,  "crouch",    TOUCH_ACT_CROUCH);
+	Android_AddInternalButton(0,   5,   3,   8,  "reload",    TOUCH_ACT_RELOAD);
+	Android_AddInternalButton(0,   8,   3,   11, "next_weap", TOUCH_ACT_INVNEXT);
+	Android_AddInternalButton(0,   2,   3,   5,  "prev_weap", TOUCH_ACT_INVPREV);
+	Android_AddInternalButton(X-2, 0,   X,   2,  "flash_light_filled", TOUCH_ACT_LIGHT);
+	Android_AddInternalButton(X-4, 0,   X-2, 2,  "save",      TOUCH_ACT_QUICKSAVE);
+	Android_AddInternalButton(X-6, 0,   X-4, 2,  "load",      TOUCH_ACT_QUICKLOAD);
+	Android_AddInternalButton(11,  Y-2, 13,  Y,  "show_weapons", TOUCH_ACT_SHOW_NUMBERS);
+	Android_AddInternalButton(X-8, 0,   X-6, 2,  "keyboard",   TOUCH_ACT_CHAT);
+	Android_AddInternalButton(2,   0,   4,   2,  "useralias1", TOUCH_ACT_USERALIAS1);
+	Android_AddInternalButton(4,   0,   6,   2,  "useralias2", TOUCH_ACT_USERALIAS2);
+	Android_AddInternalButton(6,   0,   8,   2,  "useralias3", TOUCH_ACT_USERALIAS3);
 
-	LOGI("New button: %i %i %i %i %s %i", button->sRect.left,
-		button->sRect.top, button->sRect.right, button->sRect.bottom, button->pszImageName,
-		button->hButton);
 
-	touchcontrols::Button *butt = new touchcontrols::Button(button->pszCommand,
-		rect,
-		button->pszImageName,
-		button->hButton);
+	nextWeapon = (touchcontrols::Button*)gButtons[TOUCH_ACT_INVNEXT].object;
+	prevWeapon = (touchcontrols::Button*)gButtons[TOUCH_ACT_INVPREV].object;
+	for( int i = TOUCH_ACT_USERALIAS1; i <= TOUCH_ACT_USERALIAS3; i++)
+		((touchcontrols::Button*)(gButtons[i].object))->setHidden(true);
 
-	tcGameMain->addControl( butt );
 
-	button->object = (void*)butt;
-}
+	touchJoyLeft = new touchcontrols::TouchJoy("stick",touchcontrols::RectF(0,7,8,Y),"strafe_arrow");
+	tcGameMain->addControl(touchJoyLeft);
+	touchJoyLeft->signal_move.connect(sigc::ptr_fun(&left_stick) );
+	touchJoyLeft->signal_double_tap.connect(sigc::ptr_fun(&left_double_tap) );
 
-void Android_TouchInit( touchbutton_t *button )
-{
+	touchJoyRight = new touchcontrols::TouchJoy("touch",touchcontrols::RectF(17,4,26,Y),"look_arrow");
+	tcGameMain->addControl(touchJoyRight);
+	touchJoyRight->signal_move.connect(sigc::ptr_fun(&right_stick) );
+	touchJoyRight->signal_double_tap.connect(sigc::ptr_fun(&right_double_tap) );
+
+
 	char custom_settings_file[MAX_SYSPATH];
 	sprintf(custom_settings_file, "%s/%s/game_controls.xml", getenv( "XASH3D_BASEDIR" ), GI->gamedir);
 	tcGameMain->setXMLFile(custom_settings_file);
+	pthread_mutex_unlock(&lock);
 }
 
 
 void Android_TouchDisable( bool disable )
 {
-
+	tcGameMain->setEnabled(!disable);
+	tcWeaponWheel->setEnabled(!disable);
+	tcGameWeapons->setEnabled(!disable);
 }
 
 void Android_RemoveButton( touchbutton_t *button )
 {
-
+	tcGameMain->removeControl((touchcontrols::Button*)button->object);
 }
 
 void Android_EmitButton( int hButton )
@@ -524,7 +532,6 @@ void Android_EmitButton( int hButton )
 
 void setTouchSettings(float alpha,float strafe,float fwd,float pitch,float yaw,int other)
 {
-
 	gameControlsAlpha = alpha;
 	if (tcGameMain)
 		tcGameMain->setAlpha(gameControlsAlpha);
@@ -582,7 +589,6 @@ JNIEnv* env_;
 
 int argc=1;
 const char * argv[32];
-std::string graphicpath;
 
 
 std::string game_path;
@@ -609,8 +615,8 @@ JAVA_FUNC(initTouchControls) ( JNIEnv* env,	jobject thiz,jstring graphics_dir,ji
 
 	android_screen_width = width;
 	android_screen_height = height;
+	initControls(android_screen_width,-android_screen_height,graphicpath.c_str());
 
-	initControls(android_screen_width,-android_screen_height,graphicpath.c_str(),(graphicpath + "/game_controls.xml").c_str());
 	return 0;
 }
 
