@@ -275,6 +275,9 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 			if( ch == 0xB8 ) ch = (byte)'�';
 			if( ch == 0xA8 ) ch = (byte)'�';
 #endif
+			ch = g_engfuncs.pfnUtfProcessChar( (unsigned char) ch );
+			if(!ch)
+				continue;
 			if( ch != ' ' )
 			{
 				if( shadow ) TextMessageDrawChar( xx + ofsX, yy + ofsY, charW, charH, ch, shadowModulate, uiStatic.hFont );
