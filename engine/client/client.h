@@ -760,6 +760,7 @@ void Con_DrawDebug( void );
 void Con_RunConsole( void );
 void Con_DrawConsole( void );
 void Con_DrawVersion( void );
+int Con_UtfProcessChar( int in );
 void Con_DrawStringLen( const char *pText, int *length, int *height );
 int Con_DrawString( int x, int y, const char *string, rgba_t setColor );
 int Con_DrawCharacter( int x, int y, int number, rgba_t color );
