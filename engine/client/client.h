@@ -376,6 +376,7 @@ typedef struct
 	long		logo_xres;
 	long		logo_yres;
 	float		logo_length;
+	qboolean	use_text_api;
 } menu_static_t;
 
 typedef struct

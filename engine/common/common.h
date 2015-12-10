@@ -371,6 +371,7 @@ typedef struct host_parm_s
 	int		numsounds;
 	qboolean enabledll;
 	char vguiloader[64];
+	qboolean textmode;
 } host_parm_t;
 
 extern host_parm_t	host;

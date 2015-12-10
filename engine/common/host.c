@@ -838,6 +838,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialization started
 	host.developer = host.old_developer = 0;
+	host.textmode = false;
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
 

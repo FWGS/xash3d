@@ -254,20 +254,18 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 
 void SDLash_EnableTextInput( int enable )
 {
-	static qboolean isAlreadyEnabled = false;
-
 	if( enable )
 	{
-		if( !isAlreadyEnabled )
+		if( !host.textmode )
 		{
 			SDL_StartTextInput();
 		}
-		isAlreadyEnabled = true;
+		host.textmode = true;
 	}
 	else
 	{
 		SDL_StopTextInput();
-		isAlreadyEnabled = false;
+		host.textmode = false;
 	}
 }
 #endif // XASH_SDL
