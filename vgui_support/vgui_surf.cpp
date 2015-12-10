@@ -180,7 +180,11 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 	}
 	for( int i = 0; i < textLen; i++ )
 	{
-		char ch = text[i];
+		char ch = g_api->ProcessUtfChar( (unsigned char)text[i] );
+		if( !ch )
+		{
+			continue;
+		}
 
 		int abcA,abcB,abcC;
 		_hCurrentFont->getCharABCwide( ch, abcA, abcB, abcC );

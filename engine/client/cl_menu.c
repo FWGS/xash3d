@@ -983,7 +983,10 @@ static ui_enginefuncs_t gEngfuncs =
 	#else
 	pfnEnableTextInput,
 	#endif
-	pfnSDL_free
+	pfnSDL_free,
+	Con_UtfProcessChar,
+	Con_UtfMoveLeft,
+	Con_UtfMoveRight
 };
 
 void UI_UnloadProgs( void )
