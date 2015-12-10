@@ -170,9 +170,6 @@ void CL_AddLinksToPmove( void )
 		if( solid == SOLID_NOT && ( check->curstate.skin == CONTENTS_NONE || check->curstate.modelindex == 0 ))
 			continue;
 
-		if( check->curstate.health <= 0 )
-			continue; // dead players are not solid
-
 		if( clgame.pmove->numvisent < MAX_PHYSENTS )
 		{
 			pe = &clgame.pmove->visents[clgame.pmove->numvisent];
@@ -232,6 +229,9 @@ void CL_SetSolidPlayers( int playernum )
 
 		if( !ent || !ent->player )
 			continue; // not present this frame
+
+		if( ent->curstate.health <= 0 )
+			continue; // dead players are not solid
 
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
 		if( CL_CopyEntityToPhysEnt( pe, ent ))
