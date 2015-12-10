@@ -530,7 +530,7 @@ Con_UtfProcessChar
 Convert utf char to current font's single-byte encoding
 ============================
 */
-int Con_UtfProcessChar( int in )
+int Con_UtfProcessCharForce( int in )
 {
 	static int m = -1, k = 0; //multibyte state
 	static int uc = 0; //unicode char
@@ -597,6 +597,13 @@ int Con_UtfProcessChar( int in )
 	return 0;
 }
 
+int Con_UtfProcessChar( int in )
+{
+	if( !g_utf8 )
+		return in;
+	else
+		return Con_UtfProcessCharForce( in );
+}
 /*
 =================
 Con_UtfMoveLeft
@@ -604,9 +611,11 @@ Con_UtfMoveLeft
 get position of previous printful char
 =================
 */
-static int Con_UtfMoveLeft( char *str, int pos )
+int Con_UtfMoveLeft( char *str, int pos )
 {
 	int i, j, k = 0;
+	if( !g_utf8 )
+		return pos - 1;
 	Con_UtfProcessChar( 0 );
 	if(pos == 1) return 0;
 	for( i = 0; i < pos-1; i++ )
@@ -623,9 +632,11 @@ Con_UtfMoveRight
 get next of previous printful char
 =================
 */
-static int Con_UtfMoveRight( char *str, int pos, int length )
+int Con_UtfMoveRight( char *str, int pos, int length )
 {
 	int i;
+	if( !g_utf8 )
+		return pos + 1;
 	Con_UtfProcessChar( 0 );
 	for( i = pos; i <= length; i++ )
 	{
@@ -636,7 +647,7 @@ static int Con_UtfMoveRight( char *str, int pos, int length )
 	return pos+1;
 }
 
-static int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
+int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 {
 	int	width, height;
 	float	s1, t1, s2, t2;
@@ -647,9 +658,8 @@ static int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 	if( !con.curFont || !con.curFont->valid )
 		return 0;
 
-	if( g_utf8 )
-		number = Con_UtfProcessChar(number);
-	else if( number < 32 )
+	number = Con_UtfProcessChar(number);
+	if( number < 32 )
 		return 0;
 	if( y < -con.curFont->charHeight )
 		return 0;
@@ -726,10 +736,11 @@ void Con_DrawStringLen( const char *pText, int *length, int *height )
 		}
 
 		// Convert to unicode
-		if( g_utf8 )
-			c = Con_UtfProcessChar( c );
+		c = Con_UtfProcessChar( c );
+
 		if( c )
 			curLength += con.curFont->charWidths[ c ];
+
 		pText++;
 
 		if( curLength > *length )
@@ -818,7 +829,7 @@ void Con_Init( void )
 	con_fontsize = Cvar_Get( "con_fontsize", "1", CVAR_ARCHIVE, "console font number (0, 1 or 2)" );
 	con_maxfrac = Cvar_Get( "con_maxfrac", "1.0", CVAR_ARCHIVE, "console max height" );
 	con_halffrac = Cvar_Get( "con_halffrac", "0.5", CVAR_ARCHIVE, "console half height" );
-	con_charset = Cvar_Get( "con_charset", "cp1251", CVAR_ARCHIVE, "console font charset" );
+	con_charset = Cvar_Get( "con_charset", "cp1251", CVAR_ARCHIVE, "console font charset (only cp1251 supported now)" );
 
 	Con_CheckResize();
 

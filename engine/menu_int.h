@@ -164,6 +164,10 @@ typedef struct ui_enginefuncs_s
 
 	void (*pfnEnableTextInput)( int enable );
 	void (*pfnSDL_free)( void *mem );
+
+	int (*pfnUtfProcessChar) ( int ch );
+	int (*pfnUtfMoveLeft) ( char *str, int pos );
+	int (*pfnUtfMoveRight) ( char *str, int pos, int length );
 } ui_enginefuncs_t;
 
 typedef struct
