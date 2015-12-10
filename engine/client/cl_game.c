@@ -1673,6 +1673,7 @@ static int pfnDrawCharacter( int x, int y, int number, int r, int g, int b )
 		return 0;
 
 	number &= 255;
+	number = Con_UtfProcessChar( number );
 
 	if( number < 32 ) return 0;
 	if( y < -clgame.scrInfo.iCharHeight )
