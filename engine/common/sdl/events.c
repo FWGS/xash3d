@@ -47,12 +47,16 @@ void SDLash_EventFilter( SDL_Event* event)
 			break;
 
 		case SDL_FINGERMOTION:
+		IN_TouchEvent( 2, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+			break;
 		case SDL_FINGERUP:
+		IN_TouchEvent( 1, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+			break;
 		case SDL_FINGERDOWN:
 			// Pass all touch events to client library
-			if(clgame.dllFuncs.pfnTouchEvent)
-				clgame.dllFuncs.pfnTouchEvent(event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
-			IN_TouchEvent( event->type, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+			//if(clgame.dllFuncs.pfnTouchEvent)
+				//clgame.dllFuncs.pfnTouchEvent(event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+			IN_TouchEvent( 0, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
 			break;
 
 		case SDL_MOUSEBUTTONUP:

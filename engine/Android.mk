@@ -93,6 +93,7 @@ LOCAL_SRC_FILES := \
            common/build.c \
            common/cmd.c \
            common/common.c \
+           common/touch.c \
            common/con_utils.c \
            common/console.c \
            common/crclib.c \
