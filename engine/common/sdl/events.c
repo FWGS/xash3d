@@ -11,8 +11,11 @@ static qboolean lostFocusOnce;
 static float oldVolume;
 static float oldMusicVolume;
 
+int IN_TouchEvent( qboolean down, int fingerID, float x, float y, float dx, float dy );
+
 void SDLash_EventFilter( SDL_Event* event)
 {
+	static int mdown;
 	#ifdef XASH_VGUI
 	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
 	// switch ....
@@ -24,6 +27,9 @@ void SDLash_EventFilter( SDL_Event* event)
 		case SDL_MOUSEMOTION:
 		if(!host.mouse_visible)
 			IN_MouseEvent(0);
+			if(mdown)
+				IN_TouchEvent(2, 0, (float)event->motion.x/scr_width->value, (float)event->motion.y/scr_height->value, (float)event->motion.xrel/scr_width->value, (float)event->motion.yrel/scr_height->value);
+			SDL_ShowCursor( true );
 			break;
 		case SDL_QUIT:
 			Sys_Quit();
@@ -44,12 +50,19 @@ void SDLash_EventFilter( SDL_Event* event)
 			// Pass all touch events to client library
 			if(clgame.dllFuncs.pfnTouchEvent)
 				clgame.dllFuncs.pfnTouchEvent(event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+				IN_TouchEvent( event->type, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
 			break;
 
 		case SDL_MOUSEBUTTONUP:
+			SDLash_MouseEvent(event->button);
+			mdown = 0;
+			IN_TouchEvent(1, 0, (float)event->button.x/scr_width->value, (float)event->button.y/scr_height->value, 0, 0);
+			break;
 		case SDL_MOUSEBUTTONDOWN:
 		//if(!host.mouse_visible)
 			SDLash_MouseEvent(event->button);
+			mdown = 1;
+			IN_TouchEvent(0, 0, (float)event->button.x/scr_width->value, (float)event->button.y/scr_height->value, 0, 0);
 			break;
 
 		case SDL_TEXTEDITING:

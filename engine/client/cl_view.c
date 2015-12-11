@@ -411,6 +411,7 @@ void V_PostRender( void )
 		CL_DrawDemoRecording();
 		R_ShowTextures();
 		CL_DrawHUD( CL_CHANGELEVEL );
+		IN_TouchDraw();
 		Con_DrawConsole();
 		UI_UpdateMenu( host.realtime );
 		Con_DrawVersion();
