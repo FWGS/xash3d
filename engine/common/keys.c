@@ -633,6 +633,29 @@ void Key_Event( int key, qboolean down )
 	if( cls.key_dest == key_menu )
 	{
 		// only non printable keys passed
+#ifdef XASH_SDL
+		// shift + click enables text mode (old menu compatibility)
+		/*if( down && !host.textmode && Key_IsDown( K_SHIFT ) && ( key == 241 ) )
+		{
+			SDLash_EnableTextInput( true );
+			return;
+		}
+		// and click disables
+		else if( down && ( key == 241 ) )
+			SDLash_EnableTextInput( false );
+		*/
+		if( !menu.use_text_api )
+			SDLash_EnableTextInput( true );
+#endif
+		//pass printable chars for old menus
+		if( !menu.use_text_api && !host.textmode && down && ( key >= 32 ) && ( key <= 'z' ) )
+		{
+			if( Key_IsDown( K_SHIFT ) )
+			{
+				key += 'A'-'a';
+			}
+			UI_CharEvent( key );
+		}
 		UI_KeyEvent( key, down );
 		return;
 	}

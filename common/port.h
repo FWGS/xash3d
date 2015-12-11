@@ -123,10 +123,14 @@ GNU General Public License for more details.
 	#include <windows.h>
 	#undef HSPRITE
 
-    #define OS_LIB_EXT "dll"
-    #define MENUDLL "menu." OS_LIB_EXT
-    #define CLIENTDLL "client." OS_LIB_EXT
+	#define OS_LIB_EXT "dll"
+	#define MENUDLL "menu." OS_LIB_EXT
+	#define CLIENTDLL "client." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
+	#if _MSC_VER == 1200
+		#define vsnprintf _vsnprintf
+		#define NO_ICO
+	#endif
 #endif
 
 #endif

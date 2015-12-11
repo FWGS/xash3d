@@ -59,6 +59,15 @@ double Sys_DoubleTime( void )
 	}
 	CurrentTime = SDL_GetPerformanceCounter();
 	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
+#elif _WIN32
+	if( !g_PerformanceFrequency )
+	{
+		g_PerformanceFrequency = GetPerformanceFrequency();
+		g_ClockStart = GetPerformanceCounter();
+	}
+	CurrentTime = GetPerformanceCounter();
+	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
+
 #else
 	struct timespec ts;
 	if( !g_PerformanceFrequency )

@@ -21,7 +21,12 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#if _MSC_VER == 1200
+#define true 1
+#define false 0
+#else
 #include <stdbool.h>
+#endif
 #ifdef __APPLE__
  #include <dlfcn.h>
  #include <errno.h>
@@ -40,7 +45,11 @@ GNU General Public License for more details.
  #define dlmount(x) LoadLibraryA(x)
  #define dlclose(x) FreeLibrary(x)
  #define dlsym(x,y) GetProcAddress(x,y)
- #define XASHLIB                 "xash.dll"
+#ifdef XASH_SDL
+ #define XASHLIB                 "xash_sdl.dll"
+#else
+ #define XASHLIB                 "xash_dedicated.dll"
+#endif
  #include "windows.h" 
 #endif
 
@@ -108,17 +117,17 @@ void Sys_ChangeGame( const char *progname )
 
 	Xash_Main( szArgc, szArgv, szGameDir, true, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
-#if 0
+#if _MSC_VER == 1200
 int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow)
 #else // _WIN32
 int main( int argc, char **argv )
 #endif
 {
 
-#if 0
+#if _MSC_VER == 1200
 	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
-	szArgv = (char**)malloc(szArgc*sizeof(char*));
 	int size, i = 0;
+	szArgv = (char**)malloc(szArgc*sizeof(char*));
 	for (; i < szArgc; ++i)
 	{
 		size = wcslen(lpArgv[i]) + 1;

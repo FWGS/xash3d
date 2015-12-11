@@ -51,7 +51,7 @@ int ColorStrlen( const char *str )
 
 	int len = 0;
 	p = str;
-
+	UtfProcessChar( 0 );
 	while( *p )
 	{
 		if( IsColorString( p ))
@@ -61,8 +61,10 @@ int ColorStrlen( const char *str )
 		}
 
 		p++;
-		len++;
+		if( UtfProcessChar( (unsigned char) *p ) )
+			len++;
 	}
+	len++;
 
 	return len;
 }
@@ -1411,7 +1413,7 @@ void UI_Field_Paste( void )
 	pasteLen = strlen( str );
 	for( i = 0; i < pasteLen; i++ )
 		UI_CharEvent( str[i] );
-	SDL_FREE( str );
+	FREE( str );
 }
 
 /*
@@ -1457,7 +1459,7 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	// previous character
 	if( key == K_LEFTARROW )
 	{
-		if( f->cursor > 0 ) f->cursor--;
+		if( f->cursor > 0 ) f->cursor = UtfMoveLeft( f->buffer, f->cursor );
 		if( f->cursor < f->scroll ) f->scroll--;
 		return uiSoundNull;
 	}
@@ -1465,7 +1467,7 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	// next character
 	if( key == K_RIGHTARROW )
 	{
-		if( f->cursor < len ) f->cursor++;
+		if( f->cursor < len ) f->cursor = UtfMoveRight( f->buffer, f->cursor, len );
 		if( f->cursor >= f->scroll + f->widthInChars && f->cursor <= len )
 			f->scroll++;
 		return uiSoundNull;
@@ -1489,8 +1491,9 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	{
 		if( f->cursor > 0 )
 		{
-			memmove( f->buffer + f->cursor - 1, f->buffer + f->cursor, len - f->cursor + 1 );
-			f->cursor--;
+			int pos = UtfMoveLeft( f->buffer, f->cursor );
+			memmove( f->buffer + pos, f->buffer + f->cursor, len - f->cursor + 1 );
+			f->cursor = pos;
 			if( f->scroll ) f->scroll--;
 		}
 	}
@@ -1547,7 +1550,7 @@ void UI_Field_Char( menuField_s *f, int key )
 	}
 
 	// ignore any other non printable chars
-	if( key < 32 ) return;
+	//if( key < 32 ) return;
 
 	if( key == '^' && !( f->generic.flags & QMF_ALLOW_COLORSTRINGS ))
 	{

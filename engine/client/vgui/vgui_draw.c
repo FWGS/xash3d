@@ -171,6 +171,7 @@ vguiapi_t vgui =
 	VGUI_IsInGame,
 	VGUI_SetVisible,
 	VGUI_GetMousePos,
+	Con_UtfProcessChar,
 	NULL,
 	NULL,
 	NULL,

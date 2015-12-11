@@ -838,6 +838,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialization started
 	host.developer = host.old_developer = 0;
+	host.textmode = false;
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
 
@@ -947,7 +948,9 @@ Host_Main
 int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func )
 {
 	static double	oldtime, newtime;
-
+#ifdef XASH_SDL
+	SDL_Event event;
+#endif
 	pChangeGame = func;	// may be NULL
 
 	Host_InitCommon( argc, argv, progname, bChangeGame );
@@ -1056,7 +1059,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	SCR_CheckStartupVids();	// must be last
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
-	SDL_Event event;
 #endif
 	// main window message loop
 	while( !host.crashed && !host.shutdown_issued )

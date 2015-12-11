@@ -128,7 +128,7 @@ SinCos
 */
 void SinCos( float radians, float *sine, float *cosine )
 {
-#if 0
+#if _MSC_VER == 1200
 	_asm
 	{
 		fld	dword ptr [radians]

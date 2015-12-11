@@ -496,11 +496,9 @@ Set new weapon animation
 */
 void CL_WeaponAnim( int iAnim, int body )
 {
+	cl_entity_t	*view = &clgame.viewent;
 	cl.weaponstarttime = 0;
 	cl.weaponseq = iAnim;
-
-	cl_entity_t	*view = &clgame.viewent;
-
 	if( cl_predict->value || !cl_lw->value )
 		view->curstate.modelindex = cl.frame.local.client.viewmodel;
 	else

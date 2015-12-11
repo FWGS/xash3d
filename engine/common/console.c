@@ -25,6 +25,10 @@ convar_t	*scr_conspeed;
 convar_t	*con_fontsize;
 convar_t	*con_maxfrac;
 convar_t	*con_halffrac;
+convar_t	*con_charset;
+
+static int g_codepage = 0;
+static qboolean g_utf8 = false;
 
 #define CON_TIMES		5	// need for 4 lines
 #define COLOR_DEFAULT	'7'
@@ -506,7 +510,144 @@ static void Con_LoadConchars( void )
 	
 }
 
-static int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
+// CP1251 table
+
+int table_cp1251[64] = {
+	0x0402, 0x0403, 0x201A, 0x0453, 0x201E, 0x2026, 0x2020, 0x2021,
+	0x20AC, 0x2030, 0x0409, 0x2039, 0x040A, 0x040C, 0x040B, 0x040F,
+	0x0452, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
+	0x007F, 0x2122, 0x0459, 0x203A, 0x045A, 0x045C, 0x045B, 0x045F,
+	0x00A0, 0x040E, 0x045E, 0x0408, 0x00A4, 0x0490, 0x00A6, 0x00A7,
+	0x0401, 0x00A9, 0x0404, 0x00AB, 0x00AC, 0x00AD, 0x00AE, 0x0407,
+	0x00B0, 0x00B1, 0x0406, 0x0456, 0x0491, 0x00B5, 0x00B6, 0x00B7,
+	0x0451, 0x2116, 0x0454, 0x00BB, 0x0458, 0x0405, 0x0455, 0x0457
+};
+
+/*
+============================
+Con_UtfProcessChar
+
+Convert utf char to current font's single-byte encoding
+============================
+*/
+int Con_UtfProcessCharForce( int in )
+{
+	static int m = -1, k = 0; //multibyte state
+	static int uc = 0; //unicode char
+	
+	if( !in )
+	{
+		m = -1;
+		k = 0;
+		uc = 0;
+		return 0;
+	}
+
+	// Get character length
+	if(m == -1)
+	{
+		uc = 0;
+		if( in >= 0xF8 )
+			return 0;
+		else if( in >= 0xF0 )
+			uc = in & 0x07, m = 3;
+		else if( in >= 0xE0 )
+			uc = in & 0x0F, m = 2;
+		else if( in >= 0xC0 )
+			uc = in & 0x1F, m = 1;
+		else if( in <= 0x7F)
+			return in; //ascii
+		// return 0 if we need more chars to decode one
+		k=0;
+		return 0;
+	}
+	// get more chars
+	else if( k <= m )
+	{
+		uc <<= 6;
+		uc += in & 0x3F;
+		k++;
+	}
+	if( in > 0xBF || m < 0 )
+	{
+		m = -1;
+		return 0;
+	}
+	if( k == m )
+	{
+		k = m = -1;
+		if( g_codepage == 1251 )
+		{
+			// cp1251 now
+			if( uc >= 0x0410 && uc <= 0x042F )
+				return uc - 0x410 + 0xC0;
+			if( uc >= 0x0430 && uc <= 0x044F )
+				return uc - 0x430 + 0xE0;
+			else
+			{
+				int i;
+				for( i = 0; i < 64; i++ )
+					if( table_cp1251[i] == uc )
+						return i + 0x80;
+			}
+		}
+		// not implemented yet
+		return '?';
+	}
+	return 0;
+}
+
+int Con_UtfProcessChar( int in )
+{
+	if( !g_utf8 )
+		return in;
+	else
+		return Con_UtfProcessCharForce( in );
+}
+/*
+=================
+Con_UtfMoveLeft
+
+get position of previous printful char
+=================
+*/
+int Con_UtfMoveLeft( char *str, int pos )
+{
+	int i, j, k = 0;
+	if( !g_utf8 )
+		return pos - 1;
+	Con_UtfProcessChar( 0 );
+	if(pos == 1) return 0;
+	for( i = 0; i < pos-1; i++ )
+		if( Con_UtfProcessChar( (unsigned char)str[i] ) )
+			k = i+1;
+	Con_UtfProcessChar( 0 );
+	return k;
+}
+
+/*
+=================
+Con_UtfMoveRight
+
+get next of previous printful char
+=================
+*/
+int Con_UtfMoveRight( char *str, int pos, int length )
+{
+	int i;
+	if( !g_utf8 )
+		return pos + 1;
+	Con_UtfProcessChar( 0 );
+	for( i = pos; i <= length; i++ )
+	{
+		if( Con_UtfProcessChar( (unsigned char)str[i] ) )
+			return i+1;
+	}
+	Con_UtfProcessChar( 0 );
+	return pos+1;
+}
+
+int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 {
 	int	width, height;
 	float	s1, t1, s2, t2;
@@ -517,7 +658,9 @@ static int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 	if( !con.curFont || !con.curFont->valid )
 		return 0;
 
-	if( number < 32 ) return 0;
+	number = Con_UtfProcessChar(number);
+	if( number < 32 )
+		return 0;
 	if( y < -con.curFont->charHeight )
 		return 0;
 
@@ -592,7 +735,12 @@ void Con_DrawStringLen( const char *pText, int *length, int *height )
 			continue;
 		}
 
-		curLength += con.curFont->charWidths[c];
+		// Convert to unicode
+		c = Con_UtfProcessChar( c );
+
+		if( c )
+			curLength += con.curFont->charWidths[ c ];
+
 		pText++;
 
 		if( curLength > *length )
@@ -616,6 +764,8 @@ int Con_DrawGenericString( int x, int y, const char *string, rgba_t setColor, qb
 	const char	*s;
 
 	if( !con.curFont ) return 0; // no font set
+
+	Con_UtfProcessChar( 0 );
 
 	// draw the colored text
 	s = string;
@@ -679,6 +829,7 @@ void Con_Init( void )
 	con_fontsize = Cvar_Get( "con_fontsize", "1", CVAR_ARCHIVE, "console font number (0, 1 or 2)" );
 	con_maxfrac = Cvar_Get( "con_maxfrac", "1.0", CVAR_ARCHIVE, "console max height" );
 	con_halffrac = Cvar_Get( "con_halffrac", "0.5", CVAR_ARCHIVE, "console half height" );
+	con_charset = Cvar_Get( "con_charset", "cp1251", CVAR_ARCHIVE, "console font charset (only cp1251 supported now)" );
 
 	Con_CheckResize();
 
@@ -1186,8 +1337,9 @@ void Field_KeyDownEvent( field_t *edit, int key )
 	{
 		if( edit->cursor > 0 )
 		{
-			Q_memmove( edit->buffer + edit->cursor - 1, edit->buffer + edit->cursor, len - edit->cursor + 1 );
-			edit->cursor--;
+			int newcursor = Con_UtfMoveLeft( edit->buffer, edit->cursor );
+			Q_memmove( edit->buffer + newcursor, edit->buffer + edit->cursor, len - edit->cursor + 1 );
+			edit->cursor = newcursor;
 			if( edit->scroll ) edit->scroll--;
 		}
 		return;
@@ -1195,7 +1347,7 @@ void Field_KeyDownEvent( field_t *edit, int key )
 
 	if( key == K_RIGHTARROW ) 
 	{
-		if( edit->cursor < len ) edit->cursor++;
+		if( edit->cursor < len ) edit->cursor = Con_UtfMoveRight( edit->buffer, edit->cursor, edit->widthInChars );
 		if( edit->cursor >= edit->scroll + edit->widthInChars && edit->cursor <= len )
 			edit->scroll++;
 		return;
@@ -1203,7 +1355,7 @@ void Field_KeyDownEvent( field_t *edit, int key )
 
 	if( key == K_LEFTARROW ) 
 	{
-		if( edit->cursor > 0 ) edit->cursor--;
+		if( edit->cursor > 0 ) edit->cursor= Con_UtfMoveLeft( edit->buffer, edit->cursor );
 		if( edit->cursor < edit->scroll ) edit->scroll--;
 		return;
 	}
@@ -1269,7 +1421,7 @@ void Field_CharEvent( field_t *edit, int ch )
 	}
 
 	// ignore any other non printable chars
-	if( ch < 32 ) return;
+	//if( ch < 32 ) return;
 
 	if( host.key_overstrike )
 	{	
@@ -1347,6 +1499,7 @@ void Field_DrawInputLine( int x, int y, field_t *edit )
 	// calc cursor position
 	str[edit->cursor - prestep] = 0;
 	Con_DrawStringLen( str, &curPos, NULL );
+	Con_UtfProcessChar( 0 );
 
 	if( host.key_overstrike && cursorChar )
 	{
@@ -1357,7 +1510,11 @@ void Field_DrawInputLine( int x, int y, field_t *edit )
 		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 		Con_DrawGenericChar( x + curPos, y, cursorChar, colorDefault );
 	}
-	else Con_DrawCharacter( x + curPos, y, '_', colorDefault );
+	else
+	{
+		Con_UtfProcessChar( 0 );
+		Con_DrawCharacter( x + curPos, y, '_', colorDefault );
+	}
 }
 
 /*
@@ -1967,6 +2124,12 @@ void Con_RunConsole( void )
 		if( con.finalFrac < con.displayFrac )
 			con.displayFrac = con.finalFrac;
 	}
+
+	// update codepage parameters
+	g_codepage = 0;
+	if( !Q_stricmp( con_charset->string, "cp1251" ) )
+		g_codepage = 1251;
+	g_utf8 = !Q_stricmp( cl_charset->string, "utf-8" );
 }
 
 /*

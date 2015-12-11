@@ -244,7 +244,7 @@ void IN_StartupMouse( void )
 	if( Sys_CheckParm( "-noenginemouse" )) return; 
 
 #ifdef XASH_SDL
-	m_valvehack = Cvar_Get("m_valvehack", "0", CVAR_ARCHIVE, "Enable mouse hack for client.so with different SDL binary");
+	m_valvehack = Cvar_Get("m_valvehack", "1", CVAR_ARCHIVE, "Enable mouse hack for client.so with different SDL binary");
 	m_enginemouse = Cvar_Get("m_enginemouse", "0", CVAR_ARCHIVE, "Read mouse events in engine instead of client");
 	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
 	m_pitch = Cvar_Get("m_pitch", "0.022", CVAR_ARCHIVE, "Mouse pitch value");
@@ -471,12 +471,15 @@ void IN_MouseEvent( int mstate )
 		return;
 	if( cls.key_dest == key_game )
 	{
-#if defined(XASH_SDL) && !defined(_WIN32)
+#if defined(XASH_SDL)
 		static qboolean ignore; // igonre mouse warp event
 		if( m_valvehack->integer == 0 )
 		{
 			if( host.mouse_visible )
+			{
 				SDL_SetRelativeMouseMode( SDL_FALSE );
+				SDL_ShowCursor( SDL_TRUE );
+			}
 			else
 				SDL_SetRelativeMouseMode( SDL_TRUE );
 		}
@@ -519,6 +522,7 @@ void IN_MouseEvent( int mstate )
 	{
 #if defined(XASH_SDL) && !defined(_WIN32)
 		SDL_SetRelativeMouseMode( false );
+		SDL_ShowCursor( SDL_TRUE );
 #endif
 		IN_MouseMove();
 	}
