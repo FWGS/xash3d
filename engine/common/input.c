@@ -777,6 +777,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( frametime, &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
+		IN_TouchMove( &forward, &side, &cl.refdef.cl_viewangles[YAW], &cl.refdef.cl_viewangles[PITCH] );
 		IN_JoyAppendMove( cmd, forward, side );
 
 	}
@@ -822,6 +823,7 @@ void Host_InputFrame( void )
 		}
 #endif
 #endif
+		IN_TouchMove( &forward, &side, &yaw, &pitch );
 		clgame.dllFuncs.pfnLookEvent( yaw, pitch );
 		clgame.dllFuncs.pfnMoveEvent( forward, side );
 	}

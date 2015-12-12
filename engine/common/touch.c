@@ -44,9 +44,10 @@ typedef struct touchbutton2_s
 	// Touch button type: tap, stick or slider
 	touchButtonType type;
 	// Field of button in pixels
-	float left, right, top, bottom, alpha;
+	float left, right, top, bottom;
 	// Button texture
 	int texture;
+	byte r,g,b,a;
 	char texturefile[256];
 	char command[256];
 	char name[32];
@@ -60,15 +61,25 @@ struct touch_s
 	void *mempool;
 	touchbutton2_t *first;
 	touchState state;
-	int resize_finger;
 	int look_finger;
 	int move_finger;
 	float move_start_x;
 	float move_start_y;
+	float forward;
+	float side;
+	float yaw;
+	float pitch;
+	// editing
 	touchbutton2_t *edit;
+	int resize_finger;
 } touch;
 
-void IN_AddButton( const char *name,  const char *texture, const char *command, float left, float top, float right, float bottom )
+convar_t *touch_pitch;
+convar_t *touch_yaw;
+convar_t *touch_forwardzone;
+convar_t *touch_sidezone;
+
+void IN_AddButton( const char *name,  const char *texture, const char *command, float left, float top, float right, float bottom, byte r, byte g, byte b, byte a )
 {
 	touchbutton2_t *button = Mem_Alloc( touch.mempool, sizeof( touchbutton2_t ) );
 	MsgDev( D_NOTE, "IN_AddButton()\n");
@@ -79,6 +90,10 @@ void IN_AddButton( const char *name,  const char *texture, const char *command, 
 	button->top = top;
 	button->right = right;
 	button->bottom = bottom;
+	button->r = r;
+	button->g = g;
+	button->b = b;
+	button->a = a;
 	button->command[0] = 0;
 	// check keywords
 	if( !Q_strcmp( command, "_look" ) )
@@ -93,11 +108,30 @@ void IN_AddButton( const char *name,  const char *texture, const char *command, 
 
 void IN_TouchAddButton_f()
 {
-	if( Cmd_Argc( ) != 8 )
-		Msg( "Usage: touch_addbutton <name> <texture> <command> <left> <top> <right> <bottom>\n");
-	IN_AddButton( Cmd_Argv(1), Cmd_Argv(2), Cmd_Argv(3),
-		Q_atof( Cmd_Argv(4) ), Q_atof( Cmd_Argv(5) ), 
-		Q_atof( Cmd_Argv(6) ), Q_atof( Cmd_Argv(7) ) );
+	int argc = Cmd_Argc( );
+	if( argc == 12 )
+	{
+		IN_AddButton( Cmd_Argv(1), Cmd_Argv(2), Cmd_Argv(3),
+			Q_atof( Cmd_Argv(4) ), Q_atof( Cmd_Argv(5) ), 
+			Q_atof( Cmd_Argv(6) ), Q_atof( Cmd_Argv(7) ) ,
+			Q_atoi( Cmd_Argv(8) ), Q_atoi( Cmd_Argv(9) ), 
+			Q_atoi( Cmd_Argv(10) ), Q_atoi( Cmd_Argv(11) ) );
+		return;
+	}	
+	if( argc == 8 )
+	{
+		IN_AddButton( Cmd_Argv(1), Cmd_Argv(2), Cmd_Argv(3),
+			Q_atof( Cmd_Argv(4) ), Q_atof( Cmd_Argv(5) ), 
+			Q_atof( Cmd_Argv(6) ), Q_atof( Cmd_Argv(7) ),
+			255, 255, 255, 255 );
+		return;
+	}
+	if( argc == 4 )
+	{
+		IN_AddButton( Cmd_Argv(1), Cmd_Argv(2), Cmd_Argv(3), 0.4, 0.4, 0.6, 0.6, 255, 255, 255, 255 );
+		return;
+	}
+	Msg( "Usage: touch_addbutton <name> <texture> <command> [<left> <top> <right> <bottom> [ r g b a] ]\n" );
 }
 
 void IN_TouchEnableEdit_f()
@@ -163,48 +197,115 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_enableedit", IN_TouchEnableEdit_f, "Enable button editing mode" );
 	Cmd_AddCommand( "touch_disableedit", IN_TouchDisableEdit_f, "Disable button editing mode" );
 	Cmd_AddCommand( "touch_removeall", IN_TouchRemoveAll_f, "Remove all buttons" );
+	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.5", CVAR_ARCHIVE, "forward touch zone" );
+	touch_sidezone = Cvar_Get( "touch_sidezone", "0.3", CVAR_ARCHIVE, "side touch zone" );
+	touch_pitch = Cvar_Get( "touch_pitch", "20", CVAR_ARCHIVE, "touch pitch sensitivity" );
+	touch_yaw = Cvar_Get( "touch_yaw", "50", CVAR_ARCHIVE, "touch yaw sensitivity" );
 }
 
+void IN_TouchDrawTexture ( float left, float top, float right, float bottom, int texture, byte r, byte g, byte b, byte a )
+{
+	pglColor4ub( r, g, b, a );
+	R_DrawStretchPic( scr_width->integer * left,
+		scr_height->integer * top,
+		scr_width->integer * (right - left),
+		scr_height->integer * (bottom - top),
+		0, 0, 1, 1, texture );
+}
+
+static void IN_TouchCheckCoords( float *left, float *top, float *right, float *bottom  )
+{
+	/// TODO: grid check here
+	if( *right - *left < 0.1 )
+		*right = *left + 0.1;
+	if( *bottom - *top < 0.1 )
+		*bottom = *top + 0.1;
+	if( *left < 0 )
+		*right -= *left, *left = 0;
+	if( *top < 0 )
+		*bottom -= *top, *top = 0;
+	if( *bottom > 1 )
+		*top -= *bottom - 1, *bottom = 1;
+	if( *right > 1 )
+		*left -= *right - 1, *right = 1;
+		
+}
+// code looks smaller with it
+#define B(x) button->x
 void IN_TouchDraw( void )
 {
 	touchbutton2_t *button;
-	GL_SetRenderMode( kRenderTransAdd );
+	GL_SetRenderMode( kRenderTransTexture );
 	for( button = touch.first; button; button = button->next )
 	{
 		if( button->texturefile[0] )
 		{
 			if( !button->texture )
 				button->texture = GL_LoadTexture( button->texturefile, NULL, 0, 0, NULL );
-			//MsgDev( D_NOTE, "IN_TouchDraw : %d\n", button->texture );
-			R_DrawStretchPic( scr_width->integer * button->left,
-				scr_height->integer * button->top,
-				scr_width->integer * (button->right - button->left),
-				scr_height->integer * (button->bottom - button->top),
-				0, 0, 1, 1, button->texture);
+			IN_TouchDrawTexture( B(left), B(top), B(right), B(bottom), B(texture), B(r), B(g), B(b), B(a) );
 		}
 		if( touch.state >= state_edit )
 		{
-			GL_SetRenderMode( kRenderTransAdd );
-			pglColor4ub( 255, 255, 0, 32 );
-			R_DrawStretchPic( scr_width->integer * button->left,
-				scr_height->integer * button->top,
-				scr_width->integer * (button->right - button->left),
-				scr_height->integer * (button->bottom - button->top),
-				0, 0, 1, 1, cls.fillImage );
-			pglColor4ub( 255, 255, 255, 255 );
-			GL_SetRenderMode( kRenderTransAlpha );
+			IN_TouchDrawTexture( B(left), B(top), B(right), B(bottom), cls.fillImage, 255, 255, 0, 32 );
 		}
 	}
 	if( touch.edit )
 	{
-		GL_SetRenderMode( kRenderTransAdd );
-		pglColor4ub( 255, 255, 0, 64 );
-		R_DrawStretchPic( scr_width->integer * touch.edit->left,
-			scr_height->integer * touch.edit->top,
-			scr_width->integer * (touch.edit->right - touch.edit->left),
-			scr_height->integer * (touch.edit->bottom - touch.edit->top),
-			0, 0, 1, 1, cls.fillImage );
-		pglColor4ub( 255, 255, 255, 255 );
+		float	left = touch.edit->left,
+				top = touch.edit->top,
+				right = touch.edit->right,
+				bottom = touch.edit->bottom;
+		IN_TouchCheckCoords( &left, &top, &right, &bottom );
+		IN_TouchDrawTexture( left, top, right, bottom, cls.fillImage, 255, 255, 0, 64 );
+	}
+	pglColor4ub( 255, 255, 255, 255 );
+}
+
+static void IN_TouchEditMove( touchEventType type, int fingerID, float x, float y, float dx, float dy )
+{
+	if( touch.edit->finger == fingerID )
+	{
+		if( type == event_up ) // shutdown button move
+		{
+			touch.state = state_edit;
+			touch.edit->finger = -1;
+			touch.resize_finger = -1;
+			IN_TouchCheckCoords( &touch.edit->left, &touch.edit->top,
+				&touch.edit->right, &touch.edit->bottom );
+			touch.edit = NULL;
+		}
+		if( type == event_motion ) // shutdown button move
+		{
+			touch.edit->top += dy;
+			touch.edit->bottom += dy;
+			touch.edit->left += dx;
+			touch.edit->right += dx;
+		}
+	}
+	else 
+	{
+		if( type == event_down ) // enable resizing
+		{
+			if( touch.resize_finger == -1 )
+			{
+				touch.resize_finger = fingerID;
+			}
+		}
+		if( type == event_up ) // disable resizing
+		{
+			if( touch.resize_finger == fingerID )
+			{
+				touch.resize_finger = -1;
+			}
+		}
+		if( type == event_motion ) // perform resizing
+		{
+			if( touch.resize_finger == fingerID )
+			{
+				touch.edit->bottom += dy;
+				touch.edit->right += dx;
+			}
+		}
 	}
 }
 
@@ -220,52 +321,11 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	if( type == event_up )
 		Key_Event(241, 0);*/
 	if( cls.key_dest != key_game )
-		return;
+		return 0;
 	if( touch.state == state_edit_move )
 	{
-		if( touch.edit->finger == fingerID )
-		{
-			if( type == event_up ) // shutdown button move
-			{
-				touch.state = state_edit;
-				touch.edit->finger = -1;
-				touch.resize_finger = -1;
-				touch.edit = NULL;
-			}
-			if( type == event_motion ) // shutdown button move
-			{
-				touch.edit->top += dy;
-				touch.edit->bottom += dy;
-				touch.edit->left += dx;
-				touch.edit->right += dx;
-			}
-		}
-		else 
-		{
-			if( type == event_down ) // enable resizing
-			{
-				if( touch.resize_finger == -1 )
-				{
-					touch.resize_finger = fingerID;
-				}
-			}
-			if( type == event_up ) // disable resizing
-			{
-				if( touch.resize_finger == fingerID )
-				{
-					touch.resize_finger = -1;
-				}
-			}
-			if( type == event_motion ) // disable resizing
-			{
-				if( touch.resize_finger == fingerID )
-				{
-					touch.edit->bottom += dy;
-					touch.edit->right += dx;
-				}
-			}
-		}
-		return;
+		IN_TouchEditMove( type, fingerID, x, y, dx, dy );
+		return 1;
 	}
 	for( button = touch.first; button  ; button = button->next )
 	{
@@ -281,7 +341,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				{
 					touch.edit = button;
 					touch.state = state_edit_move;
-					return;
+					return 1;
 				}
 				if( button->type == touch_command )
 				{
@@ -289,11 +349,10 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				}
 				if( button->type == touch_move )
 				{
-					MsgDev( D_NOTE, "StartMove\n");
 					if( touch.look_finger == fingerID )
 					{
 						touch.move_finger = touch.look_finger = -1;
-						return;
+						return 1;
 					}
 					if( touch.move_finger !=-1 )
 						button->finger = -1;
@@ -306,11 +365,10 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				}
 				if( button->type == touch_look )
 				{
-					MsgDev( D_NOTE, "StartLook\n");
 					if( touch.move_finger == fingerID )
 					{
 						touch.move_finger = touch.look_finger = -1;
-						return;
+						return 1;
 					}
 					if( touch.look_finger !=-1 )
 						button->finger = -1;
@@ -335,6 +393,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				{
 					MsgDev( D_NOTE, "StopMove\n");
 					touch.move_finger = -1;
+					touch.forward = touch.side = 0;
 				}
 				if( button->type == touch_look )
 				{
@@ -347,13 +406,25 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	if( type == event_motion )
 	{
 		if( fingerID == touch.move_finger )
-			clgame.dllFuncs.pfnMoveEvent( (touch.move_start_y - y) * 2, (x - touch.move_start_x) * 2 );
+		{
+			if( !touch_forwardzone->value )
+				Cvar_SetFloat( "touch_forwardzone", 0.5 );
+			if( !touch_sidezone->value )
+				Cvar_SetFloat( "touch_sidezone", 0.3 );
+			touch.forward = (touch.move_start_y - y) / touch_forwardzone->value;
+			touch.side = (x - touch.move_start_x) / touch_sidezone->value ;
+		}
 		if( fingerID == touch.look_finger )
-			clgame.dllFuncs.pfnLookEvent( -dx * 300, dy * 300 );
+			touch.yaw -=dx * touch_yaw->value, touch.pitch +=dy * touch_pitch->value;
 	}
-	return 0;
+	return 1;
 }
 
-void IN_TouchMove( float * forward, float *side, float *pitch, float *yaw )
+void IN_TouchMove( float * forward, float *side, float *yaw, float *pitch )
 {
+	*forward += touch.forward;
+	*side += touch.side;
+	*yaw += touch.yaw;
+	*pitch += touch.pitch;
+	touch.yaw = touch.pitch = 0;
 }
