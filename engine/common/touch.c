@@ -17,8 +17,9 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "input.h"
 #include "client.h"
+#ifdef XASH_SDL
 #include <SDL_hints.h>
-
+#endif
 typedef enum
 {
 	touch_command,		// Just tap a button
@@ -101,12 +102,24 @@ void IN_TouchWriteConfig( void )
 		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\ttouch.cfg - touchscreen config\n" );
 		FS_Printf( f, "//=======================================================================\n" );
+		FS_Printf( f, "\n// touch cvars\n" );
+		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
+		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
+		FS_Printf( f, "touch_pitch \"%f\"\n", touch_pitch->value );
+		FS_Printf( f, "touch_yaw \"%f\"\n", touch_yaw->value );
+		FS_Printf( f, "touch_grid_count \"%d\"\n", touch_grid_count->integer );
+		FS_Printf( f, "touch_grid_enable \"%d\"\n", touch_grid_enable->integer );
+		FS_Printf( f, "\n// touch buttons\n" );
 		FS_Printf( f, "touch_removeall\n" );
 		for( button = touch.first; button; button = button->next )
+		{
 			FS_Printf( f, "touch_addbutton \"%s\" \"%s\" \"%s\" %f %f %f %f %d %d %d %d\n", 
 				B(name), B(texturefile), B(command),
 				B(left), B(top), B(right), B(bottom),
 				B(r), B(g), B(b), B(a) );
+			if( button->hide )
+				FS_Printf( f, "touch_hide \"%s\"\n", button->name );
+		}
 
 		FS_Close( f );
 	}
@@ -316,13 +329,15 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_show", IN_TouchShow_f, "show button" );
 	Cmd_AddCommand( "touch_hide", IN_TouchHide_f, "hide button" );
 	Cmd_AddCommand( "touch_removeall", IN_TouchRemoveAll_f, "Remove all buttons" );
-	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.1", CVAR_ARCHIVE, "forward touch zone" );
-	touch_sidezone = Cvar_Get( "touch_sidezone", "0.07", CVAR_ARCHIVE, "side touch zone" );
-	touch_pitch = Cvar_Get( "touch_pitch", "20", CVAR_ARCHIVE, "touch pitch sensitivity" );
-	touch_yaw = Cvar_Get( "touch_yaw", "50", CVAR_ARCHIVE, "touch yaw sensitivity" );
-	touch_grid_count = Cvar_Get( "touch_grid_count", "50", CVAR_ARCHIVE, "touch grid count" );
-	touch_grid_enable = Cvar_Get( "touch_grid_enable", "1", CVAR_ARCHIVE, "enable touch grid" );
+	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.1", 0, "forward touch zone" );
+	touch_sidezone = Cvar_Get( "touch_sidezone", "0.07", 0, "side touch zone" );
+	touch_pitch = Cvar_Get( "touch_pitch", "20", 0, "touch pitch sensitivity" );
+	touch_yaw = Cvar_Get( "touch_yaw", "50", 0, "touch yaw sensitivity" );
+	touch_grid_count = Cvar_Get( "touch_grid_count", "50", 0, "touch grid count" );
+	touch_grid_enable = Cvar_Get( "touch_grid_enable", "1", 0, "enable touch grid" );
+#ifdef XASH_SDL
 	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
+#endif
 	Cbuf_AddText( "exec touch.cfg\n" ); 
 }
 

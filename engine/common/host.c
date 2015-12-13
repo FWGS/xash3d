@@ -1092,7 +1092,10 @@ void EXPORT Host_Shutdown( void )
 	if( !host.change_game ) Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
 
 	if( host.type == HOST_NORMAL )
+	{
 		Host_WriteConfig();
+		IN_TouchWriteConfig();
+	}
 
 	SV_Shutdown( false );
 	CL_Shutdown();
