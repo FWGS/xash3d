@@ -328,6 +328,7 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_setcolor", IN_TouchSetColor_f, "Change button color" );
 	Cmd_AddCommand( "touch_show", IN_TouchShow_f, "show button" );
 	Cmd_AddCommand( "touch_hide", IN_TouchHide_f, "hide button" );
+	Cmd_AddCommand( "touch_list", IN_TouchListButtons_f, "list buttons" );
 	Cmd_AddCommand( "touch_removeall", IN_TouchRemoveAll_f, "Remove all buttons" );
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.1", 0, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.07", 0, "side touch zone" );
@@ -502,7 +503,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	}
 
 	// exit edit on top left corner
-	if( touch.state == state_edit && (x < GRID_X/2) && (y < GRID_Y/2) )
+	if( touch.state == state_edit && (x < GRID_X) && (y < GRID_Y) )
 	{
 		
 		IN_TouchDisableEdit_f();
