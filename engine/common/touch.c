@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "input.h"
 #include "client.h"
+#include <SDL_hints.h>
 
 typedef enum
 {
@@ -238,12 +239,13 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_enableedit", IN_TouchEnableEdit_f, "Enable button editing mode" );
 	Cmd_AddCommand( "touch_disableedit", IN_TouchDisableEdit_f, "Disable button editing mode" );
 	Cmd_AddCommand( "touch_removeall", IN_TouchRemoveAll_f, "Remove all buttons" );
-	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.5", CVAR_ARCHIVE, "forward touch zone" );
-	touch_sidezone = Cvar_Get( "touch_sidezone", "0.3", CVAR_ARCHIVE, "side touch zone" );
+	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.1", CVAR_ARCHIVE, "forward touch zone" );
+	touch_sidezone = Cvar_Get( "touch_sidezone", "0.07", CVAR_ARCHIVE, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "20", CVAR_ARCHIVE, "touch pitch sensitivity" );
 	touch_yaw = Cvar_Get( "touch_yaw", "50", CVAR_ARCHIVE, "touch yaw sensitivity" );
 	touch_grid_count = Cvar_Get( "touch_grid_count", "50", CVAR_ARCHIVE, "touch grid count" );
 	touch_grid_enable = Cvar_Get( "touch_grid_enable", "1", CVAR_ARCHIVE, "enable touch grid" );
+	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
 	Cbuf_AddText( "exec touch.cfg\n" ); 
 }
 
@@ -441,7 +443,9 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				}
 				if( button->type == touch_command )
 				{
-					Cbuf_AddText( button->command );
+					char command[256];
+					Q_snprintf( command, 256, "%s\n", button->command, 256 );
+					Cbuf_AddText( command );
 				}
 				if( button->type == touch_move )
 				{
@@ -478,11 +482,11 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			if( fingerID == button->finger )
 			{
 				button->finger = -1;
-				if( button->type == touch_command )
+				if( ( button->type == touch_command ) && ( button->command[0] == '+' ) )
 				{
 					char command[256];
-					Q_strncpy( command,  button->command, 256 );
-					if( command[0] == '+' ) command [0] = '-';
+					Q_snprintf( command, 256, "%s\n", button->command, 256 );
+					command[0] = '-';
 					Cbuf_AddText( command );
 				}
 				if( button->type == touch_move )
