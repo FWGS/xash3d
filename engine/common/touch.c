@@ -195,8 +195,8 @@ void IN_TouchSetTexture( const char *name, const char *texture )
 	touchbutton2_t *button = IN_TouchFindButton( name );
 	if( !button )
 		return;
-	button->texture = 0; // mark for texture load
-	Q_strncpy( button->texturefile, texture, 256 );
+	button->texture = -1; // mark for texture load
+	Q_strncpy( button->texturefile, texture, sizeof( button->texturefile ) );
 }
 
 void IN_TouchHide( const char *name, qboolean hide )
@@ -239,8 +239,8 @@ void IN_TouchSetTexture_f( void )
 void IN_AddButton( const char *name,  const char *texture, const char *command, float left, float top, float right, float bottom, byte r, byte g, byte b, byte a )
 {
 	touchbutton2_t *button = Mem_Alloc( touch.mempool, sizeof( touchbutton2_t ) );
-	button->texture = 0;
-	Q_strncpy( button->texturefile, texture, 256 );
+	button->texture = -1;
+	Q_strncpy( button->texturefile, texture, sizeof( button->texturefile ) );
 	Q_strncpy( button->name, name, 32 );
 	IN_TouchRemoveButton( name ); //replace if exist
 	button->left = left;
@@ -410,10 +410,16 @@ void IN_TouchDraw( void )
 	}
 	for( button = touch.first; button; button = button->next )
 	{
-		if( button->texturefile[0] && ( !button->hide || touch.state >= state_edit ) )
+		if( button->texturefile[0] == '#' )
 		{
-			if( !button->texture )
+			
+		}
+		else if( button->texturefile[0] && ( !button->hide || touch.state >= state_edit ) )
+		{
+			if( button->texture == -1 )
+			{
 				button->texture = GL_LoadTexture( button->texturefile, NULL, 0, 0, NULL );
+			}
 			IN_TouchDrawTexture( B(left), B(top), B(right), B(bottom), B(texture), B(r), B(g), B(b), B(a) );
 		}
 		if( touch.state >= state_edit )
