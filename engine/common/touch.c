@@ -53,6 +53,7 @@ typedef struct touchbutton2_s
 	char command[256];
 	char name[32];
 	int finger;
+	qboolean hide;
 	// Double-linked list
 	struct touchbutton2_s *next;
 	struct touchbutton2_s *prev;
@@ -112,27 +113,41 @@ void IN_TouchWriteConfig( void )
 	else MsgDev( D_ERROR, "Couldn't write touch.cfg.\n" );
 }
 
-void IN_TouchRemoveButton( const char *name )
+void IN_TouchListButtons_f( void )
+{
+	touchbutton2_t *button;
+	for( button = touch.first; button; button = button->next )
+		Msg( "%s %s %s %f %f %f %f %d %d %d %d\n", 
+			B(name), B(texturefile), B(command),
+			B(left), B(top), B(right), B(bottom),
+			B(r), B(g), B(b), B(a) );
+}
+
+touchbutton2_t *IN_TouchFindButton( const char *name )
 {
 	touchbutton2_t *button;
 	if( !touch.first )
-		return;
+		return NULL;
 	for ( button = touch.first; button; button = button->next )
-	{
 		if( !Q_strncmp( button->name, name, 32 ) )
-		{
-			if( button->prev )
-				button->prev->next = button->next;
-			else
-				touch.first = button->next;
-			if( button->next )
-				button->next->prev = button->prev;
-			else
-				touch.last = button->prev;
-			Mem_Free( button );
-			return;
-		}
-	}
+			return button;
+	return NULL;
+}
+
+void IN_TouchRemoveButton( const char *name )
+{
+	touchbutton2_t *button = IN_TouchFindButton( name );
+	if( !button )
+		return;
+	if( button->prev )
+		button->prev->next = button->next;
+	else
+		touch.first = button->next;
+	if( button->next )
+		button->next->prev = button->prev;
+	else
+		touch.last = button->prev;
+	Mem_Free( button );
 }
 
 void IN_TouchRemoveButton_f()
@@ -151,6 +166,63 @@ void IN_TouchRemoveAll_f()
 	touch.last = NULL;
 }
 
+void IN_TouchSetColor( const char *name, byte r, byte g, byte b, byte a )
+{
+	touchbutton2_t *button = IN_TouchFindButton( name );
+	if( !button )
+		return;
+	button->r = r;
+	button->g = g;
+	button->b = b;
+	button->a = a;
+}
+
+void IN_TouchSetTexture( const char *name, const char *texture )
+{
+	touchbutton2_t *button = IN_TouchFindButton( name );
+	if( !button )
+		return;
+	button->texture = 0; // mark for texture load
+	Q_strncpy( button->texturefile, texture, 256 );
+}
+
+void IN_TouchHide( const char *name, qboolean hide )
+{
+	touchbutton2_t *button = IN_TouchFindButton( name );
+	if( !button )
+		return;
+	button->hide = hide;
+}
+void IN_TouchHide_f( void )
+{
+	IN_TouchHide( Cmd_Argv( 1 ), true );
+}
+
+void IN_TouchShow_f( void )
+{
+	IN_TouchHide( Cmd_Argv( 1 ), false );
+}
+
+void IN_TouchSetColor_f( void )
+{
+	if( Cmd_Argc() == 5 )
+	{
+		IN_TouchSetColor( Cmd_Argv(1), Q_atoi( Cmd_Argv(2) ), Q_atoi( Cmd_Argv(3) ), Q_atoi( Cmd_Argv(4) ), Q_atoi( Cmd_Argv(5) ) );
+		return;
+	}
+	Msg( "Usage: touch_setcolor <name> <r> <g> <b> <a>\n" );
+}
+
+void IN_TouchSetTexture_f( void )
+{
+	if( Cmd_Argc() == 3 )
+	{
+		IN_TouchSetTexture( Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
+		return;
+	}
+	Msg( "Usage: touch_settexture <name> <file>\n" );
+}
+
 void IN_AddButton( const char *name,  const char *texture, const char *command, float left, float top, float right, float bottom, byte r, byte g, byte b, byte a )
 {
 	touchbutton2_t *button = Mem_Alloc( touch.mempool, sizeof( touchbutton2_t ) );
@@ -167,6 +239,7 @@ void IN_AddButton( const char *name,  const char *texture, const char *command, 
 	button->b = b;
 	button->a = a;
 	button->command[0] = 0;
+	button->hide = false;
 	// check keywords
 	if( !Q_strcmp( command, "_look" ) )
 		button->type = touch_look;
@@ -238,6 +311,10 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_removebutton", IN_TouchRemoveButton_f, "Remove native touch button" );
 	Cmd_AddCommand( "touch_enableedit", IN_TouchEnableEdit_f, "Enable button editing mode" );
 	Cmd_AddCommand( "touch_disableedit", IN_TouchDisableEdit_f, "Disable button editing mode" );
+	Cmd_AddCommand( "touch_settexture", IN_TouchSetTexture_f, "Change button texture" );
+	Cmd_AddCommand( "touch_setcolor", IN_TouchSetColor_f, "Change button color" );
+	Cmd_AddCommand( "touch_show", IN_TouchShow_f, "show button" );
+	Cmd_AddCommand( "touch_hide", IN_TouchHide_f, "hide button" );
 	Cmd_AddCommand( "touch_removeall", IN_TouchRemoveAll_f, "Remove all buttons" );
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.1", CVAR_ARCHIVE, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.07", CVAR_ARCHIVE, "side touch zone" );
@@ -317,7 +394,7 @@ void IN_TouchDraw( void )
 	}
 	for( button = touch.first; button; button = button->next )
 	{
-		if( button->texturefile[0] )
+		if( button->texturefile[0] && ( !button->hide || touch.state >= state_edit ) )
 		{
 			if( !button->texture )
 				button->texture = GL_LoadTexture( button->texturefile, NULL, 0, 0, NULL );
@@ -391,24 +468,28 @@ static void IN_TouchEditMove( touchEventType type, int fingerID, float x, float 
 int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
 {
 	touchbutton2_t *button;
-	// Find suitable button
-	//MsgDev( D_NOTE, "IN_TouchEvent( %d, %d, %f, %f, %f, %f )\n", type, fingerID, x, y, dx, dy );
-	UI_MouseMove( scr_width->integer * x, scr_height->integer * y );
-	// simulate mouse click
-	/*if( type == event_down )
-		Key_Event(241, 1);
-	if( type == event_up )
-		Key_Event(241, 0);*/
+	
+	// simulate menu mouse click
 	if( cls.key_dest != key_game )
+	{
+		UI_MouseMove( scr_width->integer * x, scr_height->integer * y );
+		if( type == event_down )
+			Key_Event(241, 1);
+		if( type == event_up )
+			Key_Event(241, 0);
 		return 0;
+	}
+
 	if( touch.state == state_edit_move )
 	{
 		IN_TouchEditMove( type, fingerID, x, y, dx, dy );
 		return 1;
 	}
+
+	// exit edit on top left corner
 	if( touch.state == state_edit && (x < GRID_X/2) && (y < GRID_Y/2) )
 	{
-		// exit edit on top left corner
+		
 		IN_TouchDisableEdit_f();
 		return 1;
 	}
@@ -441,6 +522,8 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 					touch.state = state_edit_move;
 					return 1;
 				}
+				if( button->hide )
+					continue;
 				if( button->type == touch_command )
 				{
 					char command[256];
