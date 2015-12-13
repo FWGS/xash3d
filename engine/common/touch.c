@@ -80,6 +80,36 @@ convar_t *touch_pitch;
 convar_t *touch_yaw;
 convar_t *touch_forwardzone;
 convar_t *touch_sidezone;
+convar_t *touch_grid_enable;
+convar_t *touch_grid_count;
+// code looks smaller with it
+#define B(x) button->x
+void IN_TouchWriteConfig( void )
+{
+	file_t	*f;
+
+	if( !touch.first ) return;
+
+	MsgDev( D_NOTE, "IN__TouchWriteConfig()\n" );
+	f = FS_Open( "touch.cfg", "w", false );
+	if( f )
+	{
+		touchbutton2_t *button;
+		FS_Printf( f, "//=======================================================================\n");
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\ttouch.cfg - touchscreen config\n" );
+		FS_Printf( f, "//=======================================================================\n" );
+		FS_Printf( f, "touch_removeall\n" );
+		for( button = touch.first; button; button = button->next )
+			FS_Printf( f, "touch_addbutton \"%s\" \"%s\" \"%s\" %f %f %f %f %d %d %d %d\n", 
+				B(name), B(texturefile), B(command),
+				B(left), B(top), B(right), B(bottom),
+				B(r), B(g), B(b), B(a) );
+
+		FS_Close( f );
+	}
+	else MsgDev( D_ERROR, "Couldn't write touch.cfg.\n" );
+}
 
 void IN_TouchRemoveButton( const char *name )
 {
@@ -90,9 +120,13 @@ void IN_TouchRemoveButton( const char *name )
 	{
 		if( !Q_strncmp( button->name, name, 32 ) )
 		{
-			if ( button == touch.first )
+			if( button->prev )
+				button->prev->next = button->next;
+			else
 				touch.first = button->next;
-			if ( button == touch.last )
+			if( button->next )
+				button->next->prev = button->prev;
+			else
 				touch.last = button->prev;
 			Mem_Free( button );
 			return;
@@ -119,7 +153,6 @@ void IN_TouchRemoveAll_f()
 void IN_AddButton( const char *name,  const char *texture, const char *command, float left, float top, float right, float bottom, byte r, byte g, byte b, byte a )
 {
 	touchbutton2_t *button = Mem_Alloc( touch.mempool, sizeof( touchbutton2_t ) );
-	MsgDev( D_NOTE, "IN_AddButton()\n");
 	button->texture = 0;
 	Q_strncpy( button->texturefile, texture, 256 );
 	Q_strncpy( button->name, name, 32 );
@@ -190,6 +223,7 @@ void IN_TouchDisableEdit_f()
 	if( touch.edit )
 		touch.edit->finger = -1;
 	touch.resize_finger = touch.move_finger = touch.look_finger = -1;
+	IN_TouchWriteConfig();
 }
 
 void IN_TouchInit( void )
@@ -208,6 +242,9 @@ void IN_TouchInit( void )
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.3", CVAR_ARCHIVE, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "20", CVAR_ARCHIVE, "touch pitch sensitivity" );
 	touch_yaw = Cvar_Get( "touch_yaw", "50", CVAR_ARCHIVE, "touch yaw sensitivity" );
+	touch_grid_count = Cvar_Get( "touch_grid_count", "50", CVAR_ARCHIVE, "touch grid count" );
+	touch_grid_enable = Cvar_Get( "touch_grid_enable", "1", CVAR_ARCHIVE, "enable touch grid" );
+	Cbuf_AddText( "exec touch.cfg\n" ); 
 }
 
 void IN_TouchDrawTexture ( float left, float top, float right, float bottom, int texture, byte r, byte g, byte b, byte a )
@@ -225,13 +262,20 @@ void IN_TouchDrawTexture ( float left, float top, float right, float bottom, int
 		0, 0, 1, 1, texture );
 }
 
+#define GRID_COUNT_X (touch_grid_count->integer)
+#define GRID_COUNT_Y (touch_grid_count->integer * scr_height->value / scr_width->value)
+#define GRID_X (1.0/GRID_COUNT_X)
+#define GRID_Y (scr_width->value/scr_height->value/GRID_COUNT_X)
+#define GRID_ROUND_X(x) ((float)round( x * GRID_COUNT_X ) / GRID_COUNT_X)
+#define GRID_ROUND_Y(x) ((float)round( x * GRID_COUNT_Y ) / GRID_COUNT_Y)
+
 static void IN_TouchCheckCoords( float *left, float *top, float *right, float *bottom  )
 {
 	/// TODO: grid check here
-	if( *right - *left < 0.1 )
-		*right = *left + 0.1;
-	if( *bottom - *top < 0.1 )
-		*bottom = *top + 0.1;
+	if( *right - *left < GRID_X * 2 )
+		*right = *left + GRID_X * 2;
+	if( *bottom - *top < GRID_Y * 2)
+		*bottom = *top + GRID_Y * 2;
 	if( *left < 0 )
 		*right -= *left, *left = 0;
 	if( *top < 0 )
@@ -240,14 +284,35 @@ static void IN_TouchCheckCoords( float *left, float *top, float *right, float *b
 		*top -= *bottom - 1, *bottom = 1;
 	if( *right > 1 )
 		*left -= *right - 1, *right = 1;
-		
+	*left = GRID_ROUND_X( *left );
+	*right = GRID_ROUND_X( *right );
+	*top = GRID_ROUND_Y( *top );
+	*bottom = GRID_ROUND_Y( *bottom );
 }
-// code looks smaller with it
-#define B(x) button->x
+
 void IN_TouchDraw( void )
 {
 	touchbutton2_t *button;
+	if( cls.key_dest != key_game )
+		return;
 	GL_SetRenderMode( kRenderTransTexture );
+	if( touch.state >= state_edit && touch_grid_enable->value )
+	{
+		float x;
+		pglColor4ub( 0, 224, 224, 224 );
+		for ( x = 0; x < 1 ; x += GRID_X )
+			R_DrawStretchPic( scr_width->integer * x,
+				0,
+				1,
+				scr_height->integer,
+				0, 0, 1, 1, cls.fillImage );
+		for ( x = 0; x < 1 ; x += GRID_Y )
+			R_DrawStretchPic( 0,
+				scr_height->integer * x,
+				scr_width->integer,
+				1,
+				0, 0, 1, 1, cls.fillImage );
+	}
 	for( button = touch.first; button; button = button->next )
 	{
 		if( button->texturefile[0] )
@@ -339,6 +404,12 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		IN_TouchEditMove( type, fingerID, x, y, dx, dy );
 		return 1;
 	}
+	if( touch.state == state_edit && (x < GRID_X/2) && (y < GRID_Y/2) )
+	{
+		// exit edit on top left corner
+		IN_TouchDisableEdit_f();
+		return 1;
+	}
 	for( button = touch.last; button  ; button = button->prev )
 	{
 		if( type == event_down )
@@ -416,13 +487,11 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				}
 				if( button->type == touch_move )
 				{
-					MsgDev( D_NOTE, "StopMove\n");
 					touch.move_finger = -1;
 					touch.forward = touch.side = 0;
 				}
 				if( button->type == touch_look )
 				{
-					MsgDev( D_NOTE, "StopLook\n");
 					touch.look_finger = -1;
 				}
 			}
