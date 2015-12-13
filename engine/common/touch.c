@@ -52,14 +52,16 @@ typedef struct touchbutton2_s
 	char command[256];
 	char name[32];
 	int finger;
-	// Next
+	// Double-linked list
 	struct touchbutton2_s *next;
+	struct touchbutton2_s *prev;
 } touchbutton2_t;
 
 struct touch_s
 {
 	void *mempool;
 	touchbutton2_t *first;
+	touchbutton2_t *last;
 	touchState state;
 	int look_finger;
 	int move_finger;
@@ -79,6 +81,41 @@ convar_t *touch_yaw;
 convar_t *touch_forwardzone;
 convar_t *touch_sidezone;
 
+void IN_TouchRemoveButton( const char *name )
+{
+	touchbutton2_t *button;
+	if( !touch.first )
+		return;
+	for ( button = touch.first; button; button = button->next )
+	{
+		if( !Q_strncmp( button->name, name, 32 ) )
+		{
+			if ( button == touch.first )
+				touch.first = button->next;
+			if ( button == touch.last )
+				touch.last = button->prev;
+			Mem_Free( button );
+			return;
+		}
+	}
+}
+
+void IN_TouchRemoveButton_f()
+{
+	IN_TouchRemoveButton( Cmd_Argv( 1 ) );
+}
+
+void IN_TouchRemoveAll_f()
+{
+	while( touch.first )
+	{
+		touchbutton2_t *remove = touch.first;
+		touch.first = touch.first->next;
+		Mem_Free ( remove );
+	}
+	touch.last = NULL;
+}
+
 void IN_AddButton( const char *name,  const char *texture, const char *command, float left, float top, float right, float bottom, byte r, byte g, byte b, byte a )
 {
 	touchbutton2_t *button = Mem_Alloc( touch.mempool, sizeof( touchbutton2_t ) );
@@ -86,6 +123,7 @@ void IN_AddButton( const char *name,  const char *texture, const char *command, 
 	button->texture = 0;
 	Q_strncpy( button->texturefile, texture, 256 );
 	Q_strncpy( button->name, name, 32 );
+	IN_TouchRemoveButton( name ); //replace if exist
 	button->left = left;
 	button->top = top;
 	button->right = right;
@@ -102,8 +140,13 @@ void IN_AddButton( const char *name,  const char *texture, const char *command, 
 		button->type = touch_move;
 	Q_strncpy( button->command, command, sizeof( button->command ) );
 	button->finger = -1;
-	button->next = touch.first;
-	touch.first = button;
+	button->next = NULL;
+	button->prev = touch.last;
+	if( touch.last )
+		touch.last->next = button;
+	touch.last = button;
+	if( !touch.first )
+		touch.first = button;
 }
 
 void IN_TouchAddButton_f()
@@ -149,42 +192,6 @@ void IN_TouchDisableEdit_f()
 	touch.resize_finger = touch.move_finger = touch.look_finger = -1;
 }
 
-void IN_TouchRemoveButton_f()
-{
-	touchbutton2_t *button;
-	char *name;
-	if( !touch.first )
-		return;
-	name = Cmd_Argv( 1 );
-	if( !Q_strncmp( touch.first->name, name, 32 ) )
-	{
-		touchbutton2_t *remove = touch.first;
-		touch.first = remove->next;
-		Mem_Free( remove );
-	}
-	for ( button = touch.first; button->next; button = button->next )
-	{
-		if( !Q_strncmp( button->next->name, name, 32 ) )
-		{
-			touchbutton2_t *remove = button->next;
-			button->next = remove->next;
-			Mem_Free( remove );
-			return;
-		}
-	}
-	
-}
-
-void IN_TouchRemoveAll_f()
-{
-	while( touch.first )
-	{
-		touchbutton2_t *remove = touch.first;
-		touch.first = touch.first->next;
-		Mem_Free ( remove );
-	}
-}
-
 void IN_TouchInit( void )
 {
 	touch.mempool = Mem_AllocPool( "Touch" );
@@ -205,6 +212,11 @@ void IN_TouchInit( void )
 
 void IN_TouchDrawTexture ( float left, float top, float right, float bottom, int texture, byte r, byte g, byte b, byte a )
 {
+	pglColor4ub( r, g, b, a );
+	if( left >= right )
+		return;
+	if( top >= bottom )
+		return;
 	pglColor4ub( r, g, b, a );
 	R_DrawStretchPic( scr_width->integer * left,
 		scr_height->integer * top,
@@ -327,7 +339,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		IN_TouchEditMove( type, fingerID, x, y, dx, dy );
 		return 1;
 	}
-	for( button = touch.first; button  ; button = button->next )
+	for( button = touch.last; button  ; button = button->prev )
 	{
 		if( type == event_down )
 		{
@@ -340,6 +352,19 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				if( touch.state == state_edit )
 				{
 					touch.edit = button;
+					// Make button last to bring it up
+					if( button->next )
+					{
+						if( button->prev )
+							button->prev->next = button->next;
+						else 
+							touch.first = button->next;
+						button->next->prev = button->prev;
+						touch.last->next = button;
+						button->prev = touch.last;
+						button->next = NULL;
+						touch.last = button;
+					}
 					touch.state = state_edit_move;
 					return 1;
 				}
