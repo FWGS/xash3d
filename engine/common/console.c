@@ -26,6 +26,7 @@ convar_t	*con_fontsize;
 convar_t	*con_maxfrac;
 convar_t	*con_halffrac;
 convar_t	*con_charset;
+convar_t	*con_alpha;
 
 static int g_codepage = 0;
 static qboolean g_utf8 = false;
@@ -830,6 +831,7 @@ void Con_Init( void )
 	con_maxfrac = Cvar_Get( "con_maxfrac", "1.0", CVAR_ARCHIVE, "console max height" );
 	con_halffrac = Cvar_Get( "con_halffrac", "0.5", CVAR_ARCHIVE, "console half height" );
 	con_charset = Cvar_Get( "con_charset", "cp1251", CVAR_ARCHIVE, "console font charset (only cp1251 supported now)" );
+	con_alpha = Cvar_Get( "con_alpha", "1.0", CVAR_ARCHIVE, "console alpha value" );
 
 	Con_CheckResize();
 
@@ -1900,8 +1902,18 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		y *= frac;
 	if( y >= 1 )
 	{
-		GL_SetRenderMode( kRenderNormal );
+		if( fill )
+		{
+			GL_SetRenderMode( kRenderNormal );
+			pglColor4ub( 255, 255, 255, 255 );
+		}
+		else
+		{
+			GL_SetRenderMode( kRenderTransTexture );
+			pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
+		}
 		R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+		pglColor4ub( 255, 255, 255, 255 );
 	}
 	else y = 0;
 
