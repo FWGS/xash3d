@@ -100,6 +100,7 @@ convar_t *touch_config_file;
 #define TO_SCRN_Y(x) (scr_height->integer * (x))
 #define TO_SCRN_X(x) (scr_width->integer * (x))
 
+int pfnDrawCharacter( int x, int y, int number, int r, int g, int b );
 
 void IN_TouchEditClear();
 
@@ -225,13 +226,17 @@ void IN_TouchSetCommand( const char *name, const char *command )
 
 void IN_TouchHide( const char *name, qboolean hide )
 {
-	touchbutton2_t *button = IN_TouchFindButton( name );
-	if( !button )
-		return;
-	if( hide )
-		button->flags |= TOUCH_FL_HIDE;
-	else
-	button->flags &= ~TOUCH_FL_HIDE;
+	touchbutton2_t *button;
+	for( button = touch.first; button; button = button->next )
+	{
+		if( Q_stricmpext( name, button->name ) )
+		{
+			if( hide )
+				button->flags |= TOUCH_FL_HIDE;
+			else
+				button->flags &= ~TOUCH_FL_HIDE;
+		}
+	}
 	
 }
 void IN_TouchHide_f( void )
@@ -451,17 +456,29 @@ void IN_TouchDraw( void )
 	}
 	for( button = touch.first; button; button = button->next )
 	{
-		if( button->texturefile[0] == '#' )
+		if( !( button->flags & TOUCH_FL_HIDE ) || (touch.state >= state_edit ) )
 		{
-			
-		}
-		else if( button->texturefile[0] && ( !( button->flags & TOUCH_FL_HIDE ) || (touch.state >= state_edit) ) )
-		{
-			if( button->texture == -1 )
+			if( button->texturefile[0] == '#' )
 			{
-				button->texture = GL_LoadTexture( button->texturefile, NULL, 0, 0, NULL );
+				float x = button->left * clgame.scrInfo.iWidth;
+				if( !clgame.scrInfo.iWidth || !clgame.scrInfo.iHeight )
+					continue;
+				char *s = button->texturefile;
+				Con_UtfProcessChar( 0 );
+				while( *s++ )
+					x += pfnDrawCharacter( x, button->top * clgame.scrInfo.iHeight, *s, button->color[0], button->color[1], button->color[2] );
+				button->bottom = button->top + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight );
+				button->right = ( x / clgame.scrInfo.iWidth );
+				GL_SetRenderMode( kRenderTransTexture );
 			}
-			IN_TouchDrawTexture( B(left), B(top), B(right), B(bottom), B(texture), B(color[0]), B(color[1]), B(color[2]), B(color[3]) );
+			else if( button->texturefile[0] )
+			{
+				if( button->texture == -1 )
+				{
+					button->texture = GL_LoadTexture( button->texturefile, NULL, 0, 0, NULL );
+				}
+				IN_TouchDrawTexture( B(left), B(top), B(right), B(bottom), B(texture), B(color[0]), B(color[1]), B(color[2]), B(color[3]) );
+			}
 		}
 		if( touch.state >= state_edit )
 		{
@@ -470,7 +487,7 @@ void IN_TouchDraw( void )
 				IN_TouchDrawTexture( B(left), B(top), B(right), B(bottom), cls.fillImage, 255, 255, 0, 32 );
 			else
 				IN_TouchDrawTexture( B(left), B(top), B(right), B(bottom), cls.fillImage, 128, 128, 128, 128 );
-			MakeRGBA( color, 255, 255, 255, 255 );
+			MakeRGBA( color, 255, 255, 0, 128 );
 			Con_DrawString( TO_SCRN_X( B(left) ), TO_SCRN_Y( B(top) ), B(name), color );
 		}
 	}
