@@ -46,7 +46,7 @@ typedef enum
 {
 	round_none = 0,
 	round_grid,
-	round_circle
+	round_aspect
 } touchRound;
 
 typedef enum
@@ -61,6 +61,8 @@ typedef enum
 #define TOUCH_FL_CLIENT BIT( 2 )
 #define TOUCH_FL_MP BIT( 3 )
 #define TOUCH_FL_SP BIT( 4 )
+#define TOUCH_FL_DEF_SHOW BIT( 5 )
+#define TOUCH_FL_DEF_HIDE BIT( 6 )
 
 typedef struct touchbutton2_s
 {
@@ -100,6 +102,7 @@ struct touch_s
 	touchbutton2_t *selection;
 	int resize_finger;
 	qboolean showbuttons;
+	qboolean clientonly;
 } touch;
 
 typedef struct touchdefaultbutton_s
@@ -110,24 +113,25 @@ typedef struct touchdefaultbutton_s
 	float x1, y1, x2, y2;
 	rgba_t color;
 	touchRound round;
+	float aspect;
 	gameMode mode;
 } touchdefaultbutton_t;
 
 touchdefaultbutton_t g_DefaultButtons[256] = {
-{"look", "", "_look", 0.5, 0.0, 1.0, 1.0, { 255, 255, 255, 255 }, round_none, 0 },
-{"move", "", "_move", 0.0, 0.0, 0.5, 1.0, { 255, 255, 255, 255 }, round_none, 0 },
-{"invnext", "touch2/next_weap.tga", "invnext", 0.000000, 0.541083, 0.120000, 0.743989, { 255, 255, 255, 255 }, round_circle, 0 },
-{"invprev", "touch2/prev_weap.tga", "invprev", 0.000000, 0.135271, 0.120000, 0.338177, { 255, 255, 255, 255 }, round_circle, 0 },
-{"edit", "touch2/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.135271, { 255, 255, 255, 255 }, round_circle, 0 },
-{"use", "touch2/use.tga", "+use", 0.880000, 0.405812, 1.000000, 0.608719, { 255, 255, 255, 255 }, round_circle, 0 },
-{"jump", "touch2/jump.tga", "+jump", 0.880000, 0.202906, 1.000000, 0.405812, { 255, 255, 255, 255 }, round_circle, 0 },
-{"attack", "touch2/shoot.tga", "+attack", 0.760000, 0.473448, 0.880000, 0.676354, { 255, 255, 255, 255 }, round_circle, 0 },
-{"attack2", "touch2/shoot_alt.tga", "+attack2", 0.760000, 0.270542, 0.880000, 0.473448, { 255, 255, 255, 255 }, round_circle, 0 },
-{"loadquick", "touch2/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.135271, { 255, 255, 255, 255 }, round_circle, game_sp },
-{"savequick", "touch2/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_circle, game_sp },
-{"duck", "touch2/crouch.tga", "+duck", 0.880000, 0.777807, 1.000000, 0.980713, { 255, 255, 255, 255 }, round_circle, 0 },
-{"messagemode", "touch2/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_circle, game_mp },
-{"reload", "touch2/reload.tga", "+reload", 0.000000, 0.338177, 0.120000, 0.541083, { 255, 255, 255, 255 }, round_circle, 0 },
+{"look", "", "_look", 0.5, 0.0, 1.0, 1.0, { 255, 255, 255, 255 }, round_none, 0, 0 },
+{"move", "", "_move", 0.0, 0.0, 0.5, 1.0, { 255, 255, 255, 255 }, round_none, 0, 0 },
+{"invnext", "touch2/next_weap.tga", "invnext", 0.000000, 0.541083, 0.120000, 0.743989, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"invprev", "touch2/prev_weap.tga", "invprev", 0.000000, 0.135271, 0.120000, 0.338177, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"edit", "touch2/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"use", "touch2/use.tga", "+use", 0.880000, 0.405812, 1.000000, 0.608719, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"jump", "touch2/jump.tga", "+jump", 0.880000, 0.202906, 1.000000, 0.405812, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"attack", "touch2/shoot.tga", "+attack", 0.760000, 0.473448, 0.880000, 0.676354, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"attack2", "touch2/shoot_alt.tga", "+attack2", 0.760000, 0.270542, 0.880000, 0.473448, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"loadquick", "touch2/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_sp },
+{"savequick", "touch2/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_sp },
+{"duck", "touch2/crouch.tga", "+duck", 0.880000, 0.777807, 1.000000, 0.980713, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"messagemode", "touch2/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_mp },
+{"reload", "touch2/reload.tga", "+reload", 0.000000, 0.338177, 0.120000, 0.541083, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
 };
 int g_LastDefaultButton = 15;
 
@@ -138,6 +142,14 @@ convar_t *touch_sidezone;
 convar_t *touch_grid_enable;
 convar_t *touch_grid_count;
 convar_t *touch_config_file;
+convar_t *touch_enable;
+
+// enable on android by default
+#ifdef __ANDROID__
+#define TOUCH_ENABLE "1"
+#else
+#define TOUCH_ENABLE "0"
+#endif
 
 // code looks smaller with it
 #define B(x) button->x
@@ -177,12 +189,18 @@ void IN_TouchWriteConfig( void )
 		FS_Printf( f, "touch_removeall\n" );
 		for( button = touch.first; button; button = button->next )
 		{
-			if( button->flags & TOUCH_FL_CLIENT )
+			int flags = button->flags;
+			if( flags & TOUCH_FL_CLIENT )
 				continue; //skip temporary buttons
+			if( flags & TOUCH_FL_DEF_SHOW )
+				flags &= ~TOUCH_FL_HIDE;
+			if( flags & TOUCH_FL_DEF_HIDE )
+				flags |= TOUCH_FL_HIDE;
+
 			FS_Printf( f, "touch_addbutton \"%s\" \"%s\" \"%s\" %f %f %f %f %d %d %d %d %d\n", 
 				B(name), B(texturefile), B(command),
 				B(x1), B(y1), B(x2), B(y2),
-				B(color[0]), B(color[1]), B(color[2]), B(color[3]), B(flags) );
+				B(color[0]), B(color[1]), B(color[2]), B(color[3]), flags );
 			if( button->flags & TOUCH_FL_HIDE )
 				FS_Printf( f, "touch_hide \"%s\"\n", button->name );
 		}
@@ -211,6 +229,11 @@ touchbutton2_t *IN_TouchFindButton( const char *name )
 		if( !Q_strncmp( button->name, name, 32 ) )
 			return button;
 	return NULL;
+}
+
+void IN_TouchSetClientOnly( qboolean state )
+{
+	touch.clientonly = state;
 }
 
 void IN_TouchRemoveButton( const char *name )
@@ -370,13 +393,13 @@ touchbutton2_t *IN_AddButton( const char *name,  const char *texture, const char
 	return button;
 }
 
-void IN_TouchAddClientButton( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color, int round )
+void IN_TouchAddClientButton( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect )
 {
 	touchbutton2_t *button;
 	if( round )
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
-	if( round == round_circle )
-		y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H);
+	if( round == round_aspect )
+		y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * aspect;
 	button = IN_AddButton( name, texture, command, x1, y1, x2, y2, color );
 	button->flags |= TOUCH_FL_CLIENT;
 }
@@ -393,8 +416,8 @@ void IN_TouchLoadDefaults_f()
 			  y2 = g_DefaultButtons[i].y2; 
 		
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
-		if( g_DefaultButtons[i].round == round_circle )
-			y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H);
+		if( g_DefaultButtons[i].round == round_aspect )
+			y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * g_DefaultButtons[i].aspect;
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 		button = IN_AddButton( g_DefaultButtons[i].name, g_DefaultButtons[i].texturefile, g_DefaultButtons[i].command, x1, y1, x2, y2, g_DefaultButtons[i].color );
 		if( g_DefaultButtons[i].mode == game_sp )
@@ -404,7 +427,7 @@ void IN_TouchLoadDefaults_f()
 	}
 }
 
-void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, int mode )
+void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int mode )
 {
 	if( g_LastDefaultButton >= 255 )
 		return;
@@ -417,6 +440,7 @@ void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const 
 	g_DefaultButtons[g_LastDefaultButton].y2 = y2;
 	MakeRGBA( g_DefaultButtons[g_LastDefaultButton].color, color[0], color[1], color[2], color[3] );
 	g_DefaultButtons[g_LastDefaultButton].round = round;
+	g_DefaultButtons[g_LastDefaultButton].aspect = aspect;
 	g_DefaultButtons[g_LastDefaultButton].mode = mode;
 	g_LastDefaultButton++;
 }
@@ -481,6 +505,7 @@ void IN_TouchInit( void )
 	touch.move_finger = touch.resize_finger = touch.look_finger = -1;
 	touch.state = state_none;
 	touch.showbuttons = true;
+	touch.clientonly = false;
 	Cmd_AddCommand( "touch_addbutton", IN_TouchAddButton_f, "Add native touch button" );
 	Cmd_AddCommand( "touch_removebutton", IN_TouchRemoveButton_f, "Remove native touch button" );
 	Cmd_AddCommand( "touch_enableedit", IN_TouchEnableEdit_f, "Enable button editing mode" );
@@ -501,6 +526,7 @@ void IN_TouchInit( void )
 	touch_grid_count = Cvar_Get( "touch_grid_count", "50", 0, "touch grid count" );
 	touch_grid_enable = Cvar_Get( "touch_grid_enable", "1", 0, "enable touch grid" );
 	touch_config_file = Cvar_Get( "touch_config_file", "touch.cfg", CVAR_ARCHIVE, "current touch profile file" );
+	touch_enable = Cvar_Get( "touch_enable", TOUCH_ENABLE, CVAR_ARCHIVE, "enable touch controls" );
 #ifdef XASH_SDL
 	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
 #endif
@@ -515,9 +541,13 @@ void IN_TouchInitConfig( void )
 }
 qboolean IN_TouchIsVisible( touchbutton2_t *button )
 {
-	return ( !( button->flags & TOUCH_FL_HIDE ) || ( touch.state >= state_edit ) )
-	&& ( !(button->flags & TOUCH_FL_SP) || ( CL_GetMaxClients() == 1 ==  1 ) ) 
-	&& ( !(button->flags & TOUCH_FL_MP) || ( CL_GetMaxClients() == 1 !=  1 ) );
+	return ( !touch.clientonly || ( button->flags & TOUCH_FL_CLIENT) ) && 
+	( 
+	( touch.state >= state_edit )
+	||( !( button->flags & TOUCH_FL_HIDE ) 
+	&& ( !(button->flags & TOUCH_FL_SP) || ( CL_GetMaxClients() == 1 ) ) 
+	&& ( !(button->flags & TOUCH_FL_MP) || ( CL_GetMaxClients() !=  1 ) ) ) 
+	 );
 }
 
 void IN_TouchDrawTexture ( float x1, float y1, float x2, float y2, int texture, byte r, byte g, byte b, byte a )
@@ -580,6 +610,8 @@ float IN_TouchDrawText( float x1, float y1, const char *s, byte *color)
 
 void IN_TouchDraw( void )
 {
+	if( !touch_enable->value )
+		return 0;
 	touchbutton2_t *button;
 	if( cls.key_dest != key_game )
 		return;
@@ -758,6 +790,9 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			Key_Event(241, 0);
 		return 0;
 	}
+	
+	if( !touch_enable->value )
+		return 0;
 
 	if( touch.state == state_edit_move )
 	{
@@ -832,31 +867,43 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				}
 				if( button->type == touch_move )
 				{
+					if( touch.move_finger !=-1 )
+					{
+						button->finger = touch.move_finger;
+						continue;
+					}
 					if( touch.look_finger == fingerID )
 					{
+						touchbutton2_t *newbutton;
 						touch.move_finger = touch.look_finger = -1;
-						return 1;
+						//touch.move_finger = button->finger = -1;
+						for( newbutton = touch.first; newbutton; newbutton = newbutton->next )
+							if( ( newbutton->type == touch_move ) || ( newbutton->type == touch_look ) ) newbutton->finger = -1;
+						MsgDev( D_NOTE, "Touch: touch_move on look finger %d!\n", fingerID );
+						continue;
 					}
-					if( touch.move_finger !=-1 )
-						button->finger = -1;
-					else
-					{
-						touch.move_finger = fingerID;
-						touch.move_start_x = x;
-						touch.move_start_y = y;
-					}
+					touch.move_finger = fingerID;
+					touch.move_start_x = x;
+					touch.move_start_y = y;
 				}
 				if( button->type == touch_look )
 				{
+					if( touch.look_finger !=-1 )
+					{
+						button->finger = touch.look_finger;
+						continue;
+					}
 					if( touch.move_finger == fingerID )
 					{
+						touchbutton2_t *newbutton;
+						// This is an error, try recover
 						touch.move_finger = touch.look_finger = -1;
-						return 1;
+						for( newbutton = touch.first; newbutton; newbutton = newbutton->next )
+							if( ( newbutton->type == touch_move ) || ( newbutton->type == touch_look ) ) newbutton->finger = -1;
+						MsgDev( D_NOTE, "Touch: touch_look on move finger %d!\n", fingerID );
+						continue;
 					}
-					if( touch.look_finger !=-1 )
-						button->finger = -1;
-					else
-						touch.look_finger = fingerID;
+					touch.look_finger = fingerID;
 				}
 			}
 		}
