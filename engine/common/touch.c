@@ -120,20 +120,20 @@ typedef struct touchdefaultbutton_s
 touchdefaultbutton_t g_DefaultButtons[256] = {
 {"look", "", "_look", 0.5, 0.0, 1.0, 1.0, { 255, 255, 255, 255 }, round_none, 0, 0 },
 {"move", "", "_move", 0.0, 0.0, 0.5, 1.0, { 255, 255, 255, 255 }, round_none, 0, 0 },
-{"invnext", "touch2/next_weap.tga", "invnext", 0.000000, 0.541083, 0.120000, 0.743989, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"invprev", "touch2/prev_weap.tga", "invprev", 0.000000, 0.135271, 0.120000, 0.338177, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"edit", "touch2/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"use", "touch2/use.tga", "+use", 0.880000, 0.405812, 1.000000, 0.608719, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"jump", "touch2/jump.tga", "+jump", 0.880000, 0.202906, 1.000000, 0.405812, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"attack", "touch2/shoot.tga", "+attack", 0.760000, 0.473448, 0.880000, 0.676354, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"attack2", "touch2/shoot_alt.tga", "+attack2", 0.760000, 0.270542, 0.880000, 0.473448, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"loadquick", "touch2/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_sp },
-{"savequick", "touch2/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_sp },
-{"duck", "touch2/crouch.tga", "+duck", 0.880000, 0.777807, 1.000000, 0.980713, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"messagemode", "touch2/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_mp },
-{"reload", "touch2/reload.tga", "+reload", 0.000000, 0.338177, 0.120000, 0.541083, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"invnext", "touch_default/next_weap.tga", "invnext", 0.000000, 0.541083, 0.120000, 0.743989, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"invprev", "touch_default/prev_weap.tga", "invprev", 0.000000, 0.135271, 0.120000, 0.338177, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"edit", "touch_default/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"use", "touch_default/use.tga", "+use", 0.880000, 0.405812, 1.000000, 0.608719, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"jump", "touch_default/jump.tga", "+jump", 0.880000, 0.202906, 1.000000, 0.405812, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"attack", "touch_default/shoot.tga", "+attack", 0.760000, 0.473448, 0.880000, 0.676354, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"attack2", "touch_default/shoot_alt.tga", "+attack2", 0.760000, 0.270542, 0.880000, 0.473448, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"loadquick", "touch_default/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_sp },
+{"savequick", "touch_default/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_sp },
+{"duck", "touch_default/crouch.tga", "+duck", 0.880000, 0.777807, 1.000000, 0.980713, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"messagemode", "touch_default/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, game_mp },
+{"reload", "touch_default/reload.tga", "+reload", 0.000000, 0.338177, 0.120000, 0.541083, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
 };
-int g_LastDefaultButton = 15;
+int g_LastDefaultButton = 14;
 
 convar_t *touch_pitch;
 convar_t *touch_yaw;
@@ -270,12 +270,12 @@ void IN_TouchRemoveAll_f()
 	touch.last = NULL;
 }
 
-void IN_TouchSetColor( const char *name, byte r, byte g, byte b, byte a )
+void IN_TouchSetColor( const char *name, byte *color )
 {
 	touchbutton2_t *button = IN_TouchFindButton( name );
 	if( !button )
 		return;
-	MakeRGBA( button->color, r, g, b, a );
+	MakeRGBA( button->color, color[0], color[1], color[2], color[3] );
 }
 
 void IN_TouchSetTexture( const char *name, const char *texture )
@@ -295,7 +295,7 @@ void IN_TouchSetCommand( const char *name, const char *command )
 	Q_strncpy( button->command, command, sizeof( button->command ) );
 }
 
-void IN_TouchHide( const char *name, qboolean hide )
+void IN_TouchHideButtons( const char *name, qboolean hide )
 {
 	touchbutton2_t *button;
 	for( button = touch.first; button; button = button->next )
@@ -312,19 +312,21 @@ void IN_TouchHide( const char *name, qboolean hide )
 }
 void IN_TouchHide_f( void )
 {
-	IN_TouchHide( Cmd_Argv( 1 ), true );
+	IN_TouchHideButtons( Cmd_Argv( 1 ), true );
 }
 
 void IN_TouchShow_f( void )
 {
-	IN_TouchHide( Cmd_Argv( 1 ), false );
+	IN_TouchHideButtons( Cmd_Argv( 1 ), false );
 }
 
 void IN_TouchSetColor_f( void )
 {
+	rgba_t color;
 	if( Cmd_Argc() == 5 )
 	{
-		IN_TouchSetColor( Cmd_Argv(1), Q_atoi( Cmd_Argv(2) ), Q_atoi( Cmd_Argv(3) ), Q_atoi( Cmd_Argv(4) ), Q_atoi( Cmd_Argv(5) ) );
+		MakeRGBA( color,  Q_atoi( Cmd_Argv(2) ), Q_atoi( Cmd_Argv(3) ), Q_atoi( Cmd_Argv(4) ), Q_atoi( Cmd_Argv(5) ) );
+		IN_TouchSetColor( Cmd_Argv(1), color );
 		return;
 	}
 	Msg( "Usage: touch_setcolor <name> <r> <g> <b> <a>\n" );
@@ -429,6 +431,7 @@ void IN_TouchLoadDefaults_f()
 
 void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int mode )
 {
+	Msg( "IN_TouchAddDefaultButton: %s %s %s\n", name, texturefile, command );
 	if( g_LastDefaultButton >= 255 )
 		return;
 	Q_strncpy( g_DefaultButtons[g_LastDefaultButton].name, name, 32 );
@@ -442,6 +445,7 @@ void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const 
 	g_DefaultButtons[g_LastDefaultButton].round = round;
 	g_DefaultButtons[g_LastDefaultButton].aspect = aspect;
 	g_DefaultButtons[g_LastDefaultButton].mode = mode;
+	MsgDev( D_ERROR, "IN_TouchAddDefaultButton: %s %s %s\n", name, texturefile, command );
 	g_LastDefaultButton++;
 }
 
@@ -532,7 +536,7 @@ void IN_TouchInit( void )
 #endif
 }
 
-// must
+// must be called after executing config.cfg
 void IN_TouchInitConfig( void )
 {
 	if( FS_FileExists( touch_config_file->string, true ) )
@@ -611,7 +615,7 @@ float IN_TouchDrawText( float x1, float y1, const char *s, byte *color)
 void IN_TouchDraw( void )
 {
 	if( !touch_enable->value )
-		return 0;
+		return;
 	touchbutton2_t *button;
 	if( cls.key_dest != key_game )
 		return;

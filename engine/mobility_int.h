@@ -24,6 +24,7 @@ extern "C" {
 #define MOBILITY_CLIENT_EXPORT "HUD_MobilityInterface"
 
 #define VIBRATE_NORMAL (1 << 0) // just vibrate for given "life"
+
 // these controls are added by engine.
 enum {
 	TOUCH_ACT_SHOOT = 0,
@@ -110,6 +111,21 @@ typedef struct mobile_engfuncs_s
 	// segments -- sizeof(cmds)
 	// pszImage -- path to image
 	void (*Touch_SetWeaponWheel)( const char **cmds, int segments, const char *pszImageName );
+
+	// add temporaty button, edit will be disabled
+	void (*pfnTouchAddClientButton)( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect );
+
+	// add button to defaults list. Will be loaded on config generation
+	void (*pfnTouchAddDefaultButton)( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect, int mode );
+
+	// hide/show buttons by pattern
+	void (*pfnTouchHideButtons)( const char *name, unsigned char hide );
+
+	// remove button with given name
+	void (*pfnTouchRemoveButton)( const char *name );
+
+	// when enabled, only client buttons show
+	void (*pfnTouchSetClientOnly)( unsigned char state );
 
 	// To be continued...
 } mobile_engfuncs_t;

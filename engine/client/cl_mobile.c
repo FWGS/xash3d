@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #include "events.h"
 #include "library.h"
 #include "gl_local.h"
-
+#include "touch.h"
 #if defined(__ANDROID__)
 #define BELOKOCONTROLS
 
@@ -127,12 +127,21 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	MOBILITY_API_VERSION,
 	pfnVibrate,
 	pfnEnableTextInput,
+
+//beloko
 	Touch_RegisterButton,
 	Touch_AddCustomButton,
 	Touch_GetButtonByID,
 	Touch_RemoveButton,
 	Touch_EmitButton,
-	Touch_Disable
+	Touch_Disable,
+	NULL,
+// touch.c
+	IN_TouchAddClientButton,
+	IN_TouchAddDefaultButton,
+	IN_TouchHideButtons,
+	IN_TouchRemoveButton,
+	IN_TouchSetClientOnly
 };
 
 void Mobile_Init( void )
