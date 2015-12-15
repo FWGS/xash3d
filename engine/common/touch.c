@@ -128,7 +128,6 @@ touchdefaultbutton_t g_DefaultButtons[256] = {
 {"duck", "touch2/crouch.tga", "+duck", 0.880000, 0.777807, 1.000000, 0.980713, { 255, 255, 255, 255 }, round_circle, 0 },
 {"messagemode", "touch2/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_circle, game_mp },
 {"reload", "touch2/reload.tga", "+reload", 0.000000, 0.338177, 0.120000, 0.541083, { 255, 255, 255, 255 }, round_circle, 0 },
-{"flashlight", "touch2/flash_light_filled.tga", "impulse 100", 0.920000, 0.000000, 1.000000, 0.135271, { 255, 255, 255, 255 }, round_circle, 0 },
 };
 int g_LastDefaultButton = 15;
 
@@ -318,6 +317,18 @@ void IN_TouchSetTexture_f( void )
 	Msg( "Usage: touch_settexture <name> <file>\n" );
 }
 
+void IN_TouchSetFlags_f( void )
+{
+	if( Cmd_Argc() == 3 )
+	{
+		touchbutton2_t *button = IN_TouchFindButton( Cmd_Argv( 1 ) );
+		if( button )
+			button->flags = Q_atoi( Cmd_Argv( 2 ) );
+		return;
+	}
+	Msg( "Usage: touch_setflags <name> <file>\n" );
+}
+
 void IN_TouchSetCommand_f( void )
 {
 	if( Cmd_Argc() == 3 )
@@ -469,33 +480,39 @@ void IN_TouchInit( void )
 	MsgDev( D_NOTE, "IN_TouchInit()\n");
 	touch.move_finger = touch.resize_finger = touch.look_finger = -1;
 	touch.state = state_none;
-	touch.showbuttons = false;
+	touch.showbuttons = true;
 	Cmd_AddCommand( "touch_addbutton", IN_TouchAddButton_f, "Add native touch button" );
 	Cmd_AddCommand( "touch_removebutton", IN_TouchRemoveButton_f, "Remove native touch button" );
 	Cmd_AddCommand( "touch_enableedit", IN_TouchEnableEdit_f, "Enable button editing mode" );
 	Cmd_AddCommand( "touch_disableedit", IN_TouchDisableEdit_f, "Disable button editing mode" );
 	Cmd_AddCommand( "touch_settexture", IN_TouchSetTexture_f, "Change button texture" );
 	Cmd_AddCommand( "touch_setcolor", IN_TouchSetColor_f, "Change button color" );
+	Cmd_AddCommand( "touch_setcommand", IN_TouchSetCommand_f, "Change button command" );
+	Cmd_AddCommand( "touch_setflags", IN_TouchSetFlags_f, "Change button flags (be careful)" );
 	Cmd_AddCommand( "touch_show", IN_TouchShow_f, "show button" );
 	Cmd_AddCommand( "touch_hide", IN_TouchHide_f, "hide button" );
 	Cmd_AddCommand( "touch_list", IN_TouchListButtons_f, "list buttons" );
 	Cmd_AddCommand( "touch_removeall", IN_TouchRemoveAll_f, "Remove all buttons" );
 	Cmd_AddCommand( "touch_loaddefaults", IN_TouchLoadDefaults_f, "Generate config from defaults" );
-	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.1", 0, "forward touch zone" );
-	touch_sidezone = Cvar_Get( "touch_sidezone", "0.07", 0, "side touch zone" );
-	touch_pitch = Cvar_Get( "touch_pitch", "20", 0, "touch pitch sensitivity" );
-	touch_yaw = Cvar_Get( "touch_yaw", "50", 0, "touch yaw sensitivity" );
+	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
+	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
+	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
+	touch_yaw = Cvar_Get( "touch_yaw", "120", 0, "touch yaw sensitivity" );
 	touch_grid_count = Cvar_Get( "touch_grid_count", "50", 0, "touch grid count" );
 	touch_grid_enable = Cvar_Get( "touch_grid_enable", "1", 0, "enable touch grid" );
 	touch_config_file = Cvar_Get( "touch_config_file", "touch.cfg", CVAR_ARCHIVE, "current touch profile file" );
 #ifdef XASH_SDL
 	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
 #endif
+}
+
+// must
+void IN_TouchInitConfig( void )
+{
 	if( FS_FileExists( touch_config_file->string, true ) )
 		Cbuf_AddText( va( "exec %s\n", touch_config_file->string ) );
 	else IN_TouchLoadDefaults_f( );
 }
-
 qboolean IN_TouchIsVisible( touchbutton2_t *button )
 {
 	return ( !( button->flags & TOUCH_FL_HIDE ) || ( touch.state >= state_edit ) )

@@ -1057,6 +1057,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	// we need to execute it again here
 	Cmd_ExecuteString( "exec config.cfg\n", src_command );
 	oldtime = Sys_DoubleTime();
+	IN_TouchInitConfig();
 	SCR_CheckStartupVids();	// must be last
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
