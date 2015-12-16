@@ -168,7 +168,7 @@ void IN_TouchWriteConfig( void )
 
 	if( !touch.first ) return;
 
-	MsgDev( D_NOTE, "IN_TouchWriteConfig()\n" );
+	MsgDev( D_NOTE, "IN_TouchWriteConfig(): %s\n", touch_config_file->string );
 	f = FS_Open( touch_config_file->string, "w", false );
 	if( f )
 	{
@@ -201,13 +201,78 @@ void IN_TouchWriteConfig( void )
 				B(name), B(texturefile), B(command),
 				B(x1), B(y1), B(x2), B(y2),
 				B(color[0]), B(color[1]), B(color[2]), B(color[3]), flags );
-			if( button->flags & TOUCH_FL_HIDE )
-				FS_Printf( f, "touch_hide \"%s\"\n", button->name );
 		}
 
 		FS_Close( f );
 	}
-	else MsgDev( D_ERROR, "Couldn't write touch.cfg.\n" );
+	else MsgDev( D_ERROR, "Couldn't write %s.\n", touch_config_file->string );
+}
+
+void IN_TouchExportConfig_f( void )
+{
+	file_t	*f;
+	char *name;
+
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Usage: touch_exportconfig <name>\n" );
+		return;
+	}
+
+	if( !touch.first ) return;
+
+	name = Cmd_Argv( 1 );
+
+	MsgDev( D_NOTE, "Exporting config to %s\n", name );
+	f = FS_Open( name, "w", false );
+	if( f )
+	{
+		touchbutton2_t *button;
+		FS_Printf( f, "//=======================================================================\n");
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\ttouch.cfg - touchscreen config\n" );
+		FS_Printf( f, "//=======================================================================\n" );
+		FS_Printf( f, "\ntouch_config_file \"%s\"\n", touch_config_file->string );
+		FS_Printf( f, "\n// touch cvars\n" );
+		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
+		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
+		FS_Printf( f, "touch_pitch \"%f\"\n", touch_pitch->value );
+		FS_Printf( f, "touch_yaw \"%f\"\n", touch_yaw->value );
+		FS_Printf( f, "touch_grid_count \"%d\"\n", touch_grid_count->integer );
+		FS_Printf( f, "touch_grid_enable \"%d\"\n", touch_grid_enable->integer );
+		FS_Printf( f, "\n// touch buttons\n" );
+		FS_Printf( f, "touch_removeall\n" );
+		for( button = touch.first; button; button = button->next )
+		{
+			int flags = button->flags;
+			if( flags & TOUCH_FL_CLIENT )
+				continue; //skip temporary buttons
+			if( flags & TOUCH_FL_DEF_SHOW )
+				flags &= ~TOUCH_FL_HIDE;
+			if( flags & TOUCH_FL_DEF_HIDE )
+				flags |= TOUCH_FL_HIDE;
+
+			float aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_W/SCR_H) );
+
+			FS_Printf( f, "touch_addbutton \"%s\" \"%s\" \"%s\" %f %f %f %f %d %d %d %d %d %f\n", 
+				B(name), B(texturefile), B(command),
+				B(x1), B(y1), B(x2), B(y2),
+				B(color[0]), B(color[1]), B(color[2]), B(color[3]), flags, aspect );
+		}
+		FS_Printf( f, "\n// round button coordinates to grid\n" );
+		FS_Printf( f, "touch_roundall\n" );
+		FS_Close( f );
+	}
+	else MsgDev( D_ERROR, "Couldn't write %s.\n", name );
+}
+
+void IN_TouchRoundAll_f( void )
+{
+	touchbutton2_t *button;
+	if( !touch_grid_enable->value )
+		return;
+	for( button = touch.first; button; button = button->next )
+		IN_TouchCheckCoords( &B(x1), &B(y1), &B(x2), &B(y2) );
 }
 
 void IN_TouchListButtons_f( void )
@@ -463,8 +528,18 @@ void IN_TouchAddButton_f()
 			Q_atof( Cmd_Argv(4) ), Q_atof( Cmd_Argv(5) ), 
 			Q_atof( Cmd_Argv(6) ), Q_atof( Cmd_Argv(7) ) ,
 			color );
-		if( argc == 13 )
+		if( argc >= 13 )
 			button->flags = Q_atoi( Cmd_Argv(12) );
+		if( argc >= 14 )
+		{
+			// Recalculate button coordinates aspect ratio
+			// This is feature for distributed configs
+			float aspect = Q_atof( Cmd_Argv(13) );
+			IN_TouchCheckCoords( &B(x1), &B(y1), &B(x2), &B(y2) );
+			if( aspect )
+				B(y2) = B(y1) + ( B(x2) - B(x1) ) * (SCR_W/SCR_H) * aspect;
+		}
+				
 		return;
 	}	
 	if( argc == 8 )
@@ -523,6 +598,9 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_list", IN_TouchListButtons_f, "list buttons" );
 	Cmd_AddCommand( "touch_removeall", IN_TouchRemoveAll_f, "Remove all buttons" );
 	Cmd_AddCommand( "touch_loaddefaults", IN_TouchLoadDefaults_f, "Generate config from defaults" );
+	Cmd_AddCommand( "touch_roundall", IN_TouchRoundAll_f, "Round all buttons coordinates to grid" );
+	Cmd_AddCommand( "touch_exportconfig", IN_TouchExportConfig_f, "Export config keeping aspect ratio" );
+	
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
@@ -739,8 +817,7 @@ static void IN_TouchEditMove( touchEventType type, int fingerID, float x, float 
 		if( type == event_up ) // shutdown button move
 		{
 			touchbutton2_t *button = touch.edit;
-			IN_TouchCheckCoords( &button->x1, &button->y1,
-				&button->x2, &button->y2 );
+			IN_TouchCheckCoords( &B(x1), &B(y1), &B(x2), &B(y2) );
 			IN_TouchEditClear();
 			if( button->type == touch_command )
 				touch.selection = button;
