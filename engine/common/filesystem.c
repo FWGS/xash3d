@@ -952,6 +952,15 @@ void FS_Rescan( void )
 	MsgDev( D_NOTE, "FS_Rescan( %s )\n", GI->title );
 	FS_ClearSearchPath();
 
+#ifdef __ANDROID__
+	char *str;
+/*	if( str = getenv("XASH3D_EXTRAS_PAK2") )
+		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	if( str = getenv("XASH3D_EXTRAS_PAK1") )
+		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );*/
+	FS_AddPack_Fullpath( "/data/data/in.celest.xash3d.hl.test/files/pak.pak", NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+#endif
+
 	if( Q_stricmp( GI->basedir, GI->gamedir ))
 		FS_AddGameHierarchy( GI->basedir, 0 );
 	if( Q_stricmp( GI->basedir, GI->falldir ) && Q_stricmp( GI->gamedir, GI->falldir ))
