@@ -472,7 +472,13 @@ void IN_TouchAddClientButton( const char *name, const char *texture, const char 
 	if( round )
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 	if( round == round_aspect )
-		y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * aspect;
+	{
+		if( texture[0] == '#' )
+			// on text fields aspect ratio specifies line count
+			y2 = y1 + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight ) * aspect + touch.swidth*2/SCR_H;
+		else
+			y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * aspect;
+	}
 	button = IN_AddButton( name, texture, command, x1, y1, x2, y2, color );
 	button->flags |= flags | TOUCH_FL_CLIENT | TOUCH_FL_NOEDIT;
 }
@@ -490,6 +496,9 @@ void IN_TouchLoadDefaults_f()
 		
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 		if( g_DefaultButtons[i].round == round_aspect )
+		if( g_DefaultButtons[i].texturefile[0] == '#' )
+			y2 = y1 + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight ) * g_DefaultButtons[i].aspect + touch.swidth*2/SCR_H;
+		else
 			y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * g_DefaultButtons[i].aspect;
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 		button = IN_AddButton( g_DefaultButtons[i].name, g_DefaultButtons[i].texturefile, g_DefaultButtons[i].command, x1, y1, x2, y2, g_DefaultButtons[i].color );
@@ -540,7 +549,12 @@ void IN_TouchAddButton_f()
 			float aspect = Q_atof( Cmd_Argv(13) );
 			IN_TouchCheckCoords( &B(x1), &B(y1), &B(x2), &B(y2) );
 			if( aspect )
-				B(y2) = B(y1) + ( B(x2) - B(x1) ) * (SCR_W/SCR_H) * aspect;
+			{
+				if( B(texturefile)[0] == '#' )
+					B(y2) = B(y1) + ( (float)(clgame.scrInfo.iCharHeight) / (float)(clgame.scrInfo.iHeight) ) * aspect + touch.swidth*2/SCR_H;
+				else
+					B(y2) = B(y1) + ( B(x2) - B(x1) ) * (SCR_W/SCR_H) * aspect;
+			}
 		}
 				
 		return;
@@ -619,10 +633,11 @@ void IN_TouchInit( void )
 	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
 #endif
 }
-
+int pfnGetScreenInfo( SCREENINFO *pscrinfo );
 // must be called after executing config.cfg
 void IN_TouchInitConfig( void )
 {
+	pfnGetScreenInfo( NULL ); //HACK: update hud screen parameters like iHeight
 	if( FS_FileExists( touch_config_file->string, true ) )
 		Cbuf_AddText( va( "exec %s\n", touch_config_file->string ) );
 	else IN_TouchLoadDefaults_f( );

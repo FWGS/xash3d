@@ -1446,7 +1446,7 @@ pfnGetScreenInfo
 get actual screen info
 =============
 */
-static int pfnGetScreenInfo( SCREENINFO *pscrinfo )
+int pfnGetScreenInfo( SCREENINFO *pscrinfo )
 {
 	// setup screen info
 	float scale_factor = hud_scale->value;
