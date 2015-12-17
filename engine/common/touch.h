@@ -20,5 +20,5 @@ void IN_TouchHideButtons( const char *name, qboolean hide );
 void IN_TouchSetCommand( const char *name, const char *command );
 void IN_TouchSetTexture( const char *name, const char *texture );
 void IN_TouchSetColor( const char *name, byte *color );
-void IN_TouchAddClientButton( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect );
+void IN_TouchAddClientButton( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int flags );
 void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int flags );

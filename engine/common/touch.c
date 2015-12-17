@@ -466,7 +466,7 @@ touchbutton2_t *IN_AddButton( const char *name,  const char *texture, const char
 	return button;
 }
 
-void IN_TouchAddClientButton( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect )
+void IN_TouchAddClientButton( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int flags )
 {
 	touchbutton2_t *button;
 	if( round )
@@ -474,7 +474,7 @@ void IN_TouchAddClientButton( const char *name, const char *texture, const char 
 	if( round == round_aspect )
 		y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * aspect;
 	button = IN_AddButton( name, texture, command, x1, y1, x2, y2, color );
-	button->flags |= TOUCH_FL_CLIENT;
+	button->flags |= flags | TOUCH_FL_CLIENT | TOUCH_FL_NOEDIT;
 }
 
 void IN_TouchLoadDefaults_f()

@@ -113,7 +113,7 @@ typedef struct mobile_engfuncs_s
 	void (*Touch_SetWeaponWheel)( const char **cmds, int segments, const char *pszImageName );
 
 	// add temporaty button, edit will be disabled
-	void (*pfnTouchAddClientButton)( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect );
+	void (*pfnTouchAddClientButton)( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect, int flags );
 
 	// add button to defaults list. Will be loaded on config generation
 	void (*pfnTouchAddDefaultButton)( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect, int flags );
