@@ -116,7 +116,7 @@ typedef struct mobile_engfuncs_s
 	void (*pfnTouchAddClientButton)( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect );
 
 	// add button to defaults list. Will be loaded on config generation
-	void (*pfnTouchAddDefaultButton)( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect, int mode );
+	void (*pfnTouchAddDefaultButton)( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect, int flags );
 
 	// hide/show buttons by pattern
 	void (*pfnTouchHideButtons)( const char *name, unsigned char hide );
