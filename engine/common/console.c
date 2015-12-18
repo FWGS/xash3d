@@ -27,6 +27,7 @@ convar_t	*con_maxfrac;
 convar_t	*con_halffrac;
 convar_t	*con_charset;
 convar_t	*con_alpha;
+convar_t	*con_black;
 
 static int g_codepage = 0;
 static qboolean g_utf8 = false;
@@ -832,6 +833,7 @@ void Con_Init( void )
 	con_halffrac = Cvar_Get( "con_halffrac", "0.5", CVAR_ARCHIVE, "console half height" );
 	con_charset = Cvar_Get( "con_charset", "cp1251", CVAR_ARCHIVE, "console font charset (only cp1251 supported now)" );
 	con_alpha = Cvar_Get( "con_alpha", "1.0", CVAR_ARCHIVE, "console alpha value" );
+	con_black = Cvar_Get( "con_black", "0", CVAR_ARCHIVE, "make console black like a nigga" );
 
 	Con_CheckResize();
 
@@ -1905,12 +1907,18 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		if( fill )
 		{
 			GL_SetRenderMode( kRenderNormal );
-			pglColor4ub( 255, 255, 255, 255 );
+			if( con_black->value )
+				pglColor4ub( 0, 0, 0, 255 );
+			else
+				pglColor4ub( 255, 255, 255, 255 );
 		}
 		else
 		{
 			GL_SetRenderMode( kRenderTransTexture );
-			pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
+			if( con_black->value )
+				pglColor4ub( 0, 0, 0, 255 * con_alpha->value );
+			else
+				pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
 		}
 		R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
 		pglColor4ub( 255, 255, 255, 255 );
