@@ -230,7 +230,7 @@ void CL_SetSolidPlayers( int playernum )
 		if( !ent || !ent->player )
 			continue; // not present this frame
 
-		if( ent->curstate.health <= 0 )
+		if( !ent->active )
 			continue; // dead players are not solid
 
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
