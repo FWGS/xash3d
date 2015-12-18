@@ -344,7 +344,7 @@ void IN_TouchSetColor( const char *name, byte *color )
 	touchbutton2_t *button;
 	for( button = touch.first; button; button = button->next )
 	{
-		if( Q_stricmpext( name, button->name ) )
+		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || Q_strncmp( name, button->name, 32 ) )
 			MakeRGBA( button->color, color[0], color[1], color[2], color[3] );
 	}
 }
@@ -371,7 +371,7 @@ void IN_TouchHideButtons( const char *name, qboolean hide )
 	touchbutton2_t *button;
 	for( button = touch.first; button; button = button->next )
 	{
-		if( Q_stricmpext( name, button->name ) )
+		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || Q_strncmp( name, button->name, 32 ) )
 		{
 			if( hide )
 				button->flags |= TOUCH_FL_HIDE;
