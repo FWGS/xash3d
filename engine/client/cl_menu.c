@@ -65,6 +65,8 @@ void UI_SetActiveMenu( qboolean fActive )
 		cin_state = AVI_GetState( CIN_LOGO );
 		AVI_CloseVideo( cin_state );
 	}
+	else
+		Key_SetKeyDest( key_menu );
 }
 
 void UI_AddServerToList( netadr_t adr, const char *info )
@@ -111,8 +113,11 @@ qboolean UI_MouseInRect( void )
 
 qboolean UI_IsVisible( void )
 {
+	qboolean ret;
 	if( !menu.hInstance ) return 0;
-	return menu.dllFuncs.pfnIsVisible();
+	ret = menu.dllFuncs.pfnIsVisible();
+	if( ret ) Key_SetKeyDest( key_menu );
+	return ret;
 }
 
 static void UI_DrawLogo( const char *filename, float x, float y, float width, float height )
