@@ -743,9 +743,9 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 	float	div;
 	float	vLast = 0.0;
 	float	vStep = 1.0;
-	vec3_t	last1, last2, tmp, normal, scaledColor;
+	vec3_t	last1, last2, tmp, normal, scaledColor, saved_last2;
 	HSPRITE	m_hSprite;
-	rgb_t	nColor;
+	rgb_t	nColor, saved_nColor;
 
 	m_hSprite = R_GetSpriteTexture( Mod_Handle( modelIndex ), frame );
 	if( !m_hSprite ) return;
@@ -778,7 +778,7 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 	SetBeamRenderMode( rendermode );
 	GL_Bind( GL_TEXTURE0, m_hSprite );
 
-	pglBegin( GL_QUADS );
+	pglBegin( GL_TRIANGLES );
 
 	while( pHead )
 	{
@@ -789,6 +789,11 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
 		pglTexCoord2f( 0.0f, 1.0f );
 		pglVertex3fv( last1 );
+
+		VectorCopy( last2, saved_last2 );
+		saved_nColor[0] = nColor[0];
+		saved_nColor[1] = nColor[1];
+		saved_nColor[2] = nColor[2];
 
 		// Transform point into screen space
 		TriWorldToScreen( pHead->org, screen );
@@ -826,6 +831,14 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
 		pglTexCoord2f( 0.0f, 0.0f );
 		pglVertex3fv( last1 );
+		
+        pglColor4ub( saved_nColor[0], saved_nColor[1], saved_nColor[2], 255 );
+        pglTexCoord2f( 1.0f, 1.0f );
+        pglVertex3fv( saved_last2 );
+       
+        pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
+        pglTexCoord2f( 0.0f, 0.0f );
+        pglVertex3fv( last1 );
 
 		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
 		pglTexCoord2f( 1.0f, 0.0f );
