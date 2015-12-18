@@ -478,6 +478,16 @@ extern client_static_t	cls;
 extern clgame_static_t	clgame;
 extern menu_static_t	menu;
 
+extern struct predicted_player {
+	int flags;
+	int movetype;
+	int solid;
+	int usehull;
+	qboolean active;
+	vec3_t origin; // predicted origin
+	vec3_t angles;
+} predicted_players[MAX_CLIENTS];
+
 #ifdef __cplusplus
 }
 #endif

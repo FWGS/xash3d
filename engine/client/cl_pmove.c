@@ -21,6 +21,8 @@ GNU General Public License for more details.
 #include "particledef.h"
 #include "studio.h"
 
+void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient );
+
 void CL_ClearPhysEnts( void )
 {
 	clgame.pmove->numtouch = 0;
@@ -230,7 +232,7 @@ void CL_SetSolidPlayers( int playernum )
 		if( !ent || !ent->player )
 			continue; // not present this frame
 
-		if( !ent->active )
+		if( !predicted_players[j].active )
 			continue; // dead players are not solid
 
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
@@ -887,6 +889,8 @@ void CL_PredictMovement( void )
 	}
 
 	if( cl.refdef.paused || cls.key_dest == key_menu ) return;
+	
+	pfnSetUpPlayerPrediction( false, false );
 
 	// unpredicted pure angled values converted into axis
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );

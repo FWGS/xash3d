@@ -2266,15 +2266,7 @@ physent_t *pfnGetPhysent( int idx )
 	return NULL;
 }
 
-static struct predicted_player {
-	int flags;
-	int movetype;
-	int solid;
-	int usehull;
-	qboolean active;
-	vec3_t origin; // predicted origin
-	vec3_t angles;
-} predicted_players[MAX_CLIENTS];
+struct predicted_player predicted_players[MAX_CLIENTS];
 
 /*
 =============
@@ -2284,64 +2276,54 @@ pfnSetUpPlayerPrediction
 */
 void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
 {
-	int j = 0;
-	int v3 = cl.parsecountmod;	// In original GS code this is "ei", not cl.
+	int j;
 	struct predicted_player *pPlayer = predicted_players;
-	entity_state_t *entState = cl.frames[v3].playerstate; //v5
+	entity_state_t *entState = cl.frames[cl.parsecountmod].playerstate;
 
-	qboolean v7; // v7
-	cl_entity_t *clEntity; // v9
-	int v12; // edx@11
+	cl_entity_t *clEntity;
 
-	for( j = 0, pPlayer = predicted_players, entState = cl.frames[v3].playerstate;
+	for( j = 0, pPlayer = predicted_players, entState = cl.frames[cl.parsecountmod].playerstate;
 		 j < MAX_CLIENTS;
 		 j++, pPlayer++, entState++)
 	{
-		v7 = entState->messagenum == cl.parsecount;
 		pPlayer->active = false;
 
-		if( entState->messagenum != cl.parsecount )
-			continue; // not present this frame
+		// Does not work in xash3d
+		//if( entState->messagenum != cl.parsecount )
+			//continue; // not present this frame
 
 		if( !entState->modelindex )
 			continue;
 
+		clEntity = CL_EDICT_NUM( j + 1 );
 		//special for EF_NODRAW and local client?
-		if( entState->effects & EF_NODRAW && bIncludeLocalClient == false )
+		if( ( entState->effects & EF_NODRAW ) && ( bIncludeLocalClient == false ) )
 		{
 			// don't include local player?
-			if( cl.playernum == j)
+			if( cl.playernum == j )
 				continue;
 			else
 			{
-				pPlayer->active = 1;
+				pPlayer->active = true;
 				pPlayer->movetype = entState->movetype;
 				pPlayer->solid = entState->solid;
 				pPlayer->usehull = entState->usehull;
 
-				clEntity = CL_EDICT_NUM( j + 1 );
-				//CL_ComputePlayerOrigin(v9);
-				VectorCopy(clEntity->origin, pPlayer->origin);
-				VectorCopy(clEntity->angles, pPlayer->angles);
+				VectorCopy( clEntity->origin, pPlayer->origin );
+				VectorCopy( clEntity->angles, pPlayer->angles );
 			}
 		}
 		else
 		{
-			if( cl.playernum == j)
+			if( cl.playernum == j )
 				continue;
-			pPlayer->active = 1;
+			pPlayer->active = true;
 			pPlayer->movetype = entState->movetype;
 			pPlayer->solid = entState->solid;
 			pPlayer->usehull = entState->usehull;
 
-			v12 = 17080 * cl.parsecountmod + 340 * j;
-			pPlayer->origin[0] = cl.frames[0].playerstate[0].origin[0] + v12;
-			pPlayer->origin[1] = cl.frames[0].playerstate[0].origin[1] + v12;
-			pPlayer->origin[2] = cl.frames[0].playerstate[0].origin[2] + v12;
-
-			pPlayer->angles[0] = cl.frames[0].playerstate[0].angles[0] + v12;
-			pPlayer->angles[1] = cl.frames[0].playerstate[0].angles[1] + v12;
-			pPlayer->angles[2] = cl.frames[0].playerstate[0].angles[2] + v12;
+			VectorCopy(cl.frames[cl.parsecountmod].playerstate[j].origin, pPlayer->origin);
+			VectorCopy(cl.frames[cl.parsecountmod].playerstate[j].angles, pPlayer->angles);
 		}
 	}
 }
