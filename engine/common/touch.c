@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "client.h"
 #ifdef XASH_SDL
 #include <SDL_hints.h>
+#include <SDL_keyboard.h>
 #endif
 
 typedef enum

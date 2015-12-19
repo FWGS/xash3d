@@ -1228,7 +1228,11 @@ pfnSPR_Load
 */
 HSPRITE pfnSPR_Load( const char *szPicName )
 {
-	return pfnSPR_LoadExt( szPicName, 0 );
+	int texFlags = TF_NOPICMIP;
+	if( cl_sprite_nearest->value )
+		texFlags |= TF_NEAREST;
+
+	return pfnSPR_LoadExt( szPicName, texFlags );
 }
 
 /*
@@ -2536,6 +2540,11 @@ model_t *pfnLoadMapSprite( const char *filename )
 {
 	char	name[64];
 	int	i;
+	int texFlags = TF_NOPICMIP;
+
+
+	if( cl_sprite_nearest->value )
+		texFlags |= TF_NEAREST;
 
 	if( !filename || !*filename )
 	{
@@ -2571,7 +2580,7 @@ model_t *pfnLoadMapSprite( const char *filename )
 	}
 
 	// load new map sprite
-	if( CL_LoadHudSprite( name, &clgame.sprites[i], true, 0 ))
+	if( CL_LoadHudSprite( name, &clgame.sprites[i], true, texFlags ))
 	{
 		clgame.sprites[i].needload = clgame.load_sequence;
 		return &clgame.sprites[i];

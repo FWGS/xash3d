@@ -308,6 +308,10 @@ void Mod_LoadMapSprite( model_t *mod, const void *buffer, size_t size, qboolean 
 	int		linedelta, numframes;
 	mspriteframe_t	*pspriteframe;
 	msprite_t		*psprite;
+	int texFlags = TF_IMAGE;
+
+	if( cl_sprite_nearest->value )
+		texFlags |= TF_NEAREST;
 
 	if( loaded ) *loaded = false;
 	Q_snprintf( texname, sizeof( texname ), "#%s", mod->name );
@@ -395,7 +399,7 @@ void Mod_LoadMapSprite( model_t *mod, const void *buffer, size_t size, qboolean 
 		pspriteframe->left = -( w >> 1 );
 		pspriteframe->down = ( h >> 1 ) - h;
 		pspriteframe->right = w + -( w >> 1 );
-		pspriteframe->gl_texturenum = GL_LoadTextureInternal( texname, &temp, TF_IMAGE, false );
+		pspriteframe->gl_texturenum = GL_LoadTextureInternal( texname, &temp, texFlags, false );
 		GL_SetTextureType( pspriteframe->gl_texturenum, TEX_NOMIP );
 			
 		xl += w;

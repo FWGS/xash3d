@@ -50,6 +50,7 @@ convar_t	*cl_allow_fragment;
 convar_t	*cl_lw;
 convar_t	*cl_trace_events;
 convar_t	*cl_charset;
+convar_t	*cl_sprite_nearest;
 convar_t	*hud_scale;
 
 //
@@ -1653,6 +1654,7 @@ void CL_InitLocal( void )
 	cl_draw_particles = Cvar_Get( "cl_draw_particles", "1", CVAR_ARCHIVE, "disable particle effects" );
 	cl_draw_beams = Cvar_Get( "cl_draw_beams", "1", CVAR_ARCHIVE, "disable view beams" );
 	cl_lightstyle_lerping = Cvar_Get( "cl_lightstyle_lerping", "0", CVAR_ARCHIVE, "enable animated light lerping (perfomance option)" );
+	cl_sprite_nearest = Cvar_Get( "cl_sprite_nearest", "0", CVAR_ARCHIVE, "disable texture filtering on sprites" );
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
