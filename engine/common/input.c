@@ -771,7 +771,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		return;
 	if(active)
 	{
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 		Android_Move( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
 #ifdef XASH_SDL
@@ -800,7 +800,7 @@ void Host_InputFrame( void )
 
 	Sys_SendKeyEvents ();
 
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 	Android_Events();
 #endif
 
@@ -810,7 +810,7 @@ void Host_InputFrame( void )
 	if(clgame.dllFuncs.pfnLookEvent)
 	{
 		int dx, dy;
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 		Android_Move( &forward, &side, &pitch, &yaw );
 #endif
 #ifdef XASH_SDL

@@ -21,7 +21,6 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "touch.h"
 #if defined(__ANDROID__)
-#define BELOKOCONTROLS
 
 #include "platform/android/android-gameif.h"
 #include "SDL_system.h"
@@ -52,7 +51,7 @@ static inline void SET_BUTTON_SRECT( int handle, int x1, int y1, int x2, int y2 
 static void pfnVibrate( float life, char flags )
 {
 	// here goes platform-specific backends
-#if defined(__ANDROID__)
+#if defined(BELOKOCONTROLS)
 	Android_Vibrate(life, flags);
 #endif
 }
@@ -89,7 +88,7 @@ static touchbutton_t *Touch_AddCustomButton(int x1, int y1, int x2, int y2, int 
 	gButtons[hButton].pszImageName = Mem_Alloc( cls.mempool, strlen(pszImageName) + 1);
 	Q_strncpy( gButtons[hButton].pszImageName, pszImageName, strlen(pszImageName) + 1 );
 
-#if defined(__ANDROID__)
+#if defined(BELOKOCONTROLS)
 	Android_AddButton( &gButtons[hButton] );
 #else
 	gButtons[hButton].object = NULL;
@@ -105,14 +104,14 @@ static touchbutton_t *Touch_GetButtonByID( int hButton )
 
 static void Touch_RemoveButton( touchbutton_t *pButton )
 {
-#if defined(__ANDROID__)
+#if defined(BELOKOCONTROLS)
 	Android_RemoveButton( pButton );
 #endif
 }
 
 static void Touch_EmitButton( int hButton )
 {
-#if defined(__ANDROID__)
+#if defined(BELOKOCONTROLS)
 	Android_EmitButton( hButton );
 #endif
 }
@@ -182,7 +181,7 @@ void Mobile_Init( void )
 	gButtons[TOUCH_ACT_USERALIAS3].pszCommand = "_useralias3";
 
 
-#if defined(__ANDROID__)
+#if defined(BELOKOCONTROLS)
 	Android_TouchInit(gButtons);
 #endif
 }

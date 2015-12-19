@@ -1356,7 +1356,7 @@ void R_EndFrame( void )
 {
 	// flush any remaining 2D bits
 	R_Set2DMode( false );
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 	Android_DrawControls();
 #endif
 #ifdef XASH_SDL

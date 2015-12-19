@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -307,8 +307,6 @@ void setHideSticks(bool v)
 
 void Android_AddInternalButton( int x1, int y1, int x2, int y2, const char *image, int hButton )
 {
-	if(!controlsCreated)
-		return;
 	LOGI("Internal button: %i %i %i %i %s %i",
 		x1, y1, x2, y2, image, hButton);
 
@@ -474,8 +472,6 @@ extern "C" void Android_DrawControls()
 
 void Android_TouchInit( touchbutton_t *buttons )
 {
-	if(!controlsCreated)
-		return;
 	pthread_mutex_lock(&lock);
 	int X = ScaleX;
 	int Y = ScaleY;

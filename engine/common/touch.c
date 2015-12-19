@@ -344,7 +344,7 @@ void IN_TouchSetColor( const char *name, byte *color )
 	touchbutton2_t *button;
 	for( button = touch.first; button; button = button->next )
 	{
-		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || Q_strncmp( name, button->name, 32 ) )
+		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
 			MakeRGBA( button->color, color[0], color[1], color[2], color[3] );
 	}
 }
@@ -371,7 +371,7 @@ void IN_TouchHideButtons( const char *name, qboolean hide )
 	touchbutton2_t *button;
 	for( button = touch.first; button; button = button->next )
 	{
-		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || Q_strncmp( name, button->name, 32 ) )
+		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
 		{
 			if( hide )
 				button->flags |= TOUCH_FL_HIDE;
@@ -927,6 +927,13 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	// simulate menu mouse click
 	if( cls.key_dest != key_game )
 	{
+		// Hack for keyboard, hope it help
+		if( cls.key_dest == key_console || cls.key_dest == key_message ) 
+		{
+#ifdef XASH_SDL
+			SDL_StartTextInput();
+#endif
+		}
 		UI_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
 		if( type == event_down )
 			Key_Event(241, 1);
