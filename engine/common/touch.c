@@ -101,6 +101,11 @@ struct touch_s
 	qboolean clientonly;
 	rgba_t scolor;
 	int swidth;
+	// textures
+	int showtexture;
+	int hidetexture;
+	int resettexture;
+	int closetexture;
 } touch;
 
 typedef struct touchdefaultbutton_s
@@ -301,6 +306,17 @@ touchbutton2_t *IN_TouchFindButton( const char *name )
 	return NULL;
 }
 
+touchbutton2_t *IN_TouchFindFirst( const char *name )
+{
+	touchbutton2_t *button;
+	if( !touch.first )
+		return NULL;
+	for ( button = touch.first; button; button = button->next )
+		if( ( Q_strchr( name, "*" ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
+			return button;
+	return NULL;
+}
+
 void IN_TouchSetClientOnly( qboolean state )
 {
 	touch.clientonly = state;
@@ -311,24 +327,20 @@ void IN_TouchRemoveButton( const char *name )
 	touchbutton2_t *button;
 
 	IN_TouchEditClear();
-	for( button = touch.first; button; button = button->next )
+
+	while( button = IN_TouchFindFirst( name ) )
 	{
-		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
-		{
-			touchbutton2_t *remove;
-			if( button->prev )
-				button->prev->next = button->next;
-			else
-				touch.first = button->next;
-			if( button->next )
-				button->next->prev = button->prev;
-			else
-				touch.last = button->prev;
-			remove = button;
-			button = button->prev;
-			Mem_Free( remove );
-		}
+		if( button->prev )
+			button->prev->next = button->next;
+		else
+			touch.first = button->next;
+		if( button->next )
+			button->next->prev = button->prev;
+		else
+			touch.last = button->prev;
+		Mem_Free( button );
 	}
+
 }
 
 void IN_TouchRemoveButton_f()
@@ -353,7 +365,7 @@ void IN_TouchSetColor( const char *name, byte *color )
 	touchbutton2_t *button;
 	for( button = touch.first; button; button = button->next )
 	{
-		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
+		if( ( Q_strstr( name, "*" ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
 			MakeRGBA( button->color, color[0], color[1], color[2], color[3] );
 	}
 }
@@ -378,9 +390,9 @@ void IN_TouchSetCommand( const char *name, const char *command )
 void IN_TouchHideButtons( const char *name, qboolean hide )
 {
 	touchbutton2_t *button;
-	for( button = touch.first; button; button = button->next )
+	for( button = touch.first; button; button = button->next)
 	{
-		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
+		if( ( Q_strstr( name, "*" ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
 		{
 			if( hide )
 				button->flags |= TOUCH_FL_HIDE;
@@ -650,6 +662,10 @@ void IN_TouchInitConfig( void )
 	if( FS_FileExists( touch_config_file->string, true ) )
 		Cbuf_AddText( va( "exec %s\n", touch_config_file->string ) );
 	else IN_TouchLoadDefaults_f( );
+	touch.closetexture = GL_LoadTexture( "touch_default/edit_close.tga", NULL, 0, 0, NULL );
+	touch.hidetexture = GL_LoadTexture( "touch_default/edit_hide.tga", NULL, 0, 0, NULL );
+	touch.showtexture = GL_LoadTexture( "touch_default/edit_show.tga", NULL, 0, 0, NULL );
+	touch.resettexture = GL_LoadTexture( "touch_default/edit_reset.tga", NULL, 0, 0, NULL );
 }
 qboolean IN_TouchIsVisible( touchbutton2_t *button )
 {
@@ -839,12 +855,16 @@ void IN_TouchDraw( void )
 			IN_TouchDrawTexture( B(x1), B(y1), B(x2), B(y2), cls.fillImage, 255, 0, 0, 64 );
 			if( touch.showbuttons )
 			{
-				IN_TouchDrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, cls.fillImage, 0, 0, 255, 224 );
 				if( button->flags & TOUCH_FL_HIDE )
-					//Con_DrawString( TO_SCRN_X(GRID_X * 2.5), TO_SCRN_Y(GRID_Y * 8.5), "Show", color );
+				{
+					IN_TouchDrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, touch.showtexture, 255, 255, 255, 255 );
 					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Show", color );
+				}
 				else
+				{
+					IN_TouchDrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, touch.hidetexture, 255, 255, 255, 255 );
 					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Hide", color );
+				}
 			}
 			Con_DrawString( 0, TO_SCRN_Y(GRID_Y * 11), "Selection:", color );
 			Con_DrawString( Con_DrawString( 0, TO_SCRN_Y(GRID_Y*12), "Name: ", color ),
@@ -857,11 +877,11 @@ void IN_TouchDraw( void )
 		if( touch.showbuttons )
 		{
 			// close
-			IN_TouchDrawTexture( 0, GRID_Y * 2, GRID_X * 2, GRID_Y * 4, cls.fillImage, 0, 255, 0, 224 );
+			IN_TouchDrawTexture( 0, GRID_Y * 2, GRID_X * 2, GRID_Y * 4, touch.closetexture, 255, 255, 255, 255 );
 			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 2.5 ), "Close", color );
 			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 2.5, 0, 0, "Close", color );
 			// reset
-			IN_TouchDrawTexture( 0, GRID_Y * 5, GRID_X * 2, GRID_Y * 7, cls.fillImage, 255, 0, 0, 224 );
+			IN_TouchDrawTexture( 0, GRID_Y * 5, GRID_X * 2, GRID_Y * 7, touch.resettexture, 255, 255, 255, 255 );
 			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 5.5 ), "Reset", color );
 			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 5.5, 0, 0, "Reset", color );
 		}

@@ -44,9 +44,7 @@ LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 
 LOCAL_SRC_FILES := \
            platform/android/android.c \
-           platform/android/android-touchif.cpp \
-           platform/android/android-gameif.cpp \
-	    platform/android/dlsym-weak.cpp \
+	   platform/android/dlsym-weak.cpp \
 	   client/cl_cmds.c \
            client/cl_demo.c \
            client/cl_events.c \
@@ -157,8 +155,6 @@ LOCAL_SRC_FILES := \
 	   common/soundlib/libmpg/layer3.c \
 	   common/soundlib/libmpg/tabinit.c \
 	   common/soundlib/libmpg/common.c
-
-LOCAL_SHARED_LIBRARIES := touchcontrols
 
 ifeq ($(XASH_SDL),1)
 LOCAL_SHARED_LIBRARIES += SDL2
