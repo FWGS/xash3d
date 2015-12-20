@@ -312,7 +312,7 @@ touchbutton2_t *IN_TouchFindFirst( const char *name )
 	if( !touch.first )
 		return NULL;
 	for ( button = touch.first; button; button = button->next )
-		if( ( Q_strchr( name, "*" ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
+		if( ( Q_strstr( name, "*" ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
 			return button;
 	return NULL;
 }
@@ -650,7 +650,7 @@ void IN_TouchInit( void )
 	touch_grid_enable = Cvar_Get( "touch_grid_enable", "1", 0, "enable touch grid" );
 	touch_config_file = Cvar_Get( "touch_config_file", "touch.cfg", CVAR_ARCHIVE, "current touch profile file" );
 	touch_enable = Cvar_Get( "touch_enable", TOUCH_ENABLE, CVAR_ARCHIVE, "enable touch controls" );
-#ifdef XASH_SDL
+#if defined(XASH_SDL) && defined(__ANDROID__)
 	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
 #endif
 }
