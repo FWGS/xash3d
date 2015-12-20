@@ -308,19 +308,27 @@ void IN_TouchSetClientOnly( qboolean state )
 
 void IN_TouchRemoveButton( const char *name )
 {
-	touchbutton2_t *button = IN_TouchFindButton( name );
-	if( !button )
-		return;
+	touchbutton2_t *button;
+
 	IN_TouchEditClear();
-	if( button->prev )
-		button->prev->next = button->next;
-	else
-		touch.first = button->next;
-	if( button->next )
-		button->next->prev = button->prev;
-	else
-		touch.last = button->prev;
-	Mem_Free( button );
+	for( button = touch.first; button; button = button->next )
+	{
+		if( ( Q_strchr( name, '*' ) && Q_stricmpext( name, button->name ) ) || !Q_strncmp( name, button->name, 32 ) )
+		{
+			touchbutton2_t *remove;
+			if( button->prev )
+				button->prev->next = button->next;
+			else
+				touch.first = button->next;
+			if( button->next )
+				button->next->prev = button->prev;
+			else
+				touch.last = button->prev;
+			remove = button;
+			button = button->prev;
+			Mem_Free( remove );
+		}
+	}
 }
 
 void IN_TouchRemoveButton_f()
