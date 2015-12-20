@@ -1203,7 +1203,7 @@ HSPRITE pfnSPR_LoadExt( const char *szPicName, uint texFlags )
 			break; // this is a valid spot
 	}
 
-	if( i == MAX_IMAGES ) 
+	if( i >= MAX_IMAGES ) 
 	{
 		MsgDev( D_ERROR, "SPR_Load: can't load %s, MAX_HSPRITES limit exceeded\n", szPicName );
 		return 0;
@@ -1212,7 +1212,10 @@ HSPRITE pfnSPR_LoadExt( const char *szPicName, uint texFlags )
 	// load new model
 	if( CL_LoadHudSprite( name, &clgame.sprites[i], false, texFlags ))
 	{
-		clgame.sprites[i].needload = clgame.load_sequence;
+		if( i < MAX_IMAGES - 1 )
+		{
+			clgame.sprites[i].needload = clgame.load_sequence;
+		}
 		return i;
 	}
 	return 0;
