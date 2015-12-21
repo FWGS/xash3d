@@ -123,20 +123,22 @@ typedef struct touchdefaultbutton_s
 touchdefaultbutton_t g_DefaultButtons[256] = {
 {"look", "", "_look", 0.5, 0.0, 1.0, 1.0, { 255, 255, 255, 255 }, round_none, 0, 0 },
 {"move", "", "_move", 0.0, 0.0, 0.5, 1.0, { 255, 255, 255, 255 }, round_none, 0, 0 },
-{"invnext", "touch_default/next_weap.tga", "invnext", 0.000000, 0.541083, 0.120000, 0.743989, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"invprev", "touch_default/prev_weap.tga", "invprev", 0.000000, 0.135271, 0.120000, 0.338177, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"edit", "touch_default/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"use", "touch_default/use.tga", "+use", 0.880000, 0.405812, 1.000000, 0.608719, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"jump", "touch_default/jump.tga", "+jump", 0.880000, 0.202906, 1.000000, 0.405812, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"attack", "touch_default/shoot.tga", "+attack", 0.760000, 0.473448, 0.880000, 0.676354, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"attack2", "touch_default/shoot_alt.tga", "+attack2", 0.760000, 0.270542, 0.880000, 0.473448, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"invnext", "touch_default/next_weap.tga", "invnext", 0.000000, 0.530200, 0.120000, 0.757428, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"invprev", "touch_default/prev_weap.tga", "invprev", 0.000000, 0.075743, 0.120000, 0.302971, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"edit", "touch_default/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_DEF_SHOW },
+{"use", "touch_default/use.tga", "+use", 0.880000, 0.454457, 1.000000, 0.681685, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"jump", "touch_default/jump.tga", "+jump", 0.880000, 0.227228, 1.000000, 0.454457, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"attack", "touch_default/shoot.tga", "+attack", 0.760000, 0.530200, 0.880000, 0.757428, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"attack2", "touch_default/shoot_alt.tga", "+attack2", 0.760000, 0.302971, 0.880000, 0.530200, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
 {"loadquick", "touch_default/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_SP },
 {"savequick", "touch_default/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_SP },
-{"duck", "touch_default/crouch.tga", "+duck", 0.880000, 0.777807, 1.000000, 0.980713, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"duck", "touch_default/crouch.tga", "+duck", 0.280000, 0.757428, 0.400000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
 {"messagemode", "touch_default/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_MP },
-{"reload", "touch_default/reload.tga", "+reload", 0.000000, 0.338177, 0.120000, 0.541083, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"reload", "touch_default/reload.tga", "+reload", 0.000000, 0.302971, 0.120000, 0.530200, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"show_numbers", "touch_default/show_weapons.tga", "exec touch_default/numbers.cfg", 0.440000, 0.833171, 0.520000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_HIDE },
+{"tduck", "touch_default/tduck.tga", ";+duck", 0.220000, 0.871042, 0.280000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
 };
-int g_LastDefaultButton = 14;
+int g_LastDefaultButton = 16;
 
 convar_t *touch_pitch;
 convar_t *touch_yaw;
@@ -662,10 +664,10 @@ void IN_TouchInitConfig( void )
 	if( FS_FileExists( touch_config_file->string, true ) )
 		Cbuf_AddText( va( "exec %s\n", touch_config_file->string ) );
 	else IN_TouchLoadDefaults_f( );
-	touch.closetexture = GL_LoadTexture( "touch_default/edit_close.tga", NULL, 0, 0, NULL );
-	touch.hidetexture = GL_LoadTexture( "touch_default/edit_hide.tga", NULL, 0, 0, NULL );
-	touch.showtexture = GL_LoadTexture( "touch_default/edit_show.tga", NULL, 0, 0, NULL );
-	touch.resettexture = GL_LoadTexture( "touch_default/edit_reset.tga", NULL, 0, 0, NULL );
+	touch.closetexture = GL_LoadTexture( "touch_default/edit_close.tga", NULL, 0, TF_NOPICMIP, NULL );
+	touch.hidetexture = GL_LoadTexture( "touch_default/edit_hide.tga", NULL, 0, TF_NOPICMIP, NULL );
+	touch.showtexture = GL_LoadTexture( "touch_default/edit_show.tga", NULL, 0, TF_NOPICMIP, NULL );
+	touch.resettexture = GL_LoadTexture( "touch_default/edit_reset.tga", NULL, 0, TF_NOPICMIP, NULL );
 }
 qboolean IN_TouchIsVisible( touchbutton2_t *button )
 {
@@ -791,7 +793,7 @@ void IN_TouchDraw( void )
 			{
 				if( button->texture == -1 )
 				{
-					button->texture = GL_LoadTexture( button->texturefile, NULL, 0, 0, NULL );
+					button->texture = GL_LoadTexture( button->texturefile, NULL, 0, TF_NOPICMIP, NULL );
 				}
 				if( B(flags) & TOUCH_FL_DRAW_ADDITIVE )
 					GL_SetRenderMode( kRenderTransAdd );
