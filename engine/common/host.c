@@ -1040,6 +1040,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	if( host.type == HOST_DEDICATED )
 	{
+		char *defaultmap;
 		Con_InitConsoleCommands ();
 
 		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
@@ -1049,7 +1050,11 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
 		Cbuf_Execute();
 
-		Cbuf_AddText( va( "map %s\n", Cvar_VariableString( "defaultmap" )));
+		defaultmap = Cvar_VariableString( "defaultmap" );
+		if( !defaultmap[0] )
+			Msg( "Add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
+		else
+			Cbuf_AddText( va( "map %s\n", defaultmap ));
 	}
 	else
 	{
