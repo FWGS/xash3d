@@ -109,7 +109,7 @@ qboolean Image_LoadTGA( const char *name, const byte *buffer, size_t filesize )
 	else if( targa_header.image_type == 3 || targa_header.image_type == 11 )
 	{
 		// uncompressed greyscale
-		if( targa_header.pixel_size != 8 )
+		if( targa_header.pixel_size != 8 && targa_header.pixel_size != 16 )
 		{
 			MsgDev( D_WARN, "Image_LoadTGA: (%s) Only 8 bit images supported for type 3 and 11\n", name );
 			return false;
@@ -183,9 +183,13 @@ qboolean Image_LoadTGA( const char *name, const byte *buffer, size_t filesize )
 					break;
 				case 3:
 				case 11:
-					// greyscale image
 					blue = green = red = *buf_p++;
-					alpha = 255;
+					if( targa_header.pixel_size == 16 )
+						alpha = *buf_p++;
+					else
+						alpha = 255;
+					// greyscale image
+					
 					break;
 				}
 			}
