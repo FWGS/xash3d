@@ -764,6 +764,31 @@ void Host_MapDesignError( const char *format, ... )
 }
 /*
 =================
+Host_Userconfigd_f
+
+Exec all configs from userconfig.d directory
+=================
+*/
+void Host_Userconfigd_f( void )
+{
+	search_t		*t;
+	int		i;
+
+	t = FS_Search( "userconfig.d/*.cfg", true, false );
+	if( !t ) return;
+
+	for( i = 0; i < t->numfilenames; i++ )
+	{
+		Cbuf_AddText( va("exec %s\n", t->filenames[i] ) );
+	}
+
+	Mem_Free( t );
+
+}
+
+
+/*
+=================
 Host_InitCommon
 =================
 */
@@ -908,6 +933,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Cvar_Get( "developer", dev_level, CVAR_INIT, "current developer level" );
 	Cmd_AddCommand( "exec", Host_Exec_f, "execute a script file" );
 	Cmd_AddCommand( "memlist", Host_MemStats_f, "prints memory pool information" );
+	Cmd_AddCommand( "userconfigd", Host_Userconfigd_f, "execute all scripts from userconfig.d" );
 
 	FS_Init();
 	Image_Init();

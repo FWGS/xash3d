@@ -978,8 +978,26 @@ void Host_WriteConfig( void )
 		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\tconfig.cfg - archive of cvars\n" );
 		FS_Printf( f, "//=======================================================================\n" );
-		Key_WriteBindings( f );
 		Cmd_WriteVariables( f );
+
+		FS_Printf( f, "exec keyboard.cfg\n" );
+
+		FS_Printf( f, "exec userconfig.cfg\n" );
+
+		FS_Printf( f, "userconfigd\n" );
+
+		FS_Close( f );
+	}
+	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
+
+	f = FS_Open( "keyboard.cfg", "w", false );
+	if( f )
+	{
+		FS_Printf( f, "//=======================================================================\n");
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tkeyboard.cfg - archive of keybindings\n" );
+		FS_Printf( f, "//=======================================================================\n" );
+		Key_WriteBindings( f );
 
 		mlook = (kbutton_t *)clgame.dllFuncs.KB_Find( "in_mlook" );
 		jlook = (kbutton_t *)clgame.dllFuncs.KB_Find( "in_jlook" );
@@ -990,11 +1008,10 @@ void Host_WriteConfig( void )
 		if( jlook && ( jlook->state & 1 ))
 			FS_Printf( f, "+jlook\n" );
 
-		FS_Printf( f, "exec userconfig.cfg" );
-
 		FS_Close( f );
 	}
-	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
+	else MsgDev( D_ERROR, "Couldn't write keyboard.cfg.\n" );
+	
 }
 
 /*
