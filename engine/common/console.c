@@ -1547,6 +1547,9 @@ void Key_Console( int key )
 	// enter finishes the line
 	if ( key == K_ENTER || key == K_KP_ENTER )
 	{
+		// scroll down
+		Con_Bottom();
+
 		// if not in the game explicitly prepent a slash if needed
 		if( cls.state != ca_active && con.input.buffer[0] != '\\' && con.input.buffer[0] != '/' )
 		{

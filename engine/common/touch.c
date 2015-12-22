@@ -964,6 +964,23 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 #ifdef XASH_SDL
 			SDL_StartTextInput();
 #endif
+			if( cls.key_dest == key_console )
+			{
+				static float y = 0;
+				y += dy;
+				if( dy > 0.4 )
+					Con_Bottom();
+				if( y > 0.01 )
+				{
+					Con_PageUp( 1 );
+					y = 0;
+				}
+				if( y < -0.01 )
+				{
+					Con_PageDown( 1 );
+					y = 0;
+				}
+			}
 		}
 		UI_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
 		if( type == event_down )

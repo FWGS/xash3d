@@ -789,7 +789,9 @@ void Con_RestoreFont( void );
 void Key_Console( int key );
 void Key_Message( int key );
 void Con_Close( void );
-
+void Con_PageUp( int lines );
+void Con_PageDown( int lines );
+void Con_Bottom( void );
 //
 // s_main.c
 //
