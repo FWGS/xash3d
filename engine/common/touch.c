@@ -136,7 +136,7 @@ touchdefaultbutton_t g_DefaultButtons[256] = {
 {"messagemode", "touch_default/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_MP },
 {"reload", "touch_default/reload.tga", "+reload", 0.000000, 0.302971, 0.120000, 0.530200, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
 {"show_numbers", "touch_default/show_weapons.tga", "exec touch_default/numbers.cfg", 0.440000, 0.833171, 0.520000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_HIDE },
-{"tduck", "touch_default/tduck.tga", ";+duck", 0.220000, 0.871042, 0.280000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
+{"tduck", "touch_default/tduck.tga", ";+duck", 0.220000, 0.871042, 0.280000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_HIDE },
 };
 int g_LastDefaultButton = 16;
 
