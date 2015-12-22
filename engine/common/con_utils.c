@@ -391,7 +391,7 @@ qboolean Cmd_GetConfigList( const char *s, char *completedname, int length )
 	t = FS_Search( va( "%s*.cfg", s ), true, false );
 	if( !t ) return false;
 
-	FS_FileBase( t->filenames[0], matchbuf ); 
+	Q_strncpy( matchbuf, t->filenames[0], 256 );
 	if( completedname && length ) Q_strncpy( completedname, matchbuf, length );
 	if( t->numfilenames == 1 ) return true;
 
@@ -400,7 +400,7 @@ qboolean Cmd_GetConfigList( const char *s, char *completedname, int length )
 		const char *ext = FS_FileExtension( t->filenames[i] );
 
 		if( Q_stricmp( ext, "cfg" )) continue;
-		FS_FileBase( t->filenames[i], matchbuf );
+		Q_strncpy( matchbuf, t->filenames[i], 256 );
 		Msg( "%16s\n", matchbuf );
 		numconfigs++;
 	}
@@ -594,7 +594,7 @@ qboolean Cmd_GetTextureModes( const char *s, char *completedname, int length )
 	}
 
 	if( !numtexturemodes ) return false;
-	Q_strncpy( matchbuf, gl_texturemode[0], MAX_STRING ); 
+	Q_strncpy( matchbuf, texturemodes[0], MAX_STRING );
 	if( completedname && length ) Q_strncpy( completedname, matchbuf, length );
 	if( numtexturemodes == 1 ) return true;
 
