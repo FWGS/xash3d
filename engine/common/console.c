@@ -1911,19 +1911,30 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		{
 			GL_SetRenderMode( kRenderNormal );
 			if( con_black->value )
+			{
 				pglColor4ub( 0, 0, 0, 255 );
+				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+			}
 			else
+			{
 				pglColor4ub( 255, 255, 255, 255 );
+				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+			}
 		}
 		else
 		{
 			GL_SetRenderMode( kRenderTransTexture );
 			if( con_black->value )
+			{
 				pglColor4ub( 0, 0, 0, 255 * con_alpha->value );
+				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+			}
 			else
+			{
 				pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
+				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+			}
 		}
-		R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
 		pglColor4ub( 255, 255, 255, 255 );
 	}
 	else y = 0;
