@@ -36,6 +36,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_DONE	     	6
 #define ID_MSGBOX	 	7
 #define ID_MSGTEXT	 	8
+#define ID_TOUCH	     	9
 #define ID_YES	 	130
 #define ID_NO	 	131
 
@@ -49,6 +50,7 @@ typedef struct
 	menuPicButton_s	controls;
 	menuPicButton_s	audio;
 	menuPicButton_s	video;
+	menuPicButton_s	touch;
 	menuPicButton_s	update;
 	menuPicButton_s	done;
 
@@ -80,6 +82,7 @@ static void UI_CheckUpdatesDialog( void )
 	uiOptions.controls.generic.flags ^= QMF_INACTIVE; 
 	uiOptions.audio.generic.flags ^= QMF_INACTIVE;
 	uiOptions.video.generic.flags ^= QMF_INACTIVE;
+	uiOptions.touch.generic.flags ^= QMF_INACTIVE;
 	uiOptions.update.generic.flags ^= QMF_INACTIVE;
 	uiOptions.done.generic.flags ^= QMF_INACTIVE;
 
@@ -130,6 +133,9 @@ static void UI_Options_Callback( void *self, int event )
 		break;
 	case ID_VIDEO:
 		UI_Video_Menu();
+		break;
+	case ID_TOUCH:
+		UI_Touch_Menu();
 		break;
 	case ID_UPDATE:
 		UI_CheckUpdatesDialog();
@@ -206,11 +212,23 @@ static void UI_Options_Init( void )
 
 	UI_UtilSetupPicButton( &uiOptions.video, PC_VIDEO );
 
+
+	uiOptions.touch.generic.id = ID_TOUCH;
+	uiOptions.touch.generic.type = QMTYPE_BM_BUTTON;
+	uiOptions.touch.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY;
+	uiOptions.touch.generic.x = 72;
+	uiOptions.touch.generic.y = 380;
+	uiOptions.touch.generic.name = "Touch";
+	uiOptions.touch.generic.statusText = "Change touch settings and buttons";
+	uiOptions.touch.generic.callback = UI_Options_Callback;
+
+	//UI_UtilSetupPicButton( &uiOptions.video, PC_TOUCH );
+
 	uiOptions.update.generic.id = ID_UPDATE;
 	uiOptions.update.generic.type = QMTYPE_BM_BUTTON;
 	uiOptions.update.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY;
 	uiOptions.update.generic.x = 72;
-	uiOptions.update.generic.y = 380;
+	uiOptions.update.generic.y = 430;
 	uiOptions.update.generic.name = "Update";
 	uiOptions.update.generic.statusText = "Donwload the latest version of the Xash3D engine";
 	uiOptions.update.generic.callback = UI_Options_Callback;
@@ -223,7 +241,7 @@ static void UI_Options_Init( void )
 	uiOptions.done.generic.type = QMTYPE_BM_BUTTON;
 	uiOptions.done.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY;
 	uiOptions.done.generic.x = 72;
-	uiOptions.done.generic.y = 430;
+	uiOptions.done.generic.y = 480;
 	uiOptions.done.generic.name = "Done";
 	uiOptions.done.generic.statusText = "Go back to the Main Menu";
 	uiOptions.done.generic.callback = UI_Options_Callback;
@@ -272,6 +290,7 @@ static void UI_Options_Init( void )
 	UI_AddItem( &uiOptions.menu, (void *)&uiOptions.controls );
 	UI_AddItem( &uiOptions.menu, (void *)&uiOptions.audio );
 	UI_AddItem( &uiOptions.menu, (void *)&uiOptions.video );
+	UI_AddItem( &uiOptions.menu, (void *)&uiOptions.touch );
 	UI_AddItem( &uiOptions.menu, (void *)&uiOptions.update );
 	UI_AddItem( &uiOptions.menu, (void *)&uiOptions.msgBox );
 	UI_AddItem( &uiOptions.menu, (void *)&uiOptions.updatePrompt );
