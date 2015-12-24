@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "cl_tent.h"
 #include "gl_local.h"
 #include "input.h"
+#include "touch.h"
 #include "kbutton.h"
 #include "vgui_draw.h"
 
@@ -1833,6 +1834,8 @@ void CL_Init( void )
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
+	IN_TouchInit();
+
 	loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, SI.clientlib ));
 	if( !loaded )
 	{
@@ -1868,16 +1871,18 @@ CL_Shutdown
 */
 void CL_Shutdown( void )
 {
-	// already freed
+	if( cls.initialized ) 
+	{
+		MsgDev( D_INFO, "CL_Shutdown()\n" );
 
-	MsgDev( D_INFO, "CL_Shutdown()\n" );
-
-	Host_WriteOpenGLConfig ();
-	Host_WriteVideoConfig ();
-
+		Host_WriteOpenGLConfig ();
+		Host_WriteVideoConfig ();
+	}
+	IN_TouchShutdown();
 	CL_CloseDemoHeader();
 	IN_Shutdown ();
 	Mobile_Destroy();
+
 	SCR_Shutdown ();
 	if( cls.initialized ) 
 	{

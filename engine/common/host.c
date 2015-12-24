@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "mathlib.h"
 #include "input.h"
+#include "touch.h"
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
 #include "sdl/events.h"
@@ -1020,7 +1021,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Mod_Init();
 	NET_Init();
 	Netchan_Init();
-	IN_TouchInit();
 
 	// allow to change game from the console
 	if( pChangeGame != NULL )

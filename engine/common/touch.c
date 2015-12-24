@@ -81,7 +81,8 @@ typedef struct touchbutton2_s
 
 struct touch_s
 {
-	void *mempool;
+	qboolean initialized;
+	byte *mempool;
 	touchbutton2_t *first;
 	touchbutton2_t *last;
 	touchState state;
@@ -492,6 +493,8 @@ touchbutton2_t *IN_AddButton( const char *name,  const char *texture, const char
 void IN_TouchAddClientButton( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int flags )
 {
 	touchbutton2_t *button;
+	if( !touch.initialized )
+		return;
 	if( round )
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 	if( round == round_aspect )
@@ -531,7 +534,6 @@ void IN_TouchLoadDefaults_f()
 
 void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int flags )
 {
-	Msg( "IN_TouchAddDefaultButton: %s %s %s\n", name, texturefile, command );
 	if( g_LastDefaultButton >= 255 )
 		return;
 	Q_strncpy( g_DefaultButtons[g_LastDefaultButton].name, name, 32 );
@@ -545,7 +547,6 @@ void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const 
 	g_DefaultButtons[g_LastDefaultButton].round = round;
 	g_DefaultButtons[g_LastDefaultButton].aspect = aspect;
 	g_DefaultButtons[g_LastDefaultButton].flags = flags;
-	MsgDev( D_ERROR, "IN_TouchAddDefaultButton: %s %s %s\n", name, texturefile, command );
 	g_LastDefaultButton++;
 }
 
@@ -618,8 +619,10 @@ void IN_TouchDisableEdit_f()
 
 void IN_TouchInit( void )
 {
+	if( touch.initialized )
+		return;
 	touch.mempool = Mem_AllocPool( "Touch" );
-	touch.first = NULL;
+	touch.first = touch.last = NULL;
 	MsgDev( D_NOTE, "IN_TouchInit()\n");
 	touch.move_finger = touch.resize_finger = touch.look_finger = -1;
 	touch.state = state_none;
@@ -627,6 +630,7 @@ void IN_TouchInit( void )
 	touch.clientonly = false;
 	MakeRGBA( touch.scolor, 255, 255, 255, 255 );
 	touch.swidth = 1;
+	
 	Cmd_AddCommand( "touch_addbutton", IN_TouchAddButton_f, "Add native touch button" );
 	Cmd_AddCommand( "touch_removebutton", IN_TouchRemoveButton_f, "Remove native touch button" );
 	Cmd_AddCommand( "touch_enableedit", IN_TouchEnableEdit_f, "Enable button editing mode" );
@@ -643,7 +647,7 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_roundall", IN_TouchRoundAll_f, "Round all buttons coordinates to grid" );
 	Cmd_AddCommand( "touch_exportconfig", IN_TouchExportConfig_f, "Export config keeping aspect ratio" );
 	Cmd_AddCommand( "touch_set_stroke", IN_TouchStroke_f, "Set global stroke width and color" );
-	
+
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
@@ -655,11 +659,15 @@ void IN_TouchInit( void )
 #if defined(XASH_SDL) && defined(__ANDROID__)
 	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
 #endif
+	touch.initialized = true;
 }
 int pfnGetScreenInfo( SCREENINFO *pscrinfo );
 // must be called after executing config.cfg
 void IN_TouchInitConfig( void )
 {
+	if( !touch.initialized )
+		return;
+
 	pfnGetScreenInfo( NULL ); //HACK: update hud screen parameters like iHeight
 	if( FS_FileExists( touch_config_file->string, true ) )
 		Cbuf_AddText( va( "exec %s\n", touch_config_file->string ) );
@@ -759,7 +767,7 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 
 void IN_TouchDraw( void )
 {
-	if( !touch_enable->value )
+	if( !touch.initialized || !touch_enable->value )
 		return;
 	touchbutton2_t *button;
 	if( cls.key_dest != key_game )
@@ -990,7 +998,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		return 0;
 	}
 	
-	if( !touch_enable->value )
+	if( !touch.initialized || !touch_enable->value )
 		return 0;
 
 	if( touch.state == state_edit_move )
@@ -1156,4 +1164,29 @@ void IN_TouchMove( float * forward, float *side, float *yaw, float *pitch )
 	*yaw += touch.yaw;
 	*pitch += touch.pitch;
 	touch.yaw = touch.pitch = 0;
+}
+
+void IN_TouchShutdown()
+{
+	if( !touch.initialized ) 
+		return;
+	IN_TouchRemoveAll_f();
+	Cmd_RemoveCommand( "touch_addbutton" );
+	Cmd_RemoveCommand( "touch_removebutton" );
+	Cmd_RemoveCommand( "touch_enableedit" );
+	Cmd_RemoveCommand( "touch_disableedit" );
+	Cmd_RemoveCommand( "touch_settexture" );
+	Cmd_RemoveCommand( "touch_setcolor" );
+	Cmd_RemoveCommand( "touch_setcommand" );
+	Cmd_RemoveCommand( "touch_setflags" );
+	Cmd_RemoveCommand( "touch_show" );
+	Cmd_RemoveCommand( "touch_hide" );
+	Cmd_RemoveCommand( "touch_list" );
+	Cmd_RemoveCommand( "touch_removeall" );
+	Cmd_RemoveCommand( "touch_loaddefaults" );
+	Cmd_RemoveCommand( "touch_roundall" );
+	Cmd_RemoveCommand( "touch_exportconfig" );
+	Cmd_RemoveCommand( "touch_set_stroke" );
+	touch.initialized = false;
+	Mem_FreePool( &touch.mempool );
 }

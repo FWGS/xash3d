@@ -851,7 +851,7 @@ qboolean SV_RestoreCustomDecal( struct decallist_s *entry, edict_t *pEdict, qboo
 int R_CreateDecalList( struct decallist_s *pList, qboolean changelevel );
 void R_ClearAllDecals( void );
 void R_ClearStaticEntities( void );
-qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position );
+qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, fs_offset_t *position );
 struct cl_entity_s *CL_GetEntityByIndex( int index );
 struct cl_entity_s *CL_GetLocalPlayer( void );
 struct player_info_s *CL_GetPlayerInfo( int playerIndex );
