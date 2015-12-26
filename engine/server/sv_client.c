@@ -2235,12 +2235,16 @@ void SV_EntFire_f( sv_client_t *cl )
 			ent->v.target = ALLOC_STRING( Cmd_Argv ( 3 ) );
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "set" ) )
 		{
+			char keyname[MAX_STRING];
+			char value[MAX_STRING];
 			KeyValueData	pkvd;
 			if( Cmd_Argc() != 5 )
 				return;
 			pkvd.szClassName = (char*)STRING( ent->v.classname );
-			pkvd.szKeyName = Cmd_Argv( 3 );
-			pkvd.szValue = Cmd_Argv( 4 );
+			Q_strncpy( keyname, Cmd_Argv( 3 ), MAX_STRING );
+			Q_strncpy( value, Cmd_Argv( 4 ), MAX_STRING );
+			pkvd.szKeyName = keyname;
+			pkvd.szValue = value;
 			svgame.dllFuncs.pfnKeyValue( ent, &pkvd );
 			if( pkvd.fHandled )
 				SV_ClientPrintf( cl, PRINT_LOW, "value set successfully!\n" );

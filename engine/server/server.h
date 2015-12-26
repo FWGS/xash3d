@@ -591,6 +591,7 @@ byte *pfnSetFatPVS( const float *org );
 byte *pfnSetFatPAS( const float *org );
 int pfnPrecacheModel( const char *s );
 int pfnNumberOfEntities( void );
+int pfnDropToFloor( edict_t* e );
 void SV_RestartStaticEnts( void );
 
 _inline edict_t *SV_EDICT_NUM( int n, const char * file, const int line )
