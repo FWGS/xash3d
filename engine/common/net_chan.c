@@ -1434,6 +1434,9 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 		NET_SendPacket( chan->sock, BF_GetNumBytesWritten( &send ), BF_GetData( &send ), chan->remote_address );
 	}
 
+	if( chan->rate == 0)
+		chan->rate = DEFAULT_RATE;
+
 	fRate = 1.0f / chan->rate;
 
 	if( chan->cleartime < host.realtime )

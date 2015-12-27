@@ -156,8 +156,11 @@ void R_StudioInit( void )
 		pixelAspect *= (320.0f / 240.0f);
 	else pixelAspect *= (640.0f / 480.0f);
 
-	aliasXscale = (float)scr_width->integer / RI.refdef.fov_y;
-	aliasYscale = aliasXscale * pixelAspect;
+	if( RI.refdef.fov_y > 0 )
+	{
+		aliasXscale = (float)scr_width->integer / RI.refdef.fov_y;
+		aliasYscale = aliasXscale * pixelAspect;
+	}
 
 	Matrix3x4_LoadIdentity( g_aliastransform );
 	Matrix3x4_LoadIdentity( g_rotationmatrix );
