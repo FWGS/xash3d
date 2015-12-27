@@ -131,13 +131,14 @@ static void c_longcount_notsc(long long* z)
     result+=limit*tv.tv_usec;
     *z=result;
 }
+
+static pthread_mutex_t memmut = PTHREAD_MUTEX_INITIALIZER;
+#if 0
 static unsigned int localcount_stub(void);
 static void longcount_stub(long long*);
 static unsigned int (*localcount)(void)=localcount_stub;
 static void (*longcount)(long long*)=longcount_stub;
 
-static pthread_mutex_t memmut = PTHREAD_MUTEX_INITIALIZER;
-#if 0
 static unsigned int localcount_stub(void)
 {
     unsigned int regs[4];
