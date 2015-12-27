@@ -466,6 +466,10 @@ void IN_TouchSetCommand_f( void )
 	}
 	Msg( "Usage: touch_command <name> <command>\n" );
 }
+void IN_TouchReloadConfig_f( void )
+{
+	Cbuf_AddText( va("exec %s\n", touch_config_file->string ) );
+}
 
 touchbutton2_t *IN_AddButton( const char *name,  const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color )
 {
@@ -656,6 +660,7 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_exportconfig", IN_TouchExportConfig_f, "Export config keeping aspect ratio" );
 	Cmd_AddCommand( "touch_set_stroke", IN_TouchStroke_f, "Set global stroke width and color" );
 	Cmd_AddCommand( "touch_setclientonly", IN_TouchSetClientOnly_f, "When 1, only client buttons are shown" );
+	Cmd_AddCommand( "touch_reloadconfig", IN_TouchReloadConfig_f, "load config, not saving changes" );
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
@@ -1031,7 +1036,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			}
 			if( ( y > GRID_Y * 5 ) && ( y < GRID_Y * 7 ) ) // reset button
 			{
-				Cbuf_AddText( va("exec %s\n", touch_config_file->string ) );
+				IN_TouchReloadConfig_f();
 			}
 			if( ( y > GRID_Y * 8 ) && ( y < GRID_Y * 10 ) && touch.selection ) // hide button
 				touch.selection->flags ^= TOUCH_FL_HIDE;
@@ -1196,6 +1201,7 @@ void IN_TouchShutdown()
 	Cmd_RemoveCommand( "touch_exportconfig" );
 	Cmd_RemoveCommand( "touch_set_stroke" );
 	Cmd_RemoveCommand( "touch_setclientonly" );
+	Cmd_RemoveCommand( "touch_reloadconfig" );
 
 	touch.initialized = false;
 	Mem_FreePool( &touch.mempool );
