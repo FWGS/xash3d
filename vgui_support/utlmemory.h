@@ -106,7 +106,7 @@ public:
 private:
 	enum
 	{
-		EXTERNAL_BUFFER_MARKER = -1,
+		EXTERNAL_BUFFER_MARKER = -1
 	};
 
 	T* m_pMemory;
