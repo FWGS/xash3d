@@ -325,6 +325,11 @@ void IN_TouchSetClientOnly( qboolean state )
 	touch.clientonly = state;
 }
 
+void IN_TouchSetClientOnly_f( void )
+{
+	touch.clientonly = Q_atoi( Cmd_Argv( 1 ) );
+}
+
 void IN_TouchRemoveButton( const char *name )
 {
 	touchbutton2_t *button;
@@ -647,7 +652,7 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_roundall", IN_TouchRoundAll_f, "Round all buttons coordinates to grid" );
 	Cmd_AddCommand( "touch_exportconfig", IN_TouchExportConfig_f, "Export config keeping aspect ratio" );
 	Cmd_AddCommand( "touch_set_stroke", IN_TouchStroke_f, "Set global stroke width and color" );
-
+	Cmd_AddCommand( "touch_setclientonly", IN_TouchSetClientOnly_f, "When 1, only client buttons are shown" );
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
