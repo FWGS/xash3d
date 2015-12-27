@@ -192,6 +192,7 @@ void IN_TouchWriteConfig( void )
 		FS_Printf( f, "touch_grid_count \"%d\"\n", touch_grid_count->integer );
 		FS_Printf( f, "touch_grid_enable \"%d\"\n", touch_grid_enable->integer );
 		FS_Printf( f, "touch_set_stroke %d %d %d %d %d\n", touch.swidth, touch.scolor[0], touch.scolor[1], touch.scolor[2], touch.scolor[3] );
+		FS_Printf( f, "touch_setclientonly 0\n" );
 		FS_Printf( f, "\n// touch buttons\n" );
 		FS_Printf( f, "touch_removeall\n" );
 		for( button = touch.first; button; button = button->next )
@@ -247,6 +248,8 @@ void IN_TouchExportConfig_f( void )
 		FS_Printf( f, "touch_yaw \"%f\"\n", touch_yaw->value );
 		FS_Printf( f, "touch_grid_count \"%d\"\n", touch_grid_count->integer );
 		FS_Printf( f, "touch_grid_enable \"%d\"\n", touch_grid_enable->integer );
+		FS_Printf( f, "touch_set_stroke %d %d %d %d %d\n", touch.swidth, touch.scolor[0], touch.scolor[1], touch.scolor[2], touch.scolor[3] );
+		FS_Printf( f, "touch_setclientonly 0\n" );
 		FS_Printf( f, "\n// touch buttons\n" );
 		FS_Printf( f, "touch_removeall\n" );
 		for( button = touch.first; button; button = button->next )
@@ -1192,6 +1195,8 @@ void IN_TouchShutdown()
 	Cmd_RemoveCommand( "touch_roundall" );
 	Cmd_RemoveCommand( "touch_exportconfig" );
 	Cmd_RemoveCommand( "touch_set_stroke" );
+	Cmd_RemoveCommand( "touch_setclientonly" );
+
 	touch.initialized = false;
 	Mem_FreePool( &touch.mempool );
 }
