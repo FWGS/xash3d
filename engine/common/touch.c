@@ -625,8 +625,10 @@ void IN_TouchDisableEdit_f()
 	touch.state = state_none;
 	if( touch.edit )
 		touch.edit->finger = -1;
+	if( touch.selection )
+		touch.selection->finger = -1;
+	touch.edit = touch.selection = NULL;
 	touch.resize_finger = touch.move_finger = touch.look_finger = -1;
-	IN_TouchWriteConfig();
 }
 
 void IN_TouchInit( void )
@@ -661,6 +663,7 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_set_stroke", IN_TouchStroke_f, "Set global stroke width and color" );
 	Cmd_AddCommand( "touch_setclientonly", IN_TouchSetClientOnly_f, "When 1, only client buttons are shown" );
 	Cmd_AddCommand( "touch_reloadconfig", IN_TouchReloadConfig_f, "load config, not saving changes" );
+	Cmd_AddCommand( "touch_writeconfig", IN_TouchWriteConfig, "save current config" );
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
@@ -1033,6 +1036,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			if( ( y > GRID_Y * 2 ) && ( y < GRID_Y * 4 )  ) // close button
 			{
 				IN_TouchDisableEdit_f();
+				IN_TouchWriteConfig();
 			}
 			if( ( y > GRID_Y * 5 ) && ( y < GRID_Y * 7 ) ) // reset button
 			{
@@ -1202,6 +1206,7 @@ void IN_TouchShutdown()
 	Cmd_RemoveCommand( "touch_set_stroke" );
 	Cmd_RemoveCommand( "touch_setclientonly" );
 	Cmd_RemoveCommand( "touch_reloadconfig" );
+	Cmd_RemoveCommand( "touch_writeconfig" );
 
 	touch.initialized = false;
 	Mem_FreePool( &touch.mempool );
