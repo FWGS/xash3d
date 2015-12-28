@@ -774,7 +774,7 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 			break;
 		
 		x = x1 * clgame.scrInfo.iWidth;
-		if( *s )
+		if( *s=='\n' || *s == ';' )
 			s++;
 	}
 	GL_SetRenderMode( kRenderTransTexture );
