@@ -30,6 +30,7 @@ GNU General Public License for more details.
 
 touchbutton_t gButtons[TOUCH_ACT_MAX];
 mobile_engfuncs_t *gMobileEngfuncs;
+#if 0
 static inline void SET_BUTTON_SRECT( int handle, int x1, int y1, int x2, int y2 )
 {
 #ifdef BELOKOCONTROLS
@@ -46,7 +47,7 @@ static inline void SET_BUTTON_SRECT( int handle, int x1, int y1, int x2, int y2 
 #endif
 }
 
-
+#endif
 
 static void pfnVibrate( float life, char flags )
 {
@@ -80,7 +81,7 @@ static int Touch_RegisterButton( const char *cmdname )
 	// no free buttons
 	return -1;
 }
-
+#if 0
 static touchbutton_t *Touch_AddCustomButton(int x1, int y1, int x2, int y2, int hButton, const char *pszImageName )
 {
 	SET_BUTTON_SRECT(hButton, x1, y1, x2, y2);
@@ -94,7 +95,7 @@ static touchbutton_t *Touch_AddCustomButton(int x1, int y1, int x2, int y2, int 
 	gButtons[hButton].object = NULL;
 #endif
 }
-
+#endif
 static touchbutton_t *Touch_GetButtonByID( int hButton )
 {
 	ASSERT( hButton > 0 && hButton <= TOUCH_ACT_MAX );
@@ -129,7 +130,7 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 
 //beloko
 	Touch_RegisterButton,
-	Touch_AddCustomButton,
+	NULL,
 	Touch_GetButtonByID,
 	Touch_RemoveButton,
 	Touch_EmitButton,
@@ -145,11 +146,10 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 
 void Mobile_Init( void )
 {
-	gMobileEngfuncs = &gpMobileEngfuncs;
-
-
 	// find a mobility interface
 	pfnMobilityInterface ExportToClient = Com_GetProcAddress(clgame.hInstance, MOBILITY_CLIENT_EXPORT);
+
+	gMobileEngfuncs = &gpMobileEngfuncs;
 
 	if( ExportToClient )
 	{

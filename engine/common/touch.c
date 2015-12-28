@@ -17,6 +17,8 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "input.h"
 #include "client.h"
+#include "touch.h"
+#include "math.h"
 #ifdef XASH_SDL
 #include <SDL_hints.h>
 #include <SDL_keyboard.h>
@@ -166,7 +168,6 @@ convar_t *touch_enable;
 
 int pfnDrawCharacter( int x, int y, int number, int r, int g, int b );
 static void IN_TouchCheckCoords( float *x1, float *y1, float *x2, float *y2  );
-void IN_TouchEditClear();
 
 void IN_TouchWriteConfig( void )
 {
@@ -254,6 +255,7 @@ void IN_TouchExportConfig_f( void )
 		FS_Printf( f, "touch_removeall\n" );
 		for( button = touch.first; button; button = button->next )
 		{
+			float aspect;
 			int flags = button->flags;
 			if( flags & TOUCH_FL_CLIENT )
 				continue; //skip temporary buttons
@@ -262,7 +264,7 @@ void IN_TouchExportConfig_f( void )
 			if( flags & TOUCH_FL_DEF_HIDE )
 				flags |= TOUCH_FL_HIDE;
 
-			float aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_W/SCR_H) );
+			aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_W/SCR_H) );
 
 			FS_Printf( f, "touch_addbutton \"%s\" \"%s\" \"%s\" %f %f %f %f %d %d %d %d %d %f\n", 
 				B(name), B(texturefile), B(command),
@@ -354,12 +356,12 @@ void IN_TouchRemoveButton( const char *name )
 
 }
 
-void IN_TouchRemoveButton_f()
+void IN_TouchRemoveButton_f( void )
 {
 	IN_TouchRemoveButton( Cmd_Argv( 1 ) );
 }
 
-void IN_TouchRemoveAll_f()
+void IN_TouchRemoveAll_f( void )
 {
 	IN_TouchEditClear();
 	while( touch.first )
@@ -521,7 +523,7 @@ void IN_TouchAddClientButton( const char *name, const char *texture, const char 
 	button->flags |= flags | TOUCH_FL_CLIENT | TOUCH_FL_NOEDIT;
 }
 
-void IN_TouchLoadDefaults_f()
+void IN_TouchLoadDefaults_f( void )
 {
 	int i;
 	for( i = 0; i < g_LastDefaultButton; i++ )
@@ -562,7 +564,7 @@ void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const 
 	g_LastDefaultButton++;
 }
 
-void IN_TouchAddButton_f()
+void IN_TouchAddButton_f( void )
 {
 	rgba_t color;
 	int argc = Cmd_Argc( );
@@ -613,14 +615,14 @@ void IN_TouchAddButton_f()
 	Msg( "Usage: touch_addbutton <name> <texture> <command> [<x1> <y1> <x2> <y2> [ r g b a] ]\n" );
 }
 
-void IN_TouchEnableEdit_f()
+void IN_TouchEnableEdit_f( void )
 {
 	if( touch.state == state_none )
 		touch.state = state_edit;
 	touch.resize_finger = touch.move_finger = touch.look_finger = -1;
 }
 
-void IN_TouchDisableEdit_f()
+void IN_TouchDisableEdit_f( void )
 {
 	touch.state = state_none;
 	if( touch.edit )
@@ -719,6 +721,14 @@ void IN_TouchDrawTexture ( float x1, float y1, float x2, float y2, int texture, 
 		0, 0, 1, 1, texture );
 }
 
+#ifdef _MSC_VER
+static __inline int round(float f)
+{
+    return (int)(f + 0.5);
+
+}
+#endif
+
 #define GRID_COUNT_X (touch_grid_count->integer)
 #define GRID_COUNT_Y (touch_grid_count->integer * SCR_H / SCR_W)
 #define GRID_X (1.0/GRID_COUNT_X)
@@ -783,12 +793,16 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 
 void IN_TouchDraw( void )
 {
+	touchbutton2_t *button;
+
 	if( !touch.initialized || !touch_enable->value )
 		return;
-	touchbutton2_t *button;
+
 	if( cls.key_dest != key_game )
 		return;
+
 	GL_SetRenderMode( kRenderTransTexture );
+
 	if( touch.state >= state_edit && touch_grid_enable->value )
 	{
 		float x;
@@ -807,6 +821,7 @@ void IN_TouchDraw( void )
 				1,
 				0, 0, 1, 1, cls.fillImage );
 	}
+
 	for( button = touch.first; button; button = button->next )
 	{
 		if( IN_TouchIsVisible( button ) )
@@ -916,7 +931,7 @@ void IN_TouchDraw( void )
 }
 
 // clear move and selection state
-void IN_TouchEditClear()
+void IN_TouchEditClear( void )
 {
 	if( touch.state < state_edit )
 		return;
@@ -1183,7 +1198,7 @@ void IN_TouchMove( float * forward, float *side, float *yaw, float *pitch )
 	touch.yaw = touch.pitch = 0;
 }
 
-void IN_TouchShutdown()
+void IN_TouchShutdown( void )
 {
 	if( !touch.initialized ) 
 		return;
