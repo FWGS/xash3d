@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 // touch.c
+void IN_TouchEditClear( void );
 void IN_TouchSetClientOnly( qboolean state );
 void IN_TouchRemoveButton( const char *name );
 void IN_TouchHideButtons( const char *name, qboolean hide );
@@ -22,7 +23,8 @@ void IN_TouchSetTexture( const char *name, const char *texture );
 void IN_TouchSetColor( const char *name, byte *color );
 void IN_TouchAddClientButton( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int flags );
 void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int flags );
-void IN_TouchInitConfig();
-void IN_TouchWriteConfig();
-void IN_TouchInit();
-void IN_TouchShutdown();
+void IN_TouchInitConfig( void );
+void IN_TouchWriteConfig( void );
+void IN_TouchInit( void );
+void IN_TouchShutdown( void );
+void IN_TouchMove( float * forward, float *side, float *yaw, float *pitch );
