@@ -206,10 +206,10 @@ static void UI_CreateGame_GetMapsList( void )
 		if( numMaps >= UI_MAXGAMES ) break;
 		StringConcat( uiCreateGame.mapName[numMaps], token, sizeof( uiCreateGame.mapName[0] ));
 		StringConcat( uiCreateGame.mapsDescription[numMaps], token, MAPNAME_LENGTH );
-		StringConcat( uiCreateGame.mapsDescription[numMaps], uiEmptyString, MAPNAME_LENGTH );
+		AddSpaces( uiCreateGame.mapsDescription[numMaps], MAPNAME_LENGTH );
 		if(( pfile = COM_ParseFile( pfile, token )) == NULL ) break; // unexpected end of file
 		StringConcat( uiCreateGame.mapsDescription[numMaps], token, TITLE_LENGTH );
-		StringConcat( uiCreateGame.mapsDescription[numMaps], uiEmptyString, TITLE_LENGTH );
+		AddSpaces( uiCreateGame.mapsDescription[numMaps], TITLE_LENGTH );
 		uiCreateGame.mapsDescriptionPtr[numMaps] = uiCreateGame.mapsDescription[numMaps];
 		numMaps++;
 	}
@@ -276,9 +276,9 @@ static void UI_CreateGame_Init( void )
 	uiCreateGame.menu.keyFunc = UI_CreateGame_KeyFunc;
 
 	StringConcat( uiCreateGame.hintText, "Map", MAPNAME_LENGTH );
-	StringConcat( uiCreateGame.hintText, uiEmptyString, MAPNAME_LENGTH );
+	AddSpaces( uiCreateGame.hintText, MAPNAME_LENGTH );
 	StringConcat( uiCreateGame.hintText, "Title", TITLE_LENGTH );
-	StringConcat( uiCreateGame.hintText, uiEmptyString, TITLE_LENGTH );
+	AddSpaces( uiCreateGame.hintText, TITLE_LENGTH );
 
 	uiCreateGame.background.generic.id = ID_BACKGROUND;
 	uiCreateGame.background.generic.type = QMTYPE_BITMAP;

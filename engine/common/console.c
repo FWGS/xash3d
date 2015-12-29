@@ -455,13 +455,13 @@ static void Con_LoadConsoleFont( int fontNumber, cl_font_t *font )
 	if( FS_FileExists( va( "fonts.wad/font%i.fnt", fontNumber ), false ) )
 	{
 		byte	*buffer;
-		size_t	length;
+		fs_offset_t	length;
 		qfont_t	*src;
 	
 		// half-life font with variable chars witdh
 		buffer = FS_LoadFile( va( "fonts.wad/font%i", fontNumber ), &length, false );
 
-		if( buffer && length >= sizeof( qfont_t ))
+		if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
 		{
 			int	i;
 	

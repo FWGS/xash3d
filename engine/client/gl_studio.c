@@ -643,7 +643,7 @@ StudioGetAnim
 mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
 	mstudioseqgroup_t	*pseqgroup;
-	size_t		filesize;
+	fs_offset_t		filesize;
           byte		*buf;
 
 	ASSERT( m_pSubModel );	

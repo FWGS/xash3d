@@ -222,7 +222,8 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
           const char	*ext = FS_FileExtension( filename );
 	string		path, loadname, sidename;
 	qboolean		anyformat = true;
-	int		i, filesize = 0;
+	int		i;
+	fs_offset_t	filesize = 0;
 	const loadpixformat_t *format;
 	const cubepack_t	*cmap;
 	byte		*f;
@@ -258,7 +259,7 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 			f = FS_LoadFile( path, &filesize, false );
 			if( f && filesize > 0 )
 			{
-				if( format->loadfunc( path, f, filesize ))
+				if( format->loadfunc( path, f, (size_t)filesize ))
 				{
 					Mem_Free( f ); // release buffer
 					return ImagePack(); // loaded
@@ -286,7 +287,7 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 					if( f && filesize > 0 )
 					{
 						// this name will be used only for tell user about problems 
-						if( format->loadfunc( path, f, filesize ))
+						if( format->loadfunc( path, f, (size_t)filesize ))
 						{         
 							Q_snprintf( sidename, sizeof( sidename ), "%s%s.%s", loadname, cmap->type[i].suf, format->ext );
 							if( FS_AddSideToPack( sidename, cmap->type[i].flags )) // process flags to flip some sides

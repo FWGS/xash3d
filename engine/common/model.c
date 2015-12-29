@@ -894,7 +894,7 @@ load_wad_textures:
 			}
 			else
 			{
-				size_t srcSize = 0;
+				fs_offset_t srcSize = 0;
 				byte *src = NULL;
 
 				// NOTE: we can't loading it from wad as normal because _luma texture doesn't exist
@@ -916,7 +916,7 @@ load_wad_textures:
 				}
 
 				// okay, loading it from wad or hi-res version
-				tx->fb_texturenum = GL_LoadTexture( texname, src, srcSize, TF_NOMIPMAP|TF_MAKELUMA, NULL );
+				tx->fb_texturenum = GL_LoadTexture( texname, src, (size_t)srcSize, TF_NOMIPMAP|TF_MAKELUMA, NULL );
 				if( src ) Mem_Free( src );
 
 				if( !tx->fb_texturenum && load_external_luma )
@@ -3211,7 +3211,8 @@ void Mod_LoadCacheFile( const char *filename, cache_user_t *cu )
 {
 	byte	*buf;
 	string	name;
-	size_t	i, j, size;
+	size_t	i, j;
+	fs_offset_t size;
 
 	ASSERT( cu != NULL );
 

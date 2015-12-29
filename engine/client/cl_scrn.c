@@ -500,13 +500,13 @@ void SCR_LoadCreditsFont( void )
 	if( FS_FileExists( "gfx/creditsfont.fnt", false ))
 	{
 		byte	*buffer;
-		size_t	length;
+		fs_offset_t	length;
 		qfont_t	*src;
 
 		// half-life font with variable chars width
 		buffer = FS_LoadFile( "gfx/creditsfont.fnt", &length, false );
 	
-		if( buffer && length >= sizeof( qfont_t ))
+		if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
 		{
 			int	i;
 	

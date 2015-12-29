@@ -262,7 +262,7 @@ byte* COM_LoadFileForMe( const char *filename, int *pLength )
 {
 	string	name;
 	byte	*file, *pfile;
-	int	iLength;
+	fs_offset_t	iLength;
 
 	if( !filename || !*filename )
 	{
@@ -274,7 +274,7 @@ byte* COM_LoadFileForMe( const char *filename, int *pLength )
 	COM_FixSlashes( name );
 
 	pfile = FS_LoadFile( name, &iLength, false );
-	if( pLength ) *pLength = iLength;
+	if( pLength ) *pLength = (int *)iLength;
 
 	if( pfile )
 	{
@@ -298,7 +298,7 @@ byte *COM_LoadFile( const char *filename, int usehunk, int *pLength )
 {
 	string	name;
 	byte	*file, *pfile;
-	int	iLength;
+	fs_offset_t	iLength;
 
 	ASSERT( usehunk == 5 );
 
@@ -312,7 +312,7 @@ byte *COM_LoadFile( const char *filename, int usehunk, int *pLength )
 	COM_FixSlashes( name );
 
 	pfile = FS_LoadFile( name, &iLength, false );
-	if( pLength ) *pLength = iLength;
+	if( pLength ) *pLength = (int *)iLength;
 
 	if( pfile )
 	{
