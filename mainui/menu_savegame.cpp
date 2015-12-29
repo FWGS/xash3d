@@ -162,9 +162,9 @@ static void UI_SaveGame_GetGameList( void )
 			{
 				// get name string even if not found - SV_GetComment can be mark saves
 				// as <CORRUPTED> <OLD VERSION> etc
-				StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, TIME_LENGTH );
+				AddSpaces( uiSaveGame.saveDescription[i], TIME_LENGTH );
 				StringConcat( uiSaveGame.saveDescription[i], comment, NAME_LENGTH );
-				StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, NAME_LENGTH );
+				AddSpaces( uiSaveGame.saveDescription[i], NAME_LENGTH );
 				uiSaveGame.saveDescriptionPtr[i] = uiSaveGame.saveDescription[i];
 				COM_FileBase( filenames[j], uiSaveGame.saveName[i] );
 				COM_FileBase( filenames[j], uiSaveGame.delName[i] );
@@ -324,7 +324,7 @@ static void UI_SaveGame_Init( void )
 	StringConcat( uiSaveGame.hintText, "Time", TIME_LENGTH );
 	AddSpaces( uiSaveGame.hintText, TIME_LENGTH );
 	StringConcat( uiSaveGame.hintText, "Game", NAME_LENGTH );
-	AddSpaces( uiSaveGame.hintText, NAME_LENGTH )
+	AddSpaces( uiSaveGame.hintText, NAME_LENGTH );
 	StringConcat( uiSaveGame.hintText, "Elapsed time", GAMETIME_LENGTH );
 	AddSpaces( uiSaveGame.hintText, GAMETIME_LENGTH );
 
