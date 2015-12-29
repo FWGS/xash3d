@@ -322,10 +322,6 @@ void Con_CheckResize( void )
 
 	width = ( scr_width->integer / charWidth );
 
-	// NOTE: Con_CheckResize is totally wrong :-(
-	// g-cont. i've just used fixed width on all resolutions
-	// width = 90; // mittorn: seems work fine, Con_Print was broken
-
 	if( width == con.linewidth )
 		return;
 
@@ -924,7 +920,7 @@ void Con_Print( const char *txt )
 		}
 
 		// word wrap
-		// mittorn: why it is here? Line already wrapped!
+		// mittorn: Line already wrapped
 		//if( l != con.linewidth && ( con.x + l >= con.linewidth ))
 		//	Con_Linefeed();
 		txt++;

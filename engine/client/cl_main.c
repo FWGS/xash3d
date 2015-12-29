@@ -692,7 +692,7 @@ CL_Connect_f
 //#include <sys/mman.h>
 void CL_Connect_f( void )
 {
-	char server[ sizeof( cls.servername ) ];
+	string server;
 
 	if( Cmd_Argc() != 2 )
 	{
@@ -700,7 +700,7 @@ void CL_Connect_f( void )
 		return;	
 	}
 	
-	Q_strncpy( server, Cmd_Argv( 1 ), sizeof( cls.servername ));
+	Q_strncpy( server, Cmd_Argv( 1 ), MAX_STRING );
 
 	if( Host_ServerState())
 	{	

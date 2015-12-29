@@ -784,22 +784,7 @@ R_SetupFrame
 static void R_SetupFrame( void )
 {
 	vec3_t	viewOrg, viewAng;
-	// already done in client
-	/*if( RP_NORMALPASS() && cl.thirdperson )
-	{
-		vec3_t	cam_ofs, vpn;
 
-		clgame.dllFuncs.CL_CameraOffset( cam_ofs );
-
-		viewAng[PITCH] = cam_ofs[PITCH];
-		viewAng[YAW] = cam_ofs[YAW];
-		viewAng[ROLL] = 0;
-
-		AngleVectors( viewAng, vpn, NULL, NULL );
-		VectorMA( RI.refdef.vieworg, -cam_ofs[ROLL], vpn, viewOrg );
-	}
-	else
-	{*/
 	VectorCopy( RI.refdef.vieworg, viewOrg );
 	VectorCopy( RI.refdef.viewangles, viewAng );
 
