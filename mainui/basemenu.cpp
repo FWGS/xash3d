@@ -1571,6 +1571,7 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_vidmodes", UI_VidModes_Menu );
 	Cmd_AddCommand( "menu_customgame", UI_CustomGame_Menu );
 	Cmd_AddCommand( "menu_touch", UI_Touch_Menu );
+	Cmd_AddCommand( "menu_touchoptions", UI_TouchOptions_Menu );
 
 	CHECK_MAP_LIST( TRUE );
 
