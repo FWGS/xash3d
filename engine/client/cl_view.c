@@ -403,6 +403,7 @@ void V_PostRender( void )
 
 	if( draw_2d )
 	{
+		IN_TouchDraw();
 		SCR_RSpeeds();
 		SCR_NetSpeeds();
 		SCR_DrawFPS();
@@ -411,7 +412,7 @@ void V_PostRender( void )
 		CL_DrawDemoRecording();
 		R_ShowTextures();
 		CL_DrawHUD( CL_CHANGELEVEL );
-		IN_TouchDraw();
+		
 		Con_DrawConsole();
 		UI_UpdateMenu( host.realtime );
 		Con_DrawVersion();
