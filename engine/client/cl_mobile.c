@@ -52,7 +52,7 @@ static inline void SET_BUTTON_SRECT( int handle, int x1, int y1, int x2, int y2 
 static void pfnVibrate( float life, char flags )
 {
 	// here goes platform-specific backends
-#if defined(BELOKOCONTROLS)
+#ifdef __ANDROID__
 	Android_Vibrate(life, flags);
 #endif
 }

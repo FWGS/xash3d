@@ -98,6 +98,26 @@ int Java_org_libsdl_app_SDLActivity_setenv
     (*env)->ReleaseStringUTFChars(env, value, v);
     return err;
 }
+
+void *SDL_AndroidGetJNIEnv();
+void *SDL_AndroidGetActivity();
+
+void Android_Vibrate( float life, char flags )
+{
+	long time = (long)life;
+
+	JNIEnv *env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+	jobject obj = (jobject)SDL_AndroidGetActivity();
+
+	jclass cls = (*env)->GetObjectClass(env, obj);
+	jmethodID mid = (*env)->GetMethodID(env, cls, "vibrate", "(S)V");
+
+	if (mid == 0)
+		return;
+
+	(*env)->CallVoidMethod(env, obj, mid, time);
+}
+
 #else
 
 #include "nanogl.h" //use NanoGL
@@ -185,6 +205,7 @@ void Android_SwapBuffers()
 	nanoGL_Flush();
 	(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gSwapBuffers);
 }
+
 void Android_GetScreenRes(int *width, int *height)
 {
 	*width=gWidth, *height=gHeight;
