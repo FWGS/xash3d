@@ -46,6 +46,8 @@ void AddSpaces(char *s, int size)
 {
 	int len = strlen(s);
 
+	size += len - ColorStrlen(s);
+
 	while( len < size - 1 )
 	{	
 		s[len] = ' ';
