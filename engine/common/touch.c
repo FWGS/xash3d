@@ -633,6 +633,19 @@ void IN_TouchDisableEdit_f( void )
 	touch.resize_finger = touch.move_finger = touch.look_finger = -1;
 }
 
+void IN_TouchDeleteProfile_f( void )
+{
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Usage: touch_deleteprofile <name>\n" );
+		return;
+	}
+
+	// delete profile
+	FS_Delete( va( "touch_profiles/%s.sav", Cmd_Argv( 1 )));
+}
+
+
 void IN_TouchInit( void )
 {
 	if( touch.initialized )
@@ -666,6 +679,7 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_setclientonly", IN_TouchSetClientOnly_f, "When 1, only client buttons are shown" );
 	Cmd_AddCommand( "touch_reloadconfig", IN_TouchReloadConfig_f, "load config, not saving changes" );
 	Cmd_AddCommand( "touch_writeconfig", IN_TouchWriteConfig, "save current config" );
+	Cmd_AddCommand( "touch_deleteprofile", IN_TouchDeleteProfile_f, "delete profile by name" );
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
