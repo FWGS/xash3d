@@ -33,14 +33,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_LOOKY		4
 #define ID_MOVEX	5 
 #define ID_MOVEY	6
-#define ID_SIMPLE_SKY	7
+#define ID_ENABLE	7
 #define ID_RESET	8
+#define ID_PROFILELIST	9
+#define ID_SAVE 10
+#define ID_REMOVE 11
 
 typedef struct
 {
-	int		outlineWidth;
 	menuFramework_s	menu;
-
+	char		profileDesc[UI_MAXGAMES][95];
+	char		*profileDescPtr[UI_MAXGAMES];
 	menuBitmap_s	background;
 	//menuBitmap_s	banner;
 	//menuBitmap_s	testImage;
@@ -53,12 +56,39 @@ typedef struct
 	menuSlider_s	moveY;
 	menuCheckBox_s	enable;
 	menuPicButton_s	reset;
-
-	//HIMAGE		hTestImage;
+	menuPicButton_s	save;
+	menuPicButton_s	remove;
+	menuField_s	profilename;
+	menuScrollList_s profiles;
 } uiTouchOptions_t;
 
 static uiTouchOptions_t	uiTouchOptions;
 
+
+static void UI_TouchOptions_GetProfileList( void )
+{
+	char	**filenames;
+	int	i = 1, numFiles, j;
+
+	filenames = FS_SEARCH( "touch_profiles/*.cfg", &numFiles, TRUE );
+
+	strncpy( uiTouchOptions.profileDesc[0], "default", CS_SIZE );
+	uiTouchOptions.profileDescPtr[0] = uiTouchOptions.profileDesc[0];
+
+	for ( j = 0; j < numFiles; i++, j++ )
+	{
+		if( i >= UI_MAXGAMES ) break;
+		
+		// strip path, leave only filename (empty slots doesn't have savename)
+		COM_FileBase( filenames[j], uiTouchOptions.profileDesc[i] );
+		uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
+	}
+
+	for ( ; i < UI_MAXGAMES; i++ )
+		uiTouchOptions.profileDescPtr[i] = NULL;
+
+	uiTouchOptions.profiles.itemNames = (const char **)uiTouchOptions.profileDescPtr;
+}
 
 /*
 =================
@@ -74,9 +104,6 @@ static void UI_TouchOptions_GetConfig( void )
 
 	if( CVAR_GET_FLOAT( "touch_enable" ))
 		uiTouchOptions.enable.enabled = 1;
-
-	uiTouchOptions.outlineWidth = 2;
-	UI_ScaleCoords( NULL, NULL, &uiTouchOptions.outlineWidth, NULL );
 }
 
 /*
@@ -106,7 +133,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 
 	switch( item->id )
 	{
-	case ID_SIMPLE_SKY:
+	case ID_ENABLE:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -239,7 +266,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.moveY.maxValue = 1.0;
 	uiTouchOptions.moveY.range = 0.05f;
 
-	uiTouchOptions.enable.generic.id = ID_SIMPLE_SKY;
+	uiTouchOptions.enable.generic.id = ID_ENABLE;
 	uiTouchOptions.enable.generic.type = QMTYPE_CHECKBOX;
 	uiTouchOptions.enable.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
 	uiTouchOptions.enable.generic.name = "Enable";
@@ -247,6 +274,15 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.enable.generic.y = 665;
 	uiTouchOptions.enable.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.enable.generic.statusText = "enable/disable touch controls";
+	
+	uiTouchOptions.profiles.generic.id = ID_PROFILELIST;
+	uiTouchOptions.profiles.generic.type = QMTYPE_SCROLLLIST;
+	uiTouchOptions.profiles.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_SMALLFONT;
+	uiTouchOptions.profiles.generic.x = 360;
+	uiTouchOptions.profiles.generic.y = 255;
+	uiTouchOptions.profiles.generic.width = 300;
+	uiTouchOptions.profiles.generic.height = 440;
+	uiTouchOptions.profiles.generic.callback = UI_TouchOptions_Callback;
 
 	uiTouchOptions.reset.generic.id = ID_RESET;
 	uiTouchOptions.reset.generic.type = QMTYPE_BM_BUTTON;
@@ -258,6 +294,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.reset.generic.statusText = "Reset touch to default state";
 
 	UI_TouchOptions_GetConfig();
+	UI_TouchOptions_GetProfileList();
 
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.background );
 	//UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.banner );
@@ -268,7 +305,7 @@ static void UI_TouchOptions_Init( void )
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.moveY );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.enable );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.reset );
-	//UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.testImage );
+	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.profiles );
 }
 
 /*
