@@ -137,7 +137,8 @@ static void UI_Touch_Init( void )
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.background );
 	//UI_AddItem( &uiTouch.menu, (void *)&uiTouch.banner );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchOptions );
-	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchButtons );
+	// Not implemented yet
+	//UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchButtons );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.done );
 }
 

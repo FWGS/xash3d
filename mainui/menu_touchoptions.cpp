@@ -138,8 +138,8 @@ UI_TouchOptions_GetConfig
 */
 static void UI_TouchOptions_GetConfig( void )
 {
-	uiTouchOptions.lookX.curValue = RemapVal( CVAR_GET_FLOAT( "touch_pitch" ), 80.0f, 500.0f, 0.0f, 1.0f );
-	uiTouchOptions.lookY.curValue = RemapVal( CVAR_GET_FLOAT( "touch_yaw" ), 80.0f, 500.0f, 0.0f, 1.0f );
+	uiTouchOptions.lookX.curValue = RemapVal( CVAR_GET_FLOAT( "touch_yaw" ), 50.0f, 500.0f, 0.0f, 1.0f );
+	uiTouchOptions.lookY.curValue = RemapVal( CVAR_GET_FLOAT( "touch_pitch" ), 50.0f, 500.0f, 0.0f, 1.0f );
 	uiTouchOptions.moveX.curValue = ( 2.0f / CVAR_GET_FLOAT( "touch_sidezone" ) ) / 100;
 	uiTouchOptions.moveY.curValue = ( 2.0f / CVAR_GET_FLOAT( "touch_forwardzone" ) ) / 100;
 
@@ -155,8 +155,8 @@ UI_TouchOptions_SetConfig
 
 static void UI_TouchOptions_SetConfig( void )
 {
-	CVAR_SET_FLOAT( "touch_pitch", RemapVal( uiTouchOptions.lookX.curValue, 0.0f, 1.0f, 80.0f, 500.0f ));
-	CVAR_SET_FLOAT( "touch_yaw", RemapVal( uiTouchOptions.lookY.curValue, 0.0f, 1.0f, 80.0f, 500.0f ));
+	CVAR_SET_FLOAT( "touch_yaw", RemapVal( uiTouchOptions.lookX.curValue, 0.0f, 1.0f, 50.0f, 500.0f ));
+	CVAR_SET_FLOAT( "touch_pitch", RemapVal( uiTouchOptions.lookY.curValue, 0.0f, 1.0f, 50.0f, 500.0f ));
 	CVAR_SET_FLOAT( "touch_sidezone", ( 2.0 / uiTouchOptions.moveX.curValue ) / 100 );
 	CVAR_SET_FLOAT( "touch_forwardzone", ( 2.0 / uiTouchOptions.moveX.curValue ) / 100 );
 	CVAR_SET_FLOAT( "touch_enable", uiTouchOptions.enable.enabled );
