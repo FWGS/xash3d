@@ -642,7 +642,7 @@ void IN_TouchDeleteProfile_f( void )
 	}
 
 	// delete profile
-	FS_Delete( va( "touch_profiles/%s.sav", Cmd_Argv( 1 )));
+	FS_Delete( va( "touch_profiles/%s.cfg", Cmd_Argv( 1 )));
 }
 
 
