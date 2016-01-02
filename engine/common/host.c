@@ -1087,6 +1087,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	// we need to execute it again here
 	Cmd_ExecuteString( "exec config.cfg\n", src_command );
+
+	// exec all files from userconfig.d 
+	Host_Userconfigd_f();
+
 	oldtime = Sys_DoubleTime();
 	IN_TouchInitConfig();
 	SCR_CheckStartupVids();	// must be last

@@ -984,8 +984,6 @@ void Host_WriteConfig( void )
 
 		FS_Printf( f, "exec userconfig.cfg\n" );
 
-		FS_Printf( f, "userconfigd\n" );
-
 		FS_Close( f );
 	}
 	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
