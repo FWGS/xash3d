@@ -22,10 +22,10 @@ DEFINES += -DXASH_VGUI
 endif
 
 %.o : %.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
 
 %.o : %.cpp
-	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
 
 SRCS_CPP =
 OBJS_CPP = $(SRCS_CPP:.cpp=.o)
