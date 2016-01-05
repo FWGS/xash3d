@@ -26,7 +26,7 @@ static dword	ExtraMasks[32];
 
 short BF_BigShort( short swap )
 {
-#ifdef _WIN32
+#ifdef __MSC_VER
 	short *s = &swap;
 	
 	__asm {
