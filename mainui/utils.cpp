@@ -51,7 +51,7 @@ int ColorStrlen( const char *str )
 
 	int len = 0;
 	p = str;
-
+	UtfProcessChar( 0 );
 	while( *p )
 	{
 		if( IsColorString( p ))
@@ -61,8 +61,10 @@ int ColorStrlen( const char *str )
 		}
 
 		p++;
-		len++;
+		if( UtfProcessChar( (unsigned char) *p ) )
+			len++;
 	}
+	len++;
 
 	return len;
 }
@@ -178,44 +180,43 @@ key and returns the associated value, or an empty string.
 */
 char *Info_ValueForKey( const char *s, const char *key )
 {
-	static	char value[MAX_INFO_STRING];
 	char	pkey[MAX_INFO_STRING];
+	static	char value[2][MAX_INFO_STRING]; // use two buffers so compares work without stomping on each other
+	static	int valueindex;
+	char	*o;
+	
+	valueindex ^= 1;
+	if( *s == '\\' ) s++;
+	printf("I_VFK '%s' '%s'\n", s, key );
 
-	if ( *s == '\\' )
-		s++;
-
-	while ( 1 )
+	while( 1 )
 	{
-		char *o = pkey;
-
-		while ( *s != '\\' && *s != '\n' )
+		o = pkey;
+		while( *s != '\\' && *s != '\n' )
 		{
-			if ( !*s )
-				return "";
+			if( !*s ) return "";
 			*o++ = *s++;
 		}
 
 		*o = 0;
 		s++;
 
-		o = value;
+		o = value[valueindex];
 
-		while ( *s != '\\' && *s != '\n' && *s )
+		while( *s != '\\' && *s != '\n' && *s )
 		{
-			if ( !*s )
-				return "";
+			if( !*s ) return "";
 			*o++ = *s++;
 		}
 		*o = 0;
 
-		if ( !strcmp( key, pkey ))
-			return value;
-
-		if ( !*s )
-			return "";
+		if( !strcmp( key, pkey ))
+			return value[valueindex];
+		if( !*s ) return "";
 		s++;
 	}
 }
+
 
 /* 
 ===================
@@ -1412,7 +1413,7 @@ void UI_Field_Paste( void )
 	pasteLen = strlen( str );
 	for( i = 0; i < pasteLen; i++ )
 		UI_CharEvent( str[i] );
-	SDL_FREE( str );
+	FREE( str );
 }
 
 /*
@@ -1458,7 +1459,7 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	// previous character
 	if( key == K_LEFTARROW )
 	{
-		if( f->cursor > 0 ) f->cursor--;
+		if( f->cursor > 0 ) f->cursor = UtfMoveLeft( f->buffer, f->cursor );
 		if( f->cursor < f->scroll ) f->scroll--;
 		return uiSoundNull;
 	}
@@ -1466,7 +1467,7 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	// next character
 	if( key == K_RIGHTARROW )
 	{
-		if( f->cursor < len ) f->cursor++;
+		if( f->cursor < len ) f->cursor = UtfMoveRight( f->buffer, f->cursor, len );
 		if( f->cursor >= f->scroll + f->widthInChars && f->cursor <= len )
 			f->scroll++;
 		return uiSoundNull;
@@ -1490,8 +1491,9 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	{
 		if( f->cursor > 0 )
 		{
-			memmove( f->buffer + f->cursor - 1, f->buffer + f->cursor, len - f->cursor + 1 );
-			f->cursor--;
+			int pos = UtfMoveLeft( f->buffer, f->cursor );
+			memmove( f->buffer + pos, f->buffer + f->cursor, len - f->cursor + 1 );
+			f->cursor = pos;
 			if( f->scroll ) f->scroll--;
 		}
 	}
@@ -1548,7 +1550,7 @@ void UI_Field_Char( menuField_s *f, int key )
 	}
 
 	// ignore any other non printable chars
-	if( key < 32 ) return;
+	//if( key < 32 ) return;
 
 	if( key == '^' && !( f->generic.flags & QMF_ALLOW_COLORSTRINGS ))
 	{

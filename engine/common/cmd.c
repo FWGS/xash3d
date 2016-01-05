@@ -51,6 +51,7 @@ void Cbuf_Init( void )
 	cmd_text.data = cmd_text_buf;
 	cmd_text.maxsize = MAX_CMD_BUFFER;
 	cmd_text.cursize = 0;
+	Q_memset( cmd_text_buf, 0, sizeof( cmd_text_buf ) );
 }
 
 /*
@@ -1070,6 +1071,11 @@ Cmd_Init
 */
 void Cmd_Init( void )
 {
+	cvar_vars = NULL;
+	cmd_functions = NULL;
+	cmd_argc = 0;
+	cmd_args = NULL;
+	cmd_alias = NULL;
 	Cbuf_Init();
 
 	// register our commands
@@ -1081,4 +1087,14 @@ void Cmd_Init( void )
 	Cmd_AddCommand( "cmd", Cmd_ForwardToServer, "send a console commandline to the server" );
 	Cmd_AddCommand( "alias", Cmd_Alias_f, "create a script function, without arguments show the list of all aliases" );
 	Cmd_AddCommand( "unalias", Cmd_UnAlias_f, "remove a script function" );
+}
+
+void Cmd_Shutdown( void )
+{
+	int i;
+	for( i = 0; i < cmd_argc; i++ )
+		Z_Free( cmd_argv[i] );
+	cmd_argc = 0; // clear previous args
+	cmd_args = NULL;
+	//Q_memset( cmd_text_buf, 0, sizeof( cmd_text_buf ) );
 }

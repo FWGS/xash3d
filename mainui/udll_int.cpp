@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "utils.h"
 
 ui_enginefuncs_t	g_engfuncs;
+ui_textfuncs_t	g_textfuncs;
 ui_globalvars_t	*gpGlobals;
 CMenu gMenu;
 
@@ -60,8 +61,22 @@ extern "C" EXPORT int GetMenuAPI(UI_FUNCTIONS *pFunctionTable, ui_enginefuncs_t*
 	// copy HUD_FUNCTIONS table to engine, copy engfuncs table from engine
 	memcpy( pFunctionTable, &gFunctionTable, sizeof( UI_FUNCTIONS ));
 	memcpy( &g_engfuncs, pEngfuncsFromEngine, sizeof( ui_enginefuncs_t ));
+	memset( &g_textfuncs, 0, sizeof( ui_textfuncs_t ));
 
 	gpGlobals = pGlobals;
+
+	return TRUE;
+}
+
+extern "C" EXPORT int GiveTextAPI( ui_enginefuncs_t* pTextfuncsFromEngine )
+{
+	if( !pTextfuncsFromEngine )
+	{
+		return FALSE;
+	}
+
+	// copy HUD_FUNCTIONS table to engine, copy engfuncs table from engine
+	memcpy( &g_textfuncs, pTextfuncsFromEngine, sizeof( ui_textfuncs_t ));
 
 	return TRUE;
 }

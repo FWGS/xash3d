@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "mathlib.h"
 #include "input.h"
+#include "touch.h"
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
 #include "sdl/events.h"
@@ -764,6 +765,31 @@ void Host_MapDesignError( const char *format, ... )
 }
 /*
 =================
+Host_Userconfigd_f
+
+Exec all configs from userconfig.d directory
+=================
+*/
+void Host_Userconfigd_f( void )
+{
+	search_t		*t;
+	int		i;
+
+	t = FS_Search( "userconfig.d/*.cfg", true, false );
+	if( !t ) return;
+
+	for( i = 0; i < t->numfilenames; i++ )
+	{
+		Cbuf_AddText( va("exec %s\n", t->filenames[i] ) );
+	}
+
+	Mem_Free( t );
+
+}
+
+
+/*
+=================
 Host_InitCommon
 =================
 */
@@ -778,6 +804,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Sys_ParseCommandLine( argc, argv );
 	
 	host.enabledll = !Sys_CheckParm( "-nodll" );
+
+	host.shutdown_issued = false;
+	host.crashed = false;
 #ifdef DLL_LOADER
 	if( host.enabledll )
 		Setup_LDT_Keeper( ); // Must call before creating any thread
@@ -813,7 +842,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
-	if(Sys_CheckParm( "-noch" ))
+	if( !Sys_CheckParm( "-noch" ) )
 	{
 #ifdef _WIN32
 		SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
@@ -835,6 +864,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialization started
 	host.developer = host.old_developer = 0;
+	host.textmode = false;
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
 
@@ -898,11 +928,13 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Cmd_Init();
 	Cvar_Init();
 
+
 	// share developer level across all dlls
 	Q_snprintf( dev_level, sizeof( dev_level ), "%i", host.developer );
 	Cvar_Get( "developer", dev_level, CVAR_INIT, "current developer level" );
 	Cmd_AddCommand( "exec", Host_Exec_f, "execute a script file" );
 	Cmd_AddCommand( "memlist", Host_MemStats_f, "prints memory pool information" );
+	Cmd_AddCommand( "userconfigd", Host_Userconfigd_f, "execute all scripts from userconfig.d" );
 
 	FS_Init();
 	Image_Init();
@@ -943,7 +975,9 @@ Host_Main
 int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func )
 {
 	static double	oldtime, newtime;
-
+#ifdef XASH_SDL
+	SDL_Event event;
+#endif
 	pChangeGame = func;	// may be NULL
 
 	Host_InitCommon( argc, argv, progname, bChangeGame );
@@ -968,7 +1002,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	con_gamemaps = Cvar_Get( "con_mapfilter", "1", CVAR_ARCHIVE, "when enabled, show only maps in game folder (no maps from base folder when running mod)" );
 	download_types = Cvar_Get( "download_types", "msec", CVAR_ARCHIVE, "list of types to download: Model, Sounds, Events, Custom" );
 	build = Cvar_Get( "build", va( "%i", Q_buildnum()), CVAR_INIT, "returns a current build number" );
-	ver = Cvar_Get( "ver", va( "%i/%g.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
+	ver = Cvar_Get( "ver", va( "%i/%s.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
 	host_mapdesign_fatal = Cvar_Get( "host_mapdesign_fatal", "1", CVAR_ARCHIVE, "make map design errors fatal" );
 
 	// content control
@@ -1006,6 +1040,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	if( host.type == HOST_DEDICATED )
 	{
+		char *defaultmap;
 		Con_InitConsoleCommands ();
 
 		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
@@ -1015,7 +1050,11 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
 		Cbuf_Execute();
 
-		Cbuf_AddText( va( "map %s\n", Cvar_VariableString( "defaultmap" )));
+		defaultmap = Cvar_VariableString( "defaultmap" );
+		if( !defaultmap[0] )
+			Msg( "Add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
+		else
+			Cbuf_AddText( va( "map %s\n", defaultmap ));
 	}
 	else
 	{
@@ -1048,11 +1087,15 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	// we need to execute it again here
 	Cmd_ExecuteString( "exec config.cfg\n", src_command );
+
+	// exec all files from userconfig.d 
+	Host_Userconfigd_f();
+
 	oldtime = Sys_DoubleTime();
+	IN_TouchInitConfig();
 	SCR_CheckStartupVids();	// must be last
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
-	SDL_Event event;
 #endif
 	// main window message loop
 	while( !host.crashed && !host.shutdown_issued )
@@ -1085,7 +1128,10 @@ void EXPORT Host_Shutdown( void )
 	if( !host.change_game ) Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
 
 	if( host.type == HOST_NORMAL )
+	{
 		Host_WriteConfig();
+		IN_TouchWriteConfig();
+	}
 
 	SV_Shutdown( false );
 	CL_Shutdown();
@@ -1093,6 +1139,7 @@ void EXPORT Host_Shutdown( void )
 	Mod_Shutdown();
 	NET_Shutdown();
 	HTTP_Shutdown();
+	Cmd_Shutdown();
 	Host_FreeCommon();
 	Con_DestroyConsole();
 

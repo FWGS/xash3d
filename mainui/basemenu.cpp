@@ -269,12 +269,16 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 
 			ch = *l++;
 			ch &= 255;
-
+#if 0
 #ifdef _WIN32
 			// fix for letter �
 			if( ch == 0xB8 ) ch = (byte)'�';
 			if( ch == 0xA8 ) ch = (byte)'�';
 #endif
+#endif
+			ch = UtfProcessChar( (unsigned char) ch );
+			if(!ch)
+				continue;
 			if( ch != ' ' )
 			{
 				if( shadow ) TextMessageDrawChar( xx + ofsX, yy + ofsY, charW, charH, ch, shadowModulate, uiStatic.hFont );
@@ -510,7 +514,7 @@ void UI_CursorMoved( menuFramework_s *menu )
 		if( callback ) callback( (void *)curItem, QM_LOSTFOCUS );
 
 		// Disable text editing
-		if( curItem->type == QMTYPE_FIELD ) g_engfuncs.pfnEnableTextInput( false );
+		if( curItem->type == QMTYPE_FIELD ) EnableTextInput( false );
 	}
 
 	if( menu->cursor >= 0 && menu->cursor < menu->numItems )
@@ -521,7 +525,7 @@ void UI_CursorMoved( menuFramework_s *menu )
 		if( callback ) callback( (void *)curItem, QM_GOTFOCUS );
 
 		// Enable text editing. It will open keyboard on Android.
-		if( curItem->type == QMTYPE_FIELD ) g_engfuncs.pfnEnableTextInput( true );
+		if( curItem->type == QMTYPE_FIELD ) EnableTextInput( true );
 	}
 }
 
@@ -1566,6 +1570,8 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_vidoptions", UI_VidOptions_Menu );
 	Cmd_AddCommand( "menu_vidmodes", UI_VidModes_Menu );
 	Cmd_AddCommand( "menu_customgame", UI_CustomGame_Menu );
+	Cmd_AddCommand( "menu_touch", UI_Touch_Menu );
+	Cmd_AddCommand( "menu_touchoptions", UI_TouchOptions_Menu );
 
 	CHECK_MAP_LIST( TRUE );
 

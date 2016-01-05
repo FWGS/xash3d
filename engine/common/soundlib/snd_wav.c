@@ -76,7 +76,8 @@ static void FindNextChunk( const char *name )
 		iff_dataPtr += 4;
 		iff_chunkLen = GetLittleLong();
 
-		if( iff_chunkLen < 0 )
+		// limit chunk size to 1 mb
+		if( iff_chunkLen < 0 || iff_chunkLen > 1024 * 1024 )
 		{
 			iff_dataPtr = NULL;
 			return;
@@ -146,6 +147,8 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 	if( !buffer || filesize <= 0 )
 		return false;
+
+	MsgDev( D_NOTE, "Sound_LoadWAV: ( %s, %p, %u )\n", name, buffer, filesize );
 
 	iff_data = buffer;
 	iff_end = buffer + filesize;

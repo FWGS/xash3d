@@ -391,7 +391,7 @@ qboolean Cmd_GetConfigList( const char *s, char *completedname, int length )
 	t = FS_Search( va( "%s*.cfg", s ), true, false );
 	if( !t ) return false;
 
-	FS_FileBase( t->filenames[0], matchbuf ); 
+	Q_strncpy( matchbuf, t->filenames[0], 256 );
 	if( completedname && length ) Q_strncpy( completedname, matchbuf, length );
 	if( t->numfilenames == 1 ) return true;
 
@@ -400,7 +400,7 @@ qboolean Cmd_GetConfigList( const char *s, char *completedname, int length )
 		const char *ext = FS_FileExtension( t->filenames[i] );
 
 		if( Q_stricmp( ext, "cfg" )) continue;
-		FS_FileBase( t->filenames[i], matchbuf );
+		Q_strncpy( matchbuf, t->filenames[i], 256 );
 		Msg( "%16s\n", matchbuf );
 		numconfigs++;
 	}
@@ -594,7 +594,7 @@ qboolean Cmd_GetTextureModes( const char *s, char *completedname, int length )
 	}
 
 	if( !numtexturemodes ) return false;
-	Q_strncpy( matchbuf, gl_texturemode[0], MAX_STRING ); 
+	Q_strncpy( matchbuf, texturemodes[0], MAX_STRING );
 	if( completedname && length ) Q_strncpy( completedname, matchbuf, length );
 	if( numtexturemodes == 1 ) return true;
 
@@ -978,8 +978,24 @@ void Host_WriteConfig( void )
 		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\tconfig.cfg - archive of cvars\n" );
 		FS_Printf( f, "//=======================================================================\n" );
-		Key_WriteBindings( f );
 		Cmd_WriteVariables( f );
+
+		FS_Printf( f, "exec keyboard.cfg\n" );
+
+		FS_Printf( f, "exec userconfig.cfg\n" );
+
+		FS_Close( f );
+	}
+	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
+
+	f = FS_Open( "keyboard.cfg", "w", false );
+	if( f )
+	{
+		FS_Printf( f, "//=======================================================================\n");
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tkeyboard.cfg - archive of keybindings\n" );
+		FS_Printf( f, "//=======================================================================\n" );
+		Key_WriteBindings( f );
 
 		mlook = (kbutton_t *)clgame.dllFuncs.KB_Find( "in_mlook" );
 		jlook = (kbutton_t *)clgame.dllFuncs.KB_Find( "in_jlook" );
@@ -990,11 +1006,10 @@ void Host_WriteConfig( void )
 		if( jlook && ( jlook->state & 1 ))
 			FS_Printf( f, "+jlook\n" );
 
-		FS_Printf( f, "exec userconfig.cfg" );
-
 		FS_Close( f );
 	}
-	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
+	else MsgDev( D_ERROR, "Couldn't write keyboard.cfg.\n" );
+	
 }
 
 /*
@@ -1059,6 +1074,9 @@ save render variables into video.cfg
 void Host_WriteVideoConfig( void )
 {
 	file_t	*f;
+
+	if( host.type == HOST_DEDICATED )
+		return;
 
 	MsgDev( D_NOTE, "Host_WriteVideoConfig()\n" );
 	f = FS_Open( "video.cfg", "w", false );

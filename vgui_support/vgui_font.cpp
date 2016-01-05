@@ -17,7 +17,7 @@ GNU General Public License for more details.
 
 int FontCache::s_pFontPageSize[FONT_PAGE_SIZE_COUNT] = { 16, 32, 64, 128 };
 
-FontCache::FontCache() : m_CharCache( 0, 256, CacheEntryLessFunc ), m_PageList(0, 0)
+FontCache::FontCache() : m_CharCache( 0, 256, CacheEntryLessFunc )
 {
 	CacheEntry_t listHead = { 0, 0 };
 

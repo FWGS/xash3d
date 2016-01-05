@@ -1224,12 +1224,13 @@ void CL_BulletImpactParticles( const vec3_t org )
 	{ 
 		for (i = 0; i < 12; i++)
 		{
+			int greyColors;
 			p = CL_AllocParticle(NULL);
 			if (!p) return;
 
 			p->die += 1.0f;
 			// Randomly make each particle one of three colors: dark grey, medium grey or light grey.
-			int greyColors = (rand() % 3 + 1) * 32;
+			greyColors = (rand() % 3 + 1) * 32;
 			p->color = CL_LookupColor(greyColors, greyColors, greyColors);
 
 			p->type = pt_grav;

@@ -775,18 +775,20 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	if( dir && *dir )
 	{
 		// add recursively new game directories
-		if( Q_strcmp( dir, GI->gamedir ) )
+		if( Q_strnicmp( dir, GI->gamedir, 64 ) )
 		{
 			int i;
 			for( i = 0; i < SI.numgames; i++ )
 			{
-				if( !Q_strcmp( dir, SI.games[i]->gamedir) )
-					break;
+				ASSERT(SI.games[i]);
+				MsgDev( D_NOTE, "%d %s %s\n", i, SI.games[i]->gamedir, SI.games[i]->basedir );
+				if( !Q_strnicmp( dir, SI.games[i]->gamedir, 64 ) )
+				{
+					if( Q_strnicmp( SI.games[i]->gamedir, SI.games[i]->basedir, 64 ) )
+						FS_AddGameHierarchy( SI.games[i]->basedir, flags );
+				}
 			}
 
-			// if gamedir not equals basedir, add new hierarchy
-			if( Q_strcmp(SI.games[i]->gamedir, SI.games[i]->basedir))
-				FS_AddGameHierarchy( SI.games[i]->basedir, flags );
 		}
 
 
@@ -949,6 +951,15 @@ void FS_Rescan( void )
 {
 	MsgDev( D_NOTE, "FS_Rescan( %s )\n", GI->title );
 	FS_ClearSearchPath();
+
+#ifdef __ANDROID__
+	char *str;
+	if( str = getenv("XASH3D_EXTRAS_PAK1") )
+		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	if( str = getenv("XASH3D_EXTRAS_PAK2") )
+		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	//FS_AddPack_Fullpath( "/data/data/in.celest.xash3d.hl.test/files/pak.pak", NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+#endif
 
 	if( Q_stricmp( GI->basedir, GI->gamedir ))
 		FS_AddGameHierarchy( GI->basedir, 0 );

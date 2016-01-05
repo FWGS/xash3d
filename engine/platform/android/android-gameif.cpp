@@ -1,28 +1,34 @@
-#ifdef __ANDROID__
-#include "android-gameif.h"
-
-#include "port.h"
+#ifdef BELOKOCONTROLS
 
 extern "C"
 {
+#include "port.h"
+
 #include "common.h"
 #include "client.h"
 #include "input.h"
 #include "android-main.h"
-}
-#include <pthread.h>
+#include "mobility_int.h"
+#include "android-gameif.h"
 
-#include "MultitouchMouse.h"
 #ifdef XASH_SDL
 #include "SDL.h"
 #include "SDL_keycode.h"
+#include "SDL_system.h"
 #endif
 
+#include <pthread.h>
 #include <android/log.h>
-#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,"JNI", __VA_ARGS__))
-//#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "JNI", __VA_ARGS__))
-//#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR,"JNI", __VA_ARGS__))
+#include <jni.h>
 
+}
+
+#include "MultitouchMouse.h"
+
+
+#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,"JNI", __VA_ARGS__))
+#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "JNI", __VA_ARGS__))
+#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR,"JNI", __VA_ARGS__))
 
 
 // FIFO STUFF ////////////////////
@@ -61,12 +67,7 @@ static void in_finishevent(void)
 	pthread_mutex_unlock(&events_mutex);
 }
 ///////////////////////
-#if 0
-extern "C"
-{
-extern int SDL_SendKeyboardKey(Uint8 state, SDL_Scancode scancode);
-}
-#endif
+
 int PortableKeyEvent(int state, int code, int unicode){
 	//LOGI("PortableKeyEvent %d %d %d",state,code,unicode);
 	struct eventlist_s *ev = in_newevent();
@@ -116,56 +117,25 @@ static void DoCommand(int state,const char * cmd)
 {
 	char cmdfull[50];
 
-	if (state)
-		sprintf(cmdfull,"+%s",cmd);
-	else
-		sprintf(cmdfull,"-%s",cmd);
+	cmdfull[0] = state ? '+' : '-';
+	strcpy(cmdfull + 1, cmd);
+	cmdfull[strlen(cmd) + 2] = '\0';
+
 	PostCommand(cmdfull);
 }
 void PortableAction(int state, int action)
 {
 	LOGI("PortableAction %d   %d",state,action);
-	switch (action)
+
+	if( gButtons[action].pszCommand )
 	{
-	case PORT_ACT_USE:
-		DoCommand(state,"use");
-		break;
-	case PORT_ACT_JUMP:
-		DoCommand(state,"jump");
-		break;
-	case PORT_ACT_DOWN:
-		DoCommand(state,"duck");
-		break;
-	case PORT_ACT_ATTACK:
-		DoCommand(state,"attack");
-		break;
-	case PORT_ACT_ATTACK_ALT:
-		DoCommand(state,"attack2");
-		break;
-	case PORT_ACT_RELOAD:
-		DoCommand(state,"reload");
-		break;
-	case PORT_ACT_LIGHT:
-		if (state)
-			PostCommand("impulse 100");
-		break;
-	case PORT_ACT_QUICKSAVE:
-		if (state)
-			PostCommand("savequick");
-		break;
-	case PORT_ACT_QUICKLOAD:
-		if (state)
-			PostCommand("loadquick");
-		break;
-	case PORT_ACT_NEXT_WEP:
-		if (state)
-			PostCommand("invprev");
-		break;
-	case PORT_ACT_PREV_WEP:
-		if (state)
-			PostCommand("invnext");
-		break;
+		if( gButtons[action].pszCommand[0] == '+' )
+			DoCommand( state, gButtons[action].pszCommand + 1);
+		else if( state )
+			PostCommand( gButtons[action].pszCommand );
+		return;
 	}
+	return;
 }
 
 volatile int mdx=0,mdy=0;
@@ -255,18 +225,6 @@ void PortableLookYaw(int mode, float yaw)
 	}
 }
 
-
-/*
-typedef void (*pfnChangeGame)( const char *progname );
-extern "C" int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func );
-
-#define GAME_PATH	"valve"	// default dir to start from
-void PortableInit(int argc,const char ** argv){
-	Host_Main(argc, argv, GAME_PATH, false, NULL );
-}
-*/
-
-
 int PortableInMenu(void)
 {
 	// Don't draw controls, when you are not in game
@@ -313,6 +271,22 @@ void Android_Events()
 		events_used++;
 	}
 	pthread_mutex_unlock(&events_mutex);
+}
+
+void Android_Vibrate( float life, char flags )
+{
+	long time = (long)life;
+
+	JNIEnv *env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+	jobject obj = (jobject)SDL_AndroidGetActivity();
+
+	jclass cls = env->GetObjectClass(obj);
+	jmethodID mid = env->GetMethodID(cls, "vibrate", "(S)V");
+
+	if (mid == 0)
+		return;
+
+	env->CallVoidMethod(obj, mid, time);
 }
 
 void Android_Move ( float *forward, float *side, float *pitch, float *yaw )

@@ -82,7 +82,7 @@ void V_SetupRefDef( void )
 	cl.refdef.viewport[1] = (scr_height->integer - sb_lines - cl.refdef.viewport[3]) / 2;
 
 	// calc FOV
-	cl.refdef.fov_x = cl.data.fov; // this is a final fov value
+	cl.refdef.fov_x = cl.scr_fov; // this is a final fov value
 	cl.refdef.fov_y = V_CalcFov( &cl.refdef.fov_x, cl.refdef.viewport[2], cl.refdef.viewport[3] );
 
 	// adjust FOV for widescreen
@@ -403,6 +403,7 @@ void V_PostRender( void )
 
 	if( draw_2d )
 	{
+		IN_TouchDraw();
 		SCR_RSpeeds();
 		SCR_NetSpeeds();
 		SCR_DrawFPS();
@@ -411,6 +412,7 @@ void V_PostRender( void )
 		CL_DrawDemoRecording();
 		R_ShowTextures();
 		CL_DrawHUD( CL_CHANGELEVEL );
+		
 		Con_DrawConsole();
 		UI_UpdateMenu( host.realtime );
 		Con_DrawVersion();

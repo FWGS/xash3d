@@ -305,7 +305,7 @@ void Con_CreateConsole( void )
 		rect.top = 0;
 		rect.bottom = 364;
 		Q_strncpy( FontName, "Fixedsys", sizeof( FontName ));
-		Q_strncpy( s_wcd.title, va( "Xash3D %g", XASH_VERSION ), sizeof( s_wcd.title ));
+		Q_strncpy( s_wcd.title, va( "Xash3D %s", XASH_VERSION ), sizeof( s_wcd.title ));
 		Q_strncpy( s_wcd.log_path, "engine.log", sizeof( s_wcd.log_path ));
 		fontsize = 8;
 	}

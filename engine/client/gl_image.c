@@ -4457,7 +4457,7 @@ static rgbdata_t *R_InitVSDCTCubemap( texFlags_t *flags )
 	// YY
 	// ZZ
 	// stores abs(dir.xy), offset.xy/2.5
-	byte data[4*6] =
+	static byte data[4*6] =
 	{
 		0xFF, 0x00, 0x33, 0x33, // +X: <1, 0>, <0.5, 0.5>
 		0xFF, 0x00, 0x99, 0x33, // -X: <1, 0>, <1.5, 0.5>
