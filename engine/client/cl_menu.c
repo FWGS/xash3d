@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "events.h"
 
 static MENUAPI	GetMenuAPI;
+static ADDTOUCHBUTTONTOLIST pfnAddTouchButtonToList;
 static void UI_UpdateUserinfo( void );
 
 menu_static_t	menu;
@@ -625,6 +626,20 @@ static void UI_DrawSetTextColor( int r, int g, int b, int alpha )
 	menu.ds.textColor[2] = b;
 	menu.ds.textColor[3] = alpha;
 }
+/*
+=======================
+UI_AddTouchButtonToList
+
+send button parameters to menu
+=======================
+*/
+void UI_AddTouchButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags )
+{
+	if( pfnAddTouchButtonToList )
+	{
+		pfnAddTouchButtonToList( name, texture, command, color, flags );
+	}
+}
 
 /*
 ====================
@@ -1029,12 +1044,7 @@ qboolean UI_LoadProgs( void )
 	{
 		FS_AllowDirectPaths( true );
 
-#ifdef _WIN32
 		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false )))
-
-		// Attempt to try finding library by libdl magic on Linux
-		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false )))
-#endif
 
 		{
 			FS_AllowDirectPaths( false );
@@ -1074,6 +1084,8 @@ qboolean UI_LoadProgs( void )
 		if( GiveTextApi( &gpTextfuncs ) )
 			menu.use_text_api = true;
 	}
+
+	pfnAddTouchButtonToList = (ADDTOUCHBUTTONTOLIST)Com_GetProcAddress( menu.hInstance, "AddTouchButtonToList" );
 
 	// setup gameinfo
 	for( i = 0; i < SI.numgames; i++ )

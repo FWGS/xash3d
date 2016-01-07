@@ -50,6 +50,7 @@ LOCAL_SRC_FILES := basemenu.cpp \
            menu_vidmodes.cpp \
            menu_vidoptions.cpp \
 	   menu_touchoptions.cpp \
+           menu_touchbuttons.cpp \
 	   menu_touch.cpp \
            udll_int.cpp \
            ui_title_anim.cpp \

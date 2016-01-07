@@ -64,7 +64,7 @@ static void UI_Touch_Callback( void *self, int event )
 		UI_TouchOptions_Menu();
 		break;
 	case ID_TOUCHBUTTONS:
-		//UI_TouchButtons_Menu();
+		UI_TouchButtons_Menu();
 		break;
 	case ID_DONE:
 		UI_PopMenu();
@@ -137,8 +137,8 @@ static void UI_Touch_Init( void )
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.background );
 	//UI_AddItem( &uiTouch.menu, (void *)&uiTouch.banner );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchOptions );
-	// Not implemented yet
-	//UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchButtons );
+	// WIP
+	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchButtons );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.done );
 }
 

@@ -1374,6 +1374,9 @@ void UI_Precache( void )
 	UI_VidModes_Precache();
 	UI_CustomGame_Precache();
 	UI_Credits_Precache();
+	UI_Touch_Precache();
+	UI_TouchOptions_Precache();
+	UI_TouchButtons_Precache();
 }
 
 void UI_ParseColor( char *&pfile, int *outColor )
@@ -1572,6 +1575,7 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_customgame", UI_CustomGame_Menu );
 	Cmd_AddCommand( "menu_touch", UI_Touch_Menu );
 	Cmd_AddCommand( "menu_touchoptions", UI_TouchOptions_Menu );
+	Cmd_AddCommand( "menu_touchoptions", UI_TouchButtons_Menu );
 
 	CHECK_MAP_LIST( TRUE );
 

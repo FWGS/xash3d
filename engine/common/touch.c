@@ -291,10 +291,15 @@ void IN_TouchListButtons_f( void )
 {
 	touchbutton2_t *button;
 	for( button = touch.first; button; button = button->next )
+	{
 		Msg( "%s %s %s %f %f %f %f %d %d %d %d %d\n", 
 			B(name), B(texturefile), B(command),
 			B(x1), B(y1), B(x2), B(y2),
 			B(color[0]), B(color[1]), B(color[2]), B(color[3]), B(flags) );
+		if( B(flags) & TOUCH_FL_CLIENT)
+			continue;
+		UI_AddTouchButtonToList( B(name), B(texturefile), B(command),B(color), B(flags) );
+	}
 }
 
 void IN_TouchStroke_f( void )

@@ -459,6 +459,8 @@ void UI_Credits_Precache( void );
 void UI_GoToSite_Precache( void );
 void UI_Touch_Precache( void );
 void UI_TouchOptions_Precache( void );
+void UI_TouchButtons_Precache( void );
+
 // Menus
 void UI_Main_Menu( void );
 void UI_NewGame_Menu( void );
@@ -482,6 +484,10 @@ void UI_CustomGame_Menu( void );
 void UI_Credits_Menu( void );
 void UI_Touch_Menu( void );
 void UI_TouchOptions_Menu( void );
+void UI_TouchButtons_Menu( void );
+
+void UI_TouchButtons_AddButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
+
 //
 //-----------------------------------------------------
 //
