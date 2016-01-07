@@ -699,7 +699,7 @@ enum
 	kRenderGlow,		// src*a+dest -- No Z buffer checks
 	kRenderTransAlpha,		// src*srca+dest*(1-srca)
 	kRenderTransAdd,		// src*a+dest
-	kRenderWorldGlow,		// Same as kRenderGlow but not fixed size in screen space
+	kRenderWorldGlow		// Same as kRenderGlow but not fixed size in screen space
 };
 
 enum 
@@ -724,7 +724,7 @@ enum
 	kRenderFxDeadPlayer,		// kRenderAmt is the player index
 	kRenderFxExplode,			// Scale up really big!
 	kRenderFxGlowShell,			// Glowing Shell
-	kRenderFxClampMinScale,		// Keep this sprite from getting very small (SPRITES only!)
+	kRenderFxClampMinScale		// Keep this sprite from getting very small (SPRITES only!)
 };
 
 typedef int		func_t;

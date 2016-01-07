@@ -42,6 +42,20 @@ void DBG_AssertFunction( BOOL fExpr, const char* szExpr, const char* szFile, int
 }
 #endif	// DEBUG
 
+void AddSpaces(char *s, int size)
+{
+	int len = strlen(s);
+
+	size += len - ColorStrlen(s);
+
+	while( len < size - 1 )
+	{	
+		s[len] = ' ';
+		len++;
+	}
+	s[len] = '\0';
+}
+
 int ColorStrlen( const char *str )
 {
 	const char *p;

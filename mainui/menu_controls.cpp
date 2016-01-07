@@ -178,7 +178,7 @@ static void UI_Controls_ParseKeysList( void )
 
 			sprintf( str, "^6%s^7", token );	// enable uiPromptTextColor
 			StringConcat( uiControls.keysDescription[i], str, strlen( str ) + 1 );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, 256 );	// empty
+			AddSpaces( uiControls.keysDescription[i], 256 );	// empty
 			uiControls.keysDescriptionPtr[i] = uiControls.keysDescription[i];
 			strcpy( uiControls.keysBind[i], "" );
 			strcpy( uiControls.firstKey[i], "" );
@@ -205,14 +205,14 @@ static void UI_Controls_ParseKeysList( void )
 			else strncpy( uiControls.secondKey[i], KEY_KeynumToString( keys[1] ), sizeof( uiControls.secondKey[i] ));
 
 			StringConcat( uiControls.keysDescription[i], str, CMD_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, CMD_LENGTH );
+			AddSpaces( uiControls.keysDescription[i], CMD_LENGTH );
 
 			// HACKHACK this color should be get from kb_keys.lst
 			if( !strnicmp( uiControls.firstKey[i], "MOUSE", 5 ))
 				sprintf( str, "^5%s^7", uiControls.firstKey[i] );	// cyan
 			else sprintf( str, "^3%s^7", uiControls.firstKey[i] );	// yellow
 			StringConcat( uiControls.keysDescription[i], str, KEY1_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, KEY1_LENGTH );
+			AddSpaces( uiControls.keysDescription[i], KEY1_LENGTH );
 
 			// HACKHACK this color should be get from kb_keys.lst
 			if( !strnicmp( uiControls.secondKey[i], "MOUSE", 5 ))
@@ -220,7 +220,7 @@ static void UI_Controls_ParseKeysList( void )
 			else sprintf( str, "^3%s^7", uiControls.secondKey[i] );	// yellow
 
 			StringConcat( uiControls.keysDescription[i], str, KEY2_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, KEY2_LENGTH );
+			AddSpaces( uiControls.keysDescription[i],KEY2_LENGTH );
 			uiControls.keysDescriptionPtr[i] = uiControls.keysDescription[i];
 			i++;
 		}
@@ -443,11 +443,11 @@ static void UI_Controls_Init( void )
 	uiControls.menu.keyFunc = UI_Controls_KeyFunc;
 
 	StringConcat( uiControls.hintText, "Action", CMD_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, CMD_LENGTH-4 );
+	AddSpaces( uiControls.hintText, CMD_LENGTH-4 );
 	StringConcat( uiControls.hintText, "Key/Button", KEY1_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, KEY1_LENGTH-8 );
+	AddSpaces( uiControls.hintText, KEY1_LENGTH-8 );
 	StringConcat( uiControls.hintText, "Alternate", KEY2_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, KEY2_LENGTH );
+	AddSpaces( uiControls.hintText, KEY2_LENGTH );
 
 	uiControls.background.generic.id = ID_BACKGROUND;
 	uiControls.background.generic.type = QMTYPE_BITMAP;

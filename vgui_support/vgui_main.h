@@ -55,7 +55,7 @@ private:
 		FONT_PAGE_SIZE_32,
 		FONT_PAGE_SIZE_64,
 		FONT_PAGE_SIZE_128,
-		FONT_PAGE_SIZE_COUNT,
+		FONT_PAGE_SIZE_COUNT
 	};
 
 	// a single character in the cache
