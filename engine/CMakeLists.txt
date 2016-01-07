@@ -108,7 +108,9 @@ endif()
 
 if(XASH_DEDICATED)
     add_definitions(-DXASH_DEDICATED)
-    target_link_libraries(${XASH_ENGINE_LIBRARY} -lrt)
+    if(LINUX)
+    	target_link_libraries(${XASH_ENGINE_LIBRARY} -lrt)
+    endif()
 endif()
 
 target_link_libraries(${XASH_ENGINE_LIBRARY}
