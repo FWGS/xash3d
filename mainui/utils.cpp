@@ -372,6 +372,7 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 	const char	*sound = 0;
 	int		arrowWidth, arrowHeight, upX, upY, downX, downY;
 	int		i, y;
+	bool noscroll = false;
 
 	if( !down ) 
 	{
@@ -396,9 +397,10 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		upY = sl->generic.y2 + UI_OUTLINE_WIDTH;
 		downX = sl->generic.x2 + sl->generic.width2 - arrowWidth;
 		downY = sl->generic.y2 + (sl->generic.height2 - arrowHeight) - UI_OUTLINE_WIDTH;
+		noscroll = true; // don't scroll to current when mouse used
 
 		// ADAMIX
-		if( UI_CursorInRect( sl->scrollBarX, sl->scrollBarY, sl->scrollBarWidth, sl->scrollBarHeight ))
+		if( UI_CursorInRect( upX, upY, arrowWidth, downY - upY + arrowHeight ))
 		{
 			sl->scrollBarSliding = true;
 			break;
@@ -408,9 +410,9 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		// Now see if either up or down has focus
 		if( UI_CursorInRect( upX, upY, arrowWidth, arrowHeight ))
 		{
-			if( sl->curItem != 0 )
+			if( sl->topItem > 5 )
 			{
-				sl->curItem--;
+				sl->topItem-=5;
 				sound = uiSoundMove;
 			}
 			else sound = uiSoundBuzz;
@@ -418,9 +420,9 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		}
 		else if( UI_CursorInRect( downX, downY, arrowWidth, arrowHeight ))
 		{
-			if( sl->curItem != sl->numItems - 1 )
+			if( sl->topItem < sl->numItems - sl->numRows - 5 )
 			{
-				sl->curItem++;
+				sl->topItem+=5;
 				sound = uiSoundMove;
 			}
 			else sound = uiSoundBuzz;
@@ -502,13 +504,16 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		else sound = uiSoundBuzz;
 		break;
 	}
-	if( sl->curItem < sl->topItem )
-		sl->topItem = sl->curItem;
-	if( sl->curItem > sl->topItem + sl->numRows )
-		sl->topItem = sl->curItem - sl->numRows + 1;
-	if( sl->topItem < 0 ) sl->topItem = 0;
-	if( sl->topItem > sl->numItems - sl->numRows )
-		sl->topItem = sl->numItems - sl->numRows;
+	if( !noscroll )
+	{
+		if( sl->curItem < sl->topItem )
+			sl->topItem = sl->curItem;
+		if( sl->curItem > sl->topItem + sl->numRows - 1 )
+			sl->topItem = sl->curItem - sl->numRows + 1;
+		if( sl->topItem < 0 ) sl->topItem = 0;
+		if( sl->topItem > sl->numItems - sl->numRows )
+			sl->topItem = sl->numItems - sl->numRows;
+	}
 
 	if( sound && ( sl->generic.flags & QMF_SILENT ))
 		sound = uiSoundNull;
@@ -567,6 +572,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		{
 			static float ac_y = 0;
 			ac_y += cursorDY;
+			cursorDY = 0;
 			if( ac_y * uiStatic.scaleY > sl->generic.charHeight / 2 )
 			{
 				if( sl->topItem > 0 )
@@ -657,12 +663,12 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 
 	if(((downY - upY - arrowHeight) - (((sl->numItems-1)*sl->generic.charHeight)/2)) < 2)
 	{
-		sl->scrollBarHeight = (downY - upY - arrowHeight) - (step * (sl->numItems-1));
+		sl->scrollBarHeight = (downY - upY - arrowHeight) - (step * (sl->numItems - sl->numRows));
 		sl->scrollBarY = upY + arrowHeight + (step*sl->topItem);
 	}
 	else
 	{
-		sl->scrollBarHeight = downY - upY - arrowHeight - (((sl->numItems-1) * sl->generic.charHeight) / 2);
+		sl->scrollBarHeight = downY - upY - arrowHeight - (((sl->numItems- sl->numRows) * sl->generic.charHeight) / 2);
 		sl->scrollBarY = upY + arrowHeight + (((sl->topItem) * sl->generic.charHeight)/2);
 	}
 
@@ -670,25 +676,25 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	{
 		int dist = uiStatic.cursorY - sl->scrollBarY - (sl->scrollBarHeight>>2);
 
-		if((((dist / 2) > (sl->generic.charHeight / 2)) || ((dist / 2) < (sl->generic.charHeight / 2))) && sl->curItem <= (sl->numItems - 1) && sl->curItem >= 0)
+		if((((dist / 2) > (sl->generic.charHeight / 2)) || ((dist / 2) < (sl->generic.charHeight / 2))) && sl->topItem <= (sl->numItems - sl->numRows - 1) && sl->topItem >= 0)
 		{
 			if(sl->generic.callback)
 				sl->generic.callback( sl, QM_CHANGED );
 
-			if((dist / 2) > ( sl->generic.charHeight / 2 ) && sl->curItem < ( sl->numItems - 1 ))
+			if((dist / 2) > ( sl->generic.charHeight / 2 ) && sl->topItem < ( sl->numItems - sl->numRows - 1 ))
 			{
-				sl->curItem++;
+				sl->topItem++;
 			}
 			
-			if((dist / 2) < -(sl->generic.charHeight / 2) && sl->curItem > 0 )
+			if((dist / 2) < -(sl->generic.charHeight / 2) && sl->topItem > 0 )
 			{
-				sl->curItem--;
+				sl->topItem--;
 			}
 		}
 
-		sl->topItem = sl->curItem - sl->numRows + 1;
+		//sl->topItem = sl->curItem - sl->numRows + 1;
 		if( sl->topItem < 0 ) sl->topItem = 0;
-		if( sl->topItem > ( sl->numItems - sl->numRows ))
+		if( sl->topItem > ( sl->numItems - sl->numRows - 1 ))
 			sl->topItem = sl->numItems - sl->numRows;
 	}
 
