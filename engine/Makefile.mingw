@@ -1,0 +1,50 @@
+CC ?= gcc
+CXX ?= g++
+CFLAGS ?= -Og -ggdb
+LDFLAGS =
+LIBS = -lm
+TOPDIR = $(PWD)/..
+INCLUDES = -I../SDL2/include -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl
+DEFINES =
+XASH_VGUI ?= 1
+ifeq ($(XASH_DEDICATED),1)
+DEFINES += -DXASH_DEDICATED
+else
+DEFINES += -DXASH_SDL
+LIBS += -lSDL2 -L../SDL2/lib/x86 -luser32 -lkernel32 -lgdi32
+endif
+
+
+DEFINES += -DSINGLE_BINARY
+
+ifeq ($(XASH_VGUI),1)
+DEFINES += -DXASH_VGUI
+endif
+
+%.o : %.c
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
+
+%.o : %.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
+
+SRCS_CPP =
+OBJS_CPP = $(SRCS_CPP:.cpp=.o)
+SRCS = $(wildcard server/*.c) $(wildcard client/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
+OBJS = $(SRCS:.c=.o)
+
+xash_bin.exe: $(OBJS) $(OBJS_CPP)
+	$(CC) -o xash_bin.exe $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
+
+.PHONY: depend clean list
+RM = \Program Files\Git\usr\bin\rm -f
+clean:
+	$(RM) $(OBJS) $(OBJS_CPP) xash_bin.exe
+
+list:
+	@echo Sources:
+	@echo $(SRCS)
+	@echo C++ Sources:
+	@echo $(SRCS_CPP)
+	@echo Objects:
+	@echo $(OBJS) $(OBJS_CPP)
+

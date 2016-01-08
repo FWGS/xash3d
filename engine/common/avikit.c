@@ -16,7 +16,10 @@ GNU General Public License for more details.
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
+#define USE_VFW
+#endif
+#ifdef USE_VFW
 #include <vfw.h> // video for windows
 
 // msvfw32.dll exports
@@ -134,15 +137,15 @@ static movie_state_t	avi[2];
 // Converts a compressed audio stream into uncompressed PCM.
 qboolean AVI_ACMConvertAudio( movie_state_t *Avi )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	WAVEFORMATEX	dest_header, *sh, *dh;
 	AVISTREAMINFO	stream_info;
 	dword		dest_length;
 	short		bits;
 
 	ASSERT( Avi != NULL );
-
-	// WMA codecs, both versions - they simply don't work.
+    
+    // WMA codecs, both versions - they simply don't work.
 	if( Avi->audio_header->wFormatTag == 0x160 || Avi->audio_header->wFormatTag == 0x161 )
 	{
 		if( !Avi->quiet ) MsgDev( D_ERROR, "ACM does not support this audio codec.\n" );
@@ -251,7 +254,7 @@ qboolean AVI_ACMConvertAudio( movie_state_t *Avi )
 
 qboolean AVI_GetVideoInfo( movie_state_t *Avi, long *xres, long *yres, float *duration )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	ASSERT( Avi != NULL );
 
 	if( !Avi->active )
@@ -273,7 +276,7 @@ qboolean AVI_GetVideoInfo( movie_state_t *Avi, long *xres, long *yres, float *du
 // returns a unique frame identifier
 long AVI_GetVideoFrameNumber( movie_state_t *Avi, float time )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	ASSERT( Avi != NULL );
 
 	if( !Avi->active )
@@ -286,7 +289,7 @@ long AVI_GetVideoFrameNumber( movie_state_t *Avi, float time )
 // gets the raw frame data
 byte *AVI_GetVideoFrame( movie_state_t *Avi, long frame )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	LPBITMAPINFOHEADER	frame_info;
 	byte		*frame_raw, *tmp;
 	int		i;
@@ -318,7 +321,7 @@ byte *AVI_GetVideoFrame( movie_state_t *Avi, long frame )
 
 qboolean AVI_GetAudioInfo( movie_state_t *Avi, wavdata_t *snd_info )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	ASSERT( Avi != NULL );
 
 	if( !Avi->active || Avi->audio_stream == NULL || snd_info == NULL )
@@ -343,7 +346,7 @@ qboolean AVI_GetAudioInfo( movie_state_t *Avi, wavdata_t *snd_info )
 // sync the current audio read to a specific offset
 qboolean AVI_SeekPosition( movie_state_t *Avi, dword offset )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	int	breaker;
 
 	ASSERT( Avi != NULL );
@@ -396,7 +399,7 @@ qboolean AVI_SeekPosition( movie_state_t *Avi, dword offset )
 // get a chunk of audio from the stream (in bytes)
 fs_offset_t AVI_GetAudioChunk( movie_state_t *Avi, char *audiodata, long offset, long length )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	int	i;
 	long	result = 0;
 
@@ -471,7 +474,7 @@ fs_offset_t AVI_GetAudioChunk( movie_state_t *Avi, char *audiodata, long offset,
 
 void AVI_CloseVideo( movie_state_t *Avi )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	ASSERT( Avi != NULL );
 
 	if( Avi->active )
@@ -505,7 +508,7 @@ void AVI_CloseVideo( movie_state_t *Avi )
 
 void AVI_OpenVideo( movie_state_t *Avi, const char *filename, qboolean load_audio, qboolean ignore_hwgamma, int quiet )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	BITMAPINFOHEADER	bmih;
 	AVISTREAMINFO	stream_info;
 	long		opened_streams = 0;
@@ -644,17 +647,19 @@ void AVI_OpenVideo( movie_state_t *Avi, const char *filename, qboolean load_audi
 
 qboolean AVI_IsActive( movie_state_t *Avi )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	if( Avi != NULL )
 		return Avi->active;
-	return false;
 #endif
+	return false;
 }
 
 movie_state_t *AVI_GetState( int num )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	return &avi[num];
+#else
+	return NULL;
 #endif
 }
 
@@ -666,7 +671,7 @@ AVIKit user interface
 */
 movie_state_t *AVI_LoadVideo( const char *filename, qboolean load_audio, qboolean ignore_hwgamma )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	movie_state_t	*Avi;
 	string		path;
 	const char	*fullpath;
@@ -710,7 +715,7 @@ movie_state_t *AVI_LoadVideoNoSound( const char *filename, qboolean ignore_hwgam
 
 void AVI_FreeVideo( movie_state_t *state )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	if( !state ) return;
 
 	if( Mem_IsAllocatedExt( cls.mempool, state ))
@@ -723,7 +728,7 @@ void AVI_FreeVideo( movie_state_t *state )
 
 qboolean AVI_Initailize( void )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	if( Sys_CheckParm( "-noavi" ))
 	{
 		MsgDev( D_INFO, "AVI: Disabled\n" );
@@ -750,11 +755,11 @@ qboolean AVI_Initailize( void )
 		Sys_FreeLibrary( &msvfw_dll );
 		return false;
 	}
-
-	pAVIFileInit();
+	
 	avi_initialized = true;
 	MsgDev( D_NOTE, "AVI_Initailize: done\n" );
 		
+	pAVIFileInit();
 	return true;
 #endif
 	MsgDev( D_INFO, "AVI: Not supported\n" );
@@ -763,7 +768,7 @@ qboolean AVI_Initailize( void )
 
 void AVI_Shutdown( void )
 {
-#ifdef _WIN32
+#ifdef USE_VFW
 	if( !avi_initialized ) return;
 
 	pAVIFileExit();

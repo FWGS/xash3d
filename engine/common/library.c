@@ -1016,7 +1016,7 @@ void *Com_FunctionFromName(void *hInstance, const char *pName)
 	return 0;
 }
 
-const char *Com_NameForFunction( void *hInstance, dword function )
+const char *Com_NameForFunction( void *hInstance, void * function )
 {
 	dll_user_t	*hInst = (dll_user_t *)hInstance;
 	int		i, index;
