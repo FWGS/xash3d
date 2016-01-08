@@ -60,10 +60,12 @@ void SDLash_EventFilter( SDL_Event* event)
 			break;
 
 		case SDL_MOUSEBUTTONUP:
-			SDLash_MouseEvent(event->button);
+
 #ifdef TOUCHEMU
 			mdown = 0;
 			IN_TouchEvent(1, 0, (float)event->button.x/scr_width->value, (float)event->button.y/scr_height->value, 0, 0);
+#else
+			SDLash_MouseEvent(event->button);
 #endif
 			break;
 		case SDL_MOUSEBUTTONDOWN:

@@ -360,11 +360,13 @@ void UI_ScrollList_Init( menuScrollList_s *sl )
 	UI_ScaleCoords( &sl->generic.x, &sl->generic.y, &sl->generic.width, &sl->generic.height );
 }
 
+
 /*
 =================
 UI_ScrollList_Key
-=================
+================
 */
+
 const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 {
 	const char	*sound = 0;
@@ -500,8 +502,10 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		else sound = uiSoundBuzz;
 		break;
 	}
-
-	sl->topItem = sl->curItem - sl->numRows + 1;
+	if( sl->curItem < sl->topItem )
+		sl->topItem = sl->curItem;
+	if( sl->curItem > sl->topItem + sl->numRows )
+		sl->topItem = sl->curItem - sl->numRows + 1;
 	if( sl->topItem < 0 ) sl->topItem = 0;
 	if( sl->topItem > sl->numItems - sl->numRows )
 		sl->topItem = sl->numItems - sl->numRows;
@@ -555,6 +559,27 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	{
 		// draw the opaque outlinebox first 
 		UI_FillRect( x, y, w, h, uiColorBlack );
+	}
+
+	if( cursorDown )
+	{
+		if(UI_CursorInRect(x,y,w,h))
+		{
+			static float ac_y = 0;
+			ac_y += cursorDY;
+			if( ac_y * uiStatic.scaleY > sl->generic.charHeight / 2 )
+			{
+				if( sl->topItem > 0 )
+					sl->topItem--;
+				ac_y = 0;
+			}
+			if( ac_y * uiStatic.scaleY < -sl->generic.charHeight / 2 )
+			{
+				if( sl->topItem < sl->numItems - sl->numRows )
+					sl->topItem++;
+				ac_y = 0;
+			}
+		}
 	}
 
 	// hightlight the selected item
@@ -623,6 +648,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	// draw the arrows base
 	UI_FillRect( upX, upY + arrowHeight, arrowWidth, downY - upY - arrowHeight, uiInputFgColor );
 
+
 	// ADAMIX
 	sl->scrollBarX = upX + sl->generic.charHeight/4;
 	sl->scrollBarWidth = arrowWidth - sl->generic.charHeight/4;
@@ -632,12 +658,12 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	if(((downY - upY - arrowHeight) - (((sl->numItems-1)*sl->generic.charHeight)/2)) < 2)
 	{
 		sl->scrollBarHeight = (downY - upY - arrowHeight) - (step * (sl->numItems-1));
-		sl->scrollBarY = upY + arrowHeight + (step*sl->curItem);
+		sl->scrollBarY = upY + arrowHeight + (step*sl->topItem);
 	}
 	else
 	{
 		sl->scrollBarHeight = downY - upY - arrowHeight - (((sl->numItems-1) * sl->generic.charHeight) / 2);
-		sl->scrollBarY = upY + arrowHeight + (((sl->curItem) * sl->generic.charHeight)/2);
+		sl->scrollBarY = upY + arrowHeight + (((sl->topItem) * sl->generic.charHeight)/2);
 	}
 
 	if( sl->scrollBarSliding )

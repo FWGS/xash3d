@@ -1105,6 +1105,10 @@ void UI_KeyEvent( int key, int down )
 
 	if( !uiStatic.menuActive )
 		return;
+	if( key == K_MOUSE1 )
+	{
+		cursorDown = down;
+	}
 
 	if( uiStatic.menuActive->keyFunc )
 		sound = uiStatic.menuActive->keyFunc( key, down );
@@ -1151,6 +1155,8 @@ void UI_CharEvent( int key )
 		}
 	}
 }
+bool cursorDown;
+float cursorDY;
 
 /*
 =================
@@ -1168,8 +1174,22 @@ void UI_MouseMove( int x, int y )
 	if( !uiStatic.visible )
 		return;
 
+	if( cursorDown )
+	{
+		static bool prevDown = false;
+		if(!prevDown)
+			prevDown = true, cursorDY = 0;
+		else
+			if( y - uiStatic.cursorY )
+				cursorDY = y - uiStatic.cursorY;
+	}
+	else
+		cursorDY = 0;
+
 	if( !uiStatic.menuActive )
 		return;
+
+
 
 	// now menu uses absolute coordinates
 	uiStatic.cursorX = x;
