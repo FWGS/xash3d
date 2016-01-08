@@ -28,3 +28,4 @@ void IN_TouchWriteConfig( void );
 void IN_TouchInit( void );
 void IN_TouchShutdown( void );
 void IN_TouchMove( float * forward, float *side, float *yaw, float *pitch );
+void IN_TouchResetDefaultButtons( void );

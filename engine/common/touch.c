@@ -52,16 +52,6 @@ typedef enum
 	round_aspect
 } touchRound;
 
-#define TOUCH_FL_HIDE BIT( 0 )
-#define TOUCH_FL_NOEDIT BIT( 1 )
-#define TOUCH_FL_CLIENT BIT( 2 )
-#define TOUCH_FL_MP BIT( 3 )
-#define TOUCH_FL_SP BIT( 4 )
-#define TOUCH_FL_DEF_SHOW BIT( 5 )
-#define TOUCH_FL_DEF_HIDE BIT( 6 )
-#define TOUCH_FL_DRAW_ADDITIVE BIT( 7 )
-#define TOUCH_FL_STROKE BIT( 8 )
-
 typedef struct touchbutton2_s
 {
 	// Touch button type: tap, stick or slider
@@ -552,6 +542,8 @@ void IN_TouchLoadDefaults_f( void )
 	}
 }
 
+
+// Add default button from client
 void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, byte *color, int round, float aspect, int flags )
 {
 	if( g_LastDefaultButton >= 255 )
@@ -570,6 +562,11 @@ void IN_TouchAddDefaultButton( const char *name, const char *texturefile, const 
 	g_LastDefaultButton++;
 }
 
+// Client may remove all default buttons from engine
+void IN_TouchResetDefaultButtons( void )
+{
+	g_LastDefaultButton = 0;
+}
 void IN_TouchAddButton_f( void )
 {
 	rgba_t color;

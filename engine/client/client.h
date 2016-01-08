@@ -840,7 +840,6 @@ void pfnPIC_DrawAdditive( int x, int y, int width, int height, const wrect_t *pr
 //
 // cl_mobile.c
 //
-extern touchbutton_t gButtons[TOUCH_ACT_MAX];
 void Mobile_Init( void );
 void Mobile_Destroy( void );
 
