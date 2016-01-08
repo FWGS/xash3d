@@ -418,10 +418,13 @@ static void UI_TouchButtons_Callback( void *self, int event )
 		break;
 	case ID_SELECT:
 		UI_TouchButtons_DisableButtons();
-		uiFileDialogGlobal.npatterns = 3;
-		strcpy( uiFileDialogGlobal.patterns[0], "*.tga");
-		strcpy( uiFileDialogGlobal.patterns[1], "*/*.tga");
-		strcpy( uiFileDialogGlobal.patterns[2], "gfx/*/*.tga");
+		uiFileDialogGlobal.npatterns = 6;
+		strcpy( uiFileDialogGlobal.patterns[0], "touch/*.tga");
+		strcpy( uiFileDialogGlobal.patterns[1], "touch_default/*.tga");
+		strcpy( uiFileDialogGlobal.patterns[2], "gfx/touch/*");
+		strcpy( uiFileDialogGlobal.patterns[3], "gfx/vgui/*");
+		strcpy( uiFileDialogGlobal.patterns[4], "gfx/shell/*");
+		strcpy( uiFileDialogGlobal.patterns[5], "*.tga");
 		uiFileDialogGlobal.preview = true;
 		uiFileDialogGlobal.valid = true;
 		uiFileDialogGlobal.callback = UI_TouchButtons_FileDialogCallback;

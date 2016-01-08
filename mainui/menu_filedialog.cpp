@@ -70,7 +70,7 @@ static void UI_FileDialog_GetFileList( void )
 
 	for( k = 0; k < uiFileDialogGlobal.npatterns; k++)
 	{
-		filenames = FS_SEARCH( uiFileDialogGlobal.patterns[i], &numFiles, TRUE );
+		filenames = FS_SEARCH( uiFileDialogGlobal.patterns[k], &numFiles, TRUE );
 		for ( j = 0; j < numFiles; i++, j++ )
 		{
 			if( i >= UI_MAXGAMES ) break;
