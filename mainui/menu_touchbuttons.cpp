@@ -50,6 +50,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_LOCK			21
 #define ID_MP			22
 #define ID_SP			23
+#define ID_ADDITIVE		24
+#define ID_EDITOR		25
 #define ID_YES	 	130
 #define ID_NO	 	131
 typedef struct
@@ -59,8 +61,11 @@ typedef struct
     char		bTextures[UI_MAXGAMES][95];
     char		bCommands[UI_MAXGAMES][95];
     unsigned char		bColors[UI_MAXGAMES][4];
-    bool        bHide[UI_MAXGAMES];
+	int        bFlags[UI_MAXGAMES];
     bool        gettingList;
+	HIMAGE textureid;
+	char selectedName[256];
+	int curflags;
 
     char		*bNamesPtr[UI_MAXGAMES];
 	menuBitmap_s	background;
@@ -78,11 +83,12 @@ typedef struct
 	menuCheckBox_s	sp;
 	menuCheckBox_s	mp;
 	menuCheckBox_s	lock;
+	menuCheckBox_s	additive;
 	menuPicButton_s	reset;
-    menuPicButton_s	set;
 	menuPicButton_s	remove;
 	menuPicButton_s	save;
     menuPicButton_s	select;
+	menuPicButton_s	editor;
     menuField_s	command;
     menuField_s	texture;
     menuField_s	name;
@@ -97,18 +103,45 @@ typedef struct
 	menuPicButton_s	no;
 	void ( *dialogAction ) ( void );
 	char dialogText[256];
+	bool initialized;
 } uiTouchButtons_t;
 
 static uiTouchButtons_t	uiTouchButtons;
+
+#define BIT(i) ( 1<<i )
+
+#define TOUCH_FL_HIDE BIT( 0 )
+#define TOUCH_FL_NOEDIT BIT( 1 )
+#define TOUCH_FL_CLIENT BIT( 2 )
+#define TOUCH_FL_MP BIT( 3 )
+#define TOUCH_FL_SP BIT( 4 )
+#define TOUCH_FL_DEF_SHOW BIT( 5 )
+#define TOUCH_FL_DEF_HIDE BIT( 6 )
+#define TOUCH_FL_DRAW_ADDITIVE BIT( 7 )
+#define TOUCH_FL_STROKE BIT( 8 )
+
+static void UI_TouchButtons_UpdateFields( void );
 
 void UI_TouchButtons_AddButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags )
 {
 	if( !uiTouchButtons.gettingList )
 		return;
+	int i = uiTouchButtons.buttonList.numItems++;
+	strcpy(uiTouchButtons.bNames[i], name);
+	uiTouchButtons.bNamesPtr[i] = uiTouchButtons.bNames[i];
+	strcpy(uiTouchButtons.bTextures[i], texture);
+	strcpy(uiTouchButtons.bCommands[i], command);
+	uiTouchButtons.bColors[i][0] = color[0];
+	uiTouchButtons.bColors[i][1] = color[1];
+	uiTouchButtons.bColors[i][2] = color[2];
+	uiTouchButtons.bColors[i][3] = color[3];
+	uiTouchButtons.bFlags[i] = flags;
 }
 
 void UI_TouchButtons_GetButtonList()
 {
+	if( !uiTouchButtons.initialized )
+		return;
 	uiTouchButtons.buttonList.numItems = 0;
 	CLIENT_COMMAND( 1, "" ); //perform Cbuf_Execute()
 	uiTouchButtons.gettingList = true;
@@ -128,6 +161,7 @@ void UI_TouchButtons_GetButtonList()
 
 
 	uiTouchButtons.buttonList.itemNames = (const char **)uiTouchButtons.bNamesPtr;
+	UI_TouchButtons_UpdateFields();
 }
 /*
 =================
@@ -140,38 +174,117 @@ static void UI_MsgBox_Ownerdraw( void *self )
 
 	UI_FillRect( item->x, item->y, item->width, item->height, uiPromptBgColor );
 }
-
+#define CURCOLOR1(x) ( (unsigned int) ( uiTouchButtons.x.curValue * 255.0f ) )
 static void UI_Preview_Ownerdraw( void *self )
 {
     menuCommon_s	*item = (menuCommon_s *)self;
-
-    UI_FillRect( item->x, item->y, item->width, item->height, 0xFFFFFFFF );
+	UI_FillRect( item->x - 2, item->y - 2, item->width + 4, item->height + 4, 0xFFC0C0C0 );
+	UI_FillRect( item->x, item->y, item->width, item->height, 0xFF808080 );
+	PIC_Set( uiTouchButtons.textureid, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue), CURCOLOR1(alpha));
+	if( uiTouchButtons.additive.enabled )
+		PIC_DrawAdditive( item->x, item->y, item->width, item->height );
+	else
+		PIC_DrawTrans( item->x, item->y, item->width, item->height );
 }
-
+#define CURCOLOR ( (unsigned int)(uiTouchButtons.blue.curValue * 255) | \
+				 (unsigned int)(uiTouchButtons.green.curValue * 255) << 8 | \
+				 (unsigned int)(uiTouchButtons.red.curValue * 255) << 16 | \
+				 (unsigned int)(uiTouchButtons.alpha.curValue * 255) << 24 )
 static void UI_Color_Ownerdraw( void *self )
 {
     menuCommon_s	*item = (menuCommon_s *)self;
 
-    UI_FillRect( item->x, item->y, item->width, item->height, 0xFFFFFFFF );
+	UI_FillRect( item->x, item->y, item->width, item->height, CURCOLOR );
 }
 
 static void UI_DeleteButton()
 {
 	char command[256];
-
-    if( uiTouchButtons.buttonList.curItem < 1 )
-		return;
-
-    snprintf(command, 256, "touch_removebutton %s\n", uiTouchButtons.bNames[ uiTouchButtons.buttonList.curItem ] );
+	snprintf(command, 256, "touch_removebutton %s\n", uiTouchButtons.selectedName );
 	CLIENT_COMMAND(1, command);
-    //UI_TouchButtons_GetButtonsList();
+	UI_TouchButtons_GetButtonList();
 }
 
 static void UI_ResetButtons()
 {
 	CLIENT_COMMAND( 0, "touch_removeall\n" );
 	CLIENT_COMMAND( 0, "touch_loaddefaults\n" );
+	UI_TouchButtons_GetButtonList();
 }
+
+static void UI_TouchButtons_UpdateFields()
+{
+	strcpy( uiTouchButtons.selectedName, uiTouchButtons.bNames[uiTouchButtons.buttonList.curItem]);
+	strcpy( uiTouchButtons.texture.buffer, uiTouchButtons.bTextures[uiTouchButtons.buttonList.curItem]);
+	strcpy( uiTouchButtons.command.buffer, uiTouchButtons.bCommands[uiTouchButtons.buttonList.curItem]);
+	uiTouchButtons.red.curValue = (float) uiTouchButtons.bColors[uiTouchButtons.buttonList.curItem][0]/255;
+	uiTouchButtons.green.curValue = (float) uiTouchButtons.bColors[uiTouchButtons.buttonList.curItem][1]/255;
+	uiTouchButtons.blue.curValue = (float) uiTouchButtons.bColors[uiTouchButtons.buttonList.curItem][2]/255;
+	uiTouchButtons.alpha.curValue = (float) uiTouchButtons.bColors[uiTouchButtons.buttonList.curItem][3]/255;
+	uiTouchButtons.curflags = uiTouchButtons.bFlags[ uiTouchButtons.buttonList.curItem ];
+	uiTouchButtons.mp.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_MP );
+	uiTouchButtons.sp.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_SP );
+	uiTouchButtons.lock.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_NOEDIT );
+	uiTouchButtons.hide.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_HIDE );
+	uiTouchButtons.additive.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_DRAW_ADDITIVE );
+	if( uiTouchButtons.texture.buffer[0] && uiTouchButtons.texture.buffer[0] != '#' )
+		uiTouchButtons.textureid = PIC_Load(uiTouchButtons.texture.buffer);
+	else
+		uiTouchButtons.textureid = 0;
+	uiTouchButtons.name.buffer[0] = 0;
+}
+static void UI_TouchButtons_DisableButtons()
+{
+	uiTouchButtons.remove.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.hide.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.buttonList.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.blue.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.alpha.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.red.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.green.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.reset.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.name.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.done.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.cancel.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.command.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.texture.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.sp.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.mp.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.lock.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.additive.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.editor.generic.flags |= QMF_INACTIVE;
+}
+static void UI_TouchButtons_EnableButtons()
+{
+	uiTouchButtons.remove.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.hide.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.buttonList.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.blue.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.alpha.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.red.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.green.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.reset.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.name.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.done.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.cancel.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.command.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.texture.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.sp.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.mp.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.lock.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.additive.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.editor.generic.flags &= ~QMF_INACTIVE;
+}
+static void UI_TouchButtons_FileDialogCallback( bool success )
+{
+	if( success )
+	{
+		strcpy( uiTouchButtons.texture.buffer, uiFileDialogGlobal.result );
+		uiTouchButtons.textureid = PIC_Load(uiTouchButtons.texture.buffer);
+	}
+	UI_TouchButtons_EnableButtons();
+}
+
 
 /*
 =================
@@ -184,15 +297,48 @@ static void UI_TouchButtons_Callback( void *self, int event )
 
 	switch( item->id )
 	{
+	case ID_SP:
+		if( uiTouchButtons.sp.enabled )
+			uiTouchButtons.mp.enabled = false;
+	case ID_MP:
+		if( uiTouchButtons.mp.enabled )
+			uiTouchButtons.sp.enabled = false;
     case ID_HIDE:
+	case ID_ADDITIVE:
+	case ID_LOCK:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
+		// clean all flags that we may change
+		uiTouchButtons.curflags &= ~ ( TOUCH_FL_HIDE | TOUCH_FL_NOEDIT | TOUCH_FL_MP | TOUCH_FL_SP | TOUCH_FL_DRAW_ADDITIVE );
+		if( uiTouchButtons.mp.enabled )
+			uiTouchButtons.curflags |= TOUCH_FL_MP;
+		if( uiTouchButtons.sp.enabled )
+			uiTouchButtons.curflags |= TOUCH_FL_SP;
+		if( uiTouchButtons.hide.enabled )
+			uiTouchButtons.curflags |= TOUCH_FL_HIDE;
+		if( uiTouchButtons.lock.enabled )
+			uiTouchButtons.curflags |= TOUCH_FL_NOEDIT;
+		if( uiTouchButtons.additive.enabled )
+			uiTouchButtons.curflags |= TOUCH_FL_DRAW_ADDITIVE;
 		break;
 	}
 
 	if( event == QM_CHANGED )
-    {
+	{
+		switch( item->id )
+		{
+		case ID_TEXTURE:
+			// update current texture
+			if( uiTouchButtons.texture.buffer[0] && uiTouchButtons.texture.buffer[0] != '#' )
+				uiTouchButtons.textureid = PIC_Load(uiTouchButtons.texture.buffer);
+			else
+				uiTouchButtons.textureid = 0;
+			break;
+		case ID_BUTTONLIST:
+			UI_TouchButtons_UpdateFields();
+			break;
+		}
 		return;
 	}
 
@@ -202,21 +348,15 @@ static void UI_TouchButtons_Callback( void *self, int event )
 	switch( item->id )
 	{
 	case ID_DONE:
+		CLIENT_COMMAND(0, "touch_writeconfig\n");
+		UI_PopMenu();
+		break;
+	case ID_CANCEL:
+		CLIENT_COMMAND(0, "touch_loadconfig\n");
 		UI_PopMenu();
 		break;
 	case ID_RESET:
-        uiTouchButtons.set.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.remove.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.hide.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.buttonList.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.blue.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.alpha.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.red.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.green.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.reset.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.name.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.done.generic.flags |= QMF_INACTIVE;
-
+		UI_TouchButtons_DisableButtons();
 
         uiTouchButtons.msgBox.generic.flags &= ~QMF_HIDDEN;
         uiTouchButtons.promptMessage.generic.flags &= ~QMF_HIDDEN;
@@ -226,17 +366,7 @@ static void UI_TouchButtons_Callback( void *self, int event )
         uiTouchButtons.dialogAction = UI_ResetButtons;
 		break;
 	case ID_DELETE:
-        uiTouchButtons.set.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.remove.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.hide.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.buttonList.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.blue.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.alpha.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.red.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.green.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.reset.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.name.generic.flags |= QMF_INACTIVE;
-        uiTouchButtons.done.generic.flags |= QMF_INACTIVE;
+		UI_TouchButtons_DisableButtons();
 
 
         uiTouchButtons.msgBox.generic.flags &= ~QMF_HIDDEN;
@@ -250,17 +380,7 @@ static void UI_TouchButtons_Callback( void *self, int event )
     if( uiTouchButtons.dialogAction )
         uiTouchButtons.dialogAction();
 	case ID_NO:
-        uiTouchButtons.set.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.remove.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.hide.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.buttonList.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.blue.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.alpha.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.red.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.green.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.reset.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.name.generic.flags &= ~QMF_INACTIVE;
-        uiTouchButtons.done.generic.flags &= ~QMF_INACTIVE;
+		UI_TouchButtons_EnableButtons();
 
         uiTouchButtons.msgBox.generic.flags |= QMF_HIDDEN;
         uiTouchButtons.promptMessage.generic.flags |= QMF_HIDDEN;
@@ -268,11 +388,48 @@ static void UI_TouchButtons_Callback( void *self, int event )
         uiTouchButtons.yes.generic.flags |= QMF_HIDDEN;
 		break;
 	case ID_SAVE:
-            //UI_TouchButtons_GetButtonList();
+		if( strlen(uiTouchButtons.name.buffer) > 0)
+		{
+			char command[256];
+			snprintf( command, 256, "touch_addbutton %s %s %s\n", uiTouchButtons.name.buffer,
+					  uiTouchButtons.texture.buffer, uiTouchButtons.command.buffer );
+			CLIENT_COMMAND(0, command);
+			snprintf( command, 256, "touch_setflags %s %i\n", uiTouchButtons.name.buffer, uiTouchButtons.curflags );
+			CLIENT_COMMAND(0, command);
+			snprintf( command, 256, "touch_setcolor %s %d %d %d %d\n", uiTouchButtons.name.buffer, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
+			CLIENT_COMMAND(1, command);
+		}
+		else
+		{
+			char command[256];
+			snprintf( command, 256, "touch_settexture %s %s\n", uiTouchButtons.selectedName, uiTouchButtons.texture.buffer );
+			CLIENT_COMMAND(0, command);
+			snprintf( command, 256, "touch_setcommand %s %s\n", uiTouchButtons.selectedName, uiTouchButtons.texture.buffer );
+			CLIENT_COMMAND(0, command);
+			snprintf( command, 256, "touch_setflags %s %i\n", uiTouchButtons.selectedName, uiTouchButtons.curflags );
+			CLIENT_COMMAND(0, command);
+			snprintf( command, 256, "touch_setcolor %s %d %d %d %d\n", uiTouchButtons.selectedName, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
+			CLIENT_COMMAND(1, command);
+		}
+		UI_TouchButtons_GetButtonList();
+		break;
+	case ID_EDITOR:
+		UI_TouchEdit_Menu();
+		break;
+	case ID_SELECT:
+		UI_TouchButtons_DisableButtons();
+		uiFileDialogGlobal.npatterns = 3;
+		strcpy( uiFileDialogGlobal.patterns[0], "*.tga");
+		strcpy( uiFileDialogGlobal.patterns[1], "*/*.tga");
+		strcpy( uiFileDialogGlobal.patterns[2], "gfx/*/*.tga");
+		uiFileDialogGlobal.preview = true;
+		uiFileDialogGlobal.valid = true;
+		uiFileDialogGlobal.callback = UI_TouchButtons_FileDialogCallback;
+		UI_FileDialog_Menu();
 		break;
 	}
-}
 
+}
 /*
 =================
 UI_TouchButtons_Init
@@ -285,6 +442,7 @@ static void UI_TouchButtons_Init( void )
 	//uiTouchOptions.hTestImage = PIC_Load( ART_GAMMA, PIC_KEEP_RGBDATA );
 
 	uiTouchButtons.menu.vidInitFunc = UI_TouchButtons_Init;
+	uiTouchButtons.initialized = true;
 
 	uiTouchButtons.background.generic.id = ID_BACKGROUND;
 	uiTouchButtons.background.generic.type = QMTYPE_BITMAP;
@@ -393,6 +551,15 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.hide.generic.callback = UI_TouchButtons_Callback;
 	uiTouchButtons.hide.generic.statusText = "show/hide button";
 
+	uiTouchButtons.additive.generic.id = ID_ADDITIVE;
+	uiTouchButtons.additive.generic.type = QMTYPE_CHECKBOX;
+	uiTouchButtons.additive.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiTouchButtons.additive.generic.name = "Additive";
+	uiTouchButtons.additive.generic.x = 384 - 72 + 400;
+	uiTouchButtons.additive.generic.y = 470;
+	uiTouchButtons.additive.generic.callback = UI_TouchButtons_Callback;
+	uiTouchButtons.additive.generic.statusText = "Set button additive draw mode";
+
 	uiTouchButtons.mp.generic.id = ID_MP;
 	uiTouchButtons.mp.generic.type = QMTYPE_CHECKBOX;
 	uiTouchButtons.mp.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
@@ -430,25 +597,6 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.buttonList.generic.height = 370;
 	uiTouchButtons.buttonList.generic.callback = UI_TouchButtons_Callback;
 
-	uiTouchButtons.reset.generic.id = ID_RESET;
-	uiTouchButtons.reset.generic.type = QMTYPE_BM_BUTTON;
-	uiTouchButtons.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiTouchButtons.reset.generic.name = "Reset";
-	uiTouchButtons.reset.generic.x = 270;
-	uiTouchButtons.reset.generic.y = 600;
-	uiTouchButtons.reset.generic.callback = UI_TouchButtons_Callback;
-	uiTouchButtons.reset.generic.statusText = "Reset touch to default state";
-
-	uiTouchButtons.remove.generic.id = ID_DELETE;
-	uiTouchButtons.remove.generic.type = QMTYPE_BM_BUTTON;
-	uiTouchButtons.remove.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiTouchButtons.remove.generic.x = 270;
-	uiTouchButtons.remove.generic.y = 550;
-	uiTouchButtons.remove.generic.name = "Delete";
-	uiTouchButtons.remove.generic.statusText = "Delete saved game";
-	uiTouchButtons.remove.generic.callback = UI_TouchButtons_Callback;
-	UI_UtilSetupPicButton( &uiTouchButtons.remove, PC_DELETE );
-
 	uiTouchButtons.save.generic.id = ID_SAVE;
 	uiTouchButtons.save.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.save.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
@@ -457,6 +605,15 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.save.generic.name = "Save";
 	uiTouchButtons.save.generic.statusText = "Save as new button";
 	uiTouchButtons.save.generic.callback = UI_TouchButtons_Callback;
+
+	uiTouchButtons.editor.generic.id = ID_EDITOR;
+	uiTouchButtons.editor.generic.type = QMTYPE_BM_BUTTON;
+	uiTouchButtons.editor.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchButtons.editor.generic.x = 680;
+	uiTouchButtons.editor.generic.y = 570;
+	uiTouchButtons.editor.generic.name = "Editor";
+	uiTouchButtons.editor.generic.statusText = "Open interactive editor";
+	uiTouchButtons.editor.generic.callback = UI_TouchButtons_Callback;
 
 	uiTouchButtons.select.generic.id = ID_SELECT;
 	uiTouchButtons.select.generic.type = QMTYPE_BM_BUTTON;
@@ -498,7 +655,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.texture.generic.width = 205;
 	uiTouchButtons.texture.generic.height = 32;
 	uiTouchButtons.texture.generic.callback = UI_TouchButtons_Callback;
-	uiTouchButtons.texture.maxLength = 16;
+	uiTouchButtons.texture.maxLength = 160;
 
 	uiTouchButtons.msgBox.generic.id = ID_MSGBOX;
 	uiTouchButtons.msgBox.generic.type = QMTYPE_ACTION;
@@ -553,10 +710,32 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.no.generic.callback = UI_TouchButtons_Callback;
 
 	UI_UtilSetupPicButton( &uiTouchButtons.no, PC_CANCEL );
+
 	UI_TouchButtons_GetButtonList();
+
+	uiTouchButtons.reset.generic.id = ID_RESET;
+	uiTouchButtons.reset.generic.type = QMTYPE_BM_BUTTON;
+	uiTouchButtons.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchButtons.reset.generic.name = "Reset";
+	uiTouchButtons.reset.generic.x = 270;
+	uiTouchButtons.reset.generic.y = 600;
+	uiTouchButtons.reset.generic.callback = UI_TouchButtons_Callback;
+	uiTouchButtons.reset.generic.statusText = "Reset touch to default state";
+
+	uiTouchButtons.remove.generic.id = ID_DELETE;
+	uiTouchButtons.remove.generic.type = QMTYPE_BM_BUTTON;
+	uiTouchButtons.remove.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchButtons.remove.generic.x = 270;
+	uiTouchButtons.remove.generic.y = 550;
+	uiTouchButtons.remove.generic.name = "Delete";
+	uiTouchButtons.remove.generic.statusText = "Delete saved game";
+	uiTouchButtons.remove.generic.callback = UI_TouchButtons_Callback;
+	UI_UtilSetupPicButton( &uiTouchButtons.remove, PC_DELETE );
 
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.background );
 	//UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.banner );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.remove );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.reset );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.done );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.cancel );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.red );
@@ -564,14 +743,16 @@ static void UI_TouchButtons_Init( void )
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.blue );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.alpha );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.hide );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.additive );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.sp );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.mp );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.lock );
-	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.reset );
+
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.buttonList );
-	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.remove );
+
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.save );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.select );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.editor );
 
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.name );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.command );
@@ -595,6 +776,7 @@ void UI_TouchButtons_Precache( void )
 {
 	PIC_Load( ART_BACKGROUND );
 	//PIC_Load( ART_BANNER );
+	uiTouchButtons.gettingList = false; // prevent filling list before init
 }
 
 /*

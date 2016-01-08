@@ -161,7 +161,6 @@ typedef struct ui_enginefuncs_s
 	int	(*pfnIsMapValid)( char *filename );
 	void	(*pfnProcessImage)( int texnum, float gamma, int topColor, int bottomColor );
 	int	(*pfnCompareFileTime)( char *filename1, char *filename2, int *iCompare );
-	void	(*pfnSendTouchButton)( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
 } ui_enginefuncs_t;
 
 typedef struct ui_textfuncs_s {
@@ -194,4 +193,7 @@ typedef struct
 typedef int (*MENUAPI)( UI_FUNCTIONS *pFunctionTable, ui_enginefuncs_t* engfuncs, ui_globalvars_t *pGlobals );
 
 typedef int (*UITEXTAPI)( ui_textfuncs_t* engfuncs );
+
+typedef void (*ADDTOUCHBUTTONTOLIST)( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
+
 #endif//MENU_INT_H

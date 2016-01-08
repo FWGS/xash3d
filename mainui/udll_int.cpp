@@ -68,7 +68,7 @@ extern "C" EXPORT int GetMenuAPI(UI_FUNCTIONS *pFunctionTable, ui_enginefuncs_t*
 	return TRUE;
 }
 
-extern "C" EXPORT int GiveTextAPI( ui_enginefuncs_t* pTextfuncsFromEngine )
+extern "C" EXPORT int GiveTextAPI( ui_textfuncs_t* pTextfuncsFromEngine )
 {
 	if( !pTextfuncsFromEngine )
 	{
@@ -80,3 +80,9 @@ extern "C" EXPORT int GiveTextAPI( ui_enginefuncs_t* pTextfuncsFromEngine )
 
 	return TRUE;
 }
+
+extern "C" EXPORT void AddTouchButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags )
+{
+	UI_TouchButtons_AddButtonToList( name, texture, command, color, flags );
+}
+

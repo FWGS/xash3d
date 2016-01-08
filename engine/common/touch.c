@@ -151,6 +151,7 @@ convar_t *touch_grid_enable;
 convar_t *touch_grid_count;
 convar_t *touch_config_file;
 convar_t *touch_enable;
+convar_t *touch_in_menu;
 
 // enable on android by default
 #ifdef __ANDROID__
@@ -686,6 +687,7 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_writeconfig", IN_TouchWriteConfig, "save current config" );
 	Cmd_AddCommand( "touch_deleteprofile", IN_TouchDeleteProfile_f, "delete profile by name" );
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
+	touch_in_menu = Cvar_Get( "touch_in_menu", "0", 0, "draw touch in menu (for internal use only)" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
 	touch_yaw = Cvar_Get( "touch_yaw", "120", 0, "touch yaw sensitivity" );
@@ -817,7 +819,7 @@ void IN_TouchDraw( void )
 	if( !touch.initialized || !touch_enable->value )
 		return;
 
-	if( cls.key_dest != key_game )
+	if( cls.key_dest != key_game && touch_in_menu->value == 0 )
 		return;
 
 	GL_SetRenderMode( kRenderTransTexture );
@@ -825,7 +827,10 @@ void IN_TouchDraw( void )
 	if( touch.state >= state_edit && touch_grid_enable->value )
 	{
 		float x;
-		IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 0, 0, 0, 112 );
+		if( touch_in_menu->value )
+			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 96, 96, 96, 255 );
+		else
+			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 0, 0, 0, 112 );
 		pglColor4ub( 0, 224, 224, 112 );
 		for ( x = 0; x < 1 ; x += GRID_X )
 			R_DrawStretchPic( TO_SCRN_X(x),
@@ -1014,7 +1019,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	touchbutton2_t *button;
 	
 	// simulate menu mouse click
-	if( cls.key_dest != key_game )
+	if( cls.key_dest != key_game && !touch_in_menu->value )
 	{
 		// Hack for keyboard, hope it help
 		if( cls.key_dest == key_console || cls.key_dest == key_message ) 
@@ -1070,7 +1075,12 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			if( ( y > GRID_Y * 2 ) && ( y < GRID_Y * 4 )  ) // close button
 			{
 				IN_TouchDisableEdit_f();
-				IN_TouchWriteConfig();
+				if( touch_in_menu->value )
+				{
+					Cvar_Set("touch_in_menu","0");
+				}
+				else
+					IN_TouchWriteConfig();
 			}
 			if( ( y > GRID_Y * 5 ) && ( y < GRID_Y * 7 ) ) // reset button
 			{

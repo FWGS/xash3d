@@ -460,6 +460,8 @@ void UI_GoToSite_Precache( void );
 void UI_Touch_Precache( void );
 void UI_TouchOptions_Precache( void );
 void UI_TouchButtons_Precache( void );
+void UI_TouchEdit_Precache( void );
+void UI_FileDialog_Precache( void );
 
 // Menus
 void UI_Main_Menu( void );
@@ -485,9 +487,10 @@ void UI_Credits_Menu( void );
 void UI_Touch_Menu( void );
 void UI_TouchOptions_Menu( void );
 void UI_TouchButtons_Menu( void );
-
+void UI_TouchEdit_Menu( void );
+void UI_FileDialog_Menu( void );
 void UI_TouchButtons_AddButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
-
+void UI_TouchButtons_GetButtonList();
 //
 //-----------------------------------------------------
 //
@@ -497,6 +500,18 @@ public:
 	// Game information
 	GAMEINFO		m_gameinfo;
 };
+
+typedef struct
+{
+	char patterns[32][256];
+	int npatterns;
+	char result[256];
+	bool valid;
+	void ( * callback )( bool success );
+	bool preview;
+} uiFileDialogGlobal_t;
+
+extern uiFileDialogGlobal_t uiFileDialogGlobal;
 
 extern CMenu gMenu;
 

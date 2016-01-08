@@ -1377,6 +1377,8 @@ void UI_Precache( void )
 	UI_Touch_Precache();
 	UI_TouchOptions_Precache();
 	UI_TouchButtons_Precache();
+	UI_TouchEdit_Precache();
+	UI_FileDialog_Precache();
 }
 
 void UI_ParseColor( char *&pfile, int *outColor )
@@ -1575,7 +1577,9 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_customgame", UI_CustomGame_Menu );
 	Cmd_AddCommand( "menu_touch", UI_Touch_Menu );
 	Cmd_AddCommand( "menu_touchoptions", UI_TouchOptions_Menu );
-	Cmd_AddCommand( "menu_touchoptions", UI_TouchButtons_Menu );
+	Cmd_AddCommand( "menu_touchbuttons", UI_TouchButtons_Menu );
+	Cmd_AddCommand( "menu_touchedit", UI_TouchEdit_Menu );
+	Cmd_AddCommand( "menu_filedialog", UI_FileDialog_Menu );
 
 	CHECK_MAP_LIST( TRUE );
 
