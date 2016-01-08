@@ -131,20 +131,21 @@ static void UI_LanGame_GetGamesList( void )
 			continue;	// filter by game
 #endif 
 		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "host" ), GAME_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], uiEmptyString, GAME_LENGTH );
+		AddSpaces( uiLanGame.gameDescription[i], GAME_LENGTH );
 		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "map" ), MAPNAME_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], uiEmptyString, MAPNAME_LENGTH );
+		AddSpaces( uiLanGame.gameDescription[i], MAPNAME_LENGTH );
+
 		if( !strcmp( Info_ValueForKey( info, "dm" ), "1" ))
 			StringConcat( uiLanGame.gameDescription[i], "deathmatch", TYPE_LENGTH );
 		else if( !strcmp( Info_ValueForKey( info, "coop" ), "1" ))
 			StringConcat( uiLanGame.gameDescription[i], "coop", TYPE_LENGTH );
 		else if( !strcmp( Info_ValueForKey( info, "team" ), "1" ))
 			StringConcat( uiLanGame.gameDescription[i], "teamplay", TYPE_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], uiEmptyString, TYPE_LENGTH );
+		AddSpaces( uiLanGame.gameDescription[i], TYPE_LENGTH );
 		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "numcl" ), MAXCL_LENGTH );
 		StringConcat( uiLanGame.gameDescription[i], "\\", MAXCL_LENGTH );
 		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "maxcl" ), MAXCL_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], uiEmptyString, MAXCL_LENGTH );
+		AddSpaces( uiLanGame.gameDescription[i], MAXCL_LENGTH );
 		uiLanGame.gameDescriptionPtr[i] = uiLanGame.gameDescription[i];
 	}
 
@@ -274,13 +275,13 @@ static void UI_LanGame_Init( void )
 	uiLanGame.menu.keyFunc = UI_LanGame_KeyFunc;
 
 	StringConcat( uiLanGame.hintText, "Game", GAME_LENGTH );
-	StringConcat( uiLanGame.hintText, uiEmptyString, GAME_LENGTH );
+	AddSpaces( uiLanGame.hintText, GAME_LENGTH );
 	StringConcat( uiLanGame.hintText, "Map", MAPNAME_LENGTH );
-	StringConcat( uiLanGame.hintText, uiEmptyString, MAPNAME_LENGTH );
+	AddSpaces( uiLanGame.hintText, MAPNAME_LENGTH );
 	StringConcat( uiLanGame.hintText, "Type", TYPE_LENGTH );
-	StringConcat( uiLanGame.hintText, uiEmptyString, TYPE_LENGTH );
+	AddSpaces( uiLanGame.hintText, TYPE_LENGTH );
 	StringConcat( uiLanGame.hintText, "Num/Max Clients", MAXCL_LENGTH );
-	StringConcat( uiLanGame.hintText, uiEmptyString, MAXCL_LENGTH );
+	AddSpaces( uiLanGame.hintText, MAXCL_LENGTH );
 
 	uiLanGame.background.generic.id = ID_BACKGROUND;
 	uiLanGame.background.generic.type = QMTYPE_BITMAP;

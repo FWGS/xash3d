@@ -59,7 +59,7 @@ wavdata_t *FS_LoadSound( const char *filename, const byte *buffer, size_t size )
           const char	*ext = FS_FileExtension( filename );
 	string		path, loadname;
 	qboolean		anyformat = true;
-	int		filesize = 0;
+	fs_offset_t		filesize = 0;
 	const loadwavfmt_t	*format;
 	byte		*f;
 
@@ -93,7 +93,7 @@ wavdata_t *FS_LoadSound( const char *filename, const byte *buffer, size_t size )
 			f = FS_LoadFile( path, &filesize, false );
 			if( f && filesize > 0 )
 			{
-				if( format->loadfunc( path, f, filesize ))
+				if( format->loadfunc( path, f, (size_t)filesize ))
 				{
 					Mem_Free(f); // release buffer
 					return SoundPack(); // loaded

@@ -448,18 +448,20 @@ static void Con_LoadConsoleFont( int fontNumber, cl_font_t *font )
 	// loading conchars
 	font->hFontTexture = GL_LoadTexture( va( "fonts.wad/font%i", fontNumber ), NULL, 0, TF_FONT|TF_NEAREST, NULL );
 	R_GetTextureParms( &fontWidth, NULL, font->hFontTexture );
-		
+	
+	if( fontWidth == 0 ) return;
+
 	// setup creditsfont
-	if( FS_FileExists( va( "fonts.wad/font%i.fnt", fontNumber ), false ) && fontWidth != 0 )
+	if( FS_FileExists( va( "fonts.wad/font%i.fnt", fontNumber ), false ) )
 	{
 		byte	*buffer;
-		size_t	length;
+		fs_offset_t	length;
 		qfont_t	*src;
 	
 		// half-life font with variable chars witdh
 		buffer = FS_LoadFile( va( "fonts.wad/font%i", fontNumber ), &length, false );
 
-		if( buffer && length >= sizeof( qfont_t ))
+		if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
 		{
 			int	i;
 	

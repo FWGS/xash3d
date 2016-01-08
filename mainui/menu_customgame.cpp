@@ -136,7 +136,7 @@ static void UI_CustomGame_GetModList( void )
 
 		if( strlen( games[i]->type ))
 			StringConcat( uiCustomGame.modsDescription[i], games[i]->type, TYPE_LENGTH );
-		StringConcat( uiCustomGame.modsDescription[i], uiEmptyString, TYPE_LENGTH );
+		AddSpaces( uiCustomGame.modsDescription[i], TYPE_LENGTH );
 
 		if( ColorStrlen( games[i]->title ) > 31 ) // NAME_LENGTH
 		{
@@ -145,13 +145,13 @@ static void UI_CustomGame_GetModList( void )
 		}
 		else StringConcat( uiCustomGame.modsDescription[i], games[i]->title, NAME_LENGTH );
 
-		StringConcat( uiCustomGame.modsDescription[i], uiEmptyString, NAME_LENGTH );
+		AddSpaces( uiCustomGame.modsDescription[i], NAME_LENGTH );
 		StringConcat( uiCustomGame.modsDescription[i], games[i]->version, VER_LENGTH );
-		StringConcat( uiCustomGame.modsDescription[i], uiEmptyString, VER_LENGTH );
+		AddSpaces( uiCustomGame.modsDescription[i], VER_LENGTH );
 		if( strlen( games[i]->size ))
 			StringConcat( uiCustomGame.modsDescription[i], games[i]->size, SIZE_LENGTH );
 		else StringConcat( uiCustomGame.modsDescription[i], "0.0 Mb", SIZE_LENGTH );     
-		StringConcat( uiCustomGame.modsDescription[i], uiEmptyString, SIZE_LENGTH );
+		AddSpaces( uiCustomGame.modsDescription[i], SIZE_LENGTH );
 		uiCustomGame.modsDescriptionPtr[i] = uiCustomGame.modsDescription[i];
 
 		if( !strcmp( gMenu.m_gameinfo.gamefolder, games[i]->gamefolder ))
@@ -234,13 +234,13 @@ static void UI_CustomGame_Init( void )
 	uiCustomGame.menu.keyFunc = UI_CustomGame_KeyFunc;
 
 	StringConcat( uiCustomGame.hintText, "Type", TYPE_LENGTH );
-	StringConcat( uiCustomGame.hintText, uiEmptyString, TYPE_LENGTH );
+	AddSpaces( uiCustomGame.hintText, TYPE_LENGTH );
 	StringConcat( uiCustomGame.hintText, "Name", NAME_LENGTH );
-	StringConcat( uiCustomGame.hintText, uiEmptyString, NAME_LENGTH );
+	AddSpaces( uiCustomGame.hintText, NAME_LENGTH );
 	StringConcat( uiCustomGame.hintText, "Version", VER_LENGTH );
-	StringConcat( uiCustomGame.hintText, uiEmptyString, VER_LENGTH );
+	AddSpaces( uiCustomGame.hintText, VER_LENGTH );
 	StringConcat( uiCustomGame.hintText, "Size", SIZE_LENGTH );
-	StringConcat( uiCustomGame.hintText, uiEmptyString, SIZE_LENGTH );
+	AddSpaces( uiCustomGame.hintText, SIZE_LENGTH );
 
 	uiCustomGame.background.generic.id = ID_BACKGROUND;
 	uiCustomGame.background.generic.type = QMTYPE_BITMAP;

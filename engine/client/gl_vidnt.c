@@ -1247,7 +1247,7 @@ uint VID_EnumerateInstances( void )
 void VID_StartupGamma( void )
 {
 	// Device supports gamma anyway, but cannot do anything with it.
-	size_t	gamma_size;
+	fs_offset_t	gamma_size;
 	byte	*savedGamma;
 	size_t	gammaTypeSize = sizeof(glState.stateRamp);
 
@@ -1289,7 +1289,7 @@ void VID_StartupGamma( void )
 
 	savedGamma = FS_LoadFile( "gamma.dat", &gamma_size, false );
 
-	if( !savedGamma || gamma_size != gammaTypeSize)
+	if( !savedGamma || gamma_size != (fs_offset_t)gammaTypeSize)
 	{
 		// saved gamma not found or corrupted file
 		FS_WriteFile( "gamma.dat", glState.stateRamp, gammaTypeSize);

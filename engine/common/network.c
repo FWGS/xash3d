@@ -1285,7 +1285,7 @@ void HTTP_Run( void )
 #ifdef _WIN32
 		dword mode = 1;
 		pIoctlSocket( curfile->socket, FIONBIO, &mode );
-#else
+#elif !defined(__FreeBSD__)
 		// SOCK_NONBLOCK is not portable, so use fcntl
 		fcntl( curfile->socket, F_SETFL, fcntl( curfile->socket, F_GETFL, 0 ) | O_NONBLOCK );
 #endif
@@ -1337,7 +1337,7 @@ void HTTP_Run( void )
 			{
 #ifdef _WIN32
 				if( pWSAGetLastError() != WSAEWOULDBLOCK )
-#else
+#elif !defined(__FreeBSD__)
 				if( errno != EWOULDBLOCK )
 #endif
 				{
@@ -1345,7 +1345,7 @@ void HTTP_Run( void )
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
-
+#ifndef __FreeBSD__
 				// increase counter when blocking
 				curfile->blocktime += host.frametime;
 
@@ -1356,6 +1356,7 @@ void HTTP_Run( void )
 					return;
 				}
 				return;
+#endif
 			}
 			else
 			{

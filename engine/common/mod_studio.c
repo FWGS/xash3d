@@ -594,7 +594,7 @@ StudioGetAnim
 static mstudioanim_t *Mod_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
 	mstudioseqgroup_t	*pseqgroup;
-	size_t		filesize;
+	fs_offset_t		filesize;
           byte		*buf;
 
 	pseqgroup = (mstudioseqgroup_t *)((byte *)mod_studiohdr + mod_studiohdr->seqgroupindex) + pseqdesc->seqgroup;
