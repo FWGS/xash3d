@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_MSGBOX	 	12
 #define ID_MSGTEXT	 	13
 #define ID_PROFILENAME	 	14
+#define ID_APPLY	15
 #define ID_YES	 	130
 #define ID_NO	 	131
 typedef struct
@@ -60,6 +61,7 @@ typedef struct
 	menuPicButton_s	reset;
 	menuPicButton_s	save;
 	menuPicButton_s	remove;
+	menuPicButton_s	apply;
 	menuField_s	profilename;
 	menuScrollList_s profiles;
 
@@ -291,6 +293,19 @@ static void UI_TouchOptions_Callback( void *self, int event )
 		}
 		UI_TouchOptions_GetProfileList();
 		break;
+	case ID_APPLY:
+		{
+
+			int i = uiTouchOptions.profiles.curItem;
+			if( i = 0 )
+				CLIENT_COMMAND( 0,"exec touch.cfg\n" );
+			else
+			{
+				char command[256];
+				snprintf( command, 256, "exec touch_profiles/%s\n", uiTouchOptions.profileDesc[ i ] );
+				CLIENT_COMMAND( 0,  command );
+			}
+		}
 	}
 }
 
@@ -425,12 +440,22 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.remove.generic.id = ID_DELETE;
 	uiTouchOptions.remove.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchOptions.remove.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiTouchOptions.remove.generic.x = 360;
+	uiTouchOptions.remove.generic.x = 560;
 	uiTouchOptions.remove.generic.y = 650;
 	uiTouchOptions.remove.generic.name = "Delete";
 	uiTouchOptions.remove.generic.statusText = "Delete saved game";
 	uiTouchOptions.remove.generic.callback = UI_TouchOptions_Callback;
 	UI_UtilSetupPicButton( &uiTouchOptions.remove, PC_DELETE );
+
+	uiTouchOptions.apply.generic.id = ID_APPLY;
+	uiTouchOptions.apply.generic.type = QMTYPE_BM_BUTTON;
+	uiTouchOptions.apply.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchOptions.apply.generic.x = 360;
+	uiTouchOptions.apply.generic.y = 650;
+	uiTouchOptions.apply.generic.name = "Activate";
+	uiTouchOptions.apply.generic.statusText = "Apply selected profile";
+	uiTouchOptions.apply.generic.callback = UI_TouchOptions_Callback;
+	UI_UtilSetupPicButton( &uiTouchOptions.apply, PC_ACTIVATE );
 
 	uiTouchOptions.profilename.generic.id = ID_PROFILENAME;
 	uiTouchOptions.profilename.generic.type = QMTYPE_FIELD;
@@ -507,6 +532,7 @@ static void UI_TouchOptions_Init( void )
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.promptMessage );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.no );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.yes );
+	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.apply );
 
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.remove );
 }
