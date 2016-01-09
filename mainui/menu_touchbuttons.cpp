@@ -231,8 +231,16 @@ static void UI_TouchButtons_UpdateFields()
 		uiTouchButtons.textureid = 0;
 	uiTouchButtons.name.buffer[0] = 0;
 	uiTouchButtons.name.cursor = 0;
-	uiTouchButtons.texture.cursor = uiTouchButtons.texture.scroll = strlen( uiTouchButtons.texture.buffer );
-	uiTouchButtons.command.cursor = uiTouchButtons.command.scroll = strlen( uiTouchButtons.command.buffer );
+	uiTouchButtons.texture.cursor = strlen( uiTouchButtons.texture.buffer );
+	if( uiTouchButtons.texture.cursor > uiTouchButtons.texture.widthInChars )
+		uiTouchButtons.texture.scroll = uiTouchButtons.texture.cursor;
+	else
+		uiTouchButtons.texture.scroll = 0;
+	uiTouchButtons.command.cursor = strlen( uiTouchButtons.command.buffer );
+	if( uiTouchButtons.command.cursor > uiTouchButtons.command.widthInChars )
+		uiTouchButtons.command.scroll = uiTouchButtons.command.cursor;
+	else
+		uiTouchButtons.command.scroll = 0;
 
 }
 static void UI_TouchButtons_DisableButtons()
@@ -721,8 +729,6 @@ static void UI_TouchButtons_Init( void )
 
 	UI_UtilSetupPicButton( &uiTouchButtons.no, PC_CANCEL );
 
-	UI_TouchButtons_GetButtonList();
-
 	uiTouchButtons.reset.generic.id = ID_RESET;
 	uiTouchButtons.reset.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
@@ -742,6 +748,8 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.remove.generic.statusText = "Delete saved game";
 	uiTouchButtons.remove.generic.callback = UI_TouchButtons_Callback;
 	UI_UtilSetupPicButton( &uiTouchButtons.remove, PC_DELETE );
+
+	uiTouchButtons.buttonList.itemNames = (const char **)uiTouchButtons.bNamesPtr;
 
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.background );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.remove );
@@ -775,7 +783,7 @@ static void UI_TouchButtons_Init( void )
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.no );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.yes );
 
-
+	UI_TouchButtons_GetButtonList();
 }
 
 /*

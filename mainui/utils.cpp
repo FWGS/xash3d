@@ -1587,7 +1587,6 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 		if( UI_CursorInRect( f->generic.x, f->generic.y, f->generic.width, f->generic.height ) )
 		{
 			int charpos = (uiStatic.cursorX - f->generic.x) / f->generic.charWidth;
-			printf("%d\n",charpos);
 			f->cursor = f->scroll + charpos;
 			if( charpos == 0 && f->scroll )
 				f->scroll--;
