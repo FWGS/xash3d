@@ -185,7 +185,11 @@ qboolean Image_LoadTGA( const char *name, const byte *buffer, size_t filesize )
 				case 11:
 					blue = green = red = *buf_p++;
 					if( targa_header.pixel_size == 16 )
+					{
 						alpha = *buf_p++;
+						if( alpha != 255 )
+							image.flags |= IMAGE_HAS_ALPHA;
+					}
 					else
 						alpha = 255;
 					// greyscale image
