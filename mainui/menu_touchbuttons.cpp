@@ -231,8 +231,8 @@ static void UI_TouchButtons_UpdateFields()
 		uiTouchButtons.textureid = 0;
 	uiTouchButtons.name.buffer[0] = 0;
 	uiTouchButtons.name.cursor = 0;
-	uiTouchButtons.texture.cursor = 0;
-	uiTouchButtons.command.cursor = 0;
+	uiTouchButtons.texture.cursor = uiTouchButtons.texture.scroll = strlen( uiTouchButtons.texture.buffer );
+	uiTouchButtons.command.cursor = uiTouchButtons.command.scroll = strlen( uiTouchButtons.command.buffer );
 
 }
 static void UI_TouchButtons_DisableButtons()
