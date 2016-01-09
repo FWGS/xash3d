@@ -70,10 +70,11 @@ void SDLash_EventFilter( SDL_Event* event)
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 		//if(!host.mouse_visible)
-			SDLash_MouseEvent(event->button);
 #ifdef TOUCHEMU
 			mdown = 1;
 			IN_TouchEvent(0, 0, (float)event->button.x/scr_width->value, (float)event->button.y/scr_height->value, 0, 0);
+#else
+			SDLash_MouseEvent(event->button);
 #endif
 			break;
 
@@ -227,7 +228,8 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 {
 	int down = button.type == SDL_MOUSEBUTTONDOWN ? 1 : 0;
-	Key_Event(240 + button.button, down);
+	if( in_mouseinitialized && !m_ignore->value )
+		Key_Event(240 + button.button, down);
 }
 
 void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)

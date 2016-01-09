@@ -17,6 +17,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "input.h"
+#include "touch.h"
 #include "client.h"
 #include "vgui_draw.h"
 
@@ -67,6 +68,7 @@ convar_t *m_yaw;
 #endif
 
 convar_t *m_enginesens;
+convar_t *m_ignore;
 convar_t *cl_forwardspeed;
 convar_t *cl_sidespeed;
 convar_t *cl_backspeed;
@@ -238,6 +240,12 @@ void IN_EvdevFrame ()
 void IN_StartupMouse( void )
 {
 	if( host.type == HOST_DEDICATED ) return;
+#ifdef __ANDROID__
+#define M_IGNORE "1"
+#else
+#define M_IGNORE "0"
+#endif
+	m_ignore = Cvar_Get( "m_ignore", M_IGNORE, CVAR_ARCHIVE , "ignore mouse events" );
 	
 	// You can use -nomouse argument to prevent using mouse from client
 	// -noenginemouse will disable all mouse input
@@ -445,6 +453,9 @@ void IN_MouseMove( void )
 	if( !in_mouseinitialized || !in_mouseactive || !UI_IsVisible( ))
 		return;
 
+	if( m_ignore->value )
+		return;
+
 	// Show cursor in UI
 #ifdef XASH_SDL
 	if( UI_IsVisible() ) SDL_ShowCursor( true );
@@ -454,7 +465,7 @@ void IN_MouseMove( void )
 	SDL_GetMouseState( &current_pos.x, &current_pos.y );
 #endif
 	// if the menu is visible, move the menu cursor
-	UI_MouseMove( current_pos.x, current_pos.y );
+	//UI_MouseMove( current_pos.x, current_pos.y );
 
 	IN_ActivateCursor();
 }
@@ -468,6 +479,8 @@ void IN_MouseEvent( int mstate )
 {
 	int	i;
 	if( !in_mouseinitialized || !in_mouseactive )
+		return;
+	if( m_ignore->value )
 		return;
 	if( cls.key_dest == key_game )
 	{
