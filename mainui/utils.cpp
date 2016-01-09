@@ -1179,12 +1179,13 @@ const char *UI_Slider_Key( menuSlider_s *sl, int key, int down )
 	switch( key )
 	{
 	case K_MOUSE1:
-		if(!( sl->generic.flags & QMF_HASMOUSEFOCUS ))
+		//if(!( sl->generic.flags & QMF_HASMOUSEFOCUS ))
+		if( UI_CursorInRect( sl->generic.x2, sl->generic.y2 - 30, sl->generic.width2, sl->generic.height2 + 60 ) )
 			return uiSoundNull;
 
 		// find the current slider position
 		sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue * sl->numSteps));		
-                    if( UI_CursorInRect( sliderX, sl->generic.y2, sl->generic.width2, sl->generic.height ))
+					if( UI_CursorInRect( sliderX, sl->generic.y2 - 30, sl->generic.width2, sl->generic.height + 60 ))
                     {
 			sl->keepSlider = true;
 		}
@@ -1579,6 +1580,24 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	{	
 		if( f->cursor < len )
 			memmove( f->buffer + f->cursor, f->buffer + f->cursor + 1, len - f->cursor );
+	}
+
+	if( key == K_MOUSE1 )
+	{
+		if( UI_CursorInRect( f->generic.x, f->generic.y, f->generic.width, f->generic.height ) )
+		{
+			int charpos = (uiStatic.cursorX - f->generic.x) / f->generic.charWidth;
+			printf("%d\n",charpos);
+			f->cursor = f->scroll + charpos;
+			if( charpos == 0 && f->scroll )
+				f->scroll--;
+			if( charpos == f->widthInChars && f->scroll < len - 1 )
+				f->scroll++;
+			if( f->scroll > len )
+				f->scroll = len;
+			if( f->cursor > len )
+				f->cursor = len;
+		}
 	}
 
 	if( f->generic.callback )
