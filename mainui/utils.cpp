@@ -661,16 +661,16 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 			static float ac_y = 0;
 			ac_y += cursorDY;
 			cursorDY = 0;
-			if( ac_y * uiStatic.scaleY > sl->generic.charHeight )
+			if( ac_y > sl->generic.charHeight / 2 )
 			{
-				sl->topItem -= ac_y * uiStatic.scaleY/ sl->generic.charHeight - 0.5;
+				sl->topItem -= ac_y/ sl->generic.charHeight - 0.5;
 				if( sl->topItem < 0 )
 					sl->topItem = 0;
 				ac_y = 0;
 			}
-			if( ac_y * uiStatic.scaleY < -sl->generic.charHeight )
+			if( ac_y < -sl->generic.charHeight / 2 )
 			{
-				sl->topItem -= ac_y * uiStatic.scaleY/ sl->generic.charHeight - 0.5 ;
+				sl->topItem -= ac_y/ sl->generic.charHeight - 0.5 ;
 				if( sl->topItem > sl->numItems - sl->numRows )
 					sl->topItem = sl->numItems - sl->numRows;
 				ac_y = 0;
@@ -681,14 +681,14 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 			static float ac_y = 0;
 			ac_y += cursorDY;
 			cursorDY = 0;
-			if( ac_y * uiStatic.scaleY < -step )
+			if( ac_y < -step )
 			{
 				sl->topItem += ac_y / step + 0.5;
 				if( sl->topItem < 0 )
 					sl->topItem = 0;
 				ac_y = 0;
 			}
-			if( ac_y * uiStatic.scaleY > step )
+			if( ac_y > step )
 			{
 				sl->topItem += ac_y / step + 0.5;
 				if( sl->topItem > sl->numItems - sl->numRows )
