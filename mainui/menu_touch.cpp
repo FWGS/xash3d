@@ -109,6 +109,7 @@ static void UI_Touch_Init( void )
 	uiTouch.touchOptions.generic.x = 72;
 	uiTouch.touchOptions.generic.y = 230;
 	uiTouch.touchOptions.generic.callback = UI_Touch_Callback;
+	uiTouch.touchOptions.pic = PIC_Load("gfx/shell/btn_touch_options");
 
 	//UI_UtilSetupPicButton( &uiTouch.touchOptions, PC_TOUCH_OPT );
 
@@ -120,6 +121,7 @@ static void UI_Touch_Init( void )
 	uiTouch.touchButtons.generic.x = 72;
 	uiTouch.touchButtons.generic.y = 280;
 	uiTouch.touchButtons.generic.callback = UI_Touch_Callback;
+	uiTouch.touchButtons.pic = PIC_Load("gfx/shell/btn_touch_buttons");
 
 	//UI_UtilSetupPicButton( &uiTouch.touchButtons, PC_TOUCH_BUTTONS );
 

@@ -422,6 +422,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.reset.generic.y = 615;
 	uiTouchOptions.reset.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.reset.generic.statusText = "Reset touch to default state";
+	uiTouchOptions.reset.pic = PIC_Load("gfx/shell/btn_touch_reset");
 	
 	uiTouchOptions.remove.generic.id = ID_DELETE;
 	uiTouchOptions.remove.generic.type = QMTYPE_BM_BUTTON;
@@ -452,6 +453,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.save.generic.name = "Save";
 	uiTouchOptions.save.generic.statusText = "Save new profile";
 	uiTouchOptions.save.generic.callback = UI_TouchOptions_Callback;
+	uiTouchOptions.save.pic = PIC_Load("gfx/shell/btn_touch_save");
 	
 	uiTouchOptions.msgBox.generic.id = ID_MSGBOX;
 	uiTouchOptions.msgBox.generic.type = QMTYPE_ACTION;

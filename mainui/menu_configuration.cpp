@@ -221,6 +221,7 @@ static void UI_Options_Init( void )
 	uiOptions.touch.generic.name = "Touch";
 	uiOptions.touch.generic.statusText = "Change touch settings and buttons";
 	uiOptions.touch.generic.callback = UI_Options_Callback;
+	uiOptions.touch.pic = PIC_Load("gfx/shell/btn_touch");
 
 	//UI_UtilSetupPicButton( &uiOptions.video, PC_TOUCH );
 

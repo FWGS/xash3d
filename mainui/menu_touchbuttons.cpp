@@ -614,6 +614,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.save.generic.name = "Save";
 	uiTouchButtons.save.generic.statusText = "Save as new button";
 	uiTouchButtons.save.generic.callback = UI_TouchButtons_Callback;
+	uiTouchButtons.save.pic = PIC_Load("gfx/shell/btn_touch_save");
 
 	uiTouchButtons.editor.generic.id = ID_EDITOR;
 	uiTouchButtons.editor.generic.type = QMTYPE_BM_BUTTON;
@@ -623,6 +624,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.editor.generic.name = "Editor";
 	uiTouchButtons.editor.generic.statusText = "Open interactive editor";
 	uiTouchButtons.editor.generic.callback = UI_TouchButtons_Callback;
+	uiTouchButtons.editor.pic = PIC_Load("gfx/shell/btn_touch_editor");
 
 	uiTouchButtons.select.generic.id = ID_SELECT;
 	uiTouchButtons.select.generic.type = QMTYPE_BM_BUTTON;
@@ -632,6 +634,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.select.generic.name = "Select";
 	uiTouchButtons.select.generic.statusText = "Select texture from list";
 	uiTouchButtons.select.generic.callback = UI_TouchButtons_Callback;
+	uiTouchButtons.select.pic = PIC_Load("gfx/shell/btn_touch_select");
 
 	uiTouchButtons.name.generic.id = ID_NAME;
 	uiTouchButtons.name.generic.type = QMTYPE_FIELD;
@@ -730,6 +733,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.reset.generic.y = 600;
 	uiTouchButtons.reset.generic.callback = UI_TouchButtons_Callback;
 	uiTouchButtons.reset.generic.statusText = "Reset touch to default state";
+	uiTouchButtons.reset.pic = PIC_Load("gfx/shell/btn_touch_reset");
 
 	uiTouchButtons.remove.generic.id = ID_DELETE;
 	uiTouchButtons.remove.generic.type = QMTYPE_BM_BUTTON;
