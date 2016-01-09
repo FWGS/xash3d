@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "utils.h"
 #include "menu_btnsbmp_table.h"
 
-#define ART_BANNER	  	"gfx/shell/head_touchbuttons"
+#define ART_BANNER	  	"gfx/shell/head_touch_buttons"
 
 #define ID_BACKGROUND 	0
 #define ID_BANNER	  	1
@@ -464,7 +464,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.banner.generic.type = QMTYPE_BITMAP;
 	uiTouchButtons.banner.generic.flags = QMF_INACTIVE|QMF_DRAW_ADDITIVE;
 	uiTouchButtons.banner.generic.x = UI_BANNER_POSX;
-	uiTouchButtons.banner.generic.y = UI_BANNER_POSY;
+	uiTouchButtons.banner.generic.y = UI_BANNER_POSY - 70;
 	uiTouchButtons.banner.generic.width = UI_BANNER_WIDTH;
 	uiTouchButtons.banner.generic.height = UI_BANNER_HEIGHT;
 	uiTouchButtons.banner.pic = ART_BANNER;
@@ -607,7 +607,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.save.generic.id = ID_SAVE;
 	uiTouchButtons.save.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.save.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
-	uiTouchButtons.save.generic.x = 384 - 72 + 400;
+	uiTouchButtons.save.generic.x = 384 - 72 + 320;
 	uiTouchButtons.save.generic.y = 520;
 	uiTouchButtons.save.generic.name = "Save";
 	uiTouchButtons.save.generic.statusText = "Save as new button";
@@ -617,8 +617,8 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.editor.generic.id = ID_EDITOR;
 	uiTouchButtons.editor.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.editor.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
-	uiTouchButtons.editor.generic.x = 680;
-	uiTouchButtons.editor.generic.y = 570;
+	uiTouchButtons.editor.generic.x = 384 - 72 + 320;
+	uiTouchButtons.editor.generic.y = 580;
 	uiTouchButtons.editor.generic.name = "Editor";
 	uiTouchButtons.editor.generic.statusText = "Open interactive editor";
 	uiTouchButtons.editor.generic.callback = UI_TouchButtons_Callback;
@@ -727,8 +727,8 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.reset.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchButtons.reset.generic.name = "Reset";
-	uiTouchButtons.reset.generic.x = 270;
-	uiTouchButtons.reset.generic.y = 600;
+	uiTouchButtons.reset.generic.x = 384 - 72 + 480;
+	uiTouchButtons.reset.generic.y = 580;
 	uiTouchButtons.reset.generic.callback = UI_TouchButtons_Callback;
 	uiTouchButtons.reset.generic.statusText = "Reset touch to default state";
 	uiTouchButtons.reset.pic = PIC_Load("gfx/shell/btn_touch_reset");
@@ -736,15 +736,14 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.remove.generic.id = ID_DELETE;
 	uiTouchButtons.remove.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.remove.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiTouchButtons.remove.generic.x = 270;
-	uiTouchButtons.remove.generic.y = 550;
+	uiTouchButtons.remove.generic.x = 384 - 72 + 480;
+	uiTouchButtons.remove.generic.y = 520;
 	uiTouchButtons.remove.generic.name = "Delete";
 	uiTouchButtons.remove.generic.statusText = "Delete saved game";
 	uiTouchButtons.remove.generic.callback = UI_TouchButtons_Callback;
 	UI_UtilSetupPicButton( &uiTouchButtons.remove, PC_DELETE );
 
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.background );
-	//UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.banner );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.remove );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.reset );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.done );
@@ -766,6 +765,7 @@ static void UI_TouchButtons_Init( void )
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.editor );
 
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.name );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.banner );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.command );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.texture );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.color );
