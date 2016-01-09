@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "utils.h"
 #include "menu_btnsbmp_table.h"
 
-#define ART_BANNER	  	"gfx/shell/head_touchoptions"
+#define ART_BANNER	  	"gfx/shell/head_touch_options"
 
 #define ID_BACKGROUND 	0
 #define ID_BANNER	  	1
@@ -339,7 +339,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.done.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchOptions.done.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
 	uiTouchOptions.done.generic.x = 72;
-	uiTouchOptions.done.generic.y = 535;
+	uiTouchOptions.done.generic.y = 650;
 	uiTouchOptions.done.generic.name = "Done";
 	uiTouchOptions.done.generic.statusText = "Go back to the Touch Menu";
 	uiTouchOptions.done.generic.callback = UI_TouchOptions_Callback;
@@ -398,8 +398,8 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.enable.generic.type = QMTYPE_CHECKBOX;
 	uiTouchOptions.enable.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
 	uiTouchOptions.enable.generic.name = "Enable";
-	uiTouchOptions.enable.generic.x = 72;
-	uiTouchOptions.enable.generic.y = 665;
+	uiTouchOptions.enable.generic.x = 680;
+	uiTouchOptions.enable.generic.y = 650;
 	uiTouchOptions.enable.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.enable.generic.statusText = "enable/disable touch controls";
 	
@@ -416,8 +416,8 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.reset.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchOptions.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchOptions.reset.generic.name = "Reset";
-	uiTouchOptions.reset.generic.x = 72;
-	uiTouchOptions.reset.generic.y = 615;
+	uiTouchOptions.reset.generic.x = 680;
+	uiTouchOptions.reset.generic.y = 390;
 	uiTouchOptions.reset.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.reset.generic.statusText = "Reset touch to default state";
 	uiTouchOptions.reset.pic = PIC_Load("gfx/shell/btn_touch_reset");
@@ -426,7 +426,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.remove.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchOptions.remove.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
 	uiTouchOptions.remove.generic.x = 360;
-	uiTouchOptions.remove.generic.y = 255 + 355;
+	uiTouchOptions.remove.generic.y = 650;
 	uiTouchOptions.remove.generic.name = "Delete";
 	uiTouchOptions.remove.generic.statusText = "Delete saved game";
 	uiTouchOptions.remove.generic.callback = UI_TouchOptions_Callback;
@@ -492,7 +492,7 @@ static void UI_TouchOptions_Init( void )
 	UI_TouchOptions_GetProfileList();
 
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.background );
-	//UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.banner );
+	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.banner );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.done );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.lookX );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.lookY );
