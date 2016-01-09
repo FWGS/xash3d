@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "utils.h"
 #include "menu_btnsbmp_table.h"
 
-//#define ART_BANNER		"gfx/shell/head_touch"
+#define ART_BANNER		"gfx/shell/head_touch"
 
 #define ID_BACKGROUND	0
 #define ID_BANNER		1
@@ -37,7 +37,7 @@ typedef struct
 	menuFramework_s	menu;
 
 	menuBitmap_s	background;
-	//menuBitmap_s	banner;
+	menuBitmap_s	banner;
 
 	menuPicButton_s	touchOptions;
 	menuPicButton_s	touchButtons;
@@ -92,18 +92,18 @@ static void UI_Touch_Init( void )
 	uiTouch.background.generic.height = 768;
 	uiTouch.background.pic = ART_BACKGROUND;
 
-	/*uiTouch.banner.generic.id = ID_BANNER;
+	uiTouch.banner.generic.id = ID_BANNER;
 	uiTouch.banner.generic.type = QMTYPE_BITMAP;
 	uiTouch.banner.generic.flags = QMF_INACTIVE|QMF_DRAW_ADDITIVE;
 	uiTouch.banner.generic.x = UI_BANNER_POSX;
 	uiTouch.banner.generic.y = UI_BANNER_POSY;
 	uiTouch.banner.generic.width = UI_BANNER_WIDTH;
 	uiTouch.banner.generic.height = UI_BANNER_HEIGHT;
-	uiTouch.banner.pic = ART_BANNER;*/
+	uiTouch.banner.pic = ART_BANNER;
 
 	uiTouch.touchOptions.generic.id = ID_TOUCHOPTIONS;
 	uiTouch.touchOptions.generic.type = QMTYPE_BM_BUTTON;
-	uiTouch.touchOptions.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY;
+	uiTouch.touchOptions.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY | QMF_ACT_ONRELEASE;
 	uiTouch.touchOptions.generic.name = "Touch options";
 	uiTouch.touchOptions.generic.statusText = "Touch sensitivity and profile options";
 	uiTouch.touchOptions.generic.x = 72;
@@ -115,7 +115,7 @@ static void UI_Touch_Init( void )
 
 	uiTouch.touchButtons.generic.id = ID_TOUCHBUTTONS;
 	uiTouch.touchButtons.generic.type = QMTYPE_BM_BUTTON;
-	uiTouch.touchButtons.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY;
+	uiTouch.touchButtons.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY | QMF_ACT_ONRELEASE;
 	uiTouch.touchButtons.generic.name = "Touch Buttons";
 	uiTouch.touchButtons.generic.statusText = "Add, remove, edit touch buttons";
 	uiTouch.touchButtons.generic.x = 72;
@@ -139,7 +139,6 @@ static void UI_Touch_Init( void )
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.background );
 	//UI_AddItem( &uiTouch.menu, (void *)&uiTouch.banner );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchOptions );
-	// WIP
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchButtons );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.done );
 }
@@ -152,7 +151,7 @@ UI_Touch_Precache
 void UI_Touch_Precache( void )
 {
 	PIC_Load( ART_BACKGROUND );
-	//PIC_Load( ART_BANNER );
+	PIC_Load( ART_BANNER );
 }
 
 /*

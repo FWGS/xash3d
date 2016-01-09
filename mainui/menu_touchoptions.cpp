@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "menu_btnsbmp_table.h"
 
 #define ART_BANNER	  	"gfx/shell/head_touchoptions"
-#define ART_GAMMA		"gfx/shell/gamma"
 
 #define ID_BACKGROUND 	0
 #define ID_BANNER	  	1
@@ -49,8 +48,7 @@ typedef struct
 	char		profileDesc[UI_MAXGAMES][95];
 	char		*profileDescPtr[UI_MAXGAMES];
 	menuBitmap_s	background;
-	//menuBitmap_s	banner;
-	//menuBitmap_s	testImage;
+	menuBitmap_s	banner;
 
 	menuPicButton_s	done;
 
@@ -318,14 +316,14 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.background.generic.height = 768;
 	uiTouchOptions.background.pic = ART_BACKGROUND;
 
-	/*uiTouchOptions.banner.generic.id = ID_BANNER;
+	uiTouchOptions.banner.generic.id = ID_BANNER;
 	uiTouchOptions.banner.generic.type = QMTYPE_BITMAP;
 	uiTouchOptions.banner.generic.flags = QMF_INACTIVE|QMF_DRAW_ADDITIVE;
 	uiTouchOptions.banner.generic.x = UI_BANNER_POSX;
 	uiTouchOptions.banner.generic.y = UI_BANNER_POSY;
 	uiTouchOptions.banner.generic.width = UI_BANNER_WIDTH;
 	uiTouchOptions.banner.generic.height = UI_BANNER_HEIGHT;
-	uiTouchOptions.banner.pic = ART_BANNER;*/
+	uiTouchOptions.banner.pic = ART_BANNER;
 /*
 	uiTouchOptions.testImage.generic.id = ID_BANNER;
 	uiTouchOptions.testImage.generic.type = QMTYPE_BITMAP;
@@ -343,7 +341,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.done.generic.x = 72;
 	uiTouchOptions.done.generic.y = 535;
 	uiTouchOptions.done.generic.name = "Done";
-	uiTouchOptions.done.generic.statusText = "Go back to the Video Menu";
+	uiTouchOptions.done.generic.statusText = "Go back to the Touch Menu";
 	uiTouchOptions.done.generic.callback = UI_TouchOptions_Callback;
 
 	UI_UtilSetupPicButton( &uiTouchOptions.done, PC_DONE );
@@ -416,7 +414,7 @@ static void UI_TouchOptions_Init( void )
 
 	uiTouchOptions.reset.generic.id = ID_RESET;
 	uiTouchOptions.reset.generic.type = QMTYPE_BM_BUTTON;
-	uiTouchOptions.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchOptions.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchOptions.reset.generic.name = "Reset";
 	uiTouchOptions.reset.generic.x = 72;
 	uiTouchOptions.reset.generic.y = 615;
@@ -447,7 +445,7 @@ static void UI_TouchOptions_Init( void )
 
 	uiTouchOptions.save.generic.id = ID_SAVE;
 	uiTouchOptions.save.generic.type = QMTYPE_BM_BUTTON;
-	uiTouchOptions.save.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchOptions.save.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchOptions.save.generic.x = 680;
 	uiTouchOptions.save.generic.y = 330;
 	uiTouchOptions.save.generic.name = "Save";
@@ -521,7 +519,7 @@ UI_TouchOptions_Precache
 void UI_TouchOptions_Precache( void )
 {
 	PIC_Load( ART_BACKGROUND );
-	//PIC_Load( ART_BANNER );
+	PIC_Load( ART_BANNER );
 }
 
 /*

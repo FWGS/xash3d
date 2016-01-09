@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "menu_btnsbmp_table.h"
 
 #define ART_BANNER	  	"gfx/shell/head_touchbuttons"
-#define ART_GAMMA		"gfx/shell/gamma"
 
 #define ID_BACKGROUND 	0
 #define ID_BANNER	  	1
@@ -69,8 +68,7 @@ typedef struct
 
     char		*bNamesPtr[UI_MAXGAMES];
 	menuBitmap_s	background;
-	//menuBitmap_s	banner;
-	//menuBitmap_s	testImage;
+	menuBitmap_s	banner;
 
 	menuPicButton_s	done;
     menuPicButton_s	cancel;
@@ -462,14 +460,14 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.background.generic.height = 768;
 	uiTouchButtons.background.pic = ART_BACKGROUND;
 
-	/*uiTouchOptions.banner.generic.id = ID_BANNER;
-	uiTouchOptions.banner.generic.type = QMTYPE_BITMAP;
-	uiTouchOptions.banner.generic.flags = QMF_INACTIVE|QMF_DRAW_ADDITIVE;
-	uiTouchOptions.banner.generic.x = UI_BANNER_POSX;
-	uiTouchOptions.banner.generic.y = UI_BANNER_POSY;
-	uiTouchOptions.banner.generic.width = UI_BANNER_WIDTH;
-	uiTouchOptions.banner.generic.height = UI_BANNER_HEIGHT;
-	uiTouchOptions.banner.pic = ART_BANNER;*/
+	uiTouchButtons.banner.generic.id = ID_BANNER;
+	uiTouchButtons.banner.generic.type = QMTYPE_BITMAP;
+	uiTouchButtons.banner.generic.flags = QMF_INACTIVE|QMF_DRAW_ADDITIVE;
+	uiTouchButtons.banner.generic.x = UI_BANNER_POSX;
+	uiTouchButtons.banner.generic.y = UI_BANNER_POSY;
+	uiTouchButtons.banner.generic.width = UI_BANNER_WIDTH;
+	uiTouchButtons.banner.generic.height = UI_BANNER_HEIGHT;
+	uiTouchButtons.banner.pic = ART_BANNER;
 /*
 	uiTouchOptions.testImage.generic.id = ID_BANNER;
 	uiTouchOptions.testImage.generic.type = QMTYPE_BITMAP;
@@ -608,7 +606,7 @@ static void UI_TouchButtons_Init( void )
 
 	uiTouchButtons.save.generic.id = ID_SAVE;
 	uiTouchButtons.save.generic.type = QMTYPE_BM_BUTTON;
-	uiTouchButtons.save.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchButtons.save.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchButtons.save.generic.x = 384 - 72 + 400;
 	uiTouchButtons.save.generic.y = 520;
 	uiTouchButtons.save.generic.name = "Save";
@@ -618,7 +616,7 @@ static void UI_TouchButtons_Init( void )
 
 	uiTouchButtons.editor.generic.id = ID_EDITOR;
 	uiTouchButtons.editor.generic.type = QMTYPE_BM_BUTTON;
-	uiTouchButtons.editor.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchButtons.editor.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchButtons.editor.generic.x = 680;
 	uiTouchButtons.editor.generic.y = 570;
 	uiTouchButtons.editor.generic.name = "Editor";
@@ -628,7 +626,7 @@ static void UI_TouchButtons_Init( void )
 
 	uiTouchButtons.select.generic.id = ID_SELECT;
 	uiTouchButtons.select.generic.type = QMTYPE_BM_BUTTON;
-	uiTouchButtons.select.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchButtons.select.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchButtons.select.generic.x = 500;
 	uiTouchButtons.select.generic.y = 300;
 	uiTouchButtons.select.generic.name = "Select";
@@ -727,7 +725,7 @@ static void UI_TouchButtons_Init( void )
 
 	uiTouchButtons.reset.generic.id = ID_RESET;
 	uiTouchButtons.reset.generic.type = QMTYPE_BM_BUTTON;
-	uiTouchButtons.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchButtons.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchButtons.reset.generic.name = "Reset";
 	uiTouchButtons.reset.generic.x = 270;
 	uiTouchButtons.reset.generic.y = 600;
@@ -788,7 +786,7 @@ UI_TouchButtons_Precache
 void UI_TouchButtons_Precache( void )
 {
 	PIC_Load( ART_BACKGROUND );
-	//PIC_Load( ART_BANNER );
+	PIC_Load( ART_BANNER );
 	uiTouchButtons.gettingList = false; // prevent filling list before init
 }
 

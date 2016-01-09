@@ -212,10 +212,9 @@ static void UI_Options_Init( void )
 
 	UI_UtilSetupPicButton( &uiOptions.video, PC_VIDEO );
 
-
 	uiOptions.touch.generic.id = ID_TOUCH;
 	uiOptions.touch.generic.type = QMTYPE_BM_BUTTON;
-	uiOptions.touch.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY;
+	uiOptions.touch.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY | QMF_ACT_ONRELEASE;
 	uiOptions.touch.generic.x = 72;
 	uiOptions.touch.generic.y = 380;
 	uiOptions.touch.generic.name = "Touch";
