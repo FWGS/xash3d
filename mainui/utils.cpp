@@ -400,10 +400,11 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		noscroll = true; // don't scroll to current when mouse used
 
 		// ADAMIX
-		if( UI_CursorInRect( upX, upY, arrowWidth, downY - upY + arrowHeight ))
+		if( UI_CursorInRect( upX, upY + arrowHeight, arrowWidth, sl->scrollBarY - upY - arrowHeight ) ||
+			  UI_CursorInRect( upX, sl->scrollBarY + sl->scrollBarHeight , arrowWidth, downY - ( sl->scrollBarY + sl->scrollBarHeight ) ) )
 		{
 			sl->scrollBarSliding = true;
-			break;
+			//break;
 		}
 		// ADAMIX END
 
@@ -415,7 +416,11 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 				sl->topItem-=5;
 				sound = uiSoundMove;
 			}
-			else sound = uiSoundBuzz;
+			else
+			{
+				sl->topItem = 0;
+				sound = uiSoundBuzz;
+			}
 			break;
 		}
 		else if( UI_CursorInRect( downX, downY, arrowWidth, arrowHeight ))
@@ -425,7 +430,11 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 				sl->topItem+=5;
 				sound = uiSoundMove;
 			}
-			else sound = uiSoundBuzz;
+			else
+			{
+				sl->topItem = sl->numItems - sl->numRows;
+				sound = uiSoundBuzz;
+			}
 			break;
 		}
 
@@ -566,28 +575,6 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		UI_FillRect( x, y, w, h, uiColorBlack );
 	}
 
-	if( cursorDown )
-	{
-		if(UI_CursorInRect(x,y,w,h))
-		{
-			static float ac_y = 0;
-			ac_y += cursorDY;
-			cursorDY = 0;
-			if( ac_y * uiStatic.scaleY > sl->generic.charHeight / 2 )
-			{
-				if( sl->topItem > 0 )
-					sl->topItem--;
-				ac_y = 0;
-			}
-			if( ac_y * uiStatic.scaleY < -sl->generic.charHeight / 2 )
-			{
-				if( sl->topItem < sl->numItems - sl->numRows )
-					sl->topItem++;
-				ac_y = 0;
-			}
-		}
-	}
-
 	// hightlight the selected item
 	if( !( sl->generic.flags & QMF_GRAYED ))
 	{
@@ -651,6 +638,53 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	downX = sl->generic.x2 + sl->generic.width2 - arrowWidth;
 	downY = sl->generic.y2 + (sl->generic.height2 - arrowHeight) - UI_OUTLINE_WIDTH;
 
+	int step = (sl->numItems <= 1 ) ? 1 : (downY - upY - arrowHeight) / (sl->numItems - 1);
+
+	if( cursorDown && !sl->scrollBarSliding )
+	{
+		if( UI_CursorInRect( sl->generic.x2, sl->generic.y2, sl->generic.width2 - arrowWidth, sl->generic.height2 ))
+		{
+			static float ac_y = 0;
+			ac_y += cursorDY;
+			cursorDY = 0;
+			if( ac_y * uiStatic.scaleY > sl->generic.charHeight )
+			{
+				sl->topItem -= ac_y * uiStatic.scaleY/ sl->generic.charHeight - 0.5;
+				if( sl->topItem < 0 )
+					sl->topItem = 0;
+				ac_y = 0;
+			}
+			if( ac_y * uiStatic.scaleY < -sl->generic.charHeight )
+			{
+				sl->topItem -= ac_y * uiStatic.scaleY/ sl->generic.charHeight - 0.5 ;
+				if( sl->topItem > sl->numItems - sl->numRows )
+					sl->topItem = sl->numItems - sl->numRows;
+				ac_y = 0;
+			}
+		}
+		else if( UI_CursorInRect( sl->scrollBarX, sl->scrollBarY, sl->scrollBarWidth, sl->scrollBarHeight ))
+		{
+			static float ac_y = 0;
+			ac_y += cursorDY;
+			cursorDY = 0;
+			if( ac_y * uiStatic.scaleY < -step )
+			{
+				sl->topItem += ac_y / step + 0.5;
+				if( sl->topItem < 0 )
+					sl->topItem = 0;
+				ac_y = 0;
+			}
+			if( ac_y * uiStatic.scaleY > step )
+			{
+				sl->topItem += ac_y / step + 0.5;
+				if( sl->topItem > sl->numItems - sl->numRows )
+					sl->topItem = sl->numItems - sl->numRows;
+				ac_y = 0;
+			}
+		}
+
+	}
+
 	// draw the arrows base
 	UI_FillRect( upX, upY + arrowHeight, arrowWidth, downY - upY - arrowHeight, uiInputFgColor );
 
@@ -658,8 +692,6 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	// ADAMIX
 	sl->scrollBarX = upX + sl->generic.charHeight/4;
 	sl->scrollBarWidth = arrowWidth - sl->generic.charHeight/4;
-	
-	int step = (sl->numItems <= 1 ) ? 1 : (downY - upY - arrowHeight) / (sl->numItems - 1);
 
 	if(((downY - upY - arrowHeight) - (((sl->numItems-1)*sl->generic.charHeight)/2)) < 2)
 	{
@@ -674,7 +706,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 
 	if( sl->scrollBarSliding )
 	{
-		int dist = uiStatic.cursorY - sl->scrollBarY - (sl->scrollBarHeight>>2);
+		int dist = uiStatic.cursorY - sl->scrollBarY - (sl->scrollBarHeight>>1);
 
 		if((((dist / 2) > (sl->generic.charHeight / 2)) || ((dist / 2) < (sl->generic.charHeight / 2))) && sl->topItem <= (sl->numItems - sl->numRows - 1) && sl->topItem >= 0)
 		{

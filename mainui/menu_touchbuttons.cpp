@@ -41,7 +41,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_MSGBOX	 	12
 #define ID_MSGTEXT	 	13
 #define ID_NAME	 	14
-#define ID_CANCEL	 	14
 #define ID_COLOR	 	15
 #define ID_PREVIEW	 	16
 #define ID_TEXTURE	 	17
@@ -52,6 +51,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_SP			23
 #define ID_ADDITIVE		24
 #define ID_EDITOR		25
+#define ID_CANCEL	 	26
 #define ID_YES	 	130
 #define ID_NO	 	131
 typedef struct
@@ -232,6 +232,10 @@ static void UI_TouchButtons_UpdateFields()
 	else
 		uiTouchButtons.textureid = 0;
 	uiTouchButtons.name.buffer[0] = 0;
+	uiTouchButtons.name.cursor = 0;
+	uiTouchButtons.texture.cursor = 0;
+	uiTouchButtons.command.cursor = 0;
+
 }
 static void UI_TouchButtons_DisableButtons()
 {
@@ -398,6 +402,8 @@ static void UI_TouchButtons_Callback( void *self, int event )
 			CLIENT_COMMAND(0, command);
 			snprintf( command, 256, "touch_setcolor %s %d %d %d %d\n", uiTouchButtons.name.buffer, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
 			CLIENT_COMMAND(1, command);
+			uiTouchButtons.name.buffer[0] = 0;
+			uiTouchButtons.name.cursor = 0;
 		}
 		else
 		{
