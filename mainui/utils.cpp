@@ -2244,8 +2244,9 @@ void UI_PicButton_Draw( menuPicButton_s *item )
 		state = BUTTON_FOCUS;
 
 	// make sure what cursor in rect
- 	if( item->generic.bPressed )
+	if( item->generic.bPressed && cursorDown )
  		state = BUTTON_PRESSED;
+	else item->generic.bPressed = false;
 
 	if( item->generic.statusText && item->generic.flags & QMF_NOTIFY )
 	{
