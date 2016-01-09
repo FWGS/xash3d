@@ -109,6 +109,7 @@ inline float RemapVal( float val, float A, float B, float C, float D)
 	return C + (D - C) * (val - A) / (B - A);
 }
 
+extern void AddSpaces( char *s, int size );
 extern int ColorStrlen( const char *str );	// returns string length without color symbols
 extern const int g_iColorTable[8];
 extern void COM_FileBase( const char *in, char *out );		// ripped out from hlsdk 2.3

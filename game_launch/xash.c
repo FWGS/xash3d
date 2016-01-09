@@ -30,7 +30,7 @@ GNU General Public License for more details.
 #ifdef __APPLE__
  #include <dlfcn.h>
  #include <errno.h>
- #define XASHLIB                "xash.dylib"
+ #define XASHLIB                "libxash.dylib"
  #define dlmount(x)          dlopen(x, RTLD_LAZY)
  #define FreeLibrary(x)          dlclose(x)
  #define GetProcAddress(x, y)    dlsym(x, y)

@@ -16,7 +16,7 @@ enum VGUI_MouseCode
 	MOUSE_LEFT=0,
 	MOUSE_RIGHT,
 	MOUSE_MIDDLE,
-	MOUSE_LAST,
+	MOUSE_LAST
 };
 
 enum VGUI_KeyCode
@@ -124,21 +124,21 @@ enum VGUI_KeyCode
 	KEY_F10,
 	KEY_F11,
 	KEY_F12,
-	KEY_LAST,
+	KEY_LAST
 };
 
 enum VGUI_KeyAction
 {
 	KA_TYPED=0,
 	KA_PRESSED,
-	KA_RELEASED,
+	KA_RELEASED
 };
 enum VGUI_MouseAction
 {
 	MA_PRESSED=0,
 	MA_RELEASED,
 	MA_DOUBLE,
-	MA_WHEEL,
+	MA_WHEEL
 };
 
 enum VGUI_DefaultCursor
@@ -157,7 +157,7 @@ enum VGUI_DefaultCursor
 	dc_sizeall,
 	dc_no,
 	dc_hand,
-	dc_last,
+	dc_last
 };
 
 

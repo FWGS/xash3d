@@ -687,7 +687,7 @@ and hold them into permament memory pool
 */
 static void CL_InitTitles( const char *filename )
 {
-	size_t	fileSize;
+	fs_offset_t	fileSize;
 	byte	*pMemFile;
 	int	i;
 
@@ -707,7 +707,7 @@ static void CL_InitTitles( const char *filename )
 	pMemFile = FS_LoadFile( filename, &fileSize, false );
 	if( !pMemFile ) return;
 
-	CL_TextMessageParse( pMemFile, fileSize );
+	CL_TextMessageParse( pMemFile, (int)fileSize );
 	Mem_Free( pMemFile );
 }
 
@@ -1143,7 +1143,7 @@ void CL_ClearEdicts( void )
 static qboolean CL_LoadHudSprite( const char *szSpriteName, model_t *m_pSprite, qboolean mapSprite, uint texFlags )
 {
 	byte	*buf;
-	size_t	size;
+	fs_offset_t	size;
 	qboolean	loaded;
 
 	ASSERT( m_pSprite != NULL );
@@ -1154,7 +1154,7 @@ static qboolean CL_LoadHudSprite( const char *szSpriteName, model_t *m_pSprite, 
 	Q_strncpy( m_pSprite->name, szSpriteName, sizeof( m_pSprite->name ));
 	m_pSprite->flags = 256; // it's hud sprite, make difference names to prevent free shared textures
 
-	if( mapSprite ) Mod_LoadMapSprite( m_pSprite, buf, size, &loaded );
+	if( mapSprite ) Mod_LoadMapSprite( m_pSprite, buf, (size_t)size, &loaded );
 	else Mod_LoadSpriteModel( m_pSprite, buf, &loaded, texFlags );		
 
 	Mem_Free( buf );
@@ -1205,7 +1205,7 @@ HSPRITE pfnSPR_LoadExt( const char *szPicName, uint texFlags )
 			break; // this is a valid spot
 	}
 
-	if( i == MAX_IMAGES ) 
+	if( i >= MAX_IMAGES ) 
 	{
 		MsgDev( D_ERROR, "SPR_Load: can't load %s, MAX_HSPRITES limit exceeded\n", szPicName );
 		return 0;
@@ -1214,7 +1214,10 @@ HSPRITE pfnSPR_LoadExt( const char *szPicName, uint texFlags )
 	// load new model
 	if( CL_LoadHudSprite( name, &clgame.sprites[i], false, texFlags ))
 	{
-		clgame.sprites[i].needload = clgame.load_sequence;
+		if( i < MAX_IMAGES - 1 )
+		{
+			clgame.sprites[i].needload = clgame.load_sequence;
+		}
 		return i;
 	}
 	return 0;

@@ -445,6 +445,11 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 }
 #else //if !defined (__ANDROID__) // Android will have other handler
 // Posix signal handler
+
+#if defined(__FreeBSD__) || defined(__NetBSD__)
+#define HAVE_UCONTEXT_H 1
+#endif
+
 #ifdef HAVE_UCONTEXT_H
 #include <ucontext.h>
 #endif

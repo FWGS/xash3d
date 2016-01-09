@@ -383,7 +383,6 @@ extern uiStatic_t		uiStatic;
 
 #define DLG_X ((uiStatic.width - 640) / 2 - 192) // Dialogs are 640px in width
 
-extern char		uiEmptyString[256];	// HACKHACK
 extern const char		*uiSoundIn;
 extern const char		*uiSoundOut;
 extern const char		*uiSoundKey;

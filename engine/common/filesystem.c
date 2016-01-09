@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #else
 #include <dirent.h>
 #include <errno.h>
+#include <unistd.h>
 #endif
 
 #include "common.h"
@@ -1868,6 +1869,11 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 	}
 
 	file->real_length = lseek( file->handle, 0, SEEK_END );
+	if( file->real_length == -1 )
+	{
+		MsgDev( D_ERROR, "FS_SysOpen: Cannot lseek file: %s\n", strerror(errno));
+		return NULL;
+	}
 
 	// For files opened in append mode, we start at the end of the file
 	if( mod & O_APPEND ) file->position = file->real_length;

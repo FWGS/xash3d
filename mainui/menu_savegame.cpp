@@ -142,11 +142,11 @@ static void UI_SaveGame_GetGameList( void )
 		// create new entry for current save game
 		strncpy( uiSaveGame.saveName[i], "new", CS_SIZE );
 		StringConcat( uiSaveGame.saveDescription[i], "Current", TIME_LENGTH );
-		StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, TIME_LENGTH ); // fill remaining entries
+		AddSpaces( uiSaveGame.saveDescription[i], TIME_LENGTH ); // fill remaining entries
 		StringConcat( uiSaveGame.saveDescription[i], "New Saved Game", NAME_LENGTH );
-		StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, NAME_LENGTH );
+		AddSpaces( uiSaveGame.saveDescription[i], NAME_LENGTH );
 		StringConcat( uiSaveGame.saveDescription[i], "New", GAMETIME_LENGTH );
-		StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, GAMETIME_LENGTH );
+		AddSpaces( uiSaveGame.saveDescription[i], GAMETIME_LENGTH );
 		uiSaveGame.saveDescriptionPtr[i] = uiSaveGame.saveDescription[i];
 		i++;
 	}
@@ -162,9 +162,9 @@ static void UI_SaveGame_GetGameList( void )
 			{
 				// get name string even if not found - SV_GetComment can be mark saves
 				// as <CORRUPTED> <OLD VERSION> etc
-				StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, TIME_LENGTH );
+				AddSpaces( uiSaveGame.saveDescription[i], TIME_LENGTH );
 				StringConcat( uiSaveGame.saveDescription[i], comment, NAME_LENGTH );
-				StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, NAME_LENGTH );
+				AddSpaces( uiSaveGame.saveDescription[i], NAME_LENGTH );
 				uiSaveGame.saveDescriptionPtr[i] = uiSaveGame.saveDescription[i];
 				COM_FileBase( filenames[j], uiSaveGame.saveName[i] );
 				COM_FileBase( filenames[j], uiSaveGame.delName[i] );
@@ -181,11 +181,11 @@ static void UI_SaveGame_GetGameList( void )
 		StringConcat( uiSaveGame.saveDescription[i], comment + CS_SIZE, TIME_LENGTH );
 		StringConcat( uiSaveGame.saveDescription[i], " ", TIME_LENGTH );
 		StringConcat( uiSaveGame.saveDescription[i], comment + CS_SIZE + CS_TIME, TIME_LENGTH );
-		StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, TIME_LENGTH ); // fill remaining entries
+		AddSpaces( uiSaveGame.saveDescription[i], TIME_LENGTH ); // fill remaining entries
 		StringConcat( uiSaveGame.saveDescription[i], comment, NAME_LENGTH );
-		StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, NAME_LENGTH );
+		AddSpaces( uiSaveGame.saveDescription[i], NAME_LENGTH );
 		StringConcat( uiSaveGame.saveDescription[i], comment + CS_SIZE + (CS_TIME * 2), GAMETIME_LENGTH );
-		StringConcat( uiSaveGame.saveDescription[i], uiEmptyString, GAMETIME_LENGTH );
+		AddSpaces( uiSaveGame.saveDescription[i], GAMETIME_LENGTH );
 		uiSaveGame.saveDescriptionPtr[i] = uiSaveGame.saveDescription[i];
 	}
 
@@ -322,11 +322,11 @@ static void UI_SaveGame_Init( void )
 	uiSaveGame.menu.keyFunc = UI_SaveGame_KeyFunc;
 
 	StringConcat( uiSaveGame.hintText, "Time", TIME_LENGTH );
-	StringConcat( uiSaveGame.hintText, uiEmptyString, TIME_LENGTH );
+	AddSpaces( uiSaveGame.hintText, TIME_LENGTH );
 	StringConcat( uiSaveGame.hintText, "Game", NAME_LENGTH );
-	StringConcat( uiSaveGame.hintText, uiEmptyString, NAME_LENGTH );
+	AddSpaces( uiSaveGame.hintText, NAME_LENGTH );
 	StringConcat( uiSaveGame.hintText, "Elapsed time", GAMETIME_LENGTH );
-	StringConcat( uiSaveGame.hintText, uiEmptyString, GAMETIME_LENGTH );
+	AddSpaces( uiSaveGame.hintText, GAMETIME_LENGTH );
 
 	uiSaveGame.background.generic.id = ID_BACKGROUND;
 	uiSaveGame.background.generic.type = QMTYPE_BITMAP;
