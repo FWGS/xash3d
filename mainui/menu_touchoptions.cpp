@@ -297,7 +297,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 		{
 
 			int i = uiTouchOptions.profiles.curItem;
-			if( i = 0 )
+			if( i == 0 )
 				CLIENT_COMMAND( 0,"exec touch.cfg\n" );
 			else
 			{
