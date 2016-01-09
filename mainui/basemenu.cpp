@@ -1181,11 +1181,11 @@ void UI_MouseMove( int x, int y )
 			prevDown = true, cursorDY = 0;
 		else
 			if( y - uiStatic.cursorY )
-				cursorDY = y - uiStatic.cursorY;
+				cursorDY += y - uiStatic.cursorY;
 	}
 	else
 		cursorDY = 0;
-
+	//Con_Printf("%d %d %f\n",x, y, cursorDY);
 	if( !uiStatic.menuActive )
 		return;
 

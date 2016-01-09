@@ -825,7 +825,7 @@ void IN_TouchDraw( void )
 	{
 		float x;
 		if( touch_in_menu->value )
-			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 96, 96, 96, 255 );
+			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 32, 32, 32, 255 );
 		else
 			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 0, 0, 0, 112 );
 		pglColor4ub( 0, 224, 224, 112 );
@@ -1043,6 +1043,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			}
 		}
 		UI_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
+		//MsgDev( D_NOTE, "touch %d %d\n", TO_SCRN_X(x), TO_SCRN_Y(y) );
 		if( type == event_down )
 			Key_Event(241, 1);
 		if( type == event_up )
