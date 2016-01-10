@@ -465,7 +465,7 @@ void IN_MouseMove( void )
 	SDL_GetMouseState( &current_pos.x, &current_pos.y );
 #endif
 	// if the menu is visible, move the menu cursor
-	//UI_MouseMove( current_pos.x, current_pos.y );
+	UI_MouseMove( current_pos.x, current_pos.y );
 
 	IN_ActivateCursor();
 }
