@@ -44,6 +44,8 @@ option(XASH_X11 "Enable X11 support." ${XASH_VGUI})
 # MAIN BUILD CODE \
 ###################\
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
 # Build 32-bit Xash on 64-bit, because Xash3D not support this
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")

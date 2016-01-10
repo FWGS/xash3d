@@ -35,8 +35,7 @@ if(PANDORA)
 endif()
 
 if(XASH_SDL)
-	include(FindPkgConfig)
-	pkg_search_module(SDL2 REQUIRED sdl2)
+	find_package(SDL2 REQUIRED sdl2)
 	include_directories(${SDL2_INCLUDE_DIRS})
 
 	add_definitions(-DXASH_SDL)
