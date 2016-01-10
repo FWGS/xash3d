@@ -228,7 +228,7 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 {
 	int down = button.type == SDL_MOUSEBUTTONDOWN ? 1 : 0;
-	if( in_mouseinitialized && !m_ignore->value )
+	if( in_mouseinitialized && !m_ignore->value && button.which != SDL_TOUCH_MOUSEID )
 		Key_Event(240 + button.button, down);
 }
 
