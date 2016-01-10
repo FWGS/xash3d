@@ -26,7 +26,8 @@ void SDLash_EventFilter( SDL_Event* event)
 	{
 		case SDL_MOUSEMOTION:
 		if(!host.mouse_visible)
-			IN_MouseEvent(0);
+			if( event->motion.which != SDL_TOUCH_MOUSEID )
+				IN_MouseEvent(0);
 #ifdef TOUCHEMU
 			if(mdown)
 				IN_TouchEvent(2, 0, (float)event->motion.x/scr_width->value, (float)event->motion.y/scr_height->value, (float)event->motion.xrel/scr_width->value, (float)event->motion.yrel/scr_height->value);
