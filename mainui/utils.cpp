@@ -373,14 +373,11 @@ void UI_ScrollList_Init( menuScrollList_s *sl )
 
 	UI_ScaleCoords( &sl->generic.x, &sl->generic.y, &sl->generic.width, &sl->generic.height );
 }
-
-
 /*
 =================
 UI_ScrollList_Key
-================
+=================
 */
-
 const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 {
 	const char	*sound = 0;

@@ -101,10 +101,9 @@ GNU General Public License for more details.
 	int x, y;
     } POINT;
 #else
-
-#ifdef __MINGW32__
-#define _inline static inline
-#endif
+	#ifdef __MINGW32__
+	#define _inline static inline
+	#endif
 	#define strcasecmp _stricmp
 	#define strncasecmp _strnicmp
 	#define open _open
@@ -117,24 +116,20 @@ GNU General Public License for more details.
 	#pragma warning(disable : 4115)	// named type definition in parentheses
 	#pragma warning(disable : 4100)	// unreferenced formal parameter
 	#pragma warning(disable : 4127)	// conditional expression is constant
-	#pragma warning(disable : 4057)	// differs in st truncates constant value
-
-#define HSPRITE WINAPI_HSPRITEindirection to slightly different base types
+	#pragma warning(disable : 4057)	// differs in indirection to slightly different base types
 	#pragma warning(disable : 4201)	// nonstandard extension used
 	#pragma warning(disable : 4706)	// assignment within conditional expression
 	#pragma warning(disable : 4054)	// type cast' : from function pointer
-	#pragma warning(disable : 4310)	// ca
+	#pragma warning(disable : 4310)	// cast truncates constant value
+
+	#define HSPRITE WINAPI_HSPRITE
 	#include <windows.h>
 	#undef HSPRITE
 
-	#define OS_LIB_EXT "dll"
-	#define MENUDLL "menu." OS_LIB_EXT
-	#define CLIENTDLL "client." OS_LIB_EXT
+    #define OS_LIB_EXT "dll"
+    #define MENUDLL "menu." OS_LIB_EXT
+    #define CLIENTDLL "client." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
-	#if _MSC_VER == 1200
-		#define vsnprintf _vsnprintf
-		#define NO_ICO
-	#endif
 #endif
 
 #endif
