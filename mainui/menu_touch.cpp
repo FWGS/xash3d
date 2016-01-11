@@ -137,7 +137,7 @@ static void UI_Touch_Init( void )
 	UI_UtilSetupPicButton( &uiTouch.done, PC_DONE );
 
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.background );
-	//UI_AddItem( &uiTouch.menu, (void *)&uiTouch.banner );
+	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.banner );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchOptions );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.touchButtons );
 	UI_AddItem( &uiTouch.menu, (void *)&uiTouch.done );

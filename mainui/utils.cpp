@@ -394,6 +394,7 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 	switch( key )
 	{
 	case K_MOUSE1:
+		noscroll = true; // don't scroll to current when mouse used
 		if(!( sl->generic.flags & QMF_HASMOUSEFOCUS ))
 			break;
 
@@ -408,7 +409,6 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		upY = sl->generic.y2 + UI_OUTLINE_WIDTH;
 		downX = sl->generic.x2 + sl->generic.width2 - arrowWidth;
 		downY = sl->generic.y2 + (sl->generic.height2 - arrowHeight) - UI_OUTLINE_WIDTH;
-		noscroll = true; // don't scroll to current when mouse used
 
 		// ADAMIX
 		if( UI_CursorInRect( upX, upY + arrowHeight, arrowWidth, sl->scrollBarY - upY - arrowHeight ) ||
@@ -456,7 +456,7 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 			if( !sl->itemNames[i] )
 				break; // done
 
-			if( UI_CursorInRect( sl->generic.x, y, sl->generic.width, sl->generic.charHeight ))
+			if( UI_CursorInRect( sl->generic.x, y, sl->generic.width - arrowWidth, sl->generic.charHeight ))
 			{
 				sl->curItem = i;
 				sound = uiSoundNull;
@@ -719,10 +719,10 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	{
 		int dist = uiStatic.cursorY - sl->scrollBarY - (sl->scrollBarHeight>>1);
 
-		if((((dist / 2) > (sl->generic.charHeight / 2)) || ((dist / 2) < (sl->generic.charHeight / 2))) && sl->topItem <= (sl->numItems - sl->numRows - 1) && sl->topItem >= 0)
+		if((((dist / 2) > (sl->generic.charHeight / 2)) || ((dist / 2) < (sl->generic.charHeight / 2))) && sl->topItem <= (sl->numItems - sl->numRows ) && sl->topItem >= 0)
 		{
-			if(sl->generic.callback)
-				sl->generic.callback( sl, QM_CHANGED );
+			//if(sl->generic.callback)
+				//sl->generic.callback( sl, QM_CHANGED );
 
 			if((dist / 2) > ( sl->generic.charHeight / 2 ) && sl->topItem < ( sl->numItems - sl->numRows - 1 ))
 			{
@@ -738,7 +738,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		//sl->topItem = sl->curItem - sl->numRows + 1;
 		if( sl->topItem < 0 ) sl->topItem = 0;
 		if( sl->topItem > ( sl->numItems - sl->numRows - 1 ))
-			sl->topItem = sl->numItems - sl->numRows;
+			sl->topItem = sl->numItems - sl->numRows - 1;
 	}
 
 	if( sl->scrollBarSliding )
