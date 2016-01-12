@@ -649,7 +649,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	downX = sl->generic.x2 + sl->generic.width2 - arrowWidth;
 	downY = sl->generic.y2 + (sl->generic.height2 - arrowHeight) - UI_OUTLINE_WIDTH;
 
-	int step = (sl->numItems <= 1 ) ? 1 : (downY - upY - arrowHeight) / (sl->numItems - 1);
+	float step = (sl->numItems <= 1 ) ? 1 : (downY - upY - arrowHeight) / (float)(sl->numItems - 1);
 
 	if( cursorDown && !sl->scrollBarSliding )
 	{
