@@ -61,7 +61,7 @@ qboolean Image_LoadTGA( const char *name, const byte *buffer, size_t filesize )
 			MsgDev( D_WARN, "Image_LoadTGA: (%s) Only 8 bit images supported for type 1 and 9\n", name );
 			return false;
 		}
-		if( targa_header.colormap_length != 256 )
+		if( targa_header.colormap_length > 256 )
 		{
 			MsgDev( D_WARN, "Image_LoadTGA: (%s) Only 8 bit colormaps are supported for type 1 and 9\n", name );
 			return false;
@@ -161,11 +161,15 @@ qboolean Image_LoadTGA( const char *name, const byte *buffer, size_t filesize )
 				case 9:
 					// colormapped image
 					blue = *buf_p++;
-					red = palette[blue][0];
-					green = palette[blue][1];
-					alpha = palette[blue][3];
-					blue = palette[blue][2];
-					if( alpha != 255 ) image.flags |= IMAGE_HAS_ALPHA;
+					if( blue < targa_header.colormap_length )
+					{
+						red = palette[blue][0];
+						green = palette[blue][1];
+						alpha = palette[blue][3];
+						blue = palette[blue][2];
+						if( alpha != 255 ) image.flags |= IMAGE_HAS_ALPHA;
+					}
+					else red = green = blue = alpha = 255;
 					break;
 				case 2:
 				case 10:
