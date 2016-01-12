@@ -22,16 +22,19 @@ GNU General Public License for more details.
 #include "touch.h"
 #if defined(__ANDROID__)
 
-#include "platform/android/android-gameif.h"
+//#include "platform/android/android-gameif.h"
 #include "SDL_system.h"
 #endif
 
 // we don't have our controls at this time
 mobile_engfuncs_t *gMobileEngfuncs;
 
+void Android_Vibrate( float life, char flags );
+
 static void pfnVibrate( float life, char flags )
 {
 	// here goes platform-specific backends
+	MsgDev( D_NOTE, "Vibrate: %f %d", life, flags );
 #ifdef __ANDROID__
 	Android_Vibrate(life, flags);
 #endif
