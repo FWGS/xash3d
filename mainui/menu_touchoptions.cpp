@@ -41,6 +41,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_MSGTEXT	 	13
 #define ID_PROFILENAME	 	14
 #define ID_APPLY	15
+#define ID_GRID		16
+#define ID_GRID_SIZE	17
 #define ID_YES	 	130
 #define ID_NO	 	131
 typedef struct
@@ -48,6 +50,7 @@ typedef struct
 	menuFramework_s	menu;
 	char		profileDesc[UI_MAXGAMES][95];
 	char		*profileDescPtr[UI_MAXGAMES];
+	int			firstProfile;
 	menuBitmap_s	background;
 	menuBitmap_s	banner;
 
@@ -58,12 +61,14 @@ typedef struct
 	menuSlider_s	moveX;
 	menuSlider_s	moveY;
 	menuCheckBox_s	enable;
+	menuCheckBox_s	grid;
 	menuPicButton_s	reset;
 	menuPicButton_s	save;
 	menuPicButton_s	remove;
 	menuPicButton_s	apply;
 	menuField_s	profilename;
 	menuScrollList_s profiles;
+	menuSpinControl_s gridsize;
 
 	// prompt dialog
 	menuAction_s	msgBox;
@@ -94,28 +99,54 @@ static void UI_MsgBox_Ownerdraw( void *self )
 static void UI_TouchOptions_GetProfileList( void )
 {
 	char	**filenames;
-	int	i = 1, numFiles, j;
+	int	i = 0, numFiles, j = 0;
 	char *curprofile;
+
+	strncpy( uiTouchOptions.profileDesc[i], "Presets:", CS_SIZE );
+	uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
+	i++;
+
+	filenames = FS_SEARCH( "touch_presets/*.cfg", &numFiles, TRUE );
+	for ( ; j < numFiles; i++, j++ )
+	{
+		if( i >= UI_MAXGAMES ) break;
+
+		// strip path, leave only filename (empty slots doesn't have savename)
+		COM_FileBase( filenames[j], uiTouchOptions.profileDesc[i] );
+		uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
+	}
 
 	filenames = FS_SEARCH( "touch_profiles/*.cfg", &numFiles, TRUE );
 	curprofile = CVAR_GET_STRING("touch_config_file");
 
-	strncpy( uiTouchOptions.profileDesc[0], "default", CS_SIZE );
-	uiTouchOptions.profileDescPtr[0] = uiTouchOptions.profileDesc[0];
-	if( !strcmp( "touch.cfg", curprofile ) )
-		uiTouchOptions.profiles.curItem = 0;
+	strncpy( uiTouchOptions.profileDesc[i], "Profiles:", CS_SIZE );
+	uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
+	i++;
 
-	for ( j = 0; j < numFiles; i++, j++ )
+	strncpy( uiTouchOptions.profileDesc[i], "default", CS_SIZE );
+	uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
+
+	if( !strcmp( "touch.cfg", curprofile ) )
+		uiTouchOptions.profiles.curItem = i;
+
+	uiTouchOptions.firstProfile = i;
+	i++;
+
+	for ( ; j < numFiles; i++, j++ )
 	{
 		if( i >= UI_MAXGAMES ) break;
-		
-		// strip path, leave only filename (empty slots doesn't have savename)
+
 		COM_FileBase( filenames[j], uiTouchOptions.profileDesc[i] );
 		uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
 		if( !strcmp( filenames[j], curprofile ) )
 			uiTouchOptions.profiles.curItem = i;
 	}
 	uiTouchOptions.profiles.numItems = i;
+
+	uiTouchOptions.remove.generic.flags |= QMF_GRAYED;
+
+	if( uiTouchOptions.profiles.curItem > uiTouchOptions.firstProfile )
+		uiTouchOptions.remove.generic.flags &= ~QMF_GRAYED;
 
 	if( uiTouchOptions.profiles.generic.charHeight )
 	{
@@ -130,7 +161,7 @@ static void UI_TouchOptions_GetProfileList( void )
 
 	uiTouchOptions.profiles.itemNames = (const char **)uiTouchOptions.profileDescPtr;
 }
-
+static void UI_TouchOptions_SetConfig( void );
 /*
 =================
 UI_TouchOptions_GetConfig
@@ -143,8 +174,11 @@ static void UI_TouchOptions_GetConfig( void )
 	uiTouchOptions.moveX.curValue = ( 2.0f / CVAR_GET_FLOAT( "touch_sidezone" ) ) / 100;
 	uiTouchOptions.moveY.curValue = ( 2.0f / CVAR_GET_FLOAT( "touch_forwardzone" ) ) / 100;
 
-	if( CVAR_GET_FLOAT( "touch_enable" ))
-		uiTouchOptions.enable.enabled = 1;
+
+	uiTouchOptions.enable.enabled = CVAR_GET_FLOAT( "touch_enable" );
+	uiTouchOptions.grid.enabled = CVAR_GET_FLOAT( "touch_grid_enable" );
+	uiTouchOptions.gridsize.curValue = CVAR_GET_FLOAT( "touch_grid_count" );
+	UI_TouchOptions_SetConfig( );
 }
 
 /*
@@ -155,6 +189,12 @@ UI_TouchOptions_SetConfig
 
 static void UI_TouchOptions_SetConfig( void )
 {
+	static char gridText[8];
+	snprintf( gridText, 8, "%.f", uiTouchOptions.gridsize.curValue );
+
+	uiTouchOptions.gridsize.generic.name = gridText;
+	CVAR_SET_FLOAT( "touch_grid_enable", uiTouchOptions.grid.enabled );
+	CVAR_SET_FLOAT( "touch_grid_count", uiTouchOptions.gridsize.curValue );
 	CVAR_SET_FLOAT( "touch_yaw", RemapVal( uiTouchOptions.lookX.curValue, 0.0f, 1.0f, 50.0f, 500.0f ));
 	CVAR_SET_FLOAT( "touch_pitch", RemapVal( uiTouchOptions.lookY.curValue, 0.0f, 1.0f, 50.0f, 500.0f ));
 	CVAR_SET_FLOAT( "touch_sidezone", ( 2.0 / uiTouchOptions.moveX.curValue ) / 100 );
@@ -166,10 +206,10 @@ static void UI_DeleteProfile()
 {
 	char command[256];
 
-	if( uiTouchOptions.profiles.curItem < 1 )
+	if( uiTouchOptions.profiles.curItem <= uiTouchOptions.firstProfile )
 		return;
 
-	snprintf(command, 256, "touch_deleteprofile %s\n", uiTouchOptions.profileDesc[ uiTouchOptions.profiles.curItem ] );
+	snprintf(command, 256, "touch_deleteprofile \"%s\"\n", uiTouchOptions.profileDesc[ uiTouchOptions.profiles.curItem ] );
 	CLIENT_COMMAND(1, command);
 	UI_TouchOptions_GetProfileList();
 }
@@ -197,6 +237,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 	switch( item->id )
 	{
 	case ID_ENABLE:
+	case ID_GRID:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -205,10 +246,18 @@ static void UI_TouchOptions_Callback( void *self, int event )
 
 	if( event == QM_CHANGED )
 	{
+		// Update cvars based on controls
 		UI_TouchOptions_SetConfig();
-		if( uiTouchOptions.profiles.curItem == 0 )
-			uiTouchOptions.remove.generic.flags |= QMF_GRAYED;
-		else uiTouchOptions.remove.generic.flags &= ~QMF_GRAYED;
+
+		// Scrolllist changed, update availiable options
+		uiTouchOptions.remove.generic.flags |= QMF_GRAYED;
+		if( uiTouchOptions.profiles.curItem > uiTouchOptions.firstProfile )
+			uiTouchOptions.remove.generic.flags &= ~QMF_GRAYED;
+
+		uiTouchOptions.apply.generic.flags &= ~QMF_GRAYED;
+
+		if( uiTouchOptions.profiles.curItem == 0 || uiTouchOptions.profiles.curItem == uiTouchOptions.firstProfile -1 )
+			uiTouchOptions.apply.generic.flags |= QMF_GRAYED;
 		return;
 	}
 
@@ -289,6 +338,15 @@ static void UI_TouchOptions_Callback( void *self, int event )
 			char name[256];
 			snprintf( name, 256, "touch_profiles/%s.cfg", uiTouchOptions.profilename.buffer );
 			CVAR_SET_STRING("touch_config_file", name );
+			while( FILE_EXISTS( CVAR_GET_STRING( "touch_config_file" ) ) )
+			{
+				char copystring[256];
+				char filebase[256];
+				COM_FileBase( CVAR_GET_STRING( "touch_config_file" ), filebase );
+				if( snprintf( copystring, 256, "touch_profiles/%s (new).cfg", filebase ) > 255 )
+					break;
+				CVAR_SET_STRING( "touch_config_file", copystring );
+			}
 			CLIENT_COMMAND( 1, "touch_writeconfig\n" );
 		}
 		UI_TouchOptions_GetProfileList();
@@ -297,12 +355,33 @@ static void UI_TouchOptions_Callback( void *self, int event )
 		{
 
 			int i = uiTouchOptions.profiles.curItem;
-			if( i == 0 )
-				CLIENT_COMMAND( 0,"exec touch.cfg\n" );
-			else
+			if( i > 0 && i < uiTouchOptions.firstProfile - 1 )
 			{
 				char command[256];
-				snprintf( command, 256, "exec touch_profiles/%s\n", uiTouchOptions.profileDesc[ i ] );
+				char *curconfig = CVAR_GET_STRING( "touch_config_file" );
+				snprintf( command, 256, "exec \"touch_presets/%s\"\n", uiTouchOptions.profileDesc[ i ] );
+				CLIENT_COMMAND( 0,  command );
+
+				while( FILE_EXISTS( curconfig ) )
+				{
+					char copystring[256];
+					char filebase[256];
+
+					COM_FileBase( curconfig, filebase );
+
+					if( snprintf( copystring, 256, "%s (new)", filebase ) > 255 )
+						break;
+
+					CVAR_SET_STRING( "touch_config_file", copystring );
+					curconfig = CVAR_GET_STRING( "touch_config_file" );
+				}
+			}
+			else if( i == uiTouchOptions.firstProfile )
+				CLIENT_COMMAND( 0,"exec touch.cfg\n" );
+			else if( i > uiTouchOptions.firstProfile )
+			{
+				char command[256];
+				snprintf( command, 256, "exec \"touch_profiles/%s\"\n", uiTouchOptions.profileDesc[ i ] );
 				CLIENT_COMMAND( 0,  command );
 			}
 		}
@@ -408,6 +487,28 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.moveY.minValue = 0.0;
 	uiTouchOptions.moveY.maxValue = 1.0;
 	uiTouchOptions.moveY.range = 0.05f;
+
+	uiTouchOptions.gridsize.generic.id = ID_GRID_SIZE;
+	uiTouchOptions.gridsize.generic.type = QMTYPE_SPINCONTROL;
+	uiTouchOptions.gridsize.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiTouchOptions.gridsize.generic.x = 72;
+	uiTouchOptions.gridsize.generic.y = 580;
+	uiTouchOptions.gridsize.generic.width = 260;
+	uiTouchOptions.gridsize.generic.height = 30;
+	uiTouchOptions.gridsize.generic.callback = UI_TouchOptions_Callback;
+	uiTouchOptions.gridsize.generic.statusText = "Set grid size";
+	uiTouchOptions.gridsize.maxValue = 100;
+	uiTouchOptions.gridsize.minValue = 25;
+	uiTouchOptions.gridsize.range = 5;
+
+	uiTouchOptions.grid.generic.id = ID_GRID;
+	uiTouchOptions.grid.generic.type = QMTYPE_CHECKBOX;
+	uiTouchOptions.grid.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiTouchOptions.grid.generic.name = "Grid";
+	uiTouchOptions.grid.generic.x = 72;
+	uiTouchOptions.grid.generic.y = 520;
+	uiTouchOptions.grid.generic.callback = UI_TouchOptions_Callback;
+	uiTouchOptions.grid.generic.statusText = "Enable/disable grid";
 
 	uiTouchOptions.enable.generic.id = ID_ENABLE;
 	uiTouchOptions.enable.generic.type = QMTYPE_CHECKBOX;
@@ -528,13 +629,16 @@ static void UI_TouchOptions_Init( void )
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.profiles );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.save );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.profilename );
+	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.remove );
+	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.apply );
+	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.grid );
+	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.gridsize );
+
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.msgBox );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.promptMessage );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.no );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.yes );
-	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.apply );
 
-	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.remove );
 }
 
 /*
