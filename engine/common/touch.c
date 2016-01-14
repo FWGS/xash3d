@@ -227,12 +227,20 @@ void IN_TouchExportConfig_f( void )
 	f = FS_Open( name, "w", false );
 	if( f )
 	{
+		char profilename[256];
+		char profilebase[256];
 		touchbutton2_t *button;
+		if( Q_strstr( name, "touch_presets/" ) )
+		{
+			FS_FileBase( name, profilebase );
+			Q_snprintf( profilename, 256, "touch_profiles/%s (copy).cfg", profilebase );
+		}
+		else Q_strncpy( profilename, name, 256 );
 		FS_Printf( f, "//=======================================================================\n");
 		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\ttouch.cfg - touchscreen config\n" );
 		FS_Printf( f, "//=======================================================================\n" );
-		FS_Printf( f, "\ntouch_config_file \"%s\"\n", touch_config_file->string );
+		FS_Printf( f, "\ntouch_config_file \"%s\"\n", profilename );
 		FS_Printf( f, "\n// touch cvars\n" );
 		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
 		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
@@ -255,7 +263,7 @@ void IN_TouchExportConfig_f( void )
 			if( flags & TOUCH_FL_DEF_HIDE )
 				flags |= TOUCH_FL_HIDE;
 
-			aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_W/SCR_H) );
+			aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_H/SCR_W) );
 
 			FS_Printf( f, "touch_addbutton \"%s\" \"%s\" \"%s\" %f %f %f %f %d %d %d %d %d %f\n", 
 				B(name), B(texturefile), B(command),
@@ -706,7 +714,7 @@ void IN_TouchInitConfig( void )
 
 	pfnGetScreenInfo( NULL ); //HACK: update hud screen parameters like iHeight
 	if( FS_FileExists( touch_config_file->string, true ) )
-		Cbuf_AddText( va( "exec %s\n", touch_config_file->string ) );
+		Cbuf_AddText( va( "exec \"%s\"\n", touch_config_file->string ) );
 	else IN_TouchLoadDefaults_f( );
 	touch.closetexture = GL_LoadTexture( "touch_default/edit_close.tga", NULL, 0, TF_NOPICMIP, NULL );
 	touch.hidetexture = GL_LoadTexture( "touch_default/edit_hide.tga", NULL, 0, TF_NOPICMIP, NULL );
