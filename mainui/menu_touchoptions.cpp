@@ -117,6 +117,7 @@ static void UI_TouchOptions_GetProfileList( void )
 	}
 
 	filenames = FS_SEARCH( "touch_profiles/*.cfg", &numFiles, TRUE );
+	j = 0;
 	curprofile = CVAR_GET_STRING("touch_config_file");
 
 	strncpy( uiTouchOptions.profileDesc[i], "Profiles:", CS_SIZE );
@@ -336,8 +337,11 @@ static void UI_TouchOptions_Callback( void *self, int event )
 	case ID_SAVE:
 		{
 			char name[256];
-			snprintf( name, 256, "touch_profiles/%s.cfg", uiTouchOptions.profilename.buffer );
-			CVAR_SET_STRING("touch_config_file", name );
+			if( uiTouchOptions.profilename.buffer[0] )
+			{
+				snprintf( name, 256, "touch_profiles/%s.cfg", uiTouchOptions.profilename.buffer );
+				CVAR_SET_STRING("touch_config_file", name );
+			}
 			while( FILE_EXISTS( CVAR_GET_STRING( "touch_config_file" ) ) )
 			{
 				char copystring[256];
@@ -491,9 +495,9 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.gridsize.generic.id = ID_GRID_SIZE;
 	uiTouchOptions.gridsize.generic.type = QMTYPE_SPINCONTROL;
 	uiTouchOptions.gridsize.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiTouchOptions.gridsize.generic.x = 72;
+	uiTouchOptions.gridsize.generic.x = 72+30;
 	uiTouchOptions.gridsize.generic.y = 580;
-	uiTouchOptions.gridsize.generic.width = 260;
+	uiTouchOptions.gridsize.generic.width = 150;
 	uiTouchOptions.gridsize.generic.height = 30;
 	uiTouchOptions.gridsize.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.gridsize.generic.statusText = "Set grid size";
