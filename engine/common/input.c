@@ -20,27 +20,19 @@ GNU General Public License for more details.
 #include "touch.h"
 #include "client.h"
 #include "vgui_draw.h"
+#include "wrect.h"
 
 #ifdef _WIN32
 #include "windows.h"
 #endif
 
-#define PRINTSCREEN_ID	1
-#define WND_HEADSIZE	wnd_caption		// some offset
-#define WND_BORDER		3			// sentinel border in pixels
-
 Xash_Cursor*	in_mousecursor;
 qboolean	in_mouseactive;				// false when not focus app
-qboolean	in_restore_spi;
 qboolean	in_mouseinitialized;
-int	in_mouse_oldbuttonstate;
 qboolean	in_mouse_suspended;
+int	in_mouse_oldbuttonstate;
 int	in_mouse_buttons;
-#ifdef _WIN32
-RECT	window_rect, real_rect;
-#endif
-uint	in_mouse_wheel;
-int	wnd_caption;
+
 extern convar_t *vid_fullscreen;
 
 static byte scan_to_key[128] = 
@@ -258,36 +250,6 @@ void IN_StartupMouse( void )
 
 	in_mouse_buttons = 8;
 	in_mouseinitialized = true;
-
-#ifdef _WIN32
-	in_mouse_wheel = RegisterWindowMessage( "MSWHEEL_ROLLMSG" );
-#endif
-}
-
-static qboolean IN_CursorInRect( void )
-{
-#ifdef _WIN32
-	POINT	curpos;
-	
-	if( !in_mouseinitialized || !in_mouseactive )
-		return false;
-
-	// find mouse movement
-	//GetMouseState( &curpos );
-
-	SDL_GetMouseState(&curpos.x, &curpos.y);
-
-	if( curpos.x < real_rect.left + WND_BORDER )
-		return false;
-	if( curpos.x > real_rect.right - WND_BORDER * 3 )
-		return false;
-	if( curpos.y < real_rect.top + WND_HEADSIZE + WND_BORDER )
-		return false;
-	if( curpos.y > real_rect.bottom - WND_BORDER * 3 )
-		return false;
-	return true;
-#endif
-	return true;
 }
 
 static void IN_ActivateCursor( void )
@@ -385,7 +347,7 @@ void IN_ActivateMouse( qboolean force )
 
 		oldstate = in_mouse_suspended;
 
-		if( in_mouse_suspended && IN_CursorInRect( ))
+		if( in_mouse_suspended )
 		{
 			in_mouse_suspended = false;
 			in_mouseactive = false; // re-initialize mouse

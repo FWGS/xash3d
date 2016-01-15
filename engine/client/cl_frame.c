@@ -27,7 +27,7 @@ GNU General Public License for more details.
 #define MAX_FORWARD		6
 
 #ifdef XASH_SDL
-convar_t *m_valvehack = 0;
+extern convar_t *m_valvehack; // defined in input.c
 #endif
 
 qboolean CL_IsPlayerIndex( int idx )
@@ -1150,8 +1150,6 @@ void CL_ExtraUpdate( void )
 	if( !cls.initialized )
 		return;
 #ifdef XASH_SDL
-	if( !m_valvehack )
-		m_valvehack = Cvar_Get("m_valvehack", "0", CVAR_ARCHIVE, "Enable mouse hack for valve client.so");
 	if( !m_valvehack->integer )
 #endif
 		clgame.dllFuncs.IN_Accumulate();

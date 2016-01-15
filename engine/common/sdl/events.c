@@ -22,6 +22,7 @@ void SDLash_EventFilter( SDL_Event* event)
 	// CEnginePanel is visible by default, why?
  	VGUI_SurfaceWndProc(event);
 	#endif
+
 	switch ( event->type )
 	{
 		case SDL_MOUSEMOTION:
