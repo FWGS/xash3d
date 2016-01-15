@@ -1500,7 +1500,6 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
 		r_ypos->integer, width, height, wndFlags);
 
-	// host.hWnd must be filled in IN_WndProc
 	if( !host.hWnd )
 	{
 		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s': %s\n", wndname, SDL_GetError());
