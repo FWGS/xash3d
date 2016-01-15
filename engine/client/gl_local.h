@@ -589,6 +589,8 @@ typedef struct
 	qboolean		softwareGammaUpdate;
 	qboolean		deviceSupportsGamma;
 	int		prev_mode;
+	int		prev_height;
+	int		prev_width;
 } glconfig_t;
 
 typedef struct

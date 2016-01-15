@@ -822,8 +822,8 @@ void Con_Init( void )
 	int	i;
 
 	// must be init before startup video subsystem
-	scr_width = Cvar_Get( "width", "640", 0, "screen width" );
-	scr_height = Cvar_Get( "height", "480", 0, "screen height" );
+	scr_width = Cvar_Get( "width", "640", CVAR_RENDERINFO, "screen width" );
+	scr_height = Cvar_Get( "height", "480", CVAR_RENDERINFO, "screen height" );
 	scr_conspeed = Cvar_Get( "scr_conspeed", "600", 0, "console moving speed" );
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0, "notify time to live" );
 	con_fontsize = Cvar_Get( "con_fontsize", "1", CVAR_ARCHIVE, "console font number (0, 1 or 2)" );
