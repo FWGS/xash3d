@@ -30,9 +30,6 @@ extern "C" {
 #include <stdio.h> // off_t
 #include <stdarg.h> // va_list
 #include <stdlib.h> // rand, abs
-#ifdef PANDORA
-#include <unistd.h>	//off_t on PANDORA
-#endif
 
 #define EXPORT __attribute__ ((visibility ("default")))
 #else

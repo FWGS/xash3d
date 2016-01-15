@@ -42,9 +42,6 @@ RECT	window_rect, real_rect;
 uint	in_mouse_wheel;
 int	wnd_caption;
 extern convar_t *vid_fullscreen;
-#ifdef PANDORA
-int noshouldermb = 0;
-#endif
 
 static byte scan_to_key[128] = 
 { 
@@ -666,10 +663,6 @@ IN_Init
 */
 void IN_Init( void )
 {
-#ifdef PANDORA
-	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
-#endif
-
 	IN_StartupMouse( );
 
 	cl_forwardspeed	= Cvar_Get( "cl_forwardspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default forward move speed" );

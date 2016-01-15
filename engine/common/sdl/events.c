@@ -135,10 +135,6 @@ void SDLash_EventFilter( SDL_Event* event)
 	}
 }
 
-#ifdef PANDORA
-extern int noshouldermb;
-#endif
-
 void SDLash_KeyEvent(SDL_KeyboardEvent key)
 {
 	// TODO: improve that.
@@ -160,17 +156,9 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	case SDLK_RALT:
 		keynum = K_ALT;	break;
 	case SDLK_RSHIFT:
-#ifdef PANDORA
-		keynum = (noshouldermb)?K_SHIFT:K_MOUSE2;
-		break;
-#endif
 	case SDLK_LSHIFT:
 		keynum = K_SHIFT; break;
 	case SDLK_RCTRL:
-#ifdef PANDORA
-		keynum = (noshouldermb)?K_SHIFT:K_MOUSE1;
-		break;
-#endif
 	case SDLK_LCTRL:
 		keynum = K_CTRL; break;
 	case SDLK_INSERT:

@@ -30,7 +30,6 @@ project (XASH3D)
 set (XASH3D_VERSION 0.15)
 set (HL_SDK_DIR /opt/halflife CACHE PATH "Half Life 1 SDK directory")
 
-option(PANDORA "Set to ON if targeting an OpenPandora device." ${PANDORA})
 option(XASH_DEDICATED "Enable dedicated build." ${XASH_DEDICATED})
 option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux." ${XASH_DLL_LOADER})
 option(XASH_IPX "Enable IPX support for networking. Windows only." ${XASH_IPX})
