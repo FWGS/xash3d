@@ -44,4 +44,6 @@ void IN_DeactivateMouse( void );
 void IN_ToggleClientMouse( int newstate, int oldstate );
 long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam );
 void IN_SetCursor( Xash_Cursor *hCursor );
+extern qboolean	in_mouseinitialized;
+
 #endif//INPUT_H

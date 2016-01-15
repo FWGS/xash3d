@@ -19,12 +19,8 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "input.h"
 
-#if defined(__ANDROID__)
-// TODO: Find a way how to change icon in runtime on Android
-#elif (defined(_WIN32) && defined(XASH_SDL))
+#if (defined(_WIN32) && defined(XASH_SDL))
 #include <SDL_syswm.h>
-#elif defined(XASH_SDL)
-#include <SDL_image.h> // Android: disable useless SDL_image
 #endif
 
 #ifdef __ANDROID__
@@ -1514,8 +1510,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
 #ifdef XASH_SDL
 	static string	wndname;
-	Uint32 wndFlags = SDL_WINDOW_INPUT_GRABBED |
-		SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
+	Uint32 wndFlags = SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
 
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
 
@@ -1537,9 +1532,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
-#if defined(__ANDROID__)
-	// TODO: Find a way to change icon in runtime in Android
-#elif defined(_WIN32)
+#if defined(_WIN32)
 	HICON ico;
 
 	if( FS_FileExists( GI->iconpath, true ))
@@ -1563,33 +1556,6 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		// info.info.info.info.info... Holy shit, SDL?
 		SetClassLong(info.info.win.window, GCL_HICON, ico);
 	}
-
-#else
-	SDL_Surface *ico;
-
-#ifdef _WIN32
-	// find the icon file in the filesystem
-	if( FS_FileExists( GI->iconpath, true ))
-	{
-		char	localPath[MAX_SYSPATH];
-
-		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
-
-		ico = IMG_Load(localPath);
-
-		if( !ico )
-		{
-			MsgDev( D_INFO, "Failed load icon: %s\n", SDL_GetError());
-			MsgDev( D_INFO, "Try to extract %s from pak if you want to see it.\n", GI->iconpath );
-			ico = NULL;
-		}
-	}
-	else 
-#endif
-	ico = NULL;
-
-	// ico is NULL because there is no resource for standart icon. Sorry about that.
-	if(ico) SDL_SetWindowIcon(host.hWnd, ico);
 #endif
 
 	SDL_ShowWindow( host.hWnd );
@@ -1673,8 +1639,9 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 	}
 	else
 	{
+		int error;
 		SDL_SetWindowSize(host.hWnd, vidmode[vid_mode].width, vidmode[vid_mode].height );
-		int error = SDL_SetWindowFullscreen(host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN : false);
+		error = SDL_SetWindowFullscreen(host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN : false);
 		if( error )
 		{
 			MsgDev(D_ERROR, "Cannot change resolution: %s", SDL_GetError());
@@ -1714,11 +1681,12 @@ qboolean VID_SetMode( void )
 	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
 	{
 		SDL_DisplayMode mode;
+		int iScreenWidth, iScreenHeight;
 
 		SDL_GetDesktopDisplayMode(0, &mode);
 
-		int	iScreenWidth = mode.w;
-		int	iScreenHeight = mode.h;
+		iScreenWidth = mode.w;
+		iScreenHeight = mode.h;
 
 		if( R_DescribeVIDMode( iScreenWidth, iScreenHeight ))
 		{

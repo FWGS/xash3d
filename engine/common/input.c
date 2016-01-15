@@ -17,6 +17,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "input.h"
+#include "touch.h"
 #include "client.h"
 #include "vgui_draw.h"
 
@@ -67,6 +68,7 @@ convar_t *m_yaw;
 #endif
 
 convar_t *m_enginesens;
+convar_t *m_ignore;
 convar_t *cl_forwardspeed;
 convar_t *cl_sidespeed;
 convar_t *cl_backspeed;
@@ -238,13 +240,19 @@ void IN_EvdevFrame ()
 void IN_StartupMouse( void )
 {
 	if( host.type == HOST_DEDICATED ) return;
+#ifdef __ANDROID__
+#define M_IGNORE "1"
+#else
+#define M_IGNORE "0"
+#endif
+	m_ignore = Cvar_Get( "m_ignore", M_IGNORE, CVAR_ARCHIVE , "ignore mouse events" );
 	
 	// You can use -nomouse argument to prevent using mouse from client
 	// -noenginemouse will disable all mouse input
 	if( Sys_CheckParm( "-noenginemouse" )) return; 
 
 #ifdef XASH_SDL
-	m_valvehack = Cvar_Get("m_valvehack", "0", CVAR_ARCHIVE, "Enable mouse hack for client.so with different SDL binary");
+	m_valvehack = Cvar_Get("m_valvehack", "1", CVAR_ARCHIVE, "Enable mouse hack for client.so with different SDL binary");
 	m_enginemouse = Cvar_Get("m_enginemouse", "0", CVAR_ARCHIVE, "Read mouse events in engine instead of client");
 	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
 	m_pitch = Cvar_Get("m_pitch", "0.022", CVAR_ARCHIVE, "Mouse pitch value");
@@ -445,6 +453,9 @@ void IN_MouseMove( void )
 	if( !in_mouseinitialized || !in_mouseactive || !UI_IsVisible( ))
 		return;
 
+	if( m_ignore->value )
+		return;
+
 	// Show cursor in UI
 #ifdef XASH_SDL
 	if( UI_IsVisible() ) SDL_ShowCursor( true );
@@ -469,14 +480,19 @@ void IN_MouseEvent( int mstate )
 	int	i;
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
+	if( m_ignore->value )
+		return;
 	if( cls.key_dest == key_game )
 	{
-#if defined(XASH_SDL) && !defined(_WIN32)
+#if defined(XASH_SDL)
 		static qboolean ignore; // igonre mouse warp event
 		if( m_valvehack->integer == 0 )
 		{
 			if( host.mouse_visible )
+			{
 				SDL_SetRelativeMouseMode( SDL_FALSE );
+				SDL_ShowCursor( SDL_TRUE );
+			}
 			else
 				SDL_SetRelativeMouseMode( SDL_TRUE );
 		}
@@ -519,6 +535,7 @@ void IN_MouseEvent( int mstate )
 	{
 #if defined(XASH_SDL) && !defined(_WIN32)
 		SDL_SetRelativeMouseMode( false );
+		SDL_ShowCursor( SDL_TRUE );
 #endif
 		IN_MouseMove();
 	}
@@ -767,12 +784,13 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		return;
 	if(active)
 	{
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 		Android_Move( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( frametime, &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
+		IN_TouchMove( &forward, &side, &cl.refdef.cl_viewangles[YAW], &cl.refdef.cl_viewangles[PITCH] );
 		IN_JoyAppendMove( cmd, forward, side );
 
 	}
@@ -795,7 +813,7 @@ void Host_InputFrame( void )
 
 	Sys_SendKeyEvents ();
 
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 	Android_Events();
 #endif
 
@@ -805,7 +823,7 @@ void Host_InputFrame( void )
 	if(clgame.dllFuncs.pfnLookEvent)
 	{
 		int dx, dy;
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 		Android_Move( &forward, &side, &pitch, &yaw );
 #endif
 #ifdef XASH_SDL
@@ -818,6 +836,7 @@ void Host_InputFrame( void )
 		}
 #endif
 #endif
+		IN_TouchMove( &forward, &side, &yaw, &pitch );
 		clgame.dllFuncs.pfnLookEvent( yaw, pitch );
 		clgame.dllFuncs.pfnMoveEvent( forward, side );
 	}

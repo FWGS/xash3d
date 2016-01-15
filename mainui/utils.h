@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #define UTILS_H
 
 extern ui_enginefuncs_t g_engfuncs;
+extern ui_textfuncs_t g_textfuncs;
 
 #include "enginecallback.h"
 #include "gameinfo.h"

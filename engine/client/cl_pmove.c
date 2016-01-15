@@ -21,6 +21,8 @@ GNU General Public License for more details.
 #include "particledef.h"
 #include "studio.h"
 
+void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient );
+
 void CL_ClearPhysEnts( void )
 {
 	clgame.pmove->numtouch = 0;
@@ -230,7 +232,7 @@ void CL_SetSolidPlayers( int playernum )
 		if( !ent || !ent->player )
 			continue; // not present this frame
 
-		if( ent->curstate.health <= 0 )
+		if( !predicted_players[j].active )
 			continue; // dead players are not solid
 
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
@@ -887,20 +889,38 @@ void CL_PredictMovement( void )
 	}
 
 	if( cl.refdef.paused || cls.key_dest == key_menu ) return;
+	
+	pfnSetUpPlayerPrediction( false, false );
 
 	// unpredicted pure angled values converted into axis
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );
 
 	ASSERT( cl.refdef.cmd != NULL );
+	if( !cl_predict->value )
+	{
+		//simulate predict
+		local_state_t t1, t2;
+		Q_memset( &t1, 0, sizeof( local_state_t ));
+		Q_memset( &t2, 0, sizeof( local_state_t ));
+		t1.client = cl.frame.local.client;
+		Q_memcpy( t1.weapondata, cl.frame.local.weapondata, sizeof( t1.weapondata ));
+		t1.playerstate = cl.frame.playerstate[cl.playernum];
+		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, true, cl.time, cls.lastoutgoingcommand );
+		cl.predicted_viewmodel = t2.client.viewmodel;
+		cl.scr_fov = t2.client.fov;
+		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+			cl.scr_fov = 90.0f;
+		return;
+	}
 
 	if( !CL_IsPredicted( ))
 	{
 		local_state_t t1, t2;
 		Q_memset( &t1, 0, sizeof( local_state_t ));
-		Q_memset( &t2, 0, sizeof( local_state_t ));
-
+		//Q_memset( &t2, 0, sizeof( local_state_t ));
 		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, false, cl.time, cls.lastoutgoingcommand );
 		return;
+		//Q_memset( &t2, 0, sizeof( local_state_t ));
 	}
 
 	ack = cls.netchan.incoming_acknowledged;
@@ -944,6 +964,10 @@ void CL_PredictMovement( void )
 
 	if( to )
 {
+	cl.predicted_viewmodel = to->client.viewmodel;
+	cl.scr_fov = to->client.fov;
+	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+		cl.scr_fov = 90.0f;
 	VectorCopy( to->playerstate.origin, cl.predicted_origin );
 	VectorCopy( to->client.velocity, cl.predicted_velocity );
 	VectorCopy( to->client.view_ofs, cl.predicted_viewofs );

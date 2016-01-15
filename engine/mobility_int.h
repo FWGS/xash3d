@@ -20,88 +20,60 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-#define MOBILITY_API_VERSION 1
-#define MOBILITY_CLIENT_EXPORT "HUD_GetMobilityInterface"
+#define MOBILITY_API_VERSION 2
+#define MOBILITY_CLIENT_EXPORT "HUD_MobilityInterface"
 
 #define VIBRATE_NORMAL (1 << 0) // just vibrate for given "life"
 
-// these controls are added by engine.
-enum {
-	TOUCH_ACT_SHOOT = 0,
-	TOUCH_ACT_SHOOT_ALT,
-	TOUCH_ACT_USE,
-	TOUCH_ACT_JUMP,
-	TOUCH_ACT_CROUCH,
-	TOUCH_ACT_RELOAD,
-	TOUCH_ACT_INVPREV,
-	TOUCH_ACT_INVNEXT,
-	TOUCH_ACT_LIGHT,
-	TOUCH_ACT_QUICKSAVE,
-	TOUCH_ACT_QUICKLOAD,
-	TOUCH_ACT_SHOW_NUMBERS,
-	TOUCH_ACT_1,
-	TOUCH_ACT_2,
-	TOUCH_ACT_3,
-	TOUCH_ACT_4,
-	TOUCH_ACT_5,
-	TOUCH_ACT_6,
-	TOUCH_ACT_7,
-	TOUCH_ACT_8,
-	TOUCH_ACT_9,
-	TOUCH_ACT_0,
-	TOUCH_ACT_USER = 32
-};
+#define TOUCH_FL_HIDE			(1<<0)
+#define TOUCH_FL_NOEDIT			(1<<1)
+#define TOUCH_FL_CLIENT			(1<<2)
+#define TOUCH_FL_MP				(1<<3)
+#define TOUCH_FL_SP				(1<<4)
+#define TOUCH_FL_DEF_SHOW		(1<<5)
+#define TOUCH_FL_DEF_HIDE		(1<<6)
+#define TOUCH_FL_DRAW_ADDITIVE	(1<<7)
+#define TOUCH_FL_STROKE			(1<<8)
 
-struct touchbutton_t
+typedef struct mobile_engfuncs_s
 {
-	int iX;				// X pos
-	int iY;				// Y pos
-	int iXSize;			// X size
-	int iYSize;			// Y size
-	int iType;			// button type. Unused. All buttons in "tap" mode
-	int hButton;		// button handle
-	char *pszCommand;	// command executed by button
-	char *pszImageName; // path to image
-	void *object;		// private object created by Beloko or SDLash controls
-};
-
-struct mobile_engfuncs_t
-{
-	int version; // indicates version of API. Should be equal to MOBILITY_API_VERSION
+	// indicates version of API. Should be equal to MOBILITY_API_VERSION
+	// version changes when existing functions are changes
+	int version;
 
 	// vibration control
-	void (*pfnVibrate)( float *org, float life, char flags );
+	// life -- time to vibrate in ms
+	void (*pfnVibrate)( float life, char flags );
 
 	// enable text input
 	void (*pfnEnableTextInput)( int enable );
 
-	// touch controls
-	// This func will put your command to button array and return unique number
-	// Will return -1 on error
-	int (*Touch_RegisterButton)( const char *cmdname );
+	// add temporaty button, edit will be disabled
+	void (*pfnTouchAddClientButton)( const char *name, const char *texture, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect, int flags );
 
-	// xpos, ypos -- position on screen
-	// xsize, ysize -- size
-	// hButton -- integer given by Touch_RegiserButton
-	// pszImage -- path to image for button. May be in any format that supported by Xash3D
-	touchbutton_t *(*Touch_AddCustomButton)( int xpos, int ypos, int xsize, int ysize, int hButton, const char *pszImageName);
+	// add button to defaults list. Will be loaded on config generation
+	void (*pfnTouchAddDefaultButton)( const char *name, const char *texturefile, const char *command, float x1, float y1, float x2, float y2, unsigned char *color, int round, float aspect, int flags );
 
-	// get touchbutton_t struct for button ID
-	// even for predefined buttons
-	touchbutton_t *(*Touch_GetButtonByID)( int hButton );
+	// hide/show buttons by pattern
+	void (*pfnTouchHideButtons)( const char *name, unsigned char hide );
 
-	// remove button
-	void (*Touch_RemoveButton)( touchbutton_t *pButton );
+	// remove button with given name
+	void (*pfnTouchRemoveButton)( const char *name );
 
-	// simulate button touching
-	void (*Touch_EmitButton)( int hButton );
+	// when enabled, only client buttons shown
+	void (*pfnTouchSetClientOnly)( unsigned char state );
+
+	// Clean defaults list
+	void (*pfnTouchResetDefaultButtons)();
 
 	// To be continued...
-};
+} mobile_engfuncs_t;
+
+extern mobile_engfuncs_t *gMobileEngfuncs;
 
 // function exported from client
 // returns 0 on no error otherwise error
-typedef int (*pfnGetMobilityInterface)( mobile_engfuncs_t *gMobileEngfuncs );
+typedef int (*pfnMobilityInterface)( mobile_engfuncs_t *gMobileEngfuncs );
 
 #ifdef __cplusplus
 }

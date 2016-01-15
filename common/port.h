@@ -101,6 +101,9 @@ GNU General Public License for more details.
 	int x, y;
     } POINT;
 #else
+	#ifdef __MINGW32__
+	#define _inline static inline
+	#endif
 	#define strcasecmp _stricmp
 	#define strncasecmp _strnicmp
 	#define open _open

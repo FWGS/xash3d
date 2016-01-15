@@ -139,7 +139,7 @@ S_StreamGetCurrentState
 save\restore code
 =================
 */
-qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position )
+qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, fs_offset_t *position )
 {
 	if( !s_bgTrack.stream )
 		return false; // not active

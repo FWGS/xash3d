@@ -96,7 +96,7 @@ typedef enum
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	0.16f		// engine current version
+#define XASH_VERSION	"0.17 test"		// engine current version
 // since this fork have own version, this is just left for compability
 #define BASED_VERSION	0.97f
 
@@ -371,6 +371,7 @@ typedef struct host_parm_s
 	int		numsounds;
 	qboolean enabledll;
 	char vguiloader[64];
+	qboolean textmode;
 } host_parm_t;
 
 extern host_parm_t	host;
@@ -850,7 +851,7 @@ qboolean SV_RestoreCustomDecal( struct decallist_s *entry, edict_t *pEdict, qboo
 int R_CreateDecalList( struct decallist_s *pList, qboolean changelevel );
 void R_ClearAllDecals( void );
 void R_ClearStaticEntities( void );
-qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position );
+qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, fs_offset_t *position );
 struct cl_entity_s *CL_GetEntityByIndex( int index );
 struct cl_entity_s *CL_GetLocalPlayer( void );
 struct player_info_s *CL_GetPlayerInfo( int playerIndex );

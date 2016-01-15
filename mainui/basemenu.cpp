@@ -268,12 +268,16 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 
 			ch = *l++;
 			ch &= 255;
-
+#if 0
 #ifdef _WIN32
 			// fix for letter �
 			if( ch == 0xB8 ) ch = (byte)'�';
 			if( ch == 0xA8 ) ch = (byte)'�';
 #endif
+#endif
+			ch = UtfProcessChar( (unsigned char) ch );
+			if(!ch)
+				continue;
 			if( ch != ' ' )
 			{
 				if( shadow ) TextMessageDrawChar( xx + ofsX, yy + ofsY, charW, charH, ch, shadowModulate, uiStatic.hFont );
@@ -509,7 +513,7 @@ void UI_CursorMoved( menuFramework_s *menu )
 		if( callback ) callback( (void *)curItem, QM_LOSTFOCUS );
 
 		// Disable text editing
-		if( curItem->type == QMTYPE_FIELD ) g_engfuncs.pfnEnableTextInput( false );
+		if( curItem->type == QMTYPE_FIELD ) EnableTextInput( false );
 	}
 
 	if( menu->cursor >= 0 && menu->cursor < menu->numItems )
@@ -520,7 +524,7 @@ void UI_CursorMoved( menuFramework_s *menu )
 		if( callback ) callback( (void *)curItem, QM_GOTFOCUS );
 
 		// Enable text editing. It will open keyboard on Android.
-		if( curItem->type == QMTYPE_FIELD ) g_engfuncs.pfnEnableTextInput( true );
+		if( curItem->type == QMTYPE_FIELD ) EnableTextInput( true );
 	}
 }
 
@@ -1100,6 +1104,10 @@ void UI_KeyEvent( int key, int down )
 
 	if( !uiStatic.menuActive )
 		return;
+	if( key == K_MOUSE1 )
+	{
+		cursorDown = down;
+	}
 
 	if( uiStatic.menuActive->keyFunc )
 		sound = uiStatic.menuActive->keyFunc( key, down );
@@ -1146,6 +1154,8 @@ void UI_CharEvent( int key )
 		}
 	}
 }
+bool cursorDown;
+float cursorDY;
 
 /*
 =================
@@ -1163,8 +1173,22 @@ void UI_MouseMove( int x, int y )
 	if( !uiStatic.visible )
 		return;
 
+	if( cursorDown )
+	{
+		static bool prevDown = false;
+		if(!prevDown)
+			prevDown = true, cursorDY = 0;
+		else
+			if( y - uiStatic.cursorY )
+				cursorDY += y - uiStatic.cursorY;
+	}
+	else
+		cursorDY = 0;
+	//Con_Printf("%d %d %f\n",x, y, cursorDY);
 	if( !uiStatic.menuActive )
 		return;
+
+
 
 	// now menu uses absolute coordinates
 	uiStatic.cursorX = x;
@@ -1369,6 +1393,11 @@ void UI_Precache( void )
 	UI_VidModes_Precache();
 	UI_CustomGame_Precache();
 	UI_Credits_Precache();
+	UI_Touch_Precache();
+	UI_TouchOptions_Precache();
+	UI_TouchButtons_Precache();
+	UI_TouchEdit_Precache();
+	UI_FileDialog_Precache();
 }
 
 void UI_ParseColor( char *&pfile, int *outColor )
@@ -1565,6 +1594,11 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_vidoptions", UI_VidOptions_Menu );
 	Cmd_AddCommand( "menu_vidmodes", UI_VidModes_Menu );
 	Cmd_AddCommand( "menu_customgame", UI_CustomGame_Menu );
+	Cmd_AddCommand( "menu_touch", UI_Touch_Menu );
+	Cmd_AddCommand( "menu_touchoptions", UI_TouchOptions_Menu );
+	Cmd_AddCommand( "menu_touchbuttons", UI_TouchButtons_Menu );
+	Cmd_AddCommand( "menu_touchedit", UI_TouchEdit_Menu );
+	Cmd_AddCommand( "menu_filedialog", UI_FileDialog_Menu );
 
 	CHECK_MAP_LIST( TRUE );
 

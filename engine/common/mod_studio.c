@@ -594,14 +594,15 @@ StudioGetAnim
 static mstudioanim_t *Mod_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
 	mstudioseqgroup_t	*pseqgroup;
-	fs_offset_t		filesize;
-          byte		*buf;
+	size_t		filesize;
+	byte		*buf;
+	cache_user_t *paSequences;
 
 	pseqgroup = (mstudioseqgroup_t *)((byte *)mod_studiohdr + mod_studiohdr->seqgroupindex) + pseqdesc->seqgroup;
 	if( pseqdesc->seqgroup == 0 )
 		return (mstudioanim_t *)((byte *)mod_studiohdr + pseqgroup->data + pseqdesc->animindex);
 
-	cache_user_t *paSequences = (cache_user_t *)m_pSubModel->submodels;
+	paSequences = (cache_user_t *)m_pSubModel->submodels;
 
 	if( paSequences == NULL )
 	{

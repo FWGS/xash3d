@@ -784,22 +784,7 @@ R_SetupFrame
 static void R_SetupFrame( void )
 {
 	vec3_t	viewOrg, viewAng;
-	// already done in client
-	/*if( RP_NORMALPASS() && cl.thirdperson )
-	{
-		vec3_t	cam_ofs, vpn;
 
-		clgame.dllFuncs.CL_CameraOffset( cam_ofs );
-
-		viewAng[PITCH] = cam_ofs[PITCH];
-		viewAng[YAW] = cam_ofs[YAW];
-		viewAng[ROLL] = 0;
-
-		AngleVectors( viewAng, vpn, NULL, NULL );
-		VectorMA( RI.refdef.vieworg, -cam_ofs[ROLL], vpn, viewOrg );
-	}
-	else
-	{*/
 	VectorCopy( RI.refdef.vieworg, viewOrg );
 	VectorCopy( RI.refdef.viewangles, viewAng );
 
@@ -1215,7 +1200,7 @@ void R_RenderScene( const ref_params_t *fd )
 	RI.refdef = *fd;
 
 	if( !cl.worldmodel && RI.drawWorld )
-		Host_Error( "R_RenderView: NULL worldmodel\n" );
+		Host_Error( "R_RenderScene: NULL worldmodel\n" );
 
 	R_PushDlights();
 
@@ -1356,7 +1341,7 @@ void R_EndFrame( void )
 {
 	// flush any remaining 2D bits
 	R_Set2DMode( false );
-#ifdef __ANDROID__
+#ifdef BELOKOCONTROLS
 	Android_DrawControls();
 #endif
 #ifdef XASH_SDL

@@ -332,8 +332,7 @@ void CUtlVector<T>::ShiftElementsLeft( int elem, int num )
 		memmove( &Element(elem), &Element(elem+num), numToMove * sizeof(T) );
 
 #ifdef _DEBUG
-		//memset( &Element(m_Size-num), 0xDD, num * sizeof(T) );
-		//breaking debug
+		memset( &Element(m_Size-num), 0xDD, num * sizeof(T) );
 #endif
 	}
 }

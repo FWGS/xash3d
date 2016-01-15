@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "mathlib.h"
 #include "cdll_int.h"
 #include "menu_int.h"
+#include "mobility_int.h"
 #include "cl_entity.h"
 #include "com_model.h"
 #include "mod_local.h"
@@ -145,6 +146,10 @@ typedef struct
 
 	cl_entity_t	*world;
 	model_t		*worldmodel;			// pointer to world
+	float scr_fov;
+	int predicted_viewmodel;
+	float weaponstarttime;
+	int weaponseq;
 } client_t;
 
 /*
@@ -372,6 +377,7 @@ typedef struct
 	long		logo_xres;
 	long		logo_yres;
 	float		logo_length;
+	qboolean	use_text_api;
 } menu_static_t;
 
 typedef struct
@@ -472,6 +478,16 @@ extern client_static_t	cls;
 extern clgame_static_t	clgame;
 extern menu_static_t	menu;
 
+extern struct predicted_player {
+	int flags;
+	int movetype;
+	int solid;
+	int usehull;
+	qboolean active;
+	vec3_t origin; // predicted origin
+	vec3_t angles;
+} predicted_players[MAX_CLIENTS];
+
 #ifdef __cplusplus
 }
 #endif
@@ -499,7 +515,9 @@ extern convar_t	*cl_lightstyle_lerping;
 extern convar_t	*cl_draw_particles;
 extern convar_t	*cl_levelshot_name;
 extern convar_t	*cl_draw_beams;
+extern convar_t	*cl_lw;
 extern convar_t *cl_trace_events;
+extern convar_t	*cl_sprite_nearest;
 extern convar_t *hud_scale;
 extern convar_t	*scr_centertime;
 extern convar_t	*scr_viewsize;
@@ -508,6 +526,8 @@ extern convar_t	*scr_loading;
 extern convar_t	*scr_dark;	// start from dark
 extern convar_t	*userinfo;
 extern convar_t	*hltv;
+extern convar_t *m_ignore;
+
 
 //=============================================================================
 
@@ -755,6 +775,10 @@ void Con_DrawDebug( void );
 void Con_RunConsole( void );
 void Con_DrawConsole( void );
 void Con_DrawVersion( void );
+int Con_UtfProcessChar( int in );
+int Con_UtfProcessCharForce( int in );
+int Con_UtfMoveLeft( char *str, int pos );
+int Con_UtfMoveRight( char *str, int pos, int length );
 void Con_DrawStringLen( const char *pText, int *length, int *height );
 int Con_DrawString( int x, int y, const char *string, rgba_t setColor );
 int Con_DrawCharacter( int x, int y, int number, rgba_t color );
@@ -767,7 +791,9 @@ void Con_RestoreFont( void );
 void Key_Console( int key );
 void Key_Message( int key );
 void Con_Close( void );
-
+void Con_PageUp( int lines );
+void Con_PageDown( int lines );
+void Con_Bottom( void );
 //
 // s_main.c
 //
@@ -806,11 +832,18 @@ qboolean UI_CreditsActive( void );
 void UI_CharEvent( int key );
 qboolean UI_MouseInRect( void );
 qboolean UI_IsVisible( void );
+void UI_AddTouchButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
 void pfnPIC_Set( HIMAGE hPic, int r, int g, int b, int a );
 void pfnPIC_Draw( int x, int y, int width, int height, const wrect_t *prc );
 void pfnPIC_DrawTrans( int x, int y, int width, int height, const wrect_t *prc );
 void pfnPIC_DrawHoles( int x, int y, int width, int height, const wrect_t *prc );
 void pfnPIC_DrawAdditive( int x, int y, int width, int height, const wrect_t *prc );
+
+//
+// cl_mobile.c
+//
+void Mobile_Init( void );
+void Mobile_Destroy( void );
 
 //
 // cl_video.c

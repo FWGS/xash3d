@@ -1,0 +1,3 @@
+ren common\common.c common\host_common.c
+ren common\soundlib\libmpg\common.c common\soundlib\libmpg\mpg_common.c
+cl -o xash_sdl.dll /DEBUG /Zi /DLL /W3 /Gm /GD /G6 /LD /O2 /MD /O2 /D_USRDLL /D_WINDLL *\*.c client\vgui\*.c common\soundlib\*.c common\soundlib\libmpg\*.c common\imagelib\*.c common\sdl\events.c -I ../msvc6/ -I ../SDL2-2.0.3/include/ -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl -DXASH_VGUI -DXASH_SDL /link /DLL user32.lib shell32.lib gdi32.lib msvcrt.lib winmm.lib /nodefaultlib:"libc.lib" /subsystem:windows  ../SDL2-2.0.3/lib/x86/SDL2.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /DEBUG

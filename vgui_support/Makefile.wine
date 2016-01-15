@@ -14,7 +14,7 @@ SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.obj)
 
 vgui_support.dll : $(OBJS)
-	$(CXX) $(LDFLAGS) /D_USRDLL /D_WINDLL $(OBJS) -o vgui_support.dll /link /DLL vgui.lib
+	$(CXX) $(LDFLAGS) /Zi /LDd /D_USRDLL /D_WINDLL $(OBJS) -o vgui_support.dll /link /DLL /DEBUG vgui.lib
 
 .PHONY: depend clean
 

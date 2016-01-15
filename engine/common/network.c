@@ -1259,8 +1259,8 @@ void HTTP_Run( void )
 
 	if( !curfile->file ) // state == 0
 	{
-		Msg( "HTTP: Starting download %s\n", curfile->path );
 		char name[PATH_MAX];
+		Msg( "HTTP: Starting download %s from %s\n", curfile->path, server->host );
 		Q_snprintf( name, PATH_MAX, "downloaded/%s.incomplete", curfile->path );
 		curfile->file = FS_Open( name, "wb", true );
 		if( !curfile->file )
@@ -1278,12 +1278,13 @@ void HTTP_Run( void )
 
 	if( curfile->state < 2 ) // Socket is not created
 	{
+		dword mode;
 		curfile->socket = pSocket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 		// Now set non-blocking mode
 		// You may skip this if not supported by system,
 		// but download will lock engine, maybe you will need to add manual returns
 #ifdef _WIN32
-		dword mode = 1;
+		mode = 1;
 		pIoctlSocket( curfile->socket, FIONBIO, &mode );
 #elif !defined(__FreeBSD__)
 		// SOCK_NONBLOCK is not portable, so use fcntl
@@ -1384,6 +1385,7 @@ void HTTP_Run( void )
 			if( begin ) // Got full header
 			{
 				int cutheadersize = begin - header + 4; // after that begin of data
+				char *length;
 				Msg( "HTTP: Got response!\n" );
 				if( !Q_strstr(header, "200 OK") )
 				{
@@ -1393,7 +1395,7 @@ void HTTP_Run( void )
 					return;
 				}
 				// print size
-				char *length = Q_strstr(header, "Content-Length: ");
+				length = Q_strstr(header, "Content-Length: ");
 				if( length )
 				{
 					int size = Q_atoi( length += 16 );

@@ -11,8 +11,11 @@ static qboolean lostFocusOnce;
 static float oldVolume;
 static float oldMusicVolume;
 
+int IN_TouchEvent( qboolean down, int fingerID, float x, float y, float dx, float dy );
+
 void SDLash_EventFilter( SDL_Event* event)
 {
+	static int mdown;
 	#ifdef XASH_VGUI
 	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
 	// switch ....
@@ -23,7 +26,13 @@ void SDLash_EventFilter( SDL_Event* event)
 	{
 		case SDL_MOUSEMOTION:
 		if(!host.mouse_visible)
-			IN_MouseEvent(0);
+			if( event->motion.which != SDL_TOUCH_MOUSEID )
+				IN_MouseEvent(0);
+#ifdef TOUCHEMU
+			if(mdown)
+				IN_TouchEvent(2, 0, (float)event->motion.x/scr_width->value, (float)event->motion.y/scr_height->value, (float)event->motion.xrel/scr_width->value, (float)event->motion.yrel/scr_height->value);
+			SDL_ShowCursor( true );
+#endif
 			break;
 		case SDL_QUIT:
 			Sys_Quit();
@@ -39,17 +48,35 @@ void SDLash_EventFilter( SDL_Event* event)
 			break;
 
 		case SDL_FINGERMOTION:
+		IN_TouchEvent( 2, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+			break;
 		case SDL_FINGERUP:
+		IN_TouchEvent( 1, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+			break;
 		case SDL_FINGERDOWN:
 			// Pass all touch events to client library
-			if(clgame.dllFuncs.pfnTouchEvent)
-				clgame.dllFuncs.pfnTouchEvent(event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+			//if(clgame.dllFuncs.pfnTouchEvent)
+				//clgame.dllFuncs.pfnTouchEvent(event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
+			IN_TouchEvent( 0, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
 			break;
 
 		case SDL_MOUSEBUTTONUP:
+
+#ifdef TOUCHEMU
+			mdown = 0;
+			IN_TouchEvent(1, 0, (float)event->button.x/scr_width->value, (float)event->button.y/scr_height->value, 0, 0);
+#else
+			SDLash_MouseEvent(event->button);
+#endif
+			break;
 		case SDL_MOUSEBUTTONDOWN:
 		//if(!host.mouse_visible)
+#ifdef TOUCHEMU
+			mdown = 1;
+			IN_TouchEvent(0, 0, (float)event->button.x/scr_width->value, (float)event->button.y/scr_height->value, 0, 0);
+#else
 			SDLash_MouseEvent(event->button);
+#endif
 			break;
 
 		case SDL_TEXTEDITING:
@@ -202,7 +229,8 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 {
 	int down = button.type == SDL_MOUSEBUTTONDOWN ? 1 : 0;
-	Key_Event(240 + button.button, down);
+	if( in_mouseinitialized && !m_ignore->value && button.which != SDL_TOUCH_MOUSEID )
+		Key_Event(240 + button.button, down);
 }
 
 void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
@@ -215,7 +243,7 @@ void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 void SDLash_InputEvent(SDL_TextInputEvent input)
 {
 	int i, f, t;
-
+#if 0
 	// Try convert to selected charset
 	unsigned char buf[32];
 
@@ -232,32 +260,40 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 	}
 	if( ( t < 0 ) || ( cd == (SDL_iconv_t)-1 ) )
 	Q_strncpy( buf, input.text, 32 );
-
+#endif
 	// Pass characters one by one to Con_CharEvent
-	for(i = 0; buf[i]; ++i)
+	for(i = 0; input.text[i]; ++i)
 	{
-		Con_CharEvent( (uint)buf[i] );
+		int ch;
+
+		if( !Q_stricmp( cl_charset->string, "utf-8" ) )
+			ch = (unsigned char)input.text[i];
+		else
+			ch = Con_UtfProcessCharForce( (unsigned char)input.text[i] );
+
+		if( !ch )
+			continue;
+		
+		Con_CharEvent( ch );
 		if( cls.key_dest == key_menu )
-			UI_CharEvent ( (uint)buf[i] );
+			UI_CharEvent ( ch );
 	}
 }
 
 void SDLash_EnableTextInput( int enable )
 {
-	static qboolean isAlreadyEnabled = false;
-
 	if( enable )
 	{
-		if( !isAlreadyEnabled )
+		if( !host.textmode )
 		{
 			SDL_StartTextInput();
 		}
-		isAlreadyEnabled = true;
+		host.textmode = true;
 	}
 	else
 	{
 		SDL_StopTextInput();
-		isAlreadyEnabled = false;
+		host.textmode = false;
 	}
 }
 #endif // XASH_SDL

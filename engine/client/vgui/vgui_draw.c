@@ -171,6 +171,7 @@ vguiapi_t vgui =
 	VGUI_IsInGame,
 	VGUI_SetVisible,
 	VGUI_GetMousePos,
+	Con_UtfProcessChar,
 	NULL,
 	NULL,
 	NULL,
@@ -234,6 +235,7 @@ void VGui_Shutdown( void )
 		vgui.Shutdown();
 	if(lib)
 		Com_FreeLibrary(lib);
+	lib = NULL;
 	vgui.initialized = false;
 }
 

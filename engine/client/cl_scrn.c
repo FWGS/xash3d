@@ -696,6 +696,6 @@ void SCR_Shutdown( void )
 
 	if( host.state != HOST_RESTART )
 		UI_UnloadProgs();
-
+	cls.creditsFont.valid = false;
 	scr_init = false;
 }

@@ -72,14 +72,12 @@ if(XASH_NONSTANDART_LOAD)
 endif()
 
 if(XASH_SDL)
-    include(FindPkgConfig)
-    pkg_search_module(SDL2 REQUIRED sdl2)
-    pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
+    find_package(SDL2 REQUIRED)
 
-    include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS})
+    include_directories(${SDL2_INCLUDE_DIRS})
 
     add_definitions(-DXASH_SDL)
-    target_link_libraries(${XASH_ENGINE_LIBRARY} ${SDL2_LIBRARIES} ${SDL2_IMAGE_LIBRARIES})
+    target_link_libraries(${XASH_ENGINE_LIBRARY} ${SDL2_LIBRARY})
 endif()
 
 if(XASH_VGUI)

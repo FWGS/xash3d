@@ -57,7 +57,7 @@ ifeq ($(XASH_VGUI),1)
 endif
 
 %.o : %.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@ -fvisibility=hidden -DGDB_BREAK
 
 %.o : %.cpp
 	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
@@ -75,7 +75,7 @@ libxash.so : $(OBJS) $(OBJS_CPP)
 ifeq ($(XASH_DLL_LOADER),1)
 	cp $(TOPDIR)/loader/libloader.so .
 endif
-	$(CC) -o libxash.so $(LDFLAGS) -shared $(OBJS) $(OBJS_CPP) $(LIBS)
+	$(CC) -fvisibility=hidden -o libxash.so $(LDFLAGS) -shared $(OBJS) $(OBJS_CPP) $(LIBS) 
 
 ifeq ($(XASH_SINGLE_BINARY),1)
 xash: $(OBJS) $(OBJS_CPP)
@@ -83,7 +83,7 @@ xash: $(OBJS) $(OBJS_CPP)
     ifeq ($(XASH_STATIC),1)
 	$(CC) -o xash -static $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
     else
-	$(CC) -o xash $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
+	$(CC) -o xash -fvisibility=hidden $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
     endif
 
 endif
@@ -91,7 +91,7 @@ endif
 .PHONY: depend clean list
 
 clean:
-	$(RM) $(OBJS) $(OBJS_CPP) libxash.so
+	$(RM) $(OBJS) $(OBJS_CPP) libxash.so xash
 
 list:
 	@echo Sources:

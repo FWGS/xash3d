@@ -429,6 +429,7 @@ extern	convar_t		*sv_quakehulls;
 extern	convar_t		*sv_validate_changelevel;
 extern	convar_t		*sv_downloadurl;
 extern	convar_t		*sv_clientclean;
+extern	convar_t		*sv_fakegamedir;
 extern 	convar_t		*sv_skipshield; // HACK for shield
 extern	convar_t		*sv_trace_messages;
 extern	convar_t		*mp_consistency;
@@ -590,6 +591,7 @@ byte *pfnSetFatPVS( const float *org );
 byte *pfnSetFatPAS( const float *org );
 int pfnPrecacheModel( const char *s );
 int pfnNumberOfEntities( void );
+int pfnDropToFloor( edict_t* e );
 void SV_RestartStaticEnts( void );
 
 _inline edict_t *SV_EDICT_NUM( int n, const char * file, const int line )
