@@ -20,9 +20,9 @@ before_build:
   - cd c:\projects\xash
   - rmdir SDL2 /s /q
   - ren SDL2-2.0.3 SDL2
-  - git clone -q --branch=master https://github.com/SDLash3D/halflife.git C:\projects\xash\halflife
-  - git clone -q --branch=master https://github.com/SDLash3D/XashXT.git C:\projects\xash\XashXT
   - cd c:\projects\xash\xash3d
+  - git submodule init
+  - git submodule update
 
 after_build:
   - move C:\projects\xash\SDL2\lib\x86\*.* c:\projects\xash\xash3d\Debug

@@ -39,14 +39,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
-    <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;..\..\halflife\utils\vgui\lib\win32_vc6;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;../../hlsdk/utils/vgui/include;../../hlsdk/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
+    <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;..\..\hlsdk\utils\vgui\lib\win32_vc6;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
     <TargetName>xash_sdl</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;../../halflife/utils/vgui/include;../../halflife/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
-    <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;..\..\halflife\utils\vgui\lib\win32_vc6;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;../../hlsdk/utils/vgui/include;../../hlsdk/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
+    <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;..\..\hlsdk\utils\vgui\lib\win32_vc6;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
     <TargetName>xash_sdl</TargetName>
   </PropertyGroup>
