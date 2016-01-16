@@ -589,6 +589,8 @@ typedef struct
 	qboolean		softwareGammaUpdate;
 	qboolean		deviceSupportsGamma;
 	int		prev_mode;
+	int		prev_height;
+	int		prev_width;
 } glconfig_t;
 
 typedef struct
@@ -664,6 +666,8 @@ extern convar_t	*gl_nosort;
 extern convar_t	*gl_clear;
 extern convar_t	*gl_test;		// cvar to testify new effects
 
+extern convar_t	*r_ypos;
+extern convar_t	*r_xpos;
 extern convar_t	*r_width;
 extern convar_t	*r_height;
 extern convar_t	*r_speeds;

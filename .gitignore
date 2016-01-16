@@ -6,7 +6,8 @@
 
 # Other
 *.save
-*.user
+# Qt Creator for some reason creates *.user.$version files, so exclude it too
+*.user*
 *~
 
 ### Xcode ###

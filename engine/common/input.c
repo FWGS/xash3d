@@ -20,31 +20,20 @@ GNU General Public License for more details.
 #include "touch.h"
 #include "client.h"
 #include "vgui_draw.h"
+#include "wrect.h"
 
 #ifdef _WIN32
 #include "windows.h"
 #endif
 
-#define PRINTSCREEN_ID	1
-#define WND_HEADSIZE	wnd_caption		// some offset
-#define WND_BORDER		3			// sentinel border in pixels
-
 Xash_Cursor*	in_mousecursor;
 qboolean	in_mouseactive;				// false when not focus app
-qboolean	in_restore_spi;
 qboolean	in_mouseinitialized;
-int	in_mouse_oldbuttonstate;
 qboolean	in_mouse_suspended;
+int	in_mouse_oldbuttonstate;
 int	in_mouse_buttons;
-#ifdef _WIN32
-RECT	window_rect, real_rect;
-#endif
-uint	in_mouse_wheel;
-int	wnd_caption;
+
 extern convar_t *vid_fullscreen;
-#ifdef PANDORA
-int noshouldermb = 0;
-#endif
 
 static byte scan_to_key[128] = 
 { 
@@ -261,36 +250,6 @@ void IN_StartupMouse( void )
 
 	in_mouse_buttons = 8;
 	in_mouseinitialized = true;
-
-#ifdef _WIN32
-	in_mouse_wheel = RegisterWindowMessage( "MSWHEEL_ROLLMSG" );
-#endif
-}
-
-static qboolean IN_CursorInRect( void )
-{
-#ifdef _WIN32
-	POINT	curpos;
-	
-	if( !in_mouseinitialized || !in_mouseactive )
-		return false;
-
-	// find mouse movement
-	//GetMouseState( &curpos );
-
-	SDL_GetMouseState(&curpos.x, &curpos.y);
-
-	if( curpos.x < real_rect.left + WND_BORDER )
-		return false;
-	if( curpos.x > real_rect.right - WND_BORDER * 3 )
-		return false;
-	if( curpos.y < real_rect.top + WND_HEADSIZE + WND_BORDER )
-		return false;
-	if( curpos.y > real_rect.bottom - WND_BORDER * 3 )
-		return false;
-	return true;
-#endif
-	return true;
 }
 
 static void IN_ActivateCursor( void )
@@ -388,7 +347,7 @@ void IN_ActivateMouse( qboolean force )
 
 		oldstate = in_mouse_suspended;
 
-		if( in_mouse_suspended && IN_CursorInRect( ))
+		if( in_mouse_suspended )
 		{
 			in_mouse_suspended = false;
 			in_mouseactive = false; // re-initialize mouse
@@ -666,10 +625,6 @@ IN_Init
 */
 void IN_Init( void )
 {
-#ifdef PANDORA
-	if( Sys_CheckParm( "-noshouldermb" )) noshouldermb = 1;
-#endif
-
 	IN_StartupMouse( );
 
 	cl_forwardspeed	= Cvar_Get( "cl_forwardspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default forward move speed" );
@@ -784,9 +739,6 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		return;
 	if(active)
 	{
-#ifdef BELOKOCONTROLS
-		Android_Move( &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
-#endif
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( frametime, &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
 #endif
@@ -813,19 +765,13 @@ void Host_InputFrame( void )
 
 	Sys_SendKeyEvents ();
 
-#ifdef BELOKOCONTROLS
-	Android_Events();
-#endif
-
 #ifdef USE_EVDEV
 	IN_EvdevFrame();
 #endif
 	if(clgame.dllFuncs.pfnLookEvent)
 	{
 		int dx, dy;
-#ifdef BELOKOCONTROLS
-		Android_Move( &forward, &side, &pitch, &yaw );
-#endif
+
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
 #ifndef __ANDROID__
@@ -865,162 +811,4 @@ void Host_InputFrame( void )
 
 	IN_ActivateMouse( false );
 	IN_MouseMove();
-}
-
-/*
-====================
-IN_WndProc
-
-main window procedure
-====================
-*/
-long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam )
-{
-/*
-#ifdef _WIN32
-	int	i, temp = 0;
-	qboolean	fActivate;
-
-	if( uMsg == in_mouse_wheel )
-		uMsg = WM_MOUSEWHEEL;
-
-	VGUI_SurfaceWndProc( hWnd, uMsg, wParam, lParam );
-
-	switch( uMsg )
-	{
-	case WM_KILLFOCUS:
-		if( Cvar_VariableInteger( "fullscreen" ))
-			ShowWindow( host.hWnd, SW_SHOWMINNOACTIVE );
-		break;
-	case WM_SETCURSOR:
-		IN_ActivateCursor();
-		break;
-	case WM_MOUSEWHEEL:
-		if( !in_mouseactive ) break;
-		if(( short )HIWORD( wParam ) > 0 )
-		{
-			Key_Event( K_MWHEELUP, true );
-			Key_Event( K_MWHEELUP, false );
-		}
-		else
-		{
-			Key_Event( K_MWHEELDOWN, true );
-			Key_Event( K_MWHEELDOWN, false );
-		}
-		break;
-	case WM_CREATE:
-		host.hWnd = hWnd;
-		GetWindowRect( host.hWnd, &real_rect );
-		RegisterHotKey( host.hWnd, PRINTSCREEN_ID, 0, VK_SNAPSHOT );
-		break;
-	case WM_CLOSE:
-		Sys_Quit();
-		break;
-	case WM_ACTIVATE:
-		if( host.state == HOST_SHUTDOWN )
-			break; // no need to activate
-		if( host.state != HOST_RESTART )
-		{
-			if( HIWORD( wParam ))
-				host.state = HOST_SLEEP;
-			else if( LOWORD( wParam ) == WA_INACTIVE )
-				host.state = HOST_NOFOCUS;
-			else host.state = HOST_FRAME;
-			fActivate = (host.state == HOST_FRAME) ? true : false;
-		}
-		else fActivate = true; // video sucessfully restarted
-
-		wnd_caption = GetSystemMetrics( SM_CYCAPTION ) + WND_BORDER;
-
-		S_Activate( fActivate, host.hWnd );
-		IN_ActivateMouse( fActivate );
-		Key_ClearStates();
-
-		if( host.state == HOST_FRAME )
-		{
-			SetForegroundWindow( hWnd );
-			ShowWindow( hWnd, SW_RESTORE );
-		}
-		else if( Cvar_VariableInteger( "fullscreen" ) && host.state != HOST_RESTART )
-		{
-			ShowWindow( hWnd, SW_MINIMIZE );
-		}
-		break;
-	case WM_MOVE:
-		if( !Cvar_VariableInteger( "fullscreen" ))
-		{
-			RECT	rect;
-			int	xPos, yPos, style;
-
-			xPos = (short)LOWORD( lParam );    // horizontal position 
-			yPos = (short)HIWORD( lParam );    // vertical position 
-
-			rect.left = rect.top = 0;
-			rect.right = rect.bottom = 1;
-			style = GetWindowLong( hWnd, GWL_STYLE );
-			AdjustWindowRect( &rect, style, FALSE );
-
-			Cvar_SetFloat( "r_xpos", xPos + rect.left );
-			Cvar_SetFloat( "r_ypos", yPos + rect.top );
-			GetWindowRect( host.hWnd, &real_rect );
-		}
-		break;
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
-	case WM_XBUTTONDOWN:
-	case WM_XBUTTONUP:
-	case WM_MOUSEMOVE:
-		for( i = 0; i < in_mouse_buttons; i++ )
-		{
-			if( wParam & mouse_buttons[i] )
-				temp |= (1<<i);
-		}
-		IN_MouseEvent( temp );
-		break;
-	case WM_SYSCOMMAND:
-		// never turn screensaver while Xash is active
-		if( wParam == SC_SCREENSAVE && host.state != HOST_SLEEP )
-			return 0;
-		break;
-	case WM_SYSKEYDOWN:
-		if( wParam == VK_RETURN )
-		{
-			// alt+enter fullscreen switch
-			Cvar_SetFloat( "fullscreen", !Cvar_VariableValue( "fullscreen" ));
-			return 0;
-		}
-		// intentional fallthrough
-	case WM_KEYDOWN:
-		Key_Event( Host_MapKey( lParam ), true );
-		if( Host_MapKey( lParam ) == K_ALT )
-			return 0;	// prevent WC_SYSMENU call
-		break;
-	case WM_SYSKEYUP:
-	case WM_KEYUP:
-		Key_Event( Host_MapKey( lParam ), false );
-		break;
-	case WM_CHAR:
-		CL_CharEvent( wParam );
-		break;
-	case WM_HOTKEY:
-		switch( LOWORD( wParam ))
-		{
-		case PRINTSCREEN_ID:
-			// anti FiEctro system: prevent to write snapshot without Xash version
-			Q_strncpy( cls.shotname, "clipboard.bmp", sizeof( cls.shotname ));
-			cls.scrshot_action = scrshot_snapshot; // build new frame for screenshot
-			host.write_to_clipboard = true;
-			cls.envshot_vieworg = NULL;
-			break;
-		}
-		break;
-	}
-	return DefWindowProc( hWnd, uMsg, wParam, lParam );
-#else*/
-	return 0;
-//#endif
 }

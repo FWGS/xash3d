@@ -1107,7 +1107,11 @@ void CUtlRBTree<T, I>::Reinsert( I elem )
 //-----------------------------------------------------------------------------
 // returns the tree depth (not a very fast operation)
 //-----------------------------------------------------------------------------
+#ifdef max
+#undef max
+#endif
 #define max(a,b) (a)>(b)?(a):(b)
+
 template <class T, class I>
 int CUtlRBTree<T, I>::Depth( I node ) const
 {

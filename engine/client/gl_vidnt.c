@@ -33,13 +33,9 @@ GNU General Public License for more details.
 #endif
 
 
-#ifdef PANDORA
-#define VID_AUTOMODE	"10"
-#define VID_DEFAULTMODE         2.0f
-#else
+#define VID_NOMODE -2.0f
 #define VID_AUTOMODE	"-1"
 #define VID_DEFAULTMODE	2.0f
-#endif
 #define DISP_CHANGE_BADDUALVIEW	-6 // MSVC 6.0 doesn't
 #define num_vidmodes	( sizeof( vidmode ) / sizeof( vidmode[0] ))
 #define WINDOW_NAME			"Xash Window" // Half-Life
@@ -76,8 +72,6 @@ convar_t	*gl_test;
 
 convar_t	*r_xpos;
 convar_t	*r_ypos;
-convar_t	*r_width;
-convar_t	*r_height;
 convar_t	*r_speeds;
 convar_t	*r_fullbright;
 convar_t	*r_norefresh;
@@ -881,12 +875,6 @@ GL_BuildGammaTable
 */
 void GL_BuildGammaTable( void )
 {
-#ifdef PANDORA
-	char buff[100];
-	float gamma = vid_gamma->value;
-	snprintf(buff, 100, "sudo -n /usr/pandora/scripts/op_gamma.sh %f", gamma);
-	system(buff);
-#else
 	int	i, v;
 	double	invGamma, div;
 
@@ -903,7 +891,6 @@ void GL_BuildGammaTable( void )
 		glState.gammaRamp[i+256] = ((word)bound( 0, v, 65535 ));
 		glState.gammaRamp[i+512] = ((word)bound( 0, v, 65535 ));
 	}
-#endif
 }
 
 /*
@@ -1254,15 +1241,7 @@ void VID_StartupGamma( void )
 	glConfig.deviceSupportsGamma = !SDL_GetWindowGammaRamp( host.hWnd, NULL, NULL, NULL);
 #else
 	// Android doesn't support hw gamma. (thanks, SDL!)
-
-#ifdef PANDORA
-	glConfig.deviceSupportsGamma = 1;
-	BuildGammaTable( vid_gamma->value, vid_texgamma->value );
-	GL_BuildGammaTable();
-	return;
-#else
 	glConfig.deviceSupportsGamma = 0;
-#endif
 #endif
 
 	if( !glConfig.deviceSupportsGamma )
@@ -1357,9 +1336,7 @@ void VID_RestoreGamma( void )
 	// don't touch gamma if multiple instances was running
 	if( VID_EnumerateInstances( ) > 1 ) return;
 
-#ifdef PANDORA
-	system("sudo -n /usr/pandora/scripts/op_gamma.sh 0");
-#elif defined XASH_SDL
+#if defined(XASH_SDL)
 	SDL_SetWindowGammaRamp( host.hWnd, &glState.stateRamp[0],
 			&glState.stateRamp[256], &glState.stateRamp[512] );
 #endif
@@ -1453,40 +1430,18 @@ qboolean GL_SetPixelformat( void )
 	return true;
 }
 
-void R_SaveVideoMode( int vid_mode )
+void R_SaveVideoMode( int w, int h )
 {
-	int	mode = bound( 0, vid_mode, num_vidmodes ); // check range
-#ifndef __ANDROID__
-	glState.width = vidmode[mode].width;
-	glState.height = vidmode[mode].height;
-	glState.wideScreen = vidmode[mode].wideScreen;
+	glState.width = w;
+	glState.height = h;
 
-	Cvar_FullSet( "width", va( "%i", vidmode[mode].width ), CVAR_READ_ONLY );
-	Cvar_FullSet( "height", va( "%i", vidmode[mode].height ), CVAR_READ_ONLY );
-	Cvar_SetFloat( "vid_mode", mode ); // merge if it out of bounds
+	Cvar_FullSet( "width", va( "%i", w ), CVAR_READ_ONLY | CVAR_RENDERINFO );
+	Cvar_FullSet( "height", va( "%i", h ), CVAR_READ_ONLY | CVAR_RENDERINFO );
 
-	MsgDev( D_INFO, "Set: %s [%dx%d]\n", vidmode[mode].desc, vidmode[mode].width, vidmode[mode].height );
-#else
-	// Auto-detect of screen size on Android Devices
-#ifdef XASH_SDL
-	SDL_DisplayMode displayMode;
+	if( vid_mode->integer >= 0 && vid_mode->integer <= num_vidmodes )
+		glState.wideScreen = vidmode[vid_mode->integer].wideScreen;
 
-	SDL_GetCurrentDisplayMode(0, &displayMode);
-
-	glState.width = displayMode.w;
-	glState.height = displayMode.h;
-#else
-	Android_GetScreenRes(&glState.width, &glState.height);
-	//glState.width = glState.height = 600;
-#endif
-	glState.wideScreen = true;
-
-	Cvar_FullSet( "width", va( "%i", glState.width ), CVAR_READ_ONLY );
-	Cvar_FullSet( "height", va( "%i", glState.height ), CVAR_READ_ONLY );
-	Cvar_SetFloat( "vid_mode", mode );
-
-	MsgDev( D_INFO, "Set: [%dx%d]\n", glState.width, glState.height );
-#endif
+	MsgDev( D_INFO, "Set: [%dx%d]\n", w, h );
 }
 
 qboolean R_DescribeVIDMode( int width, int height )
@@ -1502,7 +1457,7 @@ qboolean R_DescribeVIDMode( int width, int height )
 			return true;
 		}
 	}
-
+	Cvar_SetFloat("vid_mode", VID_NOMODE);
 	return false;
 }
 
@@ -1510,23 +1465,38 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
 #ifdef XASH_SDL
 	static string	wndname;
-	Uint32 wndFlags = SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL;
+	Uint32 wndFlags = SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
-
-	if( fullscreen )
-	{
-		wndFlags |= SDL_WINDOW_FULLSCREEN;
-	}
 
 	host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
 		r_ypos->integer, width, height, wndFlags);
 
-	// host.hWnd must be filled in IN_WndProc
 	if( !host.hWnd )
 	{
 		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s': %s\n", wndname, SDL_GetError());
 		return false;
+	}
+
+	if( fullscreen )
+	{
+		SDL_DisplayMode want, got;
+
+		want.w = width;
+		want.h = height;
+		want.driverdata = want.format = want.refresh_rate = 0; // don't care
+
+		if( !SDL_GetClosestDisplayMode(0, &want, &got) )
+			return false;
+
+		MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
+
+		if( SDL_SetWindowDisplayMode(host.hWnd, &got) == -1 )
+			return false;
+
+		if( SDL_SetWindowFullscreen(host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
+			return false;
+
 	}
 
 	host.window_center_x = width / 2;
@@ -1612,18 +1582,41 @@ void VID_DestroyWindow( void )
 		glState.fullScreen = false;
 	}
 }
-rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
+
+/*
+==================
+R_ChangeDisplaySettingsFast
+
+Change window size fastly to custom values, without setting vid mode
+==================
+*/
+void R_ChangeDisplaySettingsFast( int width, int height )
+{
+	//Cvar_SetFloat("vid_mode", VID_NOMODE);
+	Cvar_SetFloat("width", width);
+	Cvar_SetFloat("height", height);
+
+	glState.width = width;
+	glState.height = height;
+
+	SCR_VidInit();
+}
+
+
+rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 {
 #ifdef XASH_SDL
-	int	width, height;
 	SDL_DisplayMode displayMode;
 
 	SDL_GetCurrentDisplayMode(0, &displayMode);
 
-	R_SaveVideoMode( vid_mode );
+#ifdef __ANDROID__
+	width = displayMode.w;
+	height = displayMode.h;
+	fullscreen = false;
+#endif
 
-	width = r_width->integer;
-	height = r_height->integer;
+	R_SaveVideoMode( width, height );
 
 	// check our desktop attributes
 	glw_state.desktopBitsPixel = SDL_BITSPERPIXEL(displayMode.format);
@@ -1637,31 +1630,43 @@ rserr_t R_ChangeDisplaySettings( int vid_mode, qboolean fullscreen )
 		if( !VID_CreateWindow( width, height, fullscreen ) )
 			return rserr_invalid_mode;
 	}
+#ifndef __ANDROID__ // don't change resolution on Android platform
+	else if( fullscreen )
+	{
+		SDL_DisplayMode want, got;
+
+		want.w = width;
+		want.h = height;
+		want.driverdata = want.format = want.refresh_rate = 0; // don't care
+
+		if( !SDL_GetClosestDisplayMode(0, &want, &got) )
+			return rserr_invalid_mode;
+
+		MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
+
+		if( SDL_GetWindowFlags(host.hWnd) & SDL_WINDOW_FULLSCREEN == SDL_WINDOW_FULLSCREEN)
+			if( SDL_SetWindowFullscreen(host.hWnd, 0) == -1 )
+				return rserr_invalid_fullscreen;
+
+		if( SDL_SetWindowDisplayMode(host.hWnd, &got) )
+			return rserr_invalid_mode;
+
+		if( SDL_SetWindowFullscreen(host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
+			return rserr_invalid_fullscreen;
+
+		R_ChangeDisplaySettingsFast( got.w, got.h );
+	}
 	else
 	{
-		int error;
-		SDL_SetWindowSize(host.hWnd, vidmode[vid_mode].width, vidmode[vid_mode].height );
-		error = SDL_SetWindowFullscreen(host.hWnd, fullscreen ? SDL_WINDOW_FULLSCREEN : false);
-		if( error )
-		{
-			MsgDev(D_ERROR, "Cannot change resolution: %s", SDL_GetError());
-			return rserr_invalid_mode;
-		}
+		if( SDL_SetWindowFullscreen(host.hWnd, 0) )
+			return rserr_invalid_fullscreen;
+		SDL_SetWindowSize(host.hWnd, width, height);
+		R_ChangeDisplaySettingsFast( width, height );
 	}
-#else
-	R_SaveVideoMode( vid_mode );
-	glw_state.desktopWidth = r_width->integer;
-	glw_state.desktopHeight = r_height->integer;
-	glw_state.desktopBitsPixel = 32;
-	if(!host.hWnd)
-	{
-		if( !VID_CreateWindow( 640, 480, fullscreen ) )
-			return rserr_invalid_mode;
-	}
-#endif
+#endif // __ANDROID__
+#endif // XASH_SDL
 	return rserr_ok;
 }
-
 /*
 ==================
 VID_SetMode
@@ -1673,47 +1678,38 @@ qboolean VID_SetMode( void )
 {
 #ifdef XASH_SDL
 	qboolean	fullscreen = false;
+	int iScreenWidth, iScreenHeight;
 	rserr_t	err;
 
-#ifdef PANDORA
-	fullscreen = true;
-#else
 	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
 	{
 		SDL_DisplayMode mode;
-		int iScreenWidth, iScreenHeight;
 
 		SDL_GetDesktopDisplayMode(0, &mode);
 
 		iScreenWidth = mode.w;
 		iScreenHeight = mode.h;
 
-		if( R_DescribeVIDMode( iScreenWidth, iScreenHeight ))
-		{
-			MsgDev( D_NOTE, "found specified vid mode %i [%ix%i]\n", vid_mode->integer, iScreenWidth, iScreenHeight );
-			Cvar_SetFloat( "fullscreen", 1 );
-		}
-		else
-		{
-			MsgDev( D_NOTE, "failed to set specified vid mode [%ix%i]\n", iScreenWidth, iScreenHeight );
-			Cvar_SetFloat( "vid_mode", VID_DEFAULTMODE );
-		}
+		Cvar_SetFloat( "fullscreen", 1 );
 	}
-#endif
-	gl_swapInterval->modified = true;
-	fullscreen = Cvar_VariableInteger("fullscreen");
-
-#ifdef PANDORA
-    if(( err = R_ChangeDisplaySettings( 10, fullscreen )) == rserr_ok )
-#else
-	if(( err = R_ChangeDisplaySettings( vid_mode->integer, fullscreen )) == rserr_ok )
-#endif
+	else if( vid_mode->modified && vid_mode->integer >= 0 && vid_mode->integer <= num_vidmodes )
 	{
-#ifdef PANDORA
-		glConfig.prev_mode = 10;
-#else
-		glConfig.prev_mode = vid_mode->integer;
-#endif
+		iScreenWidth = vidmode[vid_mode->integer].width;
+		iScreenHeight = vidmode[vid_mode->integer].height;
+	}
+	else
+	{
+		iScreenHeight = scr_height->integer;
+		iScreenWidth = scr_width->integer;
+	}
+
+	gl_swapInterval->modified = true;
+	fullscreen = Cvar_VariableInteger("fullscreen") != 0;
+
+	if(( err = R_ChangeDisplaySettings( iScreenWidth, iScreenHeight, fullscreen )) == rserr_ok )
+	{
+		glConfig.prev_width = iScreenWidth;
+		glConfig.prev_height = iScreenHeight;
 	}
 	else
 	{
@@ -1721,7 +1717,7 @@ qboolean VID_SetMode( void )
 		{
 			Cvar_SetFloat( "fullscreen", 0 );
 			MsgDev( D_ERROR, "VID_SetMode: fullscreen unavailable in this mode\n" );
-			if(( err = R_ChangeDisplaySettings( vid_mode->integer, false )) == rserr_ok )
+			if(( err = R_ChangeDisplaySettings( iScreenWidth, iScreenHeight, false )) == rserr_ok )
 				return true;
 		}
 		else if( err == rserr_invalid_mode )
@@ -1731,18 +1727,12 @@ qboolean VID_SetMode( void )
 		}
 
 		// try setting it back to something safe
-		if(( err = R_ChangeDisplaySettings( glConfig.prev_mode, false )) != rserr_ok )
+		if(( err = R_ChangeDisplaySettings( glConfig.prev_width, glConfig.prev_height, false )) != rserr_ok )
 		{
 			MsgDev( D_ERROR, "VID_SetMode: could not revert to safe mode\n" );
 			return false;
 		}
 	}
-#else
-	gl_swapInterval->modified = true;
-	MsgDev( D_ERROR, "VID_SetMode: enabling fake window\n" );
-	Cvar_SetFloat( "vid_mode", 10 );
-	Cvar_SetFloat( "fullscreen", 1 );
-        R_ChangeDisplaySettings( vid_mode->integer, true );
 #endif
 	return true;
 }
@@ -1757,11 +1747,11 @@ check vid modes and fullscreen
 void VID_CheckChanges( void )
 {
 	if( cl_allow_levelshots->modified )
-          {
+	{
 		GL_FreeTexture( cls.loadingBar );
 		SCR_RegisterTextures(); // reload 'lambda' image
 		cl_allow_levelshots->modified = false;
-          }
+	}
  
 	if( renderinfo->modified )
 	{
@@ -1918,7 +1908,7 @@ void R_RenderInfo_f( void )
 	}
 
 	Msg( "\n" );
-	Msg( "MODE: %i, %i x %i %s\n", vid_mode->integer, r_width->integer, r_height->integer );
+	Msg( "MODE: %i x %i %s\n", scr_width->integer, scr_height->integer );
 	Msg( "GAMMA: %s\n", (glConfig.deviceSupportsGamma) ? "hardware" : "software" );
 	Msg( "\n" );
 	Msg( "PICMIP: %i\n", gl_picmip->integer );
@@ -1937,8 +1927,6 @@ void GL_InitCommands( void )
 	Cbuf_Execute();
 
 	// system screen width and height (don't suppose for change from console at all)
-	r_width = Cvar_Get( "width", "640", CVAR_READ_ONLY, "screen width" );
-	r_height = Cvar_Get( "height", "480", CVAR_READ_ONLY, "screen height" );
 	renderinfo = Cvar_Get( "@renderinfo", "0", CVAR_READ_ONLY, "" ); // use ->modified value only
 	r_speeds = Cvar_Get( "r_speeds", "0", CVAR_ARCHIVE, "shows renderer speeds" );
 	r_fullbright = Cvar_Get( "r_fullbright", "0", CVAR_CHEAT, "disable lightmaps, get fullbright for entities" );
