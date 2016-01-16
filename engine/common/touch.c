@@ -747,7 +747,7 @@ void IN_TouchDrawTexture ( float x1, float y1, float x2, float y2, int texture, 
 		0, 0, 1, 1, texture );
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && (_MSC_VER < 1700) 
 static __inline int round(float f)
 {
     return (int)(f + 0.5);

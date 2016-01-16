@@ -39,8 +39,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;../../hlsdk/utils/vgui/include;../../hlsdk/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
-    <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;..\..\hlsdk\utils\vgui\lib\win32_vc6;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;../hlsdk/utils/vgui/include;../hlsdk/public;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
+    <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;..\hlsdk\utils\vgui\lib\win32_vc6;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
     <TargetName>xash_sdl</TargetName>
   </PropertyGroup>
@@ -89,6 +89,7 @@
     <ClCompile Include="client\cl_game.c" />
     <ClCompile Include="client\cl_main.c" />
     <ClCompile Include="client\cl_menu.c" />
+    <ClCompile Include="client\cl_mobile.c" />
     <ClCompile Include="client\cl_parse.c" />
     <ClCompile Include="client\cl_pmove.c" />
     <ClCompile Include="client\cl_remap.c" />
@@ -168,6 +169,7 @@
     <ClCompile Include="common\sys_con.c" />
     <ClCompile Include="common\sys_win.c" />
     <ClCompile Include="common\titles.c" />
+    <ClCompile Include="common\touch.c" />
     <ClCompile Include="common\world.c" />
     <ClCompile Include="common\zone.c" />
     <ClCompile Include="server\sv_client.c" />

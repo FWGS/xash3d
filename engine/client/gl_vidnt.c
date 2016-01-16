@@ -1583,6 +1583,26 @@ void VID_DestroyWindow( void )
 	}
 }
 
+/*
+==================
+R_ChangeDisplaySettingsFast
+
+Change window size fastly to custom values, without setting vid mode
+==================
+*/
+void R_ChangeDisplaySettingsFast( int width, int height )
+{
+	//Cvar_SetFloat("vid_mode", VID_NOMODE);
+	Cvar_SetFloat("width", width);
+	Cvar_SetFloat("height", height);
+
+	glState.width = width;
+	glState.height = height;
+
+	SCR_VidInit();
+}
+
+
 rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 {
 #ifdef XASH_SDL
@@ -1647,26 +1667,6 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 #endif // XASH_SDL
 	return rserr_ok;
 }
-
-/*
-==================
-R_ChangeDisplaySettingsFast
-
-Change window size fastly to custom values, without setting vid mode
-==================
-*/
-void R_ChangeDisplaySettingsFast( int width, int height )
-{
-	//Cvar_SetFloat("vid_mode", VID_NOMODE);
-	Cvar_SetFloat("width", width);
-	Cvar_SetFloat("height", height);
-
-	glState.width = width;
-	glState.height = height;
-
-	SCR_VidInit();
-}
-
 /*
 ==================
 VID_SetMode
