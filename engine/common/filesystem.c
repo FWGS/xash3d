@@ -1161,17 +1161,11 @@ void FS_CreateDefaultGameInfo( const char *filename )
 	Q_strncpy( defGI.basedir, "valve", sizeof( defGI.basedir ));
 	Q_strncpy( defGI.sp_entity, "info_player_start", sizeof( defGI.sp_entity ));
 	Q_strncpy( defGI.mp_entity, "info_player_deathmatch", sizeof( defGI.mp_entity ));
-#ifdef PANDORA
-        Q_strncpy( defGI.dll_path, LIBPATH, sizeof( defGI.dll_path ));
-        Q_strncpy( defGI.game_dll, LIBPATH "/" SERVERDLL, sizeof( defGI.game_dll ));
-
-#else
 	Q_strncpy( defGI.dll_path, "cl_dlls", sizeof( defGI.dll_path ));
 	Q_strncpy( defGI.dll_path, CLIENTDLL, sizeof( defGI.client_lib ));
 	Q_strncpy( defGI.game_dll, "dlls/hl.dll" , sizeof( defGI.game_dll ));
 	Q_strncpy( defGI.game_dll_osx, "dlls/hl.dylib", sizeof(defGI.game_dll_osx));
 	Q_strncpy( defGI.game_dll_linux, "dlls/hl.so", sizeof(defGI.game_dll_linux));
-#endif
 	Q_strncpy( defGI.startmap, "newmap", sizeof( defGI.startmap ));
 	Q_strncpy( defGI.iconpath, "game.ico", sizeof( defGI.iconpath ));
 
@@ -1407,7 +1401,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->title, "New Game", sizeof( GameInfo->title ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
-#if defined(__ANDROID__) || defined(PANDORA)
+#if defined(__ANDROID__)
 	Q_strncpy( GameInfo->dll_path, getenv("XASH3D_GAMELIBDIR"), sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 	Q_strncpy( GameInfo->game_dll, GameInfo->dll_path, sizeof( GameInfo->game_dll ));
@@ -1648,11 +1642,11 @@ void FS_LoadGameInfo( const char *rootfolder )
 	SI.GameInfo = SI.games[i];
 	if( !Sys_GetParmFromCmdLine( "-dll", SI.gamedll ) )
 	{
-#ifdef _WIN32
+#if defined(_WIN32)
 		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
 #elif defined(__APPLE__)
 		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
-#elif defined(__ANDROID__) || defined(PANDORA)
+#elif defined(__ANDROID__)
 		Q_strncpy( SI.gamedll, getenv("XASH3D_GAMELIBDIR"), sizeof( SI.gamedll ) );
 		Q_strncat( SI.gamedll, "/" SERVERDLL, sizeof( SI.gamedll ) );
 #else

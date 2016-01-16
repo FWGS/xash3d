@@ -1028,7 +1028,7 @@ const char *Com_NameForFunction( void *hInstance, void * function )
 	{
 		index = hInst->ordinals[i];
 
-		if(( function - hInst->funcBase ) == hInst->funcs[index] )
+		if(( (char*)function - hInst->funcBase ) == hInst->funcs[index] )
 			return hInst->names[i];
 	}
 	// couldn't find the function address to return name

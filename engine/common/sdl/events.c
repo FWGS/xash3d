@@ -12,6 +12,7 @@ static float oldVolume;
 static float oldMusicVolume;
 
 int IN_TouchEvent( qboolean down, int fingerID, float x, float y, float dx, float dy );
+void R_ChangeDisplaySettingsFast( int w, int h );
 
 void SDLash_EventFilter( SDL_Event* event)
 {
@@ -22,6 +23,7 @@ void SDLash_EventFilter( SDL_Event* event)
 	// CEnginePanel is visible by default, why?
  	VGUI_SurfaceWndProc(event);
 	#endif
+
 	switch ( event->type )
 	{
 		case SDL_MOUSEMOTION:
@@ -128,16 +130,17 @@ void SDLash_EventFilter( SDL_Event* event)
 				case SDL_WINDOWEVENT_CLOSE:
 					Sys_Quit();
 					break;
+				case SDL_WINDOWEVENT_RESIZED:
+					if( vid_fullscreen->integer != 0 ) break;
+					Cvar_SetFloat("vid_mode", -2.0f); // no mode
+					R_ChangeDisplaySettingsFast( event->window.data1, event->window.data2 );
+					break;
 				default:
 					break;
 				}
 			}
 	}
 }
-
-#ifdef PANDORA
-extern int noshouldermb;
-#endif
 
 void SDLash_KeyEvent(SDL_KeyboardEvent key)
 {
@@ -160,17 +163,9 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 	case SDLK_RALT:
 		keynum = K_ALT;	break;
 	case SDLK_RSHIFT:
-#ifdef PANDORA
-		keynum = (noshouldermb)?K_SHIFT:K_MOUSE2;
-		break;
-#endif
 	case SDLK_LSHIFT:
 		keynum = K_SHIFT; break;
 	case SDLK_RCTRL:
-#ifdef PANDORA
-		keynum = (noshouldermb)?K_SHIFT:K_MOUSE1;
-		break;
-#endif
 	case SDLK_LCTRL:
 		keynum = K_CTRL; break;
 	case SDLK_INSERT:

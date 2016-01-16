@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_APPLY	15
 #define ID_GRID		16
 #define ID_GRID_SIZE	17
+#define ID_IGNORE_MOUSE	18
 #define ID_YES	 	130
 #define ID_NO	 	131
 typedef struct
@@ -62,6 +63,7 @@ typedef struct
 	menuSlider_s	moveY;
 	menuCheckBox_s	enable;
 	menuCheckBox_s	grid;
+	menuCheckBox_s	nomouse;
 	menuPicButton_s	reset;
 	menuPicButton_s	save;
 	menuPicButton_s	remove;
@@ -115,6 +117,10 @@ static void UI_TouchOptions_GetProfileList( void )
 		COM_FileBase( filenames[j], uiTouchOptions.profileDesc[i] );
 		uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
 	}
+
+	// Overwrite "Presets:" line if there is no presets
+	if( i == 1 )
+		i = 0;
 
 	filenames = FS_SEARCH( "touch_profiles/*.cfg", &numFiles, TRUE );
 	j = 0;
@@ -177,6 +183,7 @@ static void UI_TouchOptions_GetConfig( void )
 
 
 	uiTouchOptions.enable.enabled = CVAR_GET_FLOAT( "touch_enable" );
+	uiTouchOptions.nomouse.enabled = CVAR_GET_FLOAT( "m_ignore" );
 	uiTouchOptions.grid.enabled = CVAR_GET_FLOAT( "touch_grid_enable" );
 	uiTouchOptions.gridsize.curValue = CVAR_GET_FLOAT( "touch_grid_count" );
 	UI_TouchOptions_SetConfig( );
@@ -201,6 +208,7 @@ static void UI_TouchOptions_SetConfig( void )
 	CVAR_SET_FLOAT( "touch_sidezone", ( 2.0 / uiTouchOptions.moveX.curValue ) / 100 );
 	CVAR_SET_FLOAT( "touch_forwardzone", ( 2.0 / uiTouchOptions.moveX.curValue ) / 100 );
 	CVAR_SET_FLOAT( "touch_enable", uiTouchOptions.enable.enabled );
+	CVAR_SET_FLOAT( "m_ignore", uiTouchOptions.nomouse.enabled );
 }
 
 static void UI_DeleteProfile()
@@ -239,6 +247,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 	{
 	case ID_ENABLE:
 	case ID_GRID:
+	case ID_IGNORE_MOUSE:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -250,15 +259,24 @@ static void UI_TouchOptions_Callback( void *self, int event )
 		// Update cvars based on controls
 		UI_TouchOptions_SetConfig();
 
-		// Scrolllist changed, update availiable options
-		uiTouchOptions.remove.generic.flags |= QMF_GRAYED;
-		if( uiTouchOptions.profiles.curItem > uiTouchOptions.firstProfile )
-			uiTouchOptions.remove.generic.flags &= ~QMF_GRAYED;
+		if( item->id == ID_PROFILELIST )
+		{
+			char curprofile[256];
+			int isCurrent;
+			COM_FileBase( CVAR_GET_STRING( "touch_config_file" ), curprofile );
+			isCurrent = !strcmp( curprofile, uiTouchOptions.profileDesc[ uiTouchOptions.profiles.curItem ]);
 
-		uiTouchOptions.apply.generic.flags &= ~QMF_GRAYED;
+			// Scrolllist changed, update availiable options
+			uiTouchOptions.remove.generic.flags |= QMF_GRAYED;
+			if( ( uiTouchOptions.profiles.curItem > uiTouchOptions.firstProfile ) && !isCurrent )
+				uiTouchOptions.remove.generic.flags &= ~QMF_GRAYED;
 
-		if( uiTouchOptions.profiles.curItem == 0 || uiTouchOptions.profiles.curItem == uiTouchOptions.firstProfile -1 )
-			uiTouchOptions.apply.generic.flags |= QMF_GRAYED;
+			uiTouchOptions.apply.generic.flags &= ~QMF_GRAYED;
+
+			if( uiTouchOptions.profiles.curItem == 0 || uiTouchOptions.profiles.curItem == uiTouchOptions.firstProfile -1
+					|| isCurrent )
+				uiTouchOptions.apply.generic.flags |= QMF_GRAYED;
+		}
 		return;
 	}
 
@@ -522,7 +540,16 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.enable.generic.y = 650;
 	uiTouchOptions.enable.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.enable.generic.statusText = "enable/disable touch controls";
-	
+
+	uiTouchOptions.nomouse.generic.id = ID_IGNORE_MOUSE;
+	uiTouchOptions.nomouse.generic.type = QMTYPE_CHECKBOX;
+	uiTouchOptions.nomouse.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiTouchOptions.nomouse.generic.name = "Ignore Mouse";
+	uiTouchOptions.nomouse.generic.x = 680;
+	uiTouchOptions.nomouse.generic.y = 590;
+	uiTouchOptions.nomouse.generic.callback = UI_TouchOptions_Callback;
+	uiTouchOptions.nomouse.generic.statusText = "Ignore mouse input";
+
 	uiTouchOptions.profiles.generic.id = ID_PROFILELIST;
 	uiTouchOptions.profiles.generic.type = QMTYPE_SCROLLLIST;
 	uiTouchOptions.profiles.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_SMALLFONT;
@@ -629,6 +656,7 @@ static void UI_TouchOptions_Init( void )
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.moveX );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.moveY );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.enable );
+	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.nomouse );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.reset );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.profiles );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.save );

@@ -401,12 +401,12 @@ static void UI_TouchButtons_Callback( void *self, int event )
 		if( strlen(uiTouchButtons.name.buffer) > 0)
 		{
 			char command[256];
-			snprintf( command, 256, "touch_addbutton %s %s %s\n", uiTouchButtons.name.buffer,
+			snprintf( command, 256, "touch_addbutton \"%s\" \"%s\" \"%s\"\n", uiTouchButtons.name.buffer,
 					  uiTouchButtons.texture.buffer, uiTouchButtons.command.buffer );
 			CLIENT_COMMAND(0, command);
-			snprintf( command, 256, "touch_setflags %s %i\n", uiTouchButtons.name.buffer, uiTouchButtons.curflags );
+			snprintf( command, 256, "touch_setflags \"%s\" %i\n", uiTouchButtons.name.buffer, uiTouchButtons.curflags );
 			CLIENT_COMMAND(0, command);
-			snprintf( command, 256, "touch_setcolor %s %d %d %d %d\n", uiTouchButtons.name.buffer, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
+			snprintf( command, 256, "touch_setcolor \"%s\" %d %d %d %d\n", uiTouchButtons.name.buffer, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
 			CLIENT_COMMAND(1, command);
 			uiTouchButtons.name.buffer[0] = 0;
 			uiTouchButtons.name.cursor = 0;
@@ -414,13 +414,13 @@ static void UI_TouchButtons_Callback( void *self, int event )
 		else
 		{
 			char command[256];
-			snprintf( command, 256, "touch_settexture %s %s\n", uiTouchButtons.selectedName, uiTouchButtons.texture.buffer );
+			snprintf( command, 256, "touch_settexture \"%s\" \"%s\"\n", uiTouchButtons.selectedName, uiTouchButtons.texture.buffer );
 			CLIENT_COMMAND(0, command);
-			snprintf( command, 256, "touch_setcommand %s %s\n", uiTouchButtons.selectedName, uiTouchButtons.texture.buffer );
+			snprintf( command, 256, "touch_setcommand \"%s\" \"%s\"\n", uiTouchButtons.selectedName, uiTouchButtons.texture.buffer );
 			CLIENT_COMMAND(0, command);
-			snprintf( command, 256, "touch_setflags %s %i\n", uiTouchButtons.selectedName, uiTouchButtons.curflags );
+			snprintf( command, 256, "touch_setflags \"%s\" %i\n", uiTouchButtons.selectedName, uiTouchButtons.curflags );
 			CLIENT_COMMAND(0, command);
-			snprintf( command, 256, "touch_setcolor %s %d %d %d %d\n", uiTouchButtons.selectedName, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
+			snprintf( command, 256, "touch_setcolor \"%s\" %d %d %d %d\n", uiTouchButtons.selectedName, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
 			CLIENT_COMMAND(1, command);
 		}
 		UI_TouchButtons_GetButtonList();
@@ -430,7 +430,7 @@ static void UI_TouchButtons_Callback( void *self, int event )
 		break;
 	case ID_SELECT:
 		UI_TouchButtons_DisableButtons();
-		uiFileDialogGlobal.npatterns = 6;
+		uiFileDialogGlobal.npatterns = 7;
 		strcpy( uiFileDialogGlobal.patterns[0], "touch/*.tga");
 		strcpy( uiFileDialogGlobal.patterns[1], "touch_default/*.tga");
 		strcpy( uiFileDialogGlobal.patterns[2], "gfx/touch/*");
@@ -651,7 +651,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.name.generic.width = 205;
 	uiTouchButtons.name.generic.height = 32;
 	uiTouchButtons.name.generic.callback = UI_TouchButtons_Callback;
-	uiTouchButtons.name.maxLength = 16;
+	uiTouchButtons.name.maxLength = 255;
 
 	uiTouchButtons.command.generic.id = ID_COMMAND;
 	uiTouchButtons.command.generic.type = QMTYPE_FIELD;
@@ -662,7 +662,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.command.generic.width = 205;
 	uiTouchButtons.command.generic.height = 32;
 	uiTouchButtons.command.generic.callback = UI_TouchButtons_Callback;
-	uiTouchButtons.command.maxLength = 16;
+	uiTouchButtons.command.maxLength = 255;
 
 	uiTouchButtons.texture.generic.id = ID_TEXTURE;
 	uiTouchButtons.texture.generic.type = QMTYPE_FIELD;
@@ -673,7 +673,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.texture.generic.width = 205;
 	uiTouchButtons.texture.generic.height = 32;
 	uiTouchButtons.texture.generic.callback = UI_TouchButtons_Callback;
-	uiTouchButtons.texture.maxLength = 160;
+	uiTouchButtons.texture.maxLength = 255;
 
 	uiTouchButtons.msgBox.generic.id = ID_MSGBOX;
 	uiTouchButtons.msgBox.generic.type = QMTYPE_ACTION;
