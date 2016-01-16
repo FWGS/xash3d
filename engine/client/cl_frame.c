@@ -26,10 +26,6 @@ GNU General Public License for more details.
 
 #define MAX_FORWARD		6
 
-#ifdef XASH_SDL
-extern convar_t *m_valvehack; // defined in input.c
-#endif
-
 qboolean CL_IsPlayerIndex( int idx )
 {
 	if( idx > 0 && idx <= cl.maxclients )
@@ -1149,9 +1145,7 @@ void CL_ExtraUpdate( void )
 {
 	if( !cls.initialized )
 		return;
-#ifdef XASH_SDL
-	if( !m_valvehack->integer )
-#endif
+	if( !m_ignore->value )
 		clgame.dllFuncs.IN_Accumulate();
 	S_ExtraUpdate();
 }
