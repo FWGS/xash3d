@@ -2628,7 +2628,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		"\\os\\%c"					// server OS?
 		"\\secure\\0"				// server anti-cheat? VAC?
 		"\\lan\\0"					// is LAN server?
-		"\\version\\%f"				// server version
+		"\\version\\%s"				// server version
 		"\\region\\255"				// server region
 		"\\product\\%s\n",			// product? Where is the difference with gamedir?
 		PROTOCOL_VERSION,
