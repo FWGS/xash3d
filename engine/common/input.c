@@ -471,15 +471,8 @@ void IN_MouseEvent( int mstate )
 			}
 			if ( !ignore )
 			{
-				if( m_enginemouse->integer )
-				{
-					int mouse_x, mouse_y;
-					SDL_GetRelativeMouseState( &mouse_x, &mouse_y );
-					cl.refdef.cl_viewangles[PITCH] += mouse_y * m_enginesens->value;
-					cl.refdef.cl_viewangles[PITCH] = bound( -90, cl.refdef.cl_viewangles[PITCH], 90 );
-					cl.refdef.cl_viewangles[YAW] -= mouse_x * m_enginesens->value;
-				}
-				else clgame.dllFuncs.IN_MouseEvent( mstate );
+				if( !m_enginemouse->integer )
+					clgame.dllFuncs.IN_MouseEvent( mstate );
 			}
 			else
 			{
@@ -734,17 +727,27 @@ Called from cl_main.c after generating command in client
 */
 void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 {
-	float forward = 0, side = 0;
+	float forward = 0, side = 0, dpitch = 0, dyaw = 0;
 	if(clgame.dllFuncs.pfnLookEvent)
 		return;
 	if(active)
 	{
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( frametime, &forward, &side, &cl.refdef.cl_viewangles[PITCH], &cl.refdef.cl_viewangles[YAW] );
+		IN_SDL_JoyMove( frametime, &forward, &side, &dpitch, &dyaw );
 #endif
-		IN_TouchMove( &forward, &side, &cl.refdef.cl_viewangles[YAW], &cl.refdef.cl_viewangles[PITCH] );
+		IN_TouchMove( &forward, &side, &dyaw, &dpitch );
 		IN_JoyAppendMove( cmd, forward, side );
-
+		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
+		if( m_enginemouse->integer )
+		{
+			int mouse_x, mouse_y;
+			SDL_GetRelativeMouseState( &mouse_x, &mouse_y );
+			cl.refdef.cl_viewangles[PITCH] += mouse_y * sensitivity;
+			cl.refdef.cl_viewangles[YAW] -= mouse_x * sensitivity;
+		}
+		cl.refdef.cl_viewangles[YAW] += dyaw * sensitivity;
+		cl.refdef.cl_viewangles[PITCH] += dpitch * sensitivity;
+		cl.refdef.cl_viewangles[PITCH] = bound( -90, cl.refdef.cl_viewangles[PITCH], 90 );
 	}
 
 
