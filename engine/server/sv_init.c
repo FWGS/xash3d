@@ -637,7 +637,7 @@ void SV_InitGame( void )
 	}
 	else if( Cvar_VariableValue( "coop" ))
 	{
-		if( sv_maxclients->integer <= 1 || sv_maxclients->integer > 4 )
+		if( sv_maxclients->integer < 1 )
 			Cvar_FullSet( "maxplayers", "4", CVAR_LATCH );
 	}
 	else	
@@ -726,6 +726,14 @@ qboolean SV_NewGame( const char *mapName, qboolean loadGame )
 		S_StopAllSounds ();
 		SV_DeactivateServer ();
 	}
+
+	if( host_xashds_hacks->value )
+	{
+		Cbuf_InsertText(va("wait;rcon map %s\n", mapName));
+		Cbuf_AddText("wait;connect 127.0.0.1\n");
+		return true;
+	}
+
 
 	sv.loadgame = loadGame;
 	sv.background = false;

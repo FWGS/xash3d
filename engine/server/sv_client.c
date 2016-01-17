@@ -105,6 +105,12 @@ void SV_DirectConnect( netadr_t from )
 	int		challenge;
 	edict_t		*ent;
 
+	if( !svs.initialized )
+	{
+		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nServer not running any map!\n" );
+		return;
+	}
+
 	version = Q_atoi( Cmd_Argv( 1 ));
 
 	if( version != PROTOCOL_VERSION )

@@ -185,6 +185,14 @@ void SV_Map_f( void )
 		return;
 	}
 
+	if( host_xashds_hacks->value )
+	{
+		CL_Disconnect();
+		Cbuf_InsertText(va("wait;rcon map %s\n",Cmd_Argv( 1 )));
+		Cbuf_AddText("wait;connect 127.0.0.1\n");
+		return;
+	}
+
 	// hold mapname to other place
 	Q_strncpy( mapname, Cmd_Argv( 1 ), sizeof( mapname ));
 	
@@ -361,7 +369,24 @@ void SV_Load_f( void )
 		Msg( "Usage: load <savename>\n" );
 		return;
 	}
+
+	if( host_xashds_hacks->value )
+	{
+		Cbuf_InsertText(va("rcon load %s\n",Cmd_Argv( 1 )));
+		Cbuf_AddText("connect 127.0.0.1\n");
+		return;
+	}
+
+	if( host.type == HOST_DEDICATED )
+	{
+		SV_InactivateClients ();
+		SV_DeactivateServer ();
+	}
+
 	SV_LoadGame( Cmd_Argv( 1 ));
+
+	if( host.type == HOST_DEDICATED )
+		SV_ActivateServer();
 }
 
 /*
@@ -391,6 +416,12 @@ void SV_Save_f( void )
 	case 2: name = Cmd_Argv( 1 ); break;
 	default:
 		Msg( "Usage: save <savename>\n" );
+		return;
+	}
+
+	if( host_xashds_hacks->value )
+	{
+		Cbuf_InsertText(va("rcon save %s\n", Cmd_Argv( 1 )));
 		return;
 	}
 
@@ -459,6 +490,12 @@ void SV_ChangeLevel_f( void )
 	if( c < 2 )
 	{
 		Msg( "Usage: changelevel <map> [landmark]\n" );
+		return;
+	}
+
+	if( host_xashds_hacks->value )
+	{
+		Cbuf_InsertText(va("rcon changelevel %s %s\n",Cmd_Argv( 1 ), Cmd_Argv( 2 )));
 		return;
 	}
 
@@ -556,6 +593,12 @@ void SV_ChangeLevel2_f( void )
 	if( c < 2 )
 	{
 		Msg( "Usage: changelevel2 <map> [landmark]\n" );
+		return;
+	}
+
+	if( host_xashds_hacks->value )
+	{
+		Cbuf_InsertText(va("rcon changelevel2 %s %s\n",Cmd_Argv( 1 ), Cmd_Argv( 2 )));
 		return;
 	}
 
@@ -974,7 +1017,12 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "entpatch", SV_EntPatch_f, "write entity patch to allow external editing" );
 	Cmd_AddCommand( "edicts_info", SV_EdictsInfo_f, "show info about edicts" );
 	Cmd_AddCommand( "entity_info", SV_EntityInfo_f, "show more info about edicts" );
-
+	Cmd_AddCommand( "save", SV_Save_f, "save the game to a file" );
+	Cmd_AddCommand( "load", SV_Load_f, "load a saved game file" );
+	Cmd_AddCommand( "savequick", SV_QuickSave_f, "save the game to the quicksave" );
+	Cmd_AddCommand( "loadquick", SV_QuickLoad_f, "load a quick-saved game file" );
+	Cmd_AddCommand( "killsave", SV_DeleteSave_f, "delete a saved game file and saveshot" );
+	Cmd_AddCommand( "autosave", SV_AutoSave_f, "save the game to 'autosave' file" );
 	if( host.type == HOST_DEDICATED )
 	{
 		Cmd_AddCommand( "say", SV_ConSay_f, "send a chat message to everyone on the server" );
@@ -983,12 +1031,6 @@ void SV_InitOperatorCommands( void )
 	else
 	{
 		Cmd_AddCommand( "map_background", SV_MapBackground_f, "set background map" );
-		Cmd_AddCommand( "save", SV_Save_f, "save the game to a file" );
-		Cmd_AddCommand( "load", SV_Load_f, "load a saved game file" );
-		Cmd_AddCommand( "savequick", SV_QuickSave_f, "save the game to the quicksave" );
-		Cmd_AddCommand( "loadquick", SV_QuickLoad_f, "load a quick-saved game file" );
-		Cmd_AddCommand( "killsave", SV_DeleteSave_f, "delete a saved game file and saveshot" );
-		Cmd_AddCommand( "autosave", SV_AutoSave_f, "save the game to 'autosave' file" );
 	}
 }
 

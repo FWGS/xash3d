@@ -349,6 +349,9 @@ void SV_ReadPackets( void )
 			continue;
 		}
 
+		if( !svs.initialized )
+			continue;
+
 		// read the qport out of the message so we can fix up
 		// stupid address translating routers
 		BF_Clear( &net_message );
@@ -594,7 +597,11 @@ Host_ServerFrame
 void Host_ServerFrame( void )
 {
 	// if server is not active, do nothing
-	if( !svs.initialized ) return;
+	if( !svs.initialized )
+	{
+		SV_ReadPackets (); // allow rcon
+		return;
+	}
 
 	svgame.globals->frametime = host.frametime;
 
