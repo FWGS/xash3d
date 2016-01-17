@@ -50,6 +50,16 @@ void UI_SetActiveMenu( qboolean fActive )
 {
 	movie_state_t	*cin_state;
 
+	if( host_xashds_hacks->value )
+	{
+		if( !cl.refdef.paused && !cls.changelevel && fActive )
+		{
+			Cbuf_InsertText("pause\n");
+			Cbuf_Execute();
+		}
+	}
+
+
 	if( !menu.hInstance )
 	{
 		if( !fActive )

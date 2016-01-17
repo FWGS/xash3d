@@ -792,6 +792,8 @@ void CL_ParseBaseline( sizebuf_t *msg )
 	if( newnum >= clgame.maxEntities ) Host_Error( "CL_AllocEdict: no free edicts\n" );
 
 	ent = CL_EDICT_NUM( newnum );
+	if( !ent )
+		Host_Error( "CL_ParseBaseline: got invalid entity");
 	Q_memset( &ent->prevstate, 0, sizeof( ent->prevstate ));
 	ent->index = newnum;
 
