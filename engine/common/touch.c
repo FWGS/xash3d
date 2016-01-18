@@ -467,7 +467,7 @@ void IN_TouchSetCommand_f( void )
 {
 	if( Cmd_Argc() == 3 )
 	{
-		IN_TouchSetTexture( Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
+		IN_TouchSetCommand( Cmd_Argv( 1 ), Cmd_Argv( 2 ) );
 		return;
 	}
 	Msg( "Usage: touch_command <name> <command>\n" );
