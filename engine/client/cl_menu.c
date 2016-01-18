@@ -767,19 +767,6 @@ static void pfnMemFree( void *mem, const char *filename, const int fileline )
 
 /*
 =========
-pfnSDL_free
-
-=========
-*/
-static void pfnSDL_free( void *mem )
-{
-#ifdef XASH_SDL
-	SDL_free( mem );
-#endif
-}
-
-/*
-=========
 pfnGetGameInfo
 
 =========
@@ -840,7 +827,6 @@ static char *pfnGetClipboardData( void )
 	char *cb, *copy; 
 	cb = Sys_GetClipboardData();
 	copy = copystring( cb );
-	SDL_free( cb );
 	return copy;
 }
 
