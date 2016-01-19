@@ -732,6 +732,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		return;
 	if(active)
 	{
+		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
 #ifdef XASH_SDL
 		IN_SDL_JoyMove( frametime, &forward, &side, &dpitch, &dyaw );
 		if( m_enginemouse->integer )
@@ -744,7 +745,6 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 #endif
 		IN_TouchMove( &forward, &side, &dyaw, &dpitch );
 		IN_JoyAppendMove( cmd, forward, side );
-		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
 
 		cl.refdef.cl_viewangles[YAW] += dyaw * sensitivity;
 		cl.refdef.cl_viewangles[PITCH] += dpitch * sensitivity;
