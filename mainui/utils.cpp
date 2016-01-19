@@ -349,6 +349,7 @@ void UI_ScrollList_Init( menuScrollList_s *sl )
 //	sl->curItem = 0;
 	sl->topItem = 0;
 	sl->numItems = 0;
+	sl->highlight = -1;
 
 	// count number of items
 	while( sl->itemNames[sl->numItems] )
@@ -594,11 +595,15 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		{
 			if( !sl->itemNames[i] )
 				break;		// Done
+			// hightlighted item
+			if( i == sl->highlight )
+			{
+				UI_FillRect( sl->generic.x, y, sl->generic.width - arrowWidth, sl->generic.charHeight, 0xFF383838 );
+			}
 
 			if( i == sl->curItem )
 			{
 				UI_FillRect( sl->generic.x, y, sl->generic.width - arrowWidth, sl->generic.charHeight, selColor );
-				break;
 			}
 		}
 	}

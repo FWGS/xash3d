@@ -207,6 +207,8 @@ typedef struct
 	int		scrollBarWidth;
 	int		scrollBarHeight;
 	int		scrollBarSliding;
+// highlight // mittorn
+	int		highlight;
 } menuScrollList_s;
 
 typedef struct

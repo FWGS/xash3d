@@ -133,8 +133,7 @@ static void UI_TouchOptions_GetProfileList( void )
 	strncpy( uiTouchOptions.profileDesc[i], "default", CS_SIZE );
 	uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
 
-	if( !strcmp( "touch.cfg", curprofile ) )
-		uiTouchOptions.profiles.curItem = i;
+	uiTouchOptions.profiles.highlight = i;
 
 	uiTouchOptions.firstProfile = i;
 	i++;
@@ -146,14 +145,12 @@ static void UI_TouchOptions_GetProfileList( void )
 		COM_FileBase( filenames[j], uiTouchOptions.profileDesc[i] );
 		uiTouchOptions.profileDescPtr[i] = uiTouchOptions.profileDesc[i];
 		if( !strcmp( filenames[j], curprofile ) )
-			uiTouchOptions.profiles.curItem = i;
+			uiTouchOptions.profiles.highlight = i;
 	}
 	uiTouchOptions.profiles.numItems = i;
 
 	uiTouchOptions.remove.generic.flags |= QMF_GRAYED;
-
-	if( uiTouchOptions.profiles.curItem > uiTouchOptions.firstProfile )
-		uiTouchOptions.remove.generic.flags &= ~QMF_GRAYED;
+	uiTouchOptions.apply.generic.flags |= QMF_GRAYED;
 
 	if( uiTouchOptions.profiles.generic.charHeight )
 	{
@@ -164,6 +161,7 @@ static void UI_TouchOptions_GetProfileList( void )
 
 	for ( ; i < UI_MAXGAMES; i++ )
 		uiTouchOptions.profileDescPtr[i] = NULL;
+	uiTouchOptions.profiles.curItem = uiTouchOptions.profiles.highlight;
 
 
 	uiTouchOptions.profiles.itemNames = (const char **)uiTouchOptions.profileDescPtr;
@@ -272,9 +270,9 @@ static void UI_TouchOptions_Callback( void *self, int event )
 				uiTouchOptions.remove.generic.flags &= ~QMF_GRAYED;
 
 			uiTouchOptions.apply.generic.flags &= ~QMF_GRAYED;
-
-			if( uiTouchOptions.profiles.curItem == 0 || uiTouchOptions.profiles.curItem == uiTouchOptions.firstProfile -1
-					|| isCurrent )
+			if( uiTouchOptions.profiles.curItem == 0 || uiTouchOptions.profiles.curItem == uiTouchOptions.firstProfile -1 )
+				uiTouchOptions.profiles.curItem ++;
+			if( isCurrent )
 				uiTouchOptions.apply.generic.flags |= QMF_GRAYED;
 		}
 		return;
@@ -360,15 +358,6 @@ static void UI_TouchOptions_Callback( void *self, int event )
 				snprintf( name, 256, "touch_profiles/%s.cfg", uiTouchOptions.profilename.buffer );
 				CVAR_SET_STRING("touch_config_file", name );
 			}
-			while( FILE_EXISTS( CVAR_GET_STRING( "touch_config_file" ) ) )
-			{
-				char copystring[256];
-				char filebase[256];
-				COM_FileBase( CVAR_GET_STRING( "touch_config_file" ), filebase );
-				if( snprintf( copystring, 256, "touch_profiles/%s (new).cfg", filebase ) > 255 )
-					break;
-				CVAR_SET_STRING( "touch_config_file", copystring );
-			}
 			CLIENT_COMMAND( 1, "touch_writeconfig\n" );
 		}
 		UI_TouchOptions_GetProfileList();
@@ -377,12 +366,14 @@ static void UI_TouchOptions_Callback( void *self, int event )
 		{
 
 			int i = uiTouchOptions.profiles.curItem;
+
+			// preset selected
 			if( i > 0 && i < uiTouchOptions.firstProfile - 1 )
 			{
 				char command[256];
 				char *curconfig = CVAR_GET_STRING( "touch_config_file" );
 				snprintf( command, 256, "exec \"touch_presets/%s\"\n", uiTouchOptions.profileDesc[ i ] );
-				CLIENT_COMMAND( 0,  command );
+				CLIENT_COMMAND( 1,  command );
 
 				while( FILE_EXISTS( curconfig ) )
 				{
@@ -391,7 +382,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 
 					COM_FileBase( curconfig, filebase );
 
-					if( snprintf( copystring, 256, "%s (new)", filebase ) > 255 )
+					if( snprintf( copystring, 256, "touch_profiles/%s (new).cfg", filebase ) > 255 )
 						break;
 
 					CVAR_SET_STRING( "touch_config_file", copystring );
@@ -399,13 +390,24 @@ static void UI_TouchOptions_Callback( void *self, int event )
 				}
 			}
 			else if( i == uiTouchOptions.firstProfile )
-				CLIENT_COMMAND( 0,"exec touch.cfg\n" );
+				CLIENT_COMMAND( 1,"exec touch.cfg\n" );
 			else if( i > uiTouchOptions.firstProfile )
 			{
 				char command[256];
 				snprintf( command, 256, "exec \"touch_profiles/%s\"\n", uiTouchOptions.profileDesc[ i ] );
-				CLIENT_COMMAND( 0,  command );
+				CLIENT_COMMAND( 1,  command );
 			}
+
+			// try save config
+			CLIENT_COMMAND( 1,  "touch_writeconfig\n" );
+
+			// check if it failed ant reset profile to default if it is
+			if( !FILE_EXISTS( CVAR_GET_STRING( "touch_config_file" ) ))
+			{
+				CVAR_SET_STRING( "touch_config_file", "touch.cfg" );
+				uiTouchOptions.profiles.curItem = uiTouchOptions.firstProfile;
+			}
+			UI_TouchOptions_GetProfileList();
 		}
 	}
 }
@@ -670,6 +672,7 @@ static void UI_TouchOptions_Init( void )
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.promptMessage );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.no );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.yes );
+	UI_TouchOptions_GetProfileList();
 
 }
 
