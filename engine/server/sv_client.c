@@ -239,7 +239,7 @@ gotnewcl:
 
 	if( ( sv_maxclients->integer > 1 ) && ent->pvPrivateData )
 	{
-		// Force this client data
+		// Force clean this client data
 		if( sv_clientclean->integer & 1 )
 		{
 			if( ent->pvPrivateData != NULL )
@@ -252,7 +252,7 @@ gotnewcl:
 				Mem_Free( ent->pvPrivateData );
 				ent->pvPrivateData = NULL;
 			}
-			// HACK: invalidate serial number
+			// invalidate serial number
 			ent->serialnumber++;
 		}
 		// "3" enables both clean and disconnect
