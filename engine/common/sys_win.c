@@ -90,11 +90,16 @@ create buffer, that contain clipboard
 */
 char *Sys_GetClipboardData( void )
 {
+	static char data[1024] = "";
 #ifdef XASH_SDL
-	return SDL_GetClipboardText();
-#else
-	return NULL;
+	char *buffer = SDL_GetClipboardText();
+	if( buffer )
+	{
+		Q_strncpy( data, buffer = SDL_GetClipboardText(), 1024 );
+		SDL_free( buffer );
+	}
 #endif
+	return data;
 }
 
 /*
