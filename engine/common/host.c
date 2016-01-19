@@ -302,6 +302,7 @@ void Host_Minimize_f( void )
 
 qboolean Host_IsLocalGame( void )
 {
+	if( host.type != HOST_DEDICATED )
 	if( CL_Active() && SV_Active() && CL_GetMaxClients() == 1 )
 		return true;
 	return false;
