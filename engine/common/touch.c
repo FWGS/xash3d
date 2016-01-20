@@ -277,6 +277,42 @@ void IN_TouchExportConfig_f( void )
 	else MsgDev( D_ERROR, "Couldn't write %s.\n", name );
 }
 
+void IN_TouchGenetateCode_f( void )
+{
+	touchbutton2_t *button;
+	rgba_t c = {0,0,0,0};
+
+	if( Cmd_Argc() != 1 )
+	{
+		Msg( "Usage: touch_generate_code\n" );
+		return;
+	}
+
+	if( !touch.first ) return;
+
+	for( button = touch.first; button; button = button->next )
+	{
+		float aspect;
+		int flags = button->flags;
+		if( flags & TOUCH_FL_CLIENT )
+			continue; //skip temporary buttons
+		if( flags & TOUCH_FL_DEF_SHOW )
+			flags &= ~TOUCH_FL_HIDE;
+		if( flags & TOUCH_FL_DEF_HIDE )
+			flags |= TOUCH_FL_HIDE;
+
+		aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_H/SCR_W) );
+		if( Q_memcmp( &c, &B(color), sizeof( rgba_t ) ) )
+		{
+			Msg( "MakeRGBA( color, %d, %d, %d, %d );\n", B(color[0]), B(color[1]), B(color[2]), B(color[3]) );
+			Q_memcpy( &c, &B(color), sizeof( rgba_t ) );
+		}
+		Msg( "TOUCH_ADDDEFAULT( \"%s\", \"%s\", \"%s\", %f, %f, %f, %f, color, %d, %f, %d );\n",
+			B(name), B(texturefile), B(command),
+			B(x1), B(y1), B(x2), B(y2), (B(type) == touch_command)?(fabs( aspect  - 1.0f) < 0.0001)?2:1:0, aspect, flags );
+	}
+}
+
 void IN_TouchRoundAll_f( void )
 {
 	touchbutton2_t *button;
@@ -539,7 +575,7 @@ void IN_TouchLoadDefaults_f( void )
 			  y2 = g_DefaultButtons[i].y2; 
 		
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
-		if( g_DefaultButtons[i].round == round_aspect )
+		if( g_DefaultButtons[i].aspect && g_DefaultButtons[i].round == round_aspect )
 		if( g_DefaultButtons[i].texturefile[0] == '#' )
 			y2 = y1 + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight ) * g_DefaultButtons[i].aspect + touch.swidth*2/SCR_H;
 		else
@@ -691,6 +727,7 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_reloadconfig", IN_TouchReloadConfig_f, "load config, not saving changes" );
 	Cmd_AddCommand( "touch_writeconfig", IN_TouchWriteConfig, "save current config" );
 	Cmd_AddCommand( "touch_deleteprofile", IN_TouchDeleteProfile_f, "delete profile by name" );
+	Cmd_AddCommand( "touch_generate_code", IN_TouchGenetateCode_f, "create code sample for mobility API" );
 	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
 	touch_in_menu = Cvar_Get( "touch_in_menu", "0", 0, "draw touch in menu (for internal use only)" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
@@ -1257,6 +1294,7 @@ void IN_TouchShutdown( void )
 	Cmd_RemoveCommand( "touch_setclientonly" );
 	Cmd_RemoveCommand( "touch_reloadconfig" );
 	Cmd_RemoveCommand( "touch_writeconfig" );
+	Cmd_RemoveCommand( "touch_generate_code" );
 
 	touch.initialized = false;
 	Mem_FreePool( &touch.mempool );
