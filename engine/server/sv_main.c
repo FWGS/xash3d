@@ -88,6 +88,7 @@ convar_t	*skill;
 convar_t	*coop;
 convar_t	*sv_skipshield; // HACK for shield
 convar_t	*sv_trace_messages;
+convar_t	*sv_master;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -649,8 +650,8 @@ void Master_Add( void )
 
 	NET_Config( true ); // allow remote
 
-	if( !NET_StringToAdr( MASTERSERVER_ADR, &adr ))
-		MsgDev( D_INFO, "Can't resolve adr: %s\n", MASTERSERVER_ADR );
+	if( !NET_StringToAdr( sv_master->string, &adr ))
+		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
 
 	NET_SendPacket( NS_SERVER, 1, "q", adr );
 }
@@ -812,6 +813,7 @@ void SV_Init( void )
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
 	sv_skipshield = Cvar_Get("sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
 	sv_trace_messages = Cvar_Get("sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)");
+	sv_master = Cvar_Get("sv_master", MASTERSERVER_ADR, CVAR_ARCHIVE, "master server address" );
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
