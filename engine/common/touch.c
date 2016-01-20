@@ -113,25 +113,8 @@ typedef struct touchdefaultbutton_s
 	int flags;
 } touchdefaultbutton_t;
 
-touchdefaultbutton_t g_DefaultButtons[256] = {
-{"look", "", "_look", 0.5, 0.0, 1.0, 1.0, { 255, 255, 255, 255 }, round_none, 0, 0 },
-{"move", "", "_move", 0.0, 0.0, 0.5, 1.0, { 255, 255, 255, 255 }, round_none, 0, 0 },
-{"invnext", "touch_default/next_weap.tga", "invnext", 0.000000, 0.530200, 0.120000, 0.757428, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"invprev", "touch_default/prev_weap.tga", "invprev", 0.000000, 0.075743, 0.120000, 0.302971, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"edit", "touch_default/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_DEF_SHOW },
-{"use", "touch_default/use.tga", "+use", 0.880000, 0.454457, 1.000000, 0.681685, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"jump", "touch_default/jump.tga", "+jump", 0.880000, 0.227228, 1.000000, 0.454457, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"attack", "touch_default/shoot.tga", "+attack", 0.760000, 0.530200, 0.880000, 0.757428, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"attack2", "touch_default/shoot_alt.tga", "+attack2", 0.760000, 0.302971, 0.880000, 0.530200, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"loadquick", "touch_default/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_SP },
-{"savequick", "touch_default/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_SP },
-{"duck", "touch_default/crouch.tga", "+duck", 0.280000, 0.757428, 0.400000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"messagemode", "touch_default/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.135271, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_MP },
-{"reload", "touch_default/reload.tga", "+reload", 0.000000, 0.302971, 0.120000, 0.530200, { 255, 255, 255, 255 }, round_aspect, 1, 0 },
-{"show_numbers", "touch_default/show_weapons.tga", "exec touch_default/numbers.cfg", 0.440000, 0.833171, 0.520000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_HIDE },
-{"tduck", "touch_default/tduck.tga", ";+duck", 0.220000, 0.871042, 0.280000, 0.984656, { 255, 255, 255, 255 }, round_aspect, 1, TOUCH_FL_HIDE },
-};
-int g_LastDefaultButton = 16;
+touchdefaultbutton_t g_DefaultButtons[256];
+int g_LastDefaultButton;
 
 convar_t *touch_pitch;
 convar_t *touch_yaw;
@@ -695,6 +678,7 @@ void IN_TouchDeleteProfile_f( void )
 
 void IN_TouchInit( void )
 {
+	rgba_t color;
 	if( touch.initialized )
 		return;
 	touch.mempool = Mem_AllocPool( "Touch" );
@@ -706,6 +690,29 @@ void IN_TouchInit( void )
 	touch.clientonly = false;
 	MakeRGBA( touch.scolor, 255, 255, 255, 255 );
 	touch.swidth = 1;
+	g_LastDefaultButton = 0;
+
+	// fill default buttons list
+	MakeRGBA( color, 255, 255, 255, 255 );
+	IN_TouchAddDefaultButton( "look", "", "_look", 0.500000, 0.000000, 1.000000, 1, color, 0, 0, 0 );
+	IN_TouchAddDefaultButton( "move", "", "_move", 0.000000, 0.000000, 0.500000, 1, color, 0, 0, 0 );
+	IN_TouchAddDefaultButton( "invnext", "touch_default/next_weap.tga", "invnext", 0.000000, 0.530200, 0.120000, 0.757428, color, 2, 0.999998, 0 );
+	IN_TouchAddDefaultButton( "invprev", "touch_default/prev_weap.tga", "invprev", 0.000000, 0.075743, 0.120000, 0.302971, color, 2, 0.999998, 0 );
+	IN_TouchAddDefaultButton( "use", "touch_default/use.tga", "+use", 0.880000, 0.454457, 1.000000, 0.681685, color, 2, 0.999998, 0 );
+	IN_TouchAddDefaultButton( "jump", "touch_default/jump.tga", "+jump", 0.880000, 0.227228, 1.000000, 0.454457, color, 2, 1.000003, 0 );
+	IN_TouchAddDefaultButton( "attack", "touch_default/shoot.tga", "+attack", 0.760000, 0.530200, 0.880000, 0.757428, color, 2, 0.999998, 0 );
+	IN_TouchAddDefaultButton( "attack2", "touch_default/shoot_alt.tga", "+attack2", 0.760000, 0.302971, 0.880000, 0.530200, color, 2, 1.000003, 0 );
+	IN_TouchAddDefaultButton( "loadquick", "touch_default/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.151486, color, 2, 1.000003, 16 );
+	IN_TouchAddDefaultButton( "savequick", "touch_default/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.151486, color, 2, 1.000002, 16 );
+	IN_TouchAddDefaultButton( "messagemode", "touch_default/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.151486, color, 2, 1.000002, 8 );
+	IN_TouchAddDefaultButton( "reload", "touch_default/reload.tga", "+reload", 0.000000, 0.302971, 0.120000, 0.530200, color, 2, 1.000003, 0 );
+	IN_TouchAddDefaultButton( "flashlight", "touch_default/flash_light_filled.tga", "impulse 100", 0.920000, 0.000000, 1.000000, 0.151486, color, 2, 1.000003, 0 );
+	IN_TouchAddDefaultButton( "scores", "touch_default/map.tga", "+showscores", 0.760000, 0.000000, 0.840000, 0.151486, color, 2, 1.000003, 8 );
+	IN_TouchAddDefaultButton( "show_numbers", "touch_default/show_weapons.tga", "exec touch_default/numbers.cfg", 0.440000, 0.833171, 0.520000, 0.984656, color, 2, 0.999996, 0 );
+	IN_TouchAddDefaultButton( "duck", "touch_default/crouch.tga", "+duck", 0.880000, 0.757428, 1.000000, 0.984656, color, 2, 0.999998, 0 );
+	IN_TouchAddDefaultButton( "tduck", "touch_default/tduck.tga", ";+duck", 0.560000, 0.833171, 0.620000, 0.946785, color, 2, 0.999998, 0 );
+	IN_TouchAddDefaultButton( "edit", "touch_default/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.151486, color, 2, 1.000003, 32 );
+
 	
 	Cmd_AddCommand( "touch_addbutton", IN_TouchAddButton_f, "Add native touch button" );
 	Cmd_AddCommand( "touch_removebutton", IN_TouchRemoveButton_f, "Remove native touch button" );
