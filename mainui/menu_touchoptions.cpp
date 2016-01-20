@@ -223,12 +223,12 @@ static void UI_DeleteProfile()
 
 static void UI_ResetButtons()
 {
-	CLIENT_COMMAND( 0, "touch_removeall\n" );
-	CLIENT_COMMAND( 0, "touch_loaddefaults\n" );
 	CLIENT_COMMAND( 0, "touch_pitch 90\n" );
 	CLIENT_COMMAND( 0, "touch_yaw 120\n" );
 	CLIENT_COMMAND( 0, "touch_forwardzone 0.06\n" );
 	CLIENT_COMMAND( 0, "touch_sidezone 0.06\n" );
+	CLIENT_COMMAND( 0, "touch_grid 1\n" );
+	CLIENT_COMMAND( 0, "touch_grid_count 50\n" );
 	UI_TouchOptions_GetConfig();
 }
 
@@ -361,6 +361,8 @@ static void UI_TouchOptions_Callback( void *self, int event )
 			CLIENT_COMMAND( 1, "touch_writeconfig\n" );
 		}
 		UI_TouchOptions_GetProfileList();
+		uiTouchOptions.profilename.buffer[0] = 0;
+		uiTouchOptions.profilename.cursor = uiTouchOptions.profilename.scroll = 0;
 		break;
 	case ID_APPLY:
 		{
@@ -408,6 +410,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 				uiTouchOptions.profiles.curItem = uiTouchOptions.firstProfile;
 			}
 			UI_TouchOptions_GetProfileList();
+			UI_TouchOptions_GetConfig();
 		}
 	}
 }
@@ -457,7 +460,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.done.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchOptions.done.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
 	uiTouchOptions.done.generic.x = 72;
-	uiTouchOptions.done.generic.y = 650;
+	uiTouchOptions.done.generic.y = 700;
 	uiTouchOptions.done.generic.name = "Done";
 	uiTouchOptions.done.generic.statusText = "Go back to the Touch Menu";
 	uiTouchOptions.done.generic.callback = UI_TouchOptions_Callback;
@@ -565,8 +568,8 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.reset.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchOptions.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchOptions.reset.generic.name = "Reset";
-	uiTouchOptions.reset.generic.x = 680;
-	uiTouchOptions.reset.generic.y = 390;
+	uiTouchOptions.reset.generic.x = 72;
+	uiTouchOptions.reset.generic.y = 640;
 	uiTouchOptions.reset.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.reset.generic.statusText = "Reset touch to default state";
 	uiTouchOptions.reset.pic = PIC_Load("gfx/shell/btn_touch_reset");
