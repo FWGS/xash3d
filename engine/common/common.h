@@ -369,6 +369,7 @@ typedef struct host_parm_s
 	qboolean enabledll;
 	char vguiloader[64];
 	qboolean textmode;
+	qboolean		vrmode;	// vr mode by Solexid
 } host_parm_t;
 
 extern host_parm_t	host;

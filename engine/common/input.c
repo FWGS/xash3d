@@ -784,6 +784,20 @@ void Host_InputFrame( void )
 			SDL_GetRelativeMouseState( &dx, &dy );
 			pitch += dy * m_pitch->value, yaw -= dx * m_yaw->value; //mouse speed
 		}
+
+	
+		
+#endif
+#ifdef __ANDROID__
+ float accelValues[3];
+  Android_JNI_GetAccelerometerValues(accelValues);
+  if(accelValues[2]<0||accelValues[2]>0){
+  //	MsgDev ( D_INFO, "%d Value 1\n",accelValues[1]);
+ // 	MsgDev ( D_INFO, "%d Value 2\n", accelValues[0]);
+cl.refdef.cl_viewangles[0]=accelValues[0];
+cl.refdef.cl_viewangles[1]=accelValues[1];
+cl.refdef.cl_viewangles[2]=accelValues[2];}
+
 #endif
 #endif
 		IN_TouchMove( &forward, &side, &yaw, &pitch );

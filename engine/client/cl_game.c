@@ -890,9 +890,10 @@ void CL_DrawCrosshair( void )
 	width = clgame.ds.rcCrosshair.right - clgame.ds.rcCrosshair.left;
 	height = clgame.ds.rcCrosshair.bottom - clgame.ds.rcCrosshair.top;
 
-	x = clgame.scrInfo.iWidth / 2; 
-	y = clgame.scrInfo.iHeight / 2;
-
+	if(host.vrmode)
+		{x = clgame.scrInfo.iWidth / 4; }
+	else
+		{x = clgame.scrInfo.iWidth / 2; }
 	// g-cont - cl.refdef.crosshairangle is the autoaim angle.
 	// if we're not using autoaim, just draw in the middle of the screen
 	if( !VectorIsNull( cl.refdef.crosshairangle ))
