@@ -70,7 +70,7 @@ endif()
 if(XASH_SDL)
     find_package(SDL2 REQUIRED)
 
-    include_directories(${SDL2_INCLUDE_DIRS})
+    include_directories(${SDL2_INCLUDE_DIR})
 
     add_definitions(-DXASH_SDL)
     target_link_libraries(${XASH_ENGINE_LIBRARY} ${SDL2_LIBRARY})
