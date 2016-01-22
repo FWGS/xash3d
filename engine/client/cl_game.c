@@ -889,7 +889,7 @@ void CL_DrawCrosshair( void )
 	// get crosshair dimension
 	width = clgame.ds.rcCrosshair.right - clgame.ds.rcCrosshair.left;
 	height = clgame.ds.rcCrosshair.bottom - clgame.ds.rcCrosshair.top;
-y = clgame.scrInfo.iHeight / 2;
+	y = clgame.scrInfo.iHeight / 2;
 	if(host.vrmode)
 		{x = clgame.scrInfo.iWidth / 4; }
 	else
