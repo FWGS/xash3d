@@ -925,6 +925,7 @@ void CL_DrawCrosshair( void )
 		SPR_EnableScissor( (clgame.scrInfo.iWidth-x) - 0.5f * width, y - 0.5f * height, width, height );
 		SPR_DrawGeneric( 0, (clgame.scrInfo.iWidth-x )- 0.5f * width, y - 0.5f * height, -1, -1, &clgame.ds.rcCrosshair );
 		SPR_DisableScissor();
+		
 		}
 }
 
