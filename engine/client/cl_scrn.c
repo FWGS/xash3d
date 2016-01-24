@@ -462,7 +462,7 @@ text to the screen.
 void SCR_UpdateScreen( void )
 {
 host.vrmode=Cvar_VariableValue("vrmode");
-if(host.vrmode)cl.scr_fov=90.0f;
+
 	if( !V_PreRender( )) return;
 
 	switch( cls.state )

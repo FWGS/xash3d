@@ -60,7 +60,15 @@ void V_SetupRefDef( void )
 	cl.refdef.nextView = 0;
 
 	SCR_AddDirtyPoint( 0, 0 );
-	SCR_AddDirtyPoint( scr_width->integer - 1, scr_height->integer - 1 );
+
+	if(host.vrmode)
+		{
+			SCR_AddDirtyPoint( (scr_width->integer - 1)/2, scr_height->integer - 1 );
+		}
+	else
+		{
+			SCR_AddDirtyPoint( scr_width->integer - 1, scr_height->integer - 1 );
+		}
 
 	if( cl.refdef.viewsize >= 120 )
 		sb_lines = 0;		// no status bar at all
@@ -89,8 +97,9 @@ void V_SetupRefDef( void )
 	cl.refdef.fov_x = cl.scr_fov; // this is a final fov value
 	cl.refdef.fov_y = V_CalcFov( &cl.refdef.fov_x, cl.refdef.viewport[2], cl.refdef.viewport[3] );
 
-	// adjust FOV for widescreen
-	if( glState.wideScreen && r_adjust_fov->integer )
+	// adjust FOV for widescreen, if vrmode not active
+
+	if( glState.wideScreen && r_adjust_fov->integer&&!host.vrmode )
 		V_AdjustFov( &cl.refdef.fov_x, &cl.refdef.fov_y, cl.refdef.viewport[2], cl.refdef.viewport[3], false );
 
 	if( CL_IsPredicted( ) && !cl.refdef.demoplayback )
@@ -352,10 +361,7 @@ Need to correct render Right Eye.*/
 	//	cl.refdef.viewangles[0] = cl.refdef.viewangles[0]+10;
 		
 		// calc FOV
-		cl.refdef.fov_x = cl.scr_fov; // this is a final fov value
-		cl.refdef.fov_y = V_CalcFov(&cl.refdef.fov_x, cl.refdef.viewport[2], cl.refdef.viewport[3]);
-		if (glState.wideScreen && r_adjust_fov->integer)
-			V_AdjustFov(&cl.refdef.fov_x, &cl.refdef.fov_y, cl.refdef.viewport[2], cl.refdef.viewport[3], false);
+	
 		R_RenderFrame(&cl.refdef, true);
 		}}
 		else 
