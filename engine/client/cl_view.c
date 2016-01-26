@@ -87,10 +87,10 @@ void V_SetupRefDef( void )
 		cl.refdef.viewport[3] = scr_height->integer;
 
 	cl.refdef.viewport[0] = (scr_width->integer - cl.refdef.viewport[2]) / 2;
-		if(		host.vrmode){
-	cl.refdef.viewport[2] = ((scr_width->integer)/2)* size / 100;
-	
-}
+	if(host.vrmode)
+	{
+		cl.refdef.viewport[2] = ((scr_width->integer)/2)* size / 100;
+	}
 	cl.refdef.viewport[1] = (scr_height->integer - sb_lines - cl.refdef.viewport[3]) / 2;
 
 	// calc FOV
@@ -345,6 +345,10 @@ void V_CalcRefDef( void )
 			}	
 			//Right eye	
 			{
+				cl.refdef.viewport[0] = (cl.refdef.viewport[2]) + (cl.refdef.viewport[0]);
+				cl.refdef.viewport[2] =  + (cl.refdef.viewport[2]);
+				RI.refdef.viewport[0]=	cl.refdef.viewport[0]-cl.refdef.viewport[2];
+				RI.refdef.viewport[2]=	cl.refdef.viewport[2]+cl.refdef.viewport[2];
 				vec3_t tmp;
 				VectorScale(tmright, 0.2, tmp);
 				VectorAdd(tmvieworg, tmp, tmvieworg);
@@ -353,8 +357,6 @@ void V_CalcRefDef( void )
 				VectorScale(tmforward, 1.5, tmp3);
 				VectorAdd(tmvieworg, tmp2, tmvieworg);
 				VectorAdd(tmvieworg, tmp3, cl.refdef.vieworg);
-				cl.refdef.viewport[0] = (cl.refdef.viewport[2]) + (cl.refdef.viewport[0]);
-				RI.viewport[2] = (cl.refdef.viewport[2]) + (cl.refdef.viewport[2]);
 				R_RenderFrame(&cl.refdef, true);
 			}
 		}
@@ -363,7 +365,7 @@ void V_CalcRefDef( void )
 		//No Vr mode
 		
 		{
-				R_RenderFrame(&cl.refdef, true);	
+			R_RenderFrame(&cl.refdef, true);	
 		}
 		
 		cl.refdef.onlyClientDraw = false;
