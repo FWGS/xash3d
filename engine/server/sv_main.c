@@ -653,7 +653,7 @@ void Master_Add( void )
 	if( !NET_StringToAdr( sv_master->string, &adr ))
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
 
-	NET_SendPacket( NS_SERVER, 1, "q", adr );
+	NET_SendPacket( NS_SERVER, 2, "q\xFF", adr );
 }
 
 
