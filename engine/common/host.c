@@ -45,6 +45,7 @@ convar_t	*host_cheats;
 convar_t	*host_maxfps;
 convar_t	*host_framerate;
 convar_t	*host_sleeptime;
+convar_t	*host_xashds_hacks;
 convar_t	*con_gamemaps;
 convar_t	*download_types;
 convar_t	*build, *ver;
@@ -301,6 +302,7 @@ void Host_Minimize_f( void )
 
 qboolean Host_IsLocalGame( void )
 {
+	if( host.type != HOST_DEDICATED )
 	if( CL_Active() && SV_Active() && CL_GetMaxClients() == 1 )
 		return true;
 	return false;
@@ -1004,6 +1006,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	build = Cvar_Get( "build", va( "%i", Q_buildnum()), CVAR_INIT, "returns a current build number" );
 	ver = Cvar_Get( "ver", va( "%i/%s.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
 	host_mapdesign_fatal = Cvar_Get( "host_mapdesign_fatal", "1", CVAR_ARCHIVE, "make map design errors fatal" );
+	host_xashds_hacks = Cvar_Get( "xashds_hacks", "0", CVAR_ARCHIVE, "hacks for xashds in singleplayer" );
 
 	// content control
 	Cvar_Get( "violence_hgibs", "1", CVAR_ARCHIVE, "show human gib entities" );
@@ -1055,6 +1058,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 			Msg( "Add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
 		else
 			Cbuf_AddText( va( "map %s\n", defaultmap ));
+		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
+		NET_Config( true );
 	}
 	else
 	{

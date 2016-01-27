@@ -948,12 +948,12 @@ void NET_Config( qboolean multiplayer )
 	static qboolean old_config;
 	static qboolean bFirst = true;
 
-	if( old_config == multiplayer )
+	if( old_config == multiplayer && host.type != HOST_DEDICATED )
 		return;
 
 	old_config = multiplayer;
 
-	if( !multiplayer )
+	if( !multiplayer && host.type != HOST_DEDICATED )
 	{	
 		int	i;
 

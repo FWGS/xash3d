@@ -924,17 +924,17 @@ CL_InternetServers_f
 void CL_InternetServers_f( void )
 {
 	netadr_t	adr;
-	char	fullquery[512] = "\x31\xFF" "0.0.0.0:0\0" "\\gamedir\\";
+	char	fullquery[512] = "1\xFF" "0.0.0.0:0\0" "\\gamedir\\";
 
 	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
 	NET_Config( true ); // allow remote
 
-	if( !NET_StringToAdr( MASTERSERVER_ADR, &adr ) )
-		MsgDev( D_INFO, "Can't resolve adr: %s\n", MASTERSERVER_ADR );
+	if( !NET_StringToAdr( sv_master->string, &adr ) )
+		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
 
-	Q_strcpy( &fullquery[21], GI->gamedir );
+	Q_strcpy( &fullquery[22], GI->gamedir );
 
-	NET_SendPacket( NS_CLIENT, Q_strlen( GI->gamedir ) + 22, fullquery, adr );
+	NET_SendPacket( NS_CLIENT, 23 + Q_strlen(GI->gamedir), fullquery, adr );
 }
 
 /*

@@ -611,22 +611,28 @@ int SV_IsValidSave( void )
 		}
 	}
 
-	if( !CL_Active( ))
+	if( host.type != HOST_DEDICATED )
 	{
-		Msg( "Can't save if not active.\n" );
-		return 0;
-	}
+		// Enable save/load in xashds
 
-	if( CL_IsIntermission( ))
-	{
-		Msg( "Can't save during intermission.\n" );
-		return 0;
-	}
+		if( !CL_Active( ))
+		{
+			Msg( "Can't save if not active.\n" );
+			return 0;
+		}
 
-	if( sv_maxclients->integer != 1 )
-	{
-		Msg( "Can't save multiplayer games.\n" );
-		return 0;
+		if( CL_IsIntermission( ))
+		{
+			Msg( "Can't save during intermission.\n" );
+			return 0;
+		}
+
+		if( sv_maxclients->integer != 1 )
+		{
+			Msg( "Can't save multiplayer games.\n" );
+			return 0;
+		}
+
 	}
 
 	if( svs.clients && svs.clients[0].state == cs_spawned )
@@ -2112,9 +2118,6 @@ qboolean SV_LoadGame( const char *pName )
 	GAME_HEADER	gameHeader;
 	string		name;
 
-	if( host.type == HOST_DEDICATED )
-		return false;
-
 	if( !pName || !pName[0] )
 		return false;
 
@@ -2160,10 +2163,13 @@ qboolean SV_LoadGame( const char *pName )
 		return false;
 	}
 
-	Cvar_FullSet( "coop", "0", CVAR_LATCH );
-	Cvar_FullSet( "teamplay", "0", CVAR_LATCH );
-	Cvar_FullSet( "deathmatch", "0", CVAR_LATCH );
-	Cvar_FullSet( "maxplayers", "1", CVAR_LATCH );
+	if( host.type != HOST_DEDICATED )
+	{
+		Cvar_FullSet( "coop", "0", CVAR_LATCH );
+		Cvar_FullSet( "teamplay", "0", CVAR_LATCH );
+		Cvar_FullSet( "deathmatch", "0", CVAR_LATCH );
+		Cvar_FullSet( "maxplayers", "1", CVAR_LATCH );
+	}
 
 	return Host_NewGame( gameHeader.mapName, true );
 }

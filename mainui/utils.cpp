@@ -1181,29 +1181,23 @@ const char *UI_Slider_Key( menuSlider_s *sl, int key, int down )
 	switch( key )
 	{
 	case K_MOUSE1:
-		//if(!( sl->generic.flags & QMF_HASMOUSEFOCUS ))
-		if( UI_CursorInRect( sl->generic.x2, sl->generic.y2 - 30, sl->generic.width2, sl->generic.height2 + 60 ) )
+		sl->keepSlider = false;
+		if( !UI_CursorInRect( sl->generic.x, sl->generic.y - 20, sl->generic.width, sl->generic.height + 40 ) )
 			return uiSoundNull;
 
 		// find the current slider position
 		sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue * sl->numSteps));		
-					if( UI_CursorInRect( sliderX, sl->generic.y2 - 30, sl->generic.width2, sl->generic.height + 60 ))
-                    {
-			sl->keepSlider = true;
-		}
-		else
-		{
-			int	dist, numSteps;
-
-			// immediately move slider into specified place
-			dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
-			numSteps = dist / (int)sl->drawStep;
-			sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
-
-			// tell menu about changes
-			if( sl->generic.callback )
-				sl->generic.callback( sl, QM_CHANGED );
-		}
+		sl->keepSlider = true;
+		int	dist, numSteps;
+		
+		// immediately move slider into specified place
+		dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
+		numSteps = dist / (int)sl->drawStep;
+		sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
+		
+		// tell menu about changes
+		if( sl->generic.callback )
+			sl->generic.callback( sl, QM_CHANGED );
 		break;
 	}
 	return uiSoundNull;
@@ -1232,14 +1226,18 @@ void UI_Slider_Draw( menuSlider_s *sl )
 	if( sl->keepSlider )
 	{
 		int	dist, numSteps;
-
-		// move slider follow the holded mouse button
-		dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
-		numSteps = dist / (int)sl->drawStep;
-		sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
-		
-		// tell menu about changes
-		if( sl->generic.callback ) sl->generic.callback( sl, QM_CHANGED );
+		if( !UI_CursorInRect( sl->generic.x, sl->generic.y - 40, sl->generic.width, sl->generic.height + 80 ) )
+			sl->keepSlider = false;
+		else
+		{
+			// move slider follow the holded mouse button
+			dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
+			numSteps = dist / (int)sl->drawStep;
+			sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
+			
+			// tell menu about changes
+			if( sl->generic.callback ) sl->generic.callback( sl, QM_CHANGED );
+		}
 	}
 
 	// keep value in range

@@ -150,7 +150,8 @@ extern convar_t	*host_limitlocal;
 extern convar_t	*host_maxfps;
 extern convar_t *net_qport;
 extern convar_t *download_types;
-
+extern convar_t	*host_xashds_hacks;
+extern convar_t	*sv_master;
 /*
 ==============================================================
 

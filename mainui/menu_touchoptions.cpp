@@ -204,7 +204,7 @@ static void UI_TouchOptions_SetConfig( void )
 	CVAR_SET_FLOAT( "touch_yaw", RemapVal( uiTouchOptions.lookX.curValue, 0.0f, 1.0f, 50.0f, 500.0f ));
 	CVAR_SET_FLOAT( "touch_pitch", RemapVal( uiTouchOptions.lookY.curValue, 0.0f, 1.0f, 50.0f, 500.0f ));
 	CVAR_SET_FLOAT( "touch_sidezone", ( 2.0 / uiTouchOptions.moveX.curValue ) / 100 );
-	CVAR_SET_FLOAT( "touch_forwardzone", ( 2.0 / uiTouchOptions.moveX.curValue ) / 100 );
+	CVAR_SET_FLOAT( "touch_forwardzone", ( 2.0 / uiTouchOptions.moveY.curValue ) / 100 );
 	CVAR_SET_FLOAT( "touch_enable", uiTouchOptions.enable.enabled );
 	CVAR_SET_FLOAT( "m_ignore", uiTouchOptions.nomouse.enabled );
 }
@@ -228,7 +228,7 @@ static void UI_ResetButtons()
 	CLIENT_COMMAND( 0, "touch_forwardzone 0.06\n" );
 	CLIENT_COMMAND( 0, "touch_sidezone 0.06\n" );
 	CLIENT_COMMAND( 0, "touch_grid 1\n" );
-	CLIENT_COMMAND( 0, "touch_grid_count 50\n" );
+	CLIENT_COMMAND( 1, "touch_grid_count 50\n" );
 	UI_TouchOptions_GetConfig();
 }
 
@@ -499,7 +499,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.moveX.generic.y = 400;
 	uiTouchOptions.moveX.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.moveX.generic.statusText = "Side move sensitivity";
-	uiTouchOptions.moveX.minValue = 0.0;
+	uiTouchOptions.moveX.minValue = 0.02;
 	uiTouchOptions.moveX.maxValue = 1.0;
 	uiTouchOptions.moveX.range = 0.05f;
 
@@ -511,7 +511,7 @@ static void UI_TouchOptions_Init( void )
 	uiTouchOptions.moveY.generic.y = 460;
 	uiTouchOptions.moveY.generic.callback = UI_TouchOptions_Callback;
 	uiTouchOptions.moveY.generic.statusText = "Forward move sensitivity";
-	uiTouchOptions.moveY.minValue = 0.0;
+	uiTouchOptions.moveY.minValue = 0.02;
 	uiTouchOptions.moveY.maxValue = 1.0;
 	uiTouchOptions.moveY.range = 0.05f;
 
