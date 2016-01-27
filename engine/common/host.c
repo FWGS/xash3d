@@ -868,12 +868,13 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.textmode = false;
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
-host.vrmode =false;
+	host.vrmode =false;
 
-	if (Sys_CheckParm("-vr")){
+	if (Sys_CheckParm("-vr"))
+	{
 		host.vrmode = true;
 
-Cvar_SetFloat("vrmode",1);
+		Cvar_SetFloat("vrmode",1);
 	}	
 	if( Sys_CheckParm( "-console" )) host.developer = 1;
 	if( Sys_CheckParm( "-dev" ))
@@ -997,8 +998,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cmd_AddCommand ( "crash", Host_Crash_f, "a way to force a bus error for development reasons");
 		Cmd_AddCommand ( "net_error", Net_Error_f, "send network bad message from random place");
 	}
-vrmode=Cvar_Get( "vrmode", "0", CVAR_ARCHIVE , "Virtual Reality mode" );
-if(host.vrmode)Cvar_SetFloat("vrmode",1);
+	vrmode=Cvar_Get( "vrmode", "0", CVAR_ARCHIVE , "Virtual Reality mode" );
+	if(host.vrmode)Cvar_SetFloat("vrmode",1);
 
 
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow usage of cheat commands and variables" );
