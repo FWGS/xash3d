@@ -1301,14 +1301,14 @@ void HTTP_Run( void )
 		if( res )
 		{
 #ifdef _WIN32
-			if( pWSAGetLastError() == WSAEINPROGRESS )
+			if( pWSAGetLastError() == WSAEINPROGRESS || pWSAGetLastError() == WSAEWOULDBLOCK )
 #else
 			if( errno == EINPROGRESS ) // Should give EWOOLDBLOCK if try recv too soon
 #endif
 				curfile->state = 3;
 			else
 			{
-				Msg( "HTTP: Cannot connect to %s\n","" );
+				Msg( "HTTP: Cannot connect to server: %s\n", NET_ErrorString( ) );
 				HTTP_FreeFile( curfile, true ); // Cannot connect
 				return;
 			}
@@ -1342,7 +1342,7 @@ void HTTP_Run( void )
 				if( errno != EWOULDBLOCK )
 #endif
 				{
-					Msg( "HTTP: Failed to send request:\n%s\n", header );
+					Msg( "HTTP: Failed to send request: %s\n", NET_ErrorString() );
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
