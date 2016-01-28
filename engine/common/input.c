@@ -21,7 +21,9 @@ GNU General Public License for more details.
 #include "client.h"
 #include "vgui_draw.h"
 #include "wrect.h"
-
+#ifdef XASH_SDL
+#include <SDL.h>
+#endif
 #ifdef _WIN32
 #include "windows.h"
 #endif
@@ -595,6 +597,11 @@ void IN_SDL_JoyInit( void )
 	joy_yaw = Cvar_Get( "joy_yaw" ,"200.0" , CVAR_ARCHIVE, "Joystick yaw sensitivity" );
 	joy_side = Cvar_Get( "joy_side" ,"1.0" , CVAR_ARCHIVE, "Joystick side sensitivity" );
 	joy_forward = Cvar_Get( "joy_forward" ,"1.0" , CVAR_ARCHIVE, "Joystick forward sensitivity" );
+	if( SDL_Init( SDL_INIT_JOYSTICK ) )
+	{
+		MsgDev( D_ERROR, "Joystick: SDL: %s \n", SDL_GetError() );
+		return;
+	}
 	IN_SDL_JoyOpen();
 }
 
@@ -624,7 +631,8 @@ void IN_Init( void )
 	cl_backspeed	= Cvar_Get( "cl_backspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default back move speed"  );
 	cl_sidespeed	= Cvar_Get( "cl_sidespeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default side move speed"  );
 #ifdef XASH_SDL
-	IN_SDL_JoyInit();
+	if( host.type != HOST_DEDICATED )
+		IN_SDL_JoyInit();
 #endif
 #ifdef USE_EVDEV
 	evdev_mousepath	= Cvar_Get( "evdev_mousepath", "", 0, "Path for evdev device node");

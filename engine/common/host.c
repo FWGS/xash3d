@@ -814,17 +814,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Setup_LDT_Keeper( ); // Must call before creating any thread
 #endif
 
-#ifdef XASH_SDL
-	if( SDL_Init( SDL_INIT_VIDEO |
-				SDL_INIT_TIMER |
-				SDL_INIT_AUDIO |
-				SDL_INIT_JOYSTICK |
-				SDL_INIT_EVENTS ))
-	{
-		Sys_Error( "SDL_Init: %s", SDL_GetError() );
-	}
-#endif
-
 	if( baseDir = getenv( "XASH3D_BASEDIR" ) )
 	{
 		Q_strncpy( host.rootdir, baseDir, sizeof(host.rootdir) );
@@ -884,7 +873,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 	if( !Sys_CheckParm( "-vguiloader" ) || !Sys_GetParmFromCmdLine( "-vguiloader", host.vguiloader ) )
 	{
-		Q_strcpy(host.vguiloader, VGUI_SUPPORT_DLL);
+		Q_strcpy( host.vguiloader, VGUI_SUPPORT_DLL );
 	}
 
 
@@ -897,6 +886,14 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #endif
 	host.con_showalways = true;
 	host.mouse_visible = false;
+
+#ifdef XASH_SDL
+	SDL_Init( SDL_INIT_TIMER );
+	if( SDL_Init( SDL_INIT_VIDEO |SDL_INIT_EVENTS ))
+	{
+		host.type = HOST_DEDICATED;
+	}
+#endif
 
 	if ( SetCurrentDirectory( host.rootdir ) != 0)
 		MsgDev( D_INFO, "%s is working directory now\n", host.rootdir );
@@ -920,8 +917,8 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 
 	host.old_developer = host.developer;
-
-	Con_CreateConsole();
+	if( !Sys_CheckParm( "-nowcon" ) )
+		Con_CreateConsole();
 
 	// first text message into console or log 
 	MsgDev( D_NOTE, "Sys_LoadLibrary: Loading Engine Library - ok\n" );
@@ -1041,35 +1038,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	HTTP_Init();
 
-	if( host.type == HOST_DEDICATED )
-	{
-		char *defaultmap;
-		Con_InitConsoleCommands ();
-
-		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
-		Cmd_AddCommand( "exit", Sys_Quit, "quit the game" );
-
-		// dedicated servers are using settings from server.cfg file
-		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
-		Cbuf_Execute();
-
-		defaultmap = Cvar_VariableString( "defaultmap" );
-		if( !defaultmap[0] )
-			Msg( "Add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
-		else
-			Cbuf_AddText( va( "map %s\n", defaultmap ));
-		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
-		NET_Config( true );
-	}
-	else
-	{
-		Cmd_AddCommand( "minimize", Host_Minimize_f, "minimize main window to taskbar" );
-		Cbuf_AddText( "exec config.cfg\n" );
-	}
-
-	host.errorframe = 0;
-	Cbuf_Execute();
-
 	// post initializations
 	switch( host.type )
 	{
@@ -1085,6 +1053,35 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_Execute();
 		break;
 	}
+
+	if( host.type == HOST_DEDICATED )
+	{
+		char *defaultmap;
+		Con_InitConsoleCommands ();
+
+		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
+		Cmd_AddCommand( "exit", Sys_Quit, "quit the game" );
+
+		// dedicated servers are using settings from server.cfg file
+		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
+		Cbuf_Execute();
+
+		defaultmap = Cvar_VariableString( "defaultmap" );
+		if( !defaultmap[0] )
+			Msg( "Please add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
+		else
+			Cbuf_AddText( va( "map %s\n", defaultmap ));
+		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
+		NET_Config( true );
+	}
+	else
+	{
+		Cmd_AddCommand( "minimize", Host_Minimize_f, "minimize main window to taskbar" );
+		Cbuf_AddText( "exec config.cfg\n" );
+	}
+
+	host.errorframe = 0;
+	Cbuf_Execute();
 
 	host.change_game = false;	// done
 	Cmd_RemoveCommand( "setr" );	// remove potential backdoor for changing renderer settings
