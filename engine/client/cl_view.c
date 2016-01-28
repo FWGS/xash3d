@@ -62,13 +62,13 @@ void V_SetupRefDef( void )
 	SCR_AddDirtyPoint( 0, 0 );
 
 	if(host.vrmode)
-		{
-			SCR_AddDirtyPoint( (scr_width->integer - 1)/2, scr_height->integer - 1 );
-		}
+	{
+		SCR_AddDirtyPoint( (scr_width->integer - 1)/2, scr_height->integer - 1 );
+	}
 	else
-		{
-			SCR_AddDirtyPoint( scr_width->integer - 1, scr_height->integer - 1 );
-		}
+	{
+		SCR_AddDirtyPoint( scr_width->integer - 1, scr_height->integer - 1 );
+	}
 
 	if( cl.refdef.viewsize >= 120 )
 		sb_lines = 0;		// no status bar at all

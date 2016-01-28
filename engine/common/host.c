@@ -1001,7 +1001,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cmd_AddCommand ( "net_error", Net_Error_f, "send network bad message from random place");
 	}
 	vrmode=Cvar_Get( "vrmode", "0", CVAR_ARCHIVE , "Virtual Reality mode" );
-	if(host.vrmode)Cvar_SetFloat("vrmode",1);
 
 
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow usage of cheat commands and variables" );
