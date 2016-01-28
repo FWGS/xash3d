@@ -340,7 +340,8 @@ void SV_ActivateServer( void )
 	else
 	{
 		// clear the ugly moving delay in singleplayer
-		Cvar_SetFloat( "clockwindow", 0.0f );
+		if( host.type != HOST_DEDICATED )
+			Cvar_SetFloat( "clockwindow", 0.0f );
 		MsgDev( D_INFO, "Game started\n" );
 	}
 
@@ -637,7 +638,7 @@ void SV_InitGame( void )
 	}
 	else if( Cvar_VariableValue( "coop" ))
 	{
-		if( sv_maxclients->integer <= 1 || sv_maxclients->integer > 4 )
+		if( sv_maxclients->integer < 1 )
 			Cvar_FullSet( "maxplayers", "4", CVAR_LATCH );
 	}
 	else	
@@ -647,7 +648,7 @@ void SV_InitGame( void )
 	}
 
 	svgame.globals->maxClients = sv_maxclients->integer;
-	SV_UPDATE_BACKUP = ( svgame.globals->maxClients == 1 ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
+	SV_UPDATE_BACKUP = ( svgame.globals->maxClients == 1 && host.type != HOST_DEDICATED ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
 
 	svs.clients = Z_Malloc( sizeof( sv_client_t ) * sv_maxclients->integer );
 	svs.num_client_entities = sv_maxclients->integer * SV_UPDATE_BACKUP * 64;
@@ -662,7 +663,7 @@ void SV_InitGame( void )
 	// copy gamemode into svgame.globals
 	svgame.globals->deathmatch = Cvar_VariableInteger( "deathmatch" );
 	svgame.globals->teamplay = Cvar_VariableInteger( "teamplay" );
-	svgame.globals->coop = Cvar_VariableInteger( "coop" );
+	svgame.globals->coop = ( sv_maxclients->integer > 1 ) ? Cvar_VariableInteger( "coop" ):0;
 
 	// heartbeats will always be sent to the id master
 	svs.last_heartbeat = MAX_HEARTBEAT; // send immediately
@@ -726,6 +727,14 @@ qboolean SV_NewGame( const char *mapName, qboolean loadGame )
 		S_StopAllSounds ();
 		SV_DeactivateServer ();
 	}
+
+	if( host_xashds_hacks->value )
+	{
+		Cbuf_InsertText(va("wait;rcon map %s\n", mapName));
+		Cbuf_AddText("wait;connect 127.0.0.1\n");
+		return true;
+	}
+
 
 	sv.loadgame = loadGame;
 	sv.background = false;

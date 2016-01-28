@@ -761,6 +761,14 @@ void Key_SetKeyDest( int key_dest )
 	#ifdef XASH_SDL
 		SDLash_EnableTextInput( false );
 	#endif
+		if( host_xashds_hacks->value )
+		{
+			Cbuf_Execute();
+			if( cl.refdef.paused )
+				Cbuf_InsertText("pause\n");
+			Cbuf_Execute();
+			cl.refdef.paused = 0;
+		}
 		cls.key_dest = key_game;
 		break;
 	case key_menu:

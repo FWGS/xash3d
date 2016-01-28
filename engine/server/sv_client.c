@@ -105,6 +105,12 @@ void SV_DirectConnect( netadr_t from )
 	int		challenge;
 	edict_t		*ent;
 
+	if( !svs.initialized )
+	{
+		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nServer not running any map!\n" );
+		return;
+	}
+
 	version = Q_atoi( Cmd_Argv( 1 ));
 
 	if( version != PROTOCOL_VERSION )
@@ -233,7 +239,7 @@ gotnewcl:
 
 	if( ( sv_maxclients->integer > 1 ) && ent->pvPrivateData )
 	{
-		// Force this client data
+		// Force clean this client data
 		if( sv_clientclean->integer & 1 )
 		{
 			if( ent->pvPrivateData != NULL )
@@ -246,7 +252,7 @@ gotnewcl:
 				Mem_Free( ent->pvPrivateData );
 				ent->pvPrivateData = NULL;
 			}
-			// HACK: invalidate serial number
+			// invalidate serial number
 			ent->serialnumber++;
 		}
 		// "3" enables both clean and disconnect
@@ -680,7 +686,7 @@ void SV_Info( netadr_t from )
 	char *gamedir = GI->gamefolder;
 
 	// ignore in single player
-	if( sv_maxclients->integer == 1 )
+	if( sv_maxclients->integer == 1 || !svs.initialized )
 		return;
 
 	version = Q_atoi( Cmd_Argv( 1 ));
@@ -726,7 +732,7 @@ void SV_BuildNetAnswer( netadr_t from )
 	int	i, count = 0;
 
 	// ignore in single player
-	if( sv_maxclients->integer == 1 )
+	if( sv_maxclients->integer == 1 || !svs.initialized )
 		return;
 
 	version = Q_atoi( Cmd_Argv( 1 ));
@@ -2598,7 +2604,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( !Q_strcmp( c, "connect" )) SV_DirectConnect( from );
 	else if( !Q_strcmp( c, "rcon" )) SV_RemoteCommand( from, msg );
 	else if( !Q_strcmp( c, "netinfo" )) SV_BuildNetAnswer( from );
-	else if( msg->pData[0] == 0xFF && msg->pData[1] == 0xFF && msg->pData[2] == 0xFF && msg->pData[3] == 0xFF && msg->pData[4] == 0x73 && msg->pData[5] == 0x0A )
+	else if( msg->pData[4] == 0x73 && msg->pData[5] == 0x0A )
 	{
 		Q_memcpy(&challenge, &msg->pData[6], sizeof(int));
 
@@ -2643,6 +2649,71 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		);
 
 		NET_SendPacket( NS_SERVER, Q_strlen( query ), query, from );
+	}
+	else if( !Q_strcmp( c, "T" "Source" ) ) // "Source Engine Query"
+	{
+		 // A2S_INFO
+		char answer[2048] = "";
+		byte *s = answer;
+#if 0 // Source format
+		*s++ = 'I';
+		*s++ = PROTOCOL_VERSION;
+		s += Q_strcpy( s, hostname->string ) + 1;
+		s += Q_strcpy( s, sv.name ) + 1;
+		s += Q_strcpy( s, gamedir ) + 1;
+		s += Q_strcpy( s, gamedir ) + 1;
+		// steam id
+		*s++ = 0;
+		*s++ = 0;
+		for( index = 0; index < sv_maxclients->integer; index++ )
+		{
+			if( svs.clients[index].state >= cs_connected )
+				count++;
+		}
+		*s++ = count;
+		*s++ = sv_maxclients->integer;
+		*s++ = 0; // bots
+		*s++ = host.type == HOST_DEDICATED?'d':'l';
+		#ifdef _WIN32
+		ostype = 'w';
+		#else
+		ostype = 'l';
+		#endif
+		*s++ = ostype;
+		*s++ = 0; // visibility
+		*s++ = 0; // not secured
+#else // GS format
+		*s++ = 'm';
+		s += Q_sprintf( s, "127.0.0.1:27015" ) + 1;
+
+		s += Q_strcpy( s, hostname->string ) + 1;
+		s += Q_strcpy( s, sv.name ) + 1;
+		s += Q_strcpy( s, gamedir ) + 1;
+		s += Q_strcpy( s, gamedir ) + 1;
+		for( index = 0; index < sv_maxclients->integer; index++ )
+		{
+			if( svs.clients[index].state >= cs_connected )
+				count++;
+		}
+		*s++ = count;
+		*s++ = sv_maxclients->integer;
+		*s++ = PROTOCOL_VERSION;
+		*s++ = host.type == HOST_DEDICATED?'D':'L';
+		*s++ = Q_toupper( ostype );
+		*s++ = 0; // not a mod
+		*s++ = 0;  // not VAC
+		*s++ = 0; //bots
+#endif
+		NET_SendPacket( NS_SERVER, (char*)s - answer, answer, from );
+
+	}
+	else if( !Q_strcmp( c, "i" ) )
+	{
+		 // A2A_PING
+		byte answer[8];
+
+		NET_SendPacket( NS_SERVER, 5, "\xFF\xFF\xFF\xFFj", from );
+
 	}
 	else if( svgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{
