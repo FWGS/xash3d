@@ -439,6 +439,7 @@ extern	convar_t		*deathmatch;
 extern	convar_t		*teamplay;
 extern	convar_t		*skill;
 extern	convar_t		*coop;
+extern	convar_t		*sv_corpse_solid;
 
 //===========================================================
 //
