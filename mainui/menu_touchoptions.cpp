@@ -656,6 +656,7 @@ static void UI_TouchOptions_Init( void )
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.background );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.banner );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.done );
+	uiTouchOptions.apply.generic.width = 80;
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.lookX );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.lookY );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.moveX );
@@ -667,7 +668,9 @@ static void UI_TouchOptions_Init( void )
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.save );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.profilename );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.remove );
+	uiTouchOptions.remove.generic.width = 100;
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.apply );
+	uiTouchOptions.apply.generic.width = 120;
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.grid );
 	UI_AddItem( &uiTouchOptions.menu, (void *)&uiTouchOptions.gridsize );
 
