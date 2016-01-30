@@ -104,13 +104,14 @@ void *SDL_AndroidGetActivity();
 
 JNIEnv *env = NULL;
 jmethodID vibrmid;
-jclass actcls
+jclass actcls;
+jobject activity;
 void Android_GetMethods()
 {
 	env = (JNIEnv*)SDL_AndroidGetJNIEnv();
 	activity = (jobject)SDL_AndroidGetActivity();
 	actcls = (*env)->GetObjectClass(env, activity);
-	vibrmid = (*env)->GetMethodID(env, actcls, "vibrate", "(S)V")
+	vibrmid = (*env)->GetMethodID(env, actcls, "vibrate", "(S)V");
 }
 
 void Android_Vibrate( float life, char flags )
