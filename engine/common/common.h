@@ -83,7 +83,8 @@ enum
 };
 
 typedef enum
-{	
+{
+	HOST_UNKNOWN = 0, // prevent detecting as normal before host.type set
 	HOST_NORMAL,	// listen server, singleplayer
 	HOST_DEDICATED,
 } instance_t;

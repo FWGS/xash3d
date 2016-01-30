@@ -1853,6 +1853,7 @@ void CL_Init( void )
 	if( loaded )
 	{
 		cls.initialized = true;
+		cls.keybind_changed = false;
 		cl.maxclients = 1; // allow to drawing player in menu
 		cls.olddemonum = -1;
 		cls.demonum = -1;

@@ -969,13 +969,14 @@ void Host_WriteConfig( void )
 	file_t	*f;
 
 	if( !clgame.hInstance ) return;
+	if( !cls.initialized ) return;
 
 	MsgDev( D_NOTE, "Host_WriteConfig()\n" );
 	f = FS_Open( "config.cfg", "w", false );
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n");
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s Â©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\tconfig.cfg - archive of cvars\n" );
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteVariables( f );
@@ -988,28 +989,32 @@ void Host_WriteConfig( void )
 	}
 	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
 
-	f = FS_Open( "keyboard.cfg", "w", false );
-	if( f )
+	if( cls.keybind_changed || !FS_FileExists( "keyboard.cfg", true ) )
 	{
-		FS_Printf( f, "//=======================================================================\n");
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
-		FS_Printf( f, "//\t\t\tkeyboard.cfg - archive of keybindings\n" );
-		FS_Printf( f, "//=======================================================================\n" );
-		Key_WriteBindings( f );
+		f = FS_Open( "keyboard.cfg", "w", false );
+		if( f )
+		{
+			FS_Printf( f, "//=======================================================================\n");
+			FS_Printf( f, "//\t\t\tCopyright XashXT Group %s Â©\n", Q_timestamp( TIME_YEAR_ONLY ));
+			FS_Printf( f, "//\t\t\tkeyboard.cfg - archive of keybindings\n" );
+			FS_Printf( f, "//=======================================================================\n" );
+			Key_WriteBindings( f );
 
-		mlook = (kbutton_t *)clgame.dllFuncs.KB_Find( "in_mlook" );
-		jlook = (kbutton_t *)clgame.dllFuncs.KB_Find( "in_jlook" );
+			mlook = (kbutton_t *)clgame.dllFuncs.KB_Find( "in_mlook" );
+			jlook = (kbutton_t *)clgame.dllFuncs.KB_Find( "in_jlook" );
 
-		if( mlook && ( mlook->state & 1 )) 
-			FS_Printf( f, "+mlook\n" );
+			if( mlook && ( mlook->state & 1 ))
+				FS_Printf( f, "+mlook\n" );
 
-		if( jlook && ( jlook->state & 1 ))
-			FS_Printf( f, "+jlook\n" );
+			if( jlook && ( jlook->state & 1 ))
+				FS_Printf( f, "+jlook\n" );
 
-		FS_Close( f );
+			FS_Close( f );
+		}
+		else MsgDev( D_ERROR, "Couldn't write keyboard.cfg.\n" );
 	}
-	else MsgDev( D_ERROR, "Couldn't write keyboard.cfg.\n" );
-	
+	else
+		MsgDev( D_NOTE, "Keyboard configuration not changed\n" );
 }
 
 /*
@@ -1028,7 +1033,7 @@ void Host_WriteServerConfig( const char *name )
 	if(( f = FS_Open( name, "w", false )) != NULL )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s Â©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\tserver.cfg - server temporary config\n" );
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteServerVariables( f );
@@ -1055,7 +1060,7 @@ void Host_WriteOpenGLConfig( void )
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s Â©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t    opengl.cfg - archive of opengl extension cvars\n");
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteOpenGLVariables( f );
@@ -1083,7 +1088,7 @@ void Host_WriteVideoConfig( void )
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s Â©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\tvideo.cfg - archive of renderer variables\n");
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteRenderVariables( f );
@@ -1108,7 +1113,7 @@ void Key_EnumCmds_f( void )
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n");
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s Â©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\thelp.txt - xash commands and console variables\n");
 		FS_Printf( f, "//=======================================================================\n");
 

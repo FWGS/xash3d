@@ -1126,14 +1126,29 @@ void EXPORT Host_Shutdown( void )
 	if( host.shutdown_issued ) return;
 	host.shutdown_issued = true;
 
-	if( host.state != HOST_ERR_FATAL ) host.state = HOST_SHUTDOWN; // prepare host to normal shutdown
-	if( !host.change_game ) Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
 
-	if( host.type == HOST_NORMAL )
+	switch( host.state )
 	{
-		Host_WriteConfig();
-		IN_TouchWriteConfig();
+	case HOST_INIT:
+	case HOST_SHUTDOWN:
+	case HOST_CRASHED:
+		host.state = HOST_SHUTDOWN;
+	case HOST_ERR_FATAL:
+		if( host.type == HOST_NORMAL )
+			MsgDev( D_WARN, "Not shutting down normally, skipping config save!\n" );
+		break;
+	default:
+		if( host.type == HOST_NORMAL )
+		{
+			Host_WriteConfig();
+			IN_TouchWriteConfig();
+		}
+		host.state = HOST_SHUTDOWN; // prepare host to normal shutdown
 	}
+
+	if( !host.change_game )
+		Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
+
 
 	SV_Shutdown( false );
 	CL_Shutdown();
