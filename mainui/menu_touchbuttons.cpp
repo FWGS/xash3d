@@ -416,7 +416,7 @@ static void UI_TouchButtons_Callback( void *self, int event )
 			char command[256];
 			snprintf( command, 256, "touch_settexture \"%s\" \"%s\"\n", uiTouchButtons.selectedName, uiTouchButtons.texture.buffer );
 			CLIENT_COMMAND(0, command);
-			snprintf( command, 256, "touch_setcommand \"%s\" \"%s\"\n", uiTouchButtons.selectedName, uiTouchButtons.texture.buffer );
+			snprintf( command, 256, "touch_setcommand \"%s\" \"%s\"\n", uiTouchButtons.selectedName, uiTouchButtons.command.buffer );
 			CLIENT_COMMAND(0, command);
 			snprintf( command, 256, "touch_setflags \"%s\" %i\n", uiTouchButtons.selectedName, uiTouchButtons.curflags );
 			CLIENT_COMMAND(0, command);
