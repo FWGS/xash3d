@@ -2363,7 +2363,6 @@ void SV_EntFire_f( sv_client_t *cl )
 				"    rendercolor (vector)\n"
 				"    renderfx\n"
 				"    renderamt\n"
-				"    renderamt\n"
 				"    hullmin (vector)\n"
 				"    hullmax (vector)\n"
 				"Actions\n"

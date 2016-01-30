@@ -50,7 +50,10 @@ static void pfnVibrate( float life, char flags )
 static void Vibrate_f()
 {
 	if( Cmd_Argc() != 2 )
-		Msg( "Usage: vibrate <time>" );
+	{
+		Msg( "Usage: vibrate <time>\n" );
+		return;
+	}
 
 	pfnVibrate( Q_atof( Cmd_Argv(1) ), VIBRATE_NORMAL );
 }
