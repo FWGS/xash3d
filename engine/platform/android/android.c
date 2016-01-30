@@ -102,20 +102,28 @@ int Java_org_libsdl_app_SDLActivity_setenv
 void *SDL_AndroidGetJNIEnv();
 void *SDL_AndroidGetActivity();
 
+JNIEnv *env = NULL;
+jmethodID vibrmid;
+jclass actcls
+void Android_GetMethods()
+{
+	env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+	activity = (jobject)SDL_AndroidGetActivity();
+	actcls = (*env)->GetObjectClass(env, activity);
+	vibrmid = (*env)->GetMethodID(env, actcls, "vibrate", "(S)V")
+}
+
 void Android_Vibrate( float life, char flags )
 {
 	long time = (long)life;
 
-	JNIEnv *env = (JNIEnv*)SDL_AndroidGetJNIEnv();
-	jobject obj = (jobject)SDL_AndroidGetActivity();
+	if( !env )
+		 Android_GetMethods();
 
-	jclass cls = (*env)->GetObjectClass(env, obj);
-	jmethodID mid = (*env)->GetMethodID(env, cls, "vibrate", "(S)V");
-
-	if (mid == 0)
+	if (vibrmid == 0)
 		return;
 
-	(*env)->CallVoidMethod(env, obj, mid, time);
+	(*env)->CallVoidMethod(env, activity, vibrmid, time);
 }
 
 #else
