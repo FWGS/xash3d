@@ -796,15 +796,14 @@ void Host_InputFrame( void )
 	
 		
 #endif
-#ifdef __ANDROID__
- float accelValues[3];
-  Android_JNI_GetAccelerometerValues(accelValues);
-  if(accelValues[2]!=0){
-
-cl.refdef.cl_viewangles[0]=accelValues[0];
-cl.refdef.cl_viewangles[1]=accelValues[1];
-cl.refdef.cl_viewangles[2]=accelValues[2];}
-
+#ifdef ANDROID_GYRO_TRACKING // disable before java part is done
+		if( getenv("XASH3D_ANDROID_GYRO" ) )
+		{
+			vec3_t accelValues;
+			Android_JNI_GetAccelerometerValues(accelValues);
+			if( accelValues[2] != 0 )
+				VectorCopy( accelValues, cl.refdef.cl_viewangles );
+		}
 #endif
 #endif
 		IN_TouchMove( &forward, &side, &yaw, &pitch );

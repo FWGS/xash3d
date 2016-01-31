@@ -34,7 +34,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_GLARE_REDUCTION	5 
 #define ID_SIMPLE_SKY	6
 #define ID_ALLOW_MATERIALS	7
-#define ID_VRMODE	7
+#define ID_VRMODE	8
+
 typedef struct
 {
 	int		outlineWidth;
@@ -81,6 +82,7 @@ static void UI_VidOptions_GetConfig( void )
 
 	if( CVAR_GET_FLOAT( "host_allow_materials" ))
 		uiVidOptions.hiTextures.enabled = 1;
+
 	if( CVAR_GET_FLOAT( "vrmode" ))
 		uiVidOptions.vrmode.enabled = 1;
 
@@ -170,6 +172,7 @@ static void UI_VidOptions_Callback( void *self, int event )
 	{
 	case ID_SIMPLE_SKY:
 	case ID_ALLOW_MATERIALS:
+	case ID_VRMODE:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;

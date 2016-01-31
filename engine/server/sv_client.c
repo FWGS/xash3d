@@ -1868,6 +1868,14 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 		val = Info_ValueForKey( cl->userinfo, "name" );
 	}
 
+	if( !Q_strlen( temp1 ) )
+	{
+		Info_SetValueForKey( cl->userinfo, "name",	"unnamed" );
+		val = Info_ValueForKey( cl->userinfo, "name" );
+		Q_strncpy( temp2, "unnamed", sizeof( temp2 ));
+		Q_strncpy( temp1, "unnamed", sizeof( temp1 ));
+	}
+
 	// check to see if another user by the same name exists
 	while( 1 )
 	{
