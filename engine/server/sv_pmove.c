@@ -229,8 +229,11 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 
 		if( check == pl ) continue;	// himself
 
-		if((( check->v.flags & FL_CLIENT ) && check->v.health <= 0 ) || check->v.deadflag == DEAD_DEAD )
-			continue;	// dead body
+		if( !sv_corpse_solid->value )
+		{
+			if((( check->v.flags & FL_CLIENT ) && check->v.health <= 0 ) || check->v.deadflag == DEAD_DEAD )
+				continue;	// dead body
+		}
 
 		if( VectorIsNull( check->v.size ))
 			continue;

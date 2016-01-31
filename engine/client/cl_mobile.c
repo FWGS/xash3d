@@ -29,15 +29,33 @@ GNU General Public License for more details.
 // we don't have our controls at this time
 mobile_engfuncs_t *gMobileEngfuncs;
 
+convar_t *vibration_length;
+convar_t *vibration_enable;
+
 void Android_Vibrate( float life, char flags );
 
 static void pfnVibrate( float life, char flags )
 {
+	if( !vibration_enable->value )
+		return;
+
+	MsgDev( D_NOTE, "Vibrate: %f %d\n", life, flags );
+
 	// here goes platform-specific backends
-	MsgDev( D_NOTE, "Vibrate: %f %d", life, flags );
 #ifdef __ANDROID__
-	Android_Vibrate(life, flags);
+	Android_Vibrate( life * vibration_length->value, flags );
 #endif
+}
+
+static void Vibrate_f()
+{
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Usage: vibrate <time>\n" );
+		return;
+	}
+
+	pfnVibrate( Q_atof( Cmd_Argv(1) ), VIBRATE_NORMAL );
 }
 
 static void pfnEnableTextInput( int enable )
@@ -80,6 +98,10 @@ void Mobile_Init( void )
 	{
 		MsgDev( D_INFO, "Mobility interface not found\n");
 	}
+
+	Cmd_AddCommand( "vibrate", Vibrate_f, "Vibrate for specified time");
+	vibration_length = Cvar_Get( "vibration_length", "1.0", CVAR_ARCHIVE, "Vibration length");
+	vibration_enable = Cvar_Get( "vibration_enable", "1", CVAR_ARCHIVE, "Enable vibration");
 }
 
 void Mobile_Destroy( void )

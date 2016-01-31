@@ -280,6 +280,9 @@ void Key_SetBinding( int keynum, const char *binding )
 		// GoldSrc doesn't touch ESC
 		if( keynum == K_ESCAPE ) return;
 
+		if( host.state != HOST_INIT && Q_stricmp( keys[keynum].binding, binding ) )
+			cls.keybind_changed = true;
+
 		Mem_Free((char *)keys[keynum].binding );
 		keys[keynum].binding = NULL;
 	}
