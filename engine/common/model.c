@@ -661,6 +661,7 @@ Mod_LoadTextures
 */
 static void Mod_LoadTextures( const dlump_t *l )
 {
+	byte		*buf;
 	dmiptexlump_t	*in;
 	texture_t		*tx, *tx2;
 	texture_t		*anims[10];
@@ -668,7 +669,7 @@ static void Mod_LoadTextures( const dlump_t *l )
 	int		num, max, altmax;
 	char		texname[64];
 	imgfilter_t	*filter;
-	mip_t		*mt;
+	mip_t		mt;
 	int 		i, j; 
 
 	if( world.loading )
@@ -711,37 +712,39 @@ static void Mod_LoadTextures( const dlump_t *l )
 			continue; // missed
 		}
 
-		mt = (mip_t *)((byte *)in + in->dataofs[i] );
-
-		if( !mt->name[0] )
+		buf = (byte *)in + in->dataofs[i];
+		Q_memcpy( &mt, buf, sizeof(mip_t));
+		
+		if( !mt.name[0] )
 		{
 			MsgDev( D_WARN, "unnamed texture in %s\n", loadmodel->name );
-			Q_snprintf( mt->name, sizeof( mt->name ), "miptex_%i", i );
+			Q_snprintf( mt.name, sizeof( mt.name ), "miptex_%i", i );
 		}
 
 		tx = Mem_Alloc( loadmodel->mempool, sizeof( *tx ));
 		loadmodel->textures[i] = tx;
 
 		// convert to lowercase
-		Q_strnlwr( mt->name, mt->name, sizeof( mt->name ));
-		Q_strncpy( tx->name, mt->name, sizeof( tx->name ));
+		Q_strnlwr( mt.name, mt.name, sizeof( mt.name ));
+		Q_strncpy( tx->name, mt.name, sizeof( tx->name ));
+		Q_memcpy( buf, mt.name, sizeof(mt.name));
 		filter = R_FindTexFilter( tx->name ); // grab texture filter
 
-		tx->width = mt->width;
-		tx->height = mt->height;
+		tx->width = mt.width;
+		tx->height = mt.height;
 
 		// check for multi-layered sky texture
-		if( world.loading && !Q_strncmp( mt->name, "sky", 3 ) && mt->width == 256 && mt->height == 128 )
+		if( world.loading && !Q_strncmp( mt.name, "sky", 3 ) && mt.width == 256 && mt.height == 128 )
 		{	
 			if( Mod_AllowMaterials( ))
 			{
 				// build standard path: "materials/mapname/texname_solid.tga"
-				Q_snprintf( texname, sizeof( texname ), "materials/%s/%s_solid.tga", modelname, mt->name );
+				Q_snprintf( texname, sizeof( texname ), "materials/%s/%s_solid.tga", modelname, mt.name );
 
 				if( !FS_FileExists( texname, false ))
 				{
 					// build common path: "materials/mapname/texname_solid.tga"
-					Q_snprintf( texname, sizeof( texname ), "materials/common/%s_solid.tga", mt->name );
+					Q_snprintf( texname, sizeof( texname ), "materials/common/%s_solid.tga", mt.name );
 
 					if( FS_FileExists( texname, false ))
 						load_external = true;
@@ -758,12 +761,12 @@ static void Mod_LoadTextures( const dlump_t *l )
 				if( tr.solidskyTexture )
 				{
 					// build standard path: "materials/mapname/texname_alpha.tga"
-					Q_snprintf( texname, sizeof( texname ), "materials/%s/%s_alpha.tga", modelname, mt->name );
+					Q_snprintf( texname, sizeof( texname ), "materials/%s/%s_alpha.tga", modelname, mt.name );
 
 					if( !FS_FileExists( texname, false ))
 					{
 						// build common path: "materials/mapname/texname_alpha.tga"
-						Q_snprintf( texname, sizeof( texname ), "materials/common/%s_alpha.tga", mt->name );
+						Q_snprintf( texname, sizeof( texname ), "materials/common/%s_alpha.tga", mt.name );
 
 						if( FS_FileExists( texname, false ))
 							load_external = true;
@@ -788,7 +791,7 @@ static void Mod_LoadTextures( const dlump_t *l )
 			}
 
 			if( !tr.solidskyTexture && !tr.alphaskyTexture )
-				R_InitSky( mt, tx ); // fallback to standard sky
+				R_InitSky( &mt, buf, tx ); // fallback to standard sky
 
 			if( tr.solidskyTexture && tr.alphaskyTexture )
 				world.sky_sphere = true;
@@ -797,15 +800,15 @@ static void Mod_LoadTextures( const dlump_t *l )
 		{
 			if( Mod_AllowMaterials( ))
 			{
-				if( mt->name[0] == '*' ) mt->name[0] = '!'; // replace unexpected symbol
+				if( mt.name[0] == '*' ) mt.name[0] = '!'; // replace unexpected symbol
 
 				// build standard path: "materials/mapname/texname.tga"
-				Q_snprintf( texname, sizeof( texname ), "materials/%s/%s.tga", modelname, mt->name );
+				Q_snprintf( texname, sizeof( texname ), "materials/%s/%s.tga", modelname, mt.name );
 
 				if( !FS_FileExists( texname, false ))
 				{
 					// build common path: "materials/mapname/texname.tga"
-					Q_snprintf( texname, sizeof( texname ), "materials/common/%s.tga", mt->name );
+					Q_snprintf( texname, sizeof( texname ), "materials/common/%s.tga", mt.name );
 
 					if( FS_FileExists( texname, false ))
 						load_external = true;
@@ -814,17 +817,17 @@ static void Mod_LoadTextures( const dlump_t *l )
 			}
 load_wad_textures:
 			if( !load_external )
-				Q_snprintf( texname, sizeof( texname ), "%s%s.mip", ( mt->offsets[0] > 0 ) ? "#" : "", mt->name );
+				Q_snprintf( texname, sizeof( texname ), "%s%s.mip", ( mt.offsets[0] > 0 ) ? "#" : "", mt.name );
 			else MsgDev( D_NOTE, "loading HQ: %s\n", texname );
 
-			if( mt->offsets[0] > 0 && !load_external )
+			if( mt.offsets[0] > 0 && !load_external )
 			{
 				// NOTE: imagelib detect miptex version by size
 				// 770 additional bytes is indicated custom palette
-				int size = (int)sizeof( mip_t ) + ((mt->width * mt->height * 85)>>6);
+				int size = (int)sizeof( mip_t ) + ((mt.width * mt.height * 85)>>6);
 				if( bmodel_version >= HLBSP_VERSION ) size += sizeof( short ) + 768;
 
-				tx->gl_texturenum = GL_LoadTexture( texname, (byte *)mt, size, 0, filter );
+				tx->gl_texturenum = GL_LoadTexture( texname, buf, size, 0, filter );
 			}
 			else
 			{
@@ -863,12 +866,12 @@ load_wad_textures:
 		if( load_external )
 		{
 			// build standard luma path: "materials/mapname/texname_luma.tga"
-			Q_snprintf( texname, sizeof( texname ), "materials/%s/%s_luma.tga", modelname, mt->name );
+			Q_snprintf( texname, sizeof( texname ), "materials/%s/%s_luma.tga", modelname, mt.name );
 
 			if( !FS_FileExists( texname, false ))
 			{
 				// build common path: "materials/mapname/texname_luma.tga"
-				Q_snprintf( texname, sizeof( texname ), "materials/common/%s_luma.tga", mt->name );
+				Q_snprintf( texname, sizeof( texname ), "materials/common/%s_luma.tga", mt.name );
 
 				if( FS_FileExists( texname, false ))
 					load_external_luma = true;
@@ -880,17 +883,17 @@ load_wad_textures:
 		if( R_GetTexture( tx->gl_texturenum )->flags & TF_HAS_LUMA || load_external_luma )
 		{
 			if( !load_external_luma )
-				Q_snprintf( texname, sizeof( texname ), "#%s_luma.mip", mt->name );
+				Q_snprintf( texname, sizeof( texname ), "#%s_luma.mip", mt.name );
 			else MsgDev( D_NOTE, "loading luma HQ: %s\n", texname );
 
-			if( mt->offsets[0] > 0 && !load_external_luma )
+			if( mt.offsets[0] > 0 && !load_external_luma )
 			{
 				// NOTE: imagelib detect miptex version by size
 				// 770 additional bytes is indicated custom palette
-				int size = (int)sizeof( mip_t ) + ((mt->width * mt->height * 85)>>6);
+				int size = (int)sizeof( mip_t ) + ((mt.width * mt.height * 85)>>6);
 				if( bmodel_version >= HLBSP_VERSION ) size += sizeof( short ) + 768;
 
-				tx->fb_texturenum = GL_LoadTexture( texname, (byte *)mt, size, TF_NOMIPMAP|TF_MAKELUMA, NULL );
+				tx->fb_texturenum = GL_LoadTexture( texname, buf, size, TF_NOMIPMAP|TF_MAKELUMA, NULL );
 			}
 			else
 			{

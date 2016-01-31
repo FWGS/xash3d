@@ -102,43 +102,25 @@ const char *MenuButtons[PC_BUTTONCOUNT] =
 	"Spectate games"
 };
 
-#pragma pack(push,1)
-typedef struct
+typedef struct bmp_s
 {
-		char magic[2];
-		unsigned int filesz;
-		unsigned short creator1;
-		unsigned short creator2;
-		unsigned int bmp_offset;
-} bmphdr_t;
-#pragma pack(pop)
-
-#ifndef _WIN32
-struct BITMAPFILEHEADER
-{
-	WORD    bfType;
-	DWORD   bfSize;
-	WORD    bfReserved1;
-	WORD    bfReserved2;
-	DWORD   bfOffBits;
-};
-
-struct BITMAPINFOHEADER
-{
-	DWORD    biSize;
-	DWORD    biWidth;
-	DWORD    biHeight;
-	WORD    biPlanes;
-	WORD    biBitCount;
-	DWORD    biCompression;
-	DWORD    biSizeImage;
-	DWORD    biXPelsPerMeter;
-	DWORD    biYPelsPerMeter;
-	DWORD    biClrUsed;
-	DWORD    biClrImportant;
-};
-#endif
-
+	//char magic[2];	//Useless.
+	unsigned int	filesz;
+	unsigned short	creator1;
+	unsigned short	creator2;
+	unsigned int	bmp_offset;
+	unsigned int	biSize;
+	unsigned int	biWidth;
+	unsigned int	biHeight;
+	unsigned short	biPlanes;
+	unsigned short	biBitCount;
+	unsigned int	biCompression;
+	unsigned int	biSizeImage;
+	unsigned int	biXPelsPerMeter;
+	unsigned int	biYPelsPerMeter;
+	unsigned int	biClrUsed;
+	unsigned int	biClrImportant;
+}bmp_t;
 
 /*
 =================
@@ -158,58 +140,48 @@ void UI_LoadBmpButtons( void )
 		return;
 	}
 
-	BITMAPINFOHEADER *pInfoHdr;
-	bmphdr_t *pHdr;
+	bmp_t bhdr;
+	memcpy( &bhdr, &bmp_buffer[sizeof( short )], sizeof( bmp_t ));
+	
+	int pallete_sz = bhdr.bmp_offset - sizeof( bmp_t ) - sizeof( short );
 
-	pInfoHdr =(BITMAPINFOHEADER *)&bmp_buffer[sizeof(bmphdr_t)];
-	pHdr = (bmphdr_t*)bmp_buffer;
+	uiStatic.buttons_height = ( bhdr.biBitCount == 4 ) ? 80 : 78; // bugstompers issues
+	uiStatic.buttons_width = bhdr.biWidth - 3; // make some offset
 
-	BITMAPINFOHEADER CuttedDibHdr;
-	bmphdr_t CuttedHdr;
-
-	memcpy( &CuttedHdr, pHdr, sizeof( bmphdr_t ));
-	memcpy( &CuttedDibHdr, pInfoHdr, pInfoHdr->biSize );
-
-	int pallete_sz = pHdr->bmp_offset - sizeof( bmphdr_t ) - pInfoHdr->biSize;
-
-	uiStatic.buttons_height = ( pInfoHdr->biBitCount == 4 ) ? 80 : 78; // bugstompers issues
-	uiStatic.buttons_width = pInfoHdr->biWidth - 3; // make some offset
-
-	int stride = (pInfoHdr->biWidth * pInfoHdr->biBitCount / 8);
+	int stride = bhdr.biWidth * bhdr.biBitCount / 8;
 	int cutted_img_sz = ((stride + 3 ) & ~3) * uiStatic.buttons_height;
-	int CuttedBmpSize = sizeof( bmphdr_t ) + pInfoHdr->biSize + pallete_sz + cutted_img_sz;
+	int CuttedBmpSize = sizeof( bmp_t ) + sizeof( short ) + pallete_sz + cutted_img_sz;
 	byte *img_data = &bmp_buffer[bmp_len_holder-cutted_img_sz];
 
-	if ( pInfoHdr->biBitCount <= 8 )
+	if ( bhdr.biBitCount <= 8 )
 	{
-		byte* pallete=&bmp_buffer[sizeof( bmphdr_t ) + pInfoHdr->biSize];
+		byte* pallete=&bmp_buffer[sizeof( bmp_t ) + sizeof( short )];
 		byte* firstpixel_col=&pallete[img_data[0]*4];
 		firstpixel_col[0]=firstpixel_col[1]=firstpixel_col[2]=0;
 	}
 
-	CuttedDibHdr.biHeight = 78;     //uiStatic.buttons_height;
-	CuttedHdr.filesz = CuttedBmpSize;
-	CuttedDibHdr.biSizeImage = CuttedBmpSize - CuttedHdr.bmp_offset;
+	// determine buttons count by image height...
+	// int pic_count = ( pInfoHdr->biHeight == 5538 ) ? PC_BUTTONCOUNT
+	int pic_count = ( bhdr.biHeight / 78 );
+
+	bhdr.biHeight = 78;     //uiStatic.buttons_height;
+	bhdr.filesz = CuttedBmpSize;
+	bhdr.biSizeImage = CuttedBmpSize - bhdr.bmp_offset;
 
 	char fname[256];
-	byte *raw_img_buff = (byte *)MALLOC( sizeof( bmphdr_t ) + pInfoHdr->biSize + pallete_sz + cutted_img_sz );
-
-	// determine buttons count by image height...
-	//      int pic_count = ( pInfoHdr->biHeight == 5538 ) ? PC_BUTTONCOUNT : PC_BUTTONCOUNT - 2;
-	int pic_count = ( pInfoHdr->biHeight / 78 );
+	byte *raw_img_buff = (byte *)MALLOC( sizeof( bmp_t ) + sizeof( short ) + pallete_sz + cutted_img_sz );
 
 	for( int i = 0; i < pic_count; i++ )
 	{
+		int offset = sizeof( short );
 		sprintf( fname, "#btns_%d.bmp", i );
 
-		int offset = 0;
-		memcpy( &raw_img_buff[offset], &CuttedHdr, sizeof( bmphdr_t ));
-		offset += sizeof( bmphdr_t );
+		memcpy( raw_img_buff, bmp_buffer, offset);
+		
+		memcpy( &raw_img_buff[offset], &bhdr, sizeof( bmp_t ));
+		offset += sizeof( bmp_t );
 
-		memcpy( &raw_img_buff[offset], &CuttedDibHdr, CuttedDibHdr.biSize );
-		offset += CuttedDibHdr.biSize;
-
-		if( CuttedDibHdr.biBitCount <= 8 )
+		if( bhdr.biBitCount <= 8 )
 		{
 			memcpy( &raw_img_buff[offset], &bmp_buffer[offset], pallete_sz );
 			offset += pallete_sz;
