@@ -6,6 +6,7 @@
 extern "C" {
 #endif
 
+void GetTrackData( float values[3]);
 void Android_SwapBuffers();
 void Android_GetScreenRes( int *width, int *height );
 

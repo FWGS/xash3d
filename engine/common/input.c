@@ -27,7 +27,9 @@ GNU General Public License for more details.
 #ifdef _WIN32
 #include "windows.h"
 #endif
-
+#ifdef __ANDROID__
+#include "../platform/android/android-main.h"
+#endif
 Xash_Cursor*	in_mousecursor;
 qboolean	in_mouseactive;				// false when not focus app
 qboolean	in_mouseinitialized;
@@ -796,13 +798,14 @@ void Host_InputFrame( void )
 	
 		
 #endif
-#ifdef ANDROID_GYRO_TRACKING // disable before java part is done
+#ifdef __ANDROID__ 
 		if( getenv("XASH3D_ANDROID_GYRO" ) )
 		{
-			vec3_t accelValues;
-			Android_JNI_GetAccelerometerValues(accelValues);
-			if( accelValues[2] != 0 )
-				VectorCopy( accelValues, cl.refdef.cl_viewangles );
+			vec3_t TrackValues;
+			GetTrackData(TrackValues);
+			if( TrackValues[2] != 0 )
+				VectorCopy( TrackValues, cl.refdef.cl_viewangles );
+
 		}
 #endif
 #endif
