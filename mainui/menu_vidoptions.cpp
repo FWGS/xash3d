@@ -34,7 +34,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_GLARE_REDUCTION	5 
 #define ID_SIMPLE_SKY	6
 #define ID_ALLOW_MATERIALS	7
-#define ID_VRMODE	7
+#define ID_VRMODE	8
 
 typedef struct
 {
