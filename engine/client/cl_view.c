@@ -330,11 +330,13 @@ void V_CalcRefDef( void )
 			VectorCopy(cl.refdef.forward, tmforward);
 			VectorCopy(cl.refdef.up, tmup);
 			VectorCopy(cl.refdef.vieworg, tmvieworg);
+			float dist = Cvar_VariableValue("vrdist");
+			if (dist==0) dist=0.4;
 
 			//Left eye	
-			{
+			{ 
 				vec3_t tmp;
-				VectorScale(cl.refdef.right, -0.2, tmp);
+				VectorScale(cl.refdef.right, -(dist/2), tmp);
 				VectorAdd(cl.refdef.vieworg, tmp, cl.refdef.vieworg);
 				vec3_t tmp2, tmp3;
 				VectorScale(cl.refdef.up, 1, tmp2);
@@ -350,7 +352,7 @@ void V_CalcRefDef( void )
 				RI.refdef.viewport[0]=	cl.refdef.viewport[0]-cl.refdef.viewport[2];
 				RI.refdef.viewport[2]=	cl.refdef.viewport[2]+cl.refdef.viewport[2];
 				vec3_t tmp;
-				VectorScale(tmright, 0.2, tmp);
+				VectorScale(tmright, (dist/2), tmp);
 				VectorAdd(tmvieworg, tmp, tmvieworg);
 				vec3_t tmp2, tmp3;
 				VectorScale(tmup, 1, tmp2);

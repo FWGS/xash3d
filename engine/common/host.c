@@ -1001,7 +1001,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cmd_AddCommand ( "net_error", Net_Error_f, "send network bad message from random place");
 	}
 	vrmode=Cvar_Get( "vrmode", "0", CVAR_ARCHIVE , "Virtual Reality mode" );
-
+	vrmode=Cvar_Get( "vrdist", "0", CVAR_ARCHIVE , "Virtual Reality distortion" );
 
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow usage of cheat commands and variables" );
 	host_maxfps = Cvar_Get( "fps_max", "72", CVAR_ARCHIVE, "host fps upper limit" );
