@@ -1833,7 +1833,6 @@ void SV_Pause_f( sv_client_t *cl )
 	SV_TogglePause( message );
 }
 
-
 /*
 =================
 SV_UserinfoChanged
@@ -1937,6 +1936,15 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 		else cl->modelindex = 0;
 	}
 	else cl->modelindex = 0;
+
+	// Force reset player model to "player"
+	if( cl->modelindex == 0 )
+	{
+		Info_SetValueForKey( cl->userinfo, "model", "player" );
+		Mod_RegisterModel( "models/player.mdl", SV_ModelIndex( "models/player.mdl" ));
+		SV_SetModel( ent, "models/player.mdl" );
+	}
+
 	// call prog code to allow overrides
 	svgame.dllFuncs.pfnClientUserInfoChanged( cl->edict, cl->userinfo );
 	ent->v.netname = MAKE_STRING( cl->name );
@@ -2362,7 +2370,6 @@ void SV_EntFire_f( sv_client_t *cl )
 				"    rendermode\n"
 				"    rendercolor (vector)\n"
 				"    renderfx\n"
-				"    renderamt\n"
 				"    renderamt\n"
 				"    hullmin (vector)\n"
 				"    hullmax (vector)\n"

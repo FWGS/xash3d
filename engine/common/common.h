@@ -83,7 +83,8 @@ enum
 };
 
 typedef enum
-{	
+{
+	HOST_UNKNOWN = 0, // prevent detecting as normal before host.type set
 	HOST_NORMAL,	// listen server, singleplayer
 	HOST_DEDICATED,
 } instance_t;
@@ -151,7 +152,7 @@ extern convar_t	*host_maxfps;
 extern convar_t *net_qport;
 extern convar_t *download_types;
 extern convar_t	*host_xashds_hacks;
-
+extern convar_t	*sv_master;
 /*
 ==============================================================
 

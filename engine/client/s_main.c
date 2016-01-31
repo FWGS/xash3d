@@ -19,7 +19,9 @@ GNU General Public License for more details.
 #include "con_nprint.h"
 #include "ref_params.h"
 #include "pm_local.h"
-
+#ifdef XASH_SDL
+#include <SDL.h>
+#endif
 #define MAX_DUPLICATED_CHANNELS	4		// threshold for identical static channels (probably error)
 #define SND_CLIP_DISTANCE		(float)(GI->soundclip_dist)
 
@@ -1768,6 +1770,15 @@ qboolean S_Init( void )
 		MsgDev( D_INFO, "Audio: Disabled\n" );
 		return false;
 	}
+#ifdef XASH_SDL
+	if( SDL_Init( SDL_INIT_AUDIO ) )
+	{
+		MsgDev( D_ERROR, "Audio: SDL: %s \n", SDL_GetError() );
+		return false;
+	}
+#else
+	return false;
+#endif
 
 	s_volume = Cvar_Get( "volume", "0.7", CVAR_ARCHIVE, "sound volume" );
 	s_musicvolume = Cvar_Get( "musicvolume", "1.0", CVAR_ARCHIVE, "background music volume" );

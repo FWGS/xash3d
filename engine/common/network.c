@@ -1337,7 +1337,7 @@ void HTTP_Run( void )
 			if( res < 0 )
 			{
 #ifdef _WIN32
-				if( pWSAGetLastError() != WSAEWOULDBLOCK )
+				if( pWSAGetLastError() != WSAEWOULDBLOCK && pWSAGetLastError() != WSAENOTCONN )
 #elif !defined(__FreeBSD__)
 				if( errno != EWOULDBLOCK )
 #endif

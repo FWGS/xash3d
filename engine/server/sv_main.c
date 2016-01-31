@@ -89,6 +89,7 @@ convar_t	*coop;
 convar_t	*sv_skipshield; // HACK for shield
 convar_t	*sv_trace_messages;
 convar_t	*sv_master;
+convar_t	*sv_corpse_solid;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -653,7 +654,7 @@ void Master_Add( void )
 	if( !NET_StringToAdr( sv_master->string, &adr ))
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
 
-	NET_SendPacket( NS_SERVER, 1, "q", adr );
+	NET_SendPacket( NS_SERVER, 2, "q\xFF", adr );
 }
 
 
@@ -811,9 +812,10 @@ void SV_Init( void )
 	mp_consistency = Cvar_Get( "mp_consistency", "1", CVAR_SERVERNOTIFY, "enable consistency check in multiplayer" );
 	clockwindow = Cvar_Get( "clockwindow", "0.5", 0, "timewindow to execute client moves" );
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
-	sv_skipshield = Cvar_Get("sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
-	sv_trace_messages = Cvar_Get("sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)");
-	sv_master = Cvar_Get("sv_master", MASTERSERVER_ADR, CVAR_ARCHIVE, "master server address" );
+	sv_skipshield = Cvar_Get( "sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
+	sv_trace_messages = Cvar_Get( "sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)" );
+	sv_master = Cvar_Get(" sv_master", MASTERSERVER_ADR, CVAR_ARCHIVE, "master server address" );
+	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
