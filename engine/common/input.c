@@ -79,7 +79,7 @@ static int Host_MapKey( int key )
 	modified = ( key >> 16 ) & 255;
 	if( modified > 127 ) return 0;
 
-	if( key & ( 1 << 24 ))
+	if( key & ( 1U << 24 ))
 		is_extended = true;
 
 	result = scan_to_key[modified];
@@ -497,12 +497,12 @@ void IN_MouseEvent( int mstate )
 	// perform button actions
 	for( i = 0; i < in_mouse_buttons; i++ )
 	{
-		if(( mstate & ( 1<<i )) && !( in_mouse_oldbuttonstate & ( 1<<i )))
+		if(( mstate & ( 1U << i )) && !( in_mouse_oldbuttonstate & ( 1U << i )))
 		{
 			Key_Event( K_MOUSE1 + i, true );
 		}
 
-		if(!( mstate & ( 1<<i )) && ( in_mouse_oldbuttonstate & ( 1<<i )))
+		if(!( mstate & ( 1U << i )) && ( in_mouse_oldbuttonstate & ( 1U << i )))
 		{
 			Key_Event( K_MOUSE1 + i, false );
 		}
@@ -654,12 +654,12 @@ Common function for engine joystick movement
 ================
 */
 
-#define F 1<<0	// Forward
-#define B 1<<1	// Back
-#define L 1<<2	// Left
-#define R 1<<3	// Right
-#define T 1<<4	// Forward stop
-#define S 1<<5	// Side stop
+#define F 1U << 0	// Forward
+#define B 1U << 1	// Back
+#define L 1U << 2	// Left
+#define R 1U << 3	// Right
+#define T 1U << 4	// Forward stop
+#define S 1U << 5	// Side stop
 void IN_JoyAppendMove( usercmd_t *cmd, float forwardmove, float sidemove )
 {
 	static uint moveflags = T | S;

@@ -76,7 +76,7 @@ void SV_GetChallenge( netadr_t from )
 	if( i == MAX_CHALLENGES )
 	{
 		// this is the first time this client has asked for a challenge
-		svs.challenges[oldest].challenge = (rand()<<16) ^ rand();
+		svs.challenges[oldest].challenge = ((uint)rand() << 16) ^ rand();
 		svs.challenges[oldest].adr = from;
 		svs.challenges[oldest].time = host.realtime;
 		svs.challenges[oldest].connected = false;
@@ -2348,22 +2348,22 @@ void SV_EntFire_f( sv_client_t *cl )
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "setflag" ) )
 		{
-			ent->v.flags |= 1 << Q_atoi( Cmd_Argv ( 3 ) );
+			ent->v.flags |= 1U << Q_atoi( Cmd_Argv ( 3 ) );
 			SV_ClientPrintf( cl, PRINT_LOW, "flags set to 0x%x\n", ent->v.flags );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "clearflag" ) )
 		{
-			ent->v.flags &= ~( 1 << Q_atoi( Cmd_Argv ( 3 ) ) );
+			ent->v.flags &= ~( 1U << Q_atoi( Cmd_Argv ( 3 ) ) );
 			SV_ClientPrintf( cl, PRINT_LOW, "flags set to 0x%x\n", ent->v.flags );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "setspawnflag" ) )
 		{
-			ent->v.spawnflags |= 1 << Q_atoi( Cmd_Argv ( 3 ) );
+			ent->v.spawnflags |= 1U << Q_atoi( Cmd_Argv ( 3 ) );
 			SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.spawnflags );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "clearspawnflag" ) )
 		{
-			ent->v.spawnflags &= ~( 1 << Q_atoi( Cmd_Argv ( 3 ) ) );
+			ent->v.spawnflags &= ~( 1U << Q_atoi( Cmd_Argv ( 3 ) ) );
 			SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.flags );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "help" ) )
@@ -2446,7 +2446,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 	ent->v.origin[2] = cl->edict->v.origin[2] + 25;
 	ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
 	ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
-	//ent->v.spawnflags |= ( 1 << 30 ); //SF_NORESPAWN
+	//ent->v.spawnflags |= ( 1U << 30 ); //SF_NORESPAWN
 	SV_LinkEdict( ent, false );
 	for( i=2; i < Cmd_Argc() - 1; i++ )
 	{

@@ -30,8 +30,8 @@ static short GetLittleShort( void )
 {
 	short	val = 0;
 
-	val += (*(iff_dataPtr+0) << 0);
-	val += (*(iff_dataPtr+1) << 8);
+	val += ((uint) *(iff_dataPtr+0) << 0);
+	val += ((uint) *(iff_dataPtr+1) << 8);
 	iff_dataPtr += 2;
 
 	return val;
@@ -46,10 +46,10 @@ static int GetLittleLong( void )
 {
 	int	val = 0;
 
-	val += (*(iff_dataPtr+0) << 0);
-	val += (*(iff_dataPtr+1) << 8);
-	val += (*(iff_dataPtr+2) <<16);
-	val += (*(iff_dataPtr+3) <<24);
+	val += ((uint) *(iff_dataPtr+0) << 0);
+	val += ((uint) *(iff_dataPtr+1) << 8);
+	val += ((uint) *(iff_dataPtr+2) <<16);
+	val += ((uint) *(iff_dataPtr+3) <<24);
 	iff_dataPtr += 4;
 
 	return val;
