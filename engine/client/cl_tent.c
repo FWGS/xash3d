@@ -203,7 +203,7 @@ void CL_TEntPlaySound( TEMPENTITY *pTemp, float damp )
 		return;
 	}
 
-	zvel = abs( pTemp->entity.baseline.origin[2] );
+	zvel = fabs( pTemp->entity.baseline.origin[2] );
 		
 	// only play one out of every n
 	if( isshellcasing )

@@ -255,12 +255,12 @@ hull_t *Mod_HullForStudio( model_t *model, float frame, int sequence, vec3_t ang
 		Mod_SetStudioHullPlane( &studio_planes[j+4], phitbox[i].bone, 2, phitbox[i].bbmax[2] );
 		Mod_SetStudioHullPlane( &studio_planes[j+5], phitbox[i].bone, 2, phitbox[i].bbmin[2] );
 
-		studio_planes[j+0].dist += DotProductAbs( studio_planes[j+0].normal, size );
-		studio_planes[j+1].dist -= DotProductAbs( studio_planes[j+1].normal, size );
-		studio_planes[j+2].dist += DotProductAbs( studio_planes[j+2].normal, size );
-		studio_planes[j+3].dist -= DotProductAbs( studio_planes[j+3].normal, size );
-		studio_planes[j+4].dist += DotProductAbs( studio_planes[j+4].normal, size );
-		studio_planes[j+5].dist -= DotProductAbs( studio_planes[j+5].normal, size );
+		studio_planes[j+0].dist += DotProductFabs( studio_planes[j+0].normal, size );
+		studio_planes[j+1].dist -= DotProductFabs( studio_planes[j+1].normal, size );
+		studio_planes[j+2].dist += DotProductFabs( studio_planes[j+2].normal, size );
+		studio_planes[j+3].dist -= DotProductFabs( studio_planes[j+3].normal, size );
+		studio_planes[j+4].dist += DotProductFabs( studio_planes[j+4].normal, size );
+		studio_planes[j+5].dist -= DotProductFabs( studio_planes[j+5].normal, size );
 	}
 
 	// tell trace code about hitbox count

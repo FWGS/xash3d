@@ -733,7 +733,7 @@ void DrawGLPoly( glpoly_t *p, float xScale, float yScale )
 		if( e->curstate.rendercolor.r ) flConveyorSpeed = -flConveyorSpeed;
 		texture = R_GetTexture( glState.currentTextures[glState.activeTMU] );
 
-		flRate = abs( flConveyorSpeed ) / (float)texture->srcWidth;
+		flRate = fabs( flConveyorSpeed ) / (float)texture->srcWidth;
 		flAngle = ( flConveyorSpeed >= 0 ) ? 180 : 0;
 
 		SinCos( flAngle * ( M_PI / 180.0f ), &sy, &cy );

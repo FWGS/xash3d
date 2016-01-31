@@ -2319,7 +2319,7 @@ void RMP_Init( rmp_t *prmp, float ramptime, int initval, int targetval )
 	// init fixed point iterator to iterate along the height of the ramp 'rise'
 	// always iterates from 0..'rise', increasing in value
 
-	POS_ONE_Init( &prmp->ps, ABS( rise ), ABS((float) rise) / ((float) run));
+	POS_ONE_Init( &prmp->ps, ABS( rise ), fabs((float) rise) / ((float) run));
 	
 	prmp->yprev = initval;
 	prmp->initval = initval;
@@ -2490,7 +2490,7 @@ ptc_t * PTC_Alloc( float timeslice, float timexfade, float fstep )
 	PTC_Init( pptc );
 
 	// get size of region to cut or duplicate
-	tcutdup = abs(( fstep - 1.0 ) * timeslice );
+	tcutdup = fabs(( fstep - 1.0 ) * timeslice );
 
 	// to prevent buffer overruns:
 
