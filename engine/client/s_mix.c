@@ -399,13 +399,13 @@ void S_MixChannel( channel_t *pChannel, void *pData, int outputOffset, int input
 	if( pSource->channels == 1 )
 	{
 		if( pSource->width == 1 )
-			S_Mix8Mono( pbuf, pvol, (char *)pData, inputOffset, fracRate, outCount );
+			S_Mix8Mono( pbuf, pvol, (byte *)pData, inputOffset, fracRate, outCount );
 		else S_Mix16Mono( pbuf, pvol, (short *)pData, inputOffset, fracRate, outCount );
 	}
 	else
 	{
 		if( pSource->width == 1 )
-			S_Mix8Stereo( pbuf, pvol, (char *)pData, inputOffset, fracRate, outCount );
+			S_Mix8Stereo( pbuf, pvol, (byte *)pData, inputOffset, fracRate, outCount );
 		else S_Mix16Stereo( pbuf, pvol, (short *)pData, inputOffset, fracRate, outCount );
 	}
 }
