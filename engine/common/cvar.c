@@ -645,7 +645,7 @@ void Cvar_DirectSet( cvar_t *var, const char *value )
 		// step through the string, only copying back in characters that are printable
 		while( *pS )
 		{
-			if( *pS < 32 || *pS > 255 )
+			if( *pS < 32 )
 			{
 				pS++;
 				continue;
