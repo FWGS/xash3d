@@ -340,7 +340,7 @@ void V_CalcRefDef( void )
 			{
 				dist=0.4;
 			}
-			else if (dist==4)
+			else if (dist>0.8)
 			{
 				cl.refdef.fov_x=60; 
 				cl.refdef.fov_y=67.5;
