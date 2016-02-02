@@ -286,6 +286,8 @@ gotnewcl:
 	// send the connect packet to the client
 	Netchan_OutOfBandPrint( NS_SERVER, from, "client_connect" );
 
+	Log_Printf ("\"%s<%i><%s><>\" connected, address \"%s\"\n", Info_ValueForKey (userinfo, "name"), newcl->userid, SV_GetClientIDString (newcl), NET_AdrToString (newcl->netchan.remote_address));
+
 	newcl->state = cs_connected;
 	newcl->cl_updaterate = 0.05;	// 20 fps as default
 	newcl->lastmessage = host.realtime;

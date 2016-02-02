@@ -727,6 +727,10 @@ void SV_Kick_f( void )
 	SV_ClientPrintf( svs.currentPlayer, PRINT_HIGH, "You were kicked from the game\n" );
 	SV_DropClient( svs.currentPlayer );
 
+	Log_Printf (
+		"Kick: \"%s<%i><%s><>\" was kicked by \"Console\"\n",
+		svs.currentPlayer->name, svs.currentPlayer->userid, SV_GetClientIDString (svs.currentPlayer));
+
 	// min case there is a funny zombie
 	svs.currentPlayer->lastmessage = host.realtime;
 }

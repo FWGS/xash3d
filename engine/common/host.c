@@ -22,6 +22,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "netchan.h"
+#include "server.h"
 #include "protocol.h"
 #include "mod_local.h"
 #include "mathlib.h"
@@ -77,6 +78,10 @@ void Host_ShutdownServer( void )
 {
 	if( !SV_Active()) return;
 	Q_strncpy( host.finalmsg, "Server was killed", MAX_STRING );
+
+	Log_Printf ("Server shutdown\n");
+	Log_Close ();
+
 	SV_Shutdown( false );
 }
 
@@ -1157,6 +1162,8 @@ void EXPORT Host_Shutdown( void )
 	if( !host.change_game )
 		Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
 
+	Log_Printf ("Server shutdown\n");
+	Log_Close ();
 
 	SV_Shutdown( false );
 	CL_Shutdown();
