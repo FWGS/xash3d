@@ -179,6 +179,7 @@
     <ClCompile Include="server\sv_game.c" />
     <ClCompile Include="server\sv_init.c" />
     <ClCompile Include="server\sv_main.c" />
+    <ClCompile Include="server\sv_log.c" />
     <ClCompile Include="server\sv_move.c" />
     <ClCompile Include="server\sv_phys.c" />
     <ClCompile Include="server\sv_pmove.c" />
