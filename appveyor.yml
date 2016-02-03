@@ -11,10 +11,9 @@ clone_folder: c:\projects\xash\xash3d
 
 build:
   project: xash.sln
-  configuration:
-  - Release
   verbosity: normal
-
+configuration:
+  - Release
 before_build:
   - mkdir C:\projects\xash\SDL2
   - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.3-VC.zip
