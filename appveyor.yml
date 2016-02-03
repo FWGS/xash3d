@@ -11,7 +11,8 @@ clone_folder: c:\projects\xash\xash3d
 
 build:
   project: xash.sln
-
+  configuration:
+  - Release
   verbosity: normal
 
 before_build:
@@ -26,8 +27,8 @@ before_build:
   - git submodule update
 
 after_build:
-  - move C:\projects\xash\SDL2\lib\x86\*.* c:\projects\xash\xash3d\Debug
-  - 7z a -tzip xash3d-win.zip c:\projects\xash\xash3d\Debug
+  - move C:\projects\xash\SDL2\lib\x86\*.* c:\projects\xash\xash3d\Relise
+  - 7z a -tzip xash3d-win.zip c:\projects\xash\xash3d\Relise
   - curl --upload-file xash3d-win.zip https://transfer.sh/xash3d-win.zip
 
 notifications:
