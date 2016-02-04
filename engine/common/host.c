@@ -140,6 +140,7 @@ void Host_EndGame( const char *message, ... )
 	{
 		Q_snprintf( host.finalmsg, sizeof( host.finalmsg ), "Host_EndGame: %s", string );
 		SV_Shutdown( false );
+		return;
 	}
 	
 	if( host.type == HOST_DEDICATED )
