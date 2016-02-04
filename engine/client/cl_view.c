@@ -335,15 +335,15 @@ void V_CalcRefDef( void )
 			VectorCopy( cl.refdef.up, tmup );
 			VectorCopy( cl.refdef.vieworg, tmvieworg );
 
-			dist= Cvar_VariableValue( "vrdist" );
-			if ( dist==0)
+			dist = Cvar_VariableValue( "vr_dist" );
+			if ( dist == 0 )
 			{
-				dist=0.4;
+				dist = 0.4;
 			}
-			else if (dist>0.8)
+			else if ( dist > 0.8 )
 			{
-				cl.refdef.fov_x=60; 
-				cl.refdef.fov_y=67.5;
+				cl.refdef.fov_x = 60; 
+				cl.refdef.fov_y = 67.5;
 			}
 
 

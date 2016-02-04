@@ -461,7 +461,7 @@ text to the screen.
 */
 void SCR_UpdateScreen( void )
 {
-	host.vrmode = Cvar_VariableValue("vrmode");
+	host.vrmode = Cvar_VariableValue("vr_mode");
 
 	if( !V_PreRender( )) return;
 

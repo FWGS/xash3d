@@ -71,7 +71,7 @@ static void UI_VidOptions_GetConfig( void )
 {
 	uiVidOptions.screenSize.curValue = RemapVal( CVAR_GET_FLOAT( "viewsize" ), 30.0f, 120.0f, 0.0f, 1.0f );
 	uiVidOptions.glareReduction.curValue = (CVAR_GET_FLOAT( "r_flaresize" ) - 100.0f ) / 200.0f;
-	uiVidOptions.vrdist.curValue = CVAR_GET_FLOAT( "vrdist" ) /10.0f;
+	uiVidOptions.vrdist.curValue = CVAR_GET_FLOAT( "vr_dist" ) /10.0f;
 
 	if( CVAR_GET_FLOAT( "gl_ignorehwgamma" ))
 	{
@@ -86,7 +86,7 @@ static void UI_VidOptions_GetConfig( void )
 	if( CVAR_GET_FLOAT( "host_allow_materials" ))
 		uiVidOptions.hiTextures.enabled = 1;
 
-	if( CVAR_GET_FLOAT( "vrmode" ))
+	if( CVAR_GET_FLOAT( "vr_mode" ))
 		uiVidOptions.vrmode.enabled = 1;
 
 	uiVidOptions.outlineWidth = 2;
@@ -104,8 +104,8 @@ static void UI_VidOptions_UpdateConfig( void )
 	CVAR_SET_FLOAT( "r_flaresize", (uiVidOptions.glareReduction.curValue * 200.0f ) + 100.0f );
 	CVAR_SET_FLOAT( "r_fastsky", uiVidOptions.fastSky.enabled );
 	CVAR_SET_FLOAT( "host_allow_materials", uiVidOptions.hiTextures.enabled );
-	CVAR_SET_FLOAT( "vrmode", uiVidOptions.vrmode.enabled );
-	CVAR_SET_FLOAT( "vrdist",uiVidOptions.vrdist.curValue*10.0f);
+	CVAR_SET_FLOAT( "vr_mode", uiVidOptions.vrmode.enabled );
+	CVAR_SET_FLOAT( "vr_dist",uiVidOptions.vrdist.curValue*10.0f);
 	if( CVAR_GET_FLOAT( "gl_ignorehwgamma" ))
 		PIC_SetGamma( uiVidOptions.hTestImage, RemapVal( uiVidOptions.gammaIntensity.curValue, 0.0f, 1.0f, 1.8f, 7.0f ));
 	else CVAR_SET_FLOAT( "gamma", RemapVal( uiVidOptions.gammaIntensity.curValue, 0.0f, 1.0f, 0.5f, 2.3f ));
@@ -117,8 +117,8 @@ static void UI_VidOptions_SetConfig( void )
 	CVAR_SET_FLOAT( "r_flaresize", (uiVidOptions.glareReduction.curValue * 200.0f ) + 100.0f );
 	CVAR_SET_FLOAT( "r_fastsky", uiVidOptions.fastSky.enabled );
 	CVAR_SET_FLOAT( "host_allow_materials", uiVidOptions.hiTextures.enabled );
-	CVAR_SET_FLOAT( "vrmode", uiVidOptions.vrmode.enabled );
-	CVAR_SET_FLOAT( "vrdist",uiVidOptions.vrdist.curValue*10.0f);
+	CVAR_SET_FLOAT( "vr_mode", uiVidOptions.vrmode.enabled );
+	CVAR_SET_FLOAT( "vr_dist", uiVidOptions.vrdist.curValue * 10.0f );
 	if( CVAR_GET_FLOAT( "gl_ignorehwgamma" ))
 		CVAR_SET_FLOAT( "gamma", RemapVal( uiVidOptions.gammaIntensity.curValue, 0.0f, 1.0f, 1.8f, 7.0f ));
 	else CVAR_SET_FLOAT( "gamma", RemapVal( uiVidOptions.gammaIntensity.curValue, 0.0f, 1.0f, 0.5f, 2.3f ));
