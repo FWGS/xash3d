@@ -563,17 +563,20 @@ void IN_SDL_JoyMove( float frametime, float *forward, float *side, float *pitch,
 		static double	nexttime = 0, lasttime = 0;
 		static float cl_rtime;
 		double		newtime;
-		newtime = Sys_DoubleTime();
-		if (newtime >= nexttime)
-		{
-			cl_rtime = (newtime - lasttime);
-			lasttime = newtime;
-			nexttime = max(nexttime + 1, lasttime - 1);
-		}
+
 	int i;
 	if( joy_enable->modified )
 		IN_SDL_JoyOpen();
 	if(!joydata.joy) return;
+	//Get client frametime - cl_rtime
+	newtime = Sys_DoubleTime();
+	if (newtime >= nexttime)
+	{
+		cl_rtime = (newtime - lasttime);
+		lasttime = newtime;
+		nexttime = max(nexttime + 1, lasttime - 1);
+	}
+
 	// Extend cvar with zeroes
 	if(joy_binding->modified)
 	{
