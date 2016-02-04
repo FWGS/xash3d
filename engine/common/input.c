@@ -560,6 +560,16 @@ void IN_SDL_JoyOpen( void )
 
 void IN_SDL_JoyMove( float frametime, float *forward, float *side, float *pitch, float *yaw )
 {
+		static double	nexttime = 0, lasttime = 0;
+		static float cl_rtime;
+		double		newtime;
+		newtime = Sys_DoubleTime();
+		if (newtime >= nexttime)
+		{
+			cl_rtime = (newtime - lasttime);
+			lasttime = newtime;
+			nexttime = max(nexttime + 1, lasttime - 1);
+		}
 	int i;
 	if( joy_enable->modified )
 		IN_SDL_JoyOpen();
@@ -580,8 +590,8 @@ void IN_SDL_JoyMove( float frametime, float *forward, float *side, float *pitch,
 		{
 			case 'f': *forward -= joy_forward->value/32768.0 * value;break; //must be form -1.0 to 1.0
 			case 's': *side += joy_side->value/32768.0 * value;break;
-			case 'p': *pitch += joy_pitch->value/32768.0 * (float)value*0.01 ;break; // abs axis rotate is frametime related
-			case 'y': *yaw -= joy_yaw->value/32768.0 * (float)value *0.01;break;
+			case 'p': *pitch += joy_pitch->value/32768.0 * (float)value*(cl_rtime/100) ;break; // abs axis rotate is frametime related
+			case 'y': *yaw -= joy_yaw->value/32768.0 * (float)value *(cl_rtime/100);break;
 			default:break;
 		}
 	}
@@ -744,7 +754,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 	{
 		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( frametime, &forward, &side, &dpitch, &dyaw );
+		IN_SDL_JoyMove( 0, &forward, &side, &dpitch, &dyaw );
 		if( m_enginemouse->integer )
 		{
 			int mouse_x, mouse_y;
@@ -787,7 +797,7 @@ void Host_InputFrame( void )
 		int dx, dy;
 
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
+		IN_SDL_JoyMove(0, &forward, &side, &pitch, &yaw );
 #ifndef __ANDROID__
 		if( in_mouseinitialized )
 		{
