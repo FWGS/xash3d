@@ -11,7 +11,9 @@ clone_folder: c:\projects\xash\xash3d
 
 build:
   project: xash.sln
+
   verbosity: normal
+
 before_build:
   - mkdir C:\projects\xash\SDL2
   - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.3-VC.zip
@@ -24,8 +26,8 @@ before_build:
   - git submodule update
 
 after_build:
-  - move C:\projects\xash\SDL2\lib\x86\*.* c:\projects\xash\xash3d\Relise
-  - 7z a -tzip xash3d-win.zip c:\projects\xash\xash3d\Relise
+  - move C:\projects\xash\SDL2\lib\x86\*.* c:\projects\xash\xash3d\Debug
+  - 7z a -tzip xash3d-win.zip c:\projects\xash\xash3d\Debug
   - curl --upload-file xash3d-win.zip https://transfer.sh/xash3d-win.zip
 
 notifications:
