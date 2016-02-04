@@ -560,9 +560,9 @@ void IN_SDL_JoyOpen( void )
 
 void IN_SDL_JoyMove( float frametime, float *forward, float *side, float *pitch, float *yaw )
 {
-		static double	nexttime = 0, lasttime = 0;
-		static float cl_rtime;
-		double		newtime;
+	static double	nexttime = 0, lasttime = 0;
+	static float cl_rtime;
+	double		newtime;
 
 	int i;
 	if( joy_enable->modified )
