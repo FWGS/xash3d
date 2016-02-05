@@ -972,7 +972,7 @@ void Host_WriteConfig( void )
 	if( !cls.initialized ) return;
 
 	MsgDev( D_NOTE, "Host_WriteConfig()\n" );
-	f = FS_Open( "config.cfg", "w", false );
+	f = FS_Open( "config.cfg", "w", true );
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n");
@@ -991,7 +991,7 @@ void Host_WriteConfig( void )
 
 	if( cls.keybind_changed || !FS_FileExists( "keyboard.cfg", true ) )
 	{
-		f = FS_Open( "keyboard.cfg", "w", false );
+		f = FS_Open( "keyboard.cfg", "w", true );
 		if( f )
 		{
 			FS_Printf( f, "//=======================================================================\n");
