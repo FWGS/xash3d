@@ -2070,6 +2070,7 @@ void SV_EntList_f( sv_client_t *cl )
 
 	for( i = 0; i < svgame.numEntities; i++ )
 	{
+		vec3_t borigin;
 		ent = EDICT_NUM( i );
 		if( !SV_IsValidEdict( ent )) continue;
 
@@ -2077,8 +2078,11 @@ void SV_EntList_f( sv_client_t *cl )
 		if( Cmd_Argc() > 1 )
 			if( !Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.classname ) ) && !Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.targetname ) ) )
 				continue;
+		VectorAdd( ent->v.absmin, ent->v.absmax, borigin );
+		VectorScale( borigin, 0.5, borigin );
 
 		SV_ClientPrintf( cl, PRINT_LOW, "%5i origin: %.f %.f %.f", i, ent->v.origin[0], ent->v.origin[1], ent->v.origin[2] );
+		SV_ClientPrintf( cl, PRINT_LOW, "%5i borigin: %.f %.f %.f", i, borigin[0], borigin[1], borigin[2] );
 
 		if( ent->v.classname )
 			SV_ClientPrintf( cl, PRINT_LOW, ", class: %s", STRING( ent->v.classname ));
@@ -2110,6 +2114,7 @@ void SV_EntInfo_f( sv_client_t *cl )
 {
 	edict_t	*ent = NULL;
 	int	i = 0;
+	vec3_t borigin;
 
 	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
 		return;
@@ -2142,9 +2147,14 @@ void SV_EntInfo_f( sv_client_t *cl )
 	ent = EDICT_NUM( i );
 	if( !SV_IsValidEdict( ent )) return;
 
+	VectorAdd( ent->v.absmin, ent->v.absmax, borigin );
+	VectorScale( borigin, 0.5, borigin );
+
 	SV_ClientPrintf( cl, PRINT_LOW, "origin: %.f %.f %.f\n", ent->v.origin[0], ent->v.origin[1], ent->v.origin[2] );
 
 	SV_ClientPrintf( cl, PRINT_LOW, "angles: %.f %.f %.f\n", ent->v.angles[0], ent->v.angles[1], ent->v.angles[2] );
+
+	SV_ClientPrintf( cl, PRINT_LOW, "borigin: %.f %.f %.f\n", borigin[0], borigin[1], borigin[2] );
 
 	if( ent->v.classname )
 		SV_ClientPrintf( cl, PRINT_LOW, "class: %s\n", STRING( ent->v.classname ));
@@ -2179,6 +2189,42 @@ void SV_EntInfo_f( sv_client_t *cl )
 		SV_ClientPrintf( cl, PRINT_LOW, "solid: %d\n", ent->v.solid );
 	SV_ClientPrintf( cl, PRINT_LOW, "flags: 0x%x\n", ent->v.flags );
 	SV_ClientPrintf( cl, PRINT_LOW, "spawnflags: 0x%x\n", ent->v.spawnflags );
+}
+edict_t *pfnFindEntityInSphere( edict_t *pStartEdict, const float *org, float flRadius );
+void pfnGetAimVector( edict_t* ent, float speed, float *rgflReturn );
+static edict_t *SV_GetCrossEnt( edict_t *player )
+{
+	edict_t *ent = NULL;
+	edict_t *closest = NULL;
+	float flMaxDot = 0;
+
+	while( ent = pfnFindEntityInSphere( ent, player->v.origin, 128 ) )
+	{
+		vec3_t vecLOS;
+		float flDot;
+		vec3_t aim;
+
+		if( ent == player )
+			continue;
+
+		// do not touch following weapons
+		if( ent->v.movetype == MOVETYPE_FOLLOW )
+			continue;
+
+		VectorAdd( ent->v.absmin, ent->v.absmax, vecLOS );
+		VectorScale( vecLOS, 0.5, vecLOS );
+		VectorSubtract( vecLOS, player->v.origin, vecLOS );
+		VectorSubtract( vecLOS, player->v.view_ofs, vecLOS );
+		VectorNormalize( vecLOS );
+
+		//pfnGetAimVector( player, 0, aim );
+
+		flDot = DotProduct (vecLOS , svgame.globals->v_forward );
+		if (flDot > flMaxDot )
+			closest = ent, flMaxDot = flDot;
+
+	}
+	return closest;
 }
 
 /*
@@ -2216,8 +2262,20 @@ void SV_EntFire_f( sv_client_t *cl )
 
 		ent = EDICT_NUM( i );
 	}
-	else if( !sv_enttools_players->value )
+	if( ( number = !Q_stricmp( Cmd_Argv( 1 ), "!cross" ) ) )
+	{
+		ent = SV_GetCrossEnt( cl->edict );
+		if( !SV_IsValidEdict( ent ) )
+			return;
+		i = NUM_FOR_EDICT( ent );
+		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+			return;
+	}
+	else
+	{
+		if( !sv_enttools_players->value )
 		i = svgame.globals->maxClients + 1;
+	}
 
 	for( ; ( i <  svgame.numEntities ) && ( count < sv_enttools_maxfire->integer ); i++ )
 	{
