@@ -1040,7 +1040,8 @@ qboolean UI_LoadProgs( void )
 	{
 		FS_AllowDirectPaths( true );
 
-		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false )))
+		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false ))
+				&& !( menu.hInstance = Com_LoadLibrary( MENUDLL, false )))
 
 		{
 			FS_AllowDirectPaths( false );

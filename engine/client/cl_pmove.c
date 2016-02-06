@@ -917,10 +917,13 @@ void CL_PredictMovement( void )
 	{
 		local_state_t t1, t2;
 		Q_memset( &t1, 0, sizeof( local_state_t ));
-		//Q_memset( &t2, 0, sizeof( local_state_t ));
+		Q_memset( &t2, 0, sizeof( local_state_t ));
 		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, false, cl.time, cls.lastoutgoingcommand );
+
+		cl.scr_fov = t2.client.fov;
+		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+			cl.scr_fov = 90.0f;
 		return;
-		//Q_memset( &t2, 0, sizeof( local_state_t ));
 	}
 
 	ack = cls.netchan.incoming_acknowledged;

@@ -78,7 +78,11 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	{
 		search = FS_FindFile( dllname, &pack_ind, true );
 
-		if( !search ) return NULL;
+		if( !search )
+		{
+			MsgDev( D_WARN, "loading library %s: %s\n", dllname, dlerror() );
+			return NULL;
+		}
 		sprintf( path, "%s%s", search->filename, dllname );
 
 #ifdef DLL_LOADER
@@ -91,7 +95,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		pHandle = dlopen( path, RTLD_LAZY );
 		if(!pHandle)
 		{
-			MsgDev(D_ERROR, "loading library %s: %s\n", dllname, dlerror());
+			MsgDev( D_WARN, "loading library %s: %s\n", dllname, dlerror() );
 			return NULL;
 		}
 	}

@@ -299,6 +299,10 @@ void CL_CreateCmd( void )
 	VectorCopy( cl.refdef.cl_viewangles, cl.data.viewangles );
 
 	cl.data.iWeaponBits = cl.frame.local.client.weapons;
+
+	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+		cl.scr_fov = 90.0f;
+
 	cl.data.fov = cl.scr_fov;
 
 	clgame.dllFuncs.pfnUpdateClientData( &cl.data, cl.time );
@@ -307,7 +311,8 @@ void CL_CreateCmd( void )
 	VectorCopy( cl.data.viewangles, cl.refdef.cl_viewangles );
 	cl.frame.local.client.weapons = cl.data.iWeaponBits;
 	cl.scr_fov = cl.data.fov;
-
+	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+		cl.scr_fov = 90.0f;
 	// allways dump the first ten messages,
 	// because it may contain leftover inputs
 	// from the last level

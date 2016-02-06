@@ -150,7 +150,7 @@ void IN_TouchWriteConfig( void )
 	if( !touch.first ) return;
 
 	MsgDev( D_NOTE, "IN_TouchWriteConfig(): %s\n", touch_config_file->string );
-	f = FS_Open( touch_config_file->string, "w", false );
+	f = FS_Open( touch_config_file->string, "w", true );
 	if( f )
 	{
 		touchbutton2_t *button;
@@ -207,7 +207,7 @@ void IN_TouchExportConfig_f( void )
 	name = Cmd_Argv( 1 );
 
 	MsgDev( D_NOTE, "Exporting config to %s\n", name );
-	f = FS_Open( name, "w", false );
+	f = FS_Open( name, "w", true );
 	if( f )
 	{
 		char profilename[256];

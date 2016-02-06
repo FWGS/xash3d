@@ -198,7 +198,7 @@ static void UI_Color_Ownerdraw( void *self )
 static void UI_DeleteButton()
 {
 	char command[256];
-	snprintf(command, 256, "touch_removebutton %s\n", uiTouchButtons.selectedName );
+	snprintf(command, 256, "touch_removebutton \"%s\"\n", uiTouchButtons.selectedName );
 	CLIENT_COMMAND(1, command);
 	UI_TouchButtons_GetButtonList();
 }
@@ -206,7 +206,7 @@ static void UI_DeleteButton()
 static void UI_ResetButtons()
 {
 	CLIENT_COMMAND( 0, "touch_removeall\n" );
-	CLIENT_COMMAND( 0, "touch_loaddefaults\n" );
+	CLIENT_COMMAND( 1, "touch_loaddefaults\n" );
 	UI_TouchButtons_GetButtonList();
 }
 
