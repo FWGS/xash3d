@@ -968,8 +968,12 @@ void Host_WriteConfig( void )
 	kbutton_t	*mlook, *jlook;
 	file_t	*f;
 
-	if( !clgame.hInstance ) return;
-	if( !cls.initialized ) return;
+	// if client not loaded, client cvars will lost
+	if( !clgame.hInstance )
+	{
+		MsgDev( D_NOTE, "Client not loaded, skipping config save!\n" );
+		return;
+	}
 
 	MsgDev( D_NOTE, "Host_WriteConfig()\n" );
 	f = FS_Open( "config.cfg", "w", true );
@@ -989,7 +993,7 @@ void Host_WriteConfig( void )
 	}
 	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
 
-	if( cls.keybind_changed || !FS_FileExists( "keyboard.cfg", true ) )
+	if( cls.initialized && ( cls.keybind_changed || !FS_FileExists( "keyboard.cfg", true ) ) )
 	{
 		f = FS_Open( "keyboard.cfg", "w", true );
 		if( f )

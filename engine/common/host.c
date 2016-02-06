@@ -166,7 +166,10 @@ aborts the current host frame and goes on with the next one
 */
 void Host_AbortCurrentFrame( void )
 {
-	longjmp( host.abortframe, 1 );
+	if( host.framecount == 0 ) // abort frame was not set up
+		Sys_Break("Could not abort current frame");
+	else
+		longjmp( host.abortframe, 1 );
 }
 
 /*
@@ -712,6 +715,7 @@ void Host_Error( const char *error, ... )
 	Mod_ClearAll( false );
 
 	recursive = false;
+
 	Host_AbortCurrentFrame();
 }
 
@@ -1011,7 +1015,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	build = Cvar_Get( "build", va( "%i", Q_buildnum()), CVAR_INIT, "returns a current build number" );
 	ver = Cvar_Get( "ver", va( "%i/%s.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
 	host_mapdesign_fatal = Cvar_Get( "host_mapdesign_fatal", "1", CVAR_ARCHIVE, "make map design errors fatal" );
-	host_xashds_hacks = Cvar_Get( "xashds_hacks", "0", CVAR_ARCHIVE, "hacks for xashds in singleplayer" );
+	host_xashds_hacks = Cvar_Get( "xashds_hacks", "0", 0, "hacks for xashds in singleplayer" );
 
 	// content control
 	Cvar_Get( "violence_hgibs", "1", CVAR_ARCHIVE, "show human gib entities" );
@@ -1138,12 +1142,12 @@ void EXPORT Host_Shutdown( void )
 	switch( host.state )
 	{
 	case HOST_INIT:
-	case HOST_SHUTDOWN:
 	case HOST_CRASHED:
-		host.state = HOST_SHUTDOWN;
 	case HOST_ERR_FATAL:
 		if( host.type == HOST_NORMAL )
-			MsgDev( D_WARN, "Not shutting down normally, skipping config save!\n" );
+			MsgDev( D_WARN, "Not shutting down normally (%d), skipping config save!\n", host.state );
+		if( host.state != HOST_ERR_FATAL)
+			host.state = HOST_SHUTDOWN;
 		break;
 	default:
 		if( host.type == HOST_NORMAL )
