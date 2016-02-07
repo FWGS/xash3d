@@ -137,11 +137,12 @@ qboolean CL_FireEvent( event_info_t *ei )
 
 	if( cl_trace_events->value > 0.0f )
 	{
-		MsgDev( D_INFO, "^3EVENT  %s\n"    // event name
-					"     %f %f\n" // float params
+		MsgDev( D_INFO, "^3EVENT  %s AT %.2f %.2f %.2f\n"    // event name
+					"     %.2f %.2f\n" // float params
 					"     %i %i\n" // int params
 					"     %s %s\n", // bool params
-					cl.event_precache[ bound( 1, ei->index, MAX_EVENTS )], ei->args.fparam1, ei->args.fparam2,
+					cl.event_precache[ bound( 1, ei->index, MAX_EVENTS )], ei->args.origin[0], ei->args.origin[1], ei->args.origin[2],
+					ei->args.fparam1, ei->args.fparam2,
 					ei->args.iparam1, ei->args.iparam2,
 					ei->args.bparam1 ? "TRUE" : "FALSE", ei->args.bparam2 ? "TRUE" : "FALSE" );
 
@@ -407,6 +408,12 @@ void CL_ParseEvent( sizebuf_t *msg )
 				args.angles[PITCH] = -state->angles[PITCH] * 3;
 				args.angles[YAW] = state->angles[YAW];
 				args.angles[ROLL] = 0; // no roll
+
+				// if we restore origin and velocity everytime, why don't do it here also?
+				if( VectorIsNull( args.origin ))
+					VectorCopy( state->origin, args.origin );
+				if( VectorIsNull( args.velocity ))
+					VectorCopy( state->velocity, args.velocity );
 			}
 		}
 		else if( state )
