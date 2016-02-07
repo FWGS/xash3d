@@ -99,7 +99,7 @@ uint Sound_GetApproxWavePlayLen( const char *filepath )
 	wavehdr_t	wav;
 	size_t	filesize;
 	float	seconds;
-	uint	samples;
+	//uint	samples;
 
 	f = FS_Open( filepath, "rb", false );
 	if( !f ) return 0;
@@ -130,7 +130,7 @@ uint Sound_GetApproxWavePlayLen( const char *filepath )
 
 	// calc samplecount
 	seconds = (float)filesize / wav.nAvgBytesPerSec / wav.nChannels;
-	samples = (uint)(( wav.nSamplesPerSec * wav.nChannels ) * seconds );
+	//samples = (uint)(( wav.nSamplesPerSec * wav.nChannels ) * seconds );
 
 	// g-cont. this function returns samplecount or time in milliseconds ???
 	return (uint)(seconds * 1000);
@@ -255,7 +255,7 @@ qboolean Sound_ResampleInternal( wavdata_t *sc, int inrate, int inwidth, int out
 qboolean Sound_Process( wavdata_t **wav, int rate, int width, uint flags )
 {
 	wavdata_t	*snd = *wav;
-	qboolean	result = true;
+	//qboolean	result = true;
 				
 	// check for buffers
 	if( !snd || !snd->buffer )
@@ -271,11 +271,12 @@ qboolean Sound_Process( wavdata_t **wav, int rate, int width, uint flags )
 			Mem_Free( snd->buffer );		// free original image buffer
 			snd->buffer = Sound_Copy( snd->size );	// unzone buffer (don't touch image.tempbuffer)
 		}
-		else
+/*		else
 		{
 			// not resampled
 			result = false;
 		}
+*/
 	}
 
 	*wav = snd;

@@ -286,7 +286,6 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 {
 	int		i, lindex, lnumverts;
 	medge_t		*pedges, *r_pedge;
-	int		vertpage;
 	texture_t		*tex;
 	gltexture_t	*glt;
 	float		*vec;
@@ -313,7 +312,6 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 	// reconstruct the polygon
 	pedges = mod->edges;
 	lnumverts = fa->numedges;
-	vertpage = 0;
 
 	// draw texture
 	poly = Mem_Alloc( mod->mempool, sizeof( glpoly_t ) + ( lnumverts - 4 ) * VERTEXSIZE * sizeof( float ));

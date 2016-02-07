@@ -1817,8 +1817,6 @@ void CL_ParseTempEntity( sizebuf_t *msg )
 	cl_entity_t	*pEnt;
 	dlight_t		*dl;
 
-	decalIndex = modelIndex = entityIndex = 0;
-
 	// parse user message into buffer
 	BF_ReadBytes( msg, pbuf, iSize );
 

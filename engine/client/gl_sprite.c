@@ -571,7 +571,6 @@ float R_GetSpriteFrameInterpolant( cl_entity_t *ent, mspriteframe_t **oldframe, 
 				// or change model on replace delta-entity
 				ent->latched.prevblending[0] = ent->latched.prevblending[1] = frame;
 				ent->latched.prevanimtime = RI.refdef.time;
-				lerpFrac = 1.0f;
 			}
                               
 			if( ent->latched.prevanimtime < RI.refdef.time )
@@ -657,7 +656,6 @@ float R_GetSpriteFrameInterpolant( cl_entity_t *ent, mspriteframe_t **oldframe, 
 				// or change model on replace delta-entity
 				ent->latched.prevblending[0] = ent->latched.prevblending[1] = frame;
 				ent->latched.prevanimtime = RI.refdef.time;
-				lerpFrac = 1.0f;
 			}
 
 			if( ent->latched.prevanimtime < RI.refdef.time )

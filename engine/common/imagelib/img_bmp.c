@@ -475,7 +475,6 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	if( host.write_to_clipboard )
 	{
 		Q_memcpy( clipbuf + cur_size, pbBmpBits, cbBmpBits );
-		cur_size += cbBmpBits;
 		Sys_SetClipboardData( clipbuf, total_size );
 		Z_Free( clipbuf );
 	}

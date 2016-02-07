@@ -825,7 +825,6 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 		else
 		{
 			VectorClear( nColor );
-			fraction = 0.0;
 		}
 	
 		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );

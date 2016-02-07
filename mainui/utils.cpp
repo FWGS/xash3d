@@ -1164,7 +1164,7 @@ UI_Slider_Key
 */
 const char *UI_Slider_Key( menuSlider_s *sl, int key, int down )
 {
-	int	sliderX;
+	//int	sliderX;
 
 	if( !down )
 	{
@@ -1186,7 +1186,7 @@ const char *UI_Slider_Key( menuSlider_s *sl, int key, int down )
 			return uiSoundNull;
 
 		// find the current slider position
-		sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue * sl->numSteps));		
+		//sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue * sl->numSteps));		
 		sl->keepSlider = true;
 		int	dist, numSteps;
 		

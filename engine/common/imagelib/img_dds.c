@@ -17,7 +17,6 @@ GNU General Public License for more details.
 
 qboolean Image_CheckDXT3Alpha( dds_t *hdr, byte *fin )
 {
-	uint	bitmask;
 	word	sAlpha;
 	byte	*alpha; 
 	int	x, y, i, j; 
@@ -28,9 +27,7 @@ qboolean Image_CheckDXT3Alpha( dds_t *hdr, byte *fin )
 		for( x = 0; x < hdr->dwWidth; x += 4 )
 		{
 			alpha = fin;
-			fin += 8;
-			bitmask = ((uint *)fin)[1];
-			fin += 8;
+			fin += 16;
 
 			for( j = 0; j < 4; j++ )
 			{
@@ -54,7 +51,7 @@ qboolean Image_CheckDXT3Alpha( dds_t *hdr, byte *fin )
 
 qboolean Image_CheckDXT5Alpha( dds_t *hdr, byte *fin )
 {
-	uint	bits, bitmask;
+	uint	bits;
 	byte	*alphamask; 
 	int	x, y, i, j; 
 
@@ -67,10 +64,7 @@ qboolean Image_CheckDXT5Alpha( dds_t *hdr, byte *fin )
 				break;
 
 			alphamask = fin + 2;
-			fin += 8;
-
-			bitmask = ((uint *)fin)[1];
-			fin += 8;
+			fin += 16;
 
 			// last three bytes
 			bits = (alphamask[3]) | (alphamask[4] << 8) | (alphamask[5] << 16);
@@ -202,9 +196,6 @@ uint Image_DXTCalcMipmapSize( dds_t *hdr )
 uint Image_DXTCalcSize( const char *name, dds_t *hdr, size_t filesize ) 
 {
 	size_t buffsize = 0;
-	int w = image.width;
-	int h = image.height;
-	int d = image.depth;
 
 	if( hdr->dsCaps.dwCaps2 & DDS_CUBEMAP ) 
 	{

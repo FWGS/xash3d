@@ -1392,7 +1392,7 @@ static void Mod_BuildPolygon( mextrasurf_t *info, msurface_t *surf, int numVerts
 	mesh->verts = (glvert_t *)buffer;
 	buffer += numVerts * sizeof( glvert_t );
 	mesh->elems = (word *)buffer;
-	buffer += numElems * sizeof( word );
+	//buffer += numElems * sizeof( word );
 
 	mesh->next = info->mesh;
 	mesh->surf = surf;	// NOTE: meshchains can be linked with one surface
@@ -1543,7 +1543,7 @@ static void Mod_SubdividePolygon( mextrasurf_t *info, msurface_t *surf, int numV
 
 	// setup pointers
 	mesh->verts = (glvert_t *)buffer;
-	buffer += numVerts * sizeof( glvert_t );
+	//buffer += numVerts * sizeof( glvert_t );
 
 	VectorClear( vTotal );
 	VectorClear( nTotal );
@@ -1691,11 +1691,11 @@ static void Mod_ConvertSurface( mextrasurf_t *info, msurface_t *surf )
 	mesh->verts = (glvert_t *)buffer;
 	buffer += numVerts * sizeof( glvert_t );
 	mesh->elems = (word *)buffer;
-	buffer += numElems * sizeof( word );
+	//buffer += numElems * sizeof( word );
 
 	// setup moving pointers
-	outVerts = (glvert_t *)mesh->verts;
-	outElems = (word *)mesh->elems;
+	//outVerts = (glvert_t *)mesh->verts;
+	//outElems = (word *)mesh->elems;
 
 	// store vertex data
 	numElems = numVerts = 0;

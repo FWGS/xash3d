@@ -2126,8 +2126,6 @@ void SV_EntInfo_f( sv_client_t *cl )
 
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return;
-
-		ent = EDICT_NUM( i );
 	}
 	else
 	{
@@ -2213,8 +2211,6 @@ void SV_EntFire_f( sv_client_t *cl )
 
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return;
-
-		ent = EDICT_NUM( i );
 	}
 	else if( !sv_enttools_players->value )
 		i = svgame.globals->maxClients + 1;
@@ -2759,7 +2755,6 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 	usercmd_t		cmds[32], *to;
 	edict_t		*player;
 
-	numbackup = 2;
 	player = cl->edict;
 
 	frame = &cl->frames[cl->netchan.incoming_acknowledged & SV_UPDATE_MASK];

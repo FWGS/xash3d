@@ -2645,7 +2645,6 @@ void R_StudioDeformShadow( void )
 	VectorScale( g_mvShadowVec, dist2, g_mvShadowVec );
 
 	verts = g_xarrayverts[0];
-	numVerts = g_nNumArrayVerts;
 
 	for( numVerts = 0; numVerts < g_nNumArrayVerts; numVerts++, verts += 3 )
 	{

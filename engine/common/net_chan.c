@@ -1161,7 +1161,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	sizebuf_t	send;
 	byte	send_buf[NET_MAX_MESSAGE];
 	qboolean	send_reliable_fragment;
-	qboolean	send_resending = false;
+	//qboolean	send_resending = false;
 	qboolean	send_reliable;
 	size_t	size1, size2;
 	uint	w1, w2, hdr_size;
@@ -1182,7 +1182,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	if( chan->incoming_acknowledged > chan->last_reliable_sequence && chan->incoming_reliable_acknowledged != chan->reliable_sequence )
 	{
 		send_reliable = true;
-		send_resending = true;
+	//	send_resending = true;
 	}
 
 	// A packet can have "reliable payload + frag payload + unreliable payload

@@ -405,7 +405,6 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 		// quake1 1.01 mip version without palette
 		fin = (byte *)buffer + mip.offsets[0];
 		pal = NULL; // clear palette
-		rendermode = LUMP_NORMAL;
 
 		hl_texture = false;
 

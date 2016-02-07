@@ -548,7 +548,7 @@ msurfmesh_t *R_DecalCreateMesh( decalinfo_t *decalinfo, decal_t *pdecal, msurfac
 	mesh->verts = (glvert_t *)buffer;
 	buffer += numVerts * sizeof( glvert_t );
 	mesh->elems = (word *)buffer;
-	buffer += numElems * sizeof( word );
+	//buffer += numElems * sizeof( word );
 
 	mesh->surf = surf;	// NOTE: meshchains can be linked with one surface
 

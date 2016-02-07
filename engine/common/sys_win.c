@@ -710,16 +710,16 @@ print into window console
 */
 void Sys_Print( const char *pMsg )
 {
-	const char	*msg;
-	char		buffer[32768];
-	char		logbuf[32768];
-	char		*b = buffer;
-	char		*c = logbuf;	
-	int		i = 0;
-
 	if( host.type == HOST_NORMAL )
 		Con_Print( pMsg );
 #ifdef _WIN32
+	const char      *msg;
+        char            buffer[32768];
+        char            logbuf[32768];
+        char            *b = buffer;
+        char            *c = logbuf;
+        int             i = 0;
+
 	// if the message is REALLY long, use just the last portion of it
 	if( Q_strlen( pMsg ) > sizeof( buffer ) - 1 )
 		msg = pMsg + Q_strlen( pMsg ) - sizeof( buffer ) + 1;

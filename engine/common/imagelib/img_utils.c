@@ -826,7 +826,7 @@ void Image_Resample32Nolerp( const void *indata, int inwidth, int inheight, void
 
 		if( j & 1 )
 		{
-			out[0] = inrow[frac >> 16];frac += fracstep;
+			out[0] = inrow[frac >> 16];
 			out += 1;
 		}
 	}
@@ -993,7 +993,6 @@ void Image_Resample24Nolerp( const void *indata, int inwidth, int inheight, void
 			*out++ = inrow[f+0];
 			*out++ = inrow[f+1];
 			*out++ = inrow[f+2];
-			frac += fracstep;
 			out += 1;
 		}
 	}

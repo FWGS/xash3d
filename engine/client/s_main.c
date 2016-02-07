@@ -1126,7 +1126,7 @@ void S_AmbientSound( const vec3_t pos, int ent, sound_t handle, float fvol, floa
 	channel_t	*ch;
 	wavdata_t	*pSource = NULL;
 	sfx_t	*sfx = NULL;
-	int	vol, fvox = 0;
+	int	vol;
 	float	radius = SND_RADIUS_MAX;
 	vec3_t	origin;		
 
@@ -1171,7 +1171,6 @@ void S_AmbientSound( const vec3_t pos, int ent, sound_t handle, float fvol, floa
 		Q_strncpy( ch->name, sfx->name, sizeof( ch->name ));
 		sfx = ch->sfx;
 		pSource = sfx->cache;
-		fvox = 1;
 	}
 	else
 	{
