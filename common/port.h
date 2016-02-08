@@ -84,6 +84,7 @@ GNU General Public License for more details.
     typedef unsigned char   BYTE;
     typedef unsigned char   byte;
     typedef short int	    WORD;
+    typedef unsigned short  word;
     typedef unsigned int    DWORD;
     typedef long int	    LONG;
     typedef unsigned long int   ULONG;

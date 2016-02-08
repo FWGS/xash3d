@@ -155,7 +155,7 @@ typedef struct
 	qboolean		finished;
 } mixer_t;
 
-typedef struct channel_s
+struct channel_s
 {
 	char		name[16];		// keept sentence name
 	sfx_t		*sfx;		// sfx number
@@ -188,7 +188,7 @@ typedef struct channel_s
 	int		wordIndex;
 	mixer_t		*currentWord;	// NULL if sentence is finished
 	voxword_t		words[CVOXWORDMAX];
-} channel_t;
+};
 
 typedef struct
 {

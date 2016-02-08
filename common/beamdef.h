@@ -29,7 +29,6 @@
 #define FBEAM_ISACTIVE		0x40000000
 #define FBEAM_FOREVER		0x80000000
 
-typedef struct beam_s BEAM;
 struct beam_s
 {
 	BEAM		*next;

@@ -60,7 +60,7 @@ typedef struct wadtype_s
 	signed char		type;
 } wadtype_t;
 
-typedef struct file_s
+struct file_s
 {
 	int		handle;			// file descriptor
 	fs_offset_t	real_length;		// uncompressed file size (for files opened in "read" mode)
@@ -71,7 +71,7 @@ typedef struct file_s
 						// Contents buffer
 	fs_offset_t	buff_ind, buff_len;		// buffer current index and length
 	byte		buff[FILE_BUFF_SIZE];	// intermediate buffer
-} file_t;
+};
 
 byte		*fs_mempool;
 searchpath_t	*fs_searchpaths = NULL;
