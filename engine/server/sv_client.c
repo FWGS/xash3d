@@ -2323,6 +2323,7 @@ void SV_EntFire_f( sv_client_t *cl )
 			Q_strncpy( value, Cmd_Argv( 4 ), MAX_STRING );
 			pkvd.szKeyName = keyname;
 			pkvd.szValue = value;
+			pkvd.fHandled = false;
 			svgame.dllFuncs.pfnKeyValue( ent, &pkvd );
 			if( pkvd.fHandled )
 				SV_ClientPrintf( cl, PRINT_LOW, "value set successfully!\n" );
@@ -2509,6 +2510,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 	for( i=2; i < Cmd_Argc() - 1; i++ )
 	{
 		KeyValueData	pkvd;
+		pkvd.fHandled = false;
 		pkvd.szClassName = (char*)STRING( ent->v.classname );
 		pkvd.szKeyName = Cmd_Argv( i );
 		i++;
