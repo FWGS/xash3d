@@ -448,7 +448,7 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		return host.oldFilter( pInfo );
 	return EXCEPTION_CONTINUE_EXECUTION;
 }
-#else //if !defined (__ANDROID__) // Android will have other handler
+#elif defined (CRASHHANDLER) // Android will have other handler
 // Posix signal handler
 
 #if defined(__FreeBSD__) || defined(__NetBSD__)

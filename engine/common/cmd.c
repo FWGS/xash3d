@@ -33,6 +33,11 @@ static byte		cmd_text_buf[MAX_CMD_BUFFER];
 static cmdalias_t	*cmd_alias;
 static int			maxcmdnamelen; // this is used to nicely format command list output
 extern convar_t		*cvar_vars;
+extern convar_t *com_scripting;
+
+// condition checking
+uint64_t cmd_cond;
+int cmd_condlevel;
 
 /*
 =============================================================================
@@ -804,6 +809,70 @@ qboolean Cmd_Exists( const char *cmd_name )
 
 /*
 ============
+Cmd_If_f
+
+Compare and et condition bit if true
+============
+*/
+void Cmd_If_f( void )
+{
+	// reset bit first
+	cmd_cond &= ~BIT( cmd_condlevel );
+
+	// one argument - check if nonzero
+	if( cmd_argc == 2 )
+	{
+		if( Q_atof( cmd_argv[1] ) )
+			cmd_cond |= BIT( cmd_condlevel );
+	}
+	else if( cmd_argc == 4 )
+	{
+		// simple compare
+		float f1 = Q_atof( cmd_argv[1] );
+		float f2 = Q_atof( cmd_argv[3] );
+
+		if( !cmd_argv[2][0] ) // this is wrong
+			return;
+
+		if( ( cmd_argv[2][0] == '=' ) ||
+			( cmd_argv[2][1] == '=' )  )				// =, ==, >=, <=
+		{
+			if( !Q_strcmp( cmd_argv[1], cmd_argv[3] ) || 
+				( ( f1 || f2 ) && ( f1 == f2 ) ) )
+				cmd_cond |= BIT( cmd_condlevel );
+		}
+
+		if( cmd_argv[2][0] == '!' ) 					// !=
+		{
+			cmd_cond ^= BIT( cmd_condlevel );
+			return;
+		}
+
+		if( ( cmd_argv[2][0] == '>' ) && ( f1 > f2 ) )	// >, >=
+			cmd_cond |= BIT( cmd_condlevel );
+		
+		if( ( cmd_argv[2][0] == '<' ) && ( f1 < f2 ) )	// <, <=
+			cmd_cond |= BIT( cmd_condlevel );
+	}
+	else
+		Msg("Syntax error!\n");
+}
+
+
+/*
+============
+Cmd_Else_f
+
+Invert condition bit
+============
+*/
+void Cmd_Else_f( void )
+{
+	cmd_cond ^= BIT( cmd_condlevel );
+}
+
+/*
+============
 Cmd_ExecuteString
 
 A complete command line has been parsed, so try to execute it
@@ -813,9 +882,39 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 {	
 	cmd_t	*cmd;
 	cmdalias_t	*a;
+	char command[MAX_CMD_LINE], *pcmd = command;
+	int len = 0;;
 
 	// set cmd source
 	cmd_source = src;
+	cmd_condlevel = 0;
+
+	if( com_scripting && com_scripting->value )
+	{
+		while( *text )
+		{
+			if( *text == '$' )
+			{
+				char token[MAX_CMD_LINE];
+				text = COM_ParseFile( text + 1, token );
+				len += Q_strncpy( pcmd, Cvar_VariableString( token ), MAX_CMD_LINE - len );
+				pcmd = command + len;
+				*pcmd++ = ' ';
+			}
+			*pcmd++ = *text++;
+			len++;
+		}
+		*pcmd = 0;
+		text = command;
+
+		while( *text == ':' )
+		{
+			if( !( cmd_cond & BIT( cmd_condlevel ) ) )
+				return;
+			cmd_condlevel++;
+			text++;
+		}
+	}
 	
 	// execute the command line
 	Cmd_TokenizeString( text );		
@@ -1076,6 +1175,7 @@ void Cmd_Init( void )
 	cmd_argc = 0;
 	cmd_args = NULL;
 	cmd_alias = NULL;
+	cmd_cond = 0;
 	Cbuf_Init();
 
 	// register our commands
@@ -1087,6 +1187,8 @@ void Cmd_Init( void )
 	Cmd_AddCommand( "cmd", Cmd_ForwardToServer, "send a console commandline to the server" );
 	Cmd_AddCommand( "alias", Cmd_Alias_f, "create a script function, without arguments show the list of all aliases" );
 	Cmd_AddCommand( "unalias", Cmd_UnAlias_f, "remove a script function" );
+	Cmd_AddCommand( "if", Cmd_If_f, "compare and set condition bits" );
+	Cmd_AddCommand( "else", Cmd_Else_f, "invert condition bit" );
 }
 
 void Cmd_Shutdown( void )
