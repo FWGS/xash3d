@@ -106,7 +106,7 @@ JNIEXPORT void JNICALL  Java_org_libsdl_app_SDLActivity_onTrackTrigger
     TrackData[2] = z;
 }
 
-void GetTrackData(float values[3])
+void GetTrackData(vec3_t values)
 {
     int i;
     for (i = 0; i < 3; ++i) 

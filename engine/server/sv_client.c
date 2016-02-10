@@ -2816,7 +2816,7 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 	int		key, size, checksum1, checksum2;
 	int		i, numbackup, newcmds, numcmds;
 	usercmd_t		nullcmd, *from;
-	usercmd_t		cmds[255], *to;
+	usercmd_t		cmds[64], *to;
 	edict_t		*player;
 
 	numbackup = 2;
@@ -2836,7 +2836,7 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 	numcmds = numbackup + newcmds;
 	net_drop = net_drop + 1 - newcmds;
 
-	if( numcmds < 0 || numcmds > 253 )
+	if( numcmds < 0 || numcmds > 50 )
 	{
 		MsgDev( D_ERROR, "%s sent too many commands: %i\n", cl->name, numcmds );
 		SV_DropClient( cl );
