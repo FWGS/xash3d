@@ -2196,13 +2196,15 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 {
 	edict_t *ent = NULL;
 	edict_t *closest = NULL;
-	float flMaxDot = 0;
+	float flMaxDot = 0.9;
+	vec3_t forward;
+	AngleVectors( player->v.v_angle, forward, NULL, NULL );
 
-	while( ent = pfnFindEntityInSphere( ent, player->v.origin, 128 ) )
+	while( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) )
 	{
 		vec3_t vecLOS;
 		float flDot;
-		vec3_t aim;
+		vec3_t boxSize;
 
 		if( ent == player )
 			continue;
@@ -2215,12 +2217,34 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 		VectorScale( vecLOS, 0.5, vecLOS );
 		VectorSubtract( vecLOS, player->v.origin, vecLOS );
 		VectorSubtract( vecLOS, player->v.view_ofs, vecLOS );
+
+		VectorCopy( ent->v.size, boxSize);
+		VectorScale( boxSize, 0.5, boxSize );
+
+		if ( vecLOS[0] > boxSize[0] )
+			vecLOS[0] -= boxSize[0];
+		else if ( vecLOS[0] < -boxSize[0] )
+			vecLOS[0] += boxSize[0];
+		else
+			vecLOS[0] = 0;
+
+		if ( vecLOS[1] > boxSize[1] )
+			vecLOS[1] -= boxSize[1];
+		else if ( vecLOS[1] < -boxSize[1] )
+			vecLOS[1] += boxSize[1];
+		else
+			vecLOS[1] = 0;
+
+		if ( vecLOS[2] > boxSize[2] )
+			vecLOS[2] -= boxSize[2];
+		else if ( vecLOS[2] < -boxSize[2] )
+			vecLOS[2] += boxSize[2];
+		else
+			vecLOS[2] = 0;
 		VectorNormalize( vecLOS );
 
-		//pfnGetAimVector( player, 0, aim );
-
-		flDot = DotProduct (vecLOS , svgame.globals->v_forward );
-		if (flDot > flMaxDot )
+		flDot = DotProduct (vecLOS , forward);
+		if ( flDot > flMaxDot )
 			closest = ent, flMaxDot = flDot;
 
 	}
