@@ -2196,7 +2196,7 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 {
 	edict_t *ent = NULL;
 	edict_t *closest = NULL;
-	float flMaxDot = 0;
+	float flMaxDot = 0.7;
 
 	while( ent = pfnFindEntityInSphere( ent, player->v.origin, 128 ) )
 	{
@@ -2816,7 +2816,7 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 	int		key, size, checksum1, checksum2;
 	int		i, numbackup, newcmds, numcmds;
 	usercmd_t		nullcmd, *from;
-	usercmd_t		cmds[64], *to;
+	usercmd_t		cmds[32], *to;
 	edict_t		*player;
 
 	numbackup = 2;
@@ -2836,7 +2836,7 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 	numcmds = numbackup + newcmds;
 	net_drop = net_drop + 1 - newcmds;
 
-	if( numcmds < 0 || numcmds > 50 )
+	if( numcmds < 0 || numcmds > 28 )
 	{
 		MsgDev( D_ERROR, "%s sent too many commands: %i\n", cl->name, numcmds );
 		SV_DropClient( cl );
