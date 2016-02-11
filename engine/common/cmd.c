@@ -893,7 +893,12 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 	{
 		while( *text )
 		{
-			if( *text == '$' )
+			// check for escape
+			if( ( *text == '\\' || *text == '$') && ( *(text + 1) == '$' ))
+			{
+				text ++;
+			}
+			else if( *text == '$' )
 			{
 				char token[MAX_CMD_LINE], *ptoken = token;
 
