@@ -33,7 +33,7 @@ static byte		cmd_text_buf[MAX_CMD_BUFFER];
 static cmdalias_t	*cmd_alias;
 static int			maxcmdnamelen; // this is used to nicely format command list output
 extern convar_t		*cvar_vars;
-extern convar_t *com_scripting;
+extern convar_t *cmd_scripting;
 
 // condition checking
 uint64_t cmd_cond;
@@ -585,9 +585,8 @@ void Cmd_TokenizeString( const char *text )
 			return;
 	
 		if( cmd_argc == 1 )
-			 cmd_args = text;
-			
-		text = COM_ParseFile( text, cmd_token );
+			 cmd_args = (char*)text;
+		text = COM_ParseFile( (char*)text, cmd_token );
 		if( !text ) return;
 
 		if( cmd_argc < MAX_CMD_TOKENS )
@@ -889,17 +888,26 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 	cmd_source = src;
 	cmd_condlevel = 0;
 
-	if( com_scripting && com_scripting->value )
+	// cvar value substitution
+	if( cmd_scripting && cmd_scripting->value )
 	{
 		while( *text )
 		{
 			if( *text == '$' )
 			{
-				char token[MAX_CMD_LINE];
-				text = COM_ParseFile( text + 1, token );
+				char token[MAX_CMD_LINE], *ptoken = token;
+
+				// check for correct cvar name
+				text++;
+				while( ( *text >= '0' && *text <= '9' ) ||
+					   ( *text >= 'A' && *text <= 'z') || *text == '_' )
+					*ptoken++ = *text++;
+				*ptoken = 0;
 				len += Q_strncpy( pcmd, Cvar_VariableString( token ), MAX_CMD_LINE - len );
 				pcmd = command + len;
-				*pcmd++ = ' ';
+				//*pcmd++ = ' ';
+				if( !*text )
+					break;
 			}
 			*pcmd++ = *text++;
 			len++;
@@ -917,7 +925,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 	}
 	
 	// execute the command line
-	Cmd_TokenizeString( text );		
+	Cmd_TokenizeString( text );
 
 	if( !Cmd_Argc()) return; // no tokens
 

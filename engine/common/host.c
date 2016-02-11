@@ -51,7 +51,7 @@ convar_t	*con_gamemaps;
 convar_t	*download_types;
 convar_t	*build, *ver;
 convar_t	*host_mapdesign_fatal;
-convar_t 	*com_scripting = NULL;
+convar_t 	*cmd_scripting = NULL;
 
 static int num_decals;
 
@@ -947,7 +947,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Cmd_AddCommand( "exec", Host_Exec_f, "execute a script file" );
 	Cmd_AddCommand( "memlist", Host_MemStats_f, "prints memory pool information" );
 	Cmd_AddCommand( "userconfigd", Host_Userconfigd_f, "execute all scripts from userconfig.d" );
-	com_scripting = Cvar_Get( "com_scripting", "0", CVAR_ARCHIVE, "enable simple condition checking and variable operations" );
+	cmd_scripting = Cvar_Get( "cmd_scripting", "0", CVAR_ARCHIVE, "enable simple condition checking and variable operations" );
 	
 	FS_Init();
 	Image_Init();
