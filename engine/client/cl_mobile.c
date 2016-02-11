@@ -39,6 +39,12 @@ static void pfnVibrate( float life, char flags )
 	if( !vibration_enable->value )
 		return;
 
+	if( life < 0.0f )
+	{
+		MsgDev( D_WARN, "Negative vibrate time: %f\n", life );
+		return;
+	}
+
 	MsgDev( D_NOTE, "Vibrate: %f %d\n", life, flags );
 
 	// here goes platform-specific backends
@@ -106,5 +112,5 @@ void Mobile_Init( void )
 
 void Mobile_Destroy( void )
 {
-
+	Cmd_RemoveCommand( "vibrate" );
 }

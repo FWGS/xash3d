@@ -1380,7 +1380,7 @@ void HTTP_Run( void )
 		{
 			buf[res] = 0; // string break to search \r\n\r\n
 			Q_memcpy( header + headersize, buf, res );
-			//MsgDev( D_INFO, "%s", buf );
+			//MsgDev( D_INFO, "%s\n", buf );
 			begin = Q_strstr( header, "\r\n\r\n" );
 			if( begin ) // Got full header
 			{
