@@ -39,7 +39,7 @@ static void pfnVibrate( float life, char flags )
 	if( !vibration_enable->value )
 		return;
 
-	if( time < 0.0f )
+	if( life < 0.0f )
 	{
 		MsgDev( D_WARN, "Negative vibrate time: %f\n", life );
 		return;
