@@ -722,7 +722,7 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	string		fullpath;
 	int		i;
 
-	MsgDev(D_NOTE, "FS_AddGameDirectory( %s, %i )", dir, flags );
+	MsgDev(D_NOTE, "FS_AddGameDirectory( %s, %i )\n", dir, flags );
 
 	if(!( flags & FS_NOWRITE_PATH ))
 		Q_strncpy( fs_gamedir, dir, sizeof( fs_gamedir ));
