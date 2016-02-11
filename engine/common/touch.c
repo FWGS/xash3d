@@ -778,11 +778,12 @@ qboolean IN_TouchIsVisible( touchbutton2_t *button )
 
 void IN_TouchDrawTexture ( float x1, float y1, float x2, float y2, int texture, byte r, byte g, byte b, byte a )
 {
-	pglColor4ub( r, g, b, a );
 	if( x1 >= x2 )
 		return;
+
 	if( y1 >= y2 )
 		return;
+
 	pglColor4ub( r, g, b, a );
 	R_DrawStretchPic( TO_SCRN_X(x1),
 		TO_SCRN_Y(y1),
