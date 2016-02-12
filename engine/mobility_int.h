@@ -34,6 +34,7 @@ extern "C" {
 #define TOUCH_FL_DEF_HIDE		(1U << 6)
 #define TOUCH_FL_DRAW_ADDITIVE	(1U << 7)
 #define TOUCH_FL_STROKE			(1U << 8)
+#define TOUCH_FL_PRECISION			(1U << 9)
 
 typedef struct mobile_engfuncs_s
 {

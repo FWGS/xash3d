@@ -95,6 +95,8 @@ void V_SetupRefDef( void )
 
 	cl.refdef.viewport[1] = (scr_height->integer - sb_lines - cl.refdef.viewport[3]) / 2;
 
+	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+		cl.scr_fov = 90.0f;
 	// calc FOV
 	cl.refdef.fov_x = cl.scr_fov; // this is a final fov value
 	cl.refdef.fov_y = V_CalcFov( &cl.refdef.fov_x, cl.refdef.viewport[2], cl.refdef.viewport[3] );

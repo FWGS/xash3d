@@ -28,7 +28,9 @@ typedef enum
 {
 	touch_command,		// Just tap a button
 	touch_move,		// Like a joystick stick.
-	touch_look		// Like a joystick stick.
+	touch_joy,		// Like a joystick stick, centered.
+	touch_dpad,		// Only two directions.
+	touch_look		// Like a touchpad.
 } touchButtonType;
 
 typedef enum
@@ -80,6 +82,7 @@ struct touch_s
 	touchState state;
 	int look_finger;
 	int move_finger;
+	touchbutton2_t *move;
 	float move_start_x;
 	float move_start_y;
 	float forward;
@@ -94,6 +97,7 @@ struct touch_s
 	qboolean clientonly;
 	rgba_t scolor;
 	int swidth;
+	qboolean precision;
 	// textures
 	int showtexture;
 	int hidetexture;
@@ -150,7 +154,7 @@ void IN_TouchWriteConfig( void )
 	if( !touch.first ) return;
 
 	MsgDev( D_NOTE, "IN_TouchWriteConfig(): %s\n", touch_config_file->string );
-	f = FS_Open( touch_config_file->string, "w", false );
+	f = FS_Open( touch_config_file->string, "w", true );
 	if( f )
 	{
 		touchbutton2_t *button;
@@ -207,7 +211,7 @@ void IN_TouchExportConfig_f( void )
 	name = Cmd_Argv( 1 );
 
 	MsgDev( D_NOTE, "Exporting config to %s\n", name );
-	f = FS_Open( name, "w", false );
+	f = FS_Open( name, "w", true );
 	if( f )
 	{
 		char profilename[256];
@@ -515,6 +519,10 @@ touchbutton2_t *IN_AddButton( const char *name,  const char *texture, const char
 		button->type = touch_look;
 	if( !Q_strcmp( command, "_move" ) )
 		button->type = touch_move;
+	if( !Q_strcmp( command, "_joy" ) )
+		button->type = touch_joy;
+	if( !Q_strcmp( command, "_dpad" ) )
+		button->type = touch_dpad;
 	Q_strncpy( button->command, command, sizeof( button->command ) );
 	button->finger = -1;
 	button->next = NULL;
@@ -692,6 +700,7 @@ void IN_TouchInit( void )
 	touch.state = state_none;
 	touch.showbuttons = true;
 	touch.clientonly = false;
+	touch.precision = false;
 	MakeRGBA( touch.scolor, 255, 255, 255, 255 );
 	touch.swidth = 1;
 	g_LastDefaultButton = 0;
@@ -782,11 +791,12 @@ qboolean IN_TouchIsVisible( touchbutton2_t *button )
 
 void IN_TouchDrawTexture ( float x1, float y1, float x2, float y2, int texture, byte r, byte g, byte b, byte a )
 {
-	pglColor4ub( r, g, b, a );
 	if( x1 >= x2 )
 		return;
+
 	if( y1 >= y2 )
 		return;
+
 	pglColor4ub( r, g, b, a );
 	R_DrawStretchPic( TO_SCRN_X(x1),
 		TO_SCRN_Y(y1),
@@ -1185,9 +1195,11 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				{
 					char command[256];
 					Q_snprintf( command, 256, "%s\n", button->command, 256 );
+					if( B(flags) & TOUCH_FL_PRECISION )
+						touch.precision = true;
 					Cbuf_AddText( command );
 				}
-				if( button->type == touch_move )
+				if( button->type == touch_move || button->type == touch_joy || button->type == touch_dpad  )
 				{
 					if( touch.move_finger !=-1 )
 					{
@@ -1205,8 +1217,19 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 						continue;
 					}
 					touch.move_finger = fingerID;
+					touch.move = button;
 					touch.move_start_x = x;
 					touch.move_start_y = y;
+					if( touch.move->type == touch_joy )
+					{
+						touch.forward = ((touch.move->y2 + touch.move->y1) - y * 2) / (touch.move->y2 - touch.move->y1);
+						touch.side = (x * 2 - (touch.move->x2 + touch.move->x1)) / (touch.move->x2 - touch.move->x1);
+					}
+					else if( touch.move->type == touch_dpad )
+					{
+						touch.forward = round(((touch.move->y2 + touch.move->y1) - y * 2) / (touch.move->y2 - touch.move->y1));
+						touch.side = round((x * 2 - (touch.move->x2 + touch.move->x1)) / (touch.move->x2 - touch.move->x1));
+					}
 				}
 				if( button->type == touch_look )
 				{
@@ -1240,11 +1263,14 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 					Q_snprintf( command, 256, "%s\n", button->command, 256 );
 					command[0] = '-';
 					Cbuf_AddText( command );
+					if( B(flags) & TOUCH_FL_PRECISION )
+						touch.precision = false;
 				}
-				if( button->type == touch_move )
+				if( button->type == touch_move || button->type == touch_joy || button->type == touch_dpad )
 				{
 					touch.move_finger = -1;
 					touch.forward = touch.side = 0;
+					touch.move = NULL;
 				}
 				if( button->type == touch_look )
 				{
@@ -1263,11 +1289,28 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				Cvar_SetFloat( "touch_forwardzone", 0.5 );
 			if( !touch_sidezone->value )
 				Cvar_SetFloat( "touch_sidezone", 0.3 );
-			touch.forward = (touch.move_start_y - y) / touch_forwardzone->value;
-			touch.side = (x - touch.move_start_x) / touch_sidezone->value ;
+			if( !touch.move || touch.move->type == touch_move )
+			{
+				touch.forward = (touch.move_start_y - y) / touch_forwardzone->value;
+				touch.side = (x - touch.move_start_x) / touch_sidezone->value;
+			}
+			else if( touch.move->type == touch_joy )
+			{
+				touch.forward = ((touch.move->y2 + touch.move->y1) - y * 2) / (touch.move->y2 - touch.move->y1);
+				touch.side = (x * 2 - (touch.move->x2 + touch.move->x1)) / (touch.move->x2 - touch.move->x1);
+			}
+			else if( touch.move->type == touch_dpad )
+			{
+				touch.forward = round(((touch.move->y2 + touch.move->y1) - y * 2) / (touch.move->y2 - touch.move->y1));
+				touch.side = round((x * 2 - (touch.move->x2 + touch.move->x1)) / (touch.move->x2 - touch.move->x1));
+			}
 		}
 		if( fingerID == touch.look_finger )
-			touch.yaw -=dx * touch_yaw->value, touch.pitch +=dy * touch_pitch->value;
+		{
+			if( touch.precision )
+				dx /= 2, dy /= 2;
+			touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
+		}
 	}
 	return 1;
 }

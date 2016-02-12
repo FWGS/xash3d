@@ -696,8 +696,8 @@ void Master_Shutdown( void )
 
 	NET_Config( true ); // allow remote
 
-	if( !NET_StringToAdr( MASTERSERVER_ADR, &adr ))
-		MsgDev( D_INFO, "Can't resolve addr: %s\n", MASTERSERVER_ADR );
+	if( !NET_StringToAdr( sv_master->string, &adr ))
+		MsgDev( D_INFO, "Can't resolve addr: %s\n", sv_master->string );
 
 	NET_SendPacket( NS_SERVER, 2, "\x62\x0A", adr );
 }
@@ -814,7 +814,7 @@ void SV_Init( void )
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
 	sv_skipshield = Cvar_Get( "sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
 	sv_trace_messages = Cvar_Get( "sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)" );
-	sv_master = Cvar_Get(" sv_master", MASTERSERVER_ADR, CVAR_ARCHIVE, "master server address" );
+	sv_master = Cvar_Get( "sv_master", MASTERSERVER_ADR, CVAR_ARCHIVE, "master server address" );
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 

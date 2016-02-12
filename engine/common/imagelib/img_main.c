@@ -222,6 +222,7 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
           const char	*ext = FS_FileExtension( filename );
 	string		path, loadname, sidename;
 	qboolean		anyformat = true;
+	qboolean		gamedironly = true;
 	int		i;
 	fs_offset_t	filesize = 0;
 	const loadpixformat_t *format;
@@ -249,6 +250,8 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 	// HACKHACK: skip any checks, load file from buffer
 	if( filename[0] == '#' && buffer && size ) goto load_internal;
 
+search_fs:
+
 	// now try all the formats in the selected list
 	for( format = image.loadformats; format && format->formatstring; format++)
 	{
@@ -256,7 +259,7 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 		{
 			Q_sprintf( path, format->formatstring, loadname, "", format->ext );
 			image.hint = format->hint;
-			f = FS_LoadFile( path, &filesize, false );
+			f = FS_LoadFile( path, &filesize, gamedironly );
 			if( f && filesize > 0 )
 			{
 				if( format->loadfunc( path, f, (size_t)filesize ))
@@ -267,6 +270,12 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 				else Mem_Free(f); // release buffer 
 			}
 		}
+	}
+
+	if( gamedironly )
+	{
+		gamedironly = false;
+		goto search_fs;
 	}
 
 	// check all cubemap sides with package suffix

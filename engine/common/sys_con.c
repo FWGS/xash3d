@@ -512,9 +512,9 @@ void Sys_InitLog( void )
 	else mode = "w";
 
 	// print log to stdout
-	printf( "=================================================================================\n" );
+	printf( "================================================================================\n" );
 	printf( "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
-	printf( "=================================================================================\n" );
+	printf( "================================================================================\n" );
 
 	s_wcd.logfileno = -1;
 	// create log if needed
@@ -524,9 +524,9 @@ void Sys_InitLog( void )
 		if( !s_wcd.logfile ) MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_wcd.log_path );
 		else s_wcd.logfileno = fileno( s_wcd.logfile );
 
-		fprintf( s_wcd.logfile, "=================================================================================\n" );
+		fprintf( s_wcd.logfile, "================================================================================\n" );
 		fprintf( s_wcd.logfile, "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
-		fprintf( s_wcd.logfile, "=================================================================================\n" );
+		fprintf( s_wcd.logfile, "================================================================================\n" );
 	}
 }
 
@@ -549,19 +549,15 @@ void Sys_CloseLog( void )
 		break;
 	}
 
-	printf( "\n");
-	printf( "=================================================================================");
-	printf( "\n\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
-	printf( "=================================================================================");
-	printf( "\n" );
+	printf( "\n================================================================================\n");
+	printf( "\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+	printf( "================================================================================\n");
 
 	if( s_wcd.logfile )
 	{
-		fprintf( s_wcd.logfile, "\n");
-		fprintf( s_wcd.logfile, "=================================================================================");
-		fprintf( s_wcd.logfile, "\n\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
-		fprintf( s_wcd.logfile, "=================================================================================");
-		fprintf( s_wcd.logfile, "\n" );
+		fprintf( s_wcd.logfile, "\n================================================================================\n");
+		fprintf( s_wcd.logfile, "\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+		fprintf( s_wcd.logfile, "================================================================================\n");
 
 		fclose( s_wcd.logfile );
 		s_wcd.logfile = NULL;
