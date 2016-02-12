@@ -291,7 +291,7 @@ static void UI_Audio_Init( void )
 	uiAudio.vibration.generic.x = 320;
 	uiAudio.vibration.generic.y = 720;
 	uiAudio.vibration.generic.callback = UI_Audio_Callback;
-	uiAudio.vibration.generic.statusText = "Singleplayer suit volume";
+	uiAudio.vibration.generic.statusText = "Vibration length";
 	uiAudio.vibration.minValue = 0.0;
 	uiAudio.vibration.maxValue = 1.0;
 	uiAudio.vibration.range = 0.05f;

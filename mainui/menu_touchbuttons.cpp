@@ -51,6 +51,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_ADDITIVE		24
 #define ID_EDITOR		25
 #define ID_CANCEL	 	26
+#define ID_PRECISION	 	27
 #define ID_YES	 	130
 #define ID_NO	 	131
 typedef struct
@@ -82,6 +83,7 @@ typedef struct
 	menuCheckBox_s	mp;
 	menuCheckBox_s	lock;
 	menuCheckBox_s	additive;
+	menuCheckBox_s	precision;
 	menuPicButton_s	reset;
 	menuPicButton_s	remove;
 	menuPicButton_s	save;
@@ -117,6 +119,7 @@ static uiTouchButtons_t	uiTouchButtons;
 #define TOUCH_FL_DEF_HIDE BIT( 6 )
 #define TOUCH_FL_DRAW_ADDITIVE BIT( 7 )
 #define TOUCH_FL_STROKE BIT( 8 )
+#define TOUCH_FL_PRECISION BIT( 9 )
 
 static void UI_TouchButtons_UpdateFields( void );
 
@@ -262,6 +265,7 @@ static void UI_TouchButtons_DisableButtons()
 	uiTouchButtons.mp.generic.flags |= QMF_INACTIVE;
 	uiTouchButtons.lock.generic.flags |= QMF_INACTIVE;
 	uiTouchButtons.additive.generic.flags |= QMF_INACTIVE;
+	uiTouchButtons.precision.generic.flags |= QMF_INACTIVE;
 	uiTouchButtons.editor.generic.flags |= QMF_INACTIVE;
 }
 static void UI_TouchButtons_EnableButtons()
@@ -283,6 +287,7 @@ static void UI_TouchButtons_EnableButtons()
 	uiTouchButtons.mp.generic.flags &= ~QMF_INACTIVE;
 	uiTouchButtons.lock.generic.flags &= ~QMF_INACTIVE;
 	uiTouchButtons.additive.generic.flags &= ~QMF_INACTIVE;
+	uiTouchButtons.precision.generic.flags &= ~QMF_INACTIVE;
 	uiTouchButtons.editor.generic.flags &= ~QMF_INACTIVE;
 }
 static void UI_TouchButtons_FileDialogCallback( bool success )
@@ -315,12 +320,13 @@ static void UI_TouchButtons_Callback( void *self, int event )
 			uiTouchButtons.sp.enabled = false;
     case ID_HIDE:
 	case ID_ADDITIVE:
+	case ID_PRECISION:
 	case ID_LOCK:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
 		// clean all flags that we may change
-		uiTouchButtons.curflags &= ~ ( TOUCH_FL_HIDE | TOUCH_FL_NOEDIT | TOUCH_FL_MP | TOUCH_FL_SP | TOUCH_FL_DRAW_ADDITIVE );
+		uiTouchButtons.curflags &= ~ ( TOUCH_FL_HIDE | TOUCH_FL_NOEDIT | TOUCH_FL_MP | TOUCH_FL_SP | TOUCH_FL_DRAW_ADDITIVE | TOUCH_FL_PRECISION );
 		if( uiTouchButtons.mp.enabled )
 			uiTouchButtons.curflags |= TOUCH_FL_MP;
 		if( uiTouchButtons.sp.enabled )
@@ -331,6 +337,8 @@ static void UI_TouchButtons_Callback( void *self, int event )
 			uiTouchButtons.curflags |= TOUCH_FL_NOEDIT;
 		if( uiTouchButtons.additive.enabled )
 			uiTouchButtons.curflags |= TOUCH_FL_DRAW_ADDITIVE;
+		if( uiTouchButtons.precision.enabled )
+			uiTouchButtons.curflags |= TOUCH_FL_PRECISION;
 		break;
 	}
 
@@ -504,7 +512,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.cancel.generic.x = 72;
 	uiTouchButtons.cancel.generic.y = 600;
 	uiTouchButtons.cancel.generic.name = "Cancel";
-	uiTouchButtons.cancel.generic.statusText = "Discard changes and go back to the Video Menu";
+	uiTouchButtons.cancel.generic.statusText = "Discard changes and go back to the Touch Menu";
 	uiTouchButtons.cancel.generic.callback = UI_TouchButtons_Callback;
 
 	UI_UtilSetupPicButton( &uiTouchButtons.cancel, PC_CANCEL );
@@ -570,7 +578,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.additive.generic.type = QMTYPE_CHECKBOX;
 	uiTouchButtons.additive.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
 	uiTouchButtons.additive.generic.name = "Additive";
-	uiTouchButtons.additive.generic.x = 384 - 72 + 400;
+	uiTouchButtons.additive.generic.x = 650;
 	uiTouchButtons.additive.generic.y = 470;
 	uiTouchButtons.additive.generic.callback = UI_TouchButtons_Callback;
 	uiTouchButtons.additive.generic.statusText = "Set button additive draw mode";
@@ -602,6 +610,14 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.lock.generic.callback = UI_TouchButtons_Callback;
 	uiTouchButtons.lock.generic.statusText = "Lock button editing";
 
+	uiTouchButtons.precision.generic.id = ID_PRECISION;
+	uiTouchButtons.precision.generic.type = QMTYPE_CHECKBOX;
+	uiTouchButtons.precision.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiTouchButtons.precision.generic.name = "Look precision";
+	uiTouchButtons.precision.generic.x = 400;
+	uiTouchButtons.precision.generic.y = 470;
+	uiTouchButtons.precision.generic.callback = UI_TouchButtons_Callback;
+	uiTouchButtons.precision.generic.statusText = "Increase look precision";
 
 	uiTouchButtons.buttonList.generic.id = ID_BUTTONLIST;
 	uiTouchButtons.buttonList.generic.type = QMTYPE_SCROLLLIST;
@@ -616,7 +632,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.save.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.save.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchButtons.save.generic.x = 384 - 72 + 320;
-	uiTouchButtons.save.generic.y = 520;
+	uiTouchButtons.save.generic.y = 550;
 	uiTouchButtons.save.generic.name = "Save";
 	uiTouchButtons.save.generic.statusText = "Save as new button";
 	uiTouchButtons.save.generic.callback = UI_TouchButtons_Callback;
@@ -626,7 +642,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.editor.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.editor.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchButtons.editor.generic.x = 384 - 72 + 320;
-	uiTouchButtons.editor.generic.y = 580;
+	uiTouchButtons.editor.generic.y = 600;
 	uiTouchButtons.editor.generic.name = "Editor";
 	uiTouchButtons.editor.generic.statusText = "Open interactive editor";
 	uiTouchButtons.editor.generic.callback = UI_TouchButtons_Callback;
@@ -647,7 +663,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.name.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
 	uiTouchButtons.name.generic.name = "New Button:";
 	uiTouchButtons.name.generic.x = 400;
-	uiTouchButtons.name.generic.y = 520;
+	uiTouchButtons.name.generic.y = 550;
 	uiTouchButtons.name.generic.width = 205;
 	uiTouchButtons.name.generic.height = 32;
 	uiTouchButtons.name.generic.callback = UI_TouchButtons_Callback;
@@ -734,7 +750,7 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.reset.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_DROPSHADOW | QMF_ACT_ONRELEASE;
 	uiTouchButtons.reset.generic.name = "Reset";
 	uiTouchButtons.reset.generic.x = 384 - 72 + 480;
-	uiTouchButtons.reset.generic.y = 580;
+	uiTouchButtons.reset.generic.y = 600;
 	uiTouchButtons.reset.generic.callback = UI_TouchButtons_Callback;
 	uiTouchButtons.reset.generic.statusText = "Reset touch to default state";
 	uiTouchButtons.reset.pic = PIC_Load("gfx/shell/btn_touch_reset");
@@ -743,9 +759,9 @@ static void UI_TouchButtons_Init( void )
 	uiTouchButtons.remove.generic.type = QMTYPE_BM_BUTTON;
 	uiTouchButtons.remove.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
 	uiTouchButtons.remove.generic.x = 384 - 72 + 480;
-	uiTouchButtons.remove.generic.y = 520;
+	uiTouchButtons.remove.generic.y = 550;
 	uiTouchButtons.remove.generic.name = "Delete";
-	uiTouchButtons.remove.generic.statusText = "Delete saved game";
+	uiTouchButtons.remove.generic.statusText = "Delete selected button";
 	uiTouchButtons.remove.generic.callback = UI_TouchButtons_Callback;
 	UI_UtilSetupPicButton( &uiTouchButtons.remove, PC_DELETE );
 
@@ -762,6 +778,7 @@ static void UI_TouchButtons_Init( void )
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.alpha );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.hide );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.additive );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.precision );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.sp );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.mp );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.lock );
