@@ -1216,6 +1216,16 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 					touch.move = button;
 					touch.move_start_x = x;
 					touch.move_start_y = y;
+					if( touch.move->type == touch_joy )
+					{
+						touch.forward = ((touch.move->y2 + touch.move->y1) - y * 2) / (touch.move->y2 - touch.move->y1);
+						touch.side = (x * 2 - (touch.move->x2 + touch.move->x1)) / (touch.move->x2 - touch.move->x1);
+					}
+					else if( touch.move->type == touch_dpad )
+					{
+						touch.forward = round(((touch.move->y2 + touch.move->y1) - y * 2) / (touch.move->y2 - touch.move->y1));
+						touch.side = round((x * 2 - (touch.move->x2 + touch.move->x1)) / (touch.move->x2 - touch.move->x1));
+					}
 				}
 				if( button->type == touch_look )
 				{
@@ -1294,8 +1304,8 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		if( fingerID == touch.look_finger )
 		{
 			if( touch.precision )
-				dx /= 2;
-			touch.yaw -=dx * touch_yaw->value, touch.pitch +=dy * touch_pitch->value;
+				dx /= 2, dy /= 2;
+			touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
 		}
 	}
 	return 1;
