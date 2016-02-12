@@ -228,6 +228,7 @@ static void UI_TouchButtons_UpdateFields()
 	uiTouchButtons.lock.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_NOEDIT );
 	uiTouchButtons.hide.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_HIDE );
 	uiTouchButtons.additive.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_DRAW_ADDITIVE );
+	uiTouchButtons.precision.enabled = !!( uiTouchButtons.curflags & TOUCH_FL_PRECISION );
 	if( uiTouchButtons.texture.buffer[0] && uiTouchButtons.texture.buffer[0] != '#' )
 		uiTouchButtons.textureid = PIC_Load(uiTouchButtons.texture.buffer);
 	else
