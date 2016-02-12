@@ -97,6 +97,7 @@ struct touch_s
 	qboolean clientonly;
 	rgba_t scolor;
 	int swidth;
+	qboolean precision;
 	// textures
 	int showtexture;
 	int hidetexture;
@@ -695,6 +696,7 @@ void IN_TouchInit( void )
 	touch.state = state_none;
 	touch.showbuttons = true;
 	touch.clientonly = false;
+	touch.precision = false;
 	MakeRGBA( touch.scolor, 255, 255, 255, 255 );
 	touch.swidth = 1;
 	g_LastDefaultButton = 0;
@@ -1189,6 +1191,8 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				{
 					char command[256];
 					Q_snprintf( command, 256, "%s\n", button->command, 256 );
+					if( B(flags) & TOUCH_FL_PRECISION )
+						touch.precision = true;
 					Cbuf_AddText( command );
 				}
 				if( button->type == touch_move || button->type == touch_joy || button->type == touch_dpad  )
@@ -1245,6 +1249,8 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 					Q_snprintf( command, 256, "%s\n", button->command, 256 );
 					command[0] = '-';
 					Cbuf_AddText( command );
+					if( B(flags) & TOUCH_FL_PRECISION )
+						touch.precision = false;
 				}
 				if( button->type == touch_move || button->type == touch_joy || button->type == touch_dpad )
 				{
@@ -1286,7 +1292,11 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			}
 		}
 		if( fingerID == touch.look_finger )
+		{
+			if( touch.precision )
+				dx /= 2;
 			touch.yaw -=dx * touch_yaw->value, touch.pitch +=dy * touch_pitch->value;
+		}
 	}
 	return 1;
 }
