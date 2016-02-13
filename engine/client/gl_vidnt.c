@@ -69,6 +69,7 @@ convar_t	*gl_finish;
 convar_t	*gl_nosort;
 convar_t	*gl_clear;
 convar_t	*gl_test;
+convar_t	*gl_msaa;
 
 convar_t	*r_xpos;
 convar_t	*r_ypos;
@@ -992,6 +993,21 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 
+	if( gl_msaa->integer > 0 )
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+
+	int samples;
+	switch( gl_msaa->integer )
+	{
+		case 0: case 2: case 4:
+		case 6: case 8: case 16:
+			samples = gl_msaa->integer;
+			break;
+		default:
+			samples = 8; // set default value
+	}
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
+
 #ifdef __ANDROID__
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 
@@ -1819,6 +1835,8 @@ static void GL_SetDefaults( void )
 
 	pglClearColor( 0.5f, 0.5f, 0.5f, 1.0f );
 
+	if( gl_msaa->integer > 0 )
+		pglEnable( GL_MULTISAMPLE );
 	pglDisable( GL_DEPTH_TEST );
 	pglDisable( GL_CULL_FACE );
 	pglDisable( GL_SCISSOR_TEST );
@@ -1979,6 +1997,7 @@ void GL_InitCommands( void )
 	gl_test = Cvar_Get( "gl_test", "0", 0, "engine developer cvar for quick testing new features" );
 	gl_wireframe = Cvar_Get( "gl_wireframe", "0", 0, "show wireframe overlay" );
 	gl_overview = Cvar_Get( "dev_overview", "0", 0, "show level overview" );
+	gl_msaa = Cvar_Get( "gl_msaa", "8", CVAR_GLCONFIG, "num MSAA samples, 0 - disable MSAA" );
 
 	// these cvar not used by engine but some mods requires this
 	Cvar_Get( "gl_polyoffset", "-0.1", 0, "polygon offset for decals" );
