@@ -445,6 +445,14 @@ void IN_TouchSetCommand( const char *name, const char *command )
 	touchbutton2_t *button = IN_TouchFindButton( name );
 	if( !button )
 		return;
+	if( !Q_strcmp( command, "_look" ) )
+		button->type = touch_look;
+	if( !Q_strcmp( command, "_move" ) )
+		button->type = touch_move;
+	if( !Q_strcmp( command, "_joy" ) )
+		button->type = touch_joy;
+	if( !Q_strcmp( command, "_dpad" ) )
+		button->type = touch_dpad;
 	Q_strncpy( button->command, command, sizeof( button->command ) );
 }
 
