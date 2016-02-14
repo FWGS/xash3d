@@ -693,19 +693,20 @@ void UI_DrawMenu( menuFramework_s *menu )
 		// flash on selected button (like in GoldSrc)
 		if( item ) item->lastFocusTime = uiStatic.realTime;
 		statusFadeTime = uiStatic.realTime;
+
 		lastItem = item;
 	}
 
-	if( item && ( item->flags & QMF_HASMOUSEFOCUS && !( item->flags & QMF_NOTIFY )) && ( item->statusText != NULL ))
+	if( item && (item == lastItem) && ( item->statusText != NULL ))
 	{
 		// fade it in, but wait a second
-		int alpha = bound( 0, ((( uiStatic.realTime - statusFadeTime ) - 1000 ) * 0.001f ) * 255, 255 );
+		float alpha = bound(0, ((( uiStatic.realTime - statusFadeTime ) - 100 ) * 0.01f ), 1);
 		int r, g, b, x, len;
 
 		GetConsoleStringSize( item->statusText, &len, NULL );
 
 		UnpackRGB( r, g, b, uiColorHelp );
-		TextMessageSetColor( r, g, b, alpha );
+		TextMessageSetColor( r, g, b, alpha * 255 );
 		x = ( ScreenWidth - len ) * 0.5; // centering
 
 		DrawConsoleString( x, 720 * uiStatic.scaleY, item->statusText );
