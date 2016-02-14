@@ -818,8 +818,20 @@ void Cmd_If_f( void )
 	// reset bit first
 	cmd_cond &= ~BIT( cmd_condlevel );
 
+	// usage
+	if( cmd_argc == 1 )
+	{
+		Msg("Usage: if <op1> [ <operator> <op2> ]\n");
+		Msg(":<action1>\n" );
+		Msg(":<action2>\n" );
+		Msg("else\n" );
+		Msg(":<action3>\n" );
+		Msg("operands are string or float values\n" );
+		Msg("and substituted cvars like '$cl_lw'\n" );
+		Msg("operator is '='', '==', '>', '<', '>=', '<=' or '!='\n" );
+	}
 	// one argument - check if nonzero
-	if( cmd_argc == 2 )
+	else if( cmd_argc == 2 )
 	{
 		if( Q_atof( cmd_argv[1] ) )
 			cmd_cond |= BIT( cmd_condlevel );
@@ -853,8 +865,6 @@ void Cmd_If_f( void )
 		if( ( cmd_argv[2][0] == '<' ) && ( f1 < f2 ) )	// <, <=
 			cmd_cond |= BIT( cmd_condlevel );
 	}
-	else
-		Msg("Syntax error!\n");
 }
 
 
