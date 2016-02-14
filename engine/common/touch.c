@@ -70,6 +70,7 @@ typedef struct touchbutton2_s
 	int flags;
 	float fade;
 	float fadespeed;
+	float fadeend;
 	// Double-linked list
 	struct touchbutton2_s *next;
 	struct touchbutton2_s *prev;
@@ -509,7 +510,7 @@ void IN_TouchShow_f( void )
 	IN_TouchHideButtons( Cmd_Argv( 1 ), false );
 }
 
-void IN_TouchFadeButtons( const char *name, float speed, float start  )
+void IN_TouchFadeButtons( const char *name, float speed, float end, float start  )
 {
 	touchbutton2_t *button;
 	for( button = touch.first; button; button = button->next)
@@ -519,17 +520,18 @@ void IN_TouchFadeButtons( const char *name, float speed, float start  )
 			if( start >= 0 )
 				button->fade = start;
 			button->fadespeed = speed;
+			button->fadeend = end;
 		}
 	}
 }
 void IN_TouchFade_f( void )
 {
 	float start = -1;
-	if( Cmd_Argc() < 3 )
+	if( Cmd_Argc() < 4 )
 		return;
-	if( Cmd_Argc() == 4)
-		start = Q_atof( Cmd_Argv( 3 ) );
-	IN_TouchFadeButtons( Cmd_Argv( 1 ), Q_atof( Cmd_Argv( 2 )), start );
+	if( Cmd_Argc() > 4 )
+		start = Q_atof( Cmd_Argv( 4 ) );
+	IN_TouchFadeButtons( Cmd_Argv( 1 ), Q_atof( Cmd_Argv( 2 )), Q_atof( Cmd_Argv( 3 )), start );
 }
 
 void IN_TouchSetColor_f( void )
@@ -1011,7 +1013,10 @@ void IN_TouchDraw( void )
 				button->fade += B( fadespeed ) * host.frametime;
 				button->fade = bound( 0, B(fade), 1 );
 				if( ( B( fade ) == 0 ) || ( B(fade) == 1 ) )
-					B( fadespeed = 0 );
+					B( fadespeed ) = 0;
+				if( ( B( fade ) >= B( fadeend ) ) && ( B( fadespeed ) > 0 ) ||
+					( B( fade ) <= B( fadeend ) ) && ( B( fadespeed ) < 0 ))
+					B( fadespeed ) = 0, B( fade ) = B( fadeend ) ;
 			}
 
 			if( ( B( finger ) != -1 ) && !( B( flags ) & TOUCH_FL_CLIENT ) )
