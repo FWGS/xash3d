@@ -106,7 +106,7 @@ struct touch_s
 	int hidetexture;
 	int resettexture;
 	int closetexture;
-	int maptexture; // touch indicator
+	int joytexture; // touch indicator
 } touch;
 
 typedef struct touchdefaultbutton_s
@@ -141,6 +141,7 @@ convar_t *touch_highlight_g;
 convar_t *touch_highlight_b;
 convar_t *touch_highlight_a;
 convar_t *touch_precise_amount;
+convar_t *touch_joy_texture;
 
 // enable on android by default
 #ifdef __ANDROID__
@@ -171,27 +172,36 @@ void IN_TouchWriteConfig( void )
 	{
 		touchbutton2_t *button;
 		FS_Printf( f, "//=======================================================================\n");
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
-		FS_Printf( f, "//\t\t\ttouch.cfg - touchscreen config\n" );
+		FS_Printf( f, "//\tCopyright SDLash3D team & XashXT group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\ttouchscreen config\n" );
 		FS_Printf( f, "//=======================================================================\n" );
 		FS_Printf( f, "\ntouch_config_file \"%s\"\n", touch_config_file->string );
 		FS_Printf( f, "\n// touch cvars\n" );
+		FS_Printf( f, "\n// _move sensitivity settings\n" );
 		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
 		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
+		FS_Printf( f, "\n// _look sensitivity settings\n" );
 		FS_Printf( f, "touch_pitch \"%f\"\n", touch_pitch->value );
 		FS_Printf( f, "touch_yaw \"%f\"\n", touch_yaw->value );
+		FS_Printf( f, "\n// grid settings\n" );
 		FS_Printf( f, "touch_grid_count \"%d\"\n", touch_grid_count->integer );
 		FS_Printf( f, "touch_grid_enable \"%d\"\n", touch_grid_enable->integer );
+		FS_Printf( f, "\n// global overstroke (width, r, g, b, a)\n" );
 		FS_Printf( f, "touch_set_stroke %d %d %d %d %d\n", touch.swidth, touch.scolor[0], touch.scolor[1], touch.scolor[2], touch.scolor[3] );
+		FS_Printf( f, "\n// highlight when pressed\n" );
 		FS_Printf( f, "touch_highlight_r \"%f\"\n", touch_highlight_r->value );
 		FS_Printf( f, "touch_highlight_g \"%f\"\n", touch_highlight_g->value );
 		FS_Printf( f, "touch_highlight_b \"%f\"\n", touch_highlight_b->value );
 		FS_Printf( f, "touch_highlight_a \"%f\"\n", touch_highlight_a->value );
+		FS_Printf( f, "\n// _joy and _dpad options\n" );
 		FS_Printf( f, "touch_dpad_radius \"%f\"\n", touch_dpad_radius->value );
 		FS_Printf( f, "touch_joy_radius \"%f\"\n", touch_joy_radius->value );
+		FS_Printf( f, "\n// how much slowdown when Precise Look button pressed\n" );
 		FS_Printf( f, "touch_precise_amount \"%f\"\n", touch_precise_amount->value );
-		FS_Printf( f, "touch_move_indicator \"%f\"\n", touch_move_indicator->value );
+		FS_Printf( f, "\n// enable/disable move indicator\n" );
+		FS_Printf( f, "touch_move_indicator \"%d\"\n", touch_move_indicator->integer );
 
+		FS_Printf( f, "\n// reset menu state when execing config\n" );
 		FS_Printf( f, "touch_setclientonly 0\n" );
 		FS_Printf( f, "\n// touch buttons\n" );
 		FS_Printf( f, "touch_removeall\n" );
@@ -245,18 +255,36 @@ void IN_TouchExportConfig_f( void )
 		}
 		else Q_strncpy( profilename, name, 256 );
 		FS_Printf( f, "//=======================================================================\n");
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
-		FS_Printf( f, "//\t\t\ttouch.cfg - touchscreen config\n" );
+		FS_Printf( f, "//\tCopyright SDLash3D team & XashXT group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\ttouchscreen preset\n" );
 		FS_Printf( f, "//=======================================================================\n" );
 		FS_Printf( f, "\ntouch_config_file \"%s\"\n", profilename );
 		FS_Printf( f, "\n// touch cvars\n" );
+		FS_Printf( f, "\n// _move sensitivity settings\n" );
 		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
 		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
+		FS_Printf( f, "\n// _look sensitivity settings\n" );
 		FS_Printf( f, "touch_pitch \"%f\"\n", touch_pitch->value );
 		FS_Printf( f, "touch_yaw \"%f\"\n", touch_yaw->value );
+		FS_Printf( f, "\n// grid settings\n" );
 		FS_Printf( f, "touch_grid_count \"%d\"\n", touch_grid_count->integer );
 		FS_Printf( f, "touch_grid_enable \"%d\"\n", touch_grid_enable->integer );
+		FS_Printf( f, "\n// global overstroke (width, r, g, b, a)\n" );
 		FS_Printf( f, "touch_set_stroke %d %d %d %d %d\n", touch.swidth, touch.scolor[0], touch.scolor[1], touch.scolor[2], touch.scolor[3] );
+		FS_Printf( f, "\n// highlight when pressed\n" );
+		FS_Printf( f, "touch_highlight_r \"%f\"\n", touch_highlight_r->value );
+		FS_Printf( f, "touch_highlight_g \"%f\"\n", touch_highlight_g->value );
+		FS_Printf( f, "touch_highlight_b \"%f\"\n", touch_highlight_b->value );
+		FS_Printf( f, "touch_highlight_a \"%f\"\n", touch_highlight_a->value );
+		FS_Printf( f, "\n// _joy and _dpad options\n" );
+		FS_Printf( f, "touch_dpad_radius \"%f\"\n", touch_dpad_radius->value );
+		FS_Printf( f, "touch_joy_radius \"%f\"\n", touch_joy_radius->value );
+		FS_Printf( f, "\n// how much slowdown when Precise Look button pressed\n" );
+		FS_Printf( f, "touch_precise_amount \"%f\"\n", touch_precise_amount->value );
+		FS_Printf( f, "\n// enable/disable move indicator\n" );
+		FS_Printf( f, "touch_move_indicator \"%d\"\n", touch_move_indicator->integer );
+
+		FS_Printf( f, "\n// reset menu state when execing config\n" );
 		FS_Printf( f, "touch_setclientonly 0\n" );
 		FS_Printf( f, "\n// touch buttons\n" );
 		FS_Printf( f, "touch_removeall\n" );
@@ -815,6 +843,7 @@ void IN_TouchInit( void )
 	touch_dpad_radius = Cvar_Get( "touch_dpad_radius", "1.0", 0, "dpad radius multiplier" );
 	touch_joy_radius = Cvar_Get( "touch_joy_radius", "1.0", 0, "joy radius multiplier" );
 	touch_move_indicator = Cvar_Get( "touch_move_indicator", "0.0", 0, "indicate move events (0 to disable)" );
+	touch_joy_texture = Cvar_Get( "touch_joy_texture", "touch_default/joy.tga", 0, "texture for move indicator");
 
 	touch_enable = Cvar_Get( "touch_enable", TOUCH_ENABLE, CVAR_ARCHIVE, "enable touch controls" );
 #if defined(XASH_SDL) && defined(__ANDROID__)
@@ -837,7 +866,7 @@ void IN_TouchInitConfig( void )
 	touch.hidetexture = GL_LoadTexture( "touch_default/edit_hide.tga", NULL, 0, TF_NOPICMIP, NULL );
 	touch.showtexture = GL_LoadTexture( "touch_default/edit_show.tga", NULL, 0, TF_NOPICMIP, NULL );
 	touch.resettexture = GL_LoadTexture( "touch_default/edit_reset.tga", NULL, 0, TF_NOPICMIP, NULL );
-	touch.maptexture = GL_LoadTexture( "touch_default/map.tga", NULL, 0, TF_NOPICMIP, NULL );
+	touch.joytexture = GL_LoadTexture( touch_joy_texture->string, NULL, 0, TF_NOPICMIP, NULL );
 }
 qboolean IN_TouchIsVisible( touchbutton2_t *button )
 {
@@ -977,7 +1006,7 @@ void IN_TouchDraw( void )
 			rgba_t color;
 			MakeRGBA( color, B( color[0] ), B( color[1] ), B( color[2] ), B( color[3] ) );
 
-			if( B( fadespeed ))
+			if( B( fadespeed ) )
 			{
 				button->fade += B( fadespeed ) * host.frametime;
 				button->fade = bound( 0, B(fade), 1 );
@@ -985,7 +1014,7 @@ void IN_TouchDraw( void )
 					B( fadespeed = 0 );
 			}
 
-			if( B( finger ) != -1 )
+			if( ( B( finger ) != -1 ) && !( B( flags ) & TOUCH_FL_CLIENT ) )
 			{
 				color[0] = bound( 0,(float) color[0] * touch_highlight_r->value, 255 );
 				color[1] = bound( 0,(float) color[1] * touch_highlight_g->value, 255 );
@@ -1104,6 +1133,11 @@ void IN_TouchDraw( void )
 	{
 		float width;
 		float height;
+		if( touch_joy_texture->modified )
+		{
+			touch_joy_texture->modified = false;
+			touch.joytexture = GL_LoadTexture( touch_joy_texture->string, NULL, 0, TF_NOPICMIP, NULL );
+		}
 		if( touch.move->type == touch_move )
 		{
 			width =  touch_sidezone->value;
@@ -1117,13 +1151,13 @@ void IN_TouchDraw( void )
 		pglColor4ub( 255, 255, 255, 128 );
 		R_DrawStretchPic( TO_SCRN_X( touch.move_start_x - GRID_X * touch_move_indicator->value ),
 						  TO_SCRN_Y( touch.move_start_y - GRID_Y * touch_move_indicator->value ),
-						  TO_SCRN_X( GRID_X * 2 * touch_move_indicator->value ), TO_SCRN_Y( GRID_Y * 2 * touch_move_indicator->value ), 0, 0, 1, 1, touch.maptexture );
+						  TO_SCRN_X( GRID_X * 2 * touch_move_indicator->value ), TO_SCRN_Y( GRID_Y * 2 * touch_move_indicator->value ), 0, 0, 1, 1, touch.joytexture );
 		pglColor4ub( 255, 255, 255, 255 );
 		R_DrawStretchPic( TO_SCRN_X( touch.move_start_x + touch.side * width - GRID_X * touch_move_indicator->value ),
 						  TO_SCRN_Y( touch.move_start_y - touch.forward * height - GRID_Y * touch_move_indicator->value ),
-						  TO_SCRN_X( GRID_X * 2 * touch_move_indicator->value ), TO_SCRN_Y( GRID_Y * 2 * touch_move_indicator->value ), 0, 0, 1, 1, touch.maptexture );
+						  TO_SCRN_X( GRID_X * 2 * touch_move_indicator->value ), TO_SCRN_Y( GRID_Y * 2 * touch_move_indicator->value ), 0, 0, 1, 1, touch.joytexture );
 
-			}
+	}
 
 }
 
