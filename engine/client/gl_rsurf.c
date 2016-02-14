@@ -143,7 +143,8 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 	}
 
 	// add a point in the center to help keep warp valid
-	poly = Mem_Alloc( loadmodel->mempool, sizeof( glpoly_t ) + ((numverts-4)+2) * VERTEXSIZE * sizeof( float ));
+	poly = Mem_Alloc( loadmodel->mempool, sizeof( glpoly_t ) );
+	poly->verts = Mem_Alloc( loadmodel->mempool, ( numverts + 2 ) * VERTEXSIZE * sizeof( float ));
 	poly->next = warpface->polys;
 	poly->flags = warpface->flags;
 	warpface->polys = poly;
@@ -314,7 +315,8 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 	lnumverts = fa->numedges;
 
 	// draw texture
-	poly = Mem_Alloc( mod->mempool, sizeof( glpoly_t ) + ( lnumverts - 4 ) * VERTEXSIZE * sizeof( float ));
+	poly = Mem_Alloc( mod->mempool, sizeof( glpoly_t ) );
+	poly->verts = Mem_Alloc( loadmodel->mempool, lnumverts * VERTEXSIZE * sizeof( float ) );
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;

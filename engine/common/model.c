@@ -662,7 +662,7 @@ Mod_LoadTextures
 static void Mod_LoadTextures( const dlump_t *l )
 {
 	byte		*buf;
-	dmiptexlump_t	*in;
+	int		*offset;
 	texture_t		*tx, *tx2;
 	texture_t		*anims[10];
 	texture_t		*altanims[10];
@@ -690,9 +690,9 @@ static void Mod_LoadTextures( const dlump_t *l )
 		return;
 	}
 
-	in = (void *)(mod_base + l->fileofs);
+	offset = (int *)(mod_base + l->fileofs);
 
-	loadmodel->numtextures = in->nummiptex;
+	loadmodel->numtextures = *offset;
 	loadmodel->textures = (texture_t **)Mem_Alloc( loadmodel->mempool, loadmodel->numtextures * sizeof( texture_t* ));
 
 	for( i = 0; i < loadmodel->numtextures; i++ )
@@ -700,7 +700,7 @@ static void Mod_LoadTextures( const dlump_t *l )
 		qboolean	load_external = false;
 		qboolean	load_external_luma = false;
 
-		if( in->dataofs[i] == -1 )
+		if( *(offset + i + 1) == -1 )
 		{
 			// create default texture (some mods requires this)
 			tx = Mem_Alloc( loadmodel->mempool, sizeof( *tx ));
@@ -712,7 +712,7 @@ static void Mod_LoadTextures( const dlump_t *l )
 			continue; // missed
 		}
 
-		buf = (byte *)in + in->dataofs[i];
+		buf = (byte *)offset + *(offset + i + 1);
 		Q_memcpy( &mt, buf, sizeof(mip_t));
 		
 		if( !mt.name[0] )
