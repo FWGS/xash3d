@@ -316,7 +316,7 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 
 	// draw texture
 	poly = Mem_Alloc( mod->mempool, sizeof( glpoly_t ) );
-	poly->verts = Mem_Alloc( loadmodel->mempool, lnumverts * VERTEXSIZE * sizeof( float ) );
+	poly->verts = Mem_Alloc( mod->mempool, lnumverts * VERTEXSIZE * sizeof( float ) );
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;
