@@ -71,6 +71,7 @@ typedef struct touchbutton2_s
 	float fade;
 	float fadespeed;
 	float fadeend;
+	float aspect;
 	// Double-linked list
 	struct touchbutton2_s *next;
 	struct touchbutton2_s *prev;
@@ -627,14 +628,11 @@ void IN_TouchAddClientButton( const char *name, const char *texture, const char 
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 	if( round == round_aspect )
 	{
-		if( texture[0] == '#' )
-			// on text fields aspect ratio specifies line count
-			y2 = y1 + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight ) * aspect + touch.swidth*2/SCR_H;
-		else
-			y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * aspect;
+		y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * aspect;
 	}
 	button = IN_TouchAddButton( name, texture, command, x1, y1, x2, y2, color );
 	button->flags |= flags | TOUCH_FL_CLIENT | TOUCH_FL_NOEDIT;
+	button->aspect = aspect;
 }
 
 void IN_TouchLoadDefaults_f( void )
@@ -657,6 +655,7 @@ void IN_TouchLoadDefaults_f( void )
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 		button = IN_TouchAddButton( g_DefaultButtons[i].name, g_DefaultButtons[i].texturefile, g_DefaultButtons[i].command, x1, y1, x2, y2, g_DefaultButtons[i].color );
 		button->flags |= g_DefaultButtons[i].flags;
+		button->aspect = g_DefaultButtons[i].aspect;
 	}
 }
 
@@ -709,10 +708,9 @@ void IN_TouchAddButton_f( void )
 			IN_TouchCheckCoords( &B(x1), &B(y1), &B(x2), &B(y2) );
 			if( aspect )
 			{
-				if( B(texturefile)[0] == '#' )
-					B(y2) = B(y1) + ( (float)(clgame.scrInfo.iCharHeight) / (float)(clgame.scrInfo.iHeight) ) * aspect + touch.swidth*2/SCR_H;
-				else
+				if( B(texturefile)[0] != '#' )
 					B(y2) = B(y1) + ( B(x2) - B(x1) ) * (SCR_W/SCR_H) * aspect;
+				B(aspect) = aspect;
 			}
 		}
 				
@@ -935,36 +933,61 @@ static void IN_TouchCheckCoords( float *x1, float *y1, float *x2, float *y2  )
 		*y2 = GRID_ROUND_Y( *y2 );
 	}
 }
-
-float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, byte *color)
+float IN_TouchDrawCharacter( float x, float y, int number, float size )
 {
-	float x = x1 * clgame.scrInfo.iWidth;
-	float y = y1 * clgame.scrInfo.iHeight;
-	float maxy = y2 * clgame.scrInfo.iHeight - clgame.scrInfo.iCharHeight;
+	float	s1, s2, t1, t2, width, height;
+	int	w, h;
+	wrect_t *prc;
+	if( !cls.creditsFont.valid )
+		return 0;
+
+	number &= 255;
+	number = Con_UtfProcessChar( number );
+
+	R_GetTextureParms( &w, &h, cls.creditsFont.hFontTexture );
+	prc = &cls.creditsFont.fontRc[number];
+
+	s1 = ((float)prc->left) / (float)w;
+	t1 = ((float)prc->top) / (float)h;
+	s2 = ((float)prc->right) / (float)w;
+	t2 = ((float)prc->bottom) / (float)h;
+
+	width = ((float)( prc->right - prc->left )) / 800.0f * size;
+	height = ((float)( prc->bottom - prc->top )) / 800.0f * size;
+
+
+	R_DrawStretchPic( TO_SCRN_X(x), TO_SCRN_Y(y), TO_SCRN_X(width), TO_SCRN_X(height), s1, t1, s2, t2, cls.creditsFont.hFontTexture );
+	return width;
+}
+
+float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, byte *color, float size )
+{
+	float maxy = y2;
 	float maxx;
 	if( x2 )
-		maxx = x2 * clgame.scrInfo.iWidth - clgame.scrInfo.charWidths['M'];
+		maxx = x2 - cls.creditsFont.charWidths['M'] / 800.0f * size;
 	else
-		maxx = clgame.scrInfo.iWidth;
+		maxx = 1;
 	
-	if( !clgame.scrInfo.iWidth || !clgame.scrInfo.iHeight )
+	if( !cls.creditsFont.valid )
 		return GRID_X * 2;
 	Con_UtfProcessChar( 0 );
+	pglColor4ub( color[0], color[1], color[2], color[3] );
+	GL_SetRenderMode( kRenderTransAdd );
 	while( *s )
 	{
-		while( *s && ( *s != '\n' ) && ( *s != ';' ) && ( x < maxx ) )
-			x += pfnDrawCharacter( x, y, *s++, color[0], color[1], color[2] );
-		y += clgame.scrInfo.iCharHeight;
+		while( *s && ( *s != '\n' ) && ( *s != ';' ) && ( x1 < maxx ) )
+			x1 += IN_TouchDrawCharacter( x1, y1, *s++, size );
+		y1 += cls.creditsFont.charHeight;
 
-		if( y >= maxy )
+		if( y1 >= maxy )
 			break;
-		
-		x = x1 * clgame.scrInfo.iWidth;
+
 		if( *s=='\n' || *s == ';' )
 			s++;
 	}
 	GL_SetRenderMode( kRenderTransTexture );
-	return ( x / clgame.scrInfo.iWidth );
+	return x1;
 }
 
 void IN_TouchDraw( void )
@@ -1029,7 +1052,7 @@ void IN_TouchDraw( void )
 
 			color[3] *= B( fade );
 			if( button->texturefile[0] == '#' )
-				IN_TouchDrawText( touch.swidth/SCR_W + B(x1), touch.swidth/SCR_H + B(y1), B(x2), B(y2), button->texturefile + 1, color );
+				IN_TouchDrawText( touch.swidth/SCR_W + B(x1), touch.swidth/SCR_H + B(y1), B(x2), B(y2), button->texturefile + 1, color, B( aspect )?B(aspect):1 );
 
 			else if( button->texturefile[0] )
 			{
@@ -1047,7 +1070,7 @@ void IN_TouchDraw( void )
 			}
 			if( B(flags) & TOUCH_FL_STROKE )
 			{
-				pglColor4ub( touch.scolor[0], touch.scolor[1], touch.scolor[2], touch.scolor[3] );
+				pglColor4ub( touch.scolor[0], touch.scolor[1], touch.scolor[2], touch.scolor[3] * B( fade ) );
 				R_DrawStretchPic( TO_SCRN_X(B(x1)),
 					TO_SCRN_Y(B(y1)),
 					touch.swidth,
@@ -1105,12 +1128,12 @@ void IN_TouchDraw( void )
 				if( button->flags & TOUCH_FL_HIDE )
 				{
 					IN_TouchDrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, touch.showtexture, 255, 255, 255, 255 );
-					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Show", color );
+					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Show", color, 2 );
 				}
 				else
 				{
 					IN_TouchDrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, touch.hidetexture, 255, 255, 255, 255 );
-					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Hide", color );
+					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Hide", color, 2 );
 				}
 			}
 			Con_DrawString( 0, TO_SCRN_Y(GRID_Y * 11), "Selection:", color );
@@ -1126,11 +1149,11 @@ void IN_TouchDraw( void )
 			// close
 			IN_TouchDrawTexture( 0, GRID_Y * 2, GRID_X * 2, GRID_Y * 4, touch.closetexture, 255, 255, 255, 255 );
 			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 2.5 ), "Close", color );
-			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 2.5, 0, 0, "Close", color );
+			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 2.5, 0, 0, "Close", color, 2 );
 			// reset
 			IN_TouchDrawTexture( 0, GRID_Y * 5, GRID_X * 2, GRID_Y * 7, touch.resettexture, 255, 255, 255, 255 );
 			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 5.5 ), "Reset", color );
-			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 5.5, 0, 0, "Reset", color );
+			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 5.5, 0, 0, "Reset", color, 2 );
 		}
 	}
 	pglColor4ub( 255, 255, 255, 255 );
