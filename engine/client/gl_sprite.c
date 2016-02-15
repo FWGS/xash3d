@@ -227,9 +227,10 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 
 	if( numi == 256 )
 	{	
-		buffer += sizeof(short);
 		rgbdata_t	*pal;
-	
+
+		buffer += sizeof(short);
+
 		// install palette
 		switch( psprite->texFormat )
 		{
