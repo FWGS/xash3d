@@ -705,7 +705,6 @@ void IN_TouchAddButton_f( void )
 			// Recalculate button coordinates aspect ratio
 			// This is feature for distributed configs
 			float aspect = Q_atof( Cmd_Argv(13) );
-			IN_TouchCheckCoords( &B(x1), &B(y1), &B(x2), &B(y2) );
 			if( aspect )
 			{
 				if( B(texturefile)[0] != '#' )
@@ -933,6 +932,7 @@ static void IN_TouchCheckCoords( float *x1, float *y1, float *x2, float *y2  )
 		*y2 = GRID_ROUND_Y( *y2 );
 	}
 }
+
 float IN_TouchDrawCharacter( float x, float y, int number, float size )
 {
 	float	s1, s2, t1, t2, width, height;
@@ -952,9 +952,8 @@ float IN_TouchDrawCharacter( float x, float y, int number, float size )
 	s2 = ((float)prc->right) / (float)w;
 	t2 = ((float)prc->bottom) / (float)h;
 
-	width = ((float)( prc->right - prc->left )) / 800.0f * size;
-	height = ((float)( prc->bottom - prc->top )) / 800.0f * size;
-
+	width = ((float)( prc->right - prc->left )) / 1024.0f * size;
+	height = ((float)( prc->bottom - prc->top )) / 1024.0f * size;
 
 	R_DrawStretchPic( TO_SCRN_X(x), TO_SCRN_Y(y), TO_SCRN_X(width), TO_SCRN_X(height), s1, t1, s2, t2, cls.creditsFont.hFontTexture );
 	return width;
@@ -962,10 +961,11 @@ float IN_TouchDrawCharacter( float x, float y, int number, float size )
 
 float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, byte *color, float size )
 {
+	float x = x1;
 	float maxy = y2;
 	float maxx;
 	if( x2 )
-		maxx = x2 - cls.creditsFont.charWidths['M'] / 800.0f * size;
+		maxx = x2 - cls.creditsFont.charWidths['M'] / 1024.0f * size;
 	else
 		maxx = 1;
 	
@@ -978,13 +978,14 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 	{
 		while( *s && ( *s != '\n' ) && ( *s != ';' ) && ( x1 < maxx ) )
 			x1 += IN_TouchDrawCharacter( x1, y1, *s++, size );
-		y1 += cls.creditsFont.charHeight;
+		y1 += cls.creditsFont.charHeight / 1024.f * size / SCR_H * SCR_W;
 
 		if( y1 >= maxy )
 			break;
 
 		if( *s=='\n' || *s == ';' )
 			s++;
+		x1 = x;
 	}
 	GL_SetRenderMode( kRenderTransTexture );
 	return x1;
@@ -1128,12 +1129,12 @@ void IN_TouchDraw( void )
 				if( button->flags & TOUCH_FL_HIDE )
 				{
 					IN_TouchDrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, touch.showtexture, 255, 255, 255, 255 );
-					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Show", color, 2 );
+					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Show", color, 1.5 );
 				}
 				else
 				{
 					IN_TouchDrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, touch.hidetexture, 255, 255, 255, 255 );
-					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Hide", color, 2 );
+					IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Hide", color, 1.5 );
 				}
 			}
 			Con_DrawString( 0, TO_SCRN_Y(GRID_Y * 11), "Selection:", color );
@@ -1149,11 +1150,11 @@ void IN_TouchDraw( void )
 			// close
 			IN_TouchDrawTexture( 0, GRID_Y * 2, GRID_X * 2, GRID_Y * 4, touch.closetexture, 255, 255, 255, 255 );
 			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 2.5 ), "Close", color );
-			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 2.5, 0, 0, "Close", color, 2 );
+			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 2.5, 0, 0, "Close", color, 1.5 );
 			// reset
 			IN_TouchDrawTexture( 0, GRID_Y * 5, GRID_X * 2, GRID_Y * 7, touch.resettexture, 255, 255, 255, 255 );
 			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 5.5 ), "Reset", color );
-			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 5.5, 0, 0, "Reset", color, 2 );
+			IN_TouchDrawText( GRID_X * 2.5, GRID_Y * 5.5, 0, 0, "Reset", color, 1.5 );
 		}
 	}
 	pglColor4ub( 255, 255, 255, 255 );
