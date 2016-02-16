@@ -442,6 +442,9 @@ void CL_FizzEffect( cl_entity_t *pent, int modelIndex, int density )
 	if( !pent || Mod_GetType( modelIndex ) == mod_bad )
 		return;
 
+	if( pent->curstate.modelindex <= 0 )
+		return;
+
 	count = density + 1;
 	density = count * 3 + 6;
 
