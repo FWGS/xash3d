@@ -127,6 +127,8 @@ void DrawSkyPolygon( int nump, vec3_t vecs )
 		j = vec_to_st[axis][2];
 		dv = (j > 0) ? vecs[j-1] : -vecs[-j-1];
 
+		if( dv == 0 ) continue;
+
 		j = vec_to_st[axis][0];
 		s = (j < 0) ? -vecs[-j-1] / dv : vecs[j-1] / dv;
 
