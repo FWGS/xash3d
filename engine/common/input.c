@@ -27,7 +27,9 @@ GNU General Public License for more details.
 #ifdef _WIN32
 #include "windows.h"
 #endif
-
+#ifdef __ANDROID__
+#include "../platform/android/android-main.h"
+#endif
 Xash_Cursor*	in_mousecursor;
 qboolean	in_mouseactive;				// false when not focus app
 qboolean	in_mouseinitialized;
@@ -556,6 +558,7 @@ void IN_SDL_JoyOpen( void )
 	joy_enable->modified = false;
 }
 
+
 void IN_SDL_JoyMove( float frametime, float *forward, float *side, float *pitch, float *yaw )
 {
 	int i;
@@ -742,7 +745,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 	{
 		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( frametime, &forward, &side, &dpitch, &dyaw );
+		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &dpitch, &dyaw );
 		if( m_enginemouse->integer )
 		{
 			int mouse_x, mouse_y;
@@ -785,7 +788,7 @@ void Host_InputFrame( void )
 		int dx, dy;
 
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
+		IN_SDL_JoyMove(host.frametime, &forward, &side, &pitch, &yaw );
 #ifndef __ANDROID__
 		if( in_mouseinitialized )
 		{
@@ -796,13 +799,14 @@ void Host_InputFrame( void )
 	
 		
 #endif
-#ifdef ANDROID_GYRO_TRACKING // disable before java part is done
+#ifdef __ANDROID__ 
 		if( getenv("XASH3D_ANDROID_GYRO" ) )
 		{
-			vec3_t accelValues;
-			Android_JNI_GetAccelerometerValues(accelValues);
-			if( accelValues[2] != 0 )
-				VectorCopy( accelValues, cl.refdef.cl_viewangles );
+			vec3_t TrackValues;
+			GetTrackData(TrackValues);
+			if( TrackValues[2] != 0 )
+				VectorCopy( TrackValues, cl.refdef.cl_viewangles );
+
 		}
 #endif
 #endif
