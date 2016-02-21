@@ -1158,6 +1158,7 @@ static void Mod_LoadDeluxemap( void )
 	char	path[64];
 	int	iCompare;
 	byte	*in;
+	fs_offset_t	filesize;
 
 	if( !world.loading ) return;	// only world can have deluxedata
 
@@ -1181,7 +1182,8 @@ static void Mod_LoadDeluxemap( void )
 	if( iCompare < 0 ) // this may happen if level-designer used -onlyents key for hlcsg
 		MsgDev( D_WARN, "Mod_LoadDeluxemap: %s is probably out of date\n", path );
 
-	in = FS_LoadFile( path, &world.vecdatasize, false );
+	in = FS_LoadFile( path, &filesize, false );
+	world.vecdatasize = filesize;
 
 	ASSERT( in != NULL );
 
