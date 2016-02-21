@@ -1530,7 +1530,7 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 	if( successfully_received)
 		MsgDev( D_INFO, "Received %s\n", filename );
 	else
-		MsgDev( D_WARN, "Failed to download %s", filename );
+		MsgDev( D_WARN, "Failed to download %s\n", filename );
 
 	if( cls.downloadfileid == cls.downloadcount - 1 )
 	{
