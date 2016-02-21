@@ -2653,7 +2653,7 @@ int CL_DecalIndexFromName( const char *name )
 	// look through the loaded sprite name list for SpriteName
 	for( i = 0; i < MAX_DECALS && host.draw_decals[i+1][0]; i++ )
 	{
-		if( !Q_stricmp( name, host.draw_decals[i+1] ))
+		if( !Q_stricmp( name, (char *)host.draw_decals[i+1] ))
 			return i+1;
 	}
 	return 0; // invalid decal
@@ -2704,7 +2704,7 @@ int CL_DecalIndex( int id )
 			}
 		}
 
-		if( !load_external ) cl.decal_index[id] = GL_LoadTexture( host.draw_decals[id], NULL, 0, TF_DECAL, NULL );
+		if( !load_external ) cl.decal_index[id] = GL_LoadTexture( (char *)host.draw_decals[id], NULL, 0, TF_DECAL, NULL );
 	}
 	host.decal_loading = false;
 

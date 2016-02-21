@@ -1358,7 +1358,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	}
 
 	// load common reslist file form gamedir root
-	resfile = pfile = FS_LoadFile("reslist.txt", 0, true );
+	resfile = pfile = (char *)FS_LoadFile("reslist.txt", 0, true );
 	while( pfile = COM_ParseFile( pfile, token ) )
 	{
 		if( !FS_FileExists( token, true ) )
@@ -1373,7 +1373,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	Q_strncpy( mapresfilename, sv.worldmodel->name, sizeof( mapresfilename ));
 	FS_StripExtension( mapresfilename );
 	FS_DefaultExtension( mapresfilename, ".res" );
-	mapresfile = pfile = FS_LoadFile( mapresfilename, 0, true );
+	mapresfile = pfile = (char *)FS_LoadFile( mapresfilename, 0, true );
 	while( pfile = COM_ParseFile( pfile, token ) )
 	{
 		if( !FS_FileExists( token, true ) )
@@ -2749,7 +2749,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	{
 		 // A2S_INFO
 		char answer[2048] = "";
-		byte *s = answer;
+		byte *s = (byte *)answer;
 #if 0 // Source format
 		*s++ = 'I';
 		*s++ = PROTOCOL_VERSION;
@@ -2779,12 +2779,12 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		*s++ = 0; // not secured
 #else // GS format
 		*s++ = 'm';
-		s += Q_sprintf( s, "127.0.0.1:27015" ) + 1;
+		s += Q_sprintf( (char *)s, "127.0.0.1:27015" ) + 1;
 
-		s += Q_strcpy( s, hostname->string ) + 1;
-		s += Q_strcpy( s, sv.name ) + 1;
-		s += Q_strcpy( s, gamedir ) + 1;
-		s += Q_strcpy( s, gamedir ) + 1;
+		s += Q_strcpy( (char *)s, hostname->string ) + 1;
+		s += Q_strcpy( (char *)s, sv.name ) + 1;
+		s += Q_strcpy( (char *)s, gamedir ) + 1;
+		s += Q_strcpy( (char *)s, gamedir ) + 1;
 		for( index = 0; index < sv_maxclients->integer; index++ )
 		{
 			if( svs.clients[index].state >= cs_connected )
@@ -2813,7 +2813,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( svgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{
 		// user out of band message (must be handled in CL_ConnectionlessPacket)
-		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, buf );
+		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, (byte *)buf );
 	}
 	else MsgDev( D_ERROR, "bad connectionless packet from %s:\n%s\n", NET_AdrToString( from ), args );
 }

@@ -580,9 +580,9 @@ void Cmd_TokenizeString( const char *text )
 			return;
 	
 		if( cmd_argc == 1 )
-			 cmd_args = text;
+			 cmd_args = (char *)text;
 			
-		text = COM_ParseFile( text, cmd_token );
+		text = COM_ParseFile( (char *)text, cmd_token );
 		if( !text ) return;
 
 		if( cmd_argc < MAX_CMD_TOKENS )

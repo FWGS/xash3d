@@ -251,8 +251,8 @@ static void listdirectory( stringlist_t *list, const char *path )
 #endif
 	long		hFile;
 
-	Q_strncpy( pattern, path, sizeof( pattern ));
-	Q_strncat( pattern, "*", sizeof( pattern ));
+	Q_strncpy( (char *)pattern, path, sizeof( pattern ));
+	Q_strncat( (char *)pattern, "*", sizeof( pattern ));
 
 	// ask for the directory listing handle
 #ifdef _WIN32
@@ -286,7 +286,7 @@ static void listdirectory( stringlist_t *list, const char *path )
 	// convert names to lowercase because windows doesn't care, but pattern matching code often does
 	for( i = 0; i < list->numstrings; i++ )
 	{
-		for( c = list->strings[i]; *c; c++ )
+		for( c = (signed char *)list->strings[i]; *c; c++ )
 		{
 			if( *c >= 'A' && *c <= 'Z' )
 				*c += 'a' - 'A';
@@ -1188,7 +1188,7 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	string	token;
 
 	if( !GameInfo ) return false;	
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 	if( !afile ) return false;
 
 	// setup default values
@@ -1385,7 +1385,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 
 	if( !GameInfo ) return false;	// no dest
 
-	afile = FS_LoadFile( filepath, NULL, false );
+	afile = (char *)FS_LoadFile( filepath, NULL, false );
 	if( !afile ) return false;
 
 	// setup default values
@@ -3522,6 +3522,6 @@ static byte *W_LoadFile( const char *path, fs_offset_t *lumpsizeptr, qboolean ga
 
 	search = FS_FindFile( path, &index, gamedironly );
 	if( search && search->wad )
-		return W_ReadLump( search->wad, &search->wad->lumps[index], lumpsizeptr ); 
+		return W_ReadLump( search->wad, &search->wad->lumps[index], (size_t *)lumpsizeptr ); 
 	return NULL;
 }

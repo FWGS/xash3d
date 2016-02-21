@@ -2633,7 +2633,7 @@ void Mod_CalcPHS( void )
 		}
 
 		// compress PHS data back
-		comp = Mod_CompressVis( (byte *)dest, &rowsize );
+		comp = Mod_CompressVis( (byte *)dest, (size_t *)&rowsize );
 		visofs[i] = vismap_p - vismap; // leaf 0 is a common solid 
 		total_size += rowsize;
 
@@ -3091,7 +3091,7 @@ void Mod_LoadWorld( const char *name, uint *checksum, qboolean force )
 	// load the newmap
 	world.loading = true;
 	worldmodel = Mod_ForName( name, true );
-	CRC32_MapFile( &world.checksum, worldmodel->name );
+	CRC32_MapFile( (dword *)&world.checksum, worldmodel->name );
 	world.loading = false;
 
 	if( checksum ) *checksum = world.checksum;

@@ -716,7 +716,7 @@ char *SV_ReadEntityScript( const char *filename, int *flags )
 	if( ft2 != -1 && ft1 < ft2 )
 	{
 		// grab .ent files only from gamedir
-		ents = FS_LoadFile( entfilename, NULL, true ); 
+		ents = (char *)FS_LoadFile( entfilename, NULL, true ); 
 	}
 
 	if( !ents && lumplen >= 10 )
@@ -2439,7 +2439,7 @@ int pfnDecalIndex( const char *m )
 
 	for( i = 1; i < MAX_DECALS && host.draw_decals[i][0]; i++ )
 	{
-		if( !Q_stricmp( host.draw_decals[i], m ))
+		if( !Q_stricmp( (char *)host.draw_decals[i], m ))
 			return i;
 	}
 
@@ -3201,7 +3201,7 @@ pfnNameForFunction
 */
 const char *pfnNameForFunction( dword function )
 {
-	return Com_NameForFunction( svgame.hInstance, function );
+	return Com_NameForFunction( svgame.hInstance, (void *)function );
 }
 
 /*

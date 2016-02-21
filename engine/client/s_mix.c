@@ -449,7 +449,7 @@ int S_MixDataToDevice( channel_t *pChannel, int sampleCount, int outputRate, int
 		double	end = pChannel->pMixer.sample + rate * sampleCount;
 		int	inputSampleCount = (int)(ceil( end ) - floor( pChannel->pMixer.sample ));
 
-		availableSamples = S_GetOutputData( pSource, &pData, pChannel->pMixer.sample, inputSampleCount, use_loop );
+		availableSamples = S_GetOutputData( pSource, (void **)&pData, pChannel->pMixer.sample, inputSampleCount, use_loop );
 
 		// none available, bail out
 		if( !availableSamples ) break;

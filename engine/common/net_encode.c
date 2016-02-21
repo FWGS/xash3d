@@ -736,7 +736,7 @@ void Delta_InitFields( void )
 	string		encodeDll, encodeFunc, token;	
 	delta_info_t	*dt;
 
-	afile = FS_LoadFile( DELTA_PATH, NULL, false );
+	afile = (char *)FS_LoadFile( DELTA_PATH, NULL, false );
 	if( !afile ) Sys_Error( "DELTA_Load: couldn't load file %s\n", DELTA_PATH );
 
 	pfile = afile;

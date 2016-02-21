@@ -1177,7 +1177,7 @@ void CL_PrepVideo( void )
 
 	// let the render dll load the map
 	Q_strncpy( mapname, cl.model_precache[1], MAX_STRING ); 
-	Mod_LoadWorld( mapname, &map_checksum, false );
+	Mod_LoadWorld( mapname, (uint *)&map_checksum, false );
 	cl.worldmodel = Mod_Handle( 1 ); // get world pointer
 	Cvar_SetFloat( "scr_loading", 25.0f );
 
@@ -1399,7 +1399,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{
 		// user out of band message (must be handled in CL_ConnectionlessPacket)
-		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, buf );
+		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, (byte *)buf );
 	}
 	else MsgDev( D_ERROR, "Bad connectionless packet from %s:\n%s\n", NET_AdrToString( from ), args );
 }

@@ -112,7 +112,7 @@ write screenshot into clipboard
 void Sys_SetClipboardData( const byte *buffer, size_t size )
 {
 #ifdef XASH_SDL
-	SDL_SetClipboardText(buffer);
+	SDL_SetClipboardText((char *)buffer);
 #endif
 }
 

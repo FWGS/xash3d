@@ -114,7 +114,7 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 			Q_strncpy( entfilename, t->filenames[i], sizeof( entfilename ));
 			FS_StripExtension( entfilename );
 			FS_DefaultExtension( entfilename, ".ent" );
-			ents = FS_LoadFile( entfilename, NULL, true );
+			ents = (char *)FS_LoadFile( entfilename, NULL, true );
 
 			if( !ents && lumplen >= 10 )
 			{
@@ -158,20 +158,20 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 		switch( ver )
 		{
 		case Q1BSP_VERSION:
-			if( mapver == 220 ) Q_strncpy( buf, "Half-Life Alpha", sizeof( buf ));
-			else Q_strncpy( buf, "Quake", sizeof( buf ));
+			if( mapver == 220 ) Q_strncpy( (char *)buf, "Half-Life Alpha", sizeof( buf ));
+			else Q_strncpy( (char *)buf, "Quake", sizeof( buf ));
 			break;
 		case HLBSP_VERSION:
-			if( gearbox ) Q_strncpy( buf, "Blue-Shift", sizeof( buf ));
-			else if( paranoia ) Q_strncpy( buf, "Paranoia 2", sizeof( buf ));
-			else Q_strncpy( buf, "Half-Life", sizeof( buf ));
+			if( gearbox ) Q_strncpy( (char *)buf, "Blue-Shift", sizeof( buf ));
+			else if( paranoia ) Q_strncpy( (char *)buf, "Paranoia 2", sizeof( buf ));
+			else Q_strncpy( (char *)buf, "Half-Life", sizeof( buf ));
 			break;
 		case XTBSP_VERSION:
-			if( paranoia ) Q_strncpy( buf, "Paranoia 2", sizeof( buf ));
-			else Q_strncpy( buf, "Xash3D", sizeof( buf ));
+			if( paranoia ) Q_strncpy( (char *)buf, "Paranoia 2", sizeof( buf ));
+			else Q_strncpy( (char *)buf, "Xash3D", sizeof( buf ));
 			break;
 		default:
-			Q_strncpy( buf, "??", sizeof( buf ));
+			Q_strncpy( (char *)buf, "??", sizeof( buf ));
 			break;
 		}
 
@@ -739,7 +739,7 @@ qboolean Cmd_CheckMapsList_R( qboolean fRefresh, qboolean onlyingamedir )
 			Q_strncpy( entfilename, t->filenames[i], sizeof( entfilename ));
 			FS_StripExtension( entfilename );
 			FS_DefaultExtension( entfilename, ".ent" );
-			ents = FS_LoadFile( entfilename, NULL, true );
+			ents = (char *)FS_LoadFile( entfilename, NULL, true );
 
 			if( !ents && lumplen >= 10 )
 			{

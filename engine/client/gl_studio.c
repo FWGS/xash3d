@@ -391,7 +391,7 @@ pfnGetModelCounters
 static void pfnGetModelCounters( int **s, int **a )
 {
 	*s = &g_nStudioCount;
-	*a = &r_stats.c_studio_models_drawn;
+	*a = (int *)&r_stats.c_studio_models_drawn;
 }
 
 /*
@@ -2756,7 +2756,7 @@ void R_StudioRenderFinal( void )
 	{
 		for( i = 0; i < m_pStudioHeader->numbodyparts; i++ )
 		{
-			R_StudioSetupModel( i, &m_pBodyPart, &m_pSubModel );
+			R_StudioSetupModel( i, (void **)&m_pBodyPart, (void **)&m_pSubModel );
 
 			GL_SetRenderMode( rendermode );
 			R_StudioDrawPoints();

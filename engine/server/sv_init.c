@@ -202,7 +202,7 @@ char *SV_EntityScript( void )
 		{
 			MsgDev( D_INFO, "^1Entity patch is older than BSP. Ignored.\n", entfilename );			
 		}
-		else if(( ents = FS_LoadFile( entfilename, NULL, true )) != NULL )
+		else if(( ents = (char *)FS_LoadFile( entfilename, NULL, true )) != NULL )
 		{
 			MsgDev( D_INFO, "^2Read entity patch:^7 %s\n", entfilename );
 			return ents;

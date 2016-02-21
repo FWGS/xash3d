@@ -555,7 +555,7 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 		if( !net_socket ) continue;
 
 		addr_len = sizeof( addr );
-		ret = pRecvFrom( net_socket, data, NET_MAX_PAYLOAD, 0, (struct sockaddr *)&addr, &addr_len );
+		ret = pRecvFrom( net_socket, data, NET_MAX_PAYLOAD, 0, (struct sockaddr *)&addr, (socklen_t *)&addr_len );
 
 		NET_SockadrToNetadr( &addr, from );
 
@@ -923,7 +923,7 @@ void NET_GetLocalAddress( void )
 		NET_StringToAdr( buff, &net_local );
 		namelen = sizeof( address );
 
-		if( pGetSockName( ip_sockets[NS_SERVER], (struct sockaddr *)&address, &namelen ) != 0 )
+		if( pGetSockName( ip_sockets[NS_SERVER], (struct sockaddr *)&address, (socklen_t *)&namelen ) != 0 )
 		{
 			MsgDev( D_ERROR, "Could not get TCP/IP address, TCP/IP disabled\nReason: %s\n", NET_ErrorString( ));
 			noip = true;
@@ -1759,7 +1759,7 @@ void HTTP_Init( void )
 		}
 		token = lineend;
 	}*/
-	line = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
+	line = serverfile = (char *)FS_LoadFile( "fastdl.txt", 0, true );
 	if( serverfile )
 	{
 		while( line = COM_ParseFile( line, token ) )

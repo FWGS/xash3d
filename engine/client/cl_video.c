@@ -108,7 +108,7 @@ void SCR_CheckStartupVids( void )
 	if( !FS_FileExists( "media/StartupVids.txt", false ))
 		SCR_CreateStartupVids();
 
-	afile = FS_LoadFile( "media/StartupVids.txt", NULL, false );
+	afile = (char *)FS_LoadFile( "media/StartupVids.txt", NULL, false );
 	if( !afile ) return; // something bad happens
 
 	pfile = afile;

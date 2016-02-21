@@ -252,7 +252,7 @@ qboolean Image_SaveTGA( const char *name, rgbdata_t *pix )
 	buffer[15] = (pix->height >> 8) & 0xFF;
 	buffer[16] = ( pix->flags & IMAGE_HAS_ALPHA ) ? 32 : 24;
 	buffer[17] = ( pix->flags & IMAGE_HAS_ALPHA ) ? 8 : 0; // 8 bits of alpha
-	Q_strncpy( buffer + 18, comment, Q_strlen( comment )); 
+	Q_strncpy( (char *)buffer + 18, comment, Q_strlen( comment )); 
 	out = buffer + 18 + Q_strlen( comment );
 
 	// get image description

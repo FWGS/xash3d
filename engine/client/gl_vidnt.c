@@ -2008,10 +2008,10 @@ void GL_InitExtensions( void )
 	GL_CheckExtension( "OpenGL 1.1.0", opengl_110funcs, NULL, GL_OPENGL_110 );
 
 	// get our various GL strings
-	glConfig.vendor_string = pglGetString( GL_VENDOR );
-	glConfig.renderer_string = pglGetString( GL_RENDERER );
-	glConfig.version_string = pglGetString( GL_VERSION );
-	glConfig.extensions_string = pglGetString( GL_EXTENSIONS );
+	glConfig.vendor_string = (char *)pglGetString( GL_VENDOR );
+	glConfig.renderer_string = (char *)pglGetString( GL_RENDERER );
+	glConfig.version_string = (char *)pglGetString( GL_VERSION );
+	glConfig.extensions_string = (char *)pglGetString( GL_EXTENSIONS );
 	MsgDev( D_INFO, "Video: %s\n", glConfig.renderer_string );
 
 	// initalize until base opengl functions loaded

@@ -2145,7 +2145,7 @@ void CL_ReadLineFile_f( void )
 	string		token;
 	
 	Q_snprintf( filename, sizeof( filename ), "maps/%s.lin", clgame.mapname );
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 
 	if( !afile )
 	{
