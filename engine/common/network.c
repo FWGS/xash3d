@@ -17,6 +17,7 @@ GNU General Public License for more details.
 // Winsock
 #include <winsock.h>
 #include <wsipx.h>
+#define socklen_t int //#include <ws2tcpip.h>
 #else
 // BSD sockets
 #include <sys/types.h>
