@@ -2755,7 +2755,7 @@ void pfnWriteString( const char *src )
 		}
 		else if( src[0] == '\\' && src[1] == 't' )
 		{
-			*dst++ = '    ';
+			*dst++ = '\t';
 			src += 2;
 			len -= 1;
 		}
