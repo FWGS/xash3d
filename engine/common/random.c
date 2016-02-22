@@ -98,7 +98,7 @@ long Com_RandomLong( long lLow, long lHigh )
 
 	if( idum == 0 ) COM_SetRandomSeed(0);
 
-	if( x <= 0 || MAX_RANDOM_RANGE < x-1 )
+	if( x == 0 || MAX_RANDOM_RANGE < x-1 )
 		return lLow;
 
 	// The following maps a uniform distribution on the interval [0, MAX_RANDOM_RANGE]
