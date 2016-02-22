@@ -98,7 +98,7 @@ void UI_DrawTitleAnim()
 void UI_SetTitleAnim( int anim_state, menuPicButton_s *button )
 {
 	// skip buttons which don't call new menu
-	if( !button || PreClickDepth == uiStatic.menuDepth && anim_state == AS_TO_TITLE )
+	if( !button || ( PreClickDepth == uiStatic.menuDepth && anim_state == AS_TO_TITLE ) )
 		return;
 
 	// replace cancel\done button with button which called this menu 

@@ -2056,7 +2056,7 @@ static void R_StudioDrawPoints( void )
 			GL_Bind( GL_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
 		}
 
-		while( i = *( ptricmds++ ))
+		while( ( i = *( ptricmds++ ) ) )
 		{
 			int	vertexState = 0;
 			qboolean	tri_strip;

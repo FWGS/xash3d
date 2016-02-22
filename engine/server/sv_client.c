@@ -1258,7 +1258,7 @@ void SV_New_f( sv_client_t *cl )
 			{
 				char *data = sv_downloadurl->string;
 				char token[256];
-				while( data = COM_ParseFile( data, token ) )
+				while( ( data = COM_ParseFile( data, token ) ) )
 				{
 					BF_WriteByte( &cl->netchan.message, svc_stufftext );
 					BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", token ));
@@ -1359,7 +1359,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 
 	// load common reslist file form gamedir root
 	resfile = pfile = (char *)FS_LoadFile("reslist.txt", 0, true );
-	while( pfile = COM_ParseFile( pfile, token ) )
+	while( ( pfile = COM_ParseFile( pfile, token ) ) )
 	{
 		if( !FS_FileExists( token, true ) )
 			continue;
@@ -1374,7 +1374,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	FS_StripExtension( mapresfilename );
 	FS_DefaultExtension( mapresfilename, ".res" );
 	mapresfile = pfile = (char *)FS_LoadFile( mapresfilename, 0, true );
-	while( pfile = COM_ParseFile( pfile, token ) )
+	while( ( pfile = COM_ParseFile( pfile, token ) ) )
 	{
 		if( !FS_FileExists( token, true ) )
 			continue;
@@ -2065,7 +2065,7 @@ void SV_EntList_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	int	i;
 
-	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+	if( ( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 
 	for( i = 0; i < svgame.numEntities; i++ )
@@ -2116,7 +2116,7 @@ void SV_EntInfo_f( sv_client_t *cl )
 	int	i = 0;
 	vec3_t borigin;
 
-	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+	if( ( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 
 	if( Cmd_Argc() != 2 )
@@ -2198,7 +2198,7 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 	vec3_t forward;
 	AngleVectors( player->v.v_angle, forward, NULL, NULL );
 
-	while( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) )
+	while( ( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) ) )
 	{
 		vec3_t vecLOS;
 		float flDot;
@@ -2262,7 +2262,7 @@ void SV_EntFire_f( sv_client_t *cl )
 	int	i = 1, count = 0;
 	qboolean number; // true if user specified entity number, not pattern
 
-	if( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+	if( ( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 
 	Msg( "Player %i: %s called ent_fire: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
@@ -2275,7 +2275,7 @@ void SV_EntFire_f( sv_client_t *cl )
 		return;
 	}
 
-	if( number = Q_isdigit( Cmd_Argv( 1 ) ) )
+	if( ( number = Q_isdigit( Cmd_Argv( 1 ) ) ) )
 	{
 		i = Q_atoi( Cmd_Argv( 1 ) );
 
@@ -2504,7 +2504,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 	int	i;
 
 
-	if( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+	if( ( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 	// log all dangerous actions
 	Msg( "Player %i: %s called ent_create: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,

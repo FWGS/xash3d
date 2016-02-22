@@ -129,7 +129,7 @@ int CL_InterpolateModel( cl_entity_t *e )
 	if( t - t2 < 0.0f )
 		return 0;
 
-	if( t2 == 0.0f || VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ))
+	if( t2 == 0.0f || ( VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ) ) )
 	{
 		VectorCopy( ph0->origin, e->origin );
 		VectorCopy( ph0->angles, e->angles );

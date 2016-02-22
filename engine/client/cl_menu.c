@@ -1074,7 +1074,7 @@ qboolean UI_LoadProgs( void )
 
 	menu.use_text_api = false;
 
-	if( GiveTextApi = (UITEXTAPI)Com_GetProcAddress( menu.hInstance, "GiveTextAPI" ) )
+	if( ( GiveTextApi = (UITEXTAPI)Com_GetProcAddress( menu.hInstance, "GiveTextAPI" ) ) )
 	{
 		// make local copy of engfuncs to prevent overwrite it with user dll
 		Q_memcpy( &gpTextfuncs, &gTextfuncs, sizeof( gpTextfuncs ));

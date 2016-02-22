@@ -368,7 +368,7 @@ void IN_TouchRemoveButton( const char *name )
 
 	IN_TouchEditClear();
 
-	while( button = IN_TouchFindFirst( name ) )
+	while( ( button = IN_TouchFindFirst( name ) ) )
 	{
 		if( button->prev )
 			button->prev->next = button->next;

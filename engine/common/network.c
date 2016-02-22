@@ -1763,7 +1763,7 @@ void HTTP_Init( void )
 	line = serverfile = (char *)FS_LoadFile( "fastdl.txt", 0, true );
 	if( serverfile )
 	{
-		while( line = COM_ParseFile( line, token ) )
+		while( ( line = COM_ParseFile( line, token ) ) )
 		{
 			httpserver_t *server = HTTP_ParseURL( token );
 			if( !server ) continue;
