@@ -521,6 +521,8 @@ static void Mod_FreeModel( model_t *mod )
 	case mod_brush:
 		Mod_UnloadBrushModel( mod );
 		break;
+	default:
+		break;
 	}
 }
 

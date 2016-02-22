@@ -1152,6 +1152,8 @@ void UI_CharEvent( int key )
 		case QMTYPE_FIELD:
 			UI_Field_Char((menuField_s *)item, key );
 			break;
+		default:
+			break;
 		}
 	}
 }

@@ -472,6 +472,8 @@ void V_PostRender( void )
 	case scrshot_snapshot:
 		draw_2d = true;
 		break;
+	default:
+		break;
 	}
 
 	if( draw_2d )

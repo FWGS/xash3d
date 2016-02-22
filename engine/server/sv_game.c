@@ -1355,6 +1355,8 @@ edict_t* SV_FindEntityByString( edict_t *pStartEdict, const char *pszField, cons
 					return ed;
 			}
 			break;
+		default:
+			break;
 		}
 	}
 
@@ -2802,6 +2804,7 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	// check message for pass
 	switch( level )
 	{
+	case at_logged:
 	case at_notice:
 		break;	// passed always
 	case at_console:

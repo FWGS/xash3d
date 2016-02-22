@@ -538,6 +538,8 @@ void R_CheckEntitiesOnList( void )
 		case mod_brush:
 			R_FindBmodelMirrors( RI.currententity, true );
 			break;
+		default:
+			break;
 		}
 	}
 
@@ -562,6 +564,8 @@ void R_CheckEntitiesOnList( void )
 		case mod_brush:
 			R_FindBmodelMirrors( RI.currententity, false );
 			break;
+		default:
+			break;
 		}
 	}
 
@@ -578,6 +582,8 @@ void R_CheckEntitiesOnList( void )
 		{
 		case mod_brush:
 			R_FindBmodelMirrors( RI.currententity, false );
+			break;
+		default:
 			break;
 		}
 	}

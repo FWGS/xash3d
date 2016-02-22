@@ -1065,6 +1065,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 		Cbuf_Execute();
 		break;
+	case HOST_UNKNOWN:
+		break;
 	}
 
 	if( host.type == HOST_DEDICATED )

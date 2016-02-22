@@ -2100,6 +2100,8 @@ void Con_DrawVersion( void )
 	case scrshot_snapshot:
 		draw_version = true;
 		break;
+	default:
+		break;
 	}
 
 	if( !host.force_draw_version )
