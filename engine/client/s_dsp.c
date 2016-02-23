@@ -35,7 +35,7 @@ GNU General Public License for more details.
 // Thus we have 3e6 / 1840 = 1630 cycles per sample.  
 
 #define PBITS		12		// parameter bits
-#define PMAX		((1 << PBITS)-1)	// parameter max size
+#define PMAX		((1U << PBITS)-1)	// parameter max size
 
 // crossfade from y2 to y1 at point r (0 < r < PMAX )
 #define XFADE( y1, y2, r )	(((y1) * (r)) >> PBITS) + (((y2) * (PMAX - (r))) >> PBITS);
@@ -445,8 +445,8 @@ _inline int dly_allpass( int D, int t, int *w, int **p, int a, int b, int x )
 // fixed point math for real-time wave table traversing, pitch shifting, resampling
 ///////////////////////////////////////////////////////////////////////////////////
 #define FIX20_BITS		20					// 20 bits of fractional part
-#define FIX20_SCALE		(1 << FIX20_BITS)
-#define FIX20_INTMAX	((1 << (32 - FIX20_BITS))-1)			// maximum step integer
+#define FIX20_SCALE		(1U << FIX20_BITS)
+#define FIX20_INTMAX	((1U << (32 - FIX20_BITS))-1)			// maximum step integer
 #define FLOAT_TO_FIX20(a)	((int)((a) * (float)FIX20_SCALE))		// convert float to fixed point
 #define INT_TO_FIX20(a)	(((int)(a)) << FIX20_BITS)			// convert int to fixed point
 #define FIX20_TO_FLOAT(a)	((float)(a) / (float)FIX20_SCALE)		// convert fix20 to float
@@ -1973,7 +1973,7 @@ _inline void DFR_Mod( void *p, float v )
 
 #define CLFOSAMPS		512		// samples per wav table - single cycle only
 #define LFOBITS		14		// bits of peak amplitude of lfo wav
-#define LFOAMP		((1<<LFOBITS)-1)	// peak amplitude of lfo wav
+#define LFOAMP		( ( 1U << LFOBITS ) - 1 )	// peak amplitude of lfo wav
 
 //types of lfo wavs
 
@@ -2847,9 +2847,9 @@ env_t *ENV_Alloc( int type, float famp1, float famp2, float famp3, float attack,
 	{
 		if( !envs[i].fused )
 		{
-			int	amp1 = famp1 * (1 << ENV_BITS);	// ramp resolution
-			int	amp2 = famp2 * (1 << ENV_BITS);	
-			int	amp3 = famp3 * (1 << ENV_BITS);
+			int	amp1 = famp1 * (1U << ENV_BITS);	// ramp resolution
+			int	amp2 = famp2 * (1U << ENV_BITS);	
+			int	amp3 = famp3 * (1U << ENV_BITS);
 
 			penv = &envs[i];
 			
@@ -2998,7 +2998,7 @@ _inline void ENV_Mod ( void *p, float v )
 #define CEFOS		64		// max # of envelope followers active
 
 #define CEFOBITS		6		// size 2^6 = 64
-#define CEFOWINDOW		(1 << (CEFOBITS))	// size of sample window
+#define CEFOWINDOW		(1U << (CEFOBITS))	// size of sample window
 
 typedef struct
 {

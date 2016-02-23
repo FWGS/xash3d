@@ -29,7 +29,7 @@ GNU General Public License for more details.
 
 #define SND_SCALE_BITS	7
 #define SND_SCALE_SHIFT	(8 - SND_SCALE_BITS)
-#define SND_SCALE_LEVELS	(1 << SND_SCALE_BITS)
+#define SND_SCALE_LEVELS	(1U << SND_SCALE_BITS)
 
 
 portable_samplepair_t	*g_curpaintbuffer;
@@ -49,7 +49,7 @@ void S_InitScaletable( void )
 	for( i = 0; i < SND_SCALE_LEVELS; i++ )
 	{
 		for( j = 0; j < 256; j++ )
-			snd_scaletable[i][j] = ((signed char)j) * i * (1<<SND_SCALE_SHIFT);
+			snd_scaletable[i][j] = ((signed char)j) * i * (1U << SND_SCALE_SHIFT);
 	}
 }
 

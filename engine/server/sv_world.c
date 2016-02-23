@@ -595,7 +595,7 @@ qboolean SV_HeadnodeVisible( mnode_t *node, byte *visbits, int *lastleaf )
 	{
 		leafnum = ((mleaf_t *)node - sv.worldmodel->leafs) - 1;
 
-		if(!( visbits[leafnum >> 3] & (1<<( leafnum & 7 ))))
+		if(!( visbits[leafnum >> 3] & (1U << ( leafnum & 7 ))))
 			return false;
 
 		if( lastleaf )

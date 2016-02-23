@@ -173,7 +173,7 @@ void R_PushDlights( void )
 		if( R_CullSphere( l->origin, l->radius, 15 ))
 			continue;
 
-		R_MarkLights( l, 1<<i, RI.currentmodel->nodes );
+		R_MarkLights( l, 1U << i, RI.currentmodel->nodes );
 	}
 }
 

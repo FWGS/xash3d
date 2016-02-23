@@ -1441,7 +1441,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 		VectorCopy( l->origin, oldorigin ); // save lightorigin
 		Matrix4x4_VectorITransform( RI.objectMatrix, l->origin, origin_l );
 		VectorCopy( origin_l, l->origin ); // move light in bmodel space
-		R_MarkLights( l, 1<<k, clmodel->nodes + clmodel->hulls[0].firstclipnode );
+		R_MarkLights( l, 1U << k, clmodel->nodes + clmodel->hulls[0].firstclipnode );
 		VectorCopy( oldorigin, l->origin ); // restore lightorigin
 	}
 
@@ -1545,7 +1545,7 @@ void R_DrawStaticModel( cl_entity_t *e )
 	{
 		if( l->die < cl.time || !l->radius )
 			continue;
-		R_MarkLights( l, 1<<k, clmodel->nodes + clmodel->hulls[0].firstclipnode );
+		R_MarkLights( l, 1U << k, clmodel->nodes + clmodel->hulls[0].firstclipnode );
 	}
 
 	psurf = &clmodel->surfaces[clmodel->firstmodelsurface];
@@ -1631,12 +1631,12 @@ void R_RecursiveWorldNode( mnode_t *node, uint clipflags )
 	{
 		for( i = 0, clipplane = RI.frustum; i < 6; i++, clipplane++ )
 		{
-			if(!( clipflags & ( 1<<i )))
+			if(!( clipflags & ( 1U << i )))
 				continue;
 
 			clipped = BoxOnPlaneSide( node->minmaxs, node->minmaxs + 3, clipplane );
 			if( clipped == 2 ) return;
-			if( clipped == 1 ) clipflags &= ~(1<<i);
+			if( clipped == 1 ) clipflags &= ~(1U << i);
 		}
 	}
 
@@ -1780,12 +1780,12 @@ void R_DrawWorldTopView( mnode_t *node, uint clipflags )
 		{
 			for( c = 0, clipplane = RI.frustum; c < 6; c++, clipplane++ )
 			{
-				if(!( clipflags & ( 1<<c )))
+				if(!( clipflags & ( 1U << c )))
 					continue;
 
 				clipped = BoxOnPlaneSide( node->minmaxs, node->minmaxs + 3, clipplane );
 				if( clipped == 2 ) return;
-				if( clipped == 1 ) clipflags &= ~(1<<c);
+				if( clipped == 1 ) clipflags &= ~(1U << c);
 			}
 		}
 
@@ -1998,7 +1998,7 @@ void R_MarkLeaves( void )
 
 	for( i = 0; i < cl.worldmodel->numleafs; i++ )
 	{
-		if( vis[i>>3] & ( 1<<( i & 7 )))
+		if( vis[i>>3] & ( 1U << ( i & 7 )))
 		{
 			node = (mnode_t *)&cl.worldmodel->leafs[i+1];
 			do

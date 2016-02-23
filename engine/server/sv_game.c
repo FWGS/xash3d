@@ -234,7 +234,7 @@ qboolean SV_CheckClientVisiblity( sv_client_t *cl, const byte *mask )
 
 	// -1 is because pvs rows are 1 based, not 0 based like leafs
 	leafnum = Mod_PointLeafnum( viewOrg ) - 1;
-	if( leafnum == -1 || (mask[leafnum>>3] & (1<<( leafnum & 7 ))))
+	if( leafnum == -1 || (mask[leafnum>>3] & (1U << ( leafnum & 7 ))))
 		return true; // visible from player view or camera view
 
 	// now check all the portal cameras
@@ -247,7 +247,7 @@ qboolean SV_CheckClientVisiblity( sv_client_t *cl, const byte *mask )
 
 		leafnum = Mod_PointLeafnum( cam->v.origin ) - 1;
 		// g-cont. probably camera in bad leaf... allow to send message here?
-		if( leafnum == -1 || (mask[leafnum>>3] & (1<<( leafnum & 7 ))))
+		if( leafnum == -1 || (mask[leafnum>>3] & (1U << ( leafnum & 7 ))))
 			return true;
 	}
 
@@ -1560,7 +1560,7 @@ edict_t* pfnFindClientInPVS( edict_t *pEdict )
 
 	i = Mod_PointLeafnum( view ) - 1;
 
-	if( i < 0 || !((clientpvs[i>>3]) & (1 << (i & 7))))
+	if( i < 0 || !((clientpvs[i>>3]) & (1U << (i & 7))))
 		return svgame.edicts;
 
 	// client which currently in PVS
@@ -4020,7 +4020,7 @@ int pfnCheckVisibility( const edict_t *ent, byte *pset )
 		// check individual leafs
 		for( i = 0; i < ent->num_leafs; i++ )
 		{
-			if( pset[ent->leafnums[i] >> 3] & (1 << (ent->leafnums[i] & 7 )))
+			if( pset[ent->leafnums[i] >> 3] & (1U << (ent->leafnums[i] & 7 )))
 				return 1;	// visible passed by leaf
 		}
 
@@ -4034,7 +4034,7 @@ int pfnCheckVisibility( const edict_t *ent, byte *pset )
 		{
 			leafnum = ent->leafnums[i];
 			if( leafnum == -1 ) break;
-			if( pset[leafnum >> 3] & (1 << ( leafnum & 7 )))
+			if( pset[leafnum >> 3] & (1U << ( leafnum & 7 )))
 				return 1;	// visible passed by leaf
 		}
 
@@ -4235,7 +4235,7 @@ qboolean pfnVoice_GetClientListening( int iReceiver, int iSender )
 		return false;
 	}
 
-	return ((svs.clients[iSender-1].listeners & ( 1 << iReceiver )) != 0 );
+	return ((svs.clients[iSender-1].listeners & ( 1U << iReceiver )) != 0 );
 }
 
 /*
@@ -4258,11 +4258,11 @@ qboolean pfnVoice_SetClientListening( int iReceiver, int iSender, qboolean bList
 
 	if( bListen )
 	{
-		svs.clients[iSender-1].listeners |= (1 << iReceiver);
+		svs.clients[iSender-1].listeners |= (1U << iReceiver);
 	}
 	else
 	{
-		svs.clients[iSender-1].listeners &= ~(1 << iReceiver);
+		svs.clients[iSender-1].listeners &= ~(1U << iReceiver);
 	}
 	return true;
 }

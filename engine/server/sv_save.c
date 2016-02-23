@@ -1872,7 +1872,7 @@ void SV_LoadAdjacentEnts( const char *pOldLevel, const char *pLandmarkName )
 			{
 				index = EntryInTable( pSaveData, sv.name, index );
 				if( index < 0 ) break;
-				flags |= (1<<index);
+				flags |= (1U << index);
 			}
 
 			if( flags ) movedCount = SV_CreateEntityTransitionList( pSaveData, flags );

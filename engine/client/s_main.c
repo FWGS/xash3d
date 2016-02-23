@@ -723,7 +723,7 @@ qboolean SND_CheckPHS( channel_t *ch )
 	{
 		leafnum = Mod_PointLeafnum( s_listener.origin ) - 1;
 
-		if( leafnum != -1 && (!(mask[leafnum>>3] & (1<<( leafnum & 7 )))))
+		if( leafnum != -1 && (!(mask[leafnum>>3] & (1U << ( leafnum & 7 )))))
 			return false;
 	}
 	return true;

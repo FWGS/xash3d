@@ -21,8 +21,8 @@ extern byte *sndpool;
 #include "mathlib.h"
 
 // local flags (never sending acorss the net)
-#define SND_LOCALSOUND	(1<<9)	// not paused, not looped, for internal use
-#define SND_STOP_LOOPING	(1<<10)	// stop all looping sounds on the entity.
+#define SND_LOCALSOUND	(1U << 9)	// not paused, not looped, for internal use
+#define SND_STOP_LOOPING	(1U << 10)	// stop all looping sounds on the entity.
 
 // sound engine rate defines
 #define SOUND_DMA_SPEED	44100	// hardware playback rate
@@ -51,10 +51,10 @@ extern byte *sndpool;
 
 // fixed point stuff for real-time resampling
 #define FIX_BITS		28
-#define FIX_SCALE		(1 << FIX_BITS)
-#define FIX_MASK		((1 << FIX_BITS)-1)
+#define FIX_SCALE		(1U << FIX_BITS)
+#define FIX_MASK		((1U << FIX_BITS)-1)
 #define FIX_FLOAT(a)	((int)((a) * FIX_SCALE))
-#define FIX(a)		(((int)(a)) << FIX_BITS)
+#define FIX(a)		(((uint)(a)) << FIX_BITS)
 #define FIX_INTPART(a)	(((int)(a)) >> FIX_BITS)
 #define FIX_FRACTION(a,b)	(FIX(a)/(b))
 #define FIX_FRACPART(a)	((a) & FIX_MASK)
