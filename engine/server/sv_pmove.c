@@ -201,7 +201,7 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 	for( l = node->solid_edicts.next; l != &node->solid_edicts; l = next )
 	{
 		next = l->next;
-		check = EDICT_FROM_AREA( l );
+		check = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
 		if( check->v.groupinfo != 0 )
 		{
@@ -284,7 +284,7 @@ void SV_AddLaddersToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3
 	for( l = node->water_edicts.next; l != &node->water_edicts; l = next )
 	{
 		next = l->next;
-		check = EDICT_FROM_AREA( l );
+		check = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
 		if( check->v.solid != SOLID_NOT ) // disabled ?
 			continue;
