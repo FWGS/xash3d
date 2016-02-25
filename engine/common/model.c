@@ -1469,6 +1469,8 @@ static void Mod_SubdividePolygon( mextrasurf_t *info, msurface_t *surf, int numV
 	byte		*buffer;
 	msurfmesh_t	*mesh;
 
+	Q_memset( dists, 0, MAX_SIDE_VERTS * sizeof(float) );
+
 	ClearBounds( mins, maxs );
 
 	for( i = 0, v = verts; i < numVerts; i++, v += 3 )
@@ -2556,7 +2558,7 @@ void Mod_CalcPHS( void )
 	int	hcount, vcount;
 	int	i, j, k, l, index, num;
 	int	rowbytes, rowwords;
-	int	bitbyte, rowsize;
+	int	bitbyte, rowsize = 0;
 	int	*visofs, total_size = 0;
 	byte	*vismap, *vismap_p;
 	byte	*uncompressed_vis;

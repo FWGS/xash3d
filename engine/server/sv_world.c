@@ -694,7 +694,7 @@ void SV_WaterLinks( const vec3_t origin, int *pCont, areanode_t *node )
 	link_t	*l, *next;
 	edict_t	*touch;
 	hull_t	*hull;
-	vec3_t	test, offset;
+	vec3_t	test, offset = {0, 0, 0};
 	model_t	*mod;
 
 	// get water edicts

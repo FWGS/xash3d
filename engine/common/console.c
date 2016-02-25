@@ -1453,7 +1453,7 @@ void Field_DrawInputLine( int x, int y, field_t *edit )
 {
 	int	len, cursorChar;
 	int	drawLen, hideChar = -1;
-	int	prestep, curPos;
+	int	prestep, curPos = 0;
 	char	str[MAX_SYSPATH];
 	byte	*colorDefault;
 

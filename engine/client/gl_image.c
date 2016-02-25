@@ -3611,7 +3611,7 @@ R_ParseClearPixels
 static rgbdata_t *R_ParseClearPixels( char **script, int *samples, texFlags_t *flags )
 {
 	char	token[256];
-	qboolean	clearAlpha;
+	qboolean	clearAlpha = false;
 	rgbdata_t *pic;
 
 	*script = COM_ParseFile( *script, token );
@@ -3669,7 +3669,7 @@ R_ParseMovePixels
 static rgbdata_t *R_ParseMovePixels( char **script, int *samples, texFlags_t *flags )
 {
 	char	token[256];
-	qboolean	alphaToColor;
+	qboolean	alphaToColor = false;
 	rgbdata_t *pic;
 
 	*script = COM_ParseFile( *script, token );

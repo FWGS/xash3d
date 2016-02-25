@@ -2692,7 +2692,7 @@ return true if library is crypted
 qboolean FS_CheckForCrypt( const char *dllname )
 {
 	file_t	*f;
-	int	key;
+	int	key = 0;
 
 	f = FS_Open( dllname, "rb", false );
 	if( !f ) return false;
