@@ -1510,7 +1510,7 @@ void SV_Physics_Toss( edict_t *ent )
 		{
 			VectorScale( ent->v.velocity, (1.0f - trace.fraction) * host.frametime * 0.9f, move );
 			VectorMA( move, (1.0f - trace.fraction) * host.frametime * 0.9f, ent->v.basevelocity, move );
-			trace = SV_PushEntity( ent, move, vec3_origin, NULL );
+			SV_PushEntity( ent, move, vec3_origin, NULL );
 			if( ent->free ) return;
 		}
 	}

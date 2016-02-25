@@ -188,7 +188,7 @@ void CL_FireEvents( void )
 	int		i;
 	event_state_t	*es;
 	event_info_t	*ei;
-	qboolean		success;
+	//qboolean		success;
 
 	es = &cl.events;
 
@@ -203,7 +203,8 @@ void CL_FireEvents( void )
 		if( ei->fire_time && ( ei->fire_time > cl.time ))
 			continue;
 
-		success = CL_FireEvent( ei );
+		//success = CL_FireEvent( ei );
+		CL_FireEvent( ei );
 
 		// zero out the remaining fields
 		CL_ResetEvent( ei );
@@ -348,7 +349,7 @@ void CL_ParseEvent( sizebuf_t *msg )
 	int		i, num_events;
 	int		packet_ent;
 	event_args_t	nullargs, args;
-	qboolean		has_update;
+	//qboolean		has_update;
 	entity_state_t	*state;
 	cl_entity_t	*pEnt;
 	float		delay;
@@ -362,7 +363,7 @@ void CL_ParseEvent( sizebuf_t *msg )
 	{
 		event_index = BF_ReadUBitLong( msg, MAX_EVENT_BITS );
 		Q_memset( &args, 0, sizeof( args ));
-		has_update = false;
+		//has_update = false;
 
 		if( BF_ReadOneBit( msg ))
 		{
@@ -371,7 +372,7 @@ void CL_ParseEvent( sizebuf_t *msg )
 			if( BF_ReadOneBit( msg ))
 			{
 				MSG_ReadDeltaEvent( msg, &nullargs, &args );
-				has_update = true;
+				//has_update = true;
 			}
 		}
 		else packet_ent = -1;

@@ -1619,8 +1619,9 @@ qboolean Image_Process( rgbdata_t **pix, int width, int height, float gamma, uin
 		}
 
 		if( flags & IMAGE_ROUNDFILLER )
-	         		out = Image_FloodInternal( pic->buffer, pic->width, pic->height, w, h, pic->type, &resampled );
-		else out = Image_ResampleInternal((uint *)pic->buffer, pic->width, pic->height, w, h, pic->type, &resampled );
+			Image_FloodInternal( pic->buffer, pic->width, pic->height, w, h, pic->type, &resampled );
+		else
+			Image_ResampleInternal((uint *)pic->buffer, pic->width, pic->height, w, h, pic->type, &resampled );
 
 		if( resampled ) // resampled or filled
 		{

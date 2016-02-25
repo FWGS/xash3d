@@ -709,7 +709,8 @@ void FLT_Design_Cheb( int Nmax, float cutoff, float ftype, float qwidth, int *pM
 	double	Astop =	10;				// max amplitude of stop band	UNDONE: use Quality to select this
 
 	double	Wpass, Wstop, epass, estop, Nex, aa;
-	double	W3, f3, W0, G, Wi2, W02, a1, a2, th, Wi, D, b1;
+	double	W0, G, Wi2, W02, a1, a2, th, Wi, D, b1;
+	//double	W3, f3;
 	int	i, K, r, N;
 	double	A[KMAX+1][3];				// denominator output matrices, second order sections
 	double	B[KMAX+1][3];				// numerator output matrices, second order sections
@@ -730,8 +731,8 @@ void FLT_Design_Cheb( int Nmax, float cutoff, float ftype, float qwidth, int *pM
 	K = (N - r ) / 2;
 
 	aa = asinh ( estop ) / N;
-	W3 = Wstop / cosh( acosh( estop ) / N );
-	f3 = (fs / M_PI) * atan( pow( W3, s ));
+	//W3 = Wstop / cosh( acosh( estop ) / N );
+	//f3 = (fs / M_PI) * atan( pow( W3, s ));
 	
 	W0 = sinh( aa ) / Wstop;
 	W02 = W0 * W0;

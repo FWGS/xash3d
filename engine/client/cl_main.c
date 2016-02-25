@@ -467,7 +467,7 @@ void CL_WritePacket( void )
 		
 	if( send_command )
 	{
-		int	outgoing_sequence;
+		//int	outgoing_sequence;
 	
 		if( cl_cmdrate->integer > 0 )
 			cls.nextcmdtime = host.realtime + ( 1.0f / cl_cmdrate->value );
@@ -475,10 +475,10 @@ void CL_WritePacket( void )
 
 		if( cls.lastoutgoingcommand == -1 )
 		{
-			outgoing_sequence = cls.netchan.outgoing_sequence;
+			//outgoing_sequence = cls.netchan.outgoing_sequence;
 			cls.lastoutgoingcommand = cls.netchan.outgoing_sequence;
 		}
-		else outgoing_sequence = cls.lastoutgoingcommand + 1;
+		//else outgoing_sequence = cls.lastoutgoingcommand + 1;
 
 		// begin a client move command
 		BF_WriteByte( &buf, clc_move );
@@ -522,7 +522,7 @@ void CL_WritePacket( void )
 		buf.pData[key] = CRC32_BlockSequence( buf.pData + key + 1, size, cls.netchan.outgoing_sequence );
 
 		// message we are constructing.
-		i = cls.netchan.outgoing_sequence & CL_UPDATE_MASK;
+		//i = cls.netchan.outgoing_sequence & CL_UPDATE_MASK;
 	
 		// determine if we need to ask for a new set of delta's.
 		if( cl.validsequence && (cls.state == ca_active) && !( cls.demorecording && cls.demowaiting ))
@@ -1467,7 +1467,7 @@ void CL_ReadNetMessage( void )
 	if( cls.state != ca_disconnected && Netchan_IncomingReady( &cls.netchan ))
 	{
 		// the header is different lengths for reliable and unreliable messages
-		int headerBytes = BF_GetNumBytesRead( &net_message );
+		//int headerBytes = BF_GetNumBytesRead( &net_message );
 
 		// process the incoming buffer(s)
 		if( Netchan_CopyNormalFragments( &cls.netchan, &net_message ))

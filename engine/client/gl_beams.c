@@ -421,7 +421,7 @@ static void CL_DrawDisk( int modelIndex, float frame, int rendermode, const vec3
 	
 	// Scroll speed 3.5 -- initial texture position, scrolls 3.5/sec (1.0 is entire texture)
 	vLast = fmod( freq * speed, 1 );
-	scale = scale * length;
+	//scale = scale * length;
 
 	w = freq * delta[2];
 
@@ -489,7 +489,7 @@ static void CL_DrawCylinder( int modelIndex, float frame, int rendermode, const 
 	
 	// Scroll speed 3.5 -- initial texture position, scrolls 3.5/sec (1.0 is entire texture)
 	vLast = fmod( freq * speed, 1.0f );
-	scale = scale * length;
+	//scale = scale * length;
 	
 	GL_Cull( GL_NONE );	// draw both sides
 	SetBeamRenderMode( rendermode );
@@ -1380,7 +1380,6 @@ void CL_DrawBeamFollow( int spriteIndex, BEAM *pbeam, int frame, int rendermode,
 		VectorCopy( particles->org, delta );
 		TriWorldToScreen( particles->org, screenLast );
 		TriWorldToScreen( particles->next->org, screen );
-		particles = particles->next;
 	}
 	else
 	{

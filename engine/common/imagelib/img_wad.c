@@ -319,7 +319,7 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 	mip_t	mip;
 	qboolean	hl_texture;
 	byte	*fin, *pal;
-	int	ofs[4], rendermode;
+	int	rendermode;
 	int	i, pixels, numcolors;
 
 	if( filesize < sizeof( mip ))
@@ -335,7 +335,6 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 	if( !Image_ValidSize( name ))
 		return false;
 
-	Q_memcpy( ofs, mip.offsets, sizeof( ofs ));
 	pixels = image.width * image.height;
 
 	if( image.hint != IL_HINT_Q1 && filesize >= (int)sizeof(mip) + ((pixels * 85)>>6) + sizeof(short) + 768)

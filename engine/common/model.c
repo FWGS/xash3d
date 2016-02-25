@@ -2460,7 +2460,7 @@ static void Mod_FindModelOrigin( const char *entities, const char *modelname, ve
 	string	keyname;
 	char	token[2048];
 	qboolean	model_found;
-	qboolean	origin_found;
+	//qboolean	origin_found;
 
 	if( !entities || !modelname || !*modelname || !origin )
 		return;
@@ -2472,7 +2472,8 @@ static void Mod_FindModelOrigin( const char *entities, const char *modelname, ve
 		if( token[0] != '{' )
 			Host_Error( "Mod_FindModelOrigin: found %s when expecting {\n", token );
 
-		model_found = origin_found = false;
+		model_found = false;
+		//origin_found = false;
 		VectorClear( origin );
 
 		while( 1 )
@@ -2497,7 +2498,7 @@ static void Mod_FindModelOrigin( const char *entities, const char *modelname, ve
 			if( !Q_stricmp( keyname, "origin" ))
 			{
 				Q_atov( origin, token, 3 );
-				origin_found = true;
+				//origin_found = true;
 			}
 		}
 

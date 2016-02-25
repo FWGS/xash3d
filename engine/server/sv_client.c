@@ -2804,9 +2804,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	}
 	else if( !Q_strcmp( c, "i" ) )
 	{
-		 // A2A_PING
-		byte answer[8];
-
+		// A2A_PING
 		NET_SendPacket( NS_SERVER, 5, "\xFF\xFF\xFF\xFFj", from );
 
 	}
