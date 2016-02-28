@@ -38,7 +38,6 @@ host_parm_t	host;	// host parms
 sysinfo_t		SI;
 
 convar_t	*host_serverstate;
-convar_t	*vrmode;
 convar_t	*host_gameloaded;
 convar_t	*host_clientloaded;
 convar_t	*host_limitlocal;
@@ -863,14 +862,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.textmode = false;
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
-	host.vrmode = false;
 
-	if ( Sys_CheckParm("-vr") )
-	{
-		host.vrmode = true;
-
-		Cvar_SetFloat( "vrmode" , 1.0f );
-	}	
 	if( Sys_CheckParm( "-console" )) host.developer = 1;
 	if( Sys_CheckParm( "-dev" ))
 	{
@@ -1001,7 +993,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cmd_AddCommand ( "crash", Host_Crash_f, "a way to force a bus error for development reasons");
 		Cmd_AddCommand ( "net_error", Net_Error_f, "send network bad message from random place");
 	}
-	vrmode = Cvar_Get( "vrmode", "0", CVAR_ARCHIVE , "Virtual Reality mode" );
+
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow usage of cheat commands and variables" );
 	host_maxfps = Cvar_Get( "fps_max", "72", CVAR_ARCHIVE, "host fps upper limit" );
 	host_sleeptime = Cvar_Get( "sleeptime", "1", CVAR_ARCHIVE, "higher value means lower accuracy" );

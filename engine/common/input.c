@@ -792,18 +792,6 @@ void Host_InputFrame( void )
 			SDL_GetRelativeMouseState( &dx, &dy );
 			pitch += dy * m_pitch->value, yaw -= dx * m_yaw->value; //mouse speed
 		}
-
-	
-		
-#endif
-#ifdef ANDROID_GYRO_TRACKING // disable before java part is done
-		if( getenv("XASH3D_ANDROID_GYRO" ) )
-		{
-			vec3_t accelValues;
-			Android_JNI_GetAccelerometerValues(accelValues);
-			if( accelValues[2] != 0 )
-				VectorCopy( accelValues, cl.refdef.cl_viewangles );
-		}
 #endif
 #endif
 		IN_TouchMove( &forward, &side, &yaw, &pitch );

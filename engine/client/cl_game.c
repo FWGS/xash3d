@@ -889,11 +889,10 @@ void CL_DrawCrosshair( void )
 	// get crosshair dimension
 	width = clgame.ds.rcCrosshair.right - clgame.ds.rcCrosshair.left;
 	height = clgame.ds.rcCrosshair.bottom - clgame.ds.rcCrosshair.top;
+
+	x = clgame.scrInfo.iWidth / 2; 
 	y = clgame.scrInfo.iHeight / 2;
-	if(host.vrmode)
-		{x = clgame.scrInfo.iWidth / 4; }
-	else
-		{x = clgame.scrInfo.iWidth / 2; }
+
 	// g-cont - cl.refdef.crosshairangle is the autoaim angle.
 	// if we're not using autoaim, just draw in the middle of the screen
 	if( !VectorIsNull( cl.refdef.crosshairangle ))
@@ -919,14 +918,6 @@ void CL_DrawCrosshair( void )
 	SPR_EnableScissor( x - 0.5f * width, y - 0.5f * height, width, height );
 	SPR_DrawGeneric( 0, x - 0.5f * width, y - 0.5f * height, -1, -1, &clgame.ds.rcCrosshair );
 	SPR_DisableScissor();
-	if(host.vrmode)
-	{
-
-		SPR_EnableScissor( (clgame.scrInfo.iWidth-x) - 0.5f * width, y - 0.5f * height, width, height );
-		SPR_DrawGeneric( 0, (clgame.scrInfo.iWidth-x )- 0.5f * width, y - 0.5f * height, -1, -1, &clgame.ds.rcCrosshair );
-		SPR_DisableScissor();
-		
-	}
 }
 
 /*
@@ -3222,7 +3213,7 @@ int TriWorldToScreen( float *world, float *screen )
 
 	retval = R_WorldToScreen( world, screen );
 
-	screen[0] =  0.5f * (float)cl.refdef.viewport[2];
+	screen[0] =  0.5f * screen[0] * (float)cl.refdef.viewport[2];
 	screen[1] = -0.5f * screen[1] * (float)cl.refdef.viewport[3];
 	screen[0] += 0.5f * (float)cl.refdef.viewport[2];
 	screen[1] += 0.5f * (float)cl.refdef.viewport[3];
