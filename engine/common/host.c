@@ -51,6 +51,7 @@ convar_t	*con_gamemaps;
 convar_t	*download_types;
 convar_t	*build, *ver;
 convar_t	*host_mapdesign_fatal;
+convar_t 	*cmd_scripting = NULL;
 
 static int num_decals;
 
@@ -848,7 +849,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
 		host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 		host.hInst = GetModuleHandle( NULL );
-//#elif defined (__ANDROID__)
+#elif !defined (CRASHHANDLER)
 //TODO
 #else
 		struct sigaction act;
@@ -943,7 +944,8 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Cmd_AddCommand( "exec", Host_Exec_f, "execute a script file" );
 	Cmd_AddCommand( "memlist", Host_MemStats_f, "prints memory pool information" );
 	Cmd_AddCommand( "userconfigd", Host_Userconfigd_f, "execute all scripts from userconfig.d" );
-
+	cmd_scripting = Cvar_Get( "cmd_scripting", "0", CVAR_ARCHIVE, "enable simple condition checking and variable operations" );
+	
 	FS_Init();
 	Image_Init();
 	Sound_Init();
