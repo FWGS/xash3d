@@ -25,6 +25,7 @@ before_build:
   - ren SDL2-2.0.4 SDL2
   - cd c:\projects\xash\xash3d\vgui_support
   - appveyor DownloadFile https://github.com/SDLash3D/halflife/raw/master/utils/vgui/lib/win32_vc6/vgui.lib
+  - cd c:\projects\xash\xash3d
 
 after_build:
   - 7z a -t7z xash3d-win.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on c:\projects\xash\xash3d\Release
