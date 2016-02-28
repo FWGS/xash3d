@@ -27,206 +27,207 @@ convar_t *sv_log_onefile;
 
 extern convar_t		*cvar_vars;
 
-void Log_InitCvars (void)
+void Log_InitCvars ( void )
 {
-	mp_logfile = Cvar_Get ("mp_logfile", "1", CVAR_ARCHIVE, "log server information in the log file");
-	mp_logecho = Cvar_Get ("mp_logecho", "1", CVAR_ARCHIVE, "echoes log information to the console");
+	mp_logfile = Cvar_Get( "mp_logfile", "1", CVAR_ARCHIVE, "log server information in the log file" );
+	mp_logecho = Cvar_Get( "mp_logecho", "1", CVAR_ARCHIVE, "echoes log information to the console" );
 
-	sv_log_singleplayer = Cvar_Get ("sv_log_singleplayer", "0", CVAR_ARCHIVE, "allows logging in singleplayer games");
-	sv_log_onefile = Cvar_Get ("sv_log_onefile", "0", CVAR_ARCHIVE, "logs server information to only one file");
+	sv_log_singleplayer = Cvar_Get( "sv_log_singleplayer", "0", CVAR_ARCHIVE, "allows logging in singleplayer games" );
+	sv_log_onefile = Cvar_Get( "sv_log_onefile", "0", CVAR_ARCHIVE, "logs server information to only one file" );
 }
 
-void Log_Printf(const char *fmt, ...)
+void Log_Printf( const char *fmt, ... )
 {
 	va_list argptr;
-	char string[MAX_SYSPATH];
+	char string[ MAX_SYSPATH ];
 	time_t ltime;
 
 	struct tm *today;
 
-	if (!svs.log.network_logging && !svs.log.active)
+	if ( !svs.log.network_logging && !svs.log.active )
 		return;
 
-	time(&ltime);
-	today = localtime(&ltime);
+	time( &ltime );
+	today = localtime( &ltime );
 
-	va_start(argptr, fmt);
-	Q_snprintf(string,sizeof(string), "L %02i/%02i/%04i - %02i:%02i:%02i: ", today->tm_mon + 1, today->tm_mday, today->tm_year + 1900, today->tm_hour, today->tm_min, today->tm_sec);
-	Q_vsnprintf(&string[Q_strlen(string)], sizeof(string) - Q_strlen(string), fmt, argptr);
-	va_end(argptr);
+	va_start( argptr, fmt );
+	Q_snprintf( string,sizeof( string ), "L %02i/%02i/%04i - %02i:%02i:%02i: ", today->tm_mon + 1, today->tm_mday, today->tm_year + 1900, today->tm_hour, today->tm_min, today->tm_sec );
+	Q_vsnprintf( &string[ Q_strlen( string ) ], sizeof( string ) - Q_strlen( string ), fmt, argptr );
+	va_end( argptr );
 
-	if (svs.log.network_logging)
-		Netchan_OutOfBandPrint (NS_SERVER, svs.log.net_address, "log %s", string);
+	if ( svs.log.network_logging )
+		Netchan_OutOfBandPrint( NS_SERVER, svs.log.net_address, "log %s", string );
 
-	if (svs.log.active && (sv_maxclients->integer > 1 || sv_log_singleplayer->value != 0.0f))
+	if ( svs.log.active && (sv_maxclients->integer > 1 || sv_log_singleplayer->value != 0.0f ) )
 	{
-		if (mp_logecho->value != 0.0f)
-			Con_Printf("%s", string);
+		if ( mp_logecho->value != 0.0f )
+			Con_Printf( "%s", string );
 
-		if (svs.log.file)
+		if( svs.log.file )
 		{
-			if (mp_logfile->value != 0.0f)
-				FS_Printf (svs.log.file, "%s", string);
+			if ( mp_logfile->value != 0.0f )
+				FS_Printf( svs.log.file, "%s", string );
 		}
 	}
 }
 
-void Log_PrintServerVars(void)
+void Log_PrintServerVars( void )
 {
 	convar_t *var;
 
-	if (!svs.log.active)
+	if ( !svs.log.active )
 		return;
 
-	Log_Printf("Server cvars start\n");
+	Log_Printf( "Server cvars start\n" );
 
-	for (var = cvar_vars; var != NULL; var = var->next)
+	for ( var = cvar_vars; var != NULL; var = var->next )
 	{
-		if (var->flags & FCVAR_SERVER)
-			Log_Printf("Server cvar \"%s\" = \"%s\"\n", var->name, var->string);
+		if ( var->flags & FCVAR_SERVER )
+			Log_Printf( "Server cvar \"%s\" = \"%s\"\n", var->name, var->string );
 	}
-	Log_Printf("Server cvars end\n");
+	Log_Printf( "Server cvars end\n" );
 }
 
-void Log_Close(void)
+void Log_Close( void )
 {
-	if (svs.log.file)
+	if ( svs.log.file )
 	{
-		Log_Printf("Log file closed\n");
-		FS_Close(svs.log.file);
+		Log_Printf( "Log file closed\n" );
+		FS_Close( svs.log.file );
 	}
 	svs.log.file = NULL;
 }
 
-void Log_Open(void)
+void Log_Open( void )
 {
 	time_t ltime;
 	struct tm *today;
 
-	char file_base[MAX_PATH];
-	char test_file[MAX_PATH];
+	char file_base[ MAX_SYSPATH ];
+	char test_file[ MAX_SYSPATH ];
 
 	int i;
 	file_t *fp;
 	char *temp;
 
-	if (!svs.log.active || (sv_log_onefile->value != 0.0f && svs.log.file))
+	if ( !svs.log.active || ( sv_log_onefile->value != 0.0f && svs.log.file ) )
 		return;
 
-	if (mp_logfile->value == 0.0f)
-		Con_Printf("Server logging data to console.\n");
+	if ( mp_logfile->value == 0.0f )
+		Con_Printf( "Server logging data to console.\n" );
 	else
 	{
 		Log_Close();
-		time(&ltime);
-		today = localtime(&ltime);
+		time( &ltime );
+		today = localtime( &ltime );
 
-		temp = Cvar_VariableString("logsdir");
+		temp = Cvar_VariableString( "logsdir" );
 
-		if (!temp || Q_strlen(temp) <= 0 || Q_strstr(temp, ":") || Q_strstr(temp, ".."))
-			Q_snprintf(file_base, sizeof(file_base), "logs/L%02i%02i", today->tm_mon + 1, today->tm_mday);
+		if ( !temp || Q_strlen(temp) <= 0 || Q_strstr( temp, ":" ) || Q_strstr( temp, ".." ) )
+			Q_snprintf( file_base, sizeof( file_base ), "logs/L%02i%02i", today->tm_mon + 1, today->tm_mday );
 
-		else Q_snprintf(file_base, sizeof(file_base), "%s/L%02i%02i", temp, today->tm_mon + 1, today->tm_mday);
+		else Q_snprintf( file_base , sizeof( file_base ), "%s/L%02i%02i", temp, today->tm_mon + 1, today->tm_mday );
 
 		for (i = 0; i < 1000; i++)
 		{
-			Q_snprintf(test_file, sizeof(test_file), "%s%03i.log", file_base, i);
+			Q_snprintf( test_file, sizeof( test_file ), "%s%03i.log", file_base, i );
 
-			COM_FixSlashes(test_file);
+			COM_FixSlashes( test_file );
 
-			fp = FS_Open(test_file, "r", TRUE);
-			if (!fp)
+			fp = FS_Open( test_file, "r", true );
+			if ( !fp )
 			{
-				fp = FS_Open(test_file, "w", TRUE);
+				fp = FS_Open( test_file, "w", true );
 
-				if (fp)
+				if ( fp )
 				{
 					svs.log.file = fp;
 
-					Con_Printf("Server logging data to file %s\n", test_file);
-					Log_Printf("Log file started (file \"%s\") (game \"%s\") (version \"%i/%s/%d\")\n", test_file, GI->gamefolder, PROTOCOL_VERSION, XASH_VERSION, Q_buildnum ());
+					Con_Printf( "Server logging data to file %s\n", test_file );
+					Log_Printf( "Log file started (file \"%s\") (game \"%s\") (version \"%i/%s/%d\")\n", test_file, GI->gamefolder, PROTOCOL_VERSION, XASH_VERSION, Q_buildnum () );
 				}
 				return;
 			}
-			FS_Close(fp);
+			FS_Close( fp );
 		}
-		Con_Printf("Unable to open logfiles under %s\nLogging disabled\n", file_base);
-		svs.log.active = FALSE;
+		Con_Printf( "Unable to open logfiles under %s\nLogging disabled\n", file_base );
+		svs.log.active = false;
 	}
 }
 
-void SV_SetLogAddress_f (void)
+void SV_SetLogAddress_f ( void )
 {
 	const char *s;
 	int numeric_port;
-	char addr[MAX_PATH];
+	char addr[ MAX_SYSPATH ];
 	netadr_t adr;
 
-	if (Cmd_Argc () != 3)
+	if ( Cmd_Argc() != 3 )
 	{
-		Con_Printf ("logaddress:  usage\nlogaddress ip port\n");
-		if (svs.log.active)
-			Con_Printf ("current:  %s\n", NET_AdrToString (svs.log.net_address));
+		Con_Printf( "logaddress:  usage\nlogaddress ip port\n" );
+		if ( svs.log.active )
+			Con_Printf( "current:  %s\n", NET_AdrToString (svs.log.net_address) );
 		return;
 	}
 
-	numeric_port = Q_atoi (Cmd_Argv (2));
-	if (!numeric_port)
+	numeric_port = Q_atoi( Cmd_Argv (2) );
+	if ( !numeric_port )
 	{
-		Con_Printf ("logaddress:  must specify a valid port\n");
+		Con_Printf( "logaddress:  must specify a valid port\n" );
 		return;
 	}
 
-	s = Cmd_Argv (1);
-	if (!s || *s == '\0')
+	s = Cmd_Argv ( 1 );
+	if ( !s || *s == '\0' )
 	{
-		Con_Printf ("logaddress:  unparseable address\n");
+		Con_Printf( "logaddress:  unparseable address\n" );
 		return;
 	}
 
-	Q_snprintf (addr, sizeof (addr), "%s:%i", s, numeric_port);
+	Q_snprintf( addr, sizeof (addr), "%s:%i", s, numeric_port );
 
-	if (!NET_StringToAdr (addr, &adr))
+	if ( !NET_StringToAdr( addr, &adr ) )
 	{
-		Con_Printf ("logaddress:  unable to resolve %s\n", addr);
+		Con_Printf( "logaddress:  unable to resolve %s\n", addr );
 		return;
 	}
 
-	svs.log.network_logging = TRUE;
-	Q_memcpy (&svs.log.net_address, &adr, sizeof (netadr_t));
-	Con_Printf ("logaddress:  %s\n", NET_AdrToString (adr));
+	svs.log.network_logging = true;
+	Q_memcpy( &svs.log.net_address, &adr, sizeof( netadr_t ) );
+	Con_Printf( "logaddress:  %s\n", NET_AdrToString(adr) );
 }
 
 void SV_ServerLog_f(void)
 {
-	if (Cmd_Argc() != 2)
+	const char *s;
+	if ( Cmd_Argc() != 2 )
 	{
-		Con_Printf("usage:  log < on | off >\n");
+		Con_Printf( "usage:  log < on | off >\n" );
 
-		if (svs.log.active)
-			Con_Printf("currently logging\n");
+		if ( svs.log.active )
+			Con_Printf( "currently logging\n" );
 
 		else
-			Con_Printf("not currently logging\n");
+			Con_Printf( "not currently logging\n" );
 
 		return;
 	}
-	const char *s = Cmd_Argv(1);
+	s = Cmd_Argv( 1 );
 
-	if (Q_stricmp(s,"off"))
+	if( Q_stricmp( s,"off" ) )
 	{
-		if (Q_stricmp(s, "on"))
-			Con_Printf("log:  unknown parameter %s, 'on' and 'off' are valid\n", s);
+		if ( Q_stricmp(s, "on" ) )
+			Con_Printf( "log:  unknown parameter %s, 'on' and 'off' are valid\n", s );
 		else
 		{
-			svs.log.active = TRUE;
+			svs.log.active = true;
 			Log_Open();
 		}
 	}
-	else if (svs.log.active)
+	else if ( svs.log.active )
 	{
 		Log_Close();
-		Con_Printf("Server logging disabled.\n");
-		svs.log.active = FALSE;
+		Con_Printf( "Server logging disabled.\n" );
+		svs.log.active = false;
 	}
 }
