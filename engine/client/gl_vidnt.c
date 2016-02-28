@@ -1484,7 +1484,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 		want.w = width;
 		want.h = height;
-		want.driverdata = want.format = want.refresh_rate = 0; // don't care
+		want.driverdata = NULL;
+		want.format = want.refresh_rate = 0; // don't care
 
 		if( !SDL_GetClosestDisplayMode(0, &want, &got) )
 			return false;
