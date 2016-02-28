@@ -19,3 +19,14 @@ typedef struct vidmode_s
 } vidmode_t;
 
 extern vidmode_t vidmode[];
+
+// backend functions
+void GL_InitExtensions( void );
+void R_Free_OpenGL( void );
+qboolean R_Init_OpenGL( void );
+qboolean VID_SetMode( void );
+void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cvarname, int r_ext );
+
+// common functions
+void R_SaveVideoMode( int w, int h );
+void GL_SetExtension( int r_ext, int enable );

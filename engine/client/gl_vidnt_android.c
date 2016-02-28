@@ -7,13 +7,15 @@
 #include <GL/nanogl.h>
 #include "gl_vidnt.h"
 
-#define VID_NOMODE -2.0f
-#define VID_AUTOMODE	"-1"
-#define VID_DEFAULTMODE	2.0f
-#define DISP_CHANGE_BADDUALVIEW	-6 // MSVC 6.0 doesn't
-#define WINDOW_NAME			"Xash Window" // Half-Life
 
-byte		*r_temppool;
+
+typedef enum
+{
+	rserr_ok,
+	rserr_invalid_fullscreen,
+	rserr_invalid_mode,
+	rserr_unknown
+} rserr_t;
 
 static char* opengl_110funcs[] =
 {
@@ -335,6 +337,191 @@ void *GL_GetProcAddress( const char *name )
 	}
 	return func;
 }
+
+
+void GL_InitExtensions( void )
+{
+	// initialize gl extensions
+	GL_CheckExtension( "OpenGL 1.1.0", opengl_110funcs, NULL, GL_OPENGL_110 );
+
+	// get our various GL strings
+	glConfig.vendor_string = pglGetString( GL_VENDOR );
+	glConfig.renderer_string = pglGetString( GL_RENDERER );
+	glConfig.version_string = pglGetString( GL_VERSION );
+	glConfig.extensions_string = pglGetString( GL_EXTENSIONS );
+	MsgDev( D_INFO, "Video: %s\n", glConfig.renderer_string );
+
+	// initalize until base opengl functions loaded
+
+	GL_CheckExtension( "glDrawRangeElements", drawrangeelementsfuncs, "gl_drawrangeelments", GL_DRAW_RANGEELEMENTS_EXT );
+
+	if( !GL_Support( GL_DRAW_RANGEELEMENTS_EXT ))
+		GL_CheckExtension( "GL_EXT_draw_range_elements", drawrangeelementsextfuncs, "gl_drawrangeelments", GL_DRAW_RANGEELEMENTS_EXT );
+
+	// multitexture
+	glConfig.max_texture_units = glConfig.max_texture_coords = glConfig.max_teximage_units = 1;
+	GL_CheckExtension( "GL_ARB_multitexture", multitexturefuncs, "gl_arb_multitexture", GL_ARB_MULTITEXTURE );
+
+	if( GL_Support( GL_ARB_MULTITEXTURE ))
+	{
+		pglGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &glConfig.max_texture_units );
+		GL_CheckExtension( "GL_ARB_texture_env_combine", NULL, "gl_texture_env_combine", GL_ENV_COMBINE_EXT );
+
+		if( !GL_Support( GL_ENV_COMBINE_EXT ))
+			GL_CheckExtension( "GL_EXT_texture_env_combine", NULL, "gl_texture_env_combine", GL_ENV_COMBINE_EXT );
+
+		if( GL_Support( GL_ENV_COMBINE_EXT ))
+			GL_CheckExtension( "GL_ARB_texture_env_dot3", NULL, "gl_texture_env_dot3", GL_DOT3_ARB_EXT );
+	}
+	else
+	{
+		GL_CheckExtension( "GL_SGIS_multitexture", sgis_multitexturefuncs, "gl_sgis_multitexture", GL_ARB_MULTITEXTURE );
+		if( GL_Support( GL_ARB_MULTITEXTURE )) glConfig.max_texture_units = 2;
+	}
+
+	if( glConfig.max_texture_units == 1 )
+		GL_SetExtension( GL_ARB_MULTITEXTURE, false );
+
+	// 3d texture support
+	GL_CheckExtension( "GL_EXT_texture3D", texture3dextfuncs, "gl_texture_3d", GL_TEXTURE_3D_EXT );
+
+	if( GL_Support( GL_TEXTURE_3D_EXT ))
+	{
+		pglGetIntegerv( GL_MAX_3D_TEXTURE_SIZE, &glConfig.max_3d_texture_size );
+
+		if( glConfig.max_3d_texture_size < 32 )
+		{
+			GL_SetExtension( GL_TEXTURE_3D_EXT, false );
+			MsgDev( D_ERROR, "GL_EXT_texture3D reported bogus GL_MAX_3D_TEXTURE_SIZE, disabled\n" );
+		}
+	}
+
+	GL_CheckExtension( "GL_SGIS_generate_mipmap", NULL, "gl_sgis_generate_mipmaps", GL_SGIS_MIPMAPS_EXT );
+
+	// hardware cubemaps
+	GL_CheckExtension( "GL_ARB_texture_cube_map", NULL, "gl_texture_cubemap", GL_TEXTURECUBEMAP_EXT );
+
+	if( GL_Support( GL_TEXTURECUBEMAP_EXT ))
+	{
+		pglGetIntegerv( GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, &glConfig.max_cubemap_size );
+
+		// check for seamless cubemaps too
+		GL_CheckExtension( "GL_ARB_seamless_cube_map", NULL, "gl_seamless_cubemap", GL_ARB_SEAMLESS_CUBEMAP );
+	}
+
+	// point particles extension
+	GL_CheckExtension( "GL_EXT_point_parameters", pointparametersfunc, NULL, GL_EXT_POINTPARAMETERS );
+
+	GL_CheckExtension( "GL_ARB_texture_non_power_of_two", NULL, "gl_texture_npot", GL_ARB_TEXTURE_NPOT_EXT );
+	GL_CheckExtension( "GL_ARB_texture_compression", texturecompressionfuncs, "gl_dds_hardware_support", GL_TEXTURE_COMPRESSION_EXT );
+	GL_CheckExtension( "GL_EXT_compiled_vertex_array", compiledvertexarrayfuncs, "gl_cva_support", GL_CUSTOM_VERTEX_ARRAY_EXT );
+
+	if( !GL_Support( GL_CUSTOM_VERTEX_ARRAY_EXT ))
+		GL_CheckExtension( "GL_SGI_compiled_vertex_array", compiledvertexarrayfuncs, "gl_cva_support", GL_CUSTOM_VERTEX_ARRAY_EXT );
+
+	GL_CheckExtension( "GL_EXT_texture_edge_clamp", NULL, "gl_clamp_to_edge", GL_CLAMPTOEDGE_EXT );
+
+	if( !GL_Support( GL_CLAMPTOEDGE_EXT ))
+		GL_CheckExtension("GL_SGIS_texture_edge_clamp", NULL, "gl_clamp_to_edge", GL_CLAMPTOEDGE_EXT );
+
+	glConfig.max_texture_anisotropy = 0.0f;
+	GL_CheckExtension( "GL_EXT_texture_filter_anisotropic", NULL, "gl_ext_anisotropic_filter", GL_ANISOTROPY_EXT );
+
+	if( GL_Support( GL_ANISOTROPY_EXT ))
+		pglGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.max_texture_anisotropy );
+
+	GL_CheckExtension( "GL_EXT_texture_lod_bias", NULL, "gl_ext_texture_lodbias", GL_TEXTURE_LODBIAS );
+	if( GL_Support( GL_TEXTURE_LODBIAS ))
+		pglGetFloatv( GL_MAX_TEXTURE_LOD_BIAS_EXT, &glConfig.max_texture_lodbias );
+
+	GL_CheckExtension( "GL_ARB_texture_border_clamp", NULL, "gl_ext_texborder_clamp", GL_CLAMP_TEXBORDER_EXT );
+
+	GL_CheckExtension( "GL_EXT_blend_minmax", blendequationfuncs, "gl_ext_customblend", GL_BLEND_MINMAX_EXT );
+	GL_CheckExtension( "GL_EXT_blend_subtract", blendequationfuncs, "gl_ext_customblend", GL_BLEND_SUBTRACT_EXT );
+
+	GL_CheckExtension( "glStencilOpSeparate", gl2separatestencilfuncs, "gl_separate_stencil", GL_SEPARATESTENCIL_EXT );
+
+	if( !GL_Support( GL_SEPARATESTENCIL_EXT ))
+		GL_CheckExtension("GL_ATI_separate_stencil", atiseparatestencilfuncs, "gl_separate_stencil", GL_SEPARATESTENCIL_EXT );
+
+	GL_CheckExtension( "GL_EXT_stencil_two_side", stenciltwosidefuncs, "gl_stenciltwoside", GL_STENCILTWOSIDE_EXT );
+	GL_CheckExtension( "GL_ARB_vertex_buffer_object", vbofuncs, "gl_vertex_buffer_object", GL_ARB_VERTEX_BUFFER_OBJECT_EXT );
+
+	// we don't care if it's an extension or not, they are identical functions, so keep it simple in the rendering code
+#ifndef __ANDROID__
+	if( pglDrawRangeElementsEXT == NULL ) pglDrawRangeElementsEXT = pglDrawRangeElements;
+#endif
+	GL_CheckExtension( "GL_ARB_texture_env_add", NULL, "gl_texture_env_add", GL_TEXTURE_ENV_ADD_EXT );
+
+	// vp and fp shaders
+	GL_CheckExtension( "GL_ARB_shader_objects", shaderobjectsfuncs, "gl_shaderobjects", GL_SHADER_OBJECTS_EXT );
+	GL_CheckExtension( "GL_ARB_shading_language_100", NULL, "gl_glslprogram", GL_SHADER_GLSL100_EXT );
+	GL_CheckExtension( "GL_ARB_vertex_shader", vertexshaderfuncs, "gl_vertexshader", GL_VERTEX_SHADER_EXT );
+	GL_CheckExtension( "GL_ARB_fragment_shader", NULL, "gl_pixelshader", GL_FRAGMENT_SHADER_EXT );
+
+	GL_CheckExtension( "GL_ARB_depth_texture", NULL, "gl_depthtexture", GL_DEPTH_TEXTURE );
+	GL_CheckExtension( "GL_ARB_shadow", NULL, "gl_arb_shadow", GL_SHADOW_EXT );
+
+	GL_CheckExtension( "GL_ARB_texture_float", NULL, "gl_arb_texture_float", GL_ARB_TEXTURE_FLOAT_EXT );
+	GL_CheckExtension( "GL_ARB_depth_buffer_float", NULL, "gl_arb_depth_float", GL_ARB_DEPTH_FLOAT_EXT );
+
+	// occlusion queries
+	GL_CheckExtension( "GL_ARB_occlusion_query", occlusionfunc, "gl_occlusion_queries", GL_OCCLUSION_QUERIES_EXT );
+
+	if( GL_Support( GL_SHADER_GLSL100_EXT ))
+	{
+		pglGetIntegerv( GL_MAX_TEXTURE_COORDS_ARB, &glConfig.max_texture_coords );
+		pglGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB, &glConfig.max_teximage_units );
+	}
+	else
+	{
+		// just get from multitexturing
+		glConfig.max_texture_coords = glConfig.max_teximage_units = glConfig.max_texture_units;
+	}
+
+	// rectangle textures support
+	if( Q_strstr( glConfig.extensions_string, "GL_NV_texture_rectangle" ))
+	{
+		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_NV;
+		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_NV, &glConfig.max_2d_rectangle_size );
+	}
+#ifndef __ANDROID__
+	else if( Q_strstr( glConfig.extensions_string, "GL_EXT_texture_rectangle" ))
+	{
+		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_EXT;
+		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_EXT, &glConfig.max_2d_rectangle_size );
+	}
+#endif
+	else glConfig.texRectangle = glConfig.max_2d_rectangle_size = 0; // no rectangle
+
+	glConfig.max_2d_texture_size = 0;
+	pglGetIntegerv( GL_MAX_TEXTURE_SIZE, &glConfig.max_2d_texture_size );
+	if( glConfig.max_2d_texture_size <= 0 ) glConfig.max_2d_texture_size = 256;
+
+	Cvar_Get( "gl_max_texture_size", "0", CVAR_INIT, "opengl texture max dims" );
+	Cvar_Set( "gl_max_texture_size", va( "%i", glConfig.max_2d_texture_size ));
+
+	pglGetIntegerv( GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, &glConfig.max_vertex_uniforms );
+	pglGetIntegerv( GL_MAX_VERTEX_ATTRIBS_ARB, &glConfig.max_vertex_attribs );
+
+	// MCD has buffering issues
+	if(Q_strstr( glConfig.renderer_string, "gdi" ))
+		Cvar_SetFloat( "gl_finish", 1 );
+
+	Cvar_Set( "gl_anisotropy", va( "%f", bound( 0, gl_texture_anisotropy->value, glConfig.max_texture_anisotropy )));
+
+	// software mipmap generator does wrong result with NPOT textures ...
+	if( !GL_Support( GL_SGIS_MIPMAPS_EXT ))
+		GL_SetExtension( GL_ARB_TEXTURE_NPOT_EXT, false );
+
+	if( GL_Support( GL_TEXTURE_COMPRESSION_EXT ))
+		Image_AddCmdFlags( IL_DDS_HARDWARE );
+
+	glw_state.initialized = true;
+
+	tr.framecount = tr.visframecount = 1;
+}
+
 
 /*
 =================
