@@ -785,7 +785,7 @@ void Host_InputFrame( void )
 		int dx, dy;
 
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
+		IN_SDL_JoyMove( host.frametime, &forward, &side, &pitch, &yaw );
 #ifndef __ANDROID__
 		if( in_mouseinitialized )
 		{
