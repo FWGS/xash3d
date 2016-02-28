@@ -130,6 +130,7 @@ LOCAL_SRC_FILES := \
            server/sv_game.c \
            server/sv_init.c \
            server/sv_main.c \
+           server/sv_log.c \
            server/sv_move.c \
            server/sv_phys.c \
            server/sv_pmove.c \

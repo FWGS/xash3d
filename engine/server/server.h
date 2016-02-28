@@ -73,6 +73,14 @@ typedef enum
 	cs_spawned	// client is fully in game
 } cl_state_t;
 
+typedef struct server_log_s
+{
+	qboolean active;
+	qboolean network_logging;
+	netadr_t net_address;
+	file_t *file;
+} server_log_t;
+
 // instanced baselines container
 typedef struct
 {
@@ -359,6 +367,8 @@ typedef struct
 	int		groupmask;
 	int		groupop;
 
+	server_log_t	log;
+
 	double		changelevel_next_time;	// don't execute multiple changelevels at once time
 	int		spawncount;		// incremented each server start
 						// used to check late spawns
@@ -440,6 +450,10 @@ extern	convar_t		*teamplay;
 extern	convar_t		*skill;
 extern	convar_t		*coop;
 extern	convar_t		*sv_corpse_solid;
+extern	convar_t		*sv_log_singleplayer;
+extern	convar_t		*sv_log_onefile;
+extern	convar_t		*mp_logecho;
+extern	convar_t		*mp_logfile;
 
 //===========================================================
 //
@@ -644,5 +658,16 @@ void SV_SetLightStyle( int style, const char* s, float f );
 const char *SV_GetLightStyle( int style );
 int SV_LightForEntity( edict_t *pEdict );
 void SV_ClearPhysEnts( void );
+
+//
+// sv_log.c
+//
+void Log_Printf (const char *fmt, ...);
+void Log_PrintServerVars (void);
+void Log_Close (void);
+void Log_Open (void);
+void Log_InitCvars (void);
+void SV_SetLogAddress_f (void);
+void SV_ServerLog_f (void);
 
 #endif//SERVER_H

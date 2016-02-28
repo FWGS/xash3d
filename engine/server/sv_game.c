@@ -81,6 +81,8 @@ void SV_SysError( const char *error_string )
 {
 	if( svgame.hInstance != NULL )
 		svgame.dllFuncs.pfnSys_Error( error_string );
+
+	Log_Printf ("FATAL ERROR (shutting down): %s\n", error_string);
 }
 
 void SV_SetMinMaxSize( edict_t *e, const float *min, const float *max )
@@ -2799,6 +2801,20 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	va_list	args;
 	char *buffer = buffer0;
 
+	if (level == at_logged && sv_maxclients->integer > 1)
+	{
+		va_start (args, szFmt);
+		Q_vsnprintf (buffer0, 2048, szFmt, args);
+		va_end (args);
+
+		Log_Printf ("%s", buffer0);
+		return;
+	}
+
+	va_start (args, szFmt);
+	Q_vsnprintf (buffer0, 2048, szFmt, args);
+	va_end (args);
+
 	// check message for pass
 	switch( level )
 	{
@@ -2822,10 +2838,6 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 		break;
 	}
 
-	va_start( args, szFmt );
-	Q_vsnprintf( buffer0, 2048, szFmt, args );
-	va_end( args );
-
 	if( *buffer == '\n' ) // skip \n in line start
 		buffer++;
 
@@ -2840,10 +2852,6 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	else if( level == at_aiconsole  )
 	{
 		Sys_Print( va( "server(ai): %s", buffer ));
-	}
-	else
-	{
-		Sys_Print( va( "server: %s", buffer ));
 	}
 }
 
