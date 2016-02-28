@@ -2374,7 +2374,7 @@ void SV_EntFire_f( sv_client_t *cl )
 		char *cmd = Cmd_Argv( 1 ) + 1;
 		i = Q_atoi( cmd );
 
-		while( isdigit( cmd ) ) cmd++;
+		while( isdigit( *cmd ) ) cmd++;
 
 		if( *cmd++ != '_' )
 			return;
