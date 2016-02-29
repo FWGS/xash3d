@@ -85,7 +85,7 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 	float	dist[SUBDIVIDE_SIZE], total_s, total_t, total_ls, total_lt;
 	glpoly_t	*poly;
 
-	Q_memset(dist, 0, SUBDIVIDE_SIZE * sizeof(float));
+	Q_memset( dist, 0, SUBDIVIDE_SIZE * sizeof( float ) );
 
 	if( numverts > ( SUBDIVIDE_SIZE - 4 ))
 		Host_Error( "Mod_SubdividePolygon: too many vertexes on face ( %i )\n", numverts );

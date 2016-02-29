@@ -538,7 +538,7 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 	struct sockaddr	addr;
 	int		err;
 	socklen_t	addr_len;
-	int		net_socket;
+	int		net_socket = 0;
 	int		protocol;
 
 	if( !data || !length )

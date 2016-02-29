@@ -554,7 +554,7 @@ UI_ScrollList_Draw
 */
 void UI_ScrollList_Draw( menuScrollList_s *sl )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	int	i, x, y, w, h;
 	int	selColor = 0xFF503818; // Red 80, Green 56, Blue 24, Alpha 255
@@ -1008,7 +1008,7 @@ UI_SpinControl_Draw
 */
 void UI_SpinControl_Draw( menuSpinControl_s *sc )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	int	x, y, w, h;
 	int	arrowWidth, arrowHeight, leftX, leftY, rightX, rightY;
@@ -1694,7 +1694,7 @@ UI_Field_Draw
 */
 void UI_Field_Draw( menuField_s *f )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	char	text[UI_MAX_FIELD_LINE];
 	int	len, drawLen, prestep;
@@ -1936,7 +1936,7 @@ UI_Action_Draw
 */
 void UI_Action_Draw( menuAction_s *a )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 
 	if( a->generic.flags & QMF_LEFT_JUSTIFY )
@@ -2295,7 +2295,7 @@ void UI_PicButton_Draw( menuPicButton_s *item )
 	}
 	else
 	{
-		int	justify;
+		int	justify = 0;
 		int	shadow;
 		
 		if( item->generic.flags & QMF_LEFT_JUSTIFY )

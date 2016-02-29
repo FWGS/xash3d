@@ -1469,7 +1469,7 @@ static void Mod_SubdividePolygon( mextrasurf_t *info, msurface_t *surf, int numV
 	byte		*buffer;
 	msurfmesh_t	*mesh;
 
-	Q_memset( dists, 0, MAX_SIDE_VERTS * sizeof(float) );
+	Q_memset( dists, 0, MAX_SIDE_VERTS * sizeof( float ) );
 
 	ClearBounds( mins, maxs );
 
