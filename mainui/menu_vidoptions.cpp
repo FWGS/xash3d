@@ -34,7 +34,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_GLARE_REDUCTION	5 
 #define ID_SIMPLE_SKY	6
 #define ID_ALLOW_MATERIALS	7
-#define ID_VRMODE	8
 
 typedef struct
 {
@@ -52,7 +51,6 @@ typedef struct
 	menuSlider_s	glareReduction;
 	menuCheckBox_s	fastSky;
 	menuCheckBox_s	hiTextures;
-	menuCheckBox_s	vrmode;
 
 	HIMAGE		hTestImage;
 } uiVidOptions_t;
@@ -83,9 +81,6 @@ static void UI_VidOptions_GetConfig( void )
 	if( CVAR_GET_FLOAT( "host_allow_materials" ))
 		uiVidOptions.hiTextures.enabled = 1;
 
-	if( CVAR_GET_FLOAT( "vrmode" ))
-		uiVidOptions.vrmode.enabled = 1;
-
 	uiVidOptions.outlineWidth = 2;
 	UI_ScaleCoords( NULL, NULL, &uiVidOptions.outlineWidth, NULL );
 }
@@ -101,7 +96,7 @@ static void UI_VidOptions_UpdateConfig( void )
 	CVAR_SET_FLOAT( "r_flaresize", (uiVidOptions.glareReduction.curValue * 200.0f ) + 100.0f );
 	CVAR_SET_FLOAT( "r_fastsky", uiVidOptions.fastSky.enabled );
 	CVAR_SET_FLOAT( "host_allow_materials", uiVidOptions.hiTextures.enabled );
-	CVAR_SET_FLOAT( "vrmode", uiVidOptions.vrmode.enabled );
+
 	if( CVAR_GET_FLOAT( "gl_ignorehwgamma" ))
 		PIC_SetGamma( uiVidOptions.hTestImage, RemapVal( uiVidOptions.gammaIntensity.curValue, 0.0f, 1.0f, 1.8f, 7.0f ));
 	else CVAR_SET_FLOAT( "gamma", RemapVal( uiVidOptions.gammaIntensity.curValue, 0.0f, 1.0f, 0.5f, 2.3f ));
@@ -113,7 +108,7 @@ static void UI_VidOptions_SetConfig( void )
 	CVAR_SET_FLOAT( "r_flaresize", (uiVidOptions.glareReduction.curValue * 200.0f ) + 100.0f );
 	CVAR_SET_FLOAT( "r_fastsky", uiVidOptions.fastSky.enabled );
 	CVAR_SET_FLOAT( "host_allow_materials", uiVidOptions.hiTextures.enabled );
-	CVAR_SET_FLOAT( "vrmode", uiVidOptions.vrmode.enabled );
+
 	if( CVAR_GET_FLOAT( "gl_ignorehwgamma" ))
 		CVAR_SET_FLOAT( "gamma", RemapVal( uiVidOptions.gammaIntensity.curValue, 0.0f, 1.0f, 1.8f, 7.0f ));
 	else CVAR_SET_FLOAT( "gamma", RemapVal( uiVidOptions.gammaIntensity.curValue, 0.0f, 1.0f, 0.5f, 2.3f ));
@@ -172,7 +167,6 @@ static void UI_VidOptions_Callback( void *self, int event )
 	{
 	case ID_SIMPLE_SKY:
 	case ID_ALLOW_MATERIALS:
-	case ID_VRMODE:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -303,15 +297,6 @@ static void UI_VidOptions_Init( void )
 	uiVidOptions.hiTextures.generic.callback = UI_VidOptions_Callback;
 	uiVidOptions.hiTextures.generic.statusText = "let engine replace 8-bit textures with full color hi-res prototypes (if present)";
 
-	uiVidOptions.vrmode.generic.id = ID_VRMODE;
-	uiVidOptions.vrmode.generic.type = QMTYPE_CHECKBOX;
-	uiVidOptions.vrmode.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
-	uiVidOptions.vrmode.generic.name = "Activate VR";
-	uiVidOptions.vrmode.generic.x = 72;
-	uiVidOptions.vrmode.generic.y = 565;
-	uiVidOptions.vrmode.generic.callback = UI_VidOptions_Callback;
-	uiVidOptions.vrmode.generic.statusText = "Activate Virtual Reality mode.";
-
 	UI_VidOptions_GetConfig();
 
 	UI_AddItem( &uiVidOptions.menu, (void *)&uiVidOptions.background );
@@ -322,7 +307,6 @@ static void UI_VidOptions_Init( void )
 	UI_AddItem( &uiVidOptions.menu, (void *)&uiVidOptions.glareReduction );
 	UI_AddItem( &uiVidOptions.menu, (void *)&uiVidOptions.fastSky );
 	UI_AddItem( &uiVidOptions.menu, (void *)&uiVidOptions.hiTextures );
-	UI_AddItem( &uiVidOptions.menu, (void *)&uiVidOptions.vrmode );
 	UI_AddItem( &uiVidOptions.menu, (void *)&uiVidOptions.testImage );
 }
 

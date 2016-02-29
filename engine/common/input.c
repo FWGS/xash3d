@@ -785,24 +785,12 @@ void Host_InputFrame( void )
 		int dx, dy;
 
 #ifdef XASH_SDL
-		IN_SDL_JoyMove( cl.time - cl.oldtime, &forward, &side, &pitch, &yaw );
+		IN_SDL_JoyMove( host.frametime, &forward, &side, &pitch, &yaw );
 #ifndef __ANDROID__
 		if( in_mouseinitialized )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );
 			pitch += dy * m_pitch->value, yaw -= dx * m_yaw->value; //mouse speed
-		}
-
-	
-		
-#endif
-#ifdef ANDROID_GYRO_TRACKING // disable before java part is done
-		if( getenv("XASH3D_ANDROID_GYRO" ) )
-		{
-			vec3_t accelValues;
-			Android_JNI_GetAccelerometerValues(accelValues);
-			if( accelValues[2] != 0 )
-				VectorCopy( accelValues, cl.refdef.cl_viewangles );
 		}
 #endif
 #endif

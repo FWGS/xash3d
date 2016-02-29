@@ -60,15 +60,7 @@ void V_SetupRefDef( void )
 	cl.refdef.nextView = 0;
 
 	SCR_AddDirtyPoint( 0, 0 );
-
-	if( host.vrmode )
-	{
-		SCR_AddDirtyPoint( ( scr_width->integer - 1 ) / 2, scr_height->integer - 1 );
-	}
-	else
-	{
-		SCR_AddDirtyPoint( scr_width->integer - 1, scr_height->integer - 1 );
-	}
+	SCR_AddDirtyPoint( scr_width->integer - 1, scr_height->integer - 1 );
 
 	if( cl.refdef.viewsize >= 120 )
 		sb_lines = 0;		// no status bar at all
@@ -87,12 +79,6 @@ void V_SetupRefDef( void )
 		cl.refdef.viewport[3] = scr_height->integer;
 
 	cl.refdef.viewport[0] = (scr_width->integer - cl.refdef.viewport[2]) / 2;
-
-	if( host.vrmode )
-	{
-		cl.refdef.viewport[2] = (( scr_width->integer ) / 2 ) * size / 100;
-	}
-
 	cl.refdef.viewport[1] = (scr_height->integer - sb_lines - cl.refdef.viewport[3]) / 2;
 
 	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
@@ -101,9 +87,8 @@ void V_SetupRefDef( void )
 	cl.refdef.fov_x = cl.scr_fov; // this is a final fov value
 	cl.refdef.fov_y = V_CalcFov( &cl.refdef.fov_x, cl.refdef.viewport[2], cl.refdef.viewport[3] );
 
-	// adjust FOV for widescreen, if vrmode not active
-
-	if( glState.wideScreen && r_adjust_fov->integer && !host.vrmode )
+	// adjust FOV for widescreen
+	if( glState.wideScreen && r_adjust_fov->integer )
 		V_AdjustFov( &cl.refdef.fov_x, &cl.refdef.fov_y, cl.refdef.viewport[2], cl.refdef.viewport[3], false );
 
 	if( CL_IsPredicted( ) && !cl.refdef.demoplayback )
@@ -319,64 +304,8 @@ void V_CalcRefDef( void )
 	{
 		clgame.dllFuncs.pfnCalcRefdef( &cl.refdef );
 		V_MergeOverviewRefdef( &cl.refdef );
-		
-		if ( host.vrmode )
-		{
-
-			/* VR mode TRUE
-			Temp vars for preivious vector data.
-			Need to correct render Right Eye. */
-
-			vec3_t tmright;
-			vec3_t tmvieworg;
-			vec3_t tmup;
-			vec3_t tmforward;
-			vec3_t tmp, tmp2, tmp3;
-			VectorCopy( cl.refdef.right, tmright );
-			VectorCopy( cl.refdef.forward, tmforward );
-			VectorCopy( cl.refdef.up, tmup );
-			VectorCopy( cl.refdef.vieworg, tmvieworg );
-
-			//Left eye	
-			{
-				VectorScale( cl.refdef.right, -0.2, tmp );
-				VectorAdd( cl.refdef.vieworg, tmp, cl.refdef.vieworg );
-
-				VectorScale( cl.refdef.up, 1, tmp2 );
-				VectorScale( cl.refdef.forward, 1.5, tmp3 );
-				VectorAdd( cl.refdef.vieworg, tmp2, cl.refdef.vieworg );
-				VectorAdd( cl.refdef.vieworg, tmp3, cl.refdef.vieworg );
-
-				R_RenderFrame( &cl.refdef, true );
-			}	
-			//Right eye	
-			{
-				cl.refdef.viewport[0] = cl.refdef.viewport[2] + cl.refdef.viewport[0];
-				cl.refdef.viewport[2] = cl.refdef.viewport[2];
-				RI.refdef.viewport[0]=	cl.refdef.viewport[0] - cl.refdef.viewport[2];
-				RI.refdef.viewport[2]=	cl.refdef.viewport[2] + cl.refdef.viewport[2];
-
-				VectorScale( tmright, 0.2, tmp );
-				VectorAdd( tmvieworg, tmp, tmvieworg );
-
-				VectorScale( tmup, 1, tmp2 );
-				VectorScale( tmforward, 1.5, tmp3 );
-				VectorAdd( tmvieworg, tmp2, tmvieworg );
-				VectorAdd( tmvieworg, tmp3, cl.refdef.vieworg );
-
-				R_RenderFrame( &cl.refdef, true );
-			}
-		}
-		else 
-		
-		//No Vr mode
-		
-		{
-			R_RenderFrame( &cl.refdef, true );
-		}
-		
+		R_RenderFrame( &cl.refdef, true );
 		cl.refdef.onlyClientDraw = false;
-	
 	} while( cl.refdef.nextView );
 
 	// Xash3D extension. draw debug triangles on a server

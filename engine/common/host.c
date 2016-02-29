@@ -22,6 +22,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "netchan.h"
+#include "server.h"
 #include "protocol.h"
 #include "mod_local.h"
 #include "mathlib.h"
@@ -38,7 +39,6 @@ host_parm_t	host;	// host parms
 sysinfo_t		SI;
 
 convar_t	*host_serverstate;
-convar_t	*vrmode;
 convar_t	*host_gameloaded;
 convar_t	*host_clientloaded;
 convar_t	*host_limitlocal;
@@ -51,6 +51,7 @@ convar_t	*con_gamemaps;
 convar_t	*download_types;
 convar_t	*build, *ver;
 convar_t	*host_mapdesign_fatal;
+convar_t 	*cmd_scripting = NULL;
 
 static int num_decals;
 
@@ -77,6 +78,10 @@ void Host_ShutdownServer( void )
 {
 	if( !SV_Active()) return;
 	Q_strncpy( host.finalmsg, "Server was killed", MAX_STRING );
+
+	Log_Printf ("Server shutdown\n");
+	Log_Close ();
+
 	SV_Shutdown( false );
 }
 
@@ -845,7 +850,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
 		host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 		host.hInst = GetModuleHandle( NULL );
-//#elif defined (__ANDROID__)
+#elif !defined (CRASHHANDLER)
 //TODO
 #else
 		struct sigaction act;
@@ -864,14 +869,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.textmode = false;
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
-	host.vrmode = false;
 
-	if ( Sys_CheckParm("-vr") )
-	{
-		host.vrmode = true;
-
-		Cvar_SetFloat( "vrmode" , 1.0f );
-	}	
 	if( Sys_CheckParm( "-console" )) host.developer = 1;
 	if( Sys_CheckParm( "-dev" ))
 	{
@@ -947,7 +945,8 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Cmd_AddCommand( "exec", Host_Exec_f, "execute a script file" );
 	Cmd_AddCommand( "memlist", Host_MemStats_f, "prints memory pool information" );
 	Cmd_AddCommand( "userconfigd", Host_Userconfigd_f, "execute all scripts from userconfig.d" );
-
+	cmd_scripting = Cvar_Get( "cmd_scripting", "0", CVAR_ARCHIVE, "enable simple condition checking and variable operations" );
+	
 	FS_Init();
 	Image_Init();
 	Sound_Init();
@@ -1002,7 +1001,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cmd_AddCommand ( "crash", Host_Crash_f, "a way to force a bus error for development reasons");
 		Cmd_AddCommand ( "net_error", Net_Error_f, "send network bad message from random place");
 	}
-	vrmode = Cvar_Get( "vrmode", "0", CVAR_ARCHIVE , "Virtual Reality mode" );
+
 	host_cheats = Cvar_Get( "sv_cheats", "0", CVAR_LATCH, "allow usage of cheat commands and variables" );
 	host_maxfps = Cvar_Get( "fps_max", "72", CVAR_ARCHIVE, "host fps upper limit" );
 	host_sleeptime = Cvar_Get( "sleeptime", "1", CVAR_ARCHIVE, "higher value means lower accuracy" );
@@ -1168,6 +1167,8 @@ void EXPORT Host_Shutdown( void )
 	if( !host.change_game )
 		Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
 
+	Log_Printf ("Server shutdown\n");
+	Log_Close ();
 
 	SV_Shutdown( false );
 	CL_Shutdown();

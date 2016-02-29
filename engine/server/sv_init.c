@@ -344,6 +344,7 @@ void SV_ActivateServer( void )
 			Cvar_SetFloat( "clockwindow", 0.0f );
 		MsgDev( D_INFO, "Game started\n" );
 	}
+	Log_Printf ("Started map \"%s\" (CRC \"0\")\n", STRING (svgame.globals->mapname));
 
 	if( host.type == HOST_DEDICATED )
 	{
@@ -497,6 +498,10 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 	{
 		MsgDev( D_INFO, "Spawn Server: %s\n", mapname );
 	}
+
+	Log_Open ();
+	Log_Printf ("Loading map \"%s\"\n", mapname);
+	Log_PrintServerVars ();
 
 	sv.state = ss_dead;
 	Host_SetServerState( sv.state );

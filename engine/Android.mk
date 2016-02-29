@@ -11,7 +11,7 @@ APP_PLATFORM := android-12
 
 include $(XASH3D_CONFIG)
 
-LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -DUSE_EVDEV -fsigned-char
+LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -DUSE_EVDEV -fsigned-char -DCRASHHANDLER
 
 ifeq ($(XASH_SDL),1)
 LOCAL_CFLAGS += -DXASH_SDL
@@ -130,6 +130,7 @@ LOCAL_SRC_FILES := \
            server/sv_game.c \
            server/sv_init.c \
            server/sv_main.c \
+           server/sv_log.c \
            server/sv_move.c \
            server/sv_phys.c \
            server/sv_pmove.c \

@@ -3,7 +3,6 @@ version: 1.0.{build}
 branches:
   only:
     - master
-    - appveyor
 
 os: Windows Server 2012
 
@@ -11,24 +10,28 @@ clone_folder: c:\projects\xash\xash3d
 
 build:
   project: xash.sln
-
   verbosity: normal
+
+configuration:
+  - Release
+  - Debug
 
 before_build:
   - mkdir C:\projects\xash\SDL2
-  - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.3-VC.zip
-  - 7z x SDL2-devel-2.0.3-VC.zip -oc:\projects\xash
+  - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.4-VC.zip
+  - 7z x SDL2-devel-2.0.4-VC.zip -oc:\projects\xash
   - cd c:\projects\xash
   - rmdir SDL2 /s /q
-  - ren SDL2-2.0.3 SDL2
+  - ren SDL2-2.0.4 SDL2
   - cd c:\projects\xash\xash3d
   - git submodule init
   - git submodule update
+  - mkdir Debug
+  - mkdir Release
 
 after_build:
-  - move C:\projects\xash\SDL2\lib\x86\*.* c:\projects\xash\xash3d\Debug
-  - 7z a -tzip xash3d-win.zip c:\projects\xash\xash3d\Debug
-  - curl --upload-file xash3d-win.zip https://transfer.sh/xash3d-win.zip
+  - 7z a -t7z xash3d-win.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on c:\projects\xash\xash3d\Release c:\projects\xash\xash3d\Debug
+  - curl --upload-file xash3d-win.7z https://transfer.sh/xash3d-win.7z
 
 notifications:
 

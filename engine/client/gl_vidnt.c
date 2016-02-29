@@ -1484,7 +1484,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 		want.w = width;
 		want.h = height;
-		want.driverdata = want.format = want.refresh_rate = 0; // don't care
+		want.driverdata = NULL;
+		want.format = want.refresh_rate = 0; // don't care
 
 		if( !SDL_GetClosestDisplayMode(0, &want, &got) )
 			return false;
@@ -1503,28 +1504,30 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_y = height / 2;
 
 #if defined(_WIN32)
-	HICON ico;
-
-	if( FS_FileExists( GI->iconpath, true ))
 	{
-		char	localPath[MAX_PATH];
+		HICON ico;
+		SDL_SysWMinfo info;
 
-		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
-		ico = LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
-
-		if( !ico )
+		if( FS_FileExists( GI->iconpath, true ) )
 		{
-			MsgDev( D_INFO, "Extract %s from pak if you want to see it.\n", GI->iconpath );
-			ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ));
-		}
-	}
-	else ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ));
+			char	localPath[MAX_PATH];
 
-	SDL_SysWMinfo info;
-	if(SDL_GetWindowWMInfo(host.hWnd, &info))
-	{
-		// info.info.info.info.info... Holy shit, SDL?
-		SetClassLong(info.info.win.window, GCL_HICON, ico);
+			Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
+			ico = LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
+
+			if( !ico )
+			{
+				MsgDev( D_INFO, "Extract %s from pak if you want to see it.\n", GI->iconpath );
+				ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ) );
+			}
+		}
+		else ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ) );
+
+		if( SDL_GetWindowWMInfo( host.hWnd, &info ) )
+		{
+			// info.info.info.info.info... Holy shit, SDL?
+			SetClassLong( info.info.win.window, GCL_HICON, ico );
+		}
 	}
 #endif
 

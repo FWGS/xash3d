@@ -33,10 +33,10 @@ char *COM_ParseFile( char *data, char *token )
 
 	if( !token )
 		return NULL;
-	
+
 	len = 0;
 	token[0] = 0;
-	
+
 	if( !data )
 		return NULL;
 // skip whitespace
@@ -47,7 +47,7 @@ skipwhite:
 			return NULL;	// end of file;
 		data++;
 	}
-	
+
 	// skip // comments
 	if( c=='/' && data[1] == '/' )
 	{
@@ -62,8 +62,23 @@ skipwhite:
 		data++;
 		while( 1 )
 		{
-			c = (byte)*data++;
-			if( c == '\"' || !c )
+			c = (byte)*data;
+
+			// unexpected line end
+			if( !c )
+			{
+				token[len] = 0;
+				return data;
+			}
+			data++;
+
+			if( c == '\\' && *data == '"' )
+			{
+				token[len++] = *data++;
+				continue;
+			}
+
+			if( c == '\"' )
 			{
 				token[len] = 0;
 				return data;
@@ -93,7 +108,7 @@ skipwhite:
 		if( c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ',' )
 			break;
 	} while( c > 32 );
-	
+
 	token[len] = 0;
 
 	return data;

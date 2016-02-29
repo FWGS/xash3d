@@ -448,7 +448,7 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		return host.oldFilter( pInfo );
 	return EXCEPTION_CONTINUE_EXECUTION;
 }
-#else //if !defined (__ANDROID__) // Android will have other handler
+#elif defined (CRASHHANDLER) // Android will have other handler
 // Posix signal handler
 
 #if defined(__FreeBSD__) || defined(__NetBSD__)
@@ -576,7 +576,7 @@ void Sys_Crash( int signal, siginfo_t *si, void *context)
 	// Put MessageBox as Sys_Error
 	Msg( message );
 #ifdef XASH_SDL
-	SDL_SetWindowGrab(host.hWnd, SDL_FALSE);
+	SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
 	//SDL_MouseQuit();
 	MSGBOX( message );
 #endif
@@ -710,66 +710,66 @@ print into window console
 */
 void Sys_Print( const char *pMsg )
 {
-#ifdef _WIN32
-	const char      *msg;
-	char            buffer[32768];
-	char            logbuf[32768];
-	char            *b = buffer;
-	char            *c = logbuf;
-	int             i = 0;
-#endif
 	if( host.type == HOST_NORMAL )
 		Con_Print( pMsg );
 #ifdef _WIN32
-	// if the message is REALLY long, use just the last portion of it
-	if( Q_strlen( pMsg ) > sizeof( buffer ) - 1 )
-		msg = pMsg + Q_strlen( pMsg ) - sizeof( buffer ) + 1;
-	else msg = pMsg;
-
-	// copy into an intermediate buffer
-	while( msg[i] && (( b - buffer ) < sizeof( buffer ) - 1 ))
 	{
-		if( msg[i] == '\n' && msg[i+1] == '\r' )
+		const char	*msg;
+		char		buffer[32768];
+		char		logbuf[32768];
+		char		*b = buffer;
+		char		*c = logbuf;
+		int		i = 0;
+		// if the message is REALLY long, use just the last portion of it
+		if( Q_strlen( pMsg ) > sizeof( buffer ) - 1 )
+			msg = pMsg + Q_strlen( pMsg ) - sizeof( buffer ) + 1;
+		else msg = pMsg;
+
+		// copy into an intermediate buffer
+		while( msg[i] && (( b - buffer ) < sizeof( buffer ) - 1 ))
 		{
-			b[0] = '\r';
-			b[1] = '\n';
-			c[0] = '\n';
-			b += 2, c++;
+			if( msg[i] == '\n' && msg[i+1] == '\r' )
+			{
+				b[0] = '\r';
+				b[1] = '\n';
+				c[0] = '\n';
+				b += 2, c++;
+				i++;
+			}
+			else if( msg[i] == '\r' )
+			{
+				b[0] = '\r';
+				b[1] = '\n';
+				b += 2;
+			}
+			else if( msg[i] == '\n' )
+			{
+				b[0] = '\r';
+				b[1] = '\n';
+				c[0] = '\n';
+				b += 2, c++;
+			}
+			else if( msg[i] == '\35' || msg[i] == '\36' || msg[i] == '\37' )
+			{
+				i++; // skip console pseudo graph
+			}
+			else if( IsColorString( &msg[i] ))
+			{
+				i++; // skip color prefix
+			}
+			else
+			{
+				*b = *c = msg[i];
+				b++, c++;
+			}
 			i++;
 		}
-		else if( msg[i] == '\r' )
-		{
-			b[0] = '\r';
-			b[1] = '\n';
-			b += 2;
-		}
-		else if( msg[i] == '\n' )
-		{
-			b[0] = '\r';
-			b[1] = '\n';
-			c[0] = '\n';
-			b += 2, c++;
-		}
-		else if( msg[i] == '\35' || msg[i] == '\36' || msg[i] == '\37' )
-		{
-			i++; // skip console pseudo graph
-		}
-		else if( IsColorString( &msg[i] ))
-		{
-			i++; // skip color prefix
-		}
-		else
-		{
-			*b = *c = msg[i];
-			b++, c++;
-		}
-		i++;
+
+		*b = *c = 0; // cutoff garbage
+
+		Sys_PrintLog( logbuf );
+		Con_WinPrint( buffer );
 	}
-
-	*b = *c = 0; // cutoff garbage
-
-	Sys_PrintLog( logbuf );
-	Con_WinPrint( buffer );
 #else
 	Sys_PrintLog( pMsg );
 #endif
