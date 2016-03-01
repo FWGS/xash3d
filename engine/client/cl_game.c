@@ -2941,7 +2941,7 @@ void pfnFillRGBABlend( int x, int y, int width, int height, int r, int g, int b,
 
 	pglEnable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
-	pglBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_ONE );
+	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 	R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, cls.fillImage );
