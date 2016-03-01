@@ -645,7 +645,7 @@ void Cvar_DirectSet( cvar_t *var, const char *value )
 		// step through the string, only copying back in characters that are printable
 		while( *pS )
 		{
-			if( *pS < 32 || *pS > 255 )
+			if( *pS < 32 )
 			{
 				pS++;
 				continue;
@@ -1077,7 +1077,7 @@ void Cvar_Restart_f( void )
 	convar_t	*var;
 	convar_t	**prev;
 
-	for( prev = &cvar_vars; var = *prev; )
+	for( prev = &cvar_vars; ( var = *prev ); )
 	{
 		// don't mess with rom values, or some inter-module
 		// communication will get broken (cl.active, etc.)
@@ -1173,7 +1173,7 @@ void Cvar_Unlink_f( void )
 		return;
 	}
 
-	for( prev = &cvar_vars; var = *prev; )
+	for( prev = &cvar_vars; ( var = *prev ); )
 	{
 		// ignore all non-game cvars
 		if( !( var->flags & CVAR_EXTDLL ))
@@ -1206,7 +1206,7 @@ void Cvar_Unlink( void )
 		return;
 	}
 
-	for( prev = &cvar_vars; var = *prev; )
+	for( prev = &cvar_vars; ( var = *prev ); )
 	{
 		// ignore all non-client cvars
 		if( !( var->flags & CVAR_CLIENTDLL ))

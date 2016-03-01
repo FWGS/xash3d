@@ -613,7 +613,7 @@ get position of previous printful char
 */
 int Con_UtfMoveLeft( char *str, int pos )
 {
-	int i, j, k = 0;
+	int i, k = 0;
 	if( !g_utf8 )
 		return pos - 1;
 	Con_UtfProcessChar( 0 );
@@ -1453,7 +1453,7 @@ void Field_DrawInputLine( int x, int y, field_t *edit )
 {
 	int	len, cursorChar;
 	int	drawLen, hideChar = -1;
-	int	prestep, curPos;
+	int	prestep, curPos = 0;
 	char	str[MAX_SYSPATH];
 	byte	*colorDefault;
 
@@ -1937,7 +1937,6 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		}
 		pglColor4ub( 255, 255, 255, 255 );
 	}
-	else y = 0;
 
 	if( !con.curFont ) return; // nothing to draw
 
@@ -2102,6 +2101,8 @@ void Con_DrawVersion( void )
 	case scrshot_normal:
 	case scrshot_snapshot:
 		draw_version = true;
+		break;
+	default:
 		break;
 	}
 

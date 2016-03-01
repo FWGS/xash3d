@@ -293,7 +293,7 @@ int read_mpeg_header( mpeg_t *mpg, const char *data, long bufsize, long streamsi
 
 	if( GetVbrTag( &vbrtag, (unsigned char *)vbrbuf ))
 	{
-		int	cur_bitrate;
+		//int	cur_bitrate;
 
 		if( vbrtag.frames < 1 || vbrtag.bytes < 1 )
 			return 0;
@@ -302,7 +302,7 @@ int read_mpeg_header( mpeg_t *mpg, const char *data, long bufsize, long streamsi
 		if( !mpg->vbrtag )
 			return 0;	// failed to allocate memory
 
-		cur_bitrate = (int)(vbrtag.bytes * 8 / (vbrtag.frames * 576.0 * (mp->fr.lsf ? 1 : 2) / mpg->rate ));
+		//cur_bitrate = (int)(vbrtag.bytes * 8 / (vbrtag.frames * 576.0 * (mp->fr.lsf ? 1 : 2) / mpg->rate ));
 		mpg->play_time = vbrtag.frames * 576.0 * (mp->fr.lsf ? 1 : 2) / mpg->rate * 1000;
 		memcpy( mpg->vbrtag, &vbrtag, sizeof( VBRTAGDATA ));
 	}

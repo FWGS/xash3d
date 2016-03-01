@@ -203,7 +203,7 @@ void CL_TEntPlaySound( TEMPENTITY *pTemp, float damp )
 		return;
 	}
 
-	zvel = abs( pTemp->entity.baseline.origin[2] );
+	zvel = fabs( pTemp->entity.baseline.origin[2] );
 		
 	// only play one out of every n
 	if( isshellcasing )
@@ -442,8 +442,11 @@ void CL_FizzEffect( cl_entity_t *pent, int modelIndex, int density )
 	if( !pent || Mod_GetType( modelIndex ) == mod_bad )
 		return;
 
+	if( pent->curstate.modelindex <= 0 )
+		return;
+
 	count = density + 1;
-	density = count * 3 + 6;
+	//density = count * 3 + 6;
 
 	Mod_GetBounds( pent->curstate.modelindex, mins, maxs );
 
@@ -1817,8 +1820,6 @@ void CL_ParseTempEntity( sizebuf_t *msg )
 	cl_entity_t	*pEnt;
 	dlight_t		*dl;
 
-	decalIndex = modelIndex = entityIndex = 0;
-
 	// parse user message into buffer
 	BF_ReadBytes( msg, pbuf, iSize );
 
@@ -2137,7 +2138,7 @@ void CL_ParseTempEntity( sizebuf_t *msg )
 		pos[2] = BF_ReadCoord( &buf );
 		entityIndex = BF_ReadShort( &buf );
 		decalIndex = BF_ReadByte( &buf );
-		pEnt = CL_GetEntityByIndex( entityIndex );
+		//pEnt = CL_GetEntityByIndex( entityIndex );
 		CL_DecalShoot( CL_DecalIndex( decalIndex ), entityIndex, 0, pos, 0 );
 		CL_BulletImpactParticles( pos );
 		CL_RicochetSound( pos );
@@ -2652,7 +2653,7 @@ int CL_DecalIndexFromName( const char *name )
 	// look through the loaded sprite name list for SpriteName
 	for( i = 0; i < MAX_DECALS && host.draw_decals[i+1][0]; i++ )
 	{
-		if( !Q_stricmp( name, host.draw_decals[i+1] ))
+		if( !Q_stricmp( name, (char *)host.draw_decals[i+1] ))
 			return i+1;
 	}
 	return 0; // invalid decal
@@ -2703,7 +2704,7 @@ int CL_DecalIndex( int id )
 			}
 		}
 
-		if( !load_external ) cl.decal_index[id] = GL_LoadTexture( host.draw_decals[id], NULL, 0, TF_DECAL, NULL );
+		if( !load_external ) cl.decal_index[id] = GL_LoadTexture( (char *)host.draw_decals[id], NULL, 0, TF_DECAL, NULL );
 	}
 	host.decal_loading = false;
 

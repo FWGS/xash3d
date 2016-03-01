@@ -71,7 +71,7 @@ Studio models are position independent, so the cache manager can move them.
 #define STUDIO_NF_NORMALMAP		0x0080	// indexed normalmap
 #define STUDIO_NF_GLOSSMAP		0x0100	// heightmap that can be used for parallax or normalmap
 #define STUDIO_NF_GLOSSPOWER	0x0200	// glossmap
-#define STUDIO_NF_UV_COORDS		(1<<31)
+#define STUDIO_NF_UV_COORDS		(1U << 31)
 
 // motion flags
 #define STUDIO_X			0x0001

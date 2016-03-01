@@ -196,7 +196,7 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 
 		for( column = 0; column < columns; column++ )
 		{
-			byte	red, green, blue, alpha;
+			byte	red = '\0', green = '\0', blue = '\0', alpha;
 			word	shortPixel;
 			int	c, k, palIndex;
 
@@ -318,7 +318,7 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	file_t		*pfile = NULL;
 	BITMAPFILEHEADER	bmfh;
 	BITMAPINFOHEADER	bmih;
-	size_t		total_size, cur_size;
+	size_t		total_size = 0, cur_size = 0;
 	RGBQUAD		rgrgbPalette[256];
 	dword		cbBmpBits;
 	byte		*clipbuf = NULL;
@@ -475,7 +475,6 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	if( host.write_to_clipboard )
 	{
 		Q_memcpy( clipbuf + cur_size, pbBmpBits, cbBmpBits );
-		cur_size += cbBmpBits;
 		Sys_SetClipboardData( clipbuf, total_size );
 		Z_Free( clipbuf );
 	}

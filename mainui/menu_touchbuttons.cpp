@@ -108,7 +108,7 @@ typedef struct
 
 static uiTouchButtons_t	uiTouchButtons;
 
-#define BIT(i) ( 1<<i )
+#define BIT(i) ( 1U << i )
 
 #define TOUCH_FL_HIDE BIT( 0 )
 #define TOUCH_FL_NOEDIT BIT( 1 )

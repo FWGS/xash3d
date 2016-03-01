@@ -156,7 +156,7 @@ void R_StudioInit( void )
 		pixelAspect *= (320.0f / 240.0f);
 	else pixelAspect *= (640.0f / 480.0f);
 
-	if( RI.refdef.fov_y > 0 )
+	if( RI.refdef.fov_y != 0 )
 	{
 		aliasXscale = (float)scr_width->integer / RI.refdef.fov_y;
 		aliasYscale = aliasXscale * pixelAspect;
@@ -391,7 +391,7 @@ pfnGetModelCounters
 static void pfnGetModelCounters( int **s, int **a )
 {
 	*s = &g_nStudioCount;
-	*a = &r_stats.c_studio_models_drawn;
+	*a = (int *)&r_stats.c_studio_models_drawn;
 }
 
 /*
@@ -643,7 +643,7 @@ StudioGetAnim
 mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
 	mstudioseqgroup_t	*pseqgroup;
-	size_t		filesize;
+	fs_offset_t		filesize;
 	byte		*buf;
 	cache_user_t	*paSequences;
 
@@ -673,13 +673,15 @@ mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc
 		Q_snprintf( filepath, sizeof( filepath ), "%s/%s%i%i.mdl", modelpath, modelname, pseqdesc->seqgroup / 10, pseqdesc->seqgroup % 10 );
 
 		buf = FS_LoadFile( filepath, &filesize, false );
-		if( !buf || !filesize ) Host_Error( "StudioGetAnim: can't load %s\n", filepath );
-		if( IDSEQGRPHEADER != *(uint *)buf ) Host_Error( "StudioGetAnim: %s is corrupted\n", filepath );
+		if( !buf || !filesize )
+			Host_Error( "StudioGetAnim: can't load %s\n", filepath );
+		else if( IDSEQGRPHEADER != *(uint *)buf )
+			Host_Error( "StudioGetAnim: %s is corrupted\n", filepath );
 
 		MsgDev( D_INFO, "loading: %s\n", filepath );
 			
 		paSequences[pseqdesc->seqgroup].data = Mem_Alloc( com_studiocache, filesize );
-		Q_memcpy( paSequences[pseqdesc->seqgroup].data, buf, filesize );
+		Q_memcpy( paSequences[pseqdesc->seqgroup].data, buf, (size_t)filesize );
 		Mem_Free( buf );
 	}
 
@@ -708,9 +710,9 @@ void R_StudioFxTransform( cl_entity_t *ent, matrix3x4 transform )
 		else if( !Com_RandomLong( 0, 49 ))
 		{
 			float	offset;
-			int	axis = Com_RandomLong( 0, 1 );
+			//int	axis = Com_RandomLong( 0, 1 );
 
-			if( axis == 1 ) axis = 2; // choose between x & z
+			//if( axis == 1 ) axis = 2; // choose between x & z
 			offset = Com_RandomFloat( -10.0f, 10.0f );
 			transform[Com_RandomLong( 0, 2 )][3] += offset;
 		}
@@ -739,7 +741,7 @@ StudioCalcBoneAdj
 void R_StudioCalcBoneAdj( float dadt, float *adj, const byte *pcontroller1, const byte *pcontroller2, byte mouthopen )
 {
 	mstudiobonecontroller_t	*pbonecontroller;
-	float			value;	
+	float			value = 0.0f;
 	int			i, j;
 
 	pbonecontroller = (mstudiobonecontroller_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bonecontrollerindex);
@@ -1929,7 +1931,7 @@ static void R_StudioDrawPoints( void )
 	mstudiotexture_t	*ptexture;
 	mstudiomesh_t	*pmesh;
 	short		*pskinref;
-	float		*av, *lv, *nv, scale;
+	float		*av, *lv, *nv, scale = 0.0f;
 
 	R_StudioSetupTextureHeader ();
 
@@ -2056,7 +2058,7 @@ static void R_StudioDrawPoints( void )
 			GL_Bind( GL_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
 		}
 
-		while( i = *( ptricmds++ ))
+		while( ( i = *( ptricmds++ ) ) )
 		{
 			int	vertexState = 0;
 			qboolean	tri_strip;
@@ -2645,7 +2647,6 @@ void R_StudioDeformShadow( void )
 	VectorScale( g_mvShadowVec, dist2, g_mvShadowVec );
 
 	verts = g_xarrayverts[0];
-	numVerts = g_nNumArrayVerts;
 
 	for( numVerts = 0; numVerts < g_nNumArrayVerts; numVerts++, verts += 3 )
 	{
@@ -2757,7 +2758,7 @@ void R_StudioRenderFinal( void )
 	{
 		for( i = 0; i < m_pStudioHeader->numbodyparts; i++ )
 		{
-			R_StudioSetupModel( i, &m_pBodyPart, &m_pSubModel );
+			R_StudioSetupModel( i, (void **)&m_pBodyPart, (void **)&m_pSubModel );
 
 			GL_SetRenderMode( rendermode );
 			R_StudioDrawPoints();
@@ -2954,7 +2955,7 @@ R_StudioDrawPlayer
 static int R_StudioDrawPlayer( int flags, entity_state_t *pplayer )
 {
 	int	m_nPlayerIndex;
-	float	gaitframe, gaityaw;
+	float	gaitframe = 0.0f, gaityaw = 0.0f;
 	vec3_t	dir, prevgaitorigin;
 	alight_t	lighting;
 

@@ -17,6 +17,7 @@ GNU General Public License for more details.
 // Winsock
 #include <winsock.h>
 #include <wsipx.h>
+#define socklen_t int //#include <ws2tcpip.h>
 #else
 // BSD sockets
 #include <sys/types.h>
@@ -535,8 +536,9 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 {
 	int 		ret;
 	struct sockaddr	addr;
-	int		err, addr_len;
-	int		net_socket;
+	int		err;
+	socklen_t	addr_len;
+	int		net_socket = 0;
 	int		protocol;
 
 	if( !data || !length )
@@ -897,7 +899,7 @@ void NET_GetLocalAddress( void )
 {
 	char		buff[512];
 	struct sockaddr_in	address;
-	int		namelen;
+	socklen_t		namelen;
 
 	Q_memset( &net_local, 0, sizeof( netadr_t ));
 
@@ -1759,10 +1761,10 @@ void HTTP_Init( void )
 		}
 		token = lineend;
 	}*/
-	line = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
+	line = serverfile = (char *)FS_LoadFile( "fastdl.txt", 0, true );
 	if( serverfile )
 	{
-		while( line = COM_ParseFile( line, token ) )
+		while( ( line = COM_ParseFile( line, token ) ) )
 		{
 			httpserver_t *server = HTTP_ParseURL( token );
 			if( !server ) continue;

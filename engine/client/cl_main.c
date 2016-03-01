@@ -467,7 +467,7 @@ void CL_WritePacket( void )
 		
 	if( send_command )
 	{
-		int	outgoing_sequence;
+		//int	outgoing_sequence;
 	
 		if( cl_cmdrate->integer > 0 )
 			cls.nextcmdtime = host.realtime + ( 1.0f / cl_cmdrate->value );
@@ -475,10 +475,10 @@ void CL_WritePacket( void )
 
 		if( cls.lastoutgoingcommand == -1 )
 		{
-			outgoing_sequence = cls.netchan.outgoing_sequence;
+			//outgoing_sequence = cls.netchan.outgoing_sequence;
 			cls.lastoutgoingcommand = cls.netchan.outgoing_sequence;
 		}
-		else outgoing_sequence = cls.lastoutgoingcommand + 1;
+		//else outgoing_sequence = cls.lastoutgoingcommand + 1;
 
 		// begin a client move command
 		BF_WriteByte( &buf, clc_move );
@@ -522,7 +522,7 @@ void CL_WritePacket( void )
 		buf.pData[key] = CRC32_BlockSequence( buf.pData + key + 1, size, cls.netchan.outgoing_sequence );
 
 		// message we are constructing.
-		i = cls.netchan.outgoing_sequence & CL_UPDATE_MASK;
+		//i = cls.netchan.outgoing_sequence & CL_UPDATE_MASK;
 	
 		// determine if we need to ask for a new set of delta's.
 		if( cl.validsequence && (cls.state == ca_active) && !( cls.demorecording && cls.demowaiting ))
@@ -1177,7 +1177,7 @@ void CL_PrepVideo( void )
 
 	// let the render dll load the map
 	Q_strncpy( mapname, cl.model_precache[1], MAX_STRING ); 
-	Mod_LoadWorld( mapname, &map_checksum, false );
+	Mod_LoadWorld( mapname, (uint *)&map_checksum, false );
 	cl.worldmodel = Mod_Handle( 1 ); // get world pointer
 	Cvar_SetFloat( "scr_loading", 25.0f );
 
@@ -1399,7 +1399,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{
 		// user out of band message (must be handled in CL_ConnectionlessPacket)
-		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, buf );
+		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, (byte *)buf );
 	}
 	else MsgDev( D_ERROR, "Bad connectionless packet from %s:\n%s\n", NET_AdrToString( from ), args );
 }
@@ -1467,7 +1467,7 @@ void CL_ReadNetMessage( void )
 	if( cls.state != ca_disconnected && Netchan_IncomingReady( &cls.netchan ))
 	{
 		// the header is different lengths for reliable and unreliable messages
-		int headerBytes = BF_GetNumBytesRead( &net_message );
+		//int headerBytes = BF_GetNumBytesRead( &net_message );
 
 		// process the incoming buffer(s)
 		if( Netchan_CopyNormalFragments( &cls.netchan, &net_message ))
@@ -1530,7 +1530,7 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 	if( successfully_received)
 		MsgDev( D_INFO, "Received %s\n", filename );
 	else
-		MsgDev( D_WARN, "Failed to download %s", filename );
+		MsgDev( D_WARN, "Failed to download %s\n", filename );
 
 	if( cls.downloadfileid == cls.downloadcount - 1 )
 	{

@@ -408,7 +408,7 @@ void GL_ResetFogColor( void );
 // gl_sprite.c
 //
 void R_SpriteInit( void );
-void Mod_LoadSpriteModel( model_t *mod, const void *buffer, qboolean *loaded, uint texFlags );
+void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint texFlags );
 mspriteframe_t *R_GetSpriteFrame( const model_t *pModel, int frame, float yaw );
 void R_DrawSpriteModel( cl_entity_t *e );
 
@@ -425,7 +425,7 @@ void R_DrawStudioModel( cl_entity_t *e );
 //
 // gl_warp.c
 //
-void R_InitSky( struct mip_s *mt, struct texture_s *tx );
+void R_InitSky( struct mip_s *mt, byte *buf, struct texture_s *tx );
 void R_AddSkyBoxSurface( msurface_t *fa );
 void R_ClearSkyBox( void );
 void R_DrawSkyBox( void );

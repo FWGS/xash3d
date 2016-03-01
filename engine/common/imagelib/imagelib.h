@@ -131,15 +131,14 @@ typedef struct
 
 ========================================================================
 */
-#pragma pack( 1 )
 typedef struct tga_s
 {
 	byte	id_length;
 	byte	colormap_type;
 	byte	image_type;
+	byte	colormap_size;
 	word	colormap_index;
 	word	colormap_length;
-	byte	colormap_size;
 	word	x_origin;
 	word	y_origin;
 	word	width;
@@ -147,8 +146,6 @@ typedef struct tga_s
 	byte	pixel_size;
 	byte	attributes;
 } tga_t;
-#pragma pack( )
-
 
 /*
 ========================================================================

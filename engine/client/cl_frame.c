@@ -129,7 +129,7 @@ int CL_InterpolateModel( cl_entity_t *e )
 	if( t - t2 < 0.0f )
 		return 0;
 
-	if( t2 == 0.0f || VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ))
+	if( t2 == 0.0f || ( VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ) ) )
 	{
 		VectorCopy( ph0->origin, e->origin );
 		VectorCopy( ph0->angles, e->angles );
@@ -825,7 +825,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 	{
 		// this is a full update that we can start delta compressing from now
 		oldframe = NULL;
-		oldpacket = -1;		// delta too old or is initial message
+		//oldpacket = -1;		// delta too old or is initial message
 		cl.force_send_usercmd = true;	// send reply
 		cls.demowaiting = false;	// we can start recording now
 	}

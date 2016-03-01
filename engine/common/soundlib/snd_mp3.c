@@ -70,7 +70,7 @@ qboolean Sound_LoadMPG( const char *name, const byte *buffer, size_t filesize )
 		return false;
 
 	// trying to read header
-	if( !read_mpeg_header( &mpeg, buffer, FRAME_SIZE, filesize ))
+	if( !read_mpeg_header( &mpeg, (char *)buffer, FRAME_SIZE, filesize ))
 	{
 		MsgDev( D_ERROR, "Sound_LoadMPG: (%s) is probably corrupted\n", name );
 		close_decoder( &mpeg );

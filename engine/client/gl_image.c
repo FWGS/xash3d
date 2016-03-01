@@ -226,7 +226,7 @@ void GL_TexFilter( gltexture_t *tex, qboolean update )
 	if( tex->flags & ( TF_BORDER|TF_ALPHA_BORDER ) && !GL_Support( GL_CLAMP_TEXBORDER_EXT ))
 	{
 		// border is not support, use clamp instead
-		tex->flags &= ~(TF_BORDER||TF_ALPHA_BORDER);
+		tex->flags &= ~(TF_BORDER|TF_ALPHA_BORDER);
 		tex->flags |= TF_CLAMP;
 	}
 
@@ -1622,7 +1622,7 @@ int GL_LoadTextureInternal( const char *name, rgbdata_t *pic, texFlags_t flags, 
 		}
 
 		tex = &r_textures[i];
-		hash = Com_HashKey( name, TEXTURES_HASH_SIZE );
+		//hash = Com_HashKey( name, TEXTURES_HASH_SIZE );
 		Q_strncpy( tex->name, name, sizeof( tex->name ));
 		tex->texnum = i;	// texnum is used for fast acess into r_textures array too
 		tex->flags = flags;
@@ -1636,7 +1636,7 @@ int GL_LoadTextureInternal( const char *name, rgbdata_t *pic, texFlags_t flags, 
 	GL_TexFilter( tex, update ); // update texture filter, wrap etc
 
 	if( !update )
-          {
+	{
 		// add to hash table
 		hash = Com_HashKey( tex->name, TEXTURES_HASH_SIZE );
 		tex->nextHash = r_texturesHashTable[hash];
@@ -3611,7 +3611,7 @@ R_ParseClearPixels
 static rgbdata_t *R_ParseClearPixels( char **script, int *samples, texFlags_t *flags )
 {
 	char	token[256];
-	qboolean	clearAlpha;
+	qboolean	clearAlpha = false;
 	rgbdata_t *pic;
 
 	*script = COM_ParseFile( *script, token );
@@ -3669,7 +3669,7 @@ R_ParseMovePixels
 static rgbdata_t *R_ParseMovePixels( char **script, int *samples, texFlags_t *flags )
 {
 	char	token[256];
-	qboolean	alphaToColor;
+	qboolean	alphaToColor = false;
 	rgbdata_t *pic;
 
 	*script = COM_ParseFile( *script, token );
@@ -4185,7 +4185,8 @@ R_InitAttenuationTexture3D
 static rgbdata_t *R_InitAttenTexture3D( texFlags_t *flags )
 {
 	vec3_t	v = { 0, 0, 0 };
-	int	x, y, z, d, size, size2, halfsize;
+	int	x, y, z, d, size;
+	//int	size2, halfsize;
 	float	intensity;
 
 	if( !GL_Support( GL_TEXTURE_3D_EXT ))
@@ -4201,9 +4202,9 @@ static rgbdata_t *R_InitAttenTexture3D( texFlags_t *flags )
 	r_image.size = r_image.width * r_image.height * r_image.depth * 4;
 
 	size = 32;
-	halfsize = size / 2;
-	intensity = halfsize * halfsize;
-	size2 = size * size;
+	//halfsize = size / 2;
+	//intensity = halfsize * halfsize;
+	//size2 = size * size;
 
 	for( x = 0; x < r_image.width; x++ )
 	{

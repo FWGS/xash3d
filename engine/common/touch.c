@@ -419,7 +419,7 @@ void IN_TouchRemoveButton( const char *name )
 
 	IN_TouchEditClear();
 
-	while( button = IN_TouchFindFirst( name ) )
+	while( ( button = IN_TouchFindFirst( name ) ) )
 	{
 		if( button->prev )
 			button->prev->next = button->next;
@@ -647,11 +647,15 @@ void IN_TouchLoadDefaults_f( void )
 			  y2 = g_DefaultButtons[i].y2; 
 		
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
+		
 		if( g_DefaultButtons[i].aspect && g_DefaultButtons[i].round == round_aspect )
-		if( g_DefaultButtons[i].texturefile[0] == '#' )
-			y2 = y1 + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight ) * g_DefaultButtons[i].aspect + touch.swidth*2/SCR_H;
-		else
-			y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * g_DefaultButtons[i].aspect;
+		{
+			if( g_DefaultButtons[i].texturefile[0] == '#' )
+				y2 = y1 + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight ) * g_DefaultButtons[i].aspect + touch.swidth*2/SCR_H;
+			else
+				y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * g_DefaultButtons[i].aspect;
+		}
+		
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 		button = IN_TouchAddButton( g_DefaultButtons[i].name, g_DefaultButtons[i].texturefile, g_DefaultButtons[i].command, x1, y1, x2, y2, g_DefaultButtons[i].color );
 		button->flags |= g_DefaultButtons[i].flags;

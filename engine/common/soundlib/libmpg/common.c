@@ -271,11 +271,9 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 
 	if( head_flags & TOC_FLAG )
 	{
-		if( pTagData->toc != NULL )
-		{
-			for(i=0;i<NUMTOCENTRIES;i++)
-				pTagData->toc[i] = buf[i];
-		}
+		for(i=0;i<NUMTOCENTRIES;i++)
+			pTagData->toc[i] = buf[i];
+
 		buf+=NUMTOCENTRIES;
 	}
 
@@ -283,7 +281,7 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 
 	if( head_flags & VBR_SCALE_FLAG )
 	{
-		pTagData->vbr_scale = ExtractI4(buf); buf+=4;
+		pTagData->vbr_scale = ExtractI4(buf);
 	}
 
 	return 1;

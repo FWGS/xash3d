@@ -90,7 +90,7 @@ typedef struct
 } dlumpinfo_t;
 
 
-typedef struct wfile_s
+struct wfile_s
 {
 	char		filename[MAX_SYSPATH];
 	int		infotableofs;
@@ -100,7 +100,7 @@ typedef struct wfile_s
 	int		handle;
 	dlumpinfo_t	*lumps;
 	time_t		filetime;
-} wfile_t;
+};
 
 typedef struct packfile_s
 {
@@ -118,14 +118,14 @@ typedef struct pack_s
 	packfile_t	*files;
 } pack_t;
 
-typedef struct searchpath_s
+struct searchpath_s
 {
 	char		filename[MAX_SYSPATH];
 	pack_t		*pack;
 	wfile_t		*wad;
 	int		flags;
 	struct searchpath_s *next;
-} searchpath_t;
+};
 
 
 #include "custom.h"

@@ -750,7 +750,7 @@ void Cmd_RemoveCommand( const char *cmd_name )
 {
 	cmd_t	*cmd, **prev;
 
-	for( prev = &cmd_functions; cmd = *prev; prev = &cmd->next )
+	for( prev = &cmd_functions; ( cmd = *prev ); prev = &cmd->next )
 	{
 		if( !Q_strcmp( cmd_name, cmd->name ))
 		{
@@ -1162,7 +1162,7 @@ void Cmd_Unlink( int group )
 		return;
 	}
 
-	for( prev = &cmd_functions; cmd = *prev; )
+	for( prev = &cmd_functions; ( cmd = *prev ); )
 	{
 		if( group && !( cmd->flags & group ))
 		{

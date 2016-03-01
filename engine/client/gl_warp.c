@@ -127,6 +127,8 @@ void DrawSkyPolygon( int nump, vec3_t vecs )
 		j = vec_to_st[axis][2];
 		dv = (j > 0) ? vecs[j-1] : -vecs[-j-1];
 
+		if( dv == 0 ) continue;
+
 		j = vec_to_st[axis][0];
 		s = (j < 0) ? -vecs[-j-1] / dv : vecs[j-1] / dv;
 
@@ -475,7 +477,7 @@ R_InitSky
 A sky texture is 256*128, with the right side being a masked overlay
 ==============
 */
-void R_InitSky( mip_t *mt, texture_t *tx )
+void R_InitSky( mip_t *mt, byte *buf, texture_t *tx )
 {
 	rgbdata_t	r_temp, *r_sky;
 	uint	*trans, *rgba;
@@ -493,7 +495,7 @@ void R_InitSky( mip_t *mt, texture_t *tx )
 		int size = (int)sizeof( mip_t ) + ((mt->width * mt->height * 85)>>6);
 		if( world.version >= HLBSP_VERSION ) size += sizeof( short ) + 768;
 
-		r_sky = FS_LoadImage( texname, (byte *)mt, size );
+		r_sky = FS_LoadImage( texname, buf, size );
 	}
 	else
 	{

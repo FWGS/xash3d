@@ -1104,7 +1104,7 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 
 		MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
 
-		if( SDL_GetWindowFlags(host.hWnd) & SDL_WINDOW_FULLSCREEN == SDL_WINDOW_FULLSCREEN)
+		if( ( SDL_GetWindowFlags(host.hWnd) & SDL_WINDOW_FULLSCREEN ) == SDL_WINDOW_FULLSCREEN)
 			if( SDL_SetWindowFullscreen(host.hWnd, 0) == -1 )
 				return rserr_invalid_fullscreen;
 

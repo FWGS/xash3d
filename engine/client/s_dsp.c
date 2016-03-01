@@ -35,7 +35,7 @@ GNU General Public License for more details.
 // Thus we have 3e6 / 1840 = 1630 cycles per sample.  
 
 #define PBITS		12		// parameter bits
-#define PMAX		((1 << PBITS)-1)	// parameter max size
+#define PMAX		((1U << PBITS)-1)	// parameter max size
 
 // crossfade from y2 to y1 at point r (0 < r < PMAX )
 #define XFADE( y1, y2, r )	(((y1) * (r)) >> PBITS) + (((y2) * (PMAX - (r))) >> PBITS);
@@ -445,8 +445,8 @@ _inline int dly_allpass( int D, int t, int *w, int **p, int a, int b, int x )
 // fixed point math for real-time wave table traversing, pitch shifting, resampling
 ///////////////////////////////////////////////////////////////////////////////////
 #define FIX20_BITS		20					// 20 bits of fractional part
-#define FIX20_SCALE		(1 << FIX20_BITS)
-#define FIX20_INTMAX	((1 << (32 - FIX20_BITS))-1)			// maximum step integer
+#define FIX20_SCALE		(1U << FIX20_BITS)
+#define FIX20_INTMAX	((1U << (32 - FIX20_BITS))-1)			// maximum step integer
 #define FLOAT_TO_FIX20(a)	((int)((a) * (float)FIX20_SCALE))		// convert float to fixed point
 #define INT_TO_FIX20(a)	(((int)(a)) << FIX20_BITS)			// convert int to fixed point
 #define FIX20_TO_FLOAT(a)	((float)(a) / (float)FIX20_SCALE)		// convert fix20 to float
@@ -709,7 +709,8 @@ void FLT_Design_Cheb( int Nmax, float cutoff, float ftype, float qwidth, int *pM
 	double	Astop =	10;				// max amplitude of stop band	UNDONE: use Quality to select this
 
 	double	Wpass, Wstop, epass, estop, Nex, aa;
-	double	W3, f3, W0, G, Wi2, W02, a1, a2, th, Wi, D, b1;
+	double	W0, G, Wi2, W02, a1, a2, th, Wi, D, b1;
+	//double	W3, f3;
 	int	i, K, r, N;
 	double	A[KMAX+1][3];				// denominator output matrices, second order sections
 	double	B[KMAX+1][3];				// numerator output matrices, second order sections
@@ -730,8 +731,8 @@ void FLT_Design_Cheb( int Nmax, float cutoff, float ftype, float qwidth, int *pM
 	K = (N - r ) / 2;
 
 	aa = asinh ( estop ) / N;
-	W3 = Wstop / cosh( acosh( estop ) / N );
-	f3 = (fs / M_PI) * atan( pow( W3, s ));
+	//W3 = Wstop / cosh( acosh( estop ) / N );
+	//f3 = (fs / M_PI) * atan( pow( W3, s ));
 	
 	W0 = sinh( aa ) / Wstop;
 	W02 = W0 * W0;
@@ -1973,7 +1974,7 @@ _inline void DFR_Mod( void *p, float v )
 
 #define CLFOSAMPS		512		// samples per wav table - single cycle only
 #define LFOBITS		14		// bits of peak amplitude of lfo wav
-#define LFOAMP		((1<<LFOBITS)-1)	// peak amplitude of lfo wav
+#define LFOAMP		( ( 1U << LFOBITS ) - 1 )	// peak amplitude of lfo wav
 
 //types of lfo wavs
 
@@ -2319,7 +2320,7 @@ void RMP_Init( rmp_t *prmp, float ramptime, int initval, int targetval )
 	// init fixed point iterator to iterate along the height of the ramp 'rise'
 	// always iterates from 0..'rise', increasing in value
 
-	POS_ONE_Init( &prmp->ps, ABS( rise ), ABS((float) rise) / ((float) run));
+	POS_ONE_Init( &prmp->ps, ABS( rise ), fabs((float) rise) / ((float) run));
 	
 	prmp->yprev = initval;
 	prmp->initval = initval;
@@ -2490,7 +2491,7 @@ ptc_t * PTC_Alloc( float timeslice, float timexfade, float fstep )
 	PTC_Init( pptc );
 
 	// get size of region to cut or duplicate
-	tcutdup = abs(( fstep - 1.0 ) * timeslice );
+	tcutdup = fabs(( fstep - 1.0 ) * timeslice );
 
 	// to prevent buffer overruns:
 
@@ -2623,7 +2624,7 @@ void TimeCompress( int *w, int *v, int cin, int cout, int cxfade, int ccut )
 	int	m;	
 	int	p;
 	int	q;
-	int	D;
+	//int	D;
 
 	// input buffer
 	//	      xfade source 
@@ -2641,7 +2642,7 @@ void TimeCompress( int *w, int *v, int cin, int cout, int cxfade, int ccut )
 	// p - index of 1st sample of crossfade source
 	// q - index of 1st sample in crossfade region
 	
-	D = cin - 1;
+	//D = cin - 1;
 	m = cin - ccut;			
 	p = cin - cxfade;	
 	q = m - cxfade;
@@ -2847,9 +2848,9 @@ env_t *ENV_Alloc( int type, float famp1, float famp2, float famp3, float attack,
 	{
 		if( !envs[i].fused )
 		{
-			int	amp1 = famp1 * (1 << ENV_BITS);	// ramp resolution
-			int	amp2 = famp2 * (1 << ENV_BITS);	
-			int	amp3 = famp3 * (1 << ENV_BITS);
+			int	amp1 = famp1 * (1U << ENV_BITS);	// ramp resolution
+			int	amp2 = famp2 * (1U << ENV_BITS);	
+			int	amp3 = famp3 * (1U << ENV_BITS);
 
 			penv = &envs[i];
 			
@@ -2998,7 +2999,7 @@ _inline void ENV_Mod ( void *p, float v )
 #define CEFOS		64		// max # of envelope followers active
 
 #define CEFOBITS		6		// size 2^6 = 64
-#define CEFOWINDOW		(1 << (CEFOBITS))	// size of sample window
+#define CEFOWINDOW		(1U << (CEFOBITS))	// size of sample window
 
 typedef struct
 {
@@ -4028,7 +4029,7 @@ qboolean PRC_InitAll( prc_t *prcs, int count )
 	prc_GetNext_t	pfnGetNext;	// get next function
 	prc_GetNextN_t	pfnGetNextN;	// get next function, batch version
 	prc_Free_t	pfnFree;	
-	prc_Mod_t		pfnMod;	
+	//prc_Mod_t		pfnMod;	
 	qboolean		fok = true;
 
 	// set up pointers to XXX_Free, XXX_GetNext and XXX_Params functions
@@ -4042,77 +4043,77 @@ qboolean PRC_InitAll( prc_t *prcs, int count )
 			pfnGetNext	= (prc_GetNext_t)&DLY_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&DLY_GetNextN;
 			pfnParam		= &DLY_VParams;
-			pfnMod		= (prc_Mod_t)&DLY_Mod;
+			//pfnMod		= (prc_Mod_t)&DLY_Mod;
 			break;
 		case PRC_RVA:
 			pfnFree		= (prc_Free_t)&RVA_Free;
 			pfnGetNext	= (prc_GetNext_t)&RVA_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&RVA_GetNextN;
 			pfnParam		= &RVA_VParams;
-			pfnMod		= (prc_Mod_t)&RVA_Mod;
+			//pfnMod		= (prc_Mod_t)&RVA_Mod;
 			break;
 		case PRC_FLT:
 			pfnFree		= (prc_Free_t)&FLT_Free;
 			pfnGetNext	= (prc_GetNext_t)&FLT_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&FLT_GetNextN;
 			pfnParam		= &FLT_VParams;
-			pfnMod		= (prc_Mod_t)&FLT_Mod;
+			//pfnMod		= (prc_Mod_t)&FLT_Mod;
 			break;
 		case PRC_CRS:
 			pfnFree		= (prc_Free_t)&CRS_Free;
 			pfnGetNext	= (prc_GetNext_t)&CRS_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&CRS_GetNextN;
 			pfnParam 		= &CRS_VParams;
-			pfnMod		= (prc_Mod_t)&CRS_Mod;
+			//pfnMod		= (prc_Mod_t)&CRS_Mod;
 			break;
 		case PRC_PTC:
 			pfnFree		= (prc_Free_t)&PTC_Free;
 			pfnGetNext	= (prc_GetNext_t)&PTC_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&PTC_GetNextN;
 			pfnParam 		= &PTC_VParams;
-			pfnMod		= (prc_Mod_t)&PTC_Mod;
+			//pfnMod		= (prc_Mod_t)&PTC_Mod;
 			break;
 		case PRC_ENV:
 			pfnFree		= (prc_Free_t)&ENV_Free;
 			pfnGetNext	= (prc_GetNext_t)&ENV_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&ENV_GetNextN;
 			pfnParam		= &ENV_VParams;
-			pfnMod		= (prc_Mod_t)&ENV_Mod;
+			//pfnMod		= (prc_Mod_t)&ENV_Mod;
 			break;
 		case PRC_LFO:
 			pfnFree		= (prc_Free_t)&LFO_Free;
 			pfnGetNext	= (prc_GetNext_t)&LFO_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&LFO_GetNextN;
 			pfnParam		= &LFO_VParams;
-			pfnMod		= (prc_Mod_t)&LFO_Mod;
+			//pfnMod		= (prc_Mod_t)&LFO_Mod;
 			break;
 		case PRC_EFO:
 			pfnFree		= (prc_Free_t)&EFO_Free;
 			pfnGetNext	= (prc_GetNext_t)&EFO_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&EFO_GetNextN;
 			pfnParam		= &EFO_VParams;
-			pfnMod		= (prc_Mod_t)&EFO_Mod;
+			//pfnMod		= (prc_Mod_t)&EFO_Mod;
 			break;
 		case PRC_MDY:
 			pfnFree		= (prc_Free_t)&MDY_Free;
 			pfnGetNext	= (prc_GetNext_t)&MDY_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&MDY_GetNextN;
 			pfnParam		= &MDY_VParams;
-			pfnMod		= (prc_Mod_t)&MDY_Mod;
+			//pfnMod		= (prc_Mod_t)&MDY_Mod;
 			break;
 		case PRC_DFR:
 			pfnFree		= (prc_Free_t)&DFR_Free;
 			pfnGetNext	= (prc_GetNext_t)&DFR_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&DFR_GetNextN;
 			pfnParam		= &DFR_VParams;
-			pfnMod		= (prc_Mod_t)&DFR_Mod;
+			//pfnMod		= (prc_Mod_t)&DFR_Mod;
 			break;
 		case PRC_AMP:
 			pfnFree		= (prc_Free_t)&AMP_Free;
 			pfnGetNext	= (prc_GetNext_t)&AMP_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&AMP_GetNextN;
 			pfnParam		= &AMP_VParams;
-			pfnMod		= (prc_Mod_t)&AMP_Mod;
+			//pfnMod		= (prc_Mod_t)&AMP_Mod;
 			break;
 		case PRC_NULL:
 		default:
@@ -4120,7 +4121,7 @@ qboolean PRC_InitAll( prc_t *prcs, int count )
 			pfnGetNext	= (prc_GetNext_t)&NULL_GetNext;
 			pfnGetNextN	= (prc_GetNextN_t)&NULL_GetNextN;
 			pfnParam		= &NULL_VParams;
-			pfnMod		= (prc_Mod_t)&NULL_Mod;
+			//pfnMod		= (prc_Mod_t)&NULL_Mod;
 			break;
 		}
 

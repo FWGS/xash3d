@@ -238,7 +238,7 @@ void CL_InitCDAudio( const char *filename )
 		CL_CreatePlaylist( filename );
 	}
 
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 	if( !afile ) return;
 
 	pfile = afile;
@@ -1372,7 +1372,7 @@ static client_sprite_t *pfnSPR_GetList( char *psz, int *piCount )
 	if( !clgame.itemspath[0] )	// typically it's sprites\*.txt
 		FS_ExtractFilePath( psz, clgame.itemspath );
 
-	afile = FS_LoadFile( psz, NULL, false );
+	afile = (char *)FS_LoadFile( psz, NULL, false );
 	if( !afile ) return NULL;
 
 	pfile = afile;
@@ -2284,8 +2284,8 @@ pfnSetUpPlayerPrediction
 void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
 {
 	int j;
-	struct predicted_player *pPlayer = predicted_players;
-	entity_state_t *entState = cl.frames[cl.parsecountmod].playerstate;
+	struct predicted_player *pPlayer;
+	entity_state_t *entState;
 
 	cl_entity_t *clEntity;
 

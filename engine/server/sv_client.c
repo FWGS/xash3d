@@ -76,7 +76,7 @@ void SV_GetChallenge( netadr_t from )
 	if( i == MAX_CHALLENGES )
 	{
 		// this is the first time this client has asked for a challenge
-		svs.challenges[oldest].challenge = (rand()<<16) ^ rand();
+		svs.challenges[oldest].challenge = ((uint)rand() << 16) ^ rand();
 		svs.challenges[oldest].adr = from;
 		svs.challenges[oldest].time = host.realtime;
 		svs.challenges[oldest].connected = false;
@@ -1260,7 +1260,7 @@ void SV_New_f( sv_client_t *cl )
 			{
 				char *data = sv_downloadurl->string;
 				char token[256];
-				while( data = COM_ParseFile( data, token ) )
+				while( ( data = COM_ParseFile( data, token ) ) )
 				{
 					BF_WriteByte( &cl->netchan.message, svc_stufftext );
 					BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", token ));
@@ -1360,8 +1360,8 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	}
 
 	// load common reslist file form gamedir root
-	resfile = pfile = FS_LoadFile("reslist.txt", 0, true );
-	while( pfile = COM_ParseFile( pfile, token ) )
+	resfile = pfile = (char *)FS_LoadFile("reslist.txt", 0, true );
+	while( ( pfile = COM_ParseFile( pfile, token ) ) )
 	{
 		if( !FS_FileExists( token, true ) )
 			continue;
@@ -1375,8 +1375,8 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	Q_strncpy( mapresfilename, sv.worldmodel->name, sizeof( mapresfilename ));
 	FS_StripExtension( mapresfilename );
 	FS_DefaultExtension( mapresfilename, ".res" );
-	mapresfile = pfile = FS_LoadFile( mapresfilename, 0, true );
-	while( pfile = COM_ParseFile( pfile, token ) )
+	mapresfile = pfile = (char *)FS_LoadFile( mapresfilename, 0, true );
+	while( ( pfile = COM_ParseFile( pfile, token ) ) )
 	{
 		if( !FS_FileExists( token, true ) )
 			continue;
@@ -2131,7 +2131,7 @@ void SV_EntList_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	int	i;
 
-	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+	if( ( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 
 	for( i = 0; i < svgame.numEntities; i++ )
@@ -2338,7 +2338,7 @@ void SV_EntFire_f( sv_client_t *cl )
 	int	i = 1, count = 0;
 	qboolean single; // true if user specified something that match single entity
 
-	if( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+	if( ( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 
 	Msg( "Player %i: %s called ent_fire: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
@@ -2357,8 +2357,6 @@ void SV_EntFire_f( sv_client_t *cl )
 
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return;
-
-		ent = EDICT_NUM( i );
 	}
 	else if( ( single = !Q_stricmp( Cmd_Argv( 1 ), "!cross" ) ) )
 	{
@@ -2522,22 +2520,22 @@ void SV_EntFire_f( sv_client_t *cl )
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "setflag" ) )
 		{
-			ent->v.flags |= 1 << Q_atoi( Cmd_Argv ( 3 ) );
+			ent->v.flags |= 1U << Q_atoi( Cmd_Argv ( 3 ) );
 			SV_ClientPrintf( cl, PRINT_LOW, "flags set to 0x%x\n", ent->v.flags );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "clearflag" ) )
 		{
-			ent->v.flags &= ~( 1 << Q_atoi( Cmd_Argv ( 3 ) ) );
+			ent->v.flags &= ~( 1U << Q_atoi( Cmd_Argv ( 3 ) ) );
 			SV_ClientPrintf( cl, PRINT_LOW, "flags set to 0x%x\n", ent->v.flags );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "setspawnflag" ) )
 		{
-			ent->v.spawnflags |= 1 << Q_atoi( Cmd_Argv ( 3 ) );
+			ent->v.spawnflags |= 1U << Q_atoi( Cmd_Argv ( 3 ) );
 			SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.spawnflags );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "clearspawnflag" ) )
 		{
-			ent->v.spawnflags &= ~( 1 << Q_atoi( Cmd_Argv ( 3 ) ) );
+			ent->v.spawnflags &= ~( 1U << Q_atoi( Cmd_Argv ( 3 ) ) );
 			SV_ClientPrintf( cl, PRINT_LOW, "spawnflags set to 0x%x\n", ent->v.flags );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "help" ) )
@@ -2599,7 +2597,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 	int	i;
 
 
-	if( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+	if( ( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 	// log all dangerous actions
 	Msg( "Player %i: %s called ent_create: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
@@ -2620,7 +2618,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 	ent->v.origin[2] = cl->edict->v.origin[2] + 25;
 	ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
 	ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
-	//ent->v.spawnflags |= ( 1 << 30 ); //SF_NORESPAWN
+	//ent->v.spawnflags |= ( 1U << 30 ); //SF_NORESPAWN
 	SV_LinkEdict( ent, false );
 	for( i=2; i < Cmd_Argc() - 1; i++ )
 	{
@@ -2858,7 +2856,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	{
 		 // A2S_INFO
 		char answer[2048] = "";
-		byte *s = answer;
+		byte *s = (byte *)answer;
 #if 0 // Source format
 		*s++ = 'I';
 		*s++ = PROTOCOL_VERSION;
@@ -2888,12 +2886,12 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		*s++ = 0; // not secured
 #else // GS format
 		*s++ = 'm';
-		s += Q_sprintf( s, "127.0.0.1:27015" ) + 1;
+		s += Q_sprintf( (char *)s, "127.0.0.1:27015" ) + 1;
 
-		s += Q_strcpy( s, hostname->string ) + 1;
-		s += Q_strcpy( s, sv.name ) + 1;
-		s += Q_strcpy( s, gamedir ) + 1;
-		s += Q_strcpy( s, gamedir ) + 1;
+		s += Q_strcpy( (char *)s, hostname->string ) + 1;
+		s += Q_strcpy( (char *)s, sv.name ) + 1;
+		s += Q_strcpy( (char *)s, gamedir ) + 1;
+		s += Q_strcpy( (char *)s, gamedir ) + 1;
 		for( index = 0; index < sv_maxclients->integer; index++ )
 		{
 			if( svs.clients[index].state >= cs_connected )
@@ -2913,16 +2911,14 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	}
 	else if( !Q_strcmp( c, "i" ) )
 	{
-		 // A2A_PING
-		byte answer[8];
-
+		// A2A_PING
 		NET_SendPacket( NS_SERVER, 5, "\xFF\xFF\xFF\xFFj", from );
 
 	}
 	else if( svgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{
 		// user out of band message (must be handled in CL_ConnectionlessPacket)
-		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, buf );
+		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, (byte *)buf );
 	}
 	else MsgDev( D_ERROR, "bad connectionless packet from %s:\n%s\n", NET_AdrToString( from ), args );
 }
@@ -2948,7 +2944,6 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 	usercmd_t		cmds[32], *to;
 	edict_t		*player;
 
-	numbackup = 2;
 	player = cl->edict;
 
 	frame = &cl->frames[cl->netchan.incoming_acknowledged & SV_UPDATE_MASK];

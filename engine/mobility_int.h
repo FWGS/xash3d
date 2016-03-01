@@ -23,18 +23,18 @@ extern "C" {
 #define MOBILITY_API_VERSION 2
 #define MOBILITY_CLIENT_EXPORT "HUD_MobilityInterface"
 
-#define VIBRATE_NORMAL (1 << 0) // just vibrate for given "life"
+#define VIBRATE_NORMAL (1U << 0) // just vibrate for given "life"
 
-#define TOUCH_FL_HIDE			(1<<0)
-#define TOUCH_FL_NOEDIT			(1<<1)
-#define TOUCH_FL_CLIENT			(1<<2)
-#define TOUCH_FL_MP				(1<<3)
-#define TOUCH_FL_SP				(1<<4)
-#define TOUCH_FL_DEF_SHOW		(1<<5)
-#define TOUCH_FL_DEF_HIDE		(1<<6)
-#define TOUCH_FL_DRAW_ADDITIVE	(1<<7)
-#define TOUCH_FL_STROKE			(1<<8)
-#define TOUCH_FL_PRECISION			(1<<9)
+#define TOUCH_FL_HIDE			(1U << 0)
+#define TOUCH_FL_NOEDIT			(1U << 1)
+#define TOUCH_FL_CLIENT			(1U << 2)
+#define TOUCH_FL_MP				(1U << 3)
+#define TOUCH_FL_SP				(1U << 4)
+#define TOUCH_FL_DEF_SHOW		(1U << 5)
+#define TOUCH_FL_DEF_HIDE		(1U << 6)
+#define TOUCH_FL_DRAW_ADDITIVE	(1U << 7)
+#define TOUCH_FL_STROKE			(1U << 8)
+#define TOUCH_FL_PRECISION			(1U << 9)
 
 typedef struct mobile_engfuncs_s
 {

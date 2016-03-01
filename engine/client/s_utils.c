@@ -60,7 +60,7 @@ int S_ZeroCrossingBefore( wavdata_t *pWaveData, int sample )
 			
 		if( pWaveData->width == 1 )
 		{
-			char	*pData = pWaveData->buffer + sample * sampleSize;
+			char	*pData = (char *)pWaveData->buffer + sample * sampleSize;
 			qboolean	zero = false;
 
 			if( pWaveData->channels == 1 )
@@ -157,7 +157,7 @@ int S_ZeroCrossingAfter( wavdata_t *pWaveData, int sample )
 
 		if( pWaveData->width == 1 )	// 8-bit
 		{
-			char	*pData = pWaveData->buffer + sample * sampleSize;
+			char	*pData = (char *)pWaveData->buffer + sample * sampleSize;
 			qboolean	zero = false;
 
 			if( pWaveData->channels == 1 )

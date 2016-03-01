@@ -1209,9 +1209,9 @@ Set screen shake
 */
 void CL_ParseScreenShake( sizebuf_t *msg )
 {
-	clgame.shake.amplitude = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<12));
-	clgame.shake.duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<12));
-	clgame.shake.frequency = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<8));
+	clgame.shake.amplitude = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
+	clgame.shake.duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
+	clgame.shake.frequency = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 8));
 	clgame.shake.time = cl.time + max( clgame.shake.duration, 0.01f );
 	clgame.shake.next_shake = 0.0f; // apply immediately
 }
@@ -1228,8 +1228,8 @@ void CL_ParseScreenFade( sizebuf_t *msg )
 	float		duration, holdTime;
 	screenfade_t	*sf = &clgame.fade;
 
-	duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<12));
-	holdTime = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<12));
+	duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
+	holdTime = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
 	sf->fadeFlags = BF_ReadShort( msg );
 
 	sf->fader = BF_ReadByte( msg );

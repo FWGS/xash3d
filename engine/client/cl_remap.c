@@ -125,7 +125,7 @@ void CL_DuplicateTexture( mstudiotexture_t *ptexture, int topcolor, int bottomco
 	pal = (byte *)(tx + 1) + (tx->width * tx->height);
 	Q_memcpy( paletteBackup, pal, 768 );
 
-	raw = CL_CreateRawTextureFromPixels( tx, &size, topcolor, bottomcolor );
+	raw = CL_CreateRawTextureFromPixels( tx, (size_t *)&size, topcolor, bottomcolor );
 	ptexture->index = GL_LoadTexture( texname, raw, size, TF_FORCE_COLOR, NULL ); // do copy
 	GL_SetTextureType( ptexture->index, TEX_REMAP );
 
@@ -176,7 +176,7 @@ void CL_UpdateTexture( mstudiotexture_t *ptexture, int topcolor, int bottomcolor
 	pal = (byte *)(tx + 1) + (tx->width * tx->height);
 	Q_memcpy( paletteBackup, pal, 768 );
 
-	raw = CL_CreateRawTextureFromPixels( tx, &size, topcolor, bottomcolor );
+	raw = CL_CreateRawTextureFromPixels( tx, (size_t *)&size, topcolor, bottomcolor );
 	pic = FS_LoadImage( glt->name, raw, size );
 	if( !pic )
 	{

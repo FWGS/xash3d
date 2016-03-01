@@ -376,7 +376,7 @@ void Netchan_OutOfBandPrint( int net_socket, netadr_t adr, char *format, ... )
 	Q_vsprintf( string, format, argptr );
 	va_end( argptr );
 
-	Netchan_OutOfBand( net_socket, adr, Q_strlen( string ), string );
+	Netchan_OutOfBand( net_socket, adr, Q_strlen( string ), (byte *)string );
 }
 
 /*
@@ -1161,7 +1161,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	sizebuf_t	send;
 	byte	send_buf[NET_MAX_MESSAGE];
 	qboolean	send_reliable_fragment;
-	qboolean	send_resending = false;
+	//qboolean	send_resending = false;
 	qboolean	send_reliable;
 	size_t	size1, size2;
 	uint	w1, w2, hdr_size;
@@ -1182,7 +1182,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	if( chan->incoming_acknowledged > chan->last_reliable_sequence && chan->incoming_reliable_acknowledged != chan->reliable_sequence )
 	{
 		send_reliable = true;
-		send_resending = true;
+	//	send_resending = true;
 	}
 
 	// A packet can have "reliable payload + frag payload + unreliable payload
@@ -1334,7 +1334,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 
 	// prepare the packet header
 	w1 = chan->outgoing_sequence | (send_reliable << 31);
-	w2 = chan->incoming_sequence | (chan->incoming_reliable_sequence << 31);
+	w2 = chan->incoming_sequence | ((uint)chan->incoming_reliable_sequence << 31);
 
 	send_reliable_fragment = false;
 
@@ -1349,7 +1349,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 
 	if( send_reliable && send_reliable_fragment )
 	{
-		w1 |= ( 1 << 30 );
+		w1 |= ( 1U << 30 );
 	}
 
 	chan->outgoing_sequence++;
@@ -1517,7 +1517,7 @@ qboolean Netchan_Process( netchan_t *chan, sizebuf_t *msg )
 	reliable_message = sequence >> 31;
 	reliable_ack = sequence_ack >> 31;
 
-	message_contains_fragments = sequence & ( 1 << 30 ) ? true : false;
+	message_contains_fragments = sequence & ( 1U << 30 ) ? true : false;
 
 	if( message_contains_fragments )
 	{
@@ -1533,9 +1533,9 @@ qboolean Netchan_Process( netchan_t *chan, sizebuf_t *msg )
 		}
 	}
 
-	sequence &= ~(1<<31);	
-	sequence &= ~(1<<30);
-	sequence_ack &= ~(1<<31);	
+	sequence &= ~(1U<<31);	
+	sequence &= ~(1U<<30);
+	sequence_ack &= ~(1U<<31);	
 
 	if( net_showpackets->integer == 2 )
 	{

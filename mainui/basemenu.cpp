@@ -204,7 +204,7 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 {
 	int	modulate, shadowModulate;
 	char	line[1024], *l;
-	int	xx, yy, ofsX, ofsY, len, ch;
+	int	xx = 0, yy, ofsX = 0, ofsY = 0, len, ch;
 
 	if( !string || !string[0] )
 		return;
@@ -1151,6 +1151,8 @@ void UI_CharEvent( int key )
 		{
 		case QMTYPE_FIELD:
 			UI_Field_Char((menuField_s *)item, key );
+			break;
+		default:
 			break;
 		}
 	}

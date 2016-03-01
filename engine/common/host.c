@@ -145,6 +145,7 @@ void Host_EndGame( const char *message, ... )
 	{
 		Q_snprintf( host.finalmsg, sizeof( host.finalmsg ), "Host_EndGame: %s", string );
 		SV_Shutdown( false );
+		return;
 	}
 	
 	if( host.type == HOST_DEDICATED )
@@ -263,7 +264,7 @@ void Host_Exec_f( void )
 	Q_strncpy( cfgpath, Cmd_Argv( 1 ), sizeof( cfgpath )); 
 	FS_DefaultExtension( cfgpath, ".cfg" ); // append as default
 
-	f = FS_LoadFile( cfgpath, NULL, false );
+	f = (char *)FS_LoadFile( cfgpath, NULL, false );
 	if( !f )
 	{
 		MsgDev( D_NOTE, "couldn't exec %s\n", Cmd_Argv( 1 ));
@@ -342,7 +343,7 @@ qboolean Host_RegisterDecal( const char *name )
 
 	for( i = 1; i < MAX_DECALS && host.draw_decals[i][0]; i++ )
 	{
-		if( !Q_stricmp( host.draw_decals[i], shortname ))
+		if( !Q_stricmp( (char *)host.draw_decals[i], shortname ))
 			return true;
 	}
 
@@ -353,7 +354,7 @@ qboolean Host_RegisterDecal( const char *name )
 	}
 
 	// register new decal
-	Q_strncpy( host.draw_decals[i], shortname, sizeof( host.draw_decals[i] ));
+	Q_strncpy( (char *)host.draw_decals[i], shortname, sizeof( host.draw_decals[i] ));
 	num_decals++;
 
 	return true;
@@ -824,18 +825,18 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Setup_LDT_Keeper( ); // Must call before creating any thread
 #endif
 
-	if( baseDir = getenv( "XASH3D_BASEDIR" ) )
+	if( ( baseDir = getenv( "XASH3D_BASEDIR" ) ) )
 	{
 		Q_strncpy( host.rootdir, baseDir, sizeof(host.rootdir) );
 	}
 	else
 	{
 		#if defined(XASH_SDL)
-		if( !(baseDir = SDL_GetBasePath()) )
+		if( !( baseDir = SDL_GetBasePath() ) )
 			Sys_Error( "couldn't determine current directory: %s", SDL_GetError() );
 		Q_strncpy( host.rootdir, baseDir, sizeof( host.rootdir ) );
 		#else
-		if( !getcwd(host.rootdir, sizeof(host.rootdir) ) )
+		if( !getcwd( host.rootdir, sizeof(host.rootdir) ) )
 			host.rootdir[0] = 0;
 		#endif
 	}
@@ -1062,6 +1063,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		if( !host.stuffcmdsrun ) Cbuf_AddText( "stuffcmds\n" );
 
 		Cbuf_Execute();
+		break;
+	case HOST_UNKNOWN:
 		break;
 	}
 

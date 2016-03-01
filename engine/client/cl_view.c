@@ -272,12 +272,13 @@ void V_ProcessShowTexturesCmds( usercmd_t *cmd )
 {
 	static int	oldbuttons;
 	int		changed;
-	int		pressed, released;
+	int		released;
+	//int		pressed;
 
 	if( !gl_showtextures->integer ) return;
 
 	changed = (oldbuttons ^ cmd->buttons);
-	pressed =  changed & cmd->buttons;
+	//pressed =  changed & cmd->buttons;
 	released = changed & (~cmd->buttons);
 
 	if( released & ( IN_RIGHT|IN_MOVERIGHT ))
@@ -400,6 +401,8 @@ void V_PostRender( void )
 	case scrshot_normal:
 	case scrshot_snapshot:
 		draw_2d = true;
+		break;
+	default:
 		break;
 	}
 

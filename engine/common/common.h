@@ -45,7 +45,7 @@ extern "C" {
 #define MAX_INFO_STRING	256	// infostrings are transmitted across network
 #define MAX_SYSPATH		PATH_MAX	// system filepath
 #define MAX_MODS		512	// environment games that engine can keep visible
-#define BIT( n )		(1<<( n ))
+#define BIT( n )		(1U << ( n ))
 
 #ifndef __cplusplus
 #define NULL		((void *)0)

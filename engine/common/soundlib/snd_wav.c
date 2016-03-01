@@ -30,8 +30,8 @@ static short GetLittleShort( void )
 {
 	short	val = 0;
 
-	val += (*(iff_dataPtr+0) << 0);
-	val += (*(iff_dataPtr+1) << 8);
+	val += ((uint) *(iff_dataPtr+0) << 0);
+	val += ((uint) *(iff_dataPtr+1) << 8);
 	iff_dataPtr += 2;
 
 	return val;
@@ -46,10 +46,10 @@ static int GetLittleLong( void )
 {
 	int	val = 0;
 
-	val += (*(iff_dataPtr+0) << 0);
-	val += (*(iff_dataPtr+1) << 8);
-	val += (*(iff_dataPtr+2) <<16);
-	val += (*(iff_dataPtr+3) <<24);
+	val += ((uint) *(iff_dataPtr+0) << 0);
+	val += ((uint) *(iff_dataPtr+1) << 8);
+	val += ((uint) *(iff_dataPtr+2) <<16);
+	val += ((uint) *(iff_dataPtr+3) <<24);
 	iff_dataPtr += 4;
 
 	return val;
@@ -86,7 +86,7 @@ static void FindNextChunk( const char *name )
 		iff_dataPtr -= 8;
 		iff_lastChunk = iff_dataPtr + 8 + ((iff_chunkLen + 1) & ~1);
 
-		if( !Q_strncmp( iff_dataPtr, name, 4 ))
+		if( !Q_strncmp( (char *)iff_dataPtr, name, 4 ))
 			return;
 	}
 }
@@ -156,7 +156,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	// find "RIFF" chunk
 	FindChunk( "RIFF" );
 
-	if( !( iff_dataPtr && !Q_strncmp( iff_dataPtr + 8, "WAVE", 4 )))
+	if( !( iff_dataPtr && !Q_strncmp( (char *)iff_dataPtr + 8, "WAVE", 4 )))
 	{
 		MsgDev( D_ERROR, "Sound_LoadWAV: %s missing 'RIFF/WAVE' chunks\n", name );
 		return false;
@@ -219,7 +219,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 		if( iff_dataPtr )
 		{
-			if( !Q_strncmp( iff_dataPtr + 28, "mark", 4 ))
+			if( !Q_strncmp( (char *)iff_dataPtr + 28, "mark", 4 ))
 			{	
 				// this is not a proper parse, but it works with CoolEdit...
 				iff_dataPtr += 24;
@@ -290,7 +290,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	if( sound.width == 1 )
 	{
 		int	i, j;
-		char	*pData = sound.wav;
+		char	*pData = (char *)sound.wav;
 
 		for( i = 0; i < sound.samples; i++ )
 		{
@@ -408,7 +408,8 @@ assume stream is valid
 */
 long Stream_ReadWAV( stream_t *stream, long bytes, void *buffer )
 {
-	int	samples, remaining;
+	//int	samples; 
+	int	remaining;
 
 	if( !stream->file ) return 0;	// invalid file
 
@@ -417,7 +418,7 @@ long Stream_ReadWAV( stream_t *stream, long bytes, void *buffer )
 	if( bytes > remaining ) bytes = remaining;
 
 	stream->pos += bytes;
-	samples = ( bytes / stream->width ) / stream->channels;
+	//samples = ( bytes / stream->width ) / stream->channels;
 	FS_Read( stream->file, buffer, bytes );
 
 	return bytes;

@@ -293,12 +293,12 @@ static void CL_SparkTracerDraw( particle_t *p, float frametime )
 static void CL_TracerImplosion( particle_t *p, float frametime )
 {
 	float	lifePerc = p->die - cl.time;
-	float	length;
+	//float	length;
 	int	alpha = 255;
 	vec3_t	delta;
 
 	VectorScale( p->vel, p->ramp, delta );
-	length = VectorLength( delta );
+	//length = VectorLength( delta );
 	if( lifePerc < 0.5f ) alpha = (lifePerc * 2) * 255;
 
 	CL_DrawTracer( p->org, delta, 1.5f, clgame.palette[p->color], alpha, 0.0f, 0.8f );
@@ -1678,7 +1678,7 @@ void CL_ReadPointFile_f( void )
 	string		token;
 	
 	Q_snprintf( filename, sizeof( filename ), "maps/%s.pts", clgame.mapname );
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 
 	if( !afile )
 	{

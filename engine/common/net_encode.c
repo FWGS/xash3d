@@ -736,7 +736,7 @@ void Delta_InitFields( void )
 	string		encodeDll, encodeFunc, token;	
 	delta_info_t	*dt;
 
-	afile = FS_LoadFile( DELTA_PATH, NULL, false );
+	afile = (char *)FS_LoadFile( DELTA_PATH, NULL, false );
 	if( !afile ) Sys_Error( "DELTA_Load: couldn't load file %s\n", DELTA_PATH );
 
 	pfile = afile;
@@ -1146,9 +1146,9 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 		#endif
 		flTime = (timebase * 100.0f) - (flValue * 100.0f);
 		#if 1
-		iValue = (uint)abs(flTime );
+		iValue = (uint)fabs( flTime );
 		#else
-		iValue = (uint)abs( flTime );
+		iValue = (uint)fabs( flTime );
 		if (flTime<0.0f) {
 			iValue |= 0x80000000;
 		}
@@ -1165,9 +1165,9 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 		#endif
 		flTime = (timebase * pField->multiplier) - (flValue * pField->multiplier);
 		#if 1
-		iValue = (uint)abs(flTime );
+		iValue = (uint)fabs( flTime );
 		#else
-		iValue = (uint)abs( flTime );
+		iValue = (uint)fabs( flTime );
 		if (flTime<0.0f) {
 			iValue |= 0x80000000;
 		}
