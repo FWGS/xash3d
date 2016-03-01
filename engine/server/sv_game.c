@@ -4402,15 +4402,16 @@ pfnCheckParm
 */
 static int pfnCheckParm( char *parm, char **ppnext )
 {
-	static char	str[64];
+	int i = Sys_CheckParm( parm );
 
-	if( Sys_GetParmFromCmdLine( parm, str ))
+	if( ppnext != NULL )
 	{
-		// get the pointer on cmdline param
-		if( ppnext ) *ppnext = str;
-		return 1;
+		if( i > 0 && i < host.argc - 1 )
+			*ppnext = host.argv[i + 1];
+		else
+			*ppnext = NULL;
 	}
-	return 0;
+	return i;
 }
 					
 // engine callbacks
