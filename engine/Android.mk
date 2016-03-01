@@ -76,7 +76,8 @@ LOCAL_SRC_FILES := \
            client/gl_rsurf.c \
            client/gl_sprite.c \
            client/gl_studio.c \
-           client/gl_vidnt.c \
+           client/gl_vidnt_android.c \
+           client/gl_vidnt_common.c \
            client/gl_warp.c \
            client/s_backend.c \
            client/s_dsp.c \
