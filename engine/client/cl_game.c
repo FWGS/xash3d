@@ -2808,24 +2808,34 @@ void pfnSPR_DrawGeneric( int frame, int x, int y, const wrect_t *prc, int blends
 =============
 pfnDrawString
 
-TODO: implement
 =============
 */
 int pfnDrawString( int x, int y, const char *str, int r, int g, int b )
 {
-	return 0;
+	Con_UtfProcessChar(0);
+
+	// draw the string until we hit the null character or a newline character
+	for ( ; *str != 0 && *str != '\n'; str++ )
+	{
+		x += pfnDrawCharacter( x, y, *str, r, g, b );
+	}
+
+	return x;
 }
 
 /*
 =============
 pfnDrawStringReverse
 
-TODO: implement
 =============
 */
 int pfnDrawStringReverse( int x, int y, const char *str, int r, int g, int b )
 {
-	return 0;
+	// find the end of the string
+	for( char *szIt = str; *szIt != 0; szIt++ )
+		x -= clgame.scrInfo.charWidths[ (unsigned char) *szIt ];
+	pfnDrawString( x, y, str, r, g, b );
+	return x;
 }
 
 /*
@@ -3329,7 +3339,8 @@ TriForParams
 */
 void TriFogParams( float flDensity, int iFogSkybox )
 {
-	// TODO: implement
+	RI.fogDensity = flDensity;
+	RI.fogCustom = iFogSkybox;
 }
 
 /*
