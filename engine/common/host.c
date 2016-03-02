@@ -1121,7 +1121,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	while( !host.crashed && !host.shutdown_issued )
 	{
 #ifdef XASH_SDL
-		while( SDL_PollEvent( &event ) )
+		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
 #endif
 		newtime = Sys_DoubleTime ();
