@@ -707,7 +707,7 @@ qboolean GL_DeleteContext( void )
 
 	return false;
 }
-
+uint num_instances;
 #ifdef _WIN32
 BOOL CALLBACK pfnEnumWnd( HWND hwnd, LPARAM lParam )
 {
@@ -783,7 +783,7 @@ char* WindowClassName(Display* display, Window window)
 }
 #endif
 #endif
-uint num_instances;
+
 uint VID_EnumerateInstances( void )
 {
 	num_instances = 0;
