@@ -915,9 +915,9 @@ void Cvar_SetA_f( void )
 {
 	convar_t	*v;
 
-	if( Cmd_Argc() != 3 )
+	if( Cmd_Argc() < 3 )
 	{
-		Msg( "Usage: seta <variable> <value>\n" );
+		Msg( "Usage: seta <variable> <value> [<description>]\n" );
 		return;
 	}
 
@@ -926,6 +926,12 @@ void Cvar_SetA_f( void )
 
 	if( !v ) return;
 	v->flags |= CVAR_ARCHIVE;
+
+	// cvars without description are not saved, so add description
+	if( Cmd_Argc() == 3 )
+		v->description = copystring( "user archive cvar" );
+	else
+		v->description = copystring( Cmd_Argv(2) );
 }
 
 /*
