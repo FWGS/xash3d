@@ -2226,7 +2226,6 @@ Print specified entity information to client
 void SV_EntInfo_f( sv_client_t *cl )
 {
 	edict_t	*ent = NULL;
-	int	i = 0;
 	vec3_t borigin;
 
 	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )

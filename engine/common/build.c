@@ -15,9 +15,9 @@ GNU General Public License for more details.
 
 #include "common.h"
 
-static char *date = __DATE__ ;
-static char *mon[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-static char mond[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+//static char *date = __DATE__ ;
+//static char *mon[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+//static char mond[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 // returns days since Feb 13 2007
 int Q_buildnum( void )

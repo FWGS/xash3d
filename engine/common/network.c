@@ -149,14 +149,14 @@ static int	ipx_sockets[2];
 static WSADATA winsockdata;
 #endif
 static qboolean winsockInitialized = false;
-static const char *net_src[2] = { "client", "server" };
+//static const char *net_src[2] = { "client", "server" };
 static qboolean noip = false;
 #ifdef XASH_IPX
 static qboolean noipx = false;
 #endif
 static convar_t *net_ip;
-static convar_t *net_hostport;
-static convar_t *net_clientport;
+//static convar_t *net_hostport;
+//static convar_t *net_clientport;
 static convar_t *net_showpackets;
 void NET_Restart_f( void );
 
@@ -536,7 +536,6 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 {
 	int 		ret;
 	struct sockaddr	addr;
-	int		err;
 	socklen_t	addr_len;
 	int		net_socket = 0;
 	int		protocol;
@@ -564,7 +563,7 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 #ifdef _WIN32
 		if( ret == SOCKET_ERROR )
 		{
-			err = pWSAGetLastError();
+			int err = pWSAGetLastError();
 
 			// WSAEWOULDBLOCK and WSAECONNRESET are silent
 			if( err == WSAEWOULDBLOCK || err == WSAECONNRESET )
@@ -601,7 +600,7 @@ NET_SendPacket
 */
 void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to )
 {
-	int		ret, err;
+	int		ret;
 	struct sockaddr	addr;
 	SOCKET		net_socket;
 
@@ -651,7 +650,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 #ifdef _WIN32
 	if (ret == SOCKET_ERROR)
 	{
-		err = pWSAGetLastError();
+		int err = pWSAGetLastError();
 
 		// WSAEWOULDBLOCK is silent
 		if (err == WSAEWOULDBLOCK)
@@ -684,7 +683,7 @@ NET_IPSocket
 */
 static int NET_IPSocket( const char *netInterface, int port )
 {
-	int		err, net_socket;
+	int		net_socket;
 	struct sockaddr_in	addr;
 	dword		_true = 1;
 
@@ -693,7 +692,7 @@ static int NET_IPSocket( const char *netInterface, int port )
 #ifdef _WIN32
 	if(( net_socket = pSocket( PF_INET, SOCK_DGRAM, IPPROTO_UDP )) == SOCKET_ERROR )
 	{
-		err = pWSAGetLastError();
+		int err = pWSAGetLastError();
 		if( err != WSAEAFNOSUPPORT )
 			MsgDev( D_WARN, "NET_UDPSocket: socket = %s\n", NET_ErrorString( ));
 		return 0;
@@ -1031,9 +1030,9 @@ NET_Init
 */
 void NET_Init( void )
 {
+#ifdef _WIN32
 	int	r;
 
-#ifdef _WIN32
 	if( !NET_OpenWinSock())	// loading wsock32.dll
 	{
 		MsgDev( D_WARN, "NET_Init: failed to load wsock32.dll\n" );
