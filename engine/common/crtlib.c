@@ -536,11 +536,11 @@ char *Q_stristr( const char *string, const char *string2 )
 
 int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list args )
 {
-	size_t	result;
+	int	result;
 
 	result = vsnprintf( buffer, buffersize, format, args );
 
-	if( result < 0 || result >= buffersize )
+	if( result < 0 || result >= ( int )buffersize )
 	{
 		buffer[buffersize - 1] = '\0';
 		return -1;
