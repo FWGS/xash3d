@@ -217,7 +217,7 @@ gotnewcl:
 	*newcl = temp;
 
 	if( sv_maxclients->integer == 1 ) // restore physinfo for singleplayer
-		Q_strncpy( newcl->physinfostr, physinfo, sizeof( physinfostr ));
+		Q_strncpy( newcl->physinfo, physinfostr, sizeof( physinfostr ));
 
 	svs.currentPlayer = newcl;
 	svs.currentPlayerNum = (newcl - svs.clients);
