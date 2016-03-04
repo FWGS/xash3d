@@ -1516,11 +1516,11 @@ void R_StudioDynamicLight( cl_entity_t *ent, alight_t *lightinfo )
 		for( i = 0; i < m_pStudioHeader->numbones; i++ )
 		{
 			vec3_t	vec, org;
-			float	dist, atten;
-				
+			float	atten;
+
 			Matrix3x4_OriginFromMatrix( g_lighttransform[i], org );
 			VectorSubtract( org, dl->origin, vec );
-			
+
 			dist = DotProduct( vec, vec );
 			atten = (dist / radius2 - 1) * -1;
 			if( atten < 0 ) atten = 0;
@@ -1533,7 +1533,7 @@ void R_StudioDynamicLight( cl_entity_t *ent, alight_t *lightinfo )
 				lightinfo->ambientlight += atten;
 				lightinfo->shadelight += atten;
 			}
-                                        
+
 			Matrix3x4_VectorIRotate( g_lighttransform[i], vec, plight->dlightvec[plight->numdlights][i] );
 			VectorScale( plight->dlightvec[plight->numdlights][i], atten, plight->dlightvec[plight->numdlights][i] );
 		}
@@ -1602,11 +1602,11 @@ void R_StudioEntityLight( alight_t *lightinfo )
 		for( i = 0; i < m_pStudioHeader->numbones; i++ )
 		{
 			vec3_t	vec, org;
-			float	dist, atten;
-				
+			float	atten;
+
 			Matrix3x4_OriginFromMatrix( g_lighttransform[i], org );
 			VectorSubtract( org, origin, vec );
-			
+
 			dist = DotProduct( vec, vec );
 			atten = (dist / radius2 - 1) * -1;
 			if( atten < 0 ) atten = 0;
@@ -1619,7 +1619,7 @@ void R_StudioEntityLight( alight_t *lightinfo )
 				lightinfo->ambientlight += atten;
 				lightinfo->shadelight += atten;
 			}
-                                        
+
 			Matrix3x4_VectorIRotate( g_lighttransform[i], vec, plight->elightvec[plight->numelights][i] );
 			VectorScale( plight->elightvec[plight->numelights][i], atten, plight->elightvec[plight->numelights][i] );
 		}
@@ -3405,7 +3405,7 @@ static void R_StudioLoadTexture( model_t *mod, studiohdr_t *phdr, mstudiotexture
 	// store some textures for remapping
 	if( !Q_strnicmp( ptexture->name, "DM_Base", 7 ) || !Q_strnicmp( ptexture->name, "remap", 5 ))
 	{
-		int	i, size;
+		int	i;
 		char	val[6];
 		byte	*pixels;
 
@@ -3489,7 +3489,7 @@ static void R_StudioLoadTexture( model_t *mod, studiohdr_t *phdr, mstudiotexture
 		ptexture->index = GL_LoadTexture( texname, (byte *)ptexture, size, flags, filter );
 	}
 	else MsgDev( D_NOTE, "Loading HQ: %s\n", texname );
-  
+
 	if( !ptexture->index )
 	{
 		MsgDev( D_WARN, "%s has null texture %s\n", mod->name, ptexture->name );

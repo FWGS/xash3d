@@ -315,7 +315,7 @@ stream_t *Stream_OpenWAV( const char *filename )
 	stream_t	*stream;
 	int 	last_chunk = 0;
 	char	chunkName[4];
-	int	iff_data;
+	int	iff_data_i;
 	file_t	*file;
 	short	t;
 
@@ -343,8 +343,8 @@ stream_t *Stream_OpenWAV( const char *filename )
 	}
 
 	// get "fmt " chunk
-	iff_data = FS_Tell( file ) + 4;
-	last_chunk = iff_data;
+	iff_data_i = FS_Tell( file ) + 4;
+	last_chunk = iff_data_i;
 	if( !StreamFindNextChunk( file, "fmt ", &last_chunk ))
 	{
 		MsgDev( D_ERROR, "Stream_OpenWAV: %s missing 'fmt ' chunk\n", filename );
@@ -375,7 +375,7 @@ stream_t *Stream_OpenWAV( const char *filename )
 	sound.loopstart = 0;
 
 	// find data chunk
-	last_chunk = iff_data;
+	last_chunk = iff_data_i;
 	if( !StreamFindNextChunk( file, "data", &last_chunk ))
 	{
 		MsgDev( D_ERROR, "Stream_OpenWAV: %s missing 'data' chunk\n", filename );

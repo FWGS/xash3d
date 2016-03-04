@@ -98,7 +98,7 @@ void SV_DirectConnect( netadr_t from )
 {
 	char		userinfo[MAX_INFO_STRING];
 	sv_client_t	temp, *cl, *newcl;
-	char		physinfo[512];
+	char		physinfostr[512];
 	int		i, edictnum;
 	int		qport, version;
 	int		count = 0;
@@ -142,7 +142,7 @@ void SV_DirectConnect( netadr_t from )
 			break;
 		}
 	}
-		
+
 	// see if the challenge is valid (LAN clients don't need to challenge)
 	if( !NET_IsLocalAddress( from ))
 	{
@@ -212,12 +212,12 @@ gotnewcl:
 	// this is the only place a sv_client_t is ever initialized
 
 	if( sv_maxclients->integer == 1 ) // save physinfo for singleplayer
-		Q_strncpy( physinfo, newcl->physinfo, sizeof( physinfo ));
+		Q_strncpy( physinfostr, newcl->physinfo, sizeof( physinfostr ));
 
 	*newcl = temp;
 
 	if( sv_maxclients->integer == 1 ) // restore physinfo for singleplayer
-		Q_strncpy( newcl->physinfo, physinfo, sizeof( physinfo ));
+		Q_strncpy( newcl->physinfostr, physinfo, sizeof( physinfostr ));
 
 	svs.currentPlayer = newcl;
 	svs.currentPlayerNum = (newcl - svs.clients);
@@ -235,7 +235,6 @@ gotnewcl:
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
 	// prevent memory leak and client crashes.
 	// This should not happend, need to test it,
-
 
 	if( ( sv_maxclients->integer > 1 ) && ent->pvPrivateData )
 	{
@@ -417,7 +416,7 @@ edict_t *SV_FakeConnect( const char *netname )
 	newcl->lastmessage = host.realtime;	// don't timeout
 	newcl->lastconnect = host.realtime;
 	newcl->sendinfo = true;
-	
+
 	return ent;
 }
 
@@ -461,7 +460,7 @@ or crashing.
 void SV_DropClient( sv_client_t *drop )
 {
 	int	i;
-	
+
 	if( drop->state == cs_zombie )
 		return;	// already dropped
 
@@ -874,7 +873,7 @@ int SV_CalcPing( sv_client_t *cl )
 		return 5;
 
 	count = 0;
-	
+
 	if ( SV_UPDATE_BACKUP <= 31 )
 	{
 		back = SV_UPDATE_BACKUP / 2;
@@ -1151,7 +1150,7 @@ void SV_PutClientInServer( edict_t *ent )
 		if( client->pViewEntity )
 			viewEnt = NUM_FOR_EDICT( client->pViewEntity );
 		else viewEnt = NUM_FOR_EDICT( client->edict );
-	
+
 		BF_WriteByte( &client->netchan.message, svc_setview );
 		BF_WriteWord( &client->netchan.message, viewEnt );
 	}
@@ -1333,7 +1332,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 
 	for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
 	{
-		
+
 		if( !FS_FileExists( va( "sound/%s", sv.sound_precache[index] ), true ) )
 			continue;
 		reslist.restype[rescount] = t_sound;
@@ -1425,7 +1424,7 @@ void SV_WriteModels_f( sv_client_t *cl )
 		SV_New_f( cl );
 		return;
 	}
-	
+
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
@@ -1471,7 +1470,7 @@ void SV_WriteSounds_f( sv_client_t *cl )
 		SV_New_f( cl );
 		return;
 	}
-	
+
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
@@ -1517,7 +1516,7 @@ void SV_WriteEvents_f( sv_client_t *cl )
 		SV_New_f( cl );
 		return;
 	}
-	
+
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
@@ -1563,7 +1562,7 @@ void SV_WriteLightstyles_f( sv_client_t *cl )
 		SV_New_f( cl );
 		return;
 	}
-	
+
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
@@ -1603,7 +1602,7 @@ void SV_UserMessages_f( sv_client_t *cl )
 		MsgDev( D_INFO, "usermessages is not valid from the console\n" );
 		return;
 	}
-	
+
 	// handle the case of a level changing while a client was connecting
 	if( Q_atoi( Cmd_Argv( 1 )) != svs.spawncount )
 	{
@@ -1611,7 +1610,7 @@ void SV_UserMessages_f( sv_client_t *cl )
 		SV_New_f( cl );
 		return;
 	}
-	
+
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
@@ -1653,7 +1652,7 @@ void SV_DeltaInfo_f( sv_client_t *cl )
 		MsgDev( D_INFO, "deltainfo is not valid from the console\n" );
 		return;
 	}
-	
+
 	// handle the case of a level changing while a client was connecting
 	if( Q_atoi( Cmd_Argv( 1 )) != svs.spawncount )
 	{
@@ -1661,7 +1660,7 @@ void SV_DeltaInfo_f( sv_client_t *cl )
 		SV_New_f( cl );
 		return;
 	}
-	
+
 	tableIndex = Q_atoi( Cmd_Argv( 2 ));
 	fieldIndex = Q_atoi( Cmd_Argv( 3 ));
 
@@ -1716,7 +1715,7 @@ void SV_Baselines_f( sv_client_t *cl )
 		MsgDev( D_INFO, "baselines is not valid from the console\n" );
 		return;
 	}
-	
+
 	// handle the case of a level changing while a client was connecting
 	if( Q_atoi( Cmd_Argv( 1 )) != svs.spawncount )
 	{
@@ -1724,7 +1723,7 @@ void SV_Baselines_f( sv_client_t *cl )
 		SV_New_f( cl );
 		return;
 	}
-	
+
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	Q_memset( &nullstate, 0, sizeof( nullstate ));
@@ -1911,7 +1910,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	if( Q_strlen( val ))
 		cl->netchan.rate = bound( MIN_RATE, Q_atoi( val ), MAX_RATE );
 	else cl->netchan.rate = DEFAULT_RATE;
-	
+
 	// msg command
 	val = Info_ValueForKey( cl->userinfo, "msg" );
 	if( Q_strlen( val )) cl->messagelevel = Q_atoi( val );
@@ -1923,7 +1922,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 
 	if( Q_strlen( val ))
 	{
-		int i = bound( 10, Q_atoi( val ), 300 );
+		i = bound( 10, Q_atoi( val ), 300 );
 		cl->cl_updaterate = 1.0f / i;
 	}
 
@@ -2055,10 +2054,7 @@ static void SV_Notarget_f( sv_client_t *cl )
 	else SV_ClientPrintf( cl, PRINT_HIGH, "notarget ON\n" );
 }
 
-
-
 edict_t *pfnFindEntityInSphere( edict_t *pStartEdict, const float *org, float flRadius );
-
 
 static edict_t *SV_GetCrossEnt( edict_t *player )
 {
@@ -2400,7 +2396,7 @@ void SV_EntFire_f( sv_client_t *cl )
 				break;
 			continue;
 		}
-		
+
 		// if user specified not a number, try find such entity
 		if( !single )
 		{
@@ -2596,7 +2592,6 @@ void SV_EntCreate_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	int	i;
 
-
 	if( ( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 	// log all dangerous actions
@@ -2660,7 +2655,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 		ent->v.targetname = ALLOC_STRING( newname );
 		SV_EntSendVars( cl, ent );
 	}
-		
+
 	SV_ClientPrintf( cl, PRINT_LOW, "Created %i: %s, targetname %s\n", NUM_FOR_EDICT( ent ), Cmd_Argv( 1 ), STRING( ent->v.targetname ) );
 	svgame.dllFuncs.pfnSpawn( ent );
 	// Now drop entity to floor.
@@ -3150,7 +3145,7 @@ void SV_ExecuteClientMessage( sv_client_t *cl, sizebuf_t *msg )
 	// set the current client
 	svs.currentPlayer = cl;
 	svs.currentPlayerNum = (cl - svs.clients);
-				
+
 	// read optional clientCommand strings
 	while( cl->state != cs_zombie )
 	{

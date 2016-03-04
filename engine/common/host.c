@@ -543,7 +543,7 @@ qboolean Host_FilterTime( float time )
 
 	if( host_framerate->value > 0 && ( Host_IsLocalGame()))
 	{
-		float fps = host_framerate->value;
+		fps = host_framerate->value;
 		if( fps > 1 ) fps = 1.0f / fps;
 		host.frametime = fps;
 	}

@@ -1165,7 +1165,7 @@ Call before entering a new level, or after changing dlls
 */
 void CL_PrepVideo( void )
 {
-	string	name, mapname;
+	string	mdlname, mapname;
 	int	i, mdlcount, step;
 	int	map_checksum; // dummy
 
@@ -1193,8 +1193,8 @@ void CL_PrepVideo( void )
 
 	for( i = 0; i < MAX_MODELS && cl.model_precache[i+1][0]; i++ )
 	{
-		Q_strncpy( name, cl.model_precache[i+1], MAX_STRING );
-		Mod_RegisterModel( name, i+1 );
+		Q_strncpy( mdlname, cl.model_precache[i+1], MAX_STRING );
+		Mod_RegisterModel( mdlname, i+1 );
 		Cvar_SetFloat( "scr_loading", scr_loading->value + 75.0f / mdlcount );
 		if( step && !( i % step ) && ( cl_allow_levelshots->integer || cl.background ) )
 			SCR_UpdateScreen();

@@ -189,7 +189,7 @@ void init_layer3(struct StaticData * psd, int down_sample_sblimit)
    }
    bdf = (short*)bi->shortDiff+3;
    for(cb=3;cb<13;cb++) {
-     int l = (*bdf++) >> 1;
+     l = (*bdf++) >> 1;
      for(lwin=0;lwin<3;lwin++) {
        *mp++ = l;
        *mp++ = i + lwin;
@@ -203,7 +203,7 @@ void init_layer3(struct StaticData * psd, int down_sample_sblimit)
    mp = psd->map[j][1] = psd->mapbuf1[j];
    bdf = (short*)bi->shortDiff+0;
    for(i=0,cb=0;cb<13;cb++) {
-     int l = (*bdf++) >> 1;
+     l = (*bdf++) >> 1;
      for(lwin=0;lwin<3;lwin++) {
        *mp++ = l;
        *mp++ = i + lwin;
@@ -968,23 +968,23 @@ static void III_i_stereo(struct StaticData * psd, float xr_buf[2][SBLIMIT][SSLIM
 	
 	  float (*xr)[SBLIMIT*SSLIMIT] = (float (*)[SBLIMIT*SSLIMIT] ) xr_buf;
       const struct bandInfoStruct *bi = &bandInfo[sfreq];
-      float *tab1,*tab2;
+      float *tab_1, *tab_2;
 
       if(lsf) {
         int p = gr_info->scalefac_compress & 0x1;
 	    if(ms_stereo) {
-          tab1 = psd->pow1_2[p]; tab2 = psd->pow2_2[p];
+          tab_1 = psd->pow1_2[p]; tab_2 = psd->pow2_2[p];
         }
         else {
-          tab1 = psd->pow1_1[p]; tab2 = psd->pow2_1[p];
+          tab_1 = psd->pow1_1[p]; tab_2 = psd->pow2_1[p];
         }
       }
       else {
         if(ms_stereo) {
-          tab1 = psd->tan1_2; tab2 = psd->tan2_2;
+          tab_1 = psd->tan1_2; tab_2 = psd->tan2_2;
         }
         else {
-          tab1 = psd->tan1_1; tab2 = psd->tan2_1;
+          tab_1 = psd->tan1_1; tab_2 = psd->tan2_1;
         }
       }
 
@@ -1008,7 +1008,7 @@ static void III_i_stereo(struct StaticData * psd, float xr_buf[2][SBLIMIT][SSLIM
                float t1,t2;
                sb = bi->shortDiff[sfb];
                idx = bi->shortIdx[sfb] + lwin;
-               t1 = tab1[is_p]; t2 = tab2[is_p];
+               t1 = tab_1[is_p]; t2 = tab_2[is_p];
                for (; sb > 0; sb--,idx+=3)
                {
                  float v = xr[0][idx];
@@ -1032,7 +1032,7 @@ maybe still wrong??? (copy 12 to 13?) */
            if(is_p != 7)
            {
              float t1,t2;
-             t1 = tab1[is_p]; t2 = tab2[is_p];
+             t1 = tab_1[is_p]; t2 = tab_2[is_p];
              for ( ; sb > 0; sb--,idx+=3 )
              {
                float v = xr[0][idx];
@@ -1056,7 +1056,7 @@ maybe still wrong??? (copy 12 to 13?) */
              int is_p = scalefac[sfb]; /* scale: 0-15 */
              if(is_p != 7) {
                float t1,t2;
-               t1 = tab1[is_p]; t2 = tab2[is_p];
+               t1 = tab_1[is_p]; t2 = tab_2[is_p];
                for ( ; sb > 0; sb--,idx++)
                {
                  float v = xr[0][idx];
@@ -1079,7 +1079,7 @@ maybe still wrong??? (copy 12 to 13?) */
           is_p = scalefac[sfb]; /* scale: 0-15 */
           if(is_p != 7) {
             float t1,t2;
-            t1 = tab1[is_p]; t2 = tab2[is_p];
+            t1 = tab_1[is_p]; t2 = tab_2[is_p];
             for ( ; sb > 0; sb--,idx++)
             {
                float v = xr[0][idx];
@@ -1095,7 +1095,7 @@ maybe still wrong??? (copy 12 to 13?) */
         if(is_p != 7)
         {
           int sb;
-          float t1 = tab1[is_p],t2 = tab2[is_p];
+          float t1 = tab_1[is_p],t2 = tab_2[is_p];
 
           for ( sb = bi->longDiff[21]; sb > 0; sb--,idx++ )
           {
