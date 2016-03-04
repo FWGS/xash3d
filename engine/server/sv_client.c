@@ -2064,7 +2064,7 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 	vec3_t forward;
 	AngleVectors( player->v.v_angle, forward, NULL, NULL );
 
-	while( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) )
+	while( ( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) ) )
 	{
 		vec3_t vecLOS;
 		float flDot;
@@ -2228,7 +2228,7 @@ void SV_EntInfo_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	vec3_t borigin;
 
-	if( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) || sv.background )
+	if( ( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 
 	if( Cmd_Argc() != 2 )
@@ -2346,7 +2346,7 @@ void SV_EntFire_f( sv_client_t *cl )
 		return;
 	}
 
-	if( single = Q_isdigit( Cmd_Argv( 1 ) ) )
+	if( ( single = Q_isdigit( Cmd_Argv( 1 ) ) ) )
 	{
 		i = Q_atoi( Cmd_Argv( 1 ) );
 
@@ -2362,7 +2362,7 @@ void SV_EntFire_f( sv_client_t *cl )
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return;
 	}
-	else if( single = ( Cmd_Argv( 1 )[0] == '!') ) // Check for correct instanse with !(num)_(serial)
+	else if( ( single = ( Cmd_Argv( 1 )[0] == '!') ) ) // Check for correct instanse with !(num)_(serial)
 	{
 		char *cmd = Cmd_Argv( 1 ) + 1;
 		i = Q_atoi( cmd );
