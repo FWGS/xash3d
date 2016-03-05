@@ -33,8 +33,8 @@ convar_t		*s_primary;
 convar_t		*s_khz;
 dma_t			dma;
 
-static qboolean	snd_firsttime = true;
-static qboolean	primary_format_set;
+//static qboolean	snd_firsttime = true;
+//static qboolean	primary_format_set;
 
 #ifdef XASH_SDL
 void SDL_SoundCallback( void* userdata, Uint8* stream, int len)

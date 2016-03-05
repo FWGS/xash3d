@@ -522,7 +522,6 @@ msurfmesh_t *R_DecalCreateMesh( decalinfo_t *decalinfo, decal_t *pdecal, msurfac
 {
 	float		*v;
 	uint		i, bufSize;
-	qboolean		createSTverts = false;
 	int		numVerts, numElems;
 	byte		*buffer;
 	msurfmesh_t	*mesh;

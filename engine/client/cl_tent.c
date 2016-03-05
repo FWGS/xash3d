@@ -1919,7 +1919,9 @@ void CL_ParseTempEntity( sizebuf_t *msg )
 		pos[2] = BF_ReadCoord( &buf );
 		decalIndex = BF_ReadShort( &buf );
 		entityIndex = BF_ReadShort( &buf );
-		if( entityIndex ) modelIndex = BF_ReadShort( &buf );
+		if( entityIndex ) 
+			modelIndex = BF_ReadShort( &buf );
+		else modelIndex = 0;
 		CL_DecalShoot( CL_DecalIndex( decalIndex ), entityIndex, modelIndex, pos, FDECAL_PERMANENT );
 		break;
 	case TE_IMPLOSION:

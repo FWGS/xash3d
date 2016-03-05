@@ -1047,8 +1047,8 @@ void IN_TouchDraw( void )
 				button->fade = bound( 0, B(fade), 1 );
 				if( ( B( fade ) == 0 ) || ( B(fade) == 1 ) )
 					B( fadespeed ) = 0;
-				if( ( B( fade ) >= B( fadeend ) ) && ( B( fadespeed ) > 0 ) ||
-					( B( fade ) <= B( fadeend ) ) && ( B( fadespeed ) < 0 ))
+				if( ( ( B( fade ) >= B( fadeend ) ) && ( B( fadespeed ) > 0 ) ) ||
+					( ( B( fade ) <= B( fadeend ) ) && ( B( fadespeed ) < 0 ) ) )
 					B( fadespeed ) = 0, B( fade ) = B( fadeend ) ;
 			}
 

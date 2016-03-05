@@ -504,7 +504,7 @@ void R_InitSky( mip_t *mt, byte *buf, texture_t *tx )
 	}
 
 	// make sure what sky image is valid
-	if( !r_sky || !r_sky->palette || r_sky->type != PF_INDEXED_32 )
+	if( !r_sky || !r_sky->palette || r_sky->type != PF_INDEXED_32 || r_sky->height == 0 )
 	{
 		MsgDev( D_ERROR, "R_InitSky: unable to load sky texture %s\n", tx->name );
 		FS_FreeImage( r_sky );

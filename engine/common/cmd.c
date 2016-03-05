@@ -466,7 +466,7 @@ typedef struct cmd_s
 static int		cmd_argc;
 static char		*cmd_args;
 static char		*cmd_argv[MAX_CMD_TOKENS];
-static char		cmd_tokenized[MAX_CMD_BUFFER];	// will have 0 bytes inserted
+//static char		cmd_tokenized[MAX_CMD_BUFFER];	// will have 0 bytes inserted
 static cmd_t		*cmd_functions;			// possible commands to execute
 cmd_source_t		cmd_source;
 
