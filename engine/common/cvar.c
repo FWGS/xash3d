@@ -927,11 +927,11 @@ void Cvar_SetA_f( void )
 	if( !v ) return;
 	v->flags |= CVAR_ARCHIVE;
 
+	if( v->description )
+		Mem_Free( v->description );
+
 	// cvars without description are not saved, so add description
-	if( Cmd_Argc() == 3 )
-		v->description = copystring( "user archive cvar" );
-	else
-		v->description = copystring( Cmd_Argv(2) );
+	v->description = copystring( "user archive cvar" );
 }
 
 /*
