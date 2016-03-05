@@ -2810,11 +2810,12 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	{
 		Q_memcpy(&challenge, &msg->pData[6], sizeof(int));
 
-		for( index = 0; index < sv_maxclients->integer; index++ )
-		{
-			if( svs.clients[index].state >= cs_connected )
-				count++;
-		}
+		if( svs.clients )
+			for( index = 0; index < sv_maxclients->integer; index++ )
+			{
+				if( svs.clients[index].state >= cs_connected )
+					count++;
+			}
 
 		#ifdef _WIN32
 		ostype = 'w';
@@ -2867,11 +2868,12 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		// steam id
 		*s++ = 0;
 		*s++ = 0;
-		for( index = 0; index < sv_maxclients->integer; index++ )
-		{
-			if( svs.clients[index].state >= cs_connected )
-				count++;
-		}
+		if( svs.clients )
+			for( index = 0; index < sv_maxclients->integer; index++ )
+			{
+				if( svs.clients[index].state >= cs_connected )
+					count++;
+			}
 		*s++ = count;
 		*s++ = sv_maxclients->integer;
 		*s++ = 0; // bots
@@ -2892,11 +2894,12 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		s += Q_strcpy( (char *)s, sv.name ) + 1;
 		s += Q_strcpy( (char *)s, gamedir ) + 1;
 		s += Q_strcpy( (char *)s, gamedir ) + 1;
-		for( index = 0; index < sv_maxclients->integer; index++ )
-		{
-			if( svs.clients[index].state >= cs_connected )
-				count++;
-		}
+		if( svs.clients )
+			for( index = 0; index < sv_maxclients->integer; index++ )
+			{
+				if( svs.clients[index].state >= cs_connected )
+					count++;
+			}
 		*s++ = count;
 		*s++ = sv_maxclients->integer;
 		*s++ = PROTOCOL_VERSION;
