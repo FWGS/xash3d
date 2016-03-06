@@ -1681,7 +1681,7 @@ void Key_Message( int key )
 			Q_snprintf( buffer, sizeof( buffer ), "%s \"%s\"\n", con.chat_cmd, con.chat.buffer );
 			Cbuf_AddText( buffer );
 
-			Log_Printf ("Server say \"%s\"\n", con.chat.buffer);
+			Log_Printf( "Server say \"%s\"\n", con.chat.buffer );
 		}
 
 		Key_SetKeyDest( key_game );

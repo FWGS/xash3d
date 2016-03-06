@@ -662,12 +662,12 @@ void SV_ClearPhysEnts( void );
 //
 // sv_log.c
 //
-void Log_Printf (const char *fmt, ...);
-void Log_PrintServerVars (void);
-void Log_Close (void);
-void Log_Open (void);
-void Log_InitCvars (void);
-void SV_SetLogAddress_f (void);
-void SV_ServerLog_f (void);
+void Log_Printf( const char *fmt, ... );
+void Log_PrintServerVars( void );
+void Log_Close( void );
+void Log_Open( void );
+void Log_InitCvars( void );
+void SV_SetLogAddress_f( void );
+void SV_ServerLog_f( void );
 
 #endif//SERVER_H

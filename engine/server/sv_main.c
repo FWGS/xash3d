@@ -715,7 +715,7 @@ void SV_Init( void )
 {
 	SV_InitOperatorCommands();
 
-	Log_InitCvars ();
+	Log_InitCvars();
 
 	skill = Cvar_Get ("skill", "1", CVAR_LATCH, "game skill level" );
 	deathmatch = Cvar_Get ("deathmatch", "0", CVAR_LATCH|CVAR_SERVERINFO, "displays deathmatch state" );
@@ -820,8 +820,8 @@ void SV_Init( void )
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
-	Cmd_AddCommand ("logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host");
-	Cmd_AddCommand ("log", SV_ServerLog_f, "enables logging to file");
+	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
+	Cmd_AddCommand( "log", SV_ServerLog_f, "enables logging to file" );
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));
