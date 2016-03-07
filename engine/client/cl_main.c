@@ -1824,6 +1824,9 @@ CL_Init
 void CL_Init( void )
 {
 	qboolean loaded;
+
+	Q_memset( &cls, 0, sizeof( cls ) );
+
 	if( host.type == HOST_DEDICATED )
 		return; // nothing running on the client
 
