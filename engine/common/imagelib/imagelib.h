@@ -103,10 +103,9 @@ typedef struct imglib_s
 
 ========================================================================
 */
-#pragma pack( 1 )
 typedef struct
 {
-	char	id[2];		// bmfh.bfType
+	//char	id[2];		// bmfh.bfType
 	dword	fileSize;		// bmfh.bfSize
 	dword	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
 	dword	bitmapDataOffset;	// bmfh.bfOffBits
@@ -122,7 +121,6 @@ typedef struct
 	dword	colors;		// bmih.biClrUsed
 	dword	importantColors;	// bmih.biClrImportant
 } bmp_t;
-#pragma pack( )
 
 /*
 ========================================================================
