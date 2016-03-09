@@ -936,7 +936,7 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 
 	if( !hInst->hInstance )
 	{
-		MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed\n", dllname );
+		MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed: %d\n", dllname, GetLastError() );
 		Com_FreeLibrary( hInst );
 		return NULL;
 	}
