@@ -306,12 +306,6 @@ typedef struct host_parm_s
 {
     HINSTANCE	hInst;
     HANDLE		hMutex;
-#ifdef _WIN32
-	LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
-#else
-	struct sigaction oldFilter;
-#endif
-
 	host_state	state;		// global host state
 	instance_t	type;		// running at
 	jmp_buf		abortframe;	// abort current frame
