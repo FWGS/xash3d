@@ -1256,7 +1256,7 @@ void SV_New_f( sv_client_t *cl )
 		else
 		{
 			// transfer fastdl servers list
-			if( sv_downloadurl->string && *sv_downloadurl->string )
+			if( *sv_downloadurl->string )
 			{
 				char *data = sv_downloadurl->string;
 				char token[256];
