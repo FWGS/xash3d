@@ -1841,22 +1841,30 @@ void CL_Init( void )
 
 	IN_TouchInit();
 #if defined (__ANDROID__)
-	char clientlib[256];
-	Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_GAMELIBDIR"));
-	loaded = CL_LoadProgs( clientlib );
-
-	if( !loaded )
 	{
-		Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_ENGLIBDIR"));
+		char clientlib[256];
+		Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_GAMELIBDIR"));
 		loaded = CL_LoadProgs( clientlib );
+
+		if( !loaded )
+		{
+			Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_ENGLIBDIR"));
+			loaded = CL_LoadProgs( clientlib );
+		}
 	}
 #else
-	loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, SI.clientlib ));
-	if( !loaded )
 	{
+		char clientlib[256];
+		if( Sys_GetParmFromCmdLine( "-clientlib", clientlib ) )
+			loaded = CL_LoadProgs( clientlib );
+		else
+			loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, SI.clientlib ));
+		if( !loaded )
+		{
 
-		loaded = CL_LoadProgs( CLIENTDLL );
+			loaded = CL_LoadProgs( CLIENTDLL );
 
+		}
 	}
 #endif
 	if( loaded )

@@ -868,12 +868,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		else host.developer++; // -dev == 1, -dev -console == 2
 	}
 
-	if( !Sys_CheckParm( "-vguiloader" ) || !Sys_GetParmFromCmdLine( "-vguiloader", host.vguiloader ) )
-	{
-		Q_strcpy( host.vguiloader, VGUI_SUPPORT_DLL );
-	}
-
-
 #ifdef XASH_DEDICATED
 	host.type = HOST_DEDICATED; // predict state
 #else

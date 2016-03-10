@@ -363,7 +363,6 @@ typedef struct host_parm_s
 	soundlist_t	*soundList;	// used for keep ambient sounds, when renderer or sound is restarted
 	int		numsounds;
 	qboolean enabledll;
-	char vguiloader[64];
 	qboolean textmode;
 } host_parm_t;
 

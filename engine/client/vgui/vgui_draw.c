@@ -93,7 +93,7 @@ void VGUI_InitCursors( void )
 	s_pDefaultCursor[dc_no] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
 	s_pDefaultCursor[dc_hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 	//host.mouse_visible = true;
-	SDL_SetCursor(s_pDefaultCursor[dc_arrow]);
+	SDL_SetCursor( s_pDefaultCursor[dc_arrow] );
 #endif
 }
 
@@ -113,9 +113,8 @@ void VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 		default:
 		host.mouse_visible = true;
 		SDL_SetRelativeMouseMode( SDL_FALSE );
-		SDL_SetCursor(s_pDefaultCursor[cursor]);
-			//SDL_SetCursor(s_pDefaultCursor[dc_arrow]);
-			break;
+		SDL_SetCursor( s_pDefaultCursor[cursor] );
+		break;
 	}
 	if( host.mouse_visible )
 	{
@@ -196,27 +195,44 @@ void VGui_Startup( int width, int height )
 {
 	if(!vgui.initialized)
 	{
-		void (*F) (vguiapi_t *);
-		lib = Com_LoadLibrary(host.vguiloader, false);
+		void (*F) ( vguiapi_t * );
+		char vguiloader[256];
+		char vguilib[256];
+
+		// hack: load vgui with correct path first if specified.
+		// it will be reused while resolving vgui support and client deps
+		if( Sys_GetParmFromCmdLine( "-vguilib", vguilib ) )
+		{
+			if( Q_strstr( vguilib, ".dll") )
+				Q_strncpy( vguiloader, "vgui_support.dll", 256 );
+			else
+				Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
+			if( !Com_LoadLibrary( vguilib, false ) )
+				MsgDev( D_WARN, "VGUI preloading failed. Default library will be used!\n");
+		}
+
+		Sys_GetParmFromCmdLine( "-vguiloader", vguiloader );
+
+		lib = Com_LoadLibrary( vguiloader, false);
 		if(!lib)
-			MsgDev(D_ERROR, "Failed to load vgui_support library!\n");
+			MsgDev( D_ERROR, "Failed to load vgui_support library!\n" );
 		else
 		{
-			F = Com_GetProcAddress(lib, "InitAPI");
-			if(F)
+			F = Com_GetProcAddress( lib, "InitAPI" );
+			if( F )
 			{
-				F(&vgui);
+				F( &vgui );
 				vgui.initialized = true;
 			}
 			else
-				MsgDev(D_ERROR, "Failed to find vgui_support library entry point!\n");
+				MsgDev( D_ERROR, "Failed to find vgui_support library entry point!\n" );
 		}
 		VGUI_InitCursors();
 	}
-	if (vgui.initialized)
+	if( vgui.initialized )
 	{
 		//host.mouse_visible = true;
-		vgui.Startup(width, height);
+		vgui.Startup( width, height );
 	}
 }
 
@@ -231,10 +247,10 @@ Unload vgui_support library and call VGui_Shutdown
 */
 void VGui_Shutdown( void )
 {
-	if( vgui.Shutdown) 
+	if( vgui.Shutdown )
 		vgui.Shutdown();
-	if(lib)
-		Com_FreeLibrary(lib);
+	if( lib )
+		Com_FreeLibrary( lib );
 	lib = NULL;
 	vgui.initialized = false;
 }
@@ -248,7 +264,7 @@ void VGUI_InitKeyTranslationTable( void )
 	bInitted = true;
 
 	// set virtual key translation table
-	Q_memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ));	
+	Q_memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ) );
 
 	s_pVirtualKeyTrans['0'] = KEY_0;
 	s_pVirtualKeyTrans['1'] = KEY_1;
