@@ -454,8 +454,14 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 void Sys_SetupCrashHandler( void )
 {
 	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
-	host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
+	oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
 	host.hInst = GetModuleHandle( NULL );
+}
+
+void Sys_RestoreCrashHandler( void )
+{
+	// restore filter
+	if( oldFilter ) SetUnhandledExceptionFilter( oldFilter );
 }
 
 #elif defined (CRASHHANDLER)
@@ -612,12 +618,22 @@ void Sys_SetupCrashHandler()
 	sigaction(SIGBUS, &act, &oldFilter);
 	sigaction(SIGILL, &act, &oldFilter);
 }
+
+void Sys_RestoreCrashHandler( void )
+{
+	// stub
+}
+
 #else
 void Sys_SetupCrashHandler( void )
 {
 	// stub
 }
 
+void Sys_RestoreCrashHandler( void )
+{
+	// stub
+}
 #endif
 
 /*

@@ -1159,9 +1159,5 @@ void EXPORT Host_Shutdown( void )
 	Cmd_Shutdown();
 	Host_FreeCommon();
 	Con_DestroyConsole();
-
-#ifdef _WIN32
-	// restore filter	
-	if( host.oldFilter ) SetUnhandledExceptionFilter( host.oldFilter );
-#endif
+	Sys_RestoreCrashHandler();
 }
