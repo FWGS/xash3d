@@ -4,7 +4,7 @@ CFLAGS ?= -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -mss
 LDFLAGS =
 LIBS = -lm
 TOPDIR = $(PWD)/..
-INCLUDES = -I../SDL2/include -Icommon -I../common -I. -I../pm_shared -Icommon/sdl
+INCLUDES = -I../SDL2/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared -Icommon/sdl
 DEFINES =
 XASH_VGUI ?= 1
 ifeq ($(XASH_DEDICATED),1)
