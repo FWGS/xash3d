@@ -35,7 +35,7 @@ GNU General Public License for more details.
 // Thus we have 3e6 / 1840 = 1630 cycles per sample.  
 
 #define PBITS		12		// parameter bits
-#define PMAX		((1U << PBITS)-1)	// parameter max size
+#define PMAX		( (1 << PBITS ) - 1 )	// parameter max size
 
 // crossfade from y2 to y1 at point r (0 < r < PMAX )
 #define XFADE( y1, y2, r )	(((y1) * (r)) >> PBITS) + (((y2) * (PMAX - (r))) >> PBITS);

@@ -15,40 +15,16 @@ GNU General Public License for more details.
 
 #include "imagelib.h"
 
+#define BI_SIZE	40 //size of bitmap info header.
 #ifndef _WIN32
 #define BI_RGB 0
 
-#pragma pack( 1 )
 typedef struct tagRGBQUAD {
 	BYTE rgbBlue;
 	BYTE rgbGreen;
 	BYTE rgbRed;
 	BYTE rgbReserved;
 } RGBQUAD;
-
-typedef struct tagBITMAPFILEHEADER {
-	WORD  bfType;
-	DWORD bfSize;
-	WORD  bfReserved1;
-	WORD  bfReserved2;
-	DWORD bfOffBits;
-} BITMAPFILEHEADER, *PBITMAPFILEHEADER;
-
-typedef struct tagBITMAPINFOHEADER {
-	DWORD biSize;
-	LONG  biWidth;
-	LONG  biHeight;
-	WORD  biPlanes;
-	WORD  biBitCount;
-	DWORD biCompression;
-	DWORD biSizeImage;
-	LONG  biXPelsPerMeter;
-	LONG  biYPelsPerMeter;
-	DWORD biClrUsed;
-	DWORD biClrImportant;
-} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
-#pragma pack( )
-
 #endif
 
 /*
@@ -58,24 +34,26 @@ Image_LoadBMP
 */
 qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 {
-	byte	*buf_p, *pixbuf;
+	byte	*buf_p, *pixbuf, magic[2];
 	byte	palette[256][4];
 	int	i, columns, column, rows, row, bpp = 1;
-	int	cbPalBytes = 0, padSize = 0, bps = 0;
+	int	padSize = 0, bps;
 	qboolean	load_qfont = false;
 	bmp_t	bhdr;
 
 	if( filesize < sizeof( bhdr )) return false; 
 
 	buf_p = (byte *)buffer;
+	Q_memcpy( magic, buf_p, sizeof( magic ) );
+	buf_p += sizeof( magic );	// move pointer
 	Q_memcpy( &bhdr, buf_p, sizeof( bmp_t ));
-	buf_p += sizeof( bmp_t );	// move pointer
+	buf_p += sizeof( bmp_t );
 
 	// bogus file header check
 	if( bhdr.reserved0 != 0 ) return false;
 	if( bhdr.planes != 1 ) return false;
 
-	if( Q_memcmp( bhdr.id, "BM", 2 ))
+	if( Q_memcmp( magic, "BM", 2 ))
 	{
 		MsgDev( D_ERROR, "Image_LoadBMP: only Windows-style BMP files supported (%s)\n", name );
 		return false;
@@ -121,6 +99,8 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 
 	if( bhdr.bitsPerPixel <= 8 )
 	{
+		int cbPalBytes;
+
 		// figure out how many entries are actually in the table
 		if( bhdr.colors == 0 )
 		{
@@ -128,9 +108,10 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 			cbPalBytes = (1 << bhdr.bitsPerPixel) * sizeof( RGBQUAD );
 		}
 		else cbPalBytes = bhdr.colors * sizeof( RGBQUAD );
-	}
 
-	Q_memcpy( palette, buf_p, cbPalBytes );
+		Q_memcpy( palette, buf_p, cbPalBytes );
+		buf_p += cbPalBytes;
+	}
 
 	if( host.overview_loading && bhdr.bitsPerPixel == 8 )
 	{
@@ -168,10 +149,8 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 		bpp = 4;
 	}
 
-	buf_p += cbPalBytes;
 	image.size = image.width * image.height * bpp;
 	image.rgba = Mem_Alloc( host.imagepool, image.size );
-	bps = image.width * (bhdr.bitsPerPixel >> 3);
 
 	switch( bhdr.bitsPerPixel )
 	{
@@ -186,6 +165,7 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 		break;
 	case 8:
 	case 24:
+		bps = image.width * (bhdr.bitsPerPixel >> 3);
 		padSize = ( 4 - ( bps % 4 )) % 4;
 		break;
 	}
@@ -316,14 +296,13 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 {
 	file_t		*pfile = NULL;
-	BITMAPFILEHEADER	bmfh;
-	BITMAPINFOHEADER	bmih;
-	size_t		total_size = 0, cur_size = 0;
+	bmp_t		bhdr;
+	size_t		total_size, cur_size;
 	RGBQUAD		rgrgbPalette[256];
 	dword		cbBmpBits;
-	byte		*clipbuf = NULL;
+	byte		*clipbuf = NULL, magic[2];
 	byte		*pb, *pbBmpBits;
-	dword		cbPalBytes = 0;
+	dword		cbPalBytes;
 	dword		biTrueWidth;
 	int		pixel_size;
 	int		i, x, y;
@@ -364,51 +343,39 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	//biTrueWidth = pix->width;
 	biTrueWidth = ((pix->width + 3) & ~3); // What is this?
 	cbBmpBits = biTrueWidth * pix->height * pixel_size;
-	if( pixel_size == 1 ) cbPalBytes = 256 * sizeof( RGBQUAD );
+	cbPalBytes = ( pixel_size == 1 ) ? 256 * sizeof( RGBQUAD ) : 0;
 
-	Q_memset( &bmfh, 0, sizeof( bmfh ));
 	// Bogus file header check
-	bmfh.bfType = MAKEWORD( 'B', 'M' );
-	bmfh.bfSize = sizeof( bmfh ) + sizeof( bmih ) + cbBmpBits + cbPalBytes;
-	bmfh.bfReserved1 = 0;
-	bmfh.bfReserved2 = 0;
-	bmfh.bfOffBits = sizeof( bmfh ) + sizeof( bmih ) + cbPalBytes;
+	magic[0] = 'B';
+	magic[1] = 'M';
+	bhdr.fileSize = sizeof( magic ) + sizeof( bmp_t ) + cbBmpBits + cbPalBytes;
+	bhdr.reserved0 = 0;
+	bhdr.bitmapDataOffset = sizeof( magic ) + sizeof( bmp_t ) + cbPalBytes;
+	bhdr.bitmapHeaderSize = BI_SIZE;
+	bhdr.width = biTrueWidth;
+	bhdr.height = pix->height;
+	bhdr.planes = 1;
+	bhdr.bitsPerPixel = pixel_size * 8;
+	bhdr.compression = 0;
+	bhdr.bitmapDataSize = cbBmpBits;
+	bhdr.hRes = 0;
+	bhdr.vRes = 0;
+	bhdr.colors = ( pixel_size == 1 ) ? 256 : 0;
+	bhdr.importantColors = 0;
 
 	if( host.write_to_clipboard )
 	{
 		// NOTE: the cbPalBytes may be 0
-		total_size = sizeof( bmih ) + cbPalBytes + cbBmpBits;
+		total_size = BI_SIZE + cbPalBytes + cbBmpBits;
 		clipbuf = Z_Malloc( total_size );
-		cur_size = 0;
+		Q_memcpy( clipbuf, (byte *)&bhdr + ( sizeof( bmp_t ) - BI_SIZE ), BI_SIZE );
+		cur_size = BI_SIZE;
 	}
 	else
 	{
-		// write header
-		FS_Write( pfile, &bmfh, sizeof( bmfh ));
-	}
-
-	// size of structure
-	bmih.biSize = sizeof( bmih );
-	bmih.biWidth = biTrueWidth;
-	bmih.biHeight = pix->height;
-	bmih.biPlanes = 1;
-	bmih.biBitCount = pixel_size * 8;
-	bmih.biCompression = BI_RGB;
-	bmih.biSizeImage = cbBmpBits;
-	bmih.biXPelsPerMeter = 0;
-	bmih.biYPelsPerMeter = 0;
-	bmih.biClrUsed = ( pixel_size == 1 ) ? 256 : 0;
-	bmih.biClrImportant = 0;
-
-	if( host.write_to_clipboard )
-	{
-		Q_memcpy( clipbuf + cur_size, &bmih, sizeof( bmih ));
-		cur_size += sizeof( bmih );
-	}
-	else
-	{
-		// Write info header
-		FS_Write( pfile, &bmih, sizeof( bmih ));
+		// Write header
+		FS_Write( pfile, magic, sizeof( magic ));
+		FS_Write( pfile, &bhdr, sizeof( bmp_t ));
 	}
 
 	pbBmpBits = Mem_Alloc( host.imagepool, cbBmpBits );
@@ -418,7 +385,7 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 		pb = pix->palette;
 
 		// copy over used entries
-		for( i = 0; i < (int)bmih.biClrUsed; i++ )
+		for( i = 0; i < (int)bhdr.colors; i++ )
 		{
 			rgrgbPalette[i].rgbRed = *pb++;
 			rgrgbPalette[i].rgbGreen = *pb++;
@@ -445,9 +412,9 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 
 	pb = pix->buffer;
 
-	for( y = 0; y < bmih.biHeight; y++ )
+	for( y = 0; y < bhdr.height; y++ )
 	{
-		i = (bmih.biHeight - 1 - y ) * (bmih.biWidth);
+		i = ( bhdr.height - 1 - y ) * ( bhdr.width );
 
 		for( x = 0; x < pix->width; x++ )
 		{
