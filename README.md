@@ -59,7 +59,7 @@ Run:
 If you want to build Xash3D for some embedded device or just do not want to use CMake, use Makefile.linux instead
 
     cd (xash3d)/engine
-    make -f Makefile.linux XASH_VGUI=1 XASH_SDL=1
+    make -f Makefile.linux XASH_VGUI=1
 
 or
 
@@ -147,6 +147,53 @@ Setup your MinGW environment and run:
     mingw32-make -f Makefile.mingw
 
     engine will be built to single exe binary
+
+## Running
+
+Put exe filr to your game data directory
+
+    cd (game)\
+    xash_bin -dev 5
+
+## Running under GDB
+
+    gdb --args ./xash_bin.exe -dev 5
+
+# Building mods
+
+## Linux
+
+### microndk
+
+All mods that ported to android may be build to linux using Android.mk with microndk:
+
+[https://github.com/SDLash3D/microndk]
+
+Clone microndk repo somewhere, change xash3d_cinfig to preffered configuration (change arch to x86 for example)
+
+Go to dlls folder if you are building server or cl_dlls if you are building client and dp:
+
+    make -f /path/to/microndk/microndk.mk -j4
+
+Do:
+
+    make -f /path/to/microndk/microndk.mk -j4 clean
+
+every time when you build client after building server
+
+### Other way is using Makefile.linux or valve's makefile for mod, or writing own makefile
+
+## Windows
+
+On windows common way is using Visual Studio as many mods does not correctly work with mingw.
+
+Just open project and build it.
+
+Other is using mingw and microndk, but it was not tested yet.
+
+hlsdk-xash3d seems to work fine with mingw.
+
+You may use microndk to build it. Build process is very similar to linux one.
 
 # License
 
