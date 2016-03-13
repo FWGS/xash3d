@@ -463,13 +463,20 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 		MsgDev( D_ERROR, "CL_PlaybackEvent: invalid eventindex %i\n", eventindex );
 		return;
 	}
+
+
+	if( flags & FEV_SERVER )
+	{
+		MsgDev( D_WARN, "CL_PlaybackEvent: event with FEV_SERVER flag!\n", eventindex );
+		return;
+	}
+
 	// check event for precached
 	if( !CL_EventIndex( cl.event_precache[eventindex] ))
 	{
 		MsgDev( D_ERROR, "CL_PlaybackEvent: event %i was not precached\n", eventindex );
 		return;		
 	}
-
 
 	flags |= FEV_CLIENT; // it's a client event
 	flags &= ~(FEV_NOTHOST|FEV_HOSTONLY|FEV_GLOBAL);
@@ -480,15 +487,18 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 	args.flags = 0;
 	args.entindex = invokerIndex;
 
-// TODO: restore checks when predicting will be done
-	//if( !angles || VectorIsNull( angles ))
+	if( !angles || VectorIsNull( angles ))
 		VectorCopy( cl.refdef.cl_viewangles, args.angles );
+	else
+		VectorCopy( angles, args.angles );
 
-	//if( !origin || VectorIsNull( origin ))
+	if( !origin || VectorIsNull( origin ))
 		VectorCopy( cl.frame.local.client.origin, args.origin );
+	else
+		VectorCopy( origin, args.origin );
 
 	VectorCopy( cl.frame.local.client.velocity, args.velocity );
-	args.ducking = cl.frame.local.playerstate.usehull;
+	args.ducking = cl.frame.local.playerstate.usehull == 1;
 
 	args.fparam1 = fparam1;
 	args.fparam2 = fparam2;
