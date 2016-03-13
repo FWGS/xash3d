@@ -6,6 +6,7 @@ before_script:
     - sudo apt-get install -qq --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch
     - sudo apt-get install -qq --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
     - sudo apt-get install -qq --force-yes gcc-multilib
+    - sudo apt-get install --force-yes libX11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev
     - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
     - tar xf SDL2-devel-2.0.4-mingw.tar.gz
     - mv SDL2-2.0.4 SDL2
@@ -20,8 +21,8 @@ script:
     - make -j2
     - cp build/.libs/libSDL2.so ../engine/
     - cd ../engine
-    - make -f Makefile.linux -j2 CC="gcc -m32" LDFLAGS="-L. libSDL2.so" XASH_VGUI=0 XASH_SINGLE_BINARY=1 clean
-    - make -f Makefile.linux -j2 CC="gcc -m32" LDFLAGS="-L. libSDL2.so" XASH_VGUI=0 XASH_SINGLE_BINARY=1 xash
+    - make -f Makefile.linux -j2 XASH_VGUI=0 XASH_SINGLE_BINARY=1 clean
+    - make -f Makefile.linux -j2 CC="gcc -m32" LDFLAGS="-L. libSDL2.so" CFLAGS="-O2 -ggdb -I../SDL2-2.0.4/include/" XASH_VGUI=0 XASH_SINGLE_BINARY=1 xash
     - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2.so
 after_script:
     - curl --upload-file xash3d-mingw.7z https://transfer.sh/xash3d-mingw-`date -u +%y-%m-%d_%H-%M`.7z
