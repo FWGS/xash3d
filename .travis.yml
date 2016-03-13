@@ -3,7 +3,9 @@ compiler: gcc
 sudo: true
 before_script:
     - sudo apt-get update -qq
+    - sudo apt-get install -qq --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch
     - sudo apt-get install -qq --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
+    - sudo apt-get install -qq --force-yes gcc-multilib
     - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
     - tar xf SDL2-devel-2.0.4-mingw.tar.gz
     - mv SDL2-2.0.4 SDL2
