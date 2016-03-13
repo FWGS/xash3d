@@ -79,7 +79,7 @@ vidmode_t vidmode[] =
 { "Mode  2: 4x3",	960,	720,	false	},
 { "Mode  3: 4x3",	1024,	768,	false	},
 { "Mode  4: 4x3",	1152,	864,	false	},
-{ "Mode  5: 4x3",	1280,	800,	false	},
+{ "Mode  5: 16x10",	1280,	800,	false	},
 { "Mode  6: 4x3",	1280,	960,	false	},
 { "Mode  7: 5x4",	1280,	1024,	false	},
 { "Mode  8: 4x3",	1600,	1200,	false	},
