@@ -467,7 +467,7 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 
 	if( flags & FEV_SERVER )
 	{
-		MsgDev( D_WARN, "CL_PlaybackEvent: event with FEV_SERVER flag!\n", eventindex );
+		MsgDev( D_WARN, "CL_PlaybackEvent: event with FEV_SERVER flag!\n" );
 		return;
 	}
 
