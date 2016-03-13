@@ -2,17 +2,14 @@ language: c
 compiler: gcc
 sudo: true
 before_script:
-    - git clone -q --depth=1 https://github.com/SDLash3D/halflife halflife
     - sudo apt-get update -qq
-    - sudo apt-get install -qq --force-yes gcc-multilib ia32-libs ia32-libs-multiarch
+    - sudo apt-get install -qq --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686
+    - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
+    - tar xf SDL2-devel-2.0.4-mingw.tar.gz
+    - mv SDL2-2.0.4 SDL2
 script:
-    - echo "BUILDING CLIENT VERSION"
-#   - mkdir build-head && cd build-head
-#   - cmake ../ -DXASH_SDL=yes -DXASH_VGUI=yes -DXASH_X11=yes -DXASH_DLL_LOADER=yes -DHL_SDK_DIR=../halflife -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
-#   - make -j2 CFLAGS+="-m32" LDFLAGS+="-m32"
-    - echo "BUILDING HEADLESS VERSION"
-    - cd ../ && mkdir build-headless && cd build-headless
-    - cmake ../ -DXASH_DEDICATED=yes -DXASH_SDL=no -DXASH_VGUI=no -DHL_SDK_DIR=../halflife -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
-    - make -j2 CFLAGS+="-m32" LDFLAGS+="-m32"
-    - echo "BUILDING ANDROID VERSION"
-    - echo "Didn't made it yet ^_^" "
+    - cd engine
+    - make -f Makefile.mingw CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ -j2
+after_script:
+    - 7z a -t7z xash3d-mingw.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash_bin.exe
+    - curl --upload-file xash3d-mingw.7z https://transfer.sh/xash3d-mingw-`date -u +%y-%m-%d_%H-%M`.7z
