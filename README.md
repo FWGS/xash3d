@@ -11,9 +11,12 @@ The multiplayer part is not yet completed, multiplayer mods should work just
 fine, but bear in mind that some features may not work at all or work not
 exactly the way they do in Gold Source Engine.
 
-# How to build on Linux
+# How to build on Linux with CMake
 
-Xash3D Engine requires [Half-Life 1 SDK](https://github.com/SDLash3D/halflife).
+If you want to enable VGUI support, you need [Half-Life 1 SDK](https://github.com/SDLash3D/halflife)
+to build vgui_support library.
+If you are using non-x86 architecture, you may skip this
+
 Clone it with git:
 
     git submodule init && git submodule update
@@ -49,13 +52,65 @@ Run:
 
     $HOME/Games/Xash3D/xash3d.sh
 
-# Building and running on Windows
+# Building on linux manually without CMake
+
+## Building engine
+
+If you want to build Xash3D for some embedded device or just do not want to use CMake, use Makefile.linux instead
+
+    cd (xash3d)/engine
+    make -f Makefile.linux XASH_VGUI=1 XASH_SDL=1
+
+or
+
+    make -f Makefile.linux XASH_DEDICATED=1
+
+To enable dll support on linux, build loader library:
+
+    cd (xash3d)/loader
+    make -f Makefile.linux libloader.so libloader.a
+    cp libloader.so libloader.a ../engine/
+
+And built engine with XASH_DLL_LOADER=1:
+
+    make -f Makefile.linux XASH_VGUI=1 XASH_SDL=1 XASH_DLL_LOADER=1
+
+or
+
+    make -f Makefile.linux XASH_DEDICATED=1 XASH_DLL_LOADER=1
+
+## After building engine, build launch binary:
+
+    cd (xash3d)/game_launch
+    gcc xash.c -o xash -ldl -lrt -lm
+
+You may build engine with XASH_SINGLE_BINARY instead:
+
+    make -f Makefile.linux XASH_SINGLE_BINARY=1 xash
+
+## Running
+
+Put xash3d binaries and vgui(optionally) to you game data directory and run:
+
+    LD_LIBRARY_PATH=. ./xash -dev 5
+
+### Running under GDB:
+
+    LD_LIBRARY_PATH=. gdb --args ./xash -dev 5
+
+### Using DLL Loader:
+
+Put vgui_support.dll from windows build to your game data folder and run:
+
+    LD_LIBRARY_PATH=. ./xash -dev 5 -vguilib vgui.dll -clientlib valve/cl_dlls/client.dll -dll dlls/hl.dll
+
+# Building and running on Windows with Visual Studio 2013
 
 Download latest prebuilt SDL2 from
 
-https://www.libsdl.org/release/SDL2-devel-2.0.3-VC.zip
+https://www.libsdl.org/release/SDL2-devel-2.0.4-VC.zip
 
-Unzip and rename `SDL2-2.0.3` folder to `SDL2` and put it next to xash3d project folder.
+Unzip and rename `SDL2-2.0.4` folder to `SDL2` and put it next to xash3d project folder.
 
     ..\xash3d\
     ..\SDL2\
@@ -71,6 +126,27 @@ Open `xash.sln` with Visual Studio 2013 and make a build. After building, copy c
     ..\xash.exe
 
 Now you good to go, just run `xash.exe`.
+
+# Building with Visual Studio 6
+
+This is legacy configuration, but msvc6 seems to generate more stable and more effective code
+
+Setup your msvc6 enviroment, unpack SDL2-2.0.4 to xash3d folder and do:
+
+    cd (xash3d)\engine
+    ..\msvc6\build.bat
+    cd (xash3d)\game_launch
+    ..\msvc6\build_launch.bat
+
+# Building with MinGW:
+
+The most effective configuration, but maybe unstable.
+Setup your MinGW environment and run:
+
+    cd (xash3d)\engine\
+    mingw32-make -f Makefile.mingw
+
+    engine will be built to single exe binary
 
 # License
 
