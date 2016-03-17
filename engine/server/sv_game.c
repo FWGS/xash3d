@@ -4816,6 +4816,8 @@ void SV_SpawnEntities( const char *mapname, char *entities )
 
 void SV_UnloadProgs( void )
 {
+	MsgDev( D_NOTE, "SV_UnloadProgs()\n");
+
 	if( !svgame.hInstance )
 		return;
 	

@@ -1030,6 +1030,9 @@ save serverinfo variables into server.cfg (using for dedicated server too)
 */
 void Host_WriteServerConfig( const char *name )
 {
+	/* Old Xash3D behaviour is writing server config
+	every time when starting server from ui. */
+#if 0
 	file_t	*f;
 
 	SV_InitGameProgs();	// collect user variables
@@ -1046,8 +1049,8 @@ void Host_WriteServerConfig( const char *name )
 	else MsgDev( D_ERROR, "Couldn't write %s.\n", name );
 
 	SV_FreeGameProgs();	// release progs with all variables
+#endif
 }
-
 /*
 ===============
 Host_WriteOpenGLConfig

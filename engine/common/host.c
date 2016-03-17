@@ -1056,6 +1056,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
 		Cmd_AddCommand( "exit", Sys_Quit, "quit the game" );
 
+		SV_InitGameProgs();
+
 		// dedicated servers are using settings from server.cfg file
 		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
 		Cbuf_Execute();

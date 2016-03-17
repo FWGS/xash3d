@@ -358,6 +358,13 @@ void SV_ActivateServer( void )
 
 	Host_SetServerState( sv.state );
 
+	// mapchangecfgfile
+	{
+		char *mapchangecfgfile = Cvar_VariableString( "mapchangecfgfile" );
+		if( *mapchangecfgfile )
+			Cbuf_AddText( va( "exec %s\n", mapchangecfgfile ) );
+	}
+
 	if( sv_maxclients->integer > 1 && public_server->integer )
 	{
 		MsgDev( D_INFO, "Adding your server to master server list\n" );
