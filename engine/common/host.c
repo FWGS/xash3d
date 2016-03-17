@@ -899,7 +899,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.mouse_visible = false;
 
 #ifdef XASH_SDL
-	if( SDL_Init( SDL_INIT_VIDEO |SDL_INIT_EVENTS ))
+	if( SDL_Init( SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS ))
 	{
 		host.type = HOST_DEDICATED;
 	}
