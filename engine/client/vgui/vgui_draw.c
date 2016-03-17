@@ -211,7 +211,8 @@ void VGui_Startup( int width, int height )
 				MsgDev( D_WARN, "VGUI preloading failed. Default library will be used!\n");
 		}
 
-		Sys_GetParmFromCmdLine( "-vguiloader", vguiloader );
+		if( !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
+			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
 
 		lib = Com_LoadLibrary( vguiloader, false);
 		if(!lib)
