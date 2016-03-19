@@ -1825,10 +1825,13 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	{
 		dt = Delta_FindStruct( "custom_entity_state_t" );
 	}
-	else //  ENTITY_NORMAL or other (predict state)
+	else //  ENTITY_NORMAL or other (try predict type)
 	{
+		/* Omit connection drop on wromg data from server.
+		 * I know that it is very dirty,
+		 * but i don't know how to do it better.*/
 		if( to->entityType != ENTITY_NORMAL )
-			MsgDev( D_ERROR, "MSG_ReadDeltaEntity: broken delta\n");
+			MsgDev( D_NOTE, "MSG_ReadDeltaEntity: broken delta: entityType = %d\n", to->entityType );
 		if( player )
 		{
 			dt = Delta_FindStruct( "entity_state_player_t" );
@@ -1842,7 +1845,7 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	if( !(dt && dt->bInitialized) ) // Broken  delta?
 	{
 		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: broken delta\n");
-		return false;
+		return true;
 	}
 	pField = dt->pFields;
 	ASSERT( pField );

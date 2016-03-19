@@ -735,96 +735,18 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 
 	CL_UpdatePositions( ent );
 }
-qboolean MSG_ReadDeltaEntity2( sizebuf_t *msg, entity_state_t *from, entity_state_t *to, int number, qboolean player, float timebase )
-{
-	delta_info_t	*dt = NULL;
-	delta_t		*pField;
-	int		i, fRemoveType;
 
-	if( number < 0 || number >= clgame.maxEntities )
-	{
-		// broken packet, try to skip it
-		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: bad delta entity number: %i\n", number );
-		return false;
-	}
-
-	*to = *from;
-	to->number = number;
-	fRemoveType = BF_ReadUBitLong( msg, 2 );
-
-	if( fRemoveType )
-	{
-		// check for a remove
-		Q_memset( to, 0, sizeof( *to ));
-
-		if( fRemoveType & 1 )
-		{
-			// removed from delta-message
-			return false;
-					}
-
-		if( fRemoveType & 2 )
-		{
-			// entity was removed from server
-			to->number = -1;
-			return false;
-		}
-
-		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: unknown update type %i\n", fRemoveType );
-		return false;
-	}
-
-	if( BF_ReadOneBit( msg ))
-		to->entityType = BF_ReadUBitLong( msg, 2 );
-
-
-	if( to->entityType == ENTITY_BEAM )
-	{
-		dt = Delta_FindStruct( "custom_entity_state_t" );
-	}
-	else //  ENTITY_NORMAL or other (predict state)
-	{
-		if( to->entityType != ENTITY_NORMAL )
-			MsgDev( D_ERROR, "MSG_ReadDeltaEntity: broken delta\n");
-		if( player )
-		{
-			dt = Delta_FindStruct( "entity_state_player_t" );
-		}
-		else
-		{
-			dt = Delta_FindStruct( "entity_state_t" );
-		}
-	}
-
-
-	if( !(dt && dt->bInitialized) ) // Broken  delta?
-	{
-		MsgDev( D_ERROR, "MSG_ReadDeltaEntity2: broken delta\n");
-		return false;
-	}
-	pField = dt->pFields;
-	ASSERT( pField );
-
-	// process fields
-	for( i = 0; i < dt->numFields; i++, pField++ )
-	{
-		Delta_ReadField( msg, pField, from, to, timebase );
-	}
-
-	// message parsed
-	return true;
-}
 /*
 =================
 CL_FlushEntityPacket
+
+Read and ignore whole entity packet.
 =================
 */
 void CL_FlushEntityPacket( sizebuf_t *msg )
 {
 	int		newnum;
 	entity_state_t	from, to;
-
-	MsgDev( D_INFO, "CL_FlushEntityPacket()\n" );
 	Q_memset( &from, 0, sizeof( from ));
 
 	cl.frames[cl.parsecountmod].valid = false;
@@ -839,8 +761,7 @@ void CL_FlushEntityPacket( sizebuf_t *msg )
 		if( BF_CheckOverflow( msg ))
 			Host_Error( "CL_FlushEntityPacket: read overflow\n" );
 
-		if( !MSG_ReadDeltaEntity2( msg, &from, &to, newnum, CL_IsPlayerIndex( newnum ), cl.mtime[0] ) )
-			return;
+		MSG_ReadDeltaEntity( msg, &from, &to, newnum, CL_IsPlayerIndex( newnum ), cl.mtime[0] );
 	}
 }
 
@@ -885,16 +806,18 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 
 		if( subtracted == 0 )
 		{
-			Host_Error( "CL_DeltaPacketEntities: update too old, connection dropped.\n" );
+			MsgDev( D_NOTE, "CL_DeltaPacketEntities: update too old (flush)\n" );
+			Con_NPrintf( 2, "^3Warning:^1 update too old\n^7\n" );
+			CL_FlushEntityPacket( msg );
 			return;
 		}
 
 
 		if( subtracted >= CL_UPDATE_MASK )
 		{
-			MsgDev( D_WARN, "CL_ParsePacketEntities: delta frame is too old: overflow\n");
+			MsgDev( D_NOTE, "CL_ParsePacketEntities: delta frame is too old: overflow (flush)\n");
 			// we can't use this, it is too old
-			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old: overflow^7\n" );
+			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old: overflow)^7\n" );
 			CL_FlushEntityPacket( msg );
 			return;
 		}
@@ -903,7 +826,8 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 
 		if(( cls.next_client_entities - oldframe->first_entity ) > ( cls.num_client_entities - 128 ))
 		{
-			MsgDev( D_WARN, "CL_ParsePacketEntities: delta frame is too old\n");
+			MsgDev( D_NOTE, "CL_ParsePacketEntities: delta frame is too old (flush)\n");
+			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old^7\n" );
 			CL_FlushEntityPacket( msg );
 			return;
 		}
