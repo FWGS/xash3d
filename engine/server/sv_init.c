@@ -358,17 +358,28 @@ void SV_ActivateServer( void )
 
 	Host_SetServerState( sv.state );
 
+	if( sv_maxclients->integer > 1 )
+	{
+		// listenserver is executed on every map change in multiplayer
+		if( host.type != HOST_DEDICATED )
+		{
+			char *plservercfgfile = Cvar_VariableString( "lservercfgfile" );
+			if( *plservercfgfile )
+				Cbuf_AddText( va( "exec %s\n", plservercfgfile ) );
+		}
+
+		if( public_server->integer )
+		{
+			MsgDev( D_INFO, "Adding your server to master server list\n" );
+			Master_Add( );
+		}
+	}
+
 	// mapchangecfgfile
 	{
 		char *mapchangecfgfile = Cvar_VariableString( "mapchangecfgfile" );
 		if( *mapchangecfgfile )
 			Cbuf_AddText( va( "exec %s\n", mapchangecfgfile ) );
-	}
-
-	if( sv_maxclients->integer > 1 && public_server->integer )
-	{
-		MsgDev( D_INFO, "Adding your server to master server list\n" );
-		Master_Add( );
 	}
 }
 
