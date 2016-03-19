@@ -1820,8 +1820,18 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	if( BF_ReadOneBit( msg ))
 		to->entityType = BF_ReadUBitLong( msg, 2 );
 
-	if( to->entityType == ENTITY_NORMAL )
+
+	if( to->entityType == ENTITY_BEAM )
 	{
+		dt = Delta_FindStruct( "custom_entity_state_t" );
+	}
+	else //  ENTITY_NORMAL or other (try predict type)
+	{
+		/* Omit connection drop on wromg data from server.
+		 * I know that it is very dirty,
+		 * but i don't know how to do it better.*/
+		if( to->entityType != ENTITY_NORMAL )
+			MsgDev( D_NOTE, "MSG_ReadDeltaEntity: broken delta: entityType = %d\n", to->entityType );
 		if( player )
 		{
 			dt = Delta_FindStruct( "entity_state_player_t" );
@@ -1830,10 +1840,6 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 		{
 			dt = Delta_FindStruct( "entity_state_t" );
 		}
-	}
-	else if( to->entityType == ENTITY_BEAM )
-	{
-		dt = Delta_FindStruct( "custom_entity_state_t" );
 	}
 
 	if( !(dt && dt->bInitialized) ) // Broken  delta?
