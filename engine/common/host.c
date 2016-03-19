@@ -1058,6 +1058,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 		SV_InitGameProgs();
 
+		Cbuf_AddText( "exec config.cfg\n" );
+
 		// dedicated servers are using settings from server.cfg file
 		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
 		Cbuf_Execute();
@@ -1067,7 +1069,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 			Msg( "Please add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
 		else
 			Cbuf_AddText( va( "map %s\n", defaultmap ));
+
 		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
+
 		NET_Config( true );
 	}
 	else
@@ -1084,7 +1088,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Cmd_RemoveCommand( "setgl" );
 
 	// we need to execute it again here
-	Cmd_ExecuteString( "exec config.cfg\n", src_command );
+	if( host.type != HOST_DEDICATED )
+		Cmd_ExecuteString( "exec config.cfg\n", src_command );
 
 	// exec all files from userconfig.d 
 	Host_Userconfigd_f();
