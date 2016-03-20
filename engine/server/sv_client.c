@@ -1372,11 +1372,24 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	resfile = pfile = (char *)FS_LoadFile("reslist.txt", 0, true );
 	while( ( pfile = COM_ParseFile( pfile, token ) ) )
 	{
+		int i;
 		if( !FS_FileExists( token, true ) )
 			continue;
-		reslist.restype[rescount] = t_generic;
+		if( !Q_memcmp( token, "sound/", 6 ) )
+		{
+			reslist.restype[rescount] = t_sound;
+			Q_memmove( token, &token[0] + 6, sizeof( token ) - 7 );
+		}
+		else
+			reslist.restype[rescount] = t_generic;
+		// prevent resource dublication
+		for( i = 0; i < rescount; i++ )
+			if( !Q_strcmp( reslist.resnames[i], token ) )
+				goto cont1;
 		Q_strcpy( reslist.resnames[rescount], token );
 		rescount++;
+		cont1:
+		continue;
 	}
 	if( resfile )
 		Mem_Free( resfile );
@@ -1390,10 +1403,10 @@ void SV_SendResourceList_f( sv_client_t *cl )
 		int i;
 		if( !FS_FileExists( token, true ) )
 			continue;
-		if( Q_memcmp( token, "sound/", 5 ) )
+		if( !Q_memcmp( token, "sound/", 6 ) )
 		{
 			reslist.restype[rescount] = t_sound;
-			Q_memmove( token, &token[0] + 5, sizeof( token ) - 5 );
+			Q_memmove( token, &token[0] + 6, sizeof( token ) - 7 );
 		}
 		else
 			reslist.restype[rescount] = t_generic;
