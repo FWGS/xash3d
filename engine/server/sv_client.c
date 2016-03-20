@@ -1722,7 +1722,7 @@ void SV_DeltaInfo_f( sv_client_t *cl )
 			Delta_WriteTableField( &cl->netchan.message, tableIndex, &dt->pFields[fieldIndex] );
 
 			// it's time to send another portion
-			if( BF_GetNumBytesWritten( &cl->netchan.message ) >= ( NET_MAX_PAYLOAD / 2 ))
+			if( BF_GetNumBytesWritten( &cl->netchan.message ) >= ( cl->maxpacket ))
 				break;
 		}
 
@@ -1969,10 +1969,10 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	if( *val )
 	{
 		cl->maxpacket = Q_atoi( val );
-		cl->maxpacket = bound( 100, cl->maxpacket, 10000 );
+		cl->maxpacket = bound( 100, cl->maxpacket, ( NET_MAX_PAYLOAD / 2 ) );
 	}
 	else
-		cl->maxpacket = 1400;
+		cl->maxpacket = ( NET_MAX_PAYLOAD / 2 );
 	if( sv_maxclients->integer == 1 )
 		cl->maxpacket = NET_MAX_PAYLOAD / 2;
 

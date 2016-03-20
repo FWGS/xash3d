@@ -1642,7 +1642,7 @@ void CL_InitLocal( void )
 
 	// userinfo
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );
-	Cvar_Get( "cl_maxpacket", "1400", CVAR_USERINFO | CVAR_ARCHIVE, "Max packet size, sent from server durning connection" );
+	Cvar_Get( "cl_maxpacket", "40000", CVAR_USERINFO | CVAR_ARCHIVE, "Max packet size, sent from server durning connection" );
 	name = Cvar_Get( "name", Sys_GetCurrentUser(), CVAR_USERINFO|CVAR_ARCHIVE|CVAR_PRINTABLEONLY, "player name" );
 	model = Cvar_Get( "model", "player", CVAR_USERINFO|CVAR_ARCHIVE, "player model ('player' is a singleplayer model)" );
 	topcolor = Cvar_Get( "topcolor", "0", CVAR_USERINFO|CVAR_ARCHIVE, "player top color" );
