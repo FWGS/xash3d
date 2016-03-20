@@ -53,7 +53,7 @@ convar_t	*cl_trace_events;
 convar_t	*cl_charset;
 convar_t	*cl_sprite_nearest;
 convar_t	*hud_scale;
-
+convar_t	*cl_maxpacket;
 //
 // userinfo
 //
@@ -700,7 +700,14 @@ void CL_Connect_f( void )
 		Msg( "Usage: connect <server>\n" );
 		return;	
 	}
-	
+
+	// default value 40000 ignored as we don't want to grow userinfo string
+	if( ( cl_maxpacket->integer < 40000 ) && ( cl_maxpacket->integer > 99 ) )
+	{
+		cl_maxpacket->flags |= CVAR_USERINFO;
+		userinfo->modified = true;
+	}
+
 	Q_strncpy( server, Cmd_Argv( 1 ), MAX_STRING );
 
 	if( Host_ServerState())
@@ -1642,7 +1649,9 @@ void CL_InitLocal( void )
 
 	// userinfo
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );
-	Cvar_Get( "cl_maxpacket", "40000", CVAR_USERINFO | CVAR_ARCHIVE, "Max packet size, sent from server durning connection" );
+	// cvar is not registered as userinfo as it not needed usually
+	// it will be set as userinfo only if it has non-default and correct value
+	cl_maxpacket = Cvar_Get( "cl_maxpacket", "40000", CVAR_ARCHIVE, "Max packet size, sent from server durning connection" );
 	name = Cvar_Get( "name", Sys_GetCurrentUser(), CVAR_USERINFO|CVAR_ARCHIVE|CVAR_PRINTABLEONLY, "player name" );
 	model = Cvar_Get( "model", "player", CVAR_USERINFO|CVAR_ARCHIVE, "player model ('player' is a singleplayer model)" );
 	topcolor = Cvar_Get( "topcolor", "0", CVAR_USERINFO|CVAR_ARCHIVE, "player top color" );
