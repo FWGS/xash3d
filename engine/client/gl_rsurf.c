@@ -224,6 +224,8 @@ void GL_SetupFogColorForSurfaces( void )
 	vec3_t	fogColor;
 	float	factor, div;
 
+	Q_memset(fogColor, 0, 3 * sizeof(float)); //Result pow( RI.fogColor[i] / div, ( 1.0f / factor )) may be nan.
+
 	if(( !RI.fogEnabled && !RI.fogCustom ) || RI.refdef.onlyClientDraw || !RI.currententity )
 		return;
 

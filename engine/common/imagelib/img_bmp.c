@@ -356,7 +356,7 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	bhdr.height = pix->height;
 	bhdr.planes = 1;
 	bhdr.bitsPerPixel = pixel_size * 8;
-	bhdr.compression = 0;
+	bhdr.compression = BI_RGB;
 	bhdr.bitmapDataSize = cbBmpBits;
 	bhdr.hRes = 0;
 	bhdr.vRes = 0;

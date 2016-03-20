@@ -901,6 +901,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #ifdef XASH_SDL
 	if( SDL_Init( SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS ))
 	{
+		SDL_Init( SDL_INIT_TIMER );
 		host.type = HOST_DEDICATED;
 	}
 #endif
