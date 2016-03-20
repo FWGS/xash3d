@@ -1662,7 +1662,7 @@ void SV_UserMessages_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( NET_MAX_PAYLOAD / 2 ) && start < MAX_USER_MESSAGES )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_USER_MESSAGES )
 	{
 		message = &svgame.msg[start];
 		if( message->name[0] )
@@ -1713,7 +1713,7 @@ void SV_DeltaInfo_f( sv_client_t *cl )
 	fieldIndex = Q_atoi( Cmd_Argv( 3 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( NET_MAX_PAYLOAD / 2 ) && tableIndex < Delta_NumTables( ))
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && tableIndex < Delta_NumTables( ))
 	{
 		dt = Delta_FindStructByIndex( tableIndex );
 
@@ -1777,7 +1777,7 @@ void SV_Baselines_f( sv_client_t *cl )
 	Q_memset( &nullstate, 0, sizeof( nullstate ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( NET_MAX_PAYLOAD / 2 ) && start < svgame.numEntities )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < svgame.numEntities )
 	{
 		base = &svs.baselines[start];
 		if( base->number && ( base->modelindex || base->effects != EF_NODRAW ))
@@ -1973,6 +1973,8 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	}
 	else
 		cl->maxpacket = 1400;
+	if( sv_maxclients->integer == 1 )
+		cl->maxpacket = NET_MAX_PAYLOAD / 2;
 
 	val = Info_ValueForKey( cl->userinfo, "cl_updaterate" );
 
