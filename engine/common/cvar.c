@@ -1252,6 +1252,7 @@ void Cvar_Init( void )
 	Cmd_AddCommand ("set", Cvar_Set_f, "create or change the value of a console variable" );
 	Cmd_AddCommand ("sets", Cvar_SetS_f, "create or change the value of a serverinfo variable" );
 	Cmd_AddCommand ("setu", Cvar_SetU_f, "create or change the value of a userinfo variable" );
+	Cmd_AddCommand ("setinfo", Cvar_SetU_f, "create or change the value of a userinfo variable" );
 	Cmd_AddCommand ("setp", Cvar_SetP_f, "create or change the value of a physicinfo variable" );
 	Cmd_AddCommand ("setr", Cvar_SetR_f, "create or change the value of a renderinfo variable" );
 	Cmd_AddCommand ("setgl", Cvar_SetGL_f, "create or change the value of a opengl variable" );
