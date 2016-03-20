@@ -1235,6 +1235,9 @@ void SV_New_f( sv_client_t *cl )
 		svgame.globals->cdAudioTrack = 0;
 	}
 
+	cl->resources_sent = 1;
+	cl->resources_count = 1;
+
 	// game server
 	if( sv.state == ss_active )
 	{
@@ -1287,6 +1290,11 @@ void SV_ContinueLoading_f( sv_client_t *cl )
 	}
 
 	Q_memset( &cl->lastcmd, 0, sizeof( cl->lastcmd ));
+	if( cl->resources_sent < cl->resources_count )
+	{
+		SV_SendResourceList_f(cl);
+		return;
+	}
 
 	// begin fetching modellist
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );
@@ -1307,6 +1315,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	int		rescount = 0;
 	resourcelist_t	reslist;	// g-cont. what about stack???
 	size_t		msg_size;
+	int msg_start, msg_end;
 	char *resfile;
 	char *mapresfile;
 	char mapresfilename[256];
@@ -1378,25 +1387,50 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	mapresfile = pfile = (char *)FS_LoadFile( mapresfilename, 0, true );
 	while( ( pfile = COM_ParseFile( pfile, token ) ) )
 	{
+		int i;
 		if( !FS_FileExists( token, true ) )
 			continue;
-		reslist.restype[rescount] = t_generic;
+		if( Q_memcmp( token, "sound/", 5 ) )
+		{
+			reslist.restype[rescount] = t_sound;
+			Q_memmove( token, &token[0] + 5, sizeof( token ) - 5 );
+		}
+		else
+			reslist.restype[rescount] = t_generic;
+		// prevent resource dublication
+		for( i = 0; i < rescount; i++ )
+			if( !Q_strcmp( reslist.resnames[i], token ) )
+				goto cont;
 		Q_strcpy( reslist.resnames[rescount], token );
 		rescount++;
+		cont:
+		continue;
 	}
 	if( mapresfile )
 		Mem_Free( mapresfile );
 
 	msg_size = BF_GetRealBytesWritten( &cl->netchan.message ); // start
 
+	index = cl->resources_sent;
 	BF_WriteByte( &cl->netchan.message, svc_resourcelist );
+	msg_start = BF_GetNumBitsWritten( &cl->netchan.message );
 	BF_WriteWord( &cl->netchan.message, rescount );
 
-	for( index = 1; index < rescount; index++ )
+	for( ; ( index < rescount ) && ( BF_GetNumBytesWritten( &cl->netchan.message ) <  cl->maxpacket ); index++ )
 	{
 		BF_WriteWord( &cl->netchan.message, reslist.restype[index] );
 		BF_WriteString( &cl->netchan.message, reslist.resnames[index] );
 	}
+
+
+	// change real sent resource count
+	msg_end = BF_GetNumBitsWritten( &cl->netchan.message );
+	BF_SeekToBit( &cl->netchan.message, msg_start );
+	BF_WriteWord( &cl->netchan.message, index - cl->resources_sent + 1 );
+	BF_SeekToBit( &cl->netchan.message, msg_end );
+
+	cl->resources_sent = index;
+	cl->resources_count = rescount;
 
 	Msg( "Count res: %d\n", rescount );
 	Msg( "ResList size: %s\n", Q_memprint( BF_GetRealBytesWritten( &cl->netchan.message ) - msg_size ));
@@ -1429,7 +1463,7 @@ void SV_WriteModels_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( NET_MAX_PAYLOAD / 2 ) && start < MAX_MODELS )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_MODELS )
 	{
 		if( sv.model_precache[start][0] )
 		{
@@ -1475,7 +1509,7 @@ void SV_WriteSounds_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( NET_MAX_PAYLOAD / 2 ) && start < MAX_SOUNDS )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_SOUNDS )
 	{
 		if( sv.sound_precache[start][0] )
 		{
@@ -1521,7 +1555,7 @@ void SV_WriteEvents_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( NET_MAX_PAYLOAD / 2 ) && start < MAX_EVENTS )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_EVENTS )
 	{
 		if( sv.event_precache[start][0] )
 		{
@@ -1567,7 +1601,7 @@ void SV_WriteLightstyles_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( NET_MAX_PAYLOAD / 2 ) && start < MAX_LIGHTSTYLES )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_LIGHTSTYLES )
 	{
 		if( sv.lightstyles[start].pattern[0] )
 		{
@@ -1918,6 +1952,14 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 
 	cl->local_weapons = Q_atoi( Info_ValueForKey( cl->userinfo, "cl_lw" )) ? true : false;
 	cl->lag_compensation = Q_atoi( Info_ValueForKey( cl->userinfo, "cl_lc" )) ? true : false;
+	val = Info_ValueForKey( cl->userinfo, "cl_maxpacket" );
+	if( *val )
+	{
+		cl->maxpacket = Q_atoi( val );
+		cl->maxpacket = bound( 100, cl->maxpacket, 10000 );
+	}
+	else
+		cl->maxpacket = 1400;
 
 	val = Info_ValueForKey( cl->userinfo, "cl_updaterate" );
 
@@ -2709,7 +2751,6 @@ ucmd_t ucmds[] =
 { "usermsgs", SV_UserMessages_f },
 { "userinfo", SV_UpdateUserinfo_f },
 { "lightstyles", SV_WriteLightstyles_f },
-{ "getresourelist", SV_SendResourceList_f }, // compat
 { "getresourcelist", SV_SendResourceList_f },
 { "continueloading", SV_ContinueLoading_f },
 { "kill", SV_Kill_f },
