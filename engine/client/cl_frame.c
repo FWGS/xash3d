@@ -817,7 +817,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 		{
 			MsgDev( D_NOTE, "CL_ParsePacketEntities: delta frame is too old: overflow (flush)\n");
 			// we can't use this, it is too old
-			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old: overflow)^7\n" );
+			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old: overflow^7\n" );
 			CL_FlushEntityPacket( msg );
 			return;
 		}
