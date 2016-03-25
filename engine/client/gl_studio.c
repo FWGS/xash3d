@@ -2501,8 +2501,10 @@ static void R_StudioClientEvents( void )
 	if( pseqdesc->numevents == 0 || cl.time == cl.oldtime )
 		return;
 
-	f = R_StudioEstimateFrame( e, pseqdesc ) + 0.01f;	// get start offset
-	start = f - e->curstate.framerate * host.frametime * pseqdesc->fps;
+	f = R_StudioEstimateFrame( e, pseqdesc );	// get start offset
+	if ( e->latched.sequencetime == e->curstate.animtime && !( pseqdesc->flags & STUDIO_LOOPING ) )
+		start = -0.01f;
+	else start = f - e->curstate.framerate * host.frametime * pseqdesc->fps;
 
 	for( i = 0; i < pseqdesc->numevents; i++ )
 	{
