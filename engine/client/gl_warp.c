@@ -305,6 +305,7 @@ void R_AddSkyBoxSurface( msurface_t *fa )
 	vec3_t	verts[MAX_CLIP_VERTS];
 	glpoly_t	*p;
 	int	i;
+	float *verts_p;
 
 	if( r_fastsky->integer )
 		return;
@@ -320,10 +321,10 @@ void R_AddSkyBoxSurface( msurface_t *fa )
 	}
 
 	// calculate vertex values for sky box
-	for( p = fa->polys; p; p = p->next )
+	for( p = fa->polys, verts_p = (float *)p + ( ( sizeof( void* ) + sizeof( int ) ) >> 1 ); p; p = p->next )
 	{
 		for( i = 0; i < p->numverts; i++ )
-			VectorSubtract( p->verts[i], RI.cullorigin, verts[i] );
+			VectorSubtract( &verts_p[VERTEXSIZE * i], RI.cullorigin, verts[i] );
 		ClipSkyPolygon( p->numverts, verts[0], 0 );
 	}
 }
