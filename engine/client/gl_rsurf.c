@@ -150,7 +150,7 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 	poly->flags = warpface->flags;
 	warpface->polys = poly;
 	poly->numverts = numverts + 2;
-	verts_p = (float *)poly + ( ( sizeof( void* ) + sizeof( int ) ) >> 1 );
+	verts_p = (float *)poly + ( ( sizeof( void* ) + sizeof( int ) ) >> 1 ); // pointer glpoly_t->verts
 	VectorClear( total );
 	total_s = total_ls = 0.0f;
 	total_t = total_lt = 0.0f;
@@ -205,7 +205,7 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 
 	vertsDiv = ( 1.0f / (float)numverts );
 
-	VectorScale( total, vertsDiv, verts_p[0] );
+	VectorScale( total, vertsDiv, &verts_p[0] );
 	verts_p[3] = total_s * vertsDiv;
 	verts_p[4] = total_t * vertsDiv;
 
