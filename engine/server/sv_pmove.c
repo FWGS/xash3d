@@ -383,15 +383,17 @@ static int pfnHullPointContents( struct hull_s *hull, int num, float *p )
 	return PM_HullPointContents( hull, num, p );
 }
 /*
- * MVSC has special mangling for functions that return agregate values.
+ * MVSC has different calling conversion for functions that return agregate values.
  * 
 */
 
-#ifdef DLL_LOADER
-static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t *trace, float *start, float *end, int traceFlags, int ignore_pe)
+#if defined(DLL_LOADER) || defined(__MINGW32__)
+static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t * retvalue, float *start, float *end, int traceFlags, int ignore_pe)
 {
-	*trace = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
-	return trace;
+	pmtrace_t tmp;
+	tmp = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
+	*retvalue = tmp;
+	return retvalue;
 }
 #endif
 static pmtrace_t pfnPlayerTrace(float *start, float *end, int traceFlags, int ignore_pe)
@@ -511,11 +513,13 @@ static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, f
 		iparam1, iparam2,
 		bparam1, bparam2 );
 }
-#ifdef DLL_LOADER
-static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t* trace, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
+#if defined(DLL_LOADER) || defined(__MINGW32__)
+static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t * retvalue, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
 {
-	*trace = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, -1, pmFilter );
-	return trace;
+	pmtrace_t tmp;
+	tmp = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, -1, pmFilter );
+	*retvalue = tmp;
+	return retvalue;
 }
 #endif
 
@@ -631,6 +635,11 @@ void SV_InitClientMove( void )
 		svgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
 	}
 #endif
+#if defined(__MINGW32__)
+	svgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
+	svgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
+#endif
+
 
 	// initalize pmove
 	svgame.dllFuncs.pfnPM_Init( svgame.pmove );
