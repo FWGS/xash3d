@@ -157,7 +157,7 @@ static qboolean noipx = false;
 static convar_t *net_ip;
 //static convar_t *net_hostport;
 //static convar_t *net_clientport;
-static convar_t *net_showpackets;
+extern convar_t *net_showpackets;
 void NET_Restart_f( void );
 
 #ifdef _WIN32
