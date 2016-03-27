@@ -105,7 +105,7 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	IN_TouchRemoveButton,
 	IN_TouchSetClientOnly,
 	IN_TouchResetDefaultButtons,
-	pfnDrawScaledСharacter
+	pfnDrawScaledCharacter
 };
 
 void Mobile_Init( void )
