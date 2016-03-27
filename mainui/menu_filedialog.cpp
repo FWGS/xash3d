@@ -104,16 +104,6 @@ static void UI_FileDialog_Callback( void *self, int event )
 {
 	menuCommon_s	*item = (menuCommon_s *)self;
 
-	switch( item->id )
-	{/*
-	   // checkboxes
-	case ID_XXX
-		if( event == QM_PRESSED )
-			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
-		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
-		break;*/
-	}
-
 	if( event == QM_CHANGED )
 	{
 		switch( item->id )

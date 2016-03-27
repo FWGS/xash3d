@@ -47,8 +47,6 @@ GNU General Public License for more details.
 #define VID_MAPSHOT		3	// special case for overview layer
 #define VID_SNAPSHOT	4	// save screenshot into root dir and no gamma correction
 
-typedef int		sound_t;
-
 //=============================================================================
 typedef struct frame_s
 {

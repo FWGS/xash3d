@@ -466,7 +466,7 @@ typedef struct cmd_s
 static int		cmd_argc;
 static char		*cmd_args;
 static char		*cmd_argv[MAX_CMD_TOKENS];
-static char		cmd_tokenized[MAX_CMD_BUFFER];	// will have 0 bytes inserted
+//static char		cmd_tokenized[MAX_CMD_BUFFER];	// will have 0 bytes inserted
 static cmd_t		*cmd_functions;			// possible commands to execute
 cmd_source_t		cmd_source;
 
@@ -750,7 +750,7 @@ void Cmd_RemoveCommand( const char *cmd_name )
 {
 	cmd_t	*cmd, **prev;
 
-	for( prev = &cmd_functions; cmd = *prev; prev = &cmd->next )
+	for( prev = &cmd_functions; ( cmd = *prev ); prev = &cmd->next )
 	{
 		if( !Q_strcmp( cmd_name, cmd->name ))
 		{
@@ -1162,7 +1162,7 @@ void Cmd_Unlink( int group )
 		return;
 	}
 
-	for( prev = &cmd_functions; cmd = *prev; )
+	for( prev = &cmd_functions; ( cmd = *prev ); )
 	{
 		if( group && !( cmd->flags & group ))
 		{

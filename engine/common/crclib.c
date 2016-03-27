@@ -561,7 +561,7 @@ qboolean MD5_HashFile( byte digest[16], const char *pszFileName, uint seed[4] )
 		bytes = FS_Read( file, buffer, sizeof( buffer ));
 
 		if( bytes > 0 )
-			MD5Update( &MD5_Hash, buffer, bytes );
+			MD5Update( &MD5_Hash, (byte *)buffer, bytes );
 
 		if( FS_Eof( file ))
 			break;

@@ -29,7 +29,7 @@ GNU General Public License for more details.
 
 #define SND_SCALE_BITS	7
 #define SND_SCALE_SHIFT	(8 - SND_SCALE_BITS)
-#define SND_SCALE_LEVELS	(1 << SND_SCALE_BITS)
+#define SND_SCALE_LEVELS	(1U << SND_SCALE_BITS)
 
 
 portable_samplepair_t	*g_curpaintbuffer;
@@ -49,7 +49,7 @@ void S_InitScaletable( void )
 	for( i = 0; i < SND_SCALE_LEVELS; i++ )
 	{
 		for( j = 0; j < 256; j++ )
-			snd_scaletable[i][j] = ((signed char)j) * i * (1<<SND_SCALE_SHIFT);
+			snd_scaletable[i][j] = ((signed char)j) * i * (1U << SND_SCALE_SHIFT);
 	}
 }
 
@@ -399,13 +399,13 @@ void S_MixChannel( channel_t *pChannel, void *pData, int outputOffset, int input
 	if( pSource->channels == 1 )
 	{
 		if( pSource->width == 1 )
-			S_Mix8Mono( pbuf, pvol, (char *)pData, inputOffset, fracRate, outCount );
+			S_Mix8Mono( pbuf, pvol, (byte *)pData, inputOffset, fracRate, outCount );
 		else S_Mix16Mono( pbuf, pvol, (short *)pData, inputOffset, fracRate, outCount );
 	}
 	else
 	{
 		if( pSource->width == 1 )
-			S_Mix8Stereo( pbuf, pvol, (char *)pData, inputOffset, fracRate, outCount );
+			S_Mix8Stereo( pbuf, pvol, (byte *)pData, inputOffset, fracRate, outCount );
 		else S_Mix16Stereo( pbuf, pvol, (short *)pData, inputOffset, fracRate, outCount );
 	}
 }
@@ -449,7 +449,7 @@ int S_MixDataToDevice( channel_t *pChannel, int sampleCount, int outputRate, int
 		double	end = pChannel->pMixer.sample + rate * sampleCount;
 		int	inputSampleCount = (int)(ceil( end ) - floor( pChannel->pMixer.sample ));
 
-		availableSamples = S_GetOutputData( pSource, &pData, pChannel->pMixer.sample, inputSampleCount, use_loop );
+		availableSamples = S_GetOutputData( pSource, (void **)&pData, pChannel->pMixer.sample, inputSampleCount, use_loop );
 
 		// none available, bail out
 		if( !availableSamples ) break;
@@ -1016,13 +1016,13 @@ void MIX_UpsampleAllPaintbuffers( int end, int count )
 void MIX_PaintChannels( int endtime )
 {
 	int	end, count;
-	float	dsp_room_gain;
+	//float	dsp_room_gain;
 
 	CheckNewDspPresets();
 
 	// get dsp preset gain values, update gain crossfaders,
 	// used when mixing dsp processed buffers into paintbuffer
-	dsp_room_gain = DSP_GetGain( idsp_room );	// update crossfader - gain only used in MIX_ScaleChannelVolume
+	//dsp_room_gain = DSP_GetGain( idsp_room );	// update crossfader - gain only used in MIX_ScaleChannelVolume
 
 	while( paintedtime < endtime )
 	{

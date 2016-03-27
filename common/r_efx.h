@@ -85,7 +85,7 @@ color24 gTracerColors[] =
 #define FTENT_SCALE			0x00100000 // An experiment
 
 typedef struct tempent_s	TEMPENTITY;
-typedef struct tempent_s
+struct tempent_s
 {
 	int		flags;
 	float		die;
@@ -110,7 +110,7 @@ typedef struct tempent_s
 	// baseline.origin		- velocity
 	// baseline.renderamt	- starting fadeout intensity
 	// baseline.angles		- angle velocity
-} TEMPENTITY;
+};
 
 typedef struct efx_api_s efx_api_t;
 

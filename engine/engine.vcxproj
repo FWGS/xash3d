@@ -114,6 +114,7 @@
     <ClCompile Include="client\gl_sprite.c" />
     <ClCompile Include="client\gl_studio.c" />
     <ClCompile Include="client\gl_vidnt.c" />
+    <ClCompile Include="client\gl_vidnt_common.c" />
     <ClCompile Include="client\gl_warp.c" />
     <ClCompile Include="client\s_backend.c" />
     <ClCompile Include="client\s_dsp.c" />

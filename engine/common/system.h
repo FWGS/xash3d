@@ -38,7 +38,6 @@ extern "C" {
 #endif
 // basic typedefs
 
-typedef unsigned char byte;
 typedef int		sound_t;
 typedef float		vec_t;
 typedef vec_t		vec2_t[2];
@@ -95,12 +94,8 @@ void* Sys_GetProcAddress( dll_info_t *dll, const char* name );
 qboolean Sys_FreeLibrary( dll_info_t *dll );
 void Sys_ParseCommandLine( int argc , const char **argv);
 void Sys_MergeCommandLine();
-#ifdef _WIN32
-long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo );
-#else
-#include <signal.h>
-void Sys_Crash( int signal, siginfo_t *si, void * );
-#endif
+void Sys_SetupCrashHandler( void );
+void Sys_RestoreCrashHandler( void );
 void Sys_SetClipboardData( const byte *buffer, size_t size );
 #define Sys_GetParmFromCmdLine( parm, out ) _Sys_GetParmFromCmdLine( parm, out, sizeof( out ))
 qboolean _Sys_GetParmFromCmdLine( char *parm, char *out, size_t size );

@@ -202,7 +202,7 @@ char *SV_EntityScript( void )
 		{
 			MsgDev( D_INFO, "^1Entity patch is older than BSP. Ignored.\n", entfilename );			
 		}
-		else if(( ents = FS_LoadFile( entfilename, NULL, true )) != NULL )
+		else if(( ents = (char *)FS_LoadFile( entfilename, NULL, true )) != NULL )
 		{
 			MsgDev( D_INFO, "^2Read entity patch:^7 %s\n", entfilename );
 			return ents;
@@ -344,7 +344,7 @@ void SV_ActivateServer( void )
 			Cvar_SetFloat( "clockwindow", 0.0f );
 		MsgDev( D_INFO, "Game started\n" );
 	}
-	Log_Printf ("Started map \"%s\" (CRC \"0\")\n", STRING (svgame.globals->mapname));
+	Log_Printf( "Started map \"%s\" (CRC \"0\")\n", STRING( svgame.globals->mapname ) );
 
 	if( host.type == HOST_DEDICATED )
 	{
@@ -358,10 +358,28 @@ void SV_ActivateServer( void )
 
 	Host_SetServerState( sv.state );
 
-	if( sv_maxclients->integer > 1 && public_server->integer )
+	if( sv_maxclients->integer > 1 )
 	{
-		MsgDev( D_INFO, "Adding your server to master server list\n" );
-		Master_Add( );
+		// listenserver is executed on every map change in multiplayer
+		if( host.type != HOST_DEDICATED )
+		{
+			char *plservercfgfile = Cvar_VariableString( "lservercfgfile" );
+			if( *plservercfgfile )
+				Cbuf_AddText( va( "exec %s\n", plservercfgfile ) );
+		}
+
+		if( public_server->integer )
+		{
+			MsgDev( D_INFO, "Adding your server to master server list\n" );
+			Master_Add( );
+		}
+	}
+
+	// mapchangecfgfile
+	{
+		char *mapchangecfgfile = Cvar_VariableString( "mapchangecfgfile" );
+		if( *mapchangecfgfile )
+			Cbuf_AddText( va( "exec %s\n", mapchangecfgfile ) );
 	}
 }
 
@@ -499,9 +517,9 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 		MsgDev( D_INFO, "Spawn Server: %s\n", mapname );
 	}
 
-	Log_Open ();
-	Log_Printf ("Loading map \"%s\"\n", mapname);
-	Log_PrintServerVars ();
+	Log_Open();
+	Log_Printf( "Loading map \"%s\"\n", mapname );
+	Log_PrintServerVars();
 
 	sv.state = ss_dead;
 	Host_SetServerState( sv.state );

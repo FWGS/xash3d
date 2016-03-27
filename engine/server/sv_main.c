@@ -30,7 +30,7 @@ convar_t	*sv_unlagsamples;
 convar_t	*sv_pausable;
 convar_t	*sv_newunit;
 convar_t	*sv_wateramp;
-convar_t	*timeout;				// seconds without any message
+convar_t	*sv_timeout;				// seconds without any message
 convar_t	*zombietime;			// seconds to sink messages after disconnect
 convar_t	*rcon_password;			// password for remote server commands
 convar_t	*sv_airaccelerate;
@@ -340,7 +340,7 @@ void SV_ReadPackets( void )
 	sv_client_t	*cl;
 	int		i, qport, curSize;
 
-	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, &curSize ))
+	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, (size_t *)&curSize ))
 	{
 		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
 
@@ -434,7 +434,7 @@ void SV_CheckTimeouts( void )
 	float		zombiepoint;
 	int		i, numclients;
 
-	droppoint = host.realtime - timeout->value;
+	droppoint = host.realtime - sv_timeout->value;
 	zombiepoint = host.realtime - zombietime->value;
 
 	for( i = 0, numclients = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
@@ -715,7 +715,7 @@ void SV_Init( void )
 {
 	SV_InitOperatorCommands();
 
-	Log_InitCvars ();
+	Log_InitCvars();
 
 	skill = Cvar_Get ("skill", "1", CVAR_LATCH, "game skill level" );
 	deathmatch = Cvar_Get ("deathmatch", "0", CVAR_LATCH|CVAR_SERVERINFO, "displays deathmatch state" );
@@ -728,6 +728,7 @@ void SV_Init( void )
 	Cvar_Get ("mapcyclefile", "mapcycle.txt", 0, "name of multiplayer map cycle configuration file" );
 	Cvar_Get ("servercfgfile","server.cfg", 0, "name of dedicated server configuration file" );
 	Cvar_Get ("lservercfgfile","listenserver.cfg", 0, "name of listen server configuration file" );
+	Cvar_Get ("mapchangecfgfile","", 0, "name of map change configuration file" );
 	Cvar_Get ("motdfile", "motd.txt", 0, "name of 'message of the day' file" );
 	Cvar_Get ("sv_language", "0", 0, "game language (currently unused)" );
 	Cvar_Get ("suitvolume", "0.25", CVAR_ARCHIVE, "HEV suit volume" );
@@ -762,7 +763,7 @@ void SV_Init( void )
 	sv_stepsize = Cvar_Get( "sv_stepsize", "18", CVAR_ARCHIVE|CVAR_PHYSICINFO, "how high you can step up" );
 	sv_newunit = Cvar_Get( "sv_newunit", "0", 0, "sets to 1 while new unit is loading" );
 	hostname = Cvar_Get( "hostname", "unnamed", CVAR_SERVERNOTIFY|CVAR_SERVERNOTIFY|CVAR_ARCHIVE, "host name" );
-	timeout = Cvar_Get( "timeout", "125", CVAR_SERVERNOTIFY, "connection timeout" );
+	sv_timeout = Cvar_Get( "sv_timeout", "125", CVAR_SERVERNOTIFY, "connection timeout" );
 	zombietime = Cvar_Get( "zombietime", "2", CVAR_SERVERNOTIFY, "timeout for clients-zombie (who died but not respawned)" );
 	sv_pausable = Cvar_Get( "pausable", "1", CVAR_SERVERNOTIFY, "allow players to pause or not" );
 	sv_allow_studio_attachment_angles = Cvar_Get( "sv_allow_studio_attachment_angles", "0", CVAR_ARCHIVE, "enable calc angles for attachment points (on studio models)" );
@@ -820,8 +821,8 @@ void SV_Init( void )
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
-	Cmd_AddCommand ("logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host");
-	Cmd_AddCommand ("log", SV_ServerLog_f, "enables logging to file");
+	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
+	Cmd_AddCommand( "log", SV_ServerLog_f, "enables logging to file" );
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));

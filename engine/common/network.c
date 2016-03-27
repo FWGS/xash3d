@@ -17,6 +17,7 @@ GNU General Public License for more details.
 // Winsock
 #include <winsock.h>
 #include <wsipx.h>
+#define socklen_t int //#include <ws2tcpip.h>
 #else
 // BSD sockets
 #include <sys/types.h>
@@ -148,14 +149,14 @@ static int	ipx_sockets[2];
 static WSADATA winsockdata;
 #endif
 static qboolean winsockInitialized = false;
-static const char *net_src[2] = { "client", "server" };
+//static const char *net_src[2] = { "client", "server" };
 static qboolean noip = false;
 #ifdef XASH_IPX
 static qboolean noipx = false;
 #endif
 static convar_t *net_ip;
-static convar_t *net_hostport;
-static convar_t *net_clientport;
+//static convar_t *net_hostport;
+//static convar_t *net_clientport;
 static convar_t *net_showpackets;
 void NET_Restart_f( void );
 
@@ -335,7 +336,7 @@ static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
 				((struct sockaddr_in *)sadr)->sin_port = pHtons((short)Q_atoi( colon + 1 ));	
 			}
 		}
-		
+
 		if( copy[0] >= '0' && copy[0] <= '9' )
 		{
 			*(int *)&((struct sockaddr_in *)sadr)->sin_addr = pInet_Addr( copy );
@@ -535,9 +536,11 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 {
 	int 		ret;
 	struct sockaddr	addr;
-	int		err, addr_len;
-	int		net_socket;
+	socklen_t	addr_len;
+	int		net_socket = 0;
 	int		protocol;
+
+	Q_memset( &addr, 0, sizeof( struct sockaddr ) );
 
 	if( !data || !length )
 		return false;
@@ -562,7 +565,7 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 #ifdef _WIN32
 		if( ret == SOCKET_ERROR )
 		{
-			err = pWSAGetLastError();
+			int err = pWSAGetLastError();
 
 			// WSAEWOULDBLOCK and WSAECONNRESET are silent
 			if( err == WSAEWOULDBLOCK || err == WSAECONNRESET )
@@ -599,7 +602,7 @@ NET_SendPacket
 */
 void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to )
 {
-	int		ret, err;
+	int		ret;
 	struct sockaddr	addr;
 	SOCKET		net_socket;
 
@@ -649,7 +652,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 #ifdef _WIN32
 	if (ret == SOCKET_ERROR)
 	{
-		err = pWSAGetLastError();
+		int err = pWSAGetLastError();
 
 		// WSAEWOULDBLOCK is silent
 		if (err == WSAEWOULDBLOCK)
@@ -682,16 +685,18 @@ NET_IPSocket
 */
 static int NET_IPSocket( const char *netInterface, int port )
 {
-	int		err, net_socket;
+	int		net_socket;
 	struct sockaddr_in	addr;
 	dword		_true = 1;
 
+	Q_memset( &addr, 0, sizeof( struct sockaddr_in ) );
+
 	MsgDev( D_NOTE, "NET_UDPSocket( %s, %i )\n", netInterface, port );
-	
+
 #ifdef _WIN32
 	if(( net_socket = pSocket( PF_INET, SOCK_DGRAM, IPPROTO_UDP )) == SOCKET_ERROR )
 	{
-		err = pWSAGetLastError();
+		int err = pWSAGetLastError();
 		if( err != WSAEAFNOSUPPORT )
 			MsgDev( D_WARN, "NET_UDPSocket: socket = %s\n", NET_ErrorString( ));
 		return 0;
@@ -897,7 +902,7 @@ void NET_GetLocalAddress( void )
 {
 	char		buff[512];
 	struct sockaddr_in	address;
-	int		namelen;
+	socklen_t		namelen;
 
 	Q_memset( &net_local, 0, sizeof( netadr_t ));
 
@@ -1029,9 +1034,9 @@ NET_Init
 */
 void NET_Init( void )
 {
+#ifdef _WIN32
 	int	r;
 
-#ifdef _WIN32
 	if( !NET_OpenWinSock())	// loading wsock32.dll
 	{
 		MsgDev( D_WARN, "NET_Init: failed to load wsock32.dll\n" );
@@ -1171,7 +1176,6 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		pCloseSocket( file->socket );
 	file->socket = -1;
 
-	
 	Q_snprintf( incname, 256, "downloaded/%s.incomplete", file->path );
 	if( error )
 	{
@@ -1316,7 +1320,7 @@ void HTTP_Run( void )
 		}
 		curfile->state = 3;
 	}
-	
+
 	if( curfile->state < 4 ) // Request not formatted
 	{
 		querylength = Q_snprintf( header, BUFSIZ,
@@ -1333,7 +1337,7 @@ void HTTP_Run( void )
 	{
 		while( sent < querylength )
 		{
-			int res = pSend( curfile->socket, header + sent, querylength - sent, 0 );
+			res = pSend( curfile->socket, header + sent, querylength - sent, 0 );
 			if( res < 0 )
 			{
 #ifdef _WIN32
@@ -1369,7 +1373,7 @@ void HTTP_Run( void )
 		Q_memset( header, 0, BUFSIZ );
 		curfile->state = 5;
 	}
-	
+
 	frametime = host.frametime; // save frametime to reset it after first iteration
 
 	while( ( res = pRecv( curfile->socket, buf, BUFSIZ, 0 ) ) > 0) // if we got there, we are receiving data
@@ -1558,7 +1562,7 @@ httpserver_t *HTTP_ParseURL( const char *url )
 	}
 	else
 		server->port = 80;
-	i=0;
+	i = 0;
 	while( *url && ( *url != '\r' ) && ( *url != '\n' ) )
 	{
 		if( i > sizeof( server->path) ) return NULL;
@@ -1581,7 +1585,7 @@ void HTTP_AddCustomServer( const char *url )
 	if( !server )
 	{
 		MsgDev ( D_ERROR, "\"%s\" is not valid url!\n", url );
-		return ;
+		return;
 	}
 	server->needfree = true;
 	server->next = first_server;
@@ -1747,7 +1751,7 @@ void HTTP_Init( void )
 		Q_strncpy( server->host, token, sizeof( server->host ) );
 		server->needfree = false; // never free
 		server->next = NULL;
-	
+
 		if( !last_server )
 			// It will be the only server
 			first_server = last_server = server;
@@ -1759,10 +1763,10 @@ void HTTP_Init( void )
 		}
 		token = lineend;
 	}*/
-	line = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
+	line = serverfile = (char *)FS_LoadFile( "fastdl.txt", 0, true );
 	if( serverfile )
 	{
-		while( line = COM_ParseFile( line, token ) )
+		while( ( line = COM_ParseFile( line, token ) ) )
 		{
 			httpserver_t *server = HTTP_ParseURL( token );
 			if( !server ) continue;

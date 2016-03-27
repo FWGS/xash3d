@@ -32,7 +32,7 @@ typedef enum
 	pt_tracer		// Always have callback
 } ptype_t;
 
-typedef struct particle_s
+struct particle_s
 {
 	vec3_t		org;
 	short		color;
@@ -49,6 +49,6 @@ typedef struct particle_s
 	
 	// For deathfunc, etc.
 	unsigned char	context;
-} particle_t;
+};
 
 #endif//PARTICLEDEF_H

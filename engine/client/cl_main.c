@@ -53,7 +53,7 @@ convar_t	*cl_trace_events;
 convar_t	*cl_charset;
 convar_t	*cl_sprite_nearest;
 convar_t	*hud_scale;
-
+convar_t	*cl_maxpacket;
 //
 // userinfo
 //
@@ -467,7 +467,7 @@ void CL_WritePacket( void )
 		
 	if( send_command )
 	{
-		int	outgoing_sequence;
+		//int	outgoing_sequence;
 	
 		if( cl_cmdrate->integer > 0 )
 			cls.nextcmdtime = host.realtime + ( 1.0f / cl_cmdrate->value );
@@ -475,10 +475,10 @@ void CL_WritePacket( void )
 
 		if( cls.lastoutgoingcommand == -1 )
 		{
-			outgoing_sequence = cls.netchan.outgoing_sequence;
+			//outgoing_sequence = cls.netchan.outgoing_sequence;
 			cls.lastoutgoingcommand = cls.netchan.outgoing_sequence;
 		}
-		else outgoing_sequence = cls.lastoutgoingcommand + 1;
+		//else outgoing_sequence = cls.lastoutgoingcommand + 1;
 
 		// begin a client move command
 		BF_WriteByte( &buf, clc_move );
@@ -522,7 +522,7 @@ void CL_WritePacket( void )
 		buf.pData[key] = CRC32_BlockSequence( buf.pData + key + 1, size, cls.netchan.outgoing_sequence );
 
 		// message we are constructing.
-		i = cls.netchan.outgoing_sequence & CL_UPDATE_MASK;
+		//i = cls.netchan.outgoing_sequence & CL_UPDATE_MASK;
 	
 		// determine if we need to ask for a new set of delta's.
 		if( cl.validsequence && (cls.state == ca_active) && !( cls.demorecording && cls.demowaiting ))
@@ -700,7 +700,14 @@ void CL_Connect_f( void )
 		Msg( "Usage: connect <server>\n" );
 		return;	
 	}
-	
+
+	// default value 40000 ignored as we don't want to grow userinfo string
+	if( ( cl_maxpacket->integer < 40000 ) && ( cl_maxpacket->integer > 99 ) )
+	{
+		cl_maxpacket->flags |= CVAR_USERINFO;
+		userinfo->modified = true;
+	}
+
 	Q_strncpy( server, Cmd_Argv( 1 ), MAX_STRING );
 
 	if( Host_ServerState())
@@ -1165,7 +1172,7 @@ Call before entering a new level, or after changing dlls
 */
 void CL_PrepVideo( void )
 {
-	string	name, mapname;
+	string	mdlname, mapname;
 	int	i, mdlcount, step;
 	int	map_checksum; // dummy
 
@@ -1177,7 +1184,7 @@ void CL_PrepVideo( void )
 
 	// let the render dll load the map
 	Q_strncpy( mapname, cl.model_precache[1], MAX_STRING ); 
-	Mod_LoadWorld( mapname, &map_checksum, false );
+	Mod_LoadWorld( mapname, (uint *)&map_checksum, false );
 	cl.worldmodel = Mod_Handle( 1 ); // get world pointer
 	Cvar_SetFloat( "scr_loading", 25.0f );
 
@@ -1193,8 +1200,8 @@ void CL_PrepVideo( void )
 
 	for( i = 0; i < MAX_MODELS && cl.model_precache[i+1][0]; i++ )
 	{
-		Q_strncpy( name, cl.model_precache[i+1], MAX_STRING );
-		Mod_RegisterModel( name, i+1 );
+		Q_strncpy( mdlname, cl.model_precache[i+1], MAX_STRING );
+		Mod_RegisterModel( mdlname, i+1 );
 		Cvar_SetFloat( "scr_loading", scr_loading->value + 75.0f / mdlcount );
 		if( step && !( i % step ) && ( cl_allow_levelshots->integer || cl.background ) )
 			SCR_UpdateScreen();
@@ -1399,7 +1406,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{
 		// user out of band message (must be handled in CL_ConnectionlessPacket)
-		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, buf );
+		if( len > 0 ) Netchan_OutOfBand( NS_SERVER, from, len, (byte *)buf );
 	}
 	else MsgDev( D_ERROR, "Bad connectionless packet from %s:\n%s\n", NET_AdrToString( from ), args );
 }
@@ -1467,7 +1474,7 @@ void CL_ReadNetMessage( void )
 	if( cls.state != ca_disconnected && Netchan_IncomingReady( &cls.netchan ))
 	{
 		// the header is different lengths for reliable and unreliable messages
-		int headerBytes = BF_GetNumBytesRead( &net_message );
+		//int headerBytes = BF_GetNumBytesRead( &net_message );
 
 		// process the incoming buffer(s)
 		if( Netchan_CopyNormalFragments( &cls.netchan, &net_message ))
@@ -1530,7 +1537,7 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 	if( successfully_received)
 		MsgDev( D_INFO, "Received %s\n", filename );
 	else
-		MsgDev( D_WARN, "Failed to download %s", filename );
+		MsgDev( D_WARN, "Failed to download %s\n", filename );
 
 	if( cls.downloadfileid == cls.downloadcount - 1 )
 	{
@@ -1642,6 +1649,9 @@ void CL_InitLocal( void )
 
 	// userinfo
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );
+	// cvar is not registered as userinfo as it not needed usually
+	// it will be set as userinfo only if it has non-default and correct value
+	cl_maxpacket = Cvar_Get( "cl_maxpacket", "40000", CVAR_ARCHIVE, "Max packet size, sent from server durning connection" );
 	name = Cvar_Get( "name", Sys_GetCurrentUser(), CVAR_USERINFO|CVAR_ARCHIVE|CVAR_PRINTABLEONLY, "player name" );
 	model = Cvar_Get( "model", "player", CVAR_USERINFO|CVAR_ARCHIVE, "player model ('player' is a singleplayer model)" );
 	topcolor = Cvar_Get( "topcolor", "0", CVAR_USERINFO|CVAR_ARCHIVE, "player top color" );
@@ -1824,6 +1834,9 @@ CL_Init
 void CL_Init( void )
 {
 	qboolean loaded;
+
+	Q_memset( &cls, 0, sizeof( cls ) );
+
 	if( host.type == HOST_DEDICATED )
 		return; // nothing running on the client
 
@@ -1838,22 +1851,30 @@ void CL_Init( void )
 
 	IN_TouchInit();
 #if defined (__ANDROID__)
-	char clientlib[256];
-	Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_GAMELIBDIR"));
-	loaded = CL_LoadProgs( clientlib );
-
-	if( !loaded )
 	{
-		Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_ENGLIBDIR"));
+		char clientlib[256];
+		Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_GAMELIBDIR"));
 		loaded = CL_LoadProgs( clientlib );
+
+		if( !loaded )
+		{
+			Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_ENGLIBDIR"));
+			loaded = CL_LoadProgs( clientlib );
+		}
 	}
 #else
-	loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, SI.clientlib ));
-	if( !loaded )
 	{
+		char clientlib[256];
+		if( Sys_GetParmFromCmdLine( "-clientlib", clientlib ) )
+			loaded = CL_LoadProgs( clientlib );
+		else
+			loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, SI.clientlib ));
+		if( !loaded )
+		{
 
-		loaded = CL_LoadProgs( CLIENTDLL );
+			loaded = CL_LoadProgs( CLIENTDLL );
 
+		}
 	}
 #endif
 	if( loaded )

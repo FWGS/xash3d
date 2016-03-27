@@ -57,7 +57,7 @@ typedef struct sndlib_s
 	int		cmd_flags;
 } sndlib_t;
 
-typedef struct stream_s
+struct stream_s
 {
 	const streamfmt_t	*format;	// streamformat to operate
 
@@ -72,7 +72,7 @@ typedef struct stream_s
 	void		*ptr;	// internal decoder state
 	int		buffsize;	// cached buffer size
 	qboolean		timejump;	// true if position is changed
-} stream_t;
+};
 
 /*
 ========================================================================

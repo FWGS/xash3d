@@ -255,12 +255,12 @@ hull_t *Mod_HullForStudio( model_t *model, float frame, int sequence, vec3_t ang
 		Mod_SetStudioHullPlane( &studio_planes[j+4], phitbox[i].bone, 2, phitbox[i].bbmax[2] );
 		Mod_SetStudioHullPlane( &studio_planes[j+5], phitbox[i].bone, 2, phitbox[i].bbmin[2] );
 
-		studio_planes[j+0].dist += DotProductAbs( studio_planes[j+0].normal, size );
-		studio_planes[j+1].dist -= DotProductAbs( studio_planes[j+1].normal, size );
-		studio_planes[j+2].dist += DotProductAbs( studio_planes[j+2].normal, size );
-		studio_planes[j+3].dist -= DotProductAbs( studio_planes[j+3].normal, size );
-		studio_planes[j+4].dist += DotProductAbs( studio_planes[j+4].normal, size );
-		studio_planes[j+5].dist -= DotProductAbs( studio_planes[j+5].normal, size );
+		studio_planes[j+0].dist += DotProductFabs( studio_planes[j+0].normal, size );
+		studio_planes[j+1].dist -= DotProductFabs( studio_planes[j+1].normal, size );
+		studio_planes[j+2].dist += DotProductFabs( studio_planes[j+2].normal, size );
+		studio_planes[j+3].dist -= DotProductFabs( studio_planes[j+3].normal, size );
+		studio_planes[j+4].dist += DotProductFabs( studio_planes[j+4].normal, size );
+		studio_planes[j+5].dist -= DotProductFabs( studio_planes[j+5].normal, size );
 	}
 
 	// tell trace code about hitbox count
@@ -290,7 +290,7 @@ StudioCalcBoneAdj
 static void Mod_StudioCalcBoneAdj( float *adj, const byte *pcontroller )
 {
 	int			i, j;
-	float			value;
+	float			value = 0.0f;
 	mstudiobonecontroller_t	*pbonecontroller;
 	
 	pbonecontroller = (mstudiobonecontroller_t *)((byte *)mod_studiohdr + mod_studiohdr->bonecontrollerindex);
@@ -502,6 +502,8 @@ static void Mod_StudioCalcRotations( int boneused[], int numbones, const byte *p
 	float		adj[MAXSTUDIOCONTROLLERS];
 	float		s;
 
+	Q_memset( adj, 0, MAXSTUDIOCONTROLLERS * sizeof( float ) );
+
 	if( f > pseqdesc->numframes - 1 )
 		f = 0.0f;
 	else if( f < -0.01f )
@@ -594,7 +596,7 @@ StudioGetAnim
 static mstudioanim_t *Mod_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
 {
 	mstudioseqgroup_t	*pseqgroup;
-	size_t		filesize;
+	fs_offset_t		filesize;
 	byte		*buf;
 	cache_user_t *paSequences;
 
@@ -620,14 +622,15 @@ static mstudioanim_t *Mod_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t 
 		Q_snprintf( filepath, sizeof( filepath ), "%s/%s%i%i.mdl", modelpath, modelname, pseqdesc->seqgroup / 10, pseqdesc->seqgroup % 10 );
 
 		buf = FS_LoadFile( filepath, &filesize, false );
-		if( !buf || !filesize ) Host_Error( "StudioGetAnim: can't load %s\n", filepath );
-		if( IDSEQGRPHEADER != *(uint *)buf )
+		if( !buf || !filesize )
+			Host_Error( "StudioGetAnim: can't load %s\n", filepath );
+		else if( IDSEQGRPHEADER != *(uint *)buf )
 			Host_Error( "StudioGetAnim: %s is corrupted\n", filepath );
 
 		MsgDev( D_INFO, "loading: %s\n", filepath );
 
 		paSequences[pseqdesc->seqgroup].data = Mem_Alloc( com_studiocache, filesize );
-		Q_memcpy( paSequences[pseqdesc->seqgroup].data, buf, filesize );
+		Q_memcpy( paSequences[pseqdesc->seqgroup].data, buf, (size_t)filesize );
 		Mem_Free( buf );
 	}
 	return (mstudioanim_t *)((byte *)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);

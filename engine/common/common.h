@@ -45,7 +45,7 @@ extern "C" {
 #define MAX_INFO_STRING	256	// infostrings are transmitted across network
 #define MAX_SYSPATH		PATH_MAX	// system filepath
 #define MAX_MODS		512	// environment games that engine can keep visible
-#define BIT( n )		(1<<( n ))
+#define BIT( n )		(1U << ( n ))
 
 #ifndef __cplusplus
 #define NULL		((void *)0)
@@ -306,12 +306,6 @@ typedef struct host_parm_s
 {
     HINSTANCE	hInst;
     HANDLE		hMutex;
-#ifdef _WIN32
-	LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
-#else
-	struct sigaction oldFilter;
-#endif
-
 	host_state	state;		// global host state
 	instance_t	type;		// running at
 	jmp_buf		abortframe;	// abort current frame
@@ -369,7 +363,6 @@ typedef struct host_parm_s
 	soundlist_t	*soundList;	// used for keep ambient sounds, when renderer or sound is restarted
 	int		numsounds;
 	qboolean enabledll;
-	char vguiloader[64];
 	qboolean textmode;
 } host_parm_t;
 

@@ -501,7 +501,7 @@ int BF_ReadSBitLong( sizebuf_t *bf, int numbits )
 	// NOTE: it does this wierdness here so it's bit-compatible with regular integer data in the buffer.
 	// (Some old code writes direct integers right into the buffer).
 	sign = BF_ReadOneBit( bf );
-	if( sign ) r = -( BIT( numbits - 1 ) - r );
+	if( sign ) r = -( (int)( BIT( numbits - 1 ) - r ) );
 
 	return r;
 }

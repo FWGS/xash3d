@@ -79,8 +79,8 @@ void Host_ShutdownServer( void )
 	if( !SV_Active()) return;
 	Q_strncpy( host.finalmsg, "Server was killed", MAX_STRING );
 
-	Log_Printf ("Server shutdown\n");
-	Log_Close ();
+	Log_Printf( "Server shutdown\n" );
+	Log_Close();
 
 	SV_Shutdown( false );
 }
@@ -145,6 +145,7 @@ void Host_EndGame( const char *message, ... )
 	{
 		Q_snprintf( host.finalmsg, sizeof( host.finalmsg ), "Host_EndGame: %s", string );
 		SV_Shutdown( false );
+		return;
 	}
 	
 	if( host.type == HOST_DEDICATED )
@@ -263,7 +264,7 @@ void Host_Exec_f( void )
 	Q_strncpy( cfgpath, Cmd_Argv( 1 ), sizeof( cfgpath )); 
 	FS_DefaultExtension( cfgpath, ".cfg" ); // append as default
 
-	f = FS_LoadFile( cfgpath, NULL, false );
+	f = (char *)FS_LoadFile( cfgpath, NULL, false );
 	if( !f )
 	{
 		MsgDev( D_NOTE, "couldn't exec %s\n", Cmd_Argv( 1 ));
@@ -342,7 +343,7 @@ qboolean Host_RegisterDecal( const char *name )
 
 	for( i = 1; i < MAX_DECALS && host.draw_decals[i][0]; i++ )
 	{
-		if( !Q_stricmp( host.draw_decals[i], shortname ))
+		if( !Q_stricmp( (char *)host.draw_decals[i], shortname ))
 			return true;
 	}
 
@@ -353,7 +354,7 @@ qboolean Host_RegisterDecal( const char *name )
 	}
 
 	// register new decal
-	Q_strncpy( host.draw_decals[i], shortname, sizeof( host.draw_decals[i] ));
+	Q_strncpy( (char *)host.draw_decals[i], shortname, sizeof( host.draw_decals[i] ));
 	num_decals++;
 
 	return true;
@@ -542,7 +543,7 @@ qboolean Host_FilterTime( float time )
 
 	if( host_framerate->value > 0 && ( Host_IsLocalGame()))
 	{
-		float fps = host_framerate->value;
+		fps = host_framerate->value;
 		if( fps > 1 ) fps = 1.0f / fps;
 		host.frametime = fps;
 	}
@@ -824,18 +825,18 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Setup_LDT_Keeper( ); // Must call before creating any thread
 #endif
 
-	if( baseDir = getenv( "XASH3D_BASEDIR" ) )
+	if( ( baseDir = getenv( "XASH3D_BASEDIR" ) ) )
 	{
 		Q_strncpy( host.rootdir, baseDir, sizeof(host.rootdir) );
 	}
 	else
 	{
 		#if defined(XASH_SDL)
-		if( !(baseDir = SDL_GetBasePath()) )
+		if( !( baseDir = SDL_GetBasePath() ) )
 			Sys_Error( "couldn't determine current directory: %s", SDL_GetError() );
 		Q_strncpy( host.rootdir, baseDir, sizeof( host.rootdir ) );
 		#else
-		if( !getcwd(host.rootdir, sizeof(host.rootdir) ) )
+		if( !getcwd( host.rootdir, sizeof(host.rootdir) ) )
 			host.rootdir[0] = 0;
 		#endif
 	}
@@ -845,21 +846,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 	if( !Sys_CheckParm( "-noch" ) )
 	{
-#ifdef _WIN32
-		SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
-		host.oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
-		host.hInst = GetModuleHandle( NULL );
-#elif !defined (CRASHHANDLER)
-//TODO
-#else
-		struct sigaction act;
-		act.sa_sigaction = Sys_Crash;
-		act.sa_flags = SA_SIGINFO | SA_ONSTACK;
-		sigaction(SIGSEGV, &act, &host.oldFilter);
-		sigaction(SIGABRT, &act, &host.oldFilter);
-		sigaction(SIGBUS, &act, &host.oldFilter);
-		sigaction(SIGILL, &act, &host.oldFilter);
-#endif
+		Sys_SetupCrashHandler();
 	}
 
 	host.change_game = bChangeGame;
@@ -881,12 +868,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		else host.developer++; // -dev == 1, -dev -console == 2
 	}
 
-	if( !Sys_CheckParm( "-vguiloader" ) || !Sys_GetParmFromCmdLine( "-vguiloader", host.vguiloader ) )
-	{
-		Q_strcpy( host.vguiloader, VGUI_SUPPORT_DLL );
-	}
-
-
 #ifdef XASH_DEDICATED
 	host.type = HOST_DEDICATED; // predict state
 #else
@@ -898,9 +879,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.mouse_visible = false;
 
 #ifdef XASH_SDL
-	SDL_Init( SDL_INIT_TIMER );
-	if( SDL_Init( SDL_INIT_VIDEO |SDL_INIT_EVENTS ))
+	if( SDL_Init( SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS ))
 	{
+		SDL_Init( SDL_INIT_TIMER );
 		host.type = HOST_DEDICATED;
 	}
 #endif
@@ -1063,6 +1044,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 		Cbuf_Execute();
 		break;
+	case HOST_UNKNOWN:
+		break;
 	}
 
 	if( host.type == HOST_DEDICATED )
@@ -1073,6 +1056,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
 		Cmd_AddCommand( "exit", Sys_Quit, "quit the game" );
 
+		SV_InitGameProgs();
+
+		Cbuf_AddText( "exec config.cfg\n" );
+
 		// dedicated servers are using settings from server.cfg file
 		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
 		Cbuf_Execute();
@@ -1082,7 +1069,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 			Msg( "Please add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
 		else
 			Cbuf_AddText( va( "map %s\n", defaultmap ));
+
 		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
+
 		NET_Config( true );
 	}
 	else
@@ -1099,7 +1088,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Cmd_RemoveCommand( "setgl" );
 
 	// we need to execute it again here
-	Cmd_ExecuteString( "exec config.cfg\n", src_command );
+	if( host.type != HOST_DEDICATED )
+		Cmd_ExecuteString( "exec config.cfg\n", src_command );
 
 	// exec all files from userconfig.d 
 	Host_Userconfigd_f();
@@ -1118,7 +1108,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	while( !host.crashed && !host.shutdown_issued )
 	{
 #ifdef XASH_SDL
-		while( SDL_PollEvent( &event ) )
+		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
 #endif
 		newtime = Sys_DoubleTime ();
@@ -1164,8 +1154,8 @@ void EXPORT Host_Shutdown( void )
 	if( !host.change_game )
 		Q_strncpy( host.finalmsg, "Server shutdown", sizeof( host.finalmsg ));
 
-	Log_Printf ("Server shutdown\n");
-	Log_Close ();
+	Log_Printf( "Server shutdown\n" );
+	Log_Close();
 
 	SV_Shutdown( false );
 	CL_Shutdown();
@@ -1176,9 +1166,5 @@ void EXPORT Host_Shutdown( void )
 	Cmd_Shutdown();
 	Host_FreeCommon();
 	Con_DestroyConsole();
-
-#ifdef _WIN32
-	// restore filter	
-	if( host.oldFilter ) SetUnhandledExceptionFilter( host.oldFilter );
-#endif
+	Sys_RestoreCrashHandler();
 }

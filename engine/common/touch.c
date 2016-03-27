@@ -419,7 +419,7 @@ void IN_TouchRemoveButton( const char *name )
 
 	IN_TouchEditClear();
 
-	while( button = IN_TouchFindFirst( name ) )
+	while( ( button = IN_TouchFindFirst( name ) ) )
 	{
 		if( button->prev )
 			button->prev->next = button->next;
@@ -647,11 +647,15 @@ void IN_TouchLoadDefaults_f( void )
 			  y2 = g_DefaultButtons[i].y2; 
 		
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
+		
 		if( g_DefaultButtons[i].aspect && g_DefaultButtons[i].round == round_aspect )
-		if( g_DefaultButtons[i].texturefile[0] == '#' )
-			y2 = y1 + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight ) * g_DefaultButtons[i].aspect + touch.swidth*2/SCR_H;
-		else
-			y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * g_DefaultButtons[i].aspect;
+		{
+			if( g_DefaultButtons[i].texturefile[0] == '#' )
+				y2 = y1 + ( (float)clgame.scrInfo.iCharHeight / (float)clgame.scrInfo.iHeight ) * g_DefaultButtons[i].aspect + touch.swidth*2/SCR_H;
+			else
+				y2 = y1 + ( x2 - x1 ) * (SCR_W/SCR_H) * g_DefaultButtons[i].aspect;
+		}
+		
 		IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 		button = IN_TouchAddButton( g_DefaultButtons[i].name, g_DefaultButtons[i].texturefile, g_DefaultButtons[i].command, x1, y1, x2, y2, g_DefaultButtons[i].color );
 		button->flags |= g_DefaultButtons[i].flags;
@@ -972,8 +976,13 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 	if( !cls.creditsFont.valid )
 		return GRID_X * 2;
 	Con_UtfProcessChar( 0 );
-	pglColor4ub( color[0], color[1], color[2], color[3] );
+
 	GL_SetRenderMode( kRenderTransAdd );
+
+	// text is additive and alpha does not work
+	pglColor4ub( color[0] * ( (float)color[3] /255.0f ), color[1] * ( (float)color[3] /255.0f ),
+			color[2] * ( (float)color[3] /255.0f ), 255 );
+
 	while( *s )
 	{
 		while( *s && ( *s != '\n' ) && ( *s != ';' ) && ( x1 < maxx ) )
@@ -1038,8 +1047,8 @@ void IN_TouchDraw( void )
 				button->fade = bound( 0, B(fade), 1 );
 				if( ( B( fade ) == 0 ) || ( B(fade) == 1 ) )
 					B( fadespeed ) = 0;
-				if( ( B( fade ) >= B( fadeend ) ) && ( B( fadespeed ) > 0 ) ||
-					( B( fade ) <= B( fadeend ) ) && ( B( fadespeed ) < 0 ))
+				if( ( ( B( fade ) >= B( fadeend ) ) && ( B( fadespeed ) > 0 ) ) ||
+					( ( B( fade ) <= B( fadeend ) ) && ( B( fadespeed ) < 0 ) ) )
 					B( fadespeed ) = 0, B( fade ) = B( fadeend ) ;
 			}
 

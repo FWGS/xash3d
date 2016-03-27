@@ -80,10 +80,12 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 {
 	int	i, j, k, f, b;
 	vec3_t	mins, maxs;
-	float	m, frac, s, t, *v, vertsDiv;
+	float	m, frac, s, t, *v, vertsDiv, *verts_p;
 	vec3_t	front[SUBDIVIDE_SIZE], back[SUBDIVIDE_SIZE], total;
 	float	dist[SUBDIVIDE_SIZE], total_s, total_t, total_ls, total_lt;
 	glpoly_t	*poly;
+
+	Q_memset( dist, 0, SUBDIVIDE_SIZE * sizeof( float ) );
 
 	if( numverts > ( SUBDIVIDE_SIZE - 4 ))
 		Host_Error( "Mod_SubdividePolygon: too many vertexes on face ( %i )\n", numverts );
@@ -143,18 +145,19 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 	}
 
 	// add a point in the center to help keep warp valid
-	poly = Mem_Alloc( loadmodel->mempool, sizeof( glpoly_t ) + ((numverts-4)+2) * VERTEXSIZE * sizeof( float ));
+	poly = Mem_Alloc( loadmodel->mempool, sizeof( glpoly_t ) + ( ( numverts - 4 ) + 2) * VERTEXSIZE * sizeof( float ));
 	poly->next = warpface->polys;
 	poly->flags = warpface->flags;
 	warpface->polys = poly;
 	poly->numverts = numverts + 2;
+	verts_p = (float *)poly + ( ( sizeof( void* ) + sizeof( int ) ) >> 1 ); // pointer glpoly_t->verts
 	VectorClear( total );
 	total_s = total_ls = 0.0f;
 	total_t = total_lt = 0.0f;
 
 	for( i = 0; i < numverts; i++, verts += 3 )
 	{
-		VectorCopy( verts, poly->verts[i+1] );
+		VectorCopy( verts, &verts_p[VERTEXSIZE * ( i + 1 )] );
 		VectorAdd( total, verts, total );
 
 		if( warpface->flags & SURF_DRAWTURB )
@@ -170,9 +173,9 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 			t /= warpface->texinfo->texture->height; 
 		}
 
-		poly->verts[i+1][3] = s;
-		poly->verts[i+1][4] = t;
-
+		verts_p[VERTEXSIZE * ( i + 1 ) + 3] = s;
+		verts_p[VERTEXSIZE * ( i + 1 ) + 4] = t;
+ 
 		total_s += s;
 		total_t += t;
 
@@ -192,8 +195,8 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 			t += LM_SAMPLE_SIZE >> 1;
 			t /= BLOCK_SIZE * LM_SAMPLE_SIZE; //fa->texinfo->texture->height;
 
-			poly->verts[i+1][5] = s;
-			poly->verts[i+1][6] = t;
+			verts_p[VERTEXSIZE * ( i + 1 ) + 5] = s;
+			verts_p[VERTEXSIZE * ( i + 1 ) + 6] = t;
 
 			total_ls += s;
 			total_lt += t;
@@ -202,24 +205,26 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 
 	vertsDiv = ( 1.0f / (float)numverts );
 
-	VectorScale( total, vertsDiv, poly->verts[0] );
-	poly->verts[0][3] = total_s * vertsDiv;
-	poly->verts[0][4] = total_t * vertsDiv;
+	VectorScale( total, vertsDiv, &verts_p[0] );
+	verts_p[3] = total_s * vertsDiv;
+	verts_p[4] = total_t * vertsDiv;
 
 	if( !( warpface->flags & SURF_DRAWTURB ))
 	{
-		poly->verts[0][5] = total_ls * vertsDiv;
-		poly->verts[0][6] = total_lt * vertsDiv;
+		verts_p[5] = total_ls * vertsDiv;
+		verts_p[6] = total_lt * vertsDiv;
 	}
 
 	// copy first vertex to last
-	Q_memcpy( poly->verts[i+1], poly->verts[1], sizeof( poly->verts[0] ));
+	Q_memcpy(&verts_p[VERTEXSIZE * ( i + 1 )], &verts_p[VERTEXSIZE], VERTEXSIZE * sizeof( float ) );
 }
 
 void GL_SetupFogColorForSurfaces( void )
 {
 	vec3_t	fogColor;
 	float	factor, div;
+
+	Q_memset(fogColor, 0, 3 * sizeof(float)); //Result pow( RI.fogColor[i] / div, ( 1.0f / factor )) may be nan.
 
 	if(( !RI.fogEnabled && !RI.fogCustom ) || RI.refdef.onlyClientDraw || !RI.currententity )
 		return;
@@ -286,10 +291,9 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 {
 	int		i, lindex, lnumverts;
 	medge_t		*pedges, *r_pedge;
-	int		vertpage;
 	texture_t		*tex;
 	gltexture_t	*glt;
-	float		*vec;
+	float		*vec, *verts_p;
 	float		s, t;
 	glpoly_t		*poly;
 
@@ -313,14 +317,14 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 	// reconstruct the polygon
 	pedges = mod->edges;
 	lnumverts = fa->numedges;
-	vertpage = 0;
 
 	// draw texture
-	poly = Mem_Alloc( mod->mempool, sizeof( glpoly_t ) + ( lnumverts - 4 ) * VERTEXSIZE * sizeof( float ));
+	poly = Mem_Alloc( mod->mempool, sizeof( glpoly_t ) + ( lnumverts - 4 ) * VERTEXSIZE * sizeof( float ) );
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;
 	poly->numverts = lnumverts;
+	verts_p = (float *)poly + (( sizeof( void* ) + sizeof( int ) ) >> 1); //pointer glpoly_t->verts
 
 	for( i = 0; i < lnumverts; i++ )
 	{
@@ -343,9 +347,9 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 		t = DotProduct( vec, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
 		t /= fa->texinfo->texture->height;
 
-		VectorCopy( vec, poly->verts[i] );
-		poly->verts[i][3] = s;
-		poly->verts[i][4] = t;
+		VectorCopy( vec, &verts_p[VERTEXSIZE * i] );
+		verts_p[VERTEXSIZE * i + 3] = s;
+		verts_p[VERTEXSIZE * i + 4] = t;
 
 		// lightmap texture coordinates
 		s = DotProduct( vec, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
@@ -360,8 +364,8 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 		t += LM_SAMPLE_SIZE >> 1;
 		t /= BLOCK_SIZE * LM_SAMPLE_SIZE; //fa->texinfo->texture->height;
 
-		poly->verts[i][5] = s;
-		poly->verts[i][6] = t;
+		verts_p[VERTEXSIZE * i + 5] = s;
+		verts_p[VERTEXSIZE * i + 6] = t;
 	}
 
 	// remove co-linear points - Ed
@@ -372,9 +376,9 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 			vec3_t	v1, v2;
 			float	*prev, *this, *next;
 
-			prev = poly->verts[(i + lnumverts - 1) % lnumverts];
-			next = poly->verts[(i + 1) % lnumverts];
-			this = poly->verts[i];
+			prev = &verts_p[VERTEXSIZE * ((i + lnumverts - 1) % lnumverts)];
+			next = &verts_p[VERTEXSIZE * ((i + 1) % lnumverts)];
+			this = &verts_p[VERTEXSIZE * i];
 
 			VectorSubtract( this, prev, v1 );
 			VectorNormalize( v1 );
@@ -389,7 +393,7 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 				for( j = i + 1; j < lnumverts; j++ )
 				{
 					for( k = 0; k < VERTEXSIZE; k++ )
-						poly->verts[j-1][k] = poly->verts[j][k];
+					verts_p[VERTEXSIZE * ( j - 1 ) + k] = verts_p[VERTEXSIZE * j + k];
 				}
 
 				// retry next vertex next time, which is now current vertex
@@ -733,7 +737,7 @@ void DrawGLPoly( glpoly_t *p, float xScale, float yScale )
 		if( e->curstate.rendercolor.r ) flConveyorSpeed = -flConveyorSpeed;
 		texture = R_GetTexture( glState.currentTextures[glState.activeTMU] );
 
-		flRate = abs( flConveyorSpeed ) / (float)texture->srcWidth;
+		flRate = fabs( flConveyorSpeed ) / (float)texture->srcWidth;
 		flAngle = ( flConveyorSpeed >= 0 ) ? 180 : 0;
 
 		SinCos( flAngle * ( M_PI / 180.0f ), &sy, &cy );
@@ -1190,7 +1194,7 @@ void R_RenderBrushPoly( msurface_t *fa )
 	}
 
 	// dynamic this frame or dynamic previously
-	if(( fa->dlightframe == tr.framecount ))
+	if( fa->dlightframe == tr.framecount )
 	{
 dynamic:
 		// NOTE: at this point we have only valid textures
@@ -1441,7 +1445,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 		VectorCopy( l->origin, oldorigin ); // save lightorigin
 		Matrix4x4_VectorITransform( RI.objectMatrix, l->origin, origin_l );
 		VectorCopy( origin_l, l->origin ); // move light in bmodel space
-		R_MarkLights( l, 1<<k, clmodel->nodes + clmodel->hulls[0].firstclipnode );
+		R_MarkLights( l, 1U << k, clmodel->nodes + clmodel->hulls[0].firstclipnode );
 		VectorCopy( oldorigin, l->origin ); // restore lightorigin
 	}
 
@@ -1545,7 +1549,7 @@ void R_DrawStaticModel( cl_entity_t *e )
 	{
 		if( l->die < cl.time || !l->radius )
 			continue;
-		R_MarkLights( l, 1<<k, clmodel->nodes + clmodel->hulls[0].firstclipnode );
+		R_MarkLights( l, 1U << k, clmodel->nodes + clmodel->hulls[0].firstclipnode );
 	}
 
 	psurf = &clmodel->surfaces[clmodel->firstmodelsurface];
@@ -1631,12 +1635,12 @@ void R_RecursiveWorldNode( mnode_t *node, uint clipflags )
 	{
 		for( i = 0, clipplane = RI.frustum; i < 6; i++, clipplane++ )
 		{
-			if(!( clipflags & ( 1<<i )))
+			if(!( clipflags & ( 1U << i )))
 				continue;
 
 			clipped = BoxOnPlaneSide( node->minmaxs, node->minmaxs + 3, clipplane );
 			if( clipped == 2 ) return;
-			if( clipped == 1 ) clipflags &= ~(1<<i);
+			if( clipped == 1 ) clipflags &= ~(1U << i);
 		}
 	}
 
@@ -1780,12 +1784,12 @@ void R_DrawWorldTopView( mnode_t *node, uint clipflags )
 		{
 			for( c = 0, clipplane = RI.frustum; c < 6; c++, clipplane++ )
 			{
-				if(!( clipflags & ( 1<<c )))
+				if(!( clipflags & ( 1U << c )))
 					continue;
 
 				clipped = BoxOnPlaneSide( node->minmaxs, node->minmaxs + 3, clipplane );
 				if( clipped == 2 ) return;
-				if( clipped == 1 ) clipflags &= ~(1<<c);
+				if( clipped == 1 ) clipflags &= ~(1U << c);
 			}
 		}
 
@@ -1998,7 +2002,7 @@ void R_MarkLeaves( void )
 
 	for( i = 0; i < cl.worldmodel->numleafs; i++ )
 	{
-		if( vis[i>>3] & ( 1<<( i & 7 )))
+		if( vis[i>>3] & ( 1U << ( i & 7 )))
 		{
 			node = (mnode_t *)&cl.worldmodel->leafs[i+1];
 			do

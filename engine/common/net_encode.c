@@ -736,7 +736,7 @@ void Delta_InitFields( void )
 	string		encodeDll, encodeFunc, token;	
 	delta_info_t	*dt;
 
-	afile = FS_LoadFile( DELTA_PATH, NULL, false );
+	afile = (char *)FS_LoadFile( DELTA_PATH, NULL, false );
 	if( !afile ) Sys_Error( "DELTA_Load: couldn't load file %s\n", DELTA_PATH );
 
 	pfile = afile;
@@ -1146,9 +1146,9 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 		#endif
 		flTime = (timebase * 100.0f) - (flValue * 100.0f);
 		#if 1
-		iValue = (uint)abs(flTime );
+		iValue = (uint)fabs( flTime );
 		#else
-		iValue = (uint)abs( flTime );
+		iValue = (uint)fabs( flTime );
 		if (flTime<0.0f) {
 			iValue |= 0x80000000;
 		}
@@ -1165,9 +1165,9 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 		#endif
 		flTime = (timebase * pField->multiplier) - (flValue * pField->multiplier);
 		#if 1
-		iValue = (uint)abs(flTime );
+		iValue = (uint)fabs( flTime );
 		#else
-		iValue = (uint)abs( flTime );
+		iValue = (uint)fabs( flTime );
 		if (flTime<0.0f) {
 			iValue |= 0x80000000;
 		}
@@ -1820,8 +1820,18 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	if( BF_ReadOneBit( msg ))
 		to->entityType = BF_ReadUBitLong( msg, 2 );
 
-	if( to->entityType == ENTITY_NORMAL )
+
+	if( to->entityType == ENTITY_BEAM )
 	{
+		dt = Delta_FindStruct( "custom_entity_state_t" );
+	}
+	else //  ENTITY_NORMAL or other (try predict type)
+	{
+		/* Omit connection drop on wromg data from server.
+		 * I know that it is very dirty,
+		 * but i don't know how to do it better.*/
+		if( to->entityType != ENTITY_NORMAL )
+			MsgDev( D_NOTE, "MSG_ReadDeltaEntity: broken delta: entityType = %d\n", to->entityType );
 		if( player )
 		{
 			dt = Delta_FindStruct( "entity_state_player_t" );
@@ -1830,10 +1840,6 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 		{
 			dt = Delta_FindStruct( "entity_state_t" );
 		}
-	}
-	else if( to->entityType == ENTITY_BEAM )
-	{
-		dt = Delta_FindStruct( "custom_entity_state_t" );
 	}
 
 	if( !(dt && dt->bInitialized) ) // Broken  delta?

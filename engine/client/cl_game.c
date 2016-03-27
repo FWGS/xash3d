@@ -238,7 +238,7 @@ void CL_InitCDAudio( const char *filename )
 		CL_CreatePlaylist( filename );
 	}
 
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 	if( !afile ) return;
 
 	pfile = afile;
@@ -1372,7 +1372,7 @@ static client_sprite_t *pfnSPR_GetList( char *psz, int *piCount )
 	if( !clgame.itemspath[0] )	// typically it's sprites\*.txt
 		FS_ExtractFilePath( psz, clgame.itemspath );
 
-	afile = FS_LoadFile( psz, NULL, false );
+	afile = (char *)FS_LoadFile( psz, NULL, false );
 	if( !afile ) return NULL;
 
 	pfile = afile;
@@ -2284,8 +2284,8 @@ pfnSetUpPlayerPrediction
 void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
 {
 	int j;
-	struct predicted_player *pPlayer = predicted_players;
-	entity_state_t *entState = cl.frames[cl.parsecountmod].playerstate;
+	struct predicted_player *pPlayer;
+	entity_state_t *entState;
 
 	cl_entity_t *clEntity;
 
@@ -2817,7 +2817,7 @@ int pfnDrawString( int x, int y, const char *str, int r, int g, int b )
 	// draw the string until we hit the null character or a newline character
 	for ( ; *str != 0 && *str != '\n'; str++ )
 	{
-		x += pfnDrawCharacter( x, y, *str, r, g, b );
+		x += pfnDrawCharacter( x, y, (unsigned char)*str, r, g, b );
 	}
 
 	return x;
@@ -2952,7 +2952,7 @@ void pfnFillRGBABlend( int x, int y, int width, int height, int r, int g, int b,
 
 	pglEnable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
-	pglBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_ONE );
+	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 	R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, cls.fillImage );

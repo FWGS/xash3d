@@ -826,7 +826,7 @@ void Image_Resample32Nolerp( const void *indata, int inwidth, int inheight, void
 
 		if( j & 1 )
 		{
-			out[0] = inrow[frac >> 16];frac += fracstep;
+			out[0] = inrow[frac >> 16];
 			out += 1;
 		}
 	}
@@ -993,7 +993,6 @@ void Image_Resample24Nolerp( const void *indata, int inwidth, int inheight, void
 			*out++ = inrow[f+0];
 			*out++ = inrow[f+1];
 			*out++ = inrow[f+2];
-			frac += fracstep;
 			out += 1;
 		}
 	}
@@ -1620,8 +1619,9 @@ qboolean Image_Process( rgbdata_t **pix, int width, int height, float gamma, uin
 		}
 
 		if( flags & IMAGE_ROUNDFILLER )
-	         		out = Image_FloodInternal( pic->buffer, pic->width, pic->height, w, h, pic->type, &resampled );
-		else out = Image_ResampleInternal((uint *)pic->buffer, pic->width, pic->height, w, h, pic->type, &resampled );
+			Image_FloodInternal( pic->buffer, pic->width, pic->height, w, h, pic->type, &resampled );
+		else
+			Image_ResampleInternal((uint *)pic->buffer, pic->width, pic->height, w, h, pic->type, &resampled );
 
 		if( resampled ) // resampled or filled
 		{

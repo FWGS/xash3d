@@ -1872,7 +1872,7 @@ void SV_LoadAdjacentEnts( const char *pOldLevel, const char *pLandmarkName )
 			{
 				index = EntryInTable( pSaveData, sv.name, index );
 				if( index < 0 ) break;
-				flags |= (1<<index);
+				flags |= (1U << index);
 			}
 
 			if( flags ) movedCount = SV_CreateEntityTransitionList( pSaveData, flags );
@@ -2300,6 +2300,7 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	char	*pData, *pSaveData, *pFieldName, **pTokenList;
 	string	name, description;
 	file_t	*f;
+	short shortpool;
 
 	f = FS_Open( savename, "rb", true );
 	if( !f )
@@ -2384,10 +2385,12 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	else pTokenList = NULL;
 
 	// short, short (size, index of field name)
-	nFieldSize = *(short *)pData;
+	Q_memcpy(&shortpool, pData, sizeof(short));
+	nFieldSize = shortpool;
 	pData += sizeof( short );
 
-	pFieldName = pTokenList[*(short *)pData];
+	Q_memcpy(&shortpool, pData, sizeof(short));
+	pFieldName = pTokenList[shortpool];
 
 	if( Q_stricmp( pFieldName, "GameHeader" ))
 	{
@@ -2410,10 +2413,12 @@ qboolean SV_GetComment( const char *savename, char *comment )
 		// Size
 		// szName
 		// Actual Data
-		nFieldSize = *(short *)pData;
+		Q_memcpy(&shortpool, pData, sizeof(short));
+		nFieldSize = shortpool;
 		pData += sizeof( short );
 
-		pFieldName = pTokenList[*(short *)pData];
+		Q_memcpy(&shortpool, pData, sizeof(short));
+		pFieldName = pTokenList[shortpool];
 		pData += sizeof( short );
 
 		if( !Q_stricmp( pFieldName, "comment" ))

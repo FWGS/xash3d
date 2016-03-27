@@ -181,7 +181,7 @@ Image_LoadSPR
 */
 qboolean Image_LoadSPR( const char *name, const byte *buffer, size_t filesize )
 {
-	dspriteframe_t	*pin;	// identical for q1\hl sprites
+	dspriteframe_t	pin;	// identical for q1\hl sprites
 
 	if( image.hint == IL_HINT_HL )
 	{
@@ -201,9 +201,9 @@ qboolean Image_LoadSPR( const char *name, const byte *buffer, size_t filesize )
 		return false;
 	}
 
-	pin = (dspriteframe_t *)buffer;
-	image.width = pin->width;
-	image.height = pin->height;
+	Q_memcpy( &pin, buffer, sizeof(dspriteframe_t) );
+	image.width = pin.width;
+	image.height = pin.height;
 
 	if( filesize < image.width * image.height )
 	{
@@ -228,7 +228,7 @@ qboolean Image_LoadSPR( const char *name, const byte *buffer, size_t filesize )
 	if( image.d_rendermode == LUMP_TRANSPARENT )
 		image.d_currentpal[255] = 0;
 
-	return Image_AddIndexedImageToPack( (byte *)(pin + 1), image.width, image.height );
+	return Image_AddIndexedImageToPack( (byte *)(buffer + sizeof(dspriteframe_t)), image.width, image.height );
 }
 
 /*
@@ -319,7 +319,7 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 	mip_t	mip;
 	qboolean	hl_texture;
 	byte	*fin, *pal;
-	int	ofs[4], rendermode;
+	int	rendermode;
 	int	i, pixels, numcolors;
 
 	if( filesize < sizeof( mip ))
@@ -335,7 +335,6 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 	if( !Image_ValidSize( name ))
 		return false;
 
-	Q_memcpy( ofs, mip.offsets, sizeof( ofs ));
 	pixels = image.width * image.height;
 
 	if( image.hint != IL_HINT_Q1 && filesize >= (int)sizeof(mip) + ((pixels * 85)>>6) + sizeof(short) + 768)
@@ -405,7 +404,6 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 		// quake1 1.01 mip version without palette
 		fin = (byte *)buffer + mip.offsets[0];
 		pal = NULL; // clear palette
-		rendermode = LUMP_NORMAL;
 
 		hl_texture = false;
 

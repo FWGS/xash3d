@@ -1,10 +1,10 @@
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?= -Og -ggdb
+CFLAGS ?= -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse4.2 -ftree-vectorize -mstackrealign -finline-limit=1024
 LDFLAGS =
 LIBS = -lm
 TOPDIR = $(PWD)/..
-INCLUDES = -I../SDL2/include -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl
+INCLUDES = -I../SDL2/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared -Icommon/sdl
 DEFINES =
 XASH_VGUI ?= 1
 ifeq ($(XASH_DEDICATED),1)
@@ -36,10 +36,12 @@ xash_bin.exe: $(OBJS) $(OBJS_CPP)
 	$(CC) -o xash_bin.exe $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
 
 .PHONY: depend clean list
-RM = \Program Files\Git\usr\bin\rm -f
 clean:
+ifneq ($(RM),)
 	$(RM) $(OBJS) $(OBJS_CPP) xash_bin.exe
-
+else
+	del $(subst /,\,$(OBJS) $(OBJS_CPP) xash_bin.exe)
+endif
 list:
 	@echo Sources:
 	@echo $(SRCS)

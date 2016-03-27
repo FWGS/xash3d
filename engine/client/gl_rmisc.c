@@ -225,7 +225,7 @@ void R_ParseDetailTextures( const char *filename )
 		R_CreateDetailTexturesList( filename );
 	}
 
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 	if( !afile ) return;
 
 	pfile = afile;
@@ -294,7 +294,7 @@ void R_ParseTexFilters( const char *filename )
 	dfilter_t	*tf;
 	int	i;
 
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 	if( !afile ) return;
 
 	pfile = afile;

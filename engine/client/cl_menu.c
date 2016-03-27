@@ -128,6 +128,7 @@ qboolean UI_IsVisible( void )
 
 static void UI_DrawLogo( const char *filename, float x, float y, float width, float height )
 {
+#ifdef USE_VFW
 	static float	cin_time;
 	static int	last_frame = -1;
 	byte		*cin_data = NULL;
@@ -193,6 +194,7 @@ static void UI_DrawLogo( const char *filename, float x, float y, float width, fl
 	}
 
 	R_DrawStretchRaw( x, y, width, height, menu.logo_xres, menu.logo_yres, cin_data, redraw );
+#endif
 }
 
 static int UI_GetLogoWidth( void )
@@ -1074,7 +1076,7 @@ qboolean UI_LoadProgs( void )
 
 	menu.use_text_api = false;
 
-	if( GiveTextApi = (UITEXTAPI)Com_GetProcAddress( menu.hInstance, "GiveTextAPI" ) )
+	if( ( GiveTextApi = (UITEXTAPI)Com_GetProcAddress( menu.hInstance, "GiveTextAPI" ) ) )
 	{
 		// make local copy of engfuncs to prevent overwrite it with user dll
 		Q_memcpy( &gpTextfuncs, &gTextfuncs, sizeof( gpTextfuncs ));
