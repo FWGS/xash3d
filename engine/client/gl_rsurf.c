@@ -80,7 +80,7 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 {
 	int	i, j, k, f, b;
 	vec3_t	mins, maxs;
-	float	m, frac, s, t, *v, vertsDiv;
+	float	m, frac, s, t, *v, vertsDiv, *verts_p;
 	vec3_t	front[SUBDIVIDE_SIZE], back[SUBDIVIDE_SIZE], total;
 	float	dist[SUBDIVIDE_SIZE], total_s, total_t, total_ls, total_lt;
 	glpoly_t	*poly;
@@ -145,19 +145,19 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 	}
 
 	// add a point in the center to help keep warp valid
-	poly = Mem_Alloc( loadmodel->mempool, sizeof( glpoly_t ) );
-	poly->verts = Mem_Alloc( loadmodel->mempool, ( numverts + 2 ) * VERTEXSIZE * sizeof( float ));
+	poly = Mem_Alloc( loadmodel->mempool, sizeof( glpoly_t ) + ( ( numverts - 4 ) + 2) * VERTEXSIZE * sizeof( float ));
 	poly->next = warpface->polys;
 	poly->flags = warpface->flags;
 	warpface->polys = poly;
 	poly->numverts = numverts + 2;
+	verts_p = (float *)poly + ( ( sizeof( void* ) + sizeof( int ) ) >> 1 ); // pointer glpoly_t->verts
 	VectorClear( total );
 	total_s = total_ls = 0.0f;
 	total_t = total_lt = 0.0f;
 
 	for( i = 0; i < numverts; i++, verts += 3 )
 	{
-		VectorCopy( verts, poly->verts[i+1] );
+		VectorCopy( verts, &verts_p[VERTEXSIZE * ( i + 1 )] );
 		VectorAdd( total, verts, total );
 
 		if( warpface->flags & SURF_DRAWTURB )
@@ -173,9 +173,9 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 			t /= warpface->texinfo->texture->height; 
 		}
 
-		poly->verts[i+1][3] = s;
-		poly->verts[i+1][4] = t;
-
+		verts_p[VERTEXSIZE * ( i + 1 ) + 3] = s;
+		verts_p[VERTEXSIZE * ( i + 1 ) + 4] = t;
+ 
 		total_s += s;
 		total_t += t;
 
@@ -195,8 +195,8 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 			t += LM_SAMPLE_SIZE >> 1;
 			t /= BLOCK_SIZE * LM_SAMPLE_SIZE; //fa->texinfo->texture->height;
 
-			poly->verts[i+1][5] = s;
-			poly->verts[i+1][6] = t;
+			verts_p[VERTEXSIZE * ( i + 1 ) + 5] = s;
+			verts_p[VERTEXSIZE * ( i + 1 ) + 6] = t;
 
 			total_ls += s;
 			total_lt += t;
@@ -205,24 +205,26 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 
 	vertsDiv = ( 1.0f / (float)numverts );
 
-	VectorScale( total, vertsDiv, poly->verts[0] );
-	poly->verts[0][3] = total_s * vertsDiv;
-	poly->verts[0][4] = total_t * vertsDiv;
+	VectorScale( total, vertsDiv, &verts_p[0] );
+	verts_p[3] = total_s * vertsDiv;
+	verts_p[4] = total_t * vertsDiv;
 
 	if( !( warpface->flags & SURF_DRAWTURB ))
 	{
-		poly->verts[0][5] = total_ls * vertsDiv;
-		poly->verts[0][6] = total_lt * vertsDiv;
+		verts_p[5] = total_ls * vertsDiv;
+		verts_p[6] = total_lt * vertsDiv;
 	}
 
 	// copy first vertex to last
-	Q_memcpy( poly->verts[i+1], poly->verts[1], sizeof( poly->verts[0] ));
+	Q_memcpy(&verts_p[VERTEXSIZE * ( i + 1 )], &verts_p[VERTEXSIZE], VERTEXSIZE * sizeof( float ) );
 }
 
 void GL_SetupFogColorForSurfaces( void )
 {
 	vec3_t	fogColor;
 	float	factor, div;
+
+	Q_memset(fogColor, 0, 3 * sizeof(float)); //Result pow( RI.fogColor[i] / div, ( 1.0f / factor )) may be nan.
 
 	if(( !RI.fogEnabled && !RI.fogCustom ) || RI.refdef.onlyClientDraw || !RI.currententity )
 		return;
@@ -291,7 +293,7 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 	medge_t		*pedges, *r_pedge;
 	texture_t		*tex;
 	gltexture_t	*glt;
-	float		*vec;
+	float		*vec, *verts_p;
 	float		s, t;
 	glpoly_t		*poly;
 
@@ -317,12 +319,12 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 	lnumverts = fa->numedges;
 
 	// draw texture
-	poly = Mem_Alloc( mod->mempool, sizeof( glpoly_t ) );
-	poly->verts = Mem_Alloc( mod->mempool, lnumverts * VERTEXSIZE * sizeof( float ) );
+	poly = Mem_Alloc( mod->mempool, sizeof( glpoly_t ) + ( lnumverts - 4 ) * VERTEXSIZE * sizeof( float ) );
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;
 	poly->numverts = lnumverts;
+	verts_p = (float *)poly + (( sizeof( void* ) + sizeof( int ) ) >> 1); //pointer glpoly_t->verts
 
 	for( i = 0; i < lnumverts; i++ )
 	{
@@ -345,9 +347,9 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 		t = DotProduct( vec, fa->texinfo->vecs[1] ) + fa->texinfo->vecs[1][3];
 		t /= fa->texinfo->texture->height;
 
-		VectorCopy( vec, poly->verts[i] );
-		poly->verts[i][3] = s;
-		poly->verts[i][4] = t;
+		VectorCopy( vec, &verts_p[VERTEXSIZE * i] );
+		verts_p[VERTEXSIZE * i + 3] = s;
+		verts_p[VERTEXSIZE * i + 4] = t;
 
 		// lightmap texture coordinates
 		s = DotProduct( vec, fa->texinfo->vecs[0] ) + fa->texinfo->vecs[0][3];
@@ -362,8 +364,8 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 		t += LM_SAMPLE_SIZE >> 1;
 		t /= BLOCK_SIZE * LM_SAMPLE_SIZE; //fa->texinfo->texture->height;
 
-		poly->verts[i][5] = s;
-		poly->verts[i][6] = t;
+		verts_p[VERTEXSIZE * i + 5] = s;
+		verts_p[VERTEXSIZE * i + 6] = t;
 	}
 
 	// remove co-linear points - Ed
@@ -374,9 +376,9 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 			vec3_t	v1, v2;
 			float	*prev, *this, *next;
 
-			prev = poly->verts[(i + lnumverts - 1) % lnumverts];
-			next = poly->verts[(i + 1) % lnumverts];
-			this = poly->verts[i];
+			prev = &verts_p[VERTEXSIZE * ((i + lnumverts - 1) % lnumverts)];
+			next = &verts_p[VERTEXSIZE * ((i + 1) % lnumverts)];
+			this = &verts_p[VERTEXSIZE * i];
 
 			VectorSubtract( this, prev, v1 );
 			VectorNormalize( v1 );
@@ -391,7 +393,7 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 				for( j = i + 1; j < lnumverts; j++ )
 				{
 					for( k = 0; k < VERTEXSIZE; k++ )
-						poly->verts[j-1][k] = poly->verts[j][k];
+					verts_p[VERTEXSIZE * ( j - 1 ) + k] = verts_p[VERTEXSIZE * j + k];
 				}
 
 				// retry next vertex next time, which is now current vertex
