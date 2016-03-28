@@ -1039,6 +1039,10 @@ void SV_ClipMoveToEntity( edict_t *ent, const vec3_t start, vec3_t mins, vec3_t 
 		VectorSubtract( end, offset, end_l );
 	}
 
+	// prevent crash on incorrect hull
+	if( !hull )
+		return;
+
 	if( hullcount == 1 )
 	{
 		SV_RecursiveHullCheck( hull, hull->firstclipnode, 0.0f, 1.0f, start_l, end_l, trace );
