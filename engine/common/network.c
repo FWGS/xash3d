@@ -457,9 +457,9 @@ qboolean NET_StringToAdr( const char *string, netadr_t *adr )
 {
 	struct sockaddr s;
 
+	Q_memset( adr, 0, sizeof( netadr_t ));
 	if( !Q_stricmp( string, "localhost" ))
 	{
-		Q_memset( adr, 0, sizeof( netadr_t ));
 		adr->type = NA_LOOPBACK;
 		return true;
 	}
