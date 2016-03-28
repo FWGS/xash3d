@@ -1210,7 +1210,7 @@ UI_Slider_Draw
 */
 void UI_Slider_Draw( menuSlider_s *sl )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	int	textHeight, sliderX;
 

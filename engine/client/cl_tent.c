@@ -2084,7 +2084,10 @@ void CL_ParseTempEntity( sizebuf_t *msg )
 		if( type == TE_DECALHIGH || type == TE_WORLDDECALHIGH )
 			decalIndex += 256;
 		pEnt = CL_GetEntityByIndex( entityIndex );
-		if( pEnt ) modelIndex = pEnt->curstate.modelindex;
+		if( pEnt )
+			modelIndex = pEnt->curstate.modelindex;
+		else
+			modelIndex = 0;
 		CL_DecalShoot( CL_DecalIndex( decalIndex ), entityIndex, modelIndex, pos, 0 );
 		break;
 	case TE_FIZZ:
