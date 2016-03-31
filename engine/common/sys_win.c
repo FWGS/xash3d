@@ -162,11 +162,8 @@ char *Sys_GetCurrentUser( void )
 }
 
 #if (defined(__linux__) && !defined __ANDROID__) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
-#include <unistd.h>
-#include <stddef.h>
-#include <string.h>
 
-int findExecutable(const char* baseName, char* buf, size_t size)
+qboolean findExecutable(const char* baseName, char* buf, size_t size)
 {
 	char* envPath;
 	char* part;
@@ -174,44 +171,42 @@ int findExecutable(const char* baseName, char* buf, size_t size)
 	size_t baseNameLength;
 	size_t needTrailingSlash;
 	
-	if (!baseName || !baseName[0]) {
-		return 0;
-	}
+	if (!baseName || !baseName[0])
+		return false;
 	
 	envPath = getenv("PATH");
-	if (!envPath) {
-		return 0;
-	}
+	if (!envPath)
+		return false;
 	
-	baseNameLength = strlen(baseName);
-	while(*envPath) {
-		part = strchr(envPath, ':');
-		if (part) {
+	baseNameLength = Q_strlen(baseName);
+	while(*envPath) 
+	{
+		part = Q_strchr(envPath, ':');
+		if (part) 
 			length = part - envPath;
-		} else {
-			length = strlen(envPath);
-		}
+		else 
+			length = Q_strlen(envPath);
 		
-		if (length > 0) {
+		if (length > 0) 
+		{
 			needTrailingSlash = (envPath[length-1] == '/') ? 0 : 1;
-			if (length + baseNameLength + needTrailingSlash < size) {
-				strncpy(buf, envPath, length);
-				strncpy(buf + length, "/", needTrailingSlash);
-				strncpy(buf + length + needTrailingSlash, baseName, baseNameLength);
+			if (length + baseNameLength + needTrailingSlash < size) 
+			{
+				Q_strncpy(buf, envPath, length+1);
+				if (needTrailingSlash)
+					Q_strcpy(buf + length, "/");
+				Q_strcpy(buf + length + needTrailingSlash, baseName);
 				buf[length + needTrailingSlash + baseNameLength] = '\0';
-				
-				if (access(buf, X_OK) == 0) {
-					return 1;
-				}
+				if (access(buf, X_OK) == 0)
+					return true;
 			}
 		}
 		
 		envPath += length;
-		if (*envPath == ':') {
+		if (*envPath == ':')
 			envPath++;
-		}
 	}
-	return 0;
+	return false;
 }
 #endif
 
