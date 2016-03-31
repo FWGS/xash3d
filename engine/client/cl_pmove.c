@@ -563,6 +563,9 @@ static const char *pfnTraceTexture( int ground, float *vstart, float *vend )
 
 static void pfnPlaySound( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
 {
+	if( !clgame.pmove->runfuncs )
+		return;
+
 	sound_t	snd = S_RegisterSound( sample );
 
 	S_StartSound( NULL, clgame.pmove->player_index + 1, channel, snd, volume, attenuation, pitch, fFlags );
