@@ -621,6 +621,9 @@ void CL_ParseServerData( sizebuf_t *msg )
 	menu.globals->maxClients = cl.maxclients;
 	Q_strncpy( menu.globals->maptitle, clgame.maptitle, sizeof( menu.globals->maptitle ));
 
+	if( cl.maxclients > 1 && r_decals->value > mp_decals->value )
+		Cvar_SetFloat( "r_decals", mp_decals->value );
+
 	if( !cls.changelevel && !cls.changedemo )
 		CL_InitEdicts (); // re-arrange edicts
 
