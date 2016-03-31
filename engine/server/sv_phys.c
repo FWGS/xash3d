@@ -862,7 +862,7 @@ SV_PushMove
 static edict_t *SV_PushMove( edict_t *pusher, float movetime )
 {
 	int		i, e, block;
-	int		oldsolid;
+	int		num_moved, oldsolid;
 	vec3_t		mins, maxs, lmove;
 	sv_pushed_t	*p, *pushed_p;
 	edict_t		*check;	
@@ -899,6 +899,7 @@ static edict_t *SV_PushMove( edict_t *pusher, float movetime )
 		return NULL;
 
 	// see if any solid entities are inside the final position
+	num_moved = 0;
 
 	for( e = 1; e < svgame.numEntities; e++ )
 	{
@@ -1510,7 +1511,7 @@ void SV_Physics_Toss( edict_t *ent )
 		{
 			VectorScale( ent->v.velocity, (1.0f - trace.fraction) * host.frametime * 0.9f, move );
 			VectorMA( move, (1.0f - trace.fraction) * host.frametime * 0.9f, ent->v.basevelocity, move );
-			SV_PushEntity( ent, move, vec3_origin, NULL );
+			trace = SV_PushEntity( ent, move, vec3_origin, NULL );
 			if( ent->free ) return;
 		}
 	}

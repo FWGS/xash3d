@@ -976,8 +976,13 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 	if( !cls.creditsFont.valid )
 		return GRID_X * 2;
 	Con_UtfProcessChar( 0 );
-	pglColor4ub( color[0], color[1], color[2], color[3] );
+
 	GL_SetRenderMode( kRenderTransAdd );
+
+	// text is additive and alpha does not work
+	pglColor4ub( color[0] * ( (float)color[3] /255.0f ), color[1] * ( (float)color[3] /255.0f ),
+			color[2] * ( (float)color[3] /255.0f ), 255 );
+
 	while( *s )
 	{
 		while( *s && ( *s != '\n' ) && ( *s != ';' ) && ( x1 < maxx ) )

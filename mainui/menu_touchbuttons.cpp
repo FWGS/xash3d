@@ -23,6 +23,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "utils.h"
 #include "menu_btnsbmp_table.h"
 
+#include "mobility_int.h"
+
 #define ART_BANNER	  	"gfx/shell/head_touch_buttons"
 
 #define ID_BACKGROUND 	0
@@ -107,19 +109,6 @@ typedef struct
 } uiTouchButtons_t;
 
 static uiTouchButtons_t	uiTouchButtons;
-
-#define BIT(i) ( 1U << i )
-
-#define TOUCH_FL_HIDE BIT( 0 )
-#define TOUCH_FL_NOEDIT BIT( 1 )
-#define TOUCH_FL_CLIENT BIT( 2 )
-#define TOUCH_FL_MP BIT( 3 )
-#define TOUCH_FL_SP BIT( 4 )
-#define TOUCH_FL_DEF_SHOW BIT( 5 )
-#define TOUCH_FL_DEF_HIDE BIT( 6 )
-#define TOUCH_FL_DRAW_ADDITIVE BIT( 7 )
-#define TOUCH_FL_STROKE BIT( 8 )
-#define TOUCH_FL_PRECISION BIT( 9 )
 
 static void UI_TouchButtons_UpdateFields( void );
 

@@ -2803,24 +2803,23 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	va_list	args;
 	char *buffer = buffer0;
 
-	if (level == at_logged && sv_maxclients->integer > 1)
+	if( ( level == at_logged ) && sv_maxclients->integer > 1 )
 	{
-		va_start (args, szFmt);
-		Q_vsnprintf (buffer0, 2048, szFmt, args);
-		va_end (args);
+		va_start( args, szFmt );
+		Q_vsnprintf( buffer0, 2048, szFmt, args );
+		va_end( args );
 
 		Log_Printf ("%s", buffer0);
 		return;
 	}
 
-	va_start (args, szFmt);
-	Q_vsnprintf (buffer0, 2048, szFmt, args);
-	va_end (args);
+	va_start( args, szFmt );
+	Q_vsnprintf( buffer0, 2048, szFmt, args );
+	va_end( args );
 
 	// check message for pass
 	switch( level )
 	{
-	case at_logged:
 	case at_notice:
 		break;	// passed always
 	case at_console:
@@ -2856,6 +2855,11 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	{
 		Sys_Print( va( "server(ai): %s", buffer ));
 	}
+	else
+	{
+		Sys_Print( va( "server: %s", buffer ));
+	}
+
 }
 
 /*
@@ -4405,15 +4409,16 @@ pfnCheckParm
 */
 static int pfnCheckParm( char *parm, char **ppnext )
 {
-	static char	str[64];
+	int i = Sys_CheckParm( parm );
 
-	if( Sys_GetParmFromCmdLine( parm, str ))
+	if( ppnext != NULL )
 	{
-		// get the pointer on cmdline param
-		if( ppnext ) *ppnext = str;
-		return 1;
+		if( i > 0 && i < host.argc - 1 )
+			*ppnext = host.argv[i + 1];
+		else
+			*ppnext = NULL;
 	}
-	return 0;
+	return i;
 }
 					
 // engine callbacks
@@ -4811,6 +4816,8 @@ void SV_SpawnEntities( const char *mapname, char *entities )
 
 void SV_UnloadProgs( void )
 {
+	MsgDev( D_NOTE, "SV_UnloadProgs()\n");
+
 	if( !svgame.hInstance )
 		return;
 	

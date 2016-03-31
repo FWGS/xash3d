@@ -408,6 +408,7 @@ void Sys_WaitForQuit( void )
 #endif
 }
 
+
 /*
 ================
 Sys_Crash
@@ -418,6 +419,7 @@ Crash handler, called from system
 #define DEBUG_BREAK
 /// TODO: implement on windows too
 #ifdef _WIN32
+LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
 	// save config
@@ -444,11 +446,25 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		Con_DestroyConsole();
 	}
 
-	if( host.oldFilter )
-		return host.oldFilter( pInfo );
+	if( oldFilter )
+		return oldFilter( pInfo );
 	return EXCEPTION_CONTINUE_EXECUTION;
 }
-#elif defined (CRASHHANDLER) // Android will have other handler
+
+void Sys_SetupCrashHandler( void )
+{
+	SetErrorMode( SEM_FAILCRITICALERRORS );	// no abort/retry/fail errors
+	oldFilter = SetUnhandledExceptionFilter( Sys_Crash );
+	host.hInst = GetModuleHandle( NULL );
+}
+
+void Sys_RestoreCrashHandler( void )
+{
+	// restore filter
+	if( oldFilter ) SetUnhandledExceptionFilter( oldFilter );
+}
+
+#elif defined (CRASHHANDLER)
 // Posix signal handler
 
 #if defined(__FreeBSD__) || defined(__NetBSD__)
@@ -510,7 +526,9 @@ int printframe( char *buf, int len, int i, void *addr )
 		return snprintf( buf, len, "% 2d: %p\n", i, addr ); // print only address
 }
 
-void Sys_Crash( int signal, siginfo_t *si, void *context)
+struct sigaction oldFilter;
+
+static void Sys_Crash( int signal, siginfo_t *si, void *context)
 {
 	void *trace[32];
 	char message[1024], stackframe[256];
@@ -588,6 +606,33 @@ void Sys_Crash( int signal, siginfo_t *si, void *context)
 	host.crashed = true;
 	Con_DestroyConsole();
 	Sys_Quit();
+}
+
+void Sys_SetupCrashHandler()
+{
+	struct sigaction act;
+	act.sa_sigaction = Sys_Crash;
+	act.sa_flags = SA_SIGINFO | SA_ONSTACK;
+	sigaction(SIGSEGV, &act, &oldFilter);
+	sigaction(SIGABRT, &act, &oldFilter);
+	sigaction(SIGBUS, &act, &oldFilter);
+	sigaction(SIGILL, &act, &oldFilter);
+}
+
+void Sys_RestoreCrashHandler( void )
+{
+	// stub
+}
+
+#else
+void Sys_SetupCrashHandler( void )
+{
+	// stub
+}
+
+void Sys_RestoreCrashHandler( void )
+{
+	// stub
 }
 #endif
 
@@ -713,6 +758,7 @@ void Sys_Print( const char *pMsg )
 	if( host.type == HOST_NORMAL )
 		Con_Print( pMsg );
 #ifdef _WIN32
+
 	{
 		const char	*msg;
 		char		buffer[32768];

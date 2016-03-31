@@ -462,11 +462,13 @@ static int pfnHullPointContents( struct hull_s *hull, int num, float *p )
 {
 	return PM_HullPointContents( hull, num, p );
 }
-#ifdef DLL_LOADER
-static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t *trace, float *start, float *end, int traceFlags, int ignore_pe)
+#if defined(DLL_LOADER) || defined(__MINGW32__)
+static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t * retvalue, float *start, float *end, int traceFlags, int ignore_pe)
 {
-	*trace = PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, ignore_pe, NULL );
-	return trace;
+	pmtrace_t tmp;
+	tmp = PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, ignore_pe, NULL );
+	*retvalue = tmp;
+	return retvalue;
 }
 #endif
 static pmtrace_t pfnPlayerTrace( float *start, float *end, int traceFlags, int ignore_pe )
@@ -561,6 +563,9 @@ static const char *pfnTraceTexture( int ground, float *vstart, float *vend )
 
 static void pfnPlaySound( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
 {
+	if( !clgame.pmove->runfuncs )
+		return;
+
 	sound_t	snd = S_RegisterSound( sample );
 
 	S_StartSound( NULL, clgame.pmove->player_index + 1, channel, snd, volume, attenuation, pitch, fFlags );
@@ -580,11 +585,13 @@ static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, f
 		iparam1, iparam2,
 		bparam1, bparam2 );
 }
-#ifdef DLL_LOADER
-static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t* trace, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
+#if defined(DLL_LOADER) || defined(__MINGW32__)
+static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t * retvalue, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
 {
-	*trace = PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, -1, pmFilter );
-	return trace;
+	pmtrace_t tmp;
+	tmp = PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, -1, pmFilter );
+	*retvalue = tmp;
+	return retvalue;
 }
 #endif
 static pmtrace_t pfnPlayerTraceEx( float *start, float *end, int traceFlags, pfnIgnore pmFilter )
@@ -692,12 +699,16 @@ void CL_InitClientMove( void )
 	clgame.pmove->PM_TestPlayerPositionEx = pfnTestPlayerPositionEx;
 	clgame.pmove->PM_TraceLineEx = pfnTraceLineEx;
 	clgame.pmove->PM_TraceSurface = pfnTraceSurface;
-	#ifdef DLL_LOADER // w32-compatible ABI
+#ifdef DLL_LOADER // w32-compatible ABI
 	if( host.enabledll && Loader_GetDllHandle( clgame.hInstance ) )
 	{
 		clgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
 		clgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
 	}
+#endif
+#if defined(__MINGW32__)
+	clgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
+	clgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
 #endif
 
 	// initalize pmove

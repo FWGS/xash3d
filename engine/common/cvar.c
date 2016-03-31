@@ -915,9 +915,9 @@ void Cvar_SetA_f( void )
 {
 	convar_t	*v;
 
-	if( Cmd_Argc() != 3 )
+	if( Cmd_Argc() < 3 )
 	{
-		Msg( "Usage: seta <variable> <value>\n" );
+		Msg( "Usage: seta <variable> <value> [<description>]\n" );
 		return;
 	}
 
@@ -926,6 +926,12 @@ void Cvar_SetA_f( void )
 
 	if( !v ) return;
 	v->flags |= CVAR_ARCHIVE;
+
+	if( v->description )
+		Mem_Free( v->description );
+
+	// cvars without description are not saved, so add description
+	v->description = copystring( "user archive cvar" );
 }
 
 /*
@@ -1246,6 +1252,7 @@ void Cvar_Init( void )
 	Cmd_AddCommand ("set", Cvar_Set_f, "create or change the value of a console variable" );
 	Cmd_AddCommand ("sets", Cvar_SetS_f, "create or change the value of a serverinfo variable" );
 	Cmd_AddCommand ("setu", Cvar_SetU_f, "create or change the value of a userinfo variable" );
+	Cmd_AddCommand ("setinfo", Cvar_SetU_f, "create or change the value of a userinfo variable" );
 	Cmd_AddCommand ("setp", Cvar_SetP_f, "create or change the value of a physicinfo variable" );
 	Cmd_AddCommand ("setr", Cvar_SetR_f, "create or change the value of a renderinfo variable" );
 	Cmd_AddCommand ("setgl", Cvar_SetGL_f, "create or change the value of a opengl variable" );

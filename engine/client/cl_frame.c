@@ -662,7 +662,13 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 	entity_state_t	*state;
 	qboolean		newent = (old) ? false : true;
 	qboolean		result = true;
-
+	if( ( newnum < 0 ) || ( newnum >= clgame.maxEntities ) )
+	{
+		state = &cls.packet_entities[cls.next_client_entities % cls.num_client_entities];
+		if( !unchanged )
+			MSG_ReadDeltaEntity( msg, old, state, newnum, CL_IsPlayerIndex( newnum ), cl.mtime[0] );
+		return;
+	}
 	ent = CL_EDICT_NUM( newnum );
 	state = &cls.packet_entities[cls.next_client_entities % cls.num_client_entities];
 	ent->index = newnum;
@@ -733,14 +739,14 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 /*
 =================
 CL_FlushEntityPacket
+
+Read and ignore whole entity packet.
 =================
 */
 void CL_FlushEntityPacket( sizebuf_t *msg )
 {
 	int		newnum;
 	entity_state_t	from, to;
-
-	MsgDev( D_INFO, "FlushEntityPacket()\n" );
 	Q_memset( &from, 0, sizeof( from ));
 
 	cl.frames[cl.parsecountmod].valid = false;
@@ -800,14 +806,18 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 
 		if( subtracted == 0 )
 		{
-			Host_Error( "CL_DeltaPacketEntities: update too old, connection dropped.\n" );
+			MsgDev( D_NOTE, "CL_DeltaPacketEntities: update too old (flush)\n" );
+			Con_NPrintf( 2, "^3Warning:^1 update too old\n^7\n" );
+			CL_FlushEntityPacket( msg );
 			return;
 		}
 
+
 		if( subtracted >= CL_UPDATE_MASK )
-		{	
+		{
+			MsgDev( D_NOTE, "CL_ParsePacketEntities: delta frame is too old: overflow (flush)\n");
 			// we can't use this, it is too old
-			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old^7\n" );
+			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old: overflow^7\n" );
 			CL_FlushEntityPacket( msg );
 			return;
 		}
@@ -816,6 +826,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 
 		if(( cls.next_client_entities - oldframe->first_entity ) > ( cls.num_client_entities - 128 ))
 		{
+			MsgDev( D_NOTE, "CL_ParsePacketEntities: delta frame is too old (flush)\n");
 			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old^7\n" );
 			CL_FlushEntityPacket( msg );
 			return;
@@ -825,7 +836,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 	{
 		// this is a full update that we can start delta compressing from now
 		oldframe = NULL;
-		//oldpacket = -1;		// delta too old or is initial message
+		oldpacket = -1;		// delta too old or is initial message
 		cl.force_send_usercmd = true;	// send reply
 		cls.demowaiting = false;	// we can start recording now
 	}

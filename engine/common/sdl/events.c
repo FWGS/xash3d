@@ -237,9 +237,8 @@ void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 
 void SDLash_InputEvent(SDL_TextInputEvent input)
 {
-	int i;
+	int i, f, t;
 #if 0
-	int f, t;
 	// Try convert to selected charset
 	unsigned char buf[32];
 

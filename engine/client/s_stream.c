@@ -221,6 +221,7 @@ void S_StreamBackgroundTrack( void )
 
 		if( r < fileBytes )
 		{
+			fileBytes = r;
 			fileSamples = r / ( info->width * info->channels );
 		}
 
@@ -320,6 +321,7 @@ void S_StreamSoundTrack( void )
 
 		if( r < fileBytes )
 		{
+			fileBytes = r;
 			fileSamples = r / ( info->width * info->channels );
 		}
 

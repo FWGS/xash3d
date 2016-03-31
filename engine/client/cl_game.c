@@ -2284,8 +2284,8 @@ pfnSetUpPlayerPrediction
 void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
 {
 	int j;
-	struct predicted_player *pPlayer;
-	entity_state_t *entState;
+	struct predicted_player *pPlayer = predicted_players;
+	entity_state_t *entState = cl.frames[cl.parsecountmod].playerstate;
 
 	cl_entity_t *clEntity;
 
@@ -2808,24 +2808,35 @@ void pfnSPR_DrawGeneric( int frame, int x, int y, const wrect_t *prc, int blends
 =============
 pfnDrawString
 
-TODO: implement
 =============
 */
 int pfnDrawString( int x, int y, const char *str, int r, int g, int b )
 {
-	return 0;
+	Con_UtfProcessChar(0);
+
+	// draw the string until we hit the null character or a newline character
+	for ( ; *str != 0 && *str != '\n'; str++ )
+	{
+		x += pfnDrawCharacter( x, y, (unsigned char)*str, r, g, b );
+	}
+
+	return x;
 }
 
 /*
 =============
 pfnDrawStringReverse
 
-TODO: implement
 =============
 */
 int pfnDrawStringReverse( int x, int y, const char *str, int r, int g, int b )
 {
-	return 0;
+	// find the end of the string
+	char *szIt;
+	for( szIt = str; *szIt != 0; szIt++ )
+		x -= clgame.scrInfo.charWidths[ (unsigned char) *szIt ];
+	pfnDrawString( x, y, str, r, g, b );
+	return x;
 }
 
 /*
@@ -2941,7 +2952,7 @@ void pfnFillRGBABlend( int x, int y, int width, int height, int r, int g, int b,
 
 	pglEnable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
-	pglBlendFunc( GL_ONE_MINUS_SRC_ALPHA, GL_ONE );
+	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 	R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, cls.fillImage );
@@ -3329,7 +3340,8 @@ TriForParams
 */
 void TriFogParams( float flDensity, int iFogSkybox )
 {
-	// TODO: implement
+	RI.fogDensity = flDensity;
+	RI.fogCustom = iFogSkybox;
 }
 
 /*

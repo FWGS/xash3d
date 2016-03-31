@@ -71,9 +71,27 @@ static void pfnEnableTextInput( int enable )
 #endif
 }
 
-static void Touch_Disable( qboolean disable )
+static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b, float scale )
 {
+	int width  = clgame.scrInfo.charWidths[number] * scale;
+	int height = clgame.scrInfo.iCharHeight        * scale;
 
+	if( !cls.creditsFont.valid )
+		return 0;
+
+	number &= 255;
+	number = Con_UtfProcessChar( number );
+
+	if( number < 32 )
+		return 0;
+
+	if( y < -height )
+		return 0;
+
+	pfnPIC_Set( cls.creditsFont.hFontTexture, r, g, b, 255 );
+	pfnPIC_DrawAdditive( x, y, width, height, &cls.creditsFont.fontRc[number] );
+
+	return clgame.scrInfo.charWidths[number];
 }
 
 static mobile_engfuncs_t gpMobileEngfuncs =
@@ -86,7 +104,8 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	IN_TouchHideButtons,
 	IN_TouchRemoveButton,
 	IN_TouchSetClientOnly,
-	IN_TouchResetDefaultButtons
+	IN_TouchResetDefaultButtons,
+	pfnDrawScaledCharacter
 };
 
 void Mobile_Init( void )

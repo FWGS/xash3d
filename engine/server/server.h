@@ -258,6 +258,10 @@ typedef struct sv_client_s
 	int		userid;			// identifying number on server
 	int		authentication_method;
 	uint		WonID;			// WonID
+
+	int		maxpacket;
+	int		resources_sent;
+	int resources_count;
 } sv_client_t;
 
 /*
@@ -473,7 +477,7 @@ void SV_KillOperatorCommands( void );
 void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo );
 void SV_PrepWorldFrame( void );
 void SV_ProcessFile( sv_client_t *cl, char *filename );
-void SV_SendResourceList( sv_client_t *cl );
+void SV_SendResourceList_f( sv_client_t *cl );
 void Master_Add( void );
 void Master_Heartbeat( void );
 void Master_Packet( void );
@@ -662,12 +666,12 @@ void SV_ClearPhysEnts( void );
 //
 // sv_log.c
 //
-void Log_Printf (const char *fmt, ...);
-void Log_PrintServerVars (void);
-void Log_Close (void);
-void Log_Open (void);
-void Log_InitCvars (void);
-void SV_SetLogAddress_f (void);
-void SV_ServerLog_f (void);
+void Log_Printf( const char *fmt, ... );
+void Log_PrintServerVars( void );
+void Log_Close( void );
+void Log_Open( void );
+void Log_InitCvars( void );
+void SV_SetLogAddress_f( void );
+void SV_ServerLog_f( void );
 
 #endif//SERVER_H

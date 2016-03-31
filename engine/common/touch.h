@@ -12,6 +12,9 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
+#pragma once
+#ifndef TOUCH_H
+#define TOUCH_H
 
 // touch.c
 void IN_TouchEditClear( void );
@@ -29,3 +32,5 @@ void IN_TouchInit( void );
 void IN_TouchShutdown( void );
 void IN_TouchMove( float * forward, float *side, float *yaw, float *pitch );
 void IN_TouchResetDefaultButtons( void );
+
+#endif // TOUCH_H

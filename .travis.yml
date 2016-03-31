@@ -2,17 +2,32 @@ language: c
 compiler: gcc
 sudo: true
 before_script:
-    - git clone -q --depth=1 https://github.com/SDLash3D/halflife halflife
     - sudo apt-get update -qq
-    - sudo apt-get install -qq --force-yes gcc-multilib ia32-libs ia32-libs-multiarch
+    - sudo apt-get install -qq --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch
+    - sudo apt-get install -qq --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
+    - sudo apt-get install -qq --force-yes gcc-multilib
+    - sudo apt-get install --force-yes libX11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev
+    - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
+    - tar xf SDL2-devel-2.0.4-mingw.tar.gz
+    - mv SDL2-2.0.4 SDL2
+    - curl http://libsdl.org/release/SDL2-2.0.4.tar.gz > SDL2-2.0.4.tar.gz
+    - tar xf SDL2-2.0.4.tar.gz
 script:
-    - echo "BUILDING CLIENT VERSION"
-#   - mkdir build-head && cd build-head
-#   - cmake ../ -DXASH_SDL=yes -DXASH_VGUI=yes -DXASH_X11=yes -DXASH_DLL_LOADER=yes -DHL_SDK_DIR=../halflife -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
-#   - make -j2 CFLAGS+="-m32" LDFLAGS+="-m32"
-    - echo "BUILDING HEADLESS VERSION"
-    - cd ../ && mkdir build-headless && cd build-headless
-    - cmake ../ -DXASH_DEDICATED=yes -DXASH_SDL=no -DXASH_VGUI=no -DHL_SDK_DIR=../halflife -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
-    - make -j2 CFLAGS+="-m32" LDFLAGS+="-m32"
-    - echo "BUILDING ANDROID VERSION"
-    - echo "Didn't made it yet ^_^" "
+    - cd engine
+    - make -f Makefile.mingw CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ -j2
+    - 7z a -t7z xash3d-mingw.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash_bin.exe
+    - cd ../SDL2-2.0.4
+    - CC="gcc -m32 -ggdb -O2" ./configure --disable-dependency-tracking --enable-audio --enable-video --enable-events --disable-render --enable-joystick --disable-haptic --disable-power --disable-threads --enable-timers --enable-loadso --enable-video-opengl --enable-x11-shared --enable-video-x11 --enable-video-x11-xrandr --enable-video-x11-scrnsaver --disable-libudev --disable-dbus --disable-ibus --enable-sdl-dlopen --disable-video-opengles --disable-cpuinfo --disable-assembly --disable-atomic
+    - make -j2
+    - cp build/.libs/libSDL2.so ../engine/
+    - cd ../loader
+    - make -f Makefile.linux -j2 CC="gcc -m32 -O1" CFLAGS="-I../SDL-2.0.4/include -w -ggdb" libloader.a
+    - cp libloader.a ../engine
+    - cd ../engine
+    - make -f Makefile.linux -j2 XASH_VGUI=0 XASH_SINGLE_BINARY=1 XASH_DLL_LOADER=1 clean
+    - make -f Makefile.linux -j2 CC="gcc -m32" LDFLAGS="-L. libSDL2.so" CFLAGS="-O3 -ggdb -I../SDL2-2.0.4/include/ -msse4.2 -march=core2 -w" XASH_VGUI=1 XASH_SINGLE_BINARY=1 xash
+    - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2.so
+after_script:
+    - curl --upload-file xash3d-mingw.7z https://transfer.sh/xash3d-mingw-`date -u +%y-%m-%d_%H-%M`.7z
+    - curl --upload-file xash3d-linux.7z https://transfer.sh/xash3d-linux-`date -u +%y-%m-%d_%H-%M`.7z
+

@@ -189,7 +189,7 @@ void CL_FireEvents( void )
 	int		i;
 	event_state_t	*es;
 	event_info_t	*ei;
-	//qboolean		success;
+	qboolean		success;
 
 	es = &cl.events;
 
@@ -204,8 +204,7 @@ void CL_FireEvents( void )
 		if( ei->fire_time && ( ei->fire_time > cl.time ))
 			continue;
 
-		//success = CL_FireEvent( ei );
-		CL_FireEvent( ei );
+		success = CL_FireEvent( ei );
 
 		// zero out the remaining fields
 		CL_ResetEvent( ei );
@@ -350,7 +349,7 @@ void CL_ParseEvent( sizebuf_t *msg )
 	int		i, num_events;
 	int		packet_ent;
 	event_args_t	nullargs, args;
-	//qboolean		has_update;
+	qboolean		has_update;
 	entity_state_t	*state;
 	cl_entity_t	*pEnt;
 	float		delay;
@@ -364,7 +363,7 @@ void CL_ParseEvent( sizebuf_t *msg )
 	{
 		event_index = BF_ReadUBitLong( msg, MAX_EVENT_BITS );
 		Q_memset( &args, 0, sizeof( args ));
-		//has_update = false;
+		has_update = false;
 
 		if( BF_ReadOneBit( msg ))
 		{
@@ -373,7 +372,7 @@ void CL_ParseEvent( sizebuf_t *msg )
 			if( BF_ReadOneBit( msg ))
 			{
 				MSG_ReadDeltaEvent( msg, &nullargs, &args );
-				//has_update = true;
+				has_update = true;
 			}
 		}
 		else packet_ent = -1;
@@ -463,13 +462,20 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 		MsgDev( D_ERROR, "CL_PlaybackEvent: invalid eventindex %i\n", eventindex );
 		return;
 	}
+
+
+	if( flags & FEV_SERVER )
+	{
+		MsgDev( D_WARN, "CL_PlaybackEvent: event with FEV_SERVER flag!\n" );
+		return;
+	}
+
 	// check event for precached
 	if( !CL_EventIndex( cl.event_precache[eventindex] ))
 	{
 		MsgDev( D_ERROR, "CL_PlaybackEvent: event %i was not precached\n", eventindex );
 		return;		
 	}
-
 
 	flags |= FEV_CLIENT; // it's a client event
 	flags &= ~(FEV_NOTHOST|FEV_HOSTONLY|FEV_GLOBAL);
@@ -480,15 +486,18 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 	args.flags = 0;
 	args.entindex = invokerIndex;
 
-// TODO: restore checks when predicting will be done
-	//if( !angles || VectorIsNull( angles ))
+	if( !angles || VectorIsNull( angles ))
 		VectorCopy( cl.refdef.cl_viewangles, args.angles );
+	else
+		VectorCopy( angles, args.angles );
 
-	//if( !origin || VectorIsNull( origin ))
+	if( !origin || VectorIsNull( origin ))
 		VectorCopy( cl.frame.local.client.origin, args.origin );
+	else
+		VectorCopy( origin, args.origin );
 
 	VectorCopy( cl.frame.local.client.velocity, args.velocity );
-	args.ducking = cl.frame.local.playerstate.usehull;
+	args.ducking = cl.frame.local.playerstate.usehull == 1;
 
 	args.fparam1 = fparam1;
 	args.fparam2 = fparam2;

@@ -94,7 +94,7 @@ typedef enum
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	"0.17 test"		// engine current version
+#define XASH_VERSION	"0.17"		// engine current version
 // since this fork have own version, this is just left for compability
 #define BASED_VERSION	0.97f
 
@@ -306,12 +306,6 @@ typedef struct host_parm_s
 {
     HINSTANCE	hInst;
     HANDLE		hMutex;
-#ifdef _WIN32
-	LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
-#else
-	struct sigaction oldFilter;
-#endif
-
 	host_state	state;		// global host state
 	instance_t	type;		// running at
 	jmp_buf		abortframe;	// abort current frame
@@ -369,7 +363,6 @@ typedef struct host_parm_s
 	soundlist_t	*soundList;	// used for keep ambient sounds, when renderer or sound is restarted
 	int		numsounds;
 	qboolean enabledll;
-	char vguiloader[64];
 	qboolean textmode;
 } host_parm_t;
 

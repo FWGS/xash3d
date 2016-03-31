@@ -715,7 +715,7 @@ void SV_Init( void )
 {
 	SV_InitOperatorCommands();
 
-	Log_InitCvars ();
+	Log_InitCvars();
 
 	skill = Cvar_Get ("skill", "1", CVAR_LATCH, "game skill level" );
 	deathmatch = Cvar_Get ("deathmatch", "0", CVAR_LATCH|CVAR_SERVERINFO, "displays deathmatch state" );
@@ -728,6 +728,7 @@ void SV_Init( void )
 	Cvar_Get ("mapcyclefile", "mapcycle.txt", 0, "name of multiplayer map cycle configuration file" );
 	Cvar_Get ("servercfgfile","server.cfg", 0, "name of dedicated server configuration file" );
 	Cvar_Get ("lservercfgfile","listenserver.cfg", 0, "name of listen server configuration file" );
+	Cvar_Get ("mapchangecfgfile","", 0, "name of map change configuration file" );
 	Cvar_Get ("motdfile", "motd.txt", 0, "name of 'message of the day' file" );
 	Cvar_Get ("sv_language", "0", 0, "game language (currently unused)" );
 	Cvar_Get ("suitvolume", "0.25", CVAR_ARCHIVE, "HEV suit volume" );
@@ -820,8 +821,8 @@ void SV_Init( void )
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
-	Cmd_AddCommand ("logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host");
-	Cmd_AddCommand ("log", SV_ServerLog_f, "enables logging to file");
+	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
+	Cmd_AddCommand( "log", SV_ServerLog_f, "enables logging to file" );
 
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));

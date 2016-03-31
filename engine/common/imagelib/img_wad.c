@@ -319,7 +319,7 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 	mip_t	mip;
 	qboolean	hl_texture;
 	byte	*fin, *pal;
-	int	rendermode;
+	int	ofs[4], rendermode;
 	int	i, pixels, numcolors;
 
 	if( filesize < sizeof( mip ))
@@ -335,6 +335,7 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 	if( !Image_ValidSize( name ))
 		return false;
 
+	Q_memcpy( ofs, mip.offsets, sizeof( ofs ));
 	pixels = image.width * image.height;
 
 	if( image.hint != IL_HINT_Q1 && filesize >= (int)sizeof(mip) + ((pixels * 85)>>6) + sizeof(short) + 768)
@@ -404,6 +405,7 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 		// quake1 1.01 mip version without palette
 		fin = (byte *)buffer + mip.offsets[0];
 		pal = NULL; // clear palette
+		rendermode = LUMP_NORMAL;
 
 		hl_texture = false;
 
