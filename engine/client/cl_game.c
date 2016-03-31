@@ -2284,8 +2284,8 @@ pfnSetUpPlayerPrediction
 void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
 {
 	int j;
-	struct predicted_player *pPlayer;
-	entity_state_t *entState;
+	struct predicted_player *pPlayer = predicted_players;
+	entity_state_t *entState = cl.frames[cl.parsecountmod].playerstate;
 
 	cl_entity_t *clEntity;
 

@@ -613,7 +613,7 @@ get position of previous printful char
 */
 int Con_UtfMoveLeft( char *str, int pos )
 {
-	int i, k = 0;
+	int i, j, k = 0;
 	if( !g_utf8 )
 		return pos - 1;
 	Con_UtfProcessChar( 0 );
@@ -1937,6 +1937,7 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		}
 		pglColor4ub( 255, 255, 255, 255 );
 	}
+	else y = 0;
 
 	if( !con.curFont ) return; // nothing to draw
 

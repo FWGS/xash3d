@@ -758,6 +758,7 @@ void Sys_Print( const char *pMsg )
 	if( host.type == HOST_NORMAL )
 		Con_Print( pMsg );
 #ifdef _WIN32
+
 	{
 		const char	*msg;
 		char		buffer[32768];
