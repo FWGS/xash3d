@@ -161,6 +161,55 @@ char *Sys_GetCurrentUser( void )
 #endif
 }
 
+#if (defined(__linux__) && !defined __ANDROID__) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
+
+qboolean findExecutable(const char* baseName, char* buf, size_t size)
+{
+	char* envPath;
+	char* part;
+	size_t length;
+	size_t baseNameLength;
+	size_t needTrailingSlash;
+	
+	if (!baseName || !baseName[0])
+		return false;
+	
+	envPath = getenv("PATH");
+	if (!envPath)
+		return false;
+	
+	baseNameLength = Q_strlen(baseName);
+	while(*envPath) 
+	{
+		part = Q_strchr(envPath, ':');
+		if (part) 
+			length = part - envPath;
+		else 
+			length = Q_strlen(envPath);
+		
+		if (length > 0) 
+		{
+			needTrailingSlash = (envPath[length-1] == '/') ? 0 : 1;
+			if (length + baseNameLength + needTrailingSlash < size) 
+			{
+				Q_strncpy(buf, envPath, length+1);
+				if (needTrailingSlash)
+					Q_strcpy(buf + length, "/");
+				Q_strcpy(buf + length + needTrailingSlash, baseName);
+				buf[length + needTrailingSlash + baseNameLength] = '\0';
+				if (access(buf, X_OK) == 0)
+					return true;
+			}
+		}
+		
+		envPath += length;
+		if (*envPath == ':')
+			envPath++;
+	}
+	return false;
+}
+#endif
+
 /*
 =================
 Sys_ShellExecute
@@ -170,21 +219,21 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 {
 #ifdef _WIN32
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
-#elif !defined __ANDROID__
-	//signal(SIGCHLD, SIG_IGN);
-	#if defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
-		const char* xdgOpen = "/usr/local/bin/xdg-open"; //TODO: find xdg-open in PATH
-	#else
-		const char* xdgOpen = "/usr/bin/xdg-open";
-	#endif
-	const char* argv[] = {xdgOpen, path, NULL};
-	pid_t id = fork();
-	if (id == 0) {
-		execve(xdgOpen, argv, environ);
-		printf("error opening %s %s", xdgOpen, path);
-		exit(1);
+#elif (defined(__linux__) && !defined __ANDROID__) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
+	char xdgOpen[128];
+	if (findExecutable("xdg-open", xdgOpen, sizeof(xdgOpen))) {
+		const char* argv[] = {xdgOpen, path, NULL};
+		pid_t id = fork();
+		if (id == 0) {
+			execve(xdgOpen, argv, environ);
+			fprintf(stderr, "error opening %s %s", xdgOpen, path);
+			_exit(1);
+		}
+	} else {
+		Msg( "Could not find xdg-open utility\n" );
 	}
 #endif
+//TODO: Use 'open' on OS X?
 
 	if( shouldExit ) Sys_Quit();
 }
