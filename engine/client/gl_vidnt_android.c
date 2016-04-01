@@ -447,10 +447,6 @@ void GL_InitExtensions( void )
 	GL_CheckExtension( "GL_EXT_stencil_two_side", stenciltwosidefuncs, "gl_stenciltwoside", GL_STENCILTWOSIDE_EXT );
 	GL_CheckExtension( "GL_ARB_vertex_buffer_object", vbofuncs, "gl_vertex_buffer_object", GL_ARB_VERTEX_BUFFER_OBJECT_EXT );
 
-	// we don't care if it's an extension or not, they are identical functions, so keep it simple in the rendering code
-#ifndef __ANDROID__
-	if( pglDrawRangeElementsEXT == NULL ) pglDrawRangeElementsEXT = pglDrawRangeElements;
-#endif
 	GL_CheckExtension( "GL_ARB_texture_env_add", NULL, "gl_texture_env_add", GL_TEXTURE_ENV_ADD_EXT );
 
 	// vp and fp shaders
@@ -485,13 +481,6 @@ void GL_InitExtensions( void )
 		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_NV;
 		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_NV, &glConfig.max_2d_rectangle_size );
 	}
-#ifndef __ANDROID__
-	else if( Q_strstr( glConfig.extensions_string, "GL_EXT_texture_rectangle" ))
-	{
-		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_EXT;
-		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_EXT, &glConfig.max_2d_rectangle_size );
-	}
-#endif
 	else glConfig.texRectangle = glConfig.max_2d_rectangle_size = 0; // no rectangle
 
 	glConfig.max_2d_texture_size = 0;
@@ -747,35 +736,6 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
-
-#if defined(_WIN32)
-	{
-		HICON ico;
-		SDL_SysWMinfo info;
-
-		if( FS_FileExists( GI->iconpath, true ) )
-		{
-			char	localPath[MAX_PATH];
-
-			Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
-			ico = LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
-
-			if( !ico )
-			{
-				MsgDev( D_INFO, "Extract %s from pak if you want to see it.\n", GI->iconpath );
-				ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ) );
-			}
-		}
-		else ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ) );
-
-		if( SDL_GetWindowWMInfo( host.hWnd, &info ) )
-		{
-			// info.info.info.info.info... Holy shit, SDL?
-			SetClassLong( info.info.win.window, GCL_HICON, ico );
-		}
-	}
-#endif
-
 	SDL_ShowWindow( host.hWnd );
 #else
 	host.hWnd = 1; //fake window
@@ -834,6 +794,8 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 	glState.width = width;
 	glState.height = height;
 
+	glState.wideScreen = true; // V_AdjustFov will check for widescreen
+
 	SCR_VidInit();
 }
 
@@ -857,6 +819,7 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	glw_state.desktopHeight = displayMode.h;
 
 	glState.fullScreen = fullscreen;
+	glState.wideScreen = true; // V_AdjustFov will check for widescreen
 
 	if(!host.hWnd)
 	{
