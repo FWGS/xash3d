@@ -115,7 +115,7 @@ extern const int g_iColorTable[8];
 extern void COM_FileBase( const char *in, char *out );		// ripped out from hlsdk 2.3
 extern int UI_FadeAlpha( int starttime, int endtime );
 extern void StringConcat( char *dst, const char *src, size_t size );	// strncat safe prototype
-extern char *Info_ValueForKey( const char *s, const char *key );
+extern const char *Info_ValueForKey( const char *s, const char *key );
 extern int KEY_GetKey( const char *binding );			// ripped out from engine
 extern char *StringCopy( const char *input );			// copy string into new memory
 extern int COM_CompareSaves( const void **a, const void **b );

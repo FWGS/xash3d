@@ -36,4 +36,4 @@ GNU General Public License for more details.
 #define HINT_CUSTOM_GAME	530
 #define HINT_MAXSTRINGS	551	// 550 strings allowed
 
-extern char *MenuStrings[HINT_MAXSTRINGS];
+extern const char *MenuStrings[HINT_MAXSTRINGS];
