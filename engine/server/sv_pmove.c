@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "pm_local.h"
 #include "event_flags.h"
 #include "studio.h"
+#include "library.h" // Loader_GetDllHandle( )
 
 static qboolean has_update = false;
 
