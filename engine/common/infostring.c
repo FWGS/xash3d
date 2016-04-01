@@ -295,7 +295,7 @@ qboolean Info_SetValueForKey( char *s, const char *key, const char *value )
 	return Info_SetValueForStarKey( s, key, value, MAX_INFO_STRING );
 }
 
-static void Cvar_LookupBitInfo( const char *name, const char *string, const char *info, void *unused )
+static void Cvar_LookupBitInfo( const char *name, const char *string, void *info, void *unused )
 {
 	Info_SetValueForKey( (char *)info, name, string );
 }
