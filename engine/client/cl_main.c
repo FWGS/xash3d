@@ -423,6 +423,7 @@ void CL_WritePacket( void )
 		Cvar_SetFloat( "cl_cmdrate", MIN_CMD_RATE );
 	}
 #endif
+	Q_memset( data, 0, MAX_CMD_BUFFER );
 	BF_Init( &buf, "ClientData", data, sizeof( data ));
 
 	// Determine number of backup commands to send along
