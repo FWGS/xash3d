@@ -193,6 +193,9 @@ Load vgui_support library and call VGui_Startup
 */
 void VGui_Startup( int width, int height )
 {
+	static qboolean failed = false;
+	if( failed )
+		return;
 	if(!vgui.initialized)
 	{
 		void (*F) ( vguiapi_t * );
@@ -224,17 +227,41 @@ void VGui_Startup( int width, int height )
 			{
 				F( &vgui );
 				vgui.initialized = true;
+				VGUI_InitCursors();
 			}
 			else
 				MsgDev( D_ERROR, "Failed to find vgui_support library entry point!\n" );
 		}
-		VGUI_InitCursors();
+
 	}
+
+	// vgui may crash if it cannot find font
+	if( width <= 320 )
+		width = 320;
+	else if( width <= 400 )
+		width = 400;
+	else if( width <= 512 )
+		width = 512;
+	else if( width <= 640 )
+		width = 640;
+	else if( width <= 800 )
+		width = 800;
+	else if( width <= 1024 )
+		width = 1024;
+	else if( width <= 1152 )
+		width = 1152;
+	else if( width <= 1280 )
+		width = 1280;
+	else //if( width <= 1600 )
+		width = 1600;
+
+
 	if( vgui.initialized )
 	{
 		//host.mouse_visible = true;
 		vgui.Startup( width, height );
 	}
+	else failed = true;
 }
 
 
