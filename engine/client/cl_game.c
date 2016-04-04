@@ -2016,6 +2016,10 @@ pfnIsSpectateOnly
 static int pfnIsSpectateOnly( void )
 {
 	cl_entity_t *pPlayer = CL_GetLocalPlayer();
+	if( hltv->integer )
+		cls.spectator = 1;
+	if( cls.spectator )
+		return 1;
 	return pPlayer ? (pPlayer->curstate.spectator != 0) : 0;
 }
 
@@ -2281,7 +2285,7 @@ pfnSetUpPlayerPrediction
 
 =============
 */
-void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
+void CL_SetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
 {
 	int j;
 	struct predicted_player *pPlayer = predicted_players;
@@ -3777,7 +3781,7 @@ static event_api_t gEventApi =
 	pfnLocalPlayerBounds,
 	pfnIndexFromTrace,
 	pfnGetPhysent,
-	pfnSetUpPlayerPrediction,
+	CL_SetUpPlayerPrediction,
 	pfnPushPMStates,
 	pfnPopPMStates,
 	CL_SetSolidPlayers,

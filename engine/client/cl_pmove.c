@@ -21,7 +21,7 @@ GNU General Public License for more details.
 #include "particledef.h"
 #include "studio.h"
 
-void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient );
+void CL_SetUpPlayerPrediction( int dopred, int bIncludeLocalClient );
 
 void CL_ClearPhysEnts( void )
 {
@@ -901,7 +901,7 @@ void CL_PredictMovement( void )
 
 	if( cl.refdef.paused || cls.key_dest == key_menu ) return;
 	
-	pfnSetUpPlayerPrediction( false, false );
+	CL_SetUpPlayerPrediction( false, false );
 
 	// unpredicted pure angled values converted into axis
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );

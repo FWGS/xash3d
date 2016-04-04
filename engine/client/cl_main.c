@@ -1217,6 +1217,8 @@ void CL_PrepVideo( void )
 
 	R_NewMap(); // tell the render about new map
 
+	CL_InitSpectator();
+
 	V_SetupOverviewState(); // set overview bounds
 
 	// must be called after lightmap loading!

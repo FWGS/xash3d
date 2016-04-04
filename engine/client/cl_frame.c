@@ -1076,6 +1076,43 @@ void CL_AddPacketEntities( frame_t *frame )
 	}
 }
 
+void CL_InitSpectator()
+{
+	Q_memset( &cls.spectatorState, 0, sizeof( local_state_t ));
+	if( cls.spectator )
+	{
+		cls.spectatorState.playerstate.friction = 1.0;
+		cls.spectatorState.playerstate.gravity = 1.0;
+		cls.spectatorState.playerstate.number = cl.playernum + 1;
+		cls.spectatorState.playerstate.usehull = 1;
+		cls.spectatorState.playerstate.movetype = 8;
+		cls.spectatorState.client.maxspeed = 400;
+	}
+}
+
+void CL_MoveSpectatorCamera()
+{
+  double time;
+
+  time = cl.time;
+  if ( cls.state == ca_active )
+  {
+	if ( cls.spectator )
+	{
+	  CL_SetUpPlayerPrediction( 0, true );
+	  CL_SetSolidPlayers( cl.playernum );
+	  cls.spectatorState.playerstate.spectator = 1;
+	  CL_RunUsercmd( &cls.spectatorState, &cls.spectatorState, &cl.refdef.cmd, true, &time, (unsigned int) (100.0 * time) );
+
+	  VectorCopy( cls.spectatorState.client.velocity, cl.refdef.simvel );
+	  VectorCopy( cls.spectatorState.playerstate.origin, cl.refdef.simorg );
+	  VectorCopy( cls.spectatorState.client.punchangle, cl.refdef.punchangle );
+	  VectorCopy( cls.spectatorState.client.view_ofs, cl.refdef.viewheight );
+
+	}
+  }
+}
+
 /*
 ===============
 CL_AddEntities
@@ -1091,7 +1128,6 @@ void CL_AddEntities( void )
 	cl.num_custombeams = 0;
 
 	CL_SetIdealPitch ();
-	clgame.dllFuncs.CAM_Think ();
 
 	CL_AddPacketEntities( &cl.frame );
 	clgame.dllFuncs.pfnCreateEntities();

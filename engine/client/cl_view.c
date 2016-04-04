@@ -333,10 +333,14 @@ void V_RenderView( void )
 
 		R_ClearScene ();
 		CL_AddEntities ();
+		clgame.dllFuncs.CAM_Think();
+		CL_MoveSpectatorCamera();
 		V_SetupRefDef ();
+		CL_MoveSpectatorCamera();
 	}
 
 	V_CalcRefDef ();
+	CL_MoveSpectatorCamera();
 }
 
 /*
