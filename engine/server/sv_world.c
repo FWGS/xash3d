@@ -840,6 +840,14 @@ LINE TESTING IN HULLS
 
 ===============================================================================
 */
+
+/* "Not a number" possible here.
+ * Enable this macro to debug it */
+#ifdef DEBUGNAN
+#define ASSERTNAN(x) if( !finitef(x) ) MsgDev( D_WARN, "NAN detected at %s:%i (%s)", __FILE__, __LINE__, #x );
+#else
+#define ASSERTNAN(x)
+#endif
 /*
 ==================
 SV_RecursiveHullCheck
@@ -887,15 +895,23 @@ qboolean SV_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 		t1 = DotProduct( plane->normal, p1 ) - plane->dist;
 		t2 = DotProduct( plane->normal, p2 ) - plane->dist;
 	}
+
+	ASSERTNAN( t1 )
+	ASSERTNAN( t2 )
 	
 	if( t1 >= 0 && t2 >= 0 )
 		return SV_RecursiveHullCheck( hull, node->children[0], p1f, p2f, p1, p2, trace );
 	if( t1 < 0 && t2 < 0 )
 		return SV_RecursiveHullCheck( hull, node->children[1], p1f, p2f, p1, p2, trace );
 
+	ASSERTNAN( t1 )
+	ASSERTNAN( t2 )
+
 	// put the crosspoint DIST_EPSILON pixels on the near side
 	if( t1 < 0 ) frac = ( t1 + DIST_EPSILON ) / ( t1 - t2 );
 	else frac = ( t1 - DIST_EPSILON ) / ( t1 - t2 );
+
+	ASSERTNAN( frac )
 
 	if( frac < 0.0f ) frac = 0.0f;
 	if( frac > 1.0f ) frac = 1.0f;
@@ -904,6 +920,8 @@ qboolean SV_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 	VectorLerp( p1, frac, p2, mid );
 
 	side = (t1 < 0);
+
+	ASSERTNAN( frac )
 
 	// move up to the node
 	if( !SV_RecursiveHullCheck( hull, node->children[side], p1f, midf, p1, mid, trace ))
@@ -934,6 +952,7 @@ qboolean SV_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 
 	while( PM_HullPointContents( hull, hull->firstclipnode, mid ) == CONTENTS_SOLID )
 	{
+		ASSERTNAN( frac )
 		// shouldn't really happen, but does occasionally
 		frac -= 0.1f;
 
