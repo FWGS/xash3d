@@ -956,7 +956,7 @@ qboolean SV_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 		// shouldn't really happen, but does occasionally
 		frac -= 0.1f;
 
-		if( frac < 0.0f )
+		if( ( frac < 0.0f ) || IS_NAN( frac ) )
 		{
 			trace->fraction = midf;
 			VectorCopy( mid, trace->endpos );
