@@ -353,7 +353,7 @@ void *GL_GetProcAddress( const char *name )
 #endif
 	if(!func)
 	{
-		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
+		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s\n", name);
 	}
 	return func;
 }
