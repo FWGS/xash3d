@@ -533,25 +533,39 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	void *trace[32];
 	char message[1024], stackframe[256];
 	int len, stacklen, logfd, i = 0;
+#if defined(__OpenBSD__)
+	struct sigcontext *ucontext = (struct sigcontext*)context;
+#else
 	ucontext_t *ucontext = (ucontext_t*)context;
-#if __i386__
-	#ifdef __FreeBSD__
+#endif
+#if defined(__amd64__)
+	#if defined(__FreeBSD__)
+		void *pc = (void*)ucontext->uc_mcontext.mc_rip, **bp = (void**)ucontext->uc_mcontext.mc_rbp, **sp = (void**)ucontext->uc_mcontext.mc_rsp;
+	#elif defined(__NetBSD__)
+		void *pc = (void*)ucontext->uc_mcontext.__gregs[REG_RIP], **bp = (void**)ucontext->uc_mcontext.__gregs[REG_RBP], **sp = (void**)ucontext->uc_mcontext.__gregs[REG_RSP];
+	#elif defined(__OpenBSD__)
+		void *pc = (void*)ucontext->sc_rip, **bp = (void**)ucontext->sc_rbp, **sp = (void**)ucontext->sc_rsp;
+	#else
+		void *pc = (void*)ucontext->uc_mcontext.gregs[REG_RIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_RBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_RSP];
+	#endif
+#elif defined(__i386__)
+	#if defined(__FreeBSD__)
 		void *pc = (void*)ucontext->uc_mcontext.mc_eip, **bp = (void**)ucontext->uc_mcontext.mc_ebp, **sp = (void**)ucontext->uc_mcontext.mc_esp;
-	#elif __NetBSD__
+	#elif defined(__NetBSD__)
 		void *pc = (void*)ucontext->uc_mcontext.__gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.__gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.__gregs[REG_ESP];
-	#elif __OpenBSD__
-		void *pc = (void*)sc_eip, **bp = (void**)sc_ebp, **sp = (void**)sc_esp;
+	#elif defined(__OpenBSD__)
+		void *pc = (void*)ucontext->sc_eip, **bp = (void**)ucontext->sc_ebp, **sp = (void**)ucontext->sc_esp;
 	#else
 		void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
 	#endif
-#elif defined (__arm__) // arm not tested
+#elif defined(__arm__) // arm not tested
 	void *pc = (void*)ucontext->uc_mcontext.arm_pc, **bp = (void*)ucontext->uc_mcontext.arm_r10, **sp = (void*)ucontext->uc_mcontext.arm_sp;
 #endif
 	// Safe actions first, stack and memory may be corrupted
 	#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-		len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr);
+		len = snprintf( message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
 	#else
-		len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr);
+		len = snprintf( message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
 	#endif
 	write(2, message, len);
 	// Flush buffers before writing directly to descriptors
