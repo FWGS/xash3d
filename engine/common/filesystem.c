@@ -110,6 +110,9 @@ int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive 
 int matchpattern_with_separator( const char *in, const char *pattern, qboolean caseinsensitive, const char *separators, qboolean wildcard_least_one )
 {
 	int c1, c2;
+
+	ASSERT( in );
+
 	while( *pattern )
 	{
 		switch( *pattern )

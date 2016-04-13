@@ -1101,9 +1101,19 @@ static void Cmd_Apropos_f( void )
 		if( var->name[0] == '@' )
 			continue;	// never shows system cvars
 
-		if( !matchpattern_with_separator( var->name, partial, true, "", false ))
-		if( !matchpattern_with_separator( ( var->flags & CVAR_EXTDLL ) ? "game cvar" : var->description, partial, true, "", false ))
-			continue;
+		if( !matchpattern_with_separator( var->name, partial, true, "", false ) )
+		{
+			char *desc = var->description;
+			if( !desc )
+			{
+				if( ( var->flags & CVAR_EXTDLL ) )
+					desc = "game cvar";
+				else
+					desc = "user cvar";
+			}
+			if( !matchpattern_with_separator( desc, partial, true, "", false ))
+				continue;
+		}
 		
 		// TODO: maybe add flags output like cvarlist, also
 		// fix inconsistencies in output from different commands
