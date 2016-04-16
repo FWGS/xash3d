@@ -1365,7 +1365,10 @@ void MSG_WriteDeltaUsercmd( sizebuf_t *msg, usercmd_t *from, usercmd_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "usercmd_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteDeltaUsercmd: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1392,7 +1395,10 @@ void MSG_ReadDeltaUsercmd( sizebuf_t *msg, usercmd_t *from, usercmd_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "usercmd_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadDeltaUsercmd: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1425,7 +1431,10 @@ void MSG_WriteDeltaEvent( sizebuf_t *msg, event_args_t *from, event_args_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "event_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteDeltaEvent: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1452,7 +1461,10 @@ void MSG_ReadDeltaEvent( sizebuf_t *msg, event_args_t *from, event_args_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "event_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadDeltaEvent: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1481,7 +1493,10 @@ qboolean MSG_WriteDeltaMovevars( sizebuf_t *msg, movevars_t *from, movevars_t *t
 	int		numChanges = 0;
 
 	dt = Delta_FindStruct( "movevars_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteDeltaMovevars: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1516,7 +1531,10 @@ void MSG_ReadDeltaMovevars( sizebuf_t *msg, movevars_t *from, movevars_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "movevars_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadDeltaMovevars: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1552,7 +1570,10 @@ void MSG_WriteClientData( sizebuf_t *msg, clientdata_t *from, clientdata_t *to, 
 	int		i;
 
 	dt = Delta_FindStruct( "clientdata_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteClientData: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1580,7 +1601,10 @@ void MSG_ReadClientData( sizebuf_t *msg, clientdata_t *from, clientdata_t *to, f
 	int		i;
 
 	dt = Delta_FindStruct( "clientdata_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadClientData: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1617,7 +1641,10 @@ void MSG_WriteWeaponData( sizebuf_t *msg, weapon_data_t *from, weapon_data_t *to
 	int		numChanges = 0;
 
 	dt = Delta_FindStruct( "weapon_data_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteWeaponData: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1655,7 +1682,10 @@ void MSG_ReadWeaponData( sizebuf_t *msg, weapon_data_t *from, weapon_data_t *to,
 	int		i;
 
 	dt = Delta_FindStruct( "weapon_data_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadWeaponData: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
