@@ -498,7 +498,7 @@ void Host_GetConsoleCommands( void )
 {
 	char	*cmd;
 
-	if( host.type == HOST_DEDICATED )
+	//if( host.type == HOST_DEDICATED )
 	{
 		cmd = Con_Input();
 		if( cmd ) Cbuf_AddText( cmd );

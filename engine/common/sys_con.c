@@ -21,6 +21,10 @@ GNU General Public License for more details.
 #include <android/log.h>
 #endif
 
+#ifdef USE_SELECT
+// non-blocking console input
+#include <sys/select.h>
+#endif
 /*
 ===============================================================================
 
@@ -479,6 +483,32 @@ returned input text
 */
 char *Con_Input( void )
 {
+#ifdef USE_SELECT
+	{
+		fd_set rfds;
+		static char line[1024];
+		static int len;
+		struct timeval tv;
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+		FD_ZERO(&rfds);
+		FD_SET(0, &rfds); // stdin
+		while( select(1, &rfds, NULL, NULL, &tv ) > 0 )
+		{
+			if( read( 0, &line[len], 1 ) != 1 )
+				break;
+			if( line[len] == '\n' || len > 1022 )
+			{
+				line[ ++len ] = 0;
+				len = 0;
+				return line;
+			}
+			len++;
+			tv.tv_sec = 0;
+			tv.tv_usec = 0;
+		}
+	}
+#endif
 #ifdef _WIN32
 	if( s_wcd.consoleText[0] == 0 )
 		return NULL;
@@ -487,7 +517,6 @@ char *Con_Input( void )
 	s_wcd.consoleText[0] = 0;
 	
 	return s_wcd.returnedText;
-#else
 #endif
 	return NULL;
 }
