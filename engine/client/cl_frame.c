@@ -680,7 +680,21 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 
 	if( !result )
 	{
-		if( newent ) Host_Error( "Cl_DeltaEntity: tried to release new entity\n" );
+		if( newent )
+		{
+			MsgDev( D_WARN, "Cl_DeltaEntity: tried to release new entity\n" );
+
+			// Perform remove, entity was created and removed between packets
+
+			if( state->number == -1 )
+			{
+				ent->curstate.messagenum = 0;
+				ent->baseline.number = 0;
+				MsgDev( D_NOTE, "Entity %i was removed from server\n", newnum );
+			}
+			else MsgDev( D_NOTE, "Entity %i was removed from delta-message\n", newnum );
+			return;
+		}
 
 		CL_KillDeadBeams( ent ); // release dead beams
 #if 0
