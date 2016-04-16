@@ -38,7 +38,7 @@ ifeq ($(XASH_STATIC_LIBDL),1)
     LIBS += -ldl
 endif
 ifeq ($(XASH_DLL_LOADER),1)
-    DEFINES += -DDLL_LOADER
+	DEFINES += -DDLL_LOADER -DCOLORIZE_CONSOLE
     ifeq ($(XASH_SINGLE_BINARY),1)
 	LIBS += libloader.a -pthread -lm
     else

@@ -612,18 +612,63 @@ void Sys_PrintLog( const char *pMsg )
 	time_t		crt_time;
 	const struct tm	*crt_tm;
 	char logtime[32];
-
-#ifdef __ANDROID__
-	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
-#endif
-
 	time( &crt_time );
 	crt_tm = localtime( &crt_time );
+#ifdef __ANDROID__
+	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
+#else
+
+
+
 	strftime( logtime, sizeof( logtime ), "[%H:%M:%S]", crt_tm ); //short time
 
-	printf( "%s %s", logtime, pMsg );
-	fflush( stdout );
+#ifdef COLORIZE_CONSOLE
+	{
+		char colored[4096];
+		const char *msg = pMsg;
+		int len = 0;
+		while( *msg && ( len < 4090 ) )
+		{
+			static char q3ToAnsi[ 8 ] =
+			{
+				'0', // COLOR_BLACK
+				'1', // COLOR_RED
+				'2', // COLOR_GREEN
+				'3', // COLOR_YELLOW
+				'4', // COLOR_BLUE
+				'6', // COLOR_CYAN
+				'5', // COLOR_MAGENTA
+				0 // COLOR_WHITE
+			};
 
+			if( *msg == '^' )
+			{
+				int color;
+
+				msg++;
+				color = q3ToAnsi[ *msg++ % 8 ];
+				colored[len++] = '\033';
+				colored[len++] = '[';
+				if( color )
+				{
+					colored[len++] = '3';
+					colored[len++] = color;
+				}
+				else
+					colored[len++] = '0';
+				colored[len++] = 'm';
+			}
+			else
+				colored[len++] = *msg++;
+		}
+		colored[len] = 0;
+		printf( "%s %s\033[0m", logtime, colored );
+	}
+#else
+	printf( "%s %s", logtime, pMsg );
+#endif // !ANDROID
+	fflush( stdout );
+#endif
 	if( !s_ld.logfile ) return;
 
 	strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
