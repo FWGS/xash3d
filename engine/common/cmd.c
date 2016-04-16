@@ -1104,13 +1104,13 @@ static void Cmd_Apropos_f( void )
 		if( !matchpattern_with_separator( var->name, partial, true, "", false ) )
 		{
 			char *desc = var->description;
+
+			if( var->flags & CVAR_EXTDLL )
+				desc = "game cvar";
+
 			if( !desc )
-			{
-				if( ( var->flags & CVAR_EXTDLL ) )
-					desc = "game cvar";
-				else
-					desc = "user cvar";
-			}
+				desc = "user cvar";
+
 			if( !matchpattern_with_separator( desc, partial, true, "", false ))
 				continue;
 		}
