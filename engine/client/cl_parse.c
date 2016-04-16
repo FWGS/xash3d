@@ -495,6 +495,7 @@ void CL_ParseStaticDecal( sizebuf_t *msg )
 {
 	vec3_t		origin;
 	int		decalIndex, entityIndex, modelIndex;
+	cl_entity_t	*ent = NULL;
 	float		scale;
 	int		flags;
 

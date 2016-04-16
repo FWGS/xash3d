@@ -713,6 +713,7 @@ void SV_DirectoryCopy( const char *pPath, file_t *pFile )
 
 	for( i = 0; i < t->numfilenames; i++ )
 	{
+		Q_memset( szName, 0, SAVENAME_LENGTH );
 		fileSize = FS_FileSize( t->filenames[i], true );
 		pCopy = FS_Open( t->filenames[i], "rb", true );
 
@@ -793,6 +794,9 @@ void SV_SaveGameStateGlobals( SAVERESTOREDATA *pSaveData )
 	SAVE_LIGHTSTYLE	light;
 	int		i;
 	
+	Q_memset( &header, 0, sizeof( SAVE_HEADER ) );
+	Q_memset( &light, 0, sizeof( SAVE_LIGHTSTYLE ) );
+
 	// write global data
 	header.skillLevel = Cvar_VariableValue( "skill" ); // This is created from an int even though it's a float
 	header.connectionCount = pSaveData->connectionCount;
@@ -1977,6 +1981,8 @@ int SV_SaveGameSlot( const char *pSaveName, const char *pSaveComment )
 
 	pSaveData = SV_SaveGameState();
 	if( !pSaveData ) return 0;
+
+	Q_memset( &gameHeader, 0, sizeof( GAME_HEADER ) );
 
 	SV_SaveFinish( pSaveData );
 

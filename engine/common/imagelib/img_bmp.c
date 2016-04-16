@@ -299,11 +299,11 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	bmp_t		bhdr;
 	size_t		total_size, cur_size;
 	RGBQUAD		rgrgbPalette[256];
-	dword		cbBmpBits;
+	uint		cbBmpBits;
 	byte		*clipbuf = NULL, magic[2];
 	byte		*pb, *pbBmpBits;
-	dword		cbPalBytes;
-	dword		biTrueWidth;
+	uint		cbPalBytes;
+	uint		biTrueWidth;
 	int		pixel_size;
 	int		i, x, y;
 

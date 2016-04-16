@@ -237,7 +237,7 @@ static void UI_CustomGame_Init( void )
 	AddSpaces( uiCustomGame.hintText, TYPE_LENGTH );
 	StringConcat( uiCustomGame.hintText, "Name", NAME_LENGTH );
 	AddSpaces( uiCustomGame.hintText, NAME_LENGTH );
-	StringConcat( uiCustomGame.hintText, "Version", VER_LENGTH );
+	StringConcat( uiCustomGame.hintText, "Ver", VER_LENGTH );
 	AddSpaces( uiCustomGame.hintText, VER_LENGTH );
 	StringConcat( uiCustomGame.hintText, "Size", SIZE_LENGTH );
 	AddSpaces( uiCustomGame.hintText, SIZE_LENGTH );
