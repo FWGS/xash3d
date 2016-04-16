@@ -1756,7 +1756,7 @@ prints directly into console (can skip notify)
 static void pfnConsolePrint( const char *string )
 {
 	if( !string || !*string ) return;
-	if( *string != 1 ) Con_Print( (char *)string ); // show notify
+	if( *string != 1 ) Msg( "%s", string ); // show notify
 	else Con_NPrintf( 0, (char *)string + 1 ); // skip notify
 }
 

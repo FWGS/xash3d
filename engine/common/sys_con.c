@@ -611,7 +611,9 @@ void Sys_PrintLog( const char *pMsg )
 {
 	time_t		crt_time;
 	const struct tm	*crt_tm;
-	char logtime[32];
+	char logtime[32] = "";
+	static char lastchar;
+
 	time( &crt_time );
 	crt_tm = localtime( &crt_time );
 #ifdef __ANDROID__
@@ -620,7 +622,8 @@ void Sys_PrintLog( const char *pMsg )
 
 
 
-	strftime( logtime, sizeof( logtime ), "[%H:%M:%S]", crt_tm ); //short time
+	if( !lastchar || lastchar == '\n')
+	strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
 
 #ifdef COLORIZE_CONSOLE
 	{
@@ -662,15 +665,17 @@ void Sys_PrintLog( const char *pMsg )
 				colored[len++] = *msg++;
 		}
 		colored[len] = 0;
-		printf( "%s %s\033[0m", logtime, colored );
+		printf( "\033[34m%s\033[0m%s\033[0m", logtime, colored );
 	}
 #else
 	printf( "%s %s", logtime, pMsg );
 #endif // !ANDROID
 	fflush( stdout );
 #endif
+	lastchar = pMsg[strlen(pMsg)-1];
 	if( !s_ld.logfile ) return;
 
+	if( !lastchar || lastchar == '\n')
 	strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
 
 	fprintf( s_ld.logfile, "%s %s", logtime, pMsg );
