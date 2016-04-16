@@ -143,7 +143,7 @@ void BF_WriteOneBit( sizebuf_t *bf, int nValue )
 
 void BF_WriteUBitLongExt( sizebuf_t *bf, uint curData, int numbits, qboolean bCheckRange )
 {
-	Assert( numbits >= 0 && numbits <= 32 );
+	//Assert( numbits >= 0 && numbits <= 32 );
 
 	// bounds checking..
 	if(( bf->iCurBit + numbits ) > bf->nDataBits )
@@ -382,7 +382,7 @@ uint BF_ReadUBitLong( sizebuf_t *bf, int numbits )
 		return 0;
 	}
 
-	ASSERT( numbits > 0 && numbits <= 32 );
+	//ASSERT( numbits > 0 && numbits <= 32 );
 
 	// Read the current dword.
 	idword1 = bf->iCurBit >> 5;
