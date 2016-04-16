@@ -285,6 +285,9 @@ void CL_ParseSoundPacket( sizebuf_t *msg, qboolean is_ambient )
 	}
 	else handle = cl.sound_index[sound];	// see precached sound
 
+	if( !cl.audio_prepped )
+		return; // too early
+
 	if( is_ambient )
 	{
 		S_AmbientSound( pos, entnum, handle, volume, attn, pitch, flags );
