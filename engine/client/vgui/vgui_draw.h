@@ -59,7 +59,6 @@ void VGui_Paint();
 void VGui_RunFrame();
 void VGUI_SurfaceWndProc( Xash_Event *event );
 void *VGui_GetPanel();
-void VGui_ViewportPaintBackground();
 
 #ifdef __cplusplus
 }

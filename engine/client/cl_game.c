@@ -3598,6 +3598,19 @@ void NetAPI_SetValueForKey( char *s, const char *key, const char *value, int max
 }
 
 
+void VGui_ViewportPaintBackground( int extents[4] )
+{
+	// stub
+}
+
+#ifndef XASH_VGUI
+void *VGui_GetPanel()
+{
+	// stub
+	return NULL;
+}
+#endif
+
 /*
 =================
 IVoiceTweak implementation
@@ -3908,8 +3921,8 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetLevelName,
 	pfnGetScreenFade,
 	pfnSetScreenFade,
-	NULL,	// VGui_GetPanel
-	NULL,	// VGui_ViewportPaintBackground
+	VGui_GetPanel,
+	VGui_ViewportPaintBackground,
 	COM_LoadFile,
 	COM_ParseFile,
 	COM_FreeFile,
@@ -4022,8 +4035,6 @@ qboolean CL_LoadProgs( const char *name )
 	// during LoadLibrary
 #ifdef XASH_VGUI
 	VGui_Startup (menu.globals->scrWidth, menu.globals->scrHeight);
-	gEngfuncs.VGui_GetPanel = VGui_GetPanel;
-	gEngfuncs.VGui_ViewportPaintBackground = VGui_ViewportPaintBackground;
 #endif
 	
 	clgame.hInstance = Com_LoadLibrary( name, false );
