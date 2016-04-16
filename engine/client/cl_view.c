@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "entity_types.h"
 #include "gl_local.h"
 #include "vgui_draw.h"
+#include "touch.h" // IN_TouchDraw( )
 
 /*
 ===============

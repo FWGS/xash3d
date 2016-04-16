@@ -1,4 +1,6 @@
-
+#pragma once
+#ifndef GL_VIDNT_H
+#define GL_VIDNT_H
 
 #define VID_NOMODE -2.0f
 #define VID_AUTOMODE	"-1"
@@ -30,3 +32,6 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 // common functions
 void R_SaveVideoMode( int w, int h );
 void GL_SetExtension( int r_ext, int enable );
+void GL_BuildGammaTable( void );
+
+#endif

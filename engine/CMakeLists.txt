@@ -31,7 +31,7 @@ project (XASH_ENGINE)
 #set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -O3")
 
 # set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic")
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-incompatible-pointer-types")
 set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
 set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 set (CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Os")
@@ -94,6 +94,8 @@ endif()
 
 if(XASH_DLL_LOADER)
     add_definitions(-DDLL_LOADER)
+
+	include_directories(../loader)
 
     # Make GCC don't put full path to libloader.so
     add_custom_command(TARGET xash PRE_LINK COMMAND

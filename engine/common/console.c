@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "protocol.h"		// get the protocol version
 #include "gl_local.h"
 #include "qfont.h"
+#include "server.h" // Log_Printf( , ... )
 
 convar_t	*con_notifytime;
 convar_t	*scr_conspeed;

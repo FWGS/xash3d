@@ -91,7 +91,7 @@ static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b
 	pfnPIC_Set( cls.creditsFont.hFontTexture, r, g, b, 255 );
 	pfnPIC_DrawAdditive( x, y, width, height, &cls.creditsFont.fontRc[number] );
 
-	return clgame.scrInfo.charWidths[number];
+	return width;
 }
 
 static mobile_engfuncs_t gpMobileEngfuncs =
