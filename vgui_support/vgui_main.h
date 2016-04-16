@@ -210,7 +210,6 @@ void VGUI_ActivateCurrentCursor( void );
 void *VGui_GetPanel( void );
 void VGui_RunFrame( void );
 void VGui_Paint( void );
-void VGui_ViewportPaintBackground( int extents[4] );
 void VGUI_Mouse(VGUI_MouseAction action, int code);
 void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code);
 void VGUI_MouseMove(int x, int y);

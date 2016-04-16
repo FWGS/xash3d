@@ -719,13 +719,9 @@ void VGui_Paint()
 
 void *VGui_GetPanel()
 {
-	if(vgui.initialized)
+	if( vgui.initialized )
 		return vgui.GetPanel();
-	return 0;
-}
-void VGui_ViewportPaintBackground( int extents[4])
-{
-	//stub
+	return NULL;
 }
 
 void VGui_RunFrame()
