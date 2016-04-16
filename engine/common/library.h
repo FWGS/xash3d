@@ -165,6 +165,7 @@ void Loader_FreeLibrary(void *hndl);
 void *Loader_GetDllHandle( void *hndl );
 const char * Loader_GetFuncName( void *hndl, void *func);
 const char * Loader_GetFuncName_int( void *wm , void *func);
+void *Setup_LDT_Keeper(void);
 #endif
 
 #endif//LIBRARY_H

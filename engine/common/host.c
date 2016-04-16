@@ -19,10 +19,6 @@ GNU General Public License for more details.
 #include <SDL.h>
 #endif
 
-#if defined(DLL_LOADER)
-#include "ldt_keeper.h"
-#endif
-
 #include <stdarg.h>  // va_args
 #include <errno.h> // errno
 
