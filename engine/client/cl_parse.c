@@ -1420,6 +1420,16 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 	}
 }
 
+void CL_ParseStuffText( sizebuf_t *msg )
+{
+	char *s = BF_ReadString( msg );
+	if( cl_trace_stufftext->value )
+	{
+		Msg("^3STUFFTEXT:\n^2%s\n^3END^7\n", s);
+	}
+	Cbuf_AddText( s );
+}
+
 /*
 =====================================================================
 
@@ -1518,8 +1528,7 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			if( i == PRINT_CHAT ) S_StartLocalSound( "common/menu2.wav", VOL_NORM, false );
 			break;
 		case svc_stufftext:
-			s = BF_ReadString( msg );
-			Cbuf_AddText( s );
+			CL_ParseStuffText( msg );
 			break;
 		case svc_lightstyle:
 			CL_ParseLightStyle( msg );
