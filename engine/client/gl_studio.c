@@ -710,9 +710,9 @@ void R_StudioFxTransform( cl_entity_t *ent, matrix3x4 transform )
 		else if( !Com_RandomLong( 0, 49 ))
 		{
 			float	offset;
-			//int	axis = Com_RandomLong( 0, 1 );
+			int	axis = Com_RandomLong( 0, 1 );
 
-			//if( axis == 1 ) axis = 2; // choose between x & z
+			if( axis == 1 ) axis = 2; // choose between x & z
 			offset = Com_RandomFloat( -10.0f, 10.0f );
 			transform[Com_RandomLong( 0, 2 )][3] += offset;
 		}
@@ -2649,6 +2649,7 @@ void R_StudioDeformShadow( void )
 	VectorScale( g_mvShadowVec, dist2, g_mvShadowVec );
 
 	verts = g_xarrayverts[0];
+	numVerts = g_nNumArrayVerts;
 
 	for( numVerts = 0; numVerts < g_nNumArrayVerts; numVerts++, verts += 3 )
 	{

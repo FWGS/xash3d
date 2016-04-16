@@ -1396,7 +1396,7 @@ static void Mod_BuildPolygon( mextrasurf_t *info, msurface_t *surf, int numVerts
 	mesh->verts = (glvert_t *)buffer;
 	buffer += numVerts * sizeof( glvert_t );
 	mesh->elems = (word *)buffer;
-	//buffer += numElems * sizeof( word );
+	buffer += numElems * sizeof( word );
 
 	mesh->next = info->mesh;
 	mesh->surf = surf;	// NOTE: meshchains can be linked with one surface
@@ -1549,7 +1549,7 @@ static void Mod_SubdividePolygon( mextrasurf_t *info, msurface_t *surf, int numV
 
 	// setup pointers
 	mesh->verts = (glvert_t *)buffer;
-	//buffer += numVerts * sizeof( glvert_t );
+	buffer += numVerts * sizeof( glvert_t );
 
 	VectorClear( vTotal );
 	VectorClear( nTotal );
@@ -1697,11 +1697,11 @@ static void Mod_ConvertSurface( mextrasurf_t *info, msurface_t *surf )
 	mesh->verts = (glvert_t *)buffer;
 	buffer += numVerts * sizeof( glvert_t );
 	mesh->elems = (word *)buffer;
-	//buffer += numElems * sizeof( word );
+	buffer += numElems * sizeof( word );
 
 	// setup moving pointers
-	//outVerts = (glvert_t *)mesh->verts;
-	//outElems = (word *)mesh->elems;
+	outVerts = (glvert_t *)mesh->verts;
+	outElems = (word *)mesh->elems;
 
 	// store vertex data
 	numElems = numVerts = 0;
@@ -2462,7 +2462,7 @@ static void Mod_FindModelOrigin( const char *entities, const char *modelname, ve
 	string	keyname;
 	char	token[2048];
 	qboolean	model_found;
-	//qboolean	origin_found;
+	qboolean	origin_found;
 
 	if( !entities || !modelname || !*modelname || !origin )
 		return;
@@ -2474,8 +2474,7 @@ static void Mod_FindModelOrigin( const char *entities, const char *modelname, ve
 		if( token[0] != '{' )
 			Host_Error( "Mod_FindModelOrigin: found %s when expecting {\n", token );
 
-		model_found = false;
-		//origin_found = false;
+		model_found = origin_found = false;
 		VectorClear( origin );
 
 		while( 1 )
@@ -2500,7 +2499,7 @@ static void Mod_FindModelOrigin( const char *entities, const char *modelname, ve
 			if( !Q_stricmp( keyname, "origin" ))
 			{
 				Q_atov( origin, token, 3 );
-				//origin_found = true;
+				origin_found = true;
 			}
 		}
 

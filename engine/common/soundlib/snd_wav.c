@@ -408,8 +408,7 @@ assume stream is valid
 */
 long Stream_ReadWAV( stream_t *stream, long bytes, void *buffer )
 {
-	//int	samples; 
-	int	remaining;
+	int	samples, remaining;
 
 	if( !stream->file ) return 0;	// invalid file
 
@@ -418,7 +417,7 @@ long Stream_ReadWAV( stream_t *stream, long bytes, void *buffer )
 	if( bytes > remaining ) bytes = remaining;
 
 	stream->pos += bytes;
-	//samples = ( bytes / stream->width ) / stream->channels;
+	samples = ( bytes / stream->width ) / stream->channels;
 	FS_Read( stream->file, buffer, bytes );
 
 	return bytes;

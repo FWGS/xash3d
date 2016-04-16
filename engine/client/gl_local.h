@@ -691,6 +691,8 @@ extern convar_t	*r_dynamic;
 extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
 
+extern convar_t *mp_decals;
+
 extern convar_t	*vid_displayfrequency;
 extern convar_t	*vid_fullscreen;
 extern convar_t	*vid_gamma;

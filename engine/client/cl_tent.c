@@ -446,7 +446,7 @@ void CL_FizzEffect( cl_entity_t *pent, int modelIndex, int density )
 		return;
 
 	count = density + 1;
-	//density = count * 3 + 6;
+	density = count * 3 + 6;
 
 	Mod_GetBounds( pent->curstate.modelindex, mins, maxs );
 
@@ -1820,6 +1820,8 @@ void CL_ParseTempEntity( sizebuf_t *msg )
 	cl_entity_t	*pEnt;
 	dlight_t		*dl;
 
+	decalIndex = modelIndex = entityIndex = 0;
+
 	// parse user message into buffer
 	BF_ReadBytes( msg, pbuf, iSize );
 
@@ -2143,7 +2145,7 @@ void CL_ParseTempEntity( sizebuf_t *msg )
 		pos[2] = BF_ReadCoord( &buf );
 		entityIndex = BF_ReadShort( &buf );
 		decalIndex = BF_ReadByte( &buf );
-		//pEnt = CL_GetEntityByIndex( entityIndex );
+		pEnt = CL_GetEntityByIndex( entityIndex );
 		CL_DecalShoot( CL_DecalIndex( decalIndex ), entityIndex, 0, pos, 0 );
 		CL_BulletImpactParticles( pos );
 		CL_RicochetSound( pos );

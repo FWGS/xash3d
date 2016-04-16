@@ -1,4 +1,4 @@
-# Xash3D Engine [![Build Status](https://travis-ci.org/SDLash3D/xash3d.svg)](https://travis-ci.org/SDLash3D/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/SDLash3D/xash3d?branch=master&svg=true)](https://ci.appveyor.com/project/a1batross/xash3d)
+# Xash3D SDL Engine [![Build Status](https://travis-ci.org/SDLash3D/xash3d.svg)](https://travis-ci.org/SDLash3D/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/SDLash3D/xash3d?branch=master&svg=true)](https://ci.appveyor.com/project/a1batross/xash3d)
 Latest version of the library is available at:
 https://github.com/SDLash3D/xash3d
 
@@ -11,11 +11,16 @@ The multiplayer part is not yet completed, multiplayer mods should work just
 fine, but bear in mind that some features may not work at all or work not
 exactly the way they do in Gold Source Engine.
 
-# How to build on Linux with CMake
+Xash3D SDL is a fork of Xash3D Engine, which aims on crossplatform and compability 
+with original Xash3D and Gold Source.
+
+# How to build with CMake (recommended for non-Windows)
 
 If you want to enable VGUI support, you need [Half-Life 1 SDK](https://github.com/SDLash3D/halflife)
 to build vgui_support library.
-If you are using non-x86 architecture, you may skip this
+
+**NOTE**: VGUI is exists only for Linux/MacOSX/Windows and only for x86. 
+Disable it by `-DXASH_VGUI=no` if you are targetting non-supported architecture.
 
 Clone it with git:
 
@@ -32,17 +37,21 @@ build Xash3D as:
 
 # How to run    
 
+Copy **valve** folder from Half-Life:
+
+    cp -r $HOME/.steam/steam/SteamApps/common/Half-Life/valve $HOME/Games/Xash3D
+
+**NOTE**: If you build with CMake, you can now use `make install`. It will install binaries where 
+they must be located. So just run `xash3d` from command line in directory where is gamedata is located. 
+For additional info look to the CMakeLists.txt in repo root and xash3d.sh script.
+
 After a successful build, copy the next files to some other directory where you want to run Xash3D:
 
     cp engine/libxash.so game_launch/xash3d mainui/libxashmenu.so $HOME/Games/Xash3D
 
 If you built it with XASH_VGUI, also copy vgui.so:
 
-    cp /opt/halflife/linux/vgui.so $HOME/Games/Xash3D
-
-Copy **valve** folder from Half-Life:
-
-    cp -r $HOME/.steam/steam/SteamApps/common/Half-Life/valve $HOME/Games/Xash3D
+    cp ../hlsdk/linux/vgui.so vgui_support/vgui_support.so $HOME/Games/Xash3D
     
 Copy script:
 
@@ -50,13 +59,16 @@ Copy script:
 
 Run:
 
-    $HOME/Games/Xash3D/xash3d.sh
+    cd $HOME/Games/Xash3D
+    ./xash3d.sh
 
-# Building on linux manually without CMake
+# Manual build and run (without CMake)
 
-## Building engine
+## Build
+### Building Engine
 
-If you want to build Xash3D for some embedded device or just do not want to use CMake, use Makefile.linux instead
+If you want to build Xash3D for some embedded device or just do not want to use CMake, 
+use Makefile.linux instead
 
     cd (xash3d)/engine
     make -f Makefile.linux XASH_VGUI=1
@@ -79,7 +91,7 @@ or
 
     make -f Makefile.linux XASH_DEDICATED=1 XASH_DLL_LOADER=1
 
-## After building engine, build launch binary:
+### After building engine, build launch binary:
 
     cd (xash3d)/game_launch
     gcc xash.c -o xash -ldl -lrt -lm
@@ -104,7 +116,7 @@ Put vgui_support.dll from windows build to your game data folder and run:
 
     LD_LIBRARY_PATH=. ./xash -dev 5 -vguilib vgui.dll -clientlib valve/cl_dlls/client.dll -dll dlls/hl.dll
 
-# Building and running on Windows with Visual Studio 2013
+# Building and running on Windows with Visual Studio 2013 (recommended for Windows)
 
 Download latest prebuilt SDL2 from
 
@@ -115,7 +127,10 @@ Unzip and rename `SDL2-2.0.4` folder to `SDL2` and put it next to xash3d project
     ..\xash3d\
     ..\SDL2\
     
-Open `xash.sln` with Visual Studio 2013 and make a build. After building, copy contents of `Debug` or `Release` folder to directory you choose. Copy `valve` folder and `vgui.dll` from your Half Life game installation folder and `SDL2.dll` form `\SDL2\lib\x86\` to it. Move `vgui_support.dll` into `valve` folder.
+Open `xash.sln` with Visual Studio 2013 and make a build. After building, copy contents of `Debug` or 
+`Release` folder to directory you choose. Copy `valve` folder and `vgui.dll` from your Half Life game 
+installation folder and `SDL2.dll` form `\SDL2\lib\x86\` to it. 
+Move `vgui_support.dll` into `valve` folder.
 
     ..\valve\
     ..\valve\vgui_support.dll
@@ -169,9 +184,10 @@ All mods that ported to android may be build to linux using Android.mk with micr
 
 [https://github.com/SDLash3D/microndk]
 
-Clone microndk repo somewhere, change xash3d_cinfig to preffered configuration (change arch to x86 for example)
+Clone microndk repo somewhere, change xash3d_cinfig to preffered configuration (change arch to x86 
+for example)
 
-Go to dlls folder if you are building server or cl_dlls if you are building client and dp:
+Go to dlls folder if you are building server or cl_dlls if you are building client and do:
 
     make -f /path/to/microndk/microndk.mk -j4
 

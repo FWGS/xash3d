@@ -353,7 +353,7 @@ void *GL_GetProcAddress( const char *name )
 #endif
 	if(!func)
 	{
-		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
+		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s\n", name);
 	}
 	return func;
 }
@@ -1064,6 +1064,9 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 
 	glState.width = width;
 	glState.height = height;
+	if( width * 3 != height * 4 && width * 4 != height * 5 )
+		glState.wideScreen = true;
+	else glState.wideScreen = false;
 
 	SCR_VidInit();
 }
@@ -1084,6 +1087,12 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	glw_state.desktopHeight = displayMode.h;
 
 	glState.fullScreen = fullscreen;
+
+	// check for 4:3 or 5:4
+	if( width * 3 != height * 4 && width * 4 != height * 5 )
+		glState.wideScreen = true;
+	else glState.wideScreen = false;
+
 
 	if(!host.hWnd)
 	{
