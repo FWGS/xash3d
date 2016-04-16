@@ -1597,6 +1597,8 @@ void CL_Precache_f( void )
 	CL_PrepSound();
 	CL_PrepVideo();
 
+	Cvar_SetCheatState( false );
+
 	BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 	BF_WriteString( &cls.netchan.message, va( "begin %i\n", spawncount ));
 }

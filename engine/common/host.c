@@ -1147,6 +1147,8 @@ void EXPORT Host_Shutdown( void )
 	default:
 		if( host.type == HOST_NORMAL )
 		{
+			// restore all latched cheat cvars
+			Cvar_SetCheatState( true );
 			Host_WriteConfig();
 			IN_TouchWriteConfig();
 		}

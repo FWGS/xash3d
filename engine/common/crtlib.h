@@ -106,7 +106,7 @@ int Cvar_VariableInteger( const char *var_name );
 char *Cvar_VariableString( const char *var_name );
 void Cvar_DirectSet( cvar_t *var, const char *value );
 void Cvar_Reset( const char *var_name );
-void Cvar_SetCheatState( void );
+void Cvar_SetCheatState( qboolean force );
 qboolean Cvar_Command( void );
 void Cvar_WriteVariables( file_t *f );
 void Cvar_Init( void );
