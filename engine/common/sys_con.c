@@ -38,11 +38,12 @@ WIN32 CONSOLE
 
 #define SYSCONSOLE		"XashConsole"
 #define COMMAND_HISTORY	64	// system console keep more commands than game console
-
+#ifdef _WIN32
 typedef struct
 {
+
 	char		title[64];
-#ifdef _WIN32
+
 	HWND		hWnd;
 	HWND		hwndBuffer;
 	HWND		hwndButtonSubmit;
@@ -50,7 +51,7 @@ typedef struct
 	HFONT		hfBufferFont;
 	HWND		hwndInputLine;
 	WNDPROC		SysInputLineWndProc;
-#endif
+
 	string		consoleText;
 	string		returnedText;
 	string		historyLines[COMMAND_HISTORY];
@@ -60,13 +61,21 @@ typedef struct
 	int		windowWidth, windowHeight;
 	size_t		outLen;
 	// log stuff
+
+
+} WinConData;
+
+static WinConData	s_wcd;
+#endif
+typedef struct {
+	char		title[64];
 	qboolean		log_active;
 	char		log_path[MAX_SYSPATH];
 	FILE		*logfile;
 	int 		logfileno;
-} WinConData;
+} LogData;
 
-static WinConData	s_wcd;
+static LogData s_ld;
 
 void Con_ShowConsole( qboolean show )
 {
@@ -392,8 +401,8 @@ void Con_CreateConsole( void )
 
 	if( Sys_CheckParm( "-log" ) && host.developer != 0 )
 	{
-		s_wcd.log_active = true;
-		Q_strncpy( s_wcd.log_path, "engine.log", sizeof( s_wcd.log_path ));
+		s_ld.log_active = true;
+		Q_strncpy( s_ld.log_path, "engine.log", sizeof( s_ld.log_path ));
 	}
 
 	Sys_InitLog();
@@ -470,6 +479,7 @@ returned input text
 */
 char *Con_Input( void )
 {
+#ifdef _WIN32
 	if( s_wcd.consoleText[0] == 0 )
 		return NULL;
 		
@@ -477,6 +487,9 @@ char *Con_Input( void )
 	s_wcd.consoleText[0] = 0;
 	
 	return s_wcd.returnedText;
+#else
+#endif
+	return NULL;
 }
 
 /*
@@ -510,23 +523,24 @@ void Sys_InitLog( void )
 	if( host.change_game )
 		mode = "a";
 	else mode = "w";
+	Q_strncpy( s_ld.title, "Xash", sizeof ( s_ld.title ) );
 
 	// print log to stdout
 	printf( "================================================================================\n" );
-	printf( "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
+	printf( "\t%s (build %i) started at %s\n", s_ld.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
 	printf( "================================================================================\n" );
 
-	s_wcd.logfileno = -1;
+	s_ld.logfileno = -1;
 	// create log if needed
-	if( s_wcd.log_active )
+	if( s_ld.log_active )
 	{
-		s_wcd.logfile = fopen( s_wcd.log_path, mode );
-		if( !s_wcd.logfile ) MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_wcd.log_path );
-		else s_wcd.logfileno = fileno( s_wcd.logfile );
+		s_ld.logfile = fopen( s_ld.log_path, mode );
+		if( !s_ld.logfile ) MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_ld.log_path );
+		else s_ld.logfileno = fileno( s_ld.logfile );
 
-		fprintf( s_wcd.logfile, "================================================================================\n" );
-		fprintf( s_wcd.logfile, "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
-		fprintf( s_wcd.logfile, "================================================================================\n" );
+		fprintf( s_ld.logfile, "================================================================================\n" );
+		fprintf( s_ld.logfile, "\t%s (build %i) started at %s\n", s_ld.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
+		fprintf( s_ld.logfile, "================================================================================\n" );
 	}
 }
 
@@ -550,17 +564,17 @@ void Sys_CloseLog( void )
 	}
 
 	printf( "\n================================================================================\n");
-	printf( "\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+	printf( "\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
 	printf( "================================================================================\n");
 
-	if( s_wcd.logfile )
+	if( s_ld.logfile )
 	{
-		fprintf( s_wcd.logfile, "\n================================================================================\n");
-		fprintf( s_wcd.logfile, "\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
-		fprintf( s_wcd.logfile, "================================================================================\n");
+		fprintf( s_ld.logfile, "\n================================================================================\n");
+		fprintf( s_ld.logfile, "\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+		fprintf( s_ld.logfile, "================================================================================\n");
 
-		fclose( s_wcd.logfile );
-		s_wcd.logfile = NULL;
+		fclose( s_ld.logfile );
+		s_ld.logfile = NULL;
 	}
 }
 
@@ -581,17 +595,17 @@ void Sys_PrintLog( const char *pMsg )
 	printf( "%s %s", logtime, pMsg );
 	fflush( stdout );
 
-	if( !s_wcd.logfile ) return;
+	if( !s_ld.logfile ) return;
 
 	strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
 
-	fprintf( s_wcd.logfile, "%s %s", logtime, pMsg );
-	fflush( s_wcd.logfile );
+	fprintf( s_ld.logfile, "%s %s", logtime, pMsg );
+	fflush( s_ld.logfile );
 }
 
 
 int Sys_LogFileNo( void )
 {
-	if( s_wcd.logfileno ) fflush( s_wcd.logfile );
-	return s_wcd.logfileno;
+	if( s_ld.logfileno ) fflush( s_ld.logfile );
+	return s_ld.logfileno;
 }
