@@ -513,10 +513,11 @@ void Delta_ParseTableField( sizebuf_t *msg )
 	tableIndex = BF_ReadUBitLong( msg, 4 );
 	dt = Delta_FindStructByIndex( tableIndex );
 
-	ASSERT( dt != NULL );
-
+	if( !dt )
+		Host_Error( "Delta_ParseTableField: not initialized" );
 	nameIndex = BF_ReadUBitLong( msg, 8 );	// read field name index		
-	ASSERT( nameIndex >= 0 && nameIndex < dt->maxFields );
+	if( !( nameIndex >= 0 && nameIndex < dt->maxFields ) )
+		Host_Error( "Delta_ParseTableField: wrong nameIndex" );
 	pName = dt->pInfo[nameIndex].name;
 	flags = BF_ReadUBitLong( msg, 10 );
 	bits = BF_ReadUBitLong( msg, 5 ) + 1;
