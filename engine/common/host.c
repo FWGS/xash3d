@@ -1080,6 +1080,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	{
 		Cmd_AddCommand( "minimize", Host_Minimize_f, "minimize main window to taskbar" );
 		Cbuf_AddText( "exec config.cfg\n" );
+		// listenserver/multiplayer config.
+		// need load it to update menu options.
+		Cbuf_AddText( "exec game.cfg\n" );
 	}
 
 	host.errorframe = 0;
