@@ -1030,26 +1030,25 @@ save serverinfo variables into server.cfg (using for dedicated server too)
 */
 void Host_WriteServerConfig( const char *name )
 {
-	/* Old Xash3D behaviour is writing server config
-	every time when starting server from ui. */
-#if 0
+	/* Old Xash3D behaviour is writing listenserver config
+	every time when starting server from ui.
+	WON Half-Life uses game.cfg for this purpose*/
 	file_t	*f;
 
 	SV_InitGameProgs();	// collect user variables
 	
-	if(( f = FS_Open( name, "w", false )) != NULL )
+	if(( f = FS_Open( "game.cfg", "w", false )) != NULL )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
 		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
-		FS_Printf( f, "//\t\t\tserver.cfg - server temporary config\n" );
+		FS_Printf( f, "//\t\t\tgame.cfg - multiplayer config\n" );
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteServerVariables( f );
 		FS_Close( f );
 	}
-	else MsgDev( D_ERROR, "Couldn't write %s.\n", name );
+	else MsgDev( D_ERROR, "Couldn't write game.cfg.\n" );
 
-	SV_FreeGameProgs();	// release progs with all variables
-#endif
+	//SV_FreeGameProgs();	// release progs with all variables
 }
 /*
 ===============
