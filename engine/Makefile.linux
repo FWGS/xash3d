@@ -12,7 +12,7 @@ TOPDIR = $(PWD)/..
 XASHXT ?= $(TOPDIR)/../xashXT
 HLSDK ?= $(TOPDIR)/../halflife/
 INCLUDES = -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui -Icommon/sdl
-DEFINES = -DUSE_SELECT
+DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
 else
@@ -38,7 +38,7 @@ ifeq ($(XASH_STATIC_LIBDL),1)
     LIBS += -ldl
 endif
 ifeq ($(XASH_DLL_LOADER),1)
-	DEFINES += -DDLL_LOADER -DCOLORIZE_CONSOLE
+	DEFINES += -DDLL_LOADER
     ifeq ($(XASH_SINGLE_BINARY),1)
 	LIBS += libloader.a -pthread -lm
     else
