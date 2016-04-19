@@ -89,7 +89,7 @@ static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 static qboolean FS_SysFileExists( const char *path );
 static qboolean FS_SysFolderExists( const char *path );
-static long FS_SysFileTime( const char *filename );
+static int FS_SysFileTime( const char *filename );
 static char W_TypeFromExt( const char *lumpname );
 static const char *W_ExtFromType( char lumptype );
 
@@ -252,7 +252,7 @@ static void listdirectory( stringlist_t *list, const char *path )
 #else
 	struct dirent **n_file;
 #endif
-	long		hFile;
+	int		hFile;
 
 	Q_strncpy( (char *)pattern, path, sizeof( pattern ));
 	Q_strncat( (char *)pattern, "*", sizeof( pattern ));
@@ -1772,7 +1772,7 @@ FS_SysFileTime
 Internal function used to determine filetime
 ====================
 */
-static long FS_SysFileTime( const char *filename )
+static int FS_SysFileTime( const char *filename )
 {
 	struct stat buf;
 	
@@ -2439,7 +2439,7 @@ int FS_Seek( file_t *file, fs_offset_t offset, int whence )
 		return -1;
 	}
 	
-	if( offset < 0 || offset > (long)file->real_length )
+	if( offset < 0 || offset > (int)file->real_length )
 		return -1;
 
 	// if we have the data in our read buffer, we don't need to actually seek

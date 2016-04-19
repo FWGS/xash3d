@@ -116,7 +116,7 @@ void Android_GetMethods()
 
 void Android_Vibrate( float life, char flags )
 {
-	long time = (long)life;
+	int time = (int)life;
 
 	if( !env )
 		 Android_GetMethods();

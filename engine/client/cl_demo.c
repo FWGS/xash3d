@@ -666,7 +666,7 @@ reads demo data and write it to client
 qboolean CL_DemoReadMessage( byte *buffer, size_t *length )
 {
 	float	f = 0.0f;
-	long	curpos = 0;
+	int	curpos = 0;
 	float	fElapsedTime = 0.0f;
 	qboolean	swallowmessages = true;
 	byte	*userbuf = NULL;

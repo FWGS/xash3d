@@ -159,7 +159,7 @@ void BF_WriteUBitLongExt( sizebuf_t *bf, uint curData, int numbits, qboolean bCh
 		dword	iCurBitMasked;
 		int	nBitsWritten;
 
-		Assert(( iDWord * 4 + sizeof( long )) <= (uint)BF_GetMaxBytes( bf ));
+		Assert(( iDWord * 4 + sizeof( int )) <= (uint)BF_GetMaxBytes( bf ));
 
 		iCurBitMasked = iCurBit & 31;
 		((dword *)bf->pData)[iDWord] &= BitWriteMasks[iCurBitMasked][nBitsLeft];
@@ -292,12 +292,12 @@ void BF_WriteVec3Coord( sizebuf_t *bf, const float *fa )
 
 void BF_WriteBitFloat( sizebuf_t *bf, float val )
 {
-	long	intVal;
+	int	intVal;
 
-	ASSERT( sizeof( long ) == sizeof( float ));
+	ASSERT( sizeof( int ) == sizeof( float ));
 	ASSERT( sizeof( float ) == 4 );
 
-	intVal = *((long *)&val );
+	intVal = *((int *)&val );
 	BF_WriteUBitLong( bf, intVal, 32 );
 }
 
@@ -321,9 +321,9 @@ void BF_WriteWord( sizebuf_t *bf, int val )
 	BF_WriteUBitLong( bf, val, sizeof( word ) << 3 );
 }
 
-void BF_WriteLong( sizebuf_t *bf, long val )
+void BF_WriteLong( sizebuf_t *bf, int val )
 {
-	BF_WriteSBitLong( bf, val, sizeof( long ) << 3 );
+	BF_WriteSBitLong( bf, val, sizeof( int ) << 3 );
 }
 
 void BF_WriteFloat( sizebuf_t *bf, float val )
@@ -412,10 +412,10 @@ uint BF_ReadUBitLong( sizebuf_t *bf, int numbits )
 
 float BF_ReadBitFloat( sizebuf_t *bf )
 {
-	long	val;
+	int	val;
 	int	bit, byte;
 
-	ASSERT( sizeof( float ) == sizeof( long ));
+	ASSERT( sizeof( float ) == sizeof( int ));
 	ASSERT( sizeof( float ) == 4 );
 
 	if( BF_Overflow( bf, 32 ))
@@ -548,9 +548,9 @@ void BF_ReadVec3Coord( sizebuf_t *bf, vec3_t fa )
 	fa[2] = BF_ReadCoord( bf );
 }
 
-long BF_ReadLong( sizebuf_t *bf )
+int BF_ReadLong( sizebuf_t *bf )
 {
-	return BF_ReadSBitLong( bf, sizeof( long ) << 3 );
+	return BF_ReadSBitLong( bf, sizeof( int ) << 3 );
 }
 
 float BF_ReadFloat( sizebuf_t *bf )

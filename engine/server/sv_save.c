@@ -2271,7 +2271,7 @@ const char *SV_GetLatestSave( void )
 {
 	search_t	*f = FS_Search( "save/*.sav", true, true );	// lookup only in gamedir
 	int	i, found = 0;
-	long	newest = 0, ft;
+	int	newest = 0, ft;
 	string	savename;	
 
 	if( !f ) return NULL;

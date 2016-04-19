@@ -88,9 +88,9 @@ GNU General Public License for more details.
 	typedef unsigned char   byte;
 	typedef short int	    WORD;
 	typedef unsigned int    DWORD;
-	typedef long int	    LONG;
-	typedef unsigned long int   ULONG;
-	typedef long			WPARAM;
+	typedef int	    LONG;
+	typedef unsigned int   ULONG;
+	typedef int			WPARAM;
 	typedef unsigned int    LPARAM;
 
 	typedef void* HANDLE;

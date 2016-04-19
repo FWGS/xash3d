@@ -637,7 +637,7 @@ UI_DrawMenu
 */
 void UI_DrawMenu( menuFramework_s *menu )
 {
-	static long	statusFadeTime;
+	static int	statusFadeTime;
 	static menuCommon_s	*lastItem;
 	menuCommon_s	*item;
 	int		i;

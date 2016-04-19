@@ -63,7 +63,7 @@ int Host_ServerState( void )
 	return host_serverstate->integer;
 }
 
-int Host_CompareFileTime( long ft1, long ft2 )
+int Host_CompareFileTime( int ft1, int ft2 )
 {
 	if( ft1 < ft2 )
 	{

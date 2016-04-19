@@ -627,7 +627,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	write( logfd, "Stack backtrace:\n", 17 );
 	strncpy(message + len, "Stack backtrace:\n", 1024 - len);
 	len += 17;
-	long pagesize = sysconf(_SC_PAGESIZE);
+	size_t pagesize = sysconf(_SC_PAGESIZE);
 	do
 	{
 		int line = printframe( message + len, 1024 - len, ++i, pc);

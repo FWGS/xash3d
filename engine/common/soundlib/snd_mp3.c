@@ -42,9 +42,9 @@ typedef struct mpeg_s
 
 // mpg123 exports
 int create_decoder( mpeg_t *mpg );
-int read_mpeg_header( mpeg_t *mpg, const char *data, long bufsize, long streamsize );
-int read_mpeg_stream( mpeg_t *mpg, const char *data, long bufsize );
-extern int set_current_pos( mpeg_t *mpg, int newpos, int (*pfnSeek)( void*, long, int ), void *file );
+int read_mpeg_header( mpeg_t *mpg, const char *data, int bufsize, int streamsize );
+int read_mpeg_stream( mpeg_t *mpg, const char *data, int bufsize );
+extern int set_current_pos( mpeg_t *mpg, int newpos, int (*pfnSeek)( void*, int, int ), void *file );
 int get_current_pos( mpeg_t *mpg, int curpos );
 void close_decoder( mpeg_t *mpg );
 
@@ -139,7 +139,7 @@ stream_t *Stream_OpenMPG( const char *filename )
 	mpeg_t	*mpegFile;
 	stream_t	*stream;
 	file_t	*file;
-	long	filesize, read_len;
+	int	filesize, read_len;
 	char	tempbuff[FRAME_SIZE];
 
 	file = FS_Open( filename, "rb", false );
@@ -210,7 +210,7 @@ Stream_ReadMPG
 assume stream is valid
 =================
 */
-long Stream_ReadMPG( stream_t *stream, long needBytes, void *buffer )
+int Stream_ReadMPG( stream_t *stream, int needBytes, void *buffer )
 {
 	// buffer handling
 	int	bytesWritten = 0;
@@ -223,7 +223,7 @@ long Stream_ReadMPG( stream_t *stream, long needBytes, void *buffer )
 	while( 1 )
 	{
 		char	tempbuff[FRAME_SIZE];
-		long	read_len, outsize;
+		int	read_len, outsize;
 		byte	*data;
 
 		if( !stream->buffsize )
@@ -284,7 +284,7 @@ Stream_SetPosMPG
 assume stream is valid
 =================
 */
-long Stream_SetPosMPG( stream_t *stream, long newpos )
+int Stream_SetPosMPG( stream_t *stream, int newpos )
 {
 	// update stream pos for right work GetPos function
 	int newPos = set_current_pos( stream->ptr, newpos, FS_Seek, stream->file );
@@ -308,7 +308,7 @@ Stream_GetPosMPG
 assume stream is valid
 =================
 */
-long Stream_GetPosMPG( stream_t *stream )
+int Stream_GetPosMPG( stream_t *stream )
 {
 	return get_current_pos( stream->ptr, stream->pos );
 }

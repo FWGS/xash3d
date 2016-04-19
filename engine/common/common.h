@@ -57,7 +57,7 @@ extern "C" {
 
 #define Mod_AllowMaterials()	( mod_allow_materials != NULL && mod_allow_materials->integer && !( host.features & ENGINE_DISABLE_HDTEXTURES ))
 
-typedef unsigned long	dword;
+typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
 typedef struct searchpath_s searchpath_t;
@@ -627,9 +627,9 @@ wavdata_t *FS_LoadSound( const char *filename, const byte *buffer, size_t size )
 void FS_FreeSound( wavdata_t *pack );
 stream_t *FS_OpenStream( const char *filename );
 wavdata_t *FS_StreamInfo( stream_t *stream );
-long FS_ReadStream( stream_t *stream, int bytes, void *buffer );
-long FS_SetStreamPos( stream_t *stream, long newpos );
-long FS_GetStreamPos( stream_t *stream );
+int FS_ReadStream( stream_t *stream, int bytes, void *buffer );
+int FS_SetStreamPos( stream_t *stream, int newpos );
+int FS_GetStreamPos( stream_t *stream );
 void FS_FreeStream( stream_t *stream );
 qboolean Sound_Process( wavdata_t **wav, int rate, int width, uint flags );
 uint Sound_GetApproxWavePlayLen( const char *filepath );
@@ -645,7 +645,7 @@ int Q_buildnum( void );
 void EXPORT Host_Shutdown( void );
 void Host_SetServerState( int state );
 int Host_ServerState( void );
-int Host_CompareFileTime( long ft1, long ft2 );
+int Host_CompareFileTime( int ft1, int ft2 );
 void Host_NewInstance( const char *name, const char *finalmsg );
 qboolean Host_NewGame( const char *mapName, qboolean loadGame );
 void Host_EndGame( const char *message, ... );
@@ -875,7 +875,7 @@ void SCR_Init( void );
 void SCR_UpdateScreen( void );
 void SCR_BeginLoadingPlaque( qboolean is_background );
 void SCR_CheckStartupVids( void );
-long SCR_GetAudioChunk( char *rawdata, long length );
+int SCR_GetAudioChunk( char *rawdata, int length );
 wavdata_t *SCR_GetMovieInfo( void );
 void SCR_Shutdown( void );
 void Con_Print( const char *txt );
@@ -895,8 +895,8 @@ char *Cvar_Serverinfo( void );
 void Cmd_WriteVariables( file_t *f );
 qboolean Cmd_CheckMapsList( qboolean fRefresh );
 void Cmd_AutoComplete( char *complete_string );
-void COM_SetRandomSeed( long lSeed );
-long Com_RandomLong( long lMin, long lMax );
+void COM_SetRandomSeed( int lSeed );
+int Com_RandomLong( int lMin, int lMax );
 float Com_RandomFloat( float fMin, float fMax );
 void TrimSpace( const char *source, char *dest );\
 const byte *GL_TextureData( unsigned int texnum );

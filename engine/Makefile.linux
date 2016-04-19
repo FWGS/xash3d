@@ -5,8 +5,8 @@ LDFLAGS =
 LIBS = -lm
 LBITS := $(shell getconf LONG_BIT)
 ifeq ($(LBITS),64)
-    LDFLAGS += -m32
-    CFLAGS += -m32
+	LDFLAGS +=
+	CFLAGS +=
 endif
 TOPDIR = $(PWD)/..
 XASHXT ?= $(TOPDIR)/../xashXT

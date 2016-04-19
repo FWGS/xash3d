@@ -195,7 +195,7 @@ typedef struct render_api_s
 	// AVIkit support
 	void		*(*AVI_LoadVideo)( const char *filename, int ignore_hwgamma );
 	int		(*AVI_GetVideoInfo)( void *Avi, long *xres, long *yres, float *duration );
-	long		(*AVI_GetVideoFrameNumber)( void *Avi, float time );
+	int		(*AVI_GetVideoFrameNumber)( void *Avi, float time );
 	byte		*(*AVI_GetVideoFrame)( void *Avi, long frame );
 	void		(*AVI_UploadRawFrame)( int texture, int cols, int rows, int width, int height, const byte *data );
 	void		(*AVI_FreeVideo)( void *Avi );

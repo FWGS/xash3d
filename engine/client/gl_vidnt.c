@@ -727,7 +727,7 @@ Window* NetClientList(Display* display, unsigned long *len)
 	Window* windowList;
 	Atom type;
 	int form, errno;
-	unsigned long remain;
+	unsigned int remain;
 
 	errno = XGetWindowProperty(
 		display,
@@ -756,7 +756,7 @@ char* WindowClassName(Display* display, Window window)
 {
 	char* className;
 	Atom type;
-	unsigned long len, remain;
+	unsigned int len, remain;
 	int form, errno;
 	errno = XGetWindowProperty(
 		display,
@@ -796,7 +796,7 @@ uint VID_EnumerateInstances( void )
 	Display* display = XOpenDisplay(NULL);
 	Window* winlist;
 	char* name;
-	unsigned long len;
+	unsigned int len;
 	int i;
 
 	if(!display)
