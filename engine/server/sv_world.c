@@ -844,7 +844,11 @@ LINE TESTING IN HULLS
 /* "Not a number" possible here.
  * Enable this macro to debug it */
 #ifdef DEBUGNAN
-#define ASSERTNAN(x) if( !finitef(x) ) MsgDev( D_WARN, "NAN detected at %s:%i (%s)", __FILE__, __LINE__, #x );
+static void _assertNAN(const char *f, int l, const char *x)
+{
+	MsgDev( D_WARN, "NAN detected at %s:%i (%s)\n", f, l, x );
+}
+#define ASSERTNAN(x) if( !finitef(x) ) _assertNAN( __FILE__, __LINE__, #x );
 #else
 #define ASSERTNAN(x)
 #endif
