@@ -2224,18 +2224,18 @@ void SV_EntList_f( sv_client_t *cl )
 }
 
 
-edict_t *SV_EntFindSingle( sv_client_t *cl )
+edict_t *SV_EntFindSingle( sv_client_t *cl, const char *pattern )
 {
 	edict_t	*ent = NULL;
 	int	i = 0;
-	if( Q_isdigit( Cmd_Argv( 1 ) ) )
+	if( Q_isdigit( pattern ) )
 	{
-		i = Q_atoi( Cmd_Argv( 1 ) );
+		i = Q_atoi( pattern );
 
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return NULL;
 	}
-	else if( !Q_stricmp( Cmd_Argv( 1 ), "!cross" ) )
+	else if( !Q_stricmp( pattern, "!cross" ) )
 	{
 		ent = SV_GetCrossEnt( cl->edict );
 		if( !SV_IsValidEdict( ent ) )
@@ -2244,21 +2244,21 @@ edict_t *SV_EntFindSingle( sv_client_t *cl )
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return NULL;
 	}
-	else if( Cmd_Argv( 1 )[0] == '!' ) // Check for correct instanse with !(num)_(serial)
+	else if( pattern[0] == '!' ) // Check for correct instanse with !(num)_(serial)
 	{
-		char *cmd = Cmd_Argv( 1 ) + 1;
-		i = Q_atoi( cmd );
+		const char *p = pattern + 1;
+		i = Q_atoi( p );
 
-		while( isdigit(*cmd) ) cmd++;
+		while( isdigit(*p) ) p++;
 
-		if( *cmd++ != '_' )
+		if( *p++ != '_' )
 			return NULL;
 
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return NULL;
 
 		ent = EDICT_NUM( i );
-		if( ent->serialnumber != Q_atoi( cmd ) )
+		if( ent->serialnumber != Q_atoi( p ) )
 			return NULL;
 	}
 	else
@@ -2266,11 +2266,15 @@ edict_t *SV_EntFindSingle( sv_client_t *cl )
 		for( i = svgame.globals->maxClients + 1; i < svgame.numEntities; i++ )
 		{
 			ent = EDICT_NUM( i );
-			if( Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.targetname ) ) )
+			if( !SV_IsValidEdict( ent ) )
+				continue;
+			if( Q_stricmpext( pattern, STRING( ent->v.targetname ) ) )
 				break;
 		}
 	}
 	ent = EDICT_NUM( i );
+	if( !SV_IsValidEdict( ent ) )
+		return NULL;
 	return ent;
 }
 
@@ -2296,7 +2300,7 @@ void SV_EntInfo_f( sv_client_t *cl )
 		return;
 	}
 
-	ent = SV_EntFindSingle( cl );
+	ent = SV_EntFindSingle( cl, Cmd_Argv( 1 ) );
 
 	if( !SV_IsValidEdict( ent )) return;
 
@@ -2373,7 +2377,7 @@ void SV_EntGetVars_f( sv_client_t *cl )
 		return;
 	}
 
-	ent = SV_EntFindSingle( cl );
+	ent = SV_EntFindSingle( cl, Cmd_Argv( 1 ) );
 	if( Cmd_Argc() )
 	if( !SV_IsValidEdict( ent )) return;
 	SV_EntSendVars( cl, ent );
@@ -2499,11 +2503,25 @@ void SV_EntFire_f( sv_client_t *cl )
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "touch" ) )
 		{
-			svgame.dllFuncs.pfnTouch( ent, cl->edict );
+			if( Cmd_Argc() == 4 )
+			{
+				edict_t *other = SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+				if( other && other->pvPrivateData )
+					svgame.dllFuncs.pfnTouch( ent, other  );
+			}
+			else
+				svgame.dllFuncs.pfnTouch( ent, cl->edict );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "use" ) )
 		{
-			svgame.dllFuncs.pfnUse( ent, cl->edict );
+			if( Cmd_Argc() == 4 )
+			{
+				edict_t *other = SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+				if( other && other->pvPrivateData )
+					svgame.dllFuncs.pfnUse( ent, other );
+			}
+			else
+				svgame.dllFuncs.pfnUse( ent, cl->edict );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "movehere" ) )
 		{
@@ -2518,21 +2536,37 @@ void SV_EntFire_f( sv_client_t *cl )
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "moveup" ) )
 		{
 			float dist = 25;
-			if( Cmd_Argc() == 4 )
+			if( Cmd_Argc() >= 4 )
 				dist = Q_atof( Cmd_Argv( 3 ) );
 			ent->v.origin[2] +=  dist;
+			if( Cmd_Argc() >= 5 )
+			{
+				dist = Q_atof( Cmd_Argv( 4 ) );
+				ent->v.origin[0] += dist * cos( DEG2RAD( cl->edict->v.angles[1] ) );
+				ent->v.origin[1] += dist * sin( DEG2RAD( cl->edict->v.angles[1] ) );
+			}
+
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeowner" ) )
 		{
-			ent->v.owner = cl->edict;
+			if( Cmd_Argc() == 4 )
+				ent->v.owner = SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+			else
+				ent->v.owner = cl->edict;
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeenemy" ) )
 		{
-			ent->v.enemy = cl->edict;
+			if( Cmd_Argc() == 4 )
+				ent->v.enemy = SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+			else
+				ent->v.enemy = cl->edict;
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeaiment" ) )
 		{
-			ent->v.aiment = cl->edict;
+			if( Cmd_Argc() == 4 )
+				ent->v.aiment= SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+			else
+				ent->v.aiment = cl->edict;
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "hullmin" ) )
 		{
