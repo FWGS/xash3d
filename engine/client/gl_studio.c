@@ -3540,6 +3540,16 @@ studiohdr_t *R_StudioLoadHeader( model_t *mod, const void *buffer )
 		}
 	}
 
+#ifdef __amd64__
+	{
+		// HACK: pseqgroup->data contains garbage. Clean it now
+		mstudioseqdesc_t	*pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex);
+		mstudioseqgroup_t	*pseqgroup = (mstudioseqgroup_t *)((byte *)phdr + phdr->seqgroupindex) + pseqdesc->seqgroup;
+		//MsgDev( D_INFO, "R_StudioLoadHeader: data=0x%08x\n", pseqgroup->data );
+		pseqgroup->data = 0;
+	}
+#endif
+
 	return (studiohdr_t *)buffer;
 }
 
