@@ -545,6 +545,9 @@ void SV_FindTouchedLeafs( edict_t *ent, mnode_t *node, int *headnode )
 	int	sides, leafnum;
 	mleaf_t	*leaf;
 
+	if( !node ) // if no collision model
+		return;
+
 	if( node->contents == CONTENTS_SOLID )
 		return;
 	

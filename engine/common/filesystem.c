@@ -2164,6 +2164,8 @@ Open a file. The syntax is the same as fopen
 */
 file_t *FS_Open( const char *filepath, const char *mode, qboolean gamedironly )
 {
+	if( !filepath )
+		return NULL;
 	if( host.type == HOST_NORMAL || host.type == HOST_DEDICATED )
           {
 		// some stupid mappers used leading '/' or '\' in path to models or sounds

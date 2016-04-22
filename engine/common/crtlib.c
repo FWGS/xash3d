@@ -205,7 +205,7 @@ int Q_atoi( const char *str )
 		return sign * str[1];
 	
 	// assume decimal
-	while( 1 )
+	while( val < 214748364 )
 	{
 		c = *str++;
 		if( c < '0' || c > '9' )

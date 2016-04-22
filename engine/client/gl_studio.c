@@ -651,7 +651,7 @@ mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc
 
 	pseqgroup = (mstudioseqgroup_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
 	if( pseqdesc->seqgroup == 0 )
-		return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
+		return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqdesc->animindex);
 
 	paSequences = (cache_user_t *)m_pSubModel->submodels;
 
@@ -3541,13 +3541,14 @@ studiohdr_t *R_StudioLoadHeader( model_t *mod, const void *buffer )
 		}
 	}
 
-#ifdef __amd64__
+#if 0
 	{
 		// HACK: pseqgroup->data contains garbage. Clean it now
 		mstudioseqdesc_t	*pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex);
 		mstudioseqgroup_t	*pseqgroup = (mstudioseqgroup_t *)((byte *)phdr + phdr->seqgroupindex) + pseqdesc->seqgroup;
 		//MsgDev( D_INFO, "R_StudioLoadHeader: data=0x%08x\n", pseqgroup->data );
-		pseqgroup->data = 0;
+		int *ptr = (byte*)(mstudioseqgroup_t *)( pseqgroup + 1); // pseqgroup->data field
+		*ptr = 0;
 	}
 #endif
 

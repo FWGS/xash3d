@@ -1,12 +1,13 @@
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?= -Og -ggdb -fsanitize=undefined -fsanitize=address
+CFLAGS ?= -Og -ggdb
 LDFLAGS =
-LIBS = -lm -fsanitize=undefined -fsanitize=address
+LIBS = -lm
 LBITS := $(shell getconf LONG_BIT)
+
 ifeq ($(LBITS),64)
-	LDFLAGS +=
-	CFLAGS +=
+	LDFLAGS += -m32
+	CFLAGS += -m32
 endif
 TOPDIR = $(PWD)/..
 XASHXT ?= $(TOPDIR)/../xashXT

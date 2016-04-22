@@ -138,10 +138,12 @@ void Cvar_LookupVars( int checkbit, void *buffer, void *ptr, setpair_t callback 
 		}
 		else
 		{
-			char *desc = cvar->description;
+			char *desc;
 
 			if( cvar->flags & CVAR_EXTDLL )
 				desc = "game cvar";
+			else
+				desc = cvar->description;
 
 			if( !desc )
 				desc = "user cvar";

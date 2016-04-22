@@ -2941,6 +2941,11 @@ void pfnFreeEntPrivateData( edict_t *pEdict )
 	SV_FreePrivateData( pEdict );
 }
 
+#ifdef __amd64__
+char g_stringbase[65536];
+char *pLastsStr = g_stringbase;
+#endif
+
 /*
 =============
 SV_AllocString
@@ -2954,10 +2959,16 @@ string_t SV_AllocString( const char *szValue )
 
 	if( svgame.physFuncs.pfnAllocString != NULL )
 		return svgame.physFuncs.pfnAllocString( szValue );
+#ifdef __amd64
+	newString = pLastsStr;
+	pLastsStr += Q_strcpy(pLastsStr,szValue) + 1;
 
+	return newString - g_stringbase;
+#else
 	newString = _copystring( svgame.stringspool, szValue, __FILE__, __LINE__ );
 	return newString - svgame.globals->pStringBase;
-}		
+#endif
+}
 
 /*
 =============
@@ -2970,8 +2981,12 @@ string_t SV_MakeString( const char *szValue )
 {
 	if( svgame.physFuncs.pfnMakeString != NULL )
 		return svgame.physFuncs.pfnMakeString( szValue );
+#ifndef __amd64__
 	return szValue - svgame.globals->pStringBase;
-}		
+#else
+	return SV_AllocString(szValue);
+#endif
+}
 
 
 /*
@@ -3203,7 +3218,7 @@ pfnFunctionFromName
 
 =============
 */
-dword pfnFunctionFromName( const char *pName )
+void *pfnFunctionFromName( const char *pName )
 {
 	return Com_FunctionFromName( svgame.hInstance, pName );
 }
@@ -3214,7 +3229,7 @@ pfnNameForFunction
 
 =============
 */
-const char *pfnNameForFunction( dword function )
+const char *pfnNameForFunction( void *function )
 {
 	return Com_NameForFunction( svgame.hInstance, (void *)function );
 }
@@ -4968,9 +4983,11 @@ qboolean SV_LoadProgs( const char *name )
 
 	// grab function SV_SaveGameComment
 	SV_InitSaveRestore ();
-
-	svgame.globals->pStringBase = ""; // setup string base
-
+#ifdef __amd64__
+	svgame.globals->pStringBase = g_stringbase; // setup string base
+#else
+	svgame.globals->pStringBase = "";
+#endif
 	svgame.globals->maxEntities = GI->max_edicts;
 	svgame.globals->maxClients = sv_maxclients->integer;
 	svgame.edicts = Mem_Alloc( svgame.mempool, sizeof( edict_t ) * svgame.globals->maxEntities );

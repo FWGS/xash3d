@@ -215,7 +215,10 @@ typedef struct
 	char		label[32];	// textual name
 	char		name[64];		// file name
 	cache_user_t	cache;		// cache index pointer
+#ifndef __amd64__
+	// it is not really used, but helps to keep pointer
 	int		data;		// hack for group 0
+#endif
 } mstudioseqgroup_t;
 
 // sequence descriptions
