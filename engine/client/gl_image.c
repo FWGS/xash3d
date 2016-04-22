@@ -3191,7 +3191,8 @@ static rgbdata_t *R_ParseStudioSkin( char **script, const byte *buf, size_t size
 		tex = ptexture + i;
 
 		// NOTE: replace index with pointer to start of imagebuffer, ImageLib expected it
-		tex->index = (int)pin + tex->index;
+		//tex->index = (int)pin + tex->index;
+		Image_SetMDLPointer((byte*)pin + tex->index);
 		tex_size = sizeof( mstudiotexture_t ) + tex->width * tex->height + 768;
 
 		// load studio texture and bind it

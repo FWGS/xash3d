@@ -338,9 +338,10 @@ SV_ReadPackets
 void SV_ReadPackets( void )
 {
 	sv_client_t	*cl;
-	int		i, qport, curSize;
+	int		i, qport;
+	size_t curSize;
 
-	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, (size_t *)&curSize ))
+	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, &curSize ))
 	{
 		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
 
