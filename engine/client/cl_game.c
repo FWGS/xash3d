@@ -1433,16 +1433,17 @@ pfnFillRGBA
 */
 static void pfnFillRGBA( int x, int y, int width, int height, int r, int g, int b, int a )
 {
+	float x1 = x, y1 = y, w1 = width, h1 = height;
 	r = bound( 0, r, 255 );
 	g = bound( 0, g, 255 );
 	b = bound( 0, b, 255 );
 	a = bound( 0, a, 255 );
 	pglColor4ub( r, g, b, a );
 
-	SPR_AdjustSize( (float *)&x, (float *)&y, (float *)&width, (float *)&height );
+	SPR_AdjustSize( &x1, &y1, &w1, &h1 );
 
 	GL_SetRenderMode( kRenderTransAdd );
-	R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, cls.fillImage );
+	R_DrawStretchPic( x1, y1, w1, h1, 0, 0, 1, 1, cls.fillImage );
 	pglColor4ub( 255, 255, 255, 255 );
 }
 
@@ -2942,20 +2943,21 @@ pfnFillRGBABlend
 */
 void pfnFillRGBABlend( int x, int y, int width, int height, int r, int g, int b, int a )
 {
+	float x1 = x, y1 = y, w1 = width, h1 = height;
 	r = bound( 0, r, 255 );
 	g = bound( 0, g, 255 );
 	b = bound( 0, b, 255 );
 	a = bound( 0, a, 255 );
 	pglColor4ub( r, g, b, a );
 
-	SPR_AdjustSize( (float *)&x, (float *)&y, (float *)&width, (float *)&height );
+	SPR_AdjustSize( &x1, &y1, &w1, &h1 );
 
 	pglEnable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
 	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
-	R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, cls.fillImage );
+	R_DrawStretchPic( x1, y1, w1, h1, 0, 0, 1, 1, cls.fillImage );
 	pglColor4ub( 255, 255, 255, 255 );
 }
 
