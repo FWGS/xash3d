@@ -840,20 +840,19 @@ pfnCheckGameDll
 */
 int pfnCheckGameDll( void )
 {
-	//void	*hInst;
+	void	*hInst;
 
-	//if( SV_Active( )) return true;
+	if( SV_Active( ) )
+		return true;
 
-	// UCyborg: Does this have issues? I see it's used
-	// to grey out menu options to start new game if
-	// server library can't be loaded. Commented out the
-	// rest with double slashes so compiler doesn't complain.
-	/*if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
+	if( )
+
+	if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
 		return true;
-	}*/ return true;
-	//return false;
+	}
+	return false;
 }
 
 /*

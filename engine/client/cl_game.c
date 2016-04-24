@@ -2833,7 +2833,7 @@ int pfnDrawStringReverse( int x, int y, const char *str, int r, int g, int b )
 {
 	// find the end of the string
 	char *szIt;
-	for( szIt = str; *szIt != 0; szIt++ )
+	for( szIt = (char*)str; *szIt != 0; szIt++ )
 		x -= clgame.scrInfo.charWidths[ (unsigned char) *szIt ];
 	pfnDrawString( x, y, str, r, g, b );
 	return x;

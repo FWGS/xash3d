@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #define TOUCH_H
 
 // touch.c
+void IN_TouchDraw( void );
 void IN_TouchEditClear( void );
 void IN_TouchSetClientOnly( qboolean state );
 void IN_TouchRemoveButton( const char *name );

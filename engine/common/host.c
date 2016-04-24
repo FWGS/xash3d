@@ -14,9 +14,15 @@ GNU General Public License for more details.
 */
 
 #include "port.h"
-#ifdef XASH_SDL
+
+#if defined(XASH_SDL)
 #include <SDL.h>
 #endif
+
+#if defined(DLL_LOADER)
+#include "ldt_keeper.h"
+#endif
+
 #include <stdarg.h>  // va_args
 #include <errno.h> // errno
 

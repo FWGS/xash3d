@@ -4414,7 +4414,7 @@ static int pfnCheckParm( char *parm, char **ppnext )
 	if( ppnext != NULL )
 	{
 		if( i > 0 && i < host.argc - 1 )
-			*ppnext = host.argv[i + 1];
+			*ppnext = (char*)host.argv[i + 1];
 		else
 			*ppnext = NULL;
 	}
