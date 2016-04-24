@@ -38,7 +38,8 @@ extern "C" {
 #include <stdlib.h> // rand, adbs
 #include <stdarg.h> // va
 #define EXPORT		__declspec( dllexport )
-#define PATH_MAX MAX_PATH // Now there is must be MATH_PAX
+#undef PATH_MAX
+#define PATH_MAX 4096 // Try workaround some strange bugs
 #endif
 
 #define MAX_STRING		256	// generic string

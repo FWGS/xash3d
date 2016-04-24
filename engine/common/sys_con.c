@@ -309,7 +309,7 @@ void Con_CreateConsole( void )
 	wc.lpszMenuName  = 0;
 
 	if( Sys_CheckParm( "-log" ) && host.developer != 0 )
-		s_wcd.log_active = true;
+		s_ld.log_active = true;
 
 	if( host.type == HOST_NORMAL )
 	{
@@ -319,7 +319,7 @@ void Con_CreateConsole( void )
 		rect.bottom = 364;
 		Q_strncpy( FontName, "Fixedsys", sizeof( FontName ));
 		Q_strncpy( s_wcd.title, va( "Xash3D %s", XASH_VERSION ), sizeof( s_wcd.title ));
-		Q_strncpy( s_wcd.log_path, "engine.log", sizeof( s_wcd.log_path ));
+		Q_strncpy( s_ld.log_path, "engine.log", sizeof( s_ld.log_path ));
 		fontsize = 8;
 	}
 	else // dedicated console
@@ -330,8 +330,8 @@ void Con_CreateConsole( void )
 		rect.bottom = 392;
 		Q_strncpy( FontName, "System", sizeof( FontName ));
 		Q_strncpy( s_wcd.title, "Xash Dedicated Server", sizeof( s_wcd.title ));
-		Q_strncpy( s_wcd.log_path, "dedicated.log", sizeof( s_wcd.log_path ));
-		s_wcd.log_active = true; // always make log
+		Q_strncpy( s_ld.log_path, "dedicated.log", sizeof( s_ld.log_path ));
+		s_ld.log_active = true; // always make log
 		fontsize = 14;
 	}
 
