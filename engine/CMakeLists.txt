@@ -110,6 +110,18 @@ if(XASH_DEDICATED)
     endif()
 endif()
 
+if(XASH_DLL_LOADER)
+	add_definitions(-DXASH_VINTERFACE)
+
+	include_directories(../vinterface)
+
+	# Make GCC don't put full path to libloader.so
+	add_custom_command(TARGET xash PRE_LINK COMMAND
+	${CMAKE_COMMAND} -E copy $<TARGET_FILE:vinterface> $<TARGET_SONAME_FILE_DIR:xash>)
+	target_link_libraries(${XASH_ENGINE_LIBRARY} -L. -lvinterface)
+endif()
+
+
 target_link_libraries(${XASH_ENGINE_LIBRARY} -lm
     ${CMAKE_DL_LIBS})
 

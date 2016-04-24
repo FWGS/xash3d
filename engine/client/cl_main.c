@@ -23,6 +23,10 @@ GNU General Public License for more details.
 #include "kbutton.h"
 #include "vgui_draw.h"
 
+#ifdef XASH_VINTERFACE
+#include "factories.h"
+#endif
+
 #define MAX_TOTAL_CMDS		16
 #define MIN_CMD_RATE		10.0
 #define MAX_CMD_BUFFER		4000
@@ -1915,4 +1919,7 @@ void CL_Shutdown( void )
 	SCR_FreeCinematic (); // release AVI's *after* client.dll because custom renderer may use them
 	S_Shutdown ();
 	R_Shutdown ();
+#ifdef XASH_VINTERFACE
+	VLoader_Shutdown ();
+#endif
 }

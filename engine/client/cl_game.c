@@ -32,6 +32,10 @@ GNU General Public License for more details.
 
 #include "port.h"
 
+#ifdef XASH_VINTERFACE
+#include "factories.h"
+#endif
+
 #define MAX_TEXTCHANNELS	8		// must be power of two (GoldSrc uses 4 channels)
 #define TEXT_MSGNAME	"TextMessage%i"
 
@@ -4101,6 +4105,11 @@ qboolean CL_LoadProgs( const char *name )
 		MsgDev( D_WARN, "CL_LoadProgs: couldn't get render API\n" );
 	}
 	Mobile_Init(); // Xash3D extension: mobile interface
+
+#ifdef XASH_VINTERFACE
+	if( clgame.dllFuncs.pfnGetClientFactory )
+		VLoader_ClientDLLFactory(clgame.hInstance);
+#endif
 
 	// initialize game
 	clgame.dllFuncs.pfnInit();
