@@ -702,6 +702,63 @@ void Master_Shutdown( void )
 	NET_SendPacket( NS_SERVER, 2, "\x62\x0A", adr );
 }
 
+/*
+=================
+SV_AddToMaster
+
+A server info answer to master server.
+Master will validate challenge and this server to public list
+=================
+*/
+void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
+{
+	uint challenge;
+	char s[MAX_INFO_STRING] = "0\n"; // skip 2 bytes of header
+	int clients = 0, bots = 0, index;
+
+	if( svs.clients )
+	{
+		for( index = 0; index < sv_maxclients->integer; index++ )
+		{
+			if( svs.clients[index].state >= cs_connected )
+			{
+				if( svs.clients[index].fakeclient )
+					bots++;
+				else clients++;
+			}
+		}
+	}
+
+	challenge = BF_ReadUBitLong( msg, sizeof( uint ) << 3 );
+
+	Info_SetValueForKey(s, "protocol",  va( "%d", PROTOCOL_VERSION ) ); // protocol version
+	Info_SetValueForKey(s, "challenge", va( "%u", challenge ) ); // challenge number
+	Info_SetValueForKey(s, "players",   va( "%d", clients ) ); // current player number, without bots
+	Info_SetValueForKey(s, "max",       sv_maxclients->string ); // max_players
+	Info_SetValueForKey(s, "bots",      va( "%d", bots ) ); // bot count
+	Info_SetValueForKey(s, "gamedir",   GI->gamedir ); // gamedir
+	Info_SetValueForKey(s, "map",       sv.name ); // current map
+	if( host.type == HOST_DEDICATED )
+		Info_SetValueForKey(s, "type",  "d" ); // dedicated
+	else
+		Info_SetValueForKey(s, "type",  "l" ); // local
+	Info_SetValueForKey(s, "password",  "0" ); // is password set
+
+#ifdef _WIN32
+	Info_SetValueForKey(s, "os",        "w" ); // Windows
+#else
+	Info_SetValueForKey(s, "os",        "l" ); // Linux
+#endif
+
+	Info_SetValueForKey(s, "secure",    "0" ); // server anti-cheat
+	Info_SetValueForKey(s, "lan",       "0" ); // LAN servers doesn't send info to master
+	Info_SetValueForKey(s, "version",   XASH_VERSION ); // server region. 255 -- all regions
+	Info_SetValueForKey(s, "region",    "255" ); // server region. 255 -- all regions
+	Info_SetValueForKey(s, "product",   GI->gamefolder ); // product? Where is the difference with gamedir?
+
+	NET_SendPacket( NS_SERVER, Q_strlen( s ), s, from );
+}
+
 //============================================================================
 
 /*

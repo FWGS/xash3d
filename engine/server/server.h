@@ -481,6 +481,7 @@ void SV_SendResourceList_f( sv_client_t *cl );
 void Master_Add( void );
 void Master_Heartbeat( void );
 void Master_Packet( void );
+void SV_AddToMaster( netadr_t from, sizebuf_t *msg );
 
 //
 // sv_init.c

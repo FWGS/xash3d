@@ -845,8 +845,6 @@ int pfnCheckGameDll( void )
 	if( SV_Active( ) )
 		return true;
 
-	if( )
-
 	if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
