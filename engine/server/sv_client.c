@@ -2855,6 +2855,92 @@ void SV_ExecuteClientCommand( sv_client_t *cl, char *s )
 	}
 }
 
+void SV_TSourceEngineQuery( netadr_t from )
+{
+	// A2S_INFO
+	char answer[1024] = "";
+	sizebuf_t buf;
+	int count = 0, bots = 0, index;
+
+	if( svs.clients )
+	{
+		for( index = 0; index < sv_maxclients->integer; index++ )
+		{
+			if( svs.clients[index].state >= cs_connected )
+			{
+				if( svs.clients[index].fakeclient )
+					bots++;
+				else count++;
+			}
+		}
+	}
+
+	BF_Init( &buf, "TSourceEngineQuery", answer, sizeof( answer ));
+
+#if 0 // Source format
+	BF_WriteByte( &buf, 'I' );
+	BF_WriteByte( &buf, PROTOCOL_VERSION );
+	BF_WriteString( &buf, hostname->string );
+	BF_WriteString( &buf, sv.name );
+	BF_WriteString( &buf, GI->gamefolder );
+	BF_WriteString( &buf, GI->title );
+	BF_WriteShort( &buf, 0 ); // steam id
+	BF_WriteByte( &buf, count );
+	BF_WriteByte( &buf, sv_maxclients->integer );
+	BF_WriteByte( &buf, bots );
+	BF_WriteByte( &buf, host.type == HOST_DEDICATED ? 'd' : 'l');
+#if defined(_WIN32)
+	BF_WriteByte( &buf, 'w' );
+#elif defined(__APPLE__)
+	BF_WriteByte( &buf, 'm' );
+#else
+	BF_WriteByte( &buf, 'l' );
+#endif
+	BF_WriteByte( &buf, 0 ); // visibility
+	BF_WriteByte( &buf, 0 ); // secure
+#else // GS format
+	BF_WriteByte( &buf, 'm' );
+	BF_WriteString( &buf, NET_AdrToString( net_local ) );
+	BF_WriteString( &buf, hostname->string );
+	BF_WriteString( &buf, sv.name );
+	BF_WriteString( &buf, GI->gamefolder );
+	BF_WriteString( &buf, GI->title );
+	BF_WriteByte( &buf, count );
+	BF_WriteByte( &buf, sv_maxclients->integer );
+	BF_WriteByte( &buf, PROTOCOL_VERSION );
+	BF_WriteByte( &buf, host.type == HOST_DEDICATED ? 'D' : 'L');
+#if defined(_WIN32)
+	BF_WriteByte( &buf, 'W' );
+#else
+	BF_WriteByte( &buf, 'L' );
+#endif
+	if( Q_stricmp(GI->gamedir, "valve") )
+	{
+		BF_WriteByte( &buf, 1 ); // mod
+		BF_WriteString( &buf, GI->game_url );
+		BF_WriteString( &buf, GI->update_url );
+		BF_WriteByte( &buf, 0 );
+		BF_WriteLong( &buf, (long)GI->version );
+		BF_WriteLong( &buf, GI->size );
+		if( GI->gamemode == 2 )
+			BF_WriteByte( &buf, 1 ); // multiplayer_only
+		else
+			BF_WriteByte( &buf, 0 );
+		if( Q_strstr(SI.gamedll, "hl." ) )
+			BF_WriteByte( &buf, 0 ); // Half-Life DLL
+		else
+			BF_WriteByte( &buf, 1 ); // Own DLL
+	}
+	else
+	{
+		BF_WriteByte( &buf, 0 ); // Half-Life
+	}
+	BF_WriteByte( &buf, 0 ); // unsecure
+	BF_WriteByte( &buf, bots );
+#endif
+	NET_SendPacket( NS_SERVER, BF_GetNumBytesWritten( &buf ), BF_GetData( &buf ), from );
+}
+
 /*
 =================
 SV_ConnectionlessPacket
@@ -2870,9 +2956,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	char	*args;
 	char	*c, buf[MAX_SYSPATH];
 	int	len = sizeof( buf );
-	uint	challenge;
-	int	index, count = 0;
-	char	query[512], ostype = 'u';
 	char *gamedir = GI->gamefolder;
 
 	BF_Clear( msg );
@@ -2894,117 +2977,11 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( !Q_strcmp( c, "connect" )) SV_DirectConnect( from );
 	else if( !Q_strcmp( c, "rcon" )) SV_RemoteCommand( from, msg );
 	else if( !Q_strcmp( c, "netinfo" )) SV_BuildNetAnswer( from );
-	else if( msg->pData[4] == 0x73 && msg->pData[5] == 0x0A )
-	{
-		Q_memcpy(&challenge, &msg->pData[6], sizeof(int));
-
-		if( svs.clients )
-			for( index = 0; index < sv_maxclients->integer; index++ )
-			{
-				if( svs.clients[index].state >= cs_connected )
-					count++;
-			}
-
-		#ifdef _WIN32
-		ostype = 'w';
-		#else
-		ostype = 'l';
-		#endif
-
-		Q_snprintf( query, sizeof( query ),
-		"0\n"
-		"\\protocol\\%d"			// protocol version
-		"\\challenge\\%u"			// challenge number that got after FF FF FF FF 73 0A
-		"\\players\\%d"				// current player number
-		"\\max\\%d"					// max_players
-		"\\bots\\0"					// bot number?
-		"\\gamedir\\%s"				// gamedir. _xash appended, because Xash3D is not compatible with GS in multiplayer
-		"\\map\\%s"					// current map
-		"\\type\\d"					// server type
-		"\\password\\0"				// is password set
-		"\\os\\%c"					// server OS?
-		"\\secure\\0"				// server anti-cheat? VAC?
-		"\\lan\\0"					// is LAN server?
-		"\\version\\%s"				// server version
-		"\\region\\255"				// server region
-		"\\product\\%s\n",			// product? Where is the difference with gamedir?
-		PROTOCOL_VERSION,
-		challenge,
-		count,
-		sv_maxclients->integer,
-		gamedir,
-		sv.name,
-		ostype,
-		XASH_VERSION,
-		GI->gamefolder
-		);
-
-		NET_SendPacket( NS_SERVER, Q_strlen( query ), query, from );
-	}
-	else if( !Q_strcmp( c, "T" "Source" ) ) // "Source Engine Query"
-	{
-		 // A2S_INFO
-		char answer[2048] = "";
-		byte *s = (byte *)answer;
-#if 0 // Source format
-		*s++ = 'I';
-		*s++ = PROTOCOL_VERSION;
-		s += Q_strcpy( s, hostname->string ) + 1;
-		s += Q_strcpy( s, sv.name ) + 1;
-		s += Q_strcpy( s, gamedir ) + 1;
-		s += Q_strcpy( s, gamedir ) + 1;
-		// steam id
-		*s++ = 0;
-		*s++ = 0;
-		if( svs.clients )
-			for( index = 0; index < sv_maxclients->integer; index++ )
-			{
-				if( svs.clients[index].state >= cs_connected )
-					count++;
-			}
-		*s++ = count;
-		*s++ = sv_maxclients->integer;
-		*s++ = 0; // bots
-		*s++ = host.type == HOST_DEDICATED?'d':'l';
-		#ifdef _WIN32
-		ostype = 'w';
-		#else
-		ostype = 'l';
-		#endif
-		*s++ = ostype;
-		*s++ = 0; // visibility
-		*s++ = 0; // not secured
-#else // GS format
-		*s++ = 'm';
-		s += Q_sprintf( (char *)s, "127.0.0.1:27015" ) + 1;
-
-		s += Q_strcpy( (char *)s, hostname->string ) + 1;
-		s += Q_strcpy( (char *)s, sv.name ) + 1;
-		s += Q_strcpy( (char *)s, gamedir ) + 1;
-		s += Q_strcpy( (char *)s, gamedir ) + 1;
-		if( svs.clients )
-			for( index = 0; index < sv_maxclients->integer; index++ )
-			{
-				if( svs.clients[index].state >= cs_connected )
-					count++;
-			}
-		*s++ = count;
-		*s++ = sv_maxclients->integer;
-		*s++ = PROTOCOL_VERSION;
-		*s++ = host.type == HOST_DEDICATED?'D':'L';
-		*s++ = Q_toupper( ostype );
-		*s++ = 0; // not a mod
-		*s++ = 0;  // not VAC
-		*s++ = 0; //bots
-#endif
-		NET_SendPacket( NS_SERVER, (char*)s - answer, answer, from );
-
-	}
+	else if( !Q_strcmp( c, "s")) SV_AddToMaster( from, msg );
+	else if( !Q_strcmp( c, "T" "Source" ) ) SV_TSourceEngineQuery( from );
 	else if( !Q_strcmp( c, "i" ) )
 	{
-		 // A2A_PING
-		byte answer[8];
-
+		// A2A_PING
 		NET_SendPacket( NS_SERVER, 5, "\xFF\xFF\xFF\xFFj", from );
 
 	}

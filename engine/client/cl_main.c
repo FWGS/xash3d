@@ -1294,9 +1294,8 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 {
 	char	*args;
 	char	*c, buf[MAX_SYSPATH];
-	int	len = sizeof( buf );
-	int	dataoffset = 0;
-	netadr_t	servadr;
+	int	len = sizeof( buf ), i = 0;
+	netadr_t servadr;
 	
 	BF_Clear( msg );
 	BF_ReadLong( msg ); // skip the -1
@@ -1382,16 +1381,16 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		// dropped the connection but it is still getting packets from us
 		CL_Disconnect();
 	}
-	else if( msg->pData[0] == 0xFF && msg->pData[1] == 0xFF && msg->pData[2] == 0xFF && msg->pData[3] == 0xFF && msg->pData[4] == 0x66 && msg->pData[5] == 0x0A )
+	else if( !Q_strcmp( c, "f") )
 	{
-		dataoffset = 6;
-
-		while( 1 )
+		// serverlist got from masterserver
+		while( !msg->bOverflow )
 		{
 			servadr.type = NA_IP;
-			Q_memcpy( servadr.ip, &msg->pData[dataoffset], sizeof(servadr.ip));
-
-			servadr.port = *(unsigned short *)&msg->pData[dataoffset + 4];
+			// 4 bytes for IP
+			BF_ReadBytes( msg, servadr.ip, sizeof( servadr.ip ));
+			// 2 bytes for Port
+			servadr.port = BF_ReadShort( msg );
 
 			if( !servadr.port )
 				break;
@@ -1401,8 +1400,6 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 			NET_Config( true ); // allow remote
 
 			Netchan_OutOfBandPrint( NS_CLIENT, servadr, "info %i", PROTOCOL_VERSION );
-
-			dataoffset += 6;
 		}
 	}
 	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
