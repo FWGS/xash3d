@@ -649,6 +649,11 @@ _inline cl_entity_t *CL_EDICT_NUM( int n )
 extern rgba_t g_color_table[8];
 
 //
+// cl_module.c
+//
+void CL_LoadSecurityModule(qboolean *critical_exports, dllfunc_t *cdll_exports);
+
+//
 // cl_parse.c
 //
 void CL_ParseServerMessage( sizebuf_t *msg );

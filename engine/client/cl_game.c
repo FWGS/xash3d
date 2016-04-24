@@ -4021,7 +4021,6 @@ qboolean CL_LoadProgs( const char *name )
 {
 	static playermove_t		gpMove;
 	const dllfunc_t		*func;
-	CL_EXPORT_FUNCS		F; // export 'F'
 	qboolean			critical_exports = true;
 
 	if( clgame.hInstance ) CL_UnloadProgs();
@@ -4050,25 +4049,7 @@ qboolean CL_LoadProgs( const char *name )
 	for( func = cdll_exports; func && func->name; func++ )
 		*func->func = NULL;
 
-	// trying to get single export named 'F'
-	if(( F = (void *)Com_GetProcAddress( clgame.hInstance, "F" )) != NULL )
-	{
-		MsgDev( D_NOTE, "CL_LoadProgs: found single callback export\n" );		
-
-		// trying to fill interface now
-		F( &clgame.dllFuncs );
-
-		// check critical functions again
-		for( func = cdll_exports; func && func->name; func++ )
-		{
-			if( func->func == NULL )
-				break; // BAH critical function was missed
-		}
-
-		// because all the exports are loaded through function 'F"
-		if( !func || !func->name )
-			critical_exports = false;
-	}
+	CL_LoadSecurityModule( &critical_exports, cdll_exports );
 
 	for( func = cdll_exports; func && func->name != NULL; func++ )
 	{
