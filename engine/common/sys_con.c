@@ -23,7 +23,11 @@ GNU General Public License for more details.
 
 #ifdef USE_SELECT
 // non-blocking console input
+#ifdef _WIN32
+#include "winsock2.h"
+#else
 #include <sys/select.h>
+#endif
 #endif
 /*
 ===============================================================================
@@ -32,6 +36,10 @@ WIN32 CONSOLE
 
 ===============================================================================
 */
+
+#if defined(_WIN32) && !defined(__amd64__)
+#define WINCON
+#endif
 
 // console defines
 #define SUBMIT_ID		1	// "submit" button
@@ -42,7 +50,7 @@ WIN32 CONSOLE
 
 #define SYSCONSOLE		"XashConsole"
 #define COMMAND_HISTORY	64	// system console keep more commands than game console
-#ifdef _WIN32
+#ifdef WINCON
 typedef struct
 {
 
@@ -83,7 +91,7 @@ static LogData s_ld;
 
 void Con_ShowConsole( qboolean show )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	if( !s_wcd.hWnd || show == s_wcd.status )
 		return;
 
@@ -99,13 +107,13 @@ void Con_ShowConsole( qboolean show )
 
 void Con_DisableInput( void )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	if( host.type != HOST_DEDICATED ) return;
 	SendMessage( s_wcd.hwndButtonSubmit, WM_ENABLE, 0, 0 );
 	SendMessage( s_wcd.hwndInputLine, WM_ENABLE, 0, 0 );
 #endif
 }
-#ifdef _WIN32
+#ifdef WINCON
 void Con_SetInputText( const char *inputText )
 {
 	if( host.type != HOST_DEDICATED ) return;
@@ -258,7 +266,7 @@ print into window console
 */
 void Con_WinPrint( const char *pMsg )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	size_t	len = Q_strlen( pMsg );
 
 	// replace selection instead of appending if we're overflowing
@@ -287,7 +295,7 @@ create win32 console
 */
 void Con_CreateConsole( void )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	HDC	hDC;
 	WNDCLASS	wc;
 	RECT	rect;
@@ -421,7 +429,7 @@ register console commands (dedicated only)
 */
 void Con_InitConsoleCommands( void )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	if( host.type != HOST_DEDICATED ) return;
 	Cmd_AddCommand( "clear", Con_Clear_f, "clear console history" );
 #endif
@@ -440,7 +448,7 @@ void Con_DestroyConsole( void )
 	MsgDev( D_NOTE, "Con_DestroyConsole: Exiting!\n" );
 
 	Sys_CloseLog();
-#ifdef _WIN32
+#ifdef WINCON
 	if( s_wcd.hWnd )
 	{
 		DeleteObject( s_wcd.hbrEditBackground );
@@ -509,7 +517,7 @@ char *Con_Input( void )
 		}
 	}
 #endif
-#ifdef _WIN32
+#ifdef WINCON
 	if( s_wcd.consoleText[0] == 0 )
 		return NULL;
 		
@@ -530,7 +538,7 @@ change focus to console hwnd
 */
 void Con_RegisterHotkeys( void )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	SetFocus( s_wcd.hWnd );
 
 	// user can hit escape for quit

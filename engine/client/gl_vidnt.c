@@ -978,7 +978,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
-#if defined(_WIN32)
+#if defined(_WIN32) & !defined(__amd64__)
 	{
 		HICON ico;
 		SDL_SysWMinfo info;
