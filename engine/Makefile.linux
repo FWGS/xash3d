@@ -58,7 +58,7 @@ ifeq ($(XASH_VGUI),1)
 endif
 
 %.o : %.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@ -fvisibility=hidden -DGDB_BREAK
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@  -Wno-unused-result -fvisibility=hidden -DGDB_BREAK
 
 %.o : %.cpp
 	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
