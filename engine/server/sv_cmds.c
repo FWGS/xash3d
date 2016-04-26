@@ -205,19 +205,28 @@ void SV_Map_f( void )
 
 	if( flags & MAP_INVALID_VERSION )
 	{
-		Msg( "SV_NewMap: map %s is invalid or not supported\n", mapname );
+		if( CL_IsInMenu() )
+			Sys_Warn( "SV_NewMap: map %s is invalid or not supported\n", mapname );
+		else
+			Msg( "SV_NewMap: map %s is invalid or not supported\n", mapname );
 		return;
 	}
 	
 	if(!( flags & MAP_IS_EXIST ))
 	{
-		Msg( "SV_NewMap: map %s doesn't exist\n", mapname );
+		if( CL_IsInMenu() )
+			Sys_Warn( "SV_NewMap: map %s doesn't exist\n", mapname );
+		else
+			Msg( "SV_NewMap: map %s doesn't exist\n", mapname );
 		return;
 	}
 
 	if(!( flags & MAP_HAS_SPAWNPOINT ))
 	{
-		Msg( "SV_NewMap: map %s doesn't have a valid spawnpoint\n", mapname );
+		if( CL_IsInMenu() )
+			Sys_Warn( "SV_NewMap: map %s doesn't have a valid spawnpoint\n", mapname );
+		else
+			Msg( "SV_NewMap: map %s doesn't have a valid spawnpoint\n", mapname );
 		return;
 	}
 
@@ -236,7 +245,11 @@ void SV_Map_f( void )
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 
 	SV_DeactivateServer();
-	SV_SpawnServer( mapname, NULL );
+	if( !SV_SpawnServer( mapname, NULL ) )
+	{
+		Msg("Could not spawn server!\n");
+		return;
+	}
 	SV_LevelInit( mapname, NULL, NULL, false );
 	SV_ActivateServer ();
 }
