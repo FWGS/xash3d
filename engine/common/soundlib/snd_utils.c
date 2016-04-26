@@ -235,11 +235,11 @@ qboolean Sound_ResampleInternal( wavdata_t *sc, int inrate, int inwidth, int out
 				srcsample = samplefrac >> 8;
 				samplefrac += fracstep;
 
-				if( inwidth == 2 ) sample = ((short *)data)[srcsample];
-				else sample = (int)( (char)(data[srcsample])) << 8;
+				if( inwidth == 2 ) sample = ( (short *)data )[srcsample];
+				else sample = (int)( (uint)( (char)(data[srcsample]) ) << 8 );
 
-				if( outwidth == 2 ) ((short *)sound.tempbuffer)[i] = sample;
-				else ((signed char *)sound.tempbuffer)[i] = sample >> 8;
+				if( outwidth == 2 ) ( (short *)sound.tempbuffer )[i] = sample;
+				else ( (signed char *)sound.tempbuffer )[i] = sample >> 8;
 			}
 		}
 

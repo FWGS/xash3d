@@ -32,6 +32,7 @@ GNU General Public License for more details.
 
 #include "port.h"
 
+#define MAX_LINELENGTH		80
 #define MAX_TEXTCHANNELS	8		// must be power of two (GoldSrc uses 4 channels)
 #define TEXT_MSGNAME	"TextMessage%i"
 
@@ -359,7 +360,7 @@ print centerscreen message
 */
 void CL_CenterPrint( const char *text, float y )
 {
-	char	*s;
+	byte	*s;
 	int	width = 0;
 	int	length = 0;
 
@@ -580,7 +581,7 @@ void CL_DrawCenterPrint( void )
 	char	*pText;
 	int	i, j, x, y;
 	int	width, lineLength;
-	byte	*colorDefault, line[80];
+	byte	*colorDefault, line[MAX_LINELENGTH];
 	int	charWidth, charHeight;
 
 	if( !clgame.centerPrint.time )
@@ -603,7 +604,7 @@ void CL_DrawCenterPrint( void )
 		lineLength = 0;
 		width = 0;
 
-		while( *pText && *pText != '\n' )
+		while( *pText && *pText != '\n' && lineLength < MAX_LINELENGTH )
 		{
 			byte c = *pText;
 			line[lineLength] = c;
@@ -612,6 +613,9 @@ void CL_DrawCenterPrint( void )
 			lineLength++;
 			pText++;
 		}
+
+		if( lineLength == MAX_LINELENGTH )
+			lineLength--;
 
 		pText++; // Skip LineFeed
 		line[lineLength] = 0;
