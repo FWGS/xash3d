@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "touch.h"
 #include "kbutton.h"
 #include "vgui_draw.h"
+#include "library.h"
 
 #define MAX_TOTAL_CMDS		16
 #define MIN_CMD_RATE		10.0
@@ -157,8 +158,9 @@ qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset )
 		Q_strncpy( mapname, clgame.mapname, MAX_STRING );
 		Q_strncpy( maptitle, clgame.maptitle, MAX_STRING );
 
+		Com_ResetLibraryError();
 		if( !CL_LoadProgs( va( "%s/%s", GI->dll_path, GI->client_lib)))
-			Host_Error( "Can't initialize client library\n" );
+			Sys_Warn( "Can't initialize client library\n%s", Com_GetLibraryError() );
 
 		// restore parms
 		clgame.maxEntities = maxEntities;
@@ -1868,6 +1870,7 @@ void CL_Init( void )
 #else
 	{
 		char clientlib[256];
+		Com_ResetLibraryError();
 		if( Sys_GetParmFromCmdLine( "-clientlib", clientlib ) )
 			loaded = CL_LoadProgs( clientlib );
 		else
@@ -1888,6 +1891,8 @@ void CL_Init( void )
 		cls.olddemonum = -1;
 		cls.demonum = -1;
 	}
+	else
+		Sys_Warn("Could not load client library:\n%s", Com_GetLibraryError());
 }
 
 /*

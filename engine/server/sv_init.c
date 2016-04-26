@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "server.h"
+#include "library.h"
 
 int SV_UPDATE_BACKUP = SINGLEPLAYER_BACKUP;
 
@@ -621,9 +622,13 @@ void SV_InitGame( void )
 		// init game after host error
 		if( !svgame.hInstance )
 		{
+			Com_ResetLibraryError();
 			if( !SV_LoadProgs( SI.gamedll ))
 			{
-				MsgDev( D_ERROR, "SV_InitGame: can't initialize \"%s\"\n", SI.gamedll );
+				if( CL_IsInMenu() )
+					Sys_Warn( "SV_InitGame: can't initialize \"%s\":\n%s", SI.gamedll, Com_GetLibraryError() );
+				else
+					Msg( "SV_InitGame: can't initialize \"%s\":\n%s", SI.gamedll, Com_GetLibraryError() );
 				return; // can't load
 			}
 			MsgDev( D_INFO, "Server loaded\n" );
@@ -725,6 +730,7 @@ void SV_InitGameProgs( void )
 
 	// just try to initialize
 	SV_LoadProgs( SI.gamedll );
+	Com_ResetLibraryError();
 }
 
 void SV_FreeGameProgs( void )

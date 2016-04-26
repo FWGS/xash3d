@@ -848,8 +848,11 @@ int pfnCheckGameDll( void )
 	if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
+		Com_ResetLibraryError();
 		return true;
 	}
+	MsgDev( D_WARN, "Could not load server library:\n%s", Com_GetLibraryError() );
+	Com_ResetLibraryError();
 	return false;
 }
 

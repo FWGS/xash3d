@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "vgui_draw.h"
 #include "qfont.h"
+#include "library.h"
 
 convar_t *scr_centertime;
 convar_t *scr_loading;
@@ -659,9 +660,11 @@ void SCR_Init( void )
 	Cmd_AddCommand( "sizeup", SCR_SizeUp_f, "screen size up to 10 points" );
 	Cmd_AddCommand( "sizedown", SCR_SizeDown_f, "screen size down to 10 points" );
 
+	Com_ResetLibraryError();
+
 	if( host.state != HOST_RESTART && !UI_LoadProgs( ))
 	{
-		Msg( "^1Error: ^7can't initialize menu library\n" ); // this is not fatal for us
+		Sys_Warn( "can't initialize menu library:\n%s", Com_GetLibraryError() ); // this is not fatal for us
 		// console still can't be toggled in-game without extra cmd-line switch
 		if( !host.developer ) host.developer = 1; // we need console, because menu is missing
 	}

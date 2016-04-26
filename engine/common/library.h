@@ -157,6 +157,9 @@ void *Com_GetProcAddress( void *hInstance, const char *name );
 const char *Com_NameForFunction( void *hInstance, void *function );
 void *Com_FunctionFromName( void *hInstance, const char *pName );
 void Com_FreeLibrary( void *hInstance );
+void Com_PushLibraryError( const char *error );
+void Com_ResetLibraryError();
+const char *Com_GetLibraryError();
 
 #ifdef DLL_LOADER // wine-based dll loader
 void * Loader_LoadLibrary (const char *name);
