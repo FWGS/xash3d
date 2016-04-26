@@ -701,17 +701,41 @@ void Sys_RestoreCrashHandler( void )
 
 /*
 ================
+Sys_Warn
+
+Just messagebox
+================
+*/
+void Sys_Warn( const char *format, ... )
+{
+	va_list	argptr;
+	char	text[MAX_SYSPATH];
+
+	DEBUG_BREAK;
+
+	va_start( argptr, format );
+	Q_vsprintf( text, format, argptr );
+	va_end( argptr );
+	if( host.type != HOST_DEDICATED ) // dedicated server should not hang on messagebox
+		MSGBOX(text);
+	Msg( "Sys_Warn: %s\n", text );
+}
+
+/*
+================
 Sys_Error
 
 NOTE: we must prepare engine to shutdown
 before call this
 ================
 */
-void Sys_Error( const char *error, ... )
+void Sys_Error( const char *format, ... )
 {
 	va_list	argptr;
 	char	text[MAX_SYSPATH];
+
 	DEBUG_BREAK;
+
 	if( host.state == HOST_ERR_FATAL )
 		return; // don't execute more than once
 
@@ -720,8 +744,8 @@ void Sys_Error( const char *error, ... )
 
 	error_on_exit = true;
 	host.state = HOST_ERR_FATAL;	
-	va_start( argptr, error );
-	Q_vsprintf( text, error, argptr );
+	va_start( argptr, format );
+	Q_vsprintf( text, format, argptr );
 	va_end( argptr );
 
 	SV_SysError( text );
@@ -759,7 +783,7 @@ Sys_Break
 same as Error
 ================
 */
-void Sys_Break( const char *error, ... )
+void Sys_Break( const char *format, ... )
 {
 	va_list	argptr;
 	char	text[MAX_SYSPATH];
@@ -769,8 +793,8 @@ void Sys_Break( const char *error, ... )
 
 	error_on_exit = true;	
 	host.state = HOST_ERR_FATAL;         
-	va_start( argptr, error );
-	Q_vsprintf( text, error, argptr );
+	va_start( argptr, format );
+	Q_vsprintf( text, format, argptr );
 	va_end( argptr );
 
 	if( host.type == HOST_NORMAL )
