@@ -103,7 +103,7 @@ void GL_BackendEndFrame( void )
 GL_LoadTexMatrix
 =================
 */
-void GL_LoadTexMatrix( const matrix4x4 m )
+void GL_LoadTexMatrix( cmatrix4x4 m )
 {
 	pglMatrixMode( GL_TEXTURE );
 	GL_LoadMatrix( m );
@@ -128,7 +128,7 @@ void GL_LoadTexMatrixExt( const float *glmatrix )
 GL_LoadMatrix
 =================
 */
-void GL_LoadMatrix( const matrix4x4 source )
+void GL_LoadMatrix( cmatrix4x4 source )
 {
 	GLfloat	dest[16];
 

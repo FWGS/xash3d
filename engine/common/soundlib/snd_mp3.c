@@ -287,7 +287,7 @@ assume stream is valid
 int Stream_SetPosMPG( stream_t *stream, int newpos )
 {
 	// update stream pos for right work GetPos function
-	int newPos = set_current_pos( stream->ptr, newpos, FS_Seek, stream->file );
+	int newPos = set_current_pos( stream->ptr, newpos, (void*)FS_Seek, stream->file );
 
 	if( newPos != -1 )
 	{

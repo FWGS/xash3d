@@ -76,7 +76,7 @@ void V_AdjustFov( float *fov_x, float *fov_y, float width, float height, qboolea
 
 ========================================================================
 */
-void Matrix4x4_Concat( matrix4x4 out, const matrix4x4 in1, const matrix4x4 in2 )
+void Matrix4x4_Concat(matrix4x4 out, cmatrix4x4 in1, cmatrix4x4 in2 )
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0] + in1[0][3] * in2[3][0];
 	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] + in1[0][2] * in2[2][1] + in1[0][3] * in2[3][1];
@@ -152,7 +152,7 @@ void Matrix4x4_CreateModelview( matrix4x4 out )
 	out[1][2] = 1.0f;
 }
 
-void Matrix4x4_ToArrayFloatGL( const matrix4x4 in, float out[16] )
+void Matrix4x4_ToArrayFloatGL(cmatrix4x4 in, float out[16] )
 {
 	out[ 0] = in[0][0];
 	out[ 1] = in[1][0];

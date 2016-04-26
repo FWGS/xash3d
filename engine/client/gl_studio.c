@@ -1996,7 +1996,7 @@ static void R_StudioDrawPoints( void )
 	if( r_studio_sort_textures->integer )
 	{
 		// sort opaque and translucent for right results
-		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), R_StudioMeshCompare );
+		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), (void*)R_StudioMeshCompare );
 	}
 
 	for( j = 0; j < m_pSubModel->nummesh; j++ ) 
@@ -3684,8 +3684,8 @@ static engine_studio_api_t gStudioAPI =
 {
 	Mod_Calloc,
 	Mod_CacheCheck,
-	Mod_LoadCacheFile,
-	Mod_ForName,
+	(void*)Mod_LoadCacheFile,
+	(void*)Mod_ForName,
 	Mod_Extradata,
 	Mod_Handle,
 	pfnGetCurrentEntity,
@@ -3711,13 +3711,13 @@ static engine_studio_api_t gStudioAPI =
 	R_StudioDrawHulls,
 	R_StudioDrawAbsBBox,
 	R_StudioDrawBones,
-	R_StudioSetupSkin,
+	(void*)R_StudioSetupSkin,
 	R_StudioSetRemapColors,
 	R_StudioSetupPlayerModel,
 	R_StudioClientEvents,
 	R_StudioGetForceFaceFlags,
 	R_StudioSetForceFaceFlags,
-	R_StudioSetHeader,
+	(void*)R_StudioSetHeader,
 	R_StudioSetRenderModel,
 	R_StudioSetupRenderer,
 	R_StudioRestoreRenderer,

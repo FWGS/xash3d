@@ -140,7 +140,7 @@ JustAfew:
 	// the main loop is aligned and only has to worry about 8 byte at a time.
 	// The low-order two bits of pb and nBuffer in total control the
 	// upfront work.
-	nFront = ((uint)pb) & 3;
+	nFront = ((size_t)pb) & 3;
 	nBuffer -= nFront;
 
 	switch( nFront )

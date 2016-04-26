@@ -1504,7 +1504,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 	}
 
 	if( need_sort && !gl_nosort->integer )
-		qsort( world.draw_surfaces, num_sorted, sizeof( msurface_t* ), R_SurfaceCompare );
+		qsort( world.draw_surfaces, num_sorted, sizeof( msurface_t* ), (void*)R_SurfaceCompare );
 
 	// draw sorted translucent surfaces
 	for( i = 0; i < num_sorted; i++ )

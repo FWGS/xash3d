@@ -101,9 +101,9 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	pfnEnableTextInput,
 	IN_TouchAddClientButton,
 	IN_TouchAddDefaultButton,
-	IN_TouchHideButtons,
+	(void*)IN_TouchHideButtons,
 	IN_TouchRemoveButton,
-	IN_TouchSetClientOnly,
+	(void*)IN_TouchSetClientOnly,
 	IN_TouchResetDefaultButtons,
 	pfnDrawScaledCharacter
 };

@@ -938,22 +938,22 @@ static void Cmd_WriteHelp(const char *name, const char *unused, const char *desc
 
 void Cmd_WriteVariables( file_t *f )
 {
-	Cvar_LookupVars( CVAR_ARCHIVE, NULL, f, Cmd_WriteCvar ); 
+	Cvar_LookupVars( CVAR_ARCHIVE, NULL, f, (void*)Cmd_WriteCvar );
 }
 
 void Cmd_WriteServerVariables( file_t *f )
 {
-	Cvar_LookupVars( CVAR_SERVERNOTIFY, NULL, f, Cmd_WriteServerCvar ); 
+	Cvar_LookupVars( CVAR_SERVERNOTIFY, NULL, f, (void*)Cmd_WriteServerCvar );
 }
 
 void Cmd_WriteOpenGLVariables( file_t *f )
 {
-	Cvar_LookupVars( CVAR_GLCONFIG, NULL, f, Cmd_WriteOpenGLCvar ); 
+	Cvar_LookupVars( CVAR_GLCONFIG, NULL, f, (void*)Cmd_WriteOpenGLCvar );
 }
 
 void Cmd_WriteRenderVariables( file_t *f )
 {
-	Cvar_LookupVars( CVAR_RENDERINFO, NULL, f, Cmd_WriteRenderCvar ); 
+	Cvar_LookupVars( CVAR_RENDERINFO, NULL, f, (void*)Cmd_WriteRenderCvar );
 }
 
 /*
@@ -1124,9 +1124,9 @@ void Key_EnumCmds_f( void )
 		FS_Printf( f, "//=======================================================================\n");
 
 		FS_Printf( f, "\n\n\t\t\tconsole variables\n\n");
-		Cvar_LookupVars( 0, NULL, f, Cmd_WriteHelp ); 
+		Cvar_LookupVars( 0, NULL, f, (void*)Cmd_WriteHelp );
 		FS_Printf( f, "\n\n\t\t\tconsole commands\n\n");
-		Cmd_LookupCmds( NULL, f, Cmd_WriteHelp ); 
+		Cmd_LookupCmds( NULL, f, (void*)Cmd_WriteHelp );
   		FS_Printf( f, "\n\n");
 		FS_Close( f );
 		Msg( "help.txt created\n" );

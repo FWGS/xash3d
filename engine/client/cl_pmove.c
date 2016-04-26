@@ -670,7 +670,7 @@ void CL_InitClientMove( void )
 	Q_memcpy( clgame.pmove->player_maxs, clgame.player_maxs, sizeof( clgame.player_maxs ));
 
 	// common utilities
-	clgame.pmove->PM_Info_ValueForKey = Info_ValueForKey;
+	clgame.pmove->PM_Info_ValueForKey = (void*)Info_ValueForKey;
 	clgame.pmove->PM_Particle = pfnParticle;
 	clgame.pmove->PM_TestPlayerPosition = pfnTestPlayerPosition;
 	clgame.pmove->Con_NPrintf = Con_NPrintf;
@@ -683,14 +683,14 @@ void CL_InitClientMove( void )
 	clgame.pmove->PM_HullPointContents = pfnHullPointContents; 
 	clgame.pmove->PM_PlayerTrace = pfnPlayerTrace;
 	clgame.pmove->PM_TraceLine = pfnTraceLine;
-	clgame.pmove->RandomLong = Com_RandomLong;
+	clgame.pmove->RandomLong = (void*)Com_RandomLong;
 	clgame.pmove->RandomFloat = Com_RandomFloat;
 	clgame.pmove->PM_GetModelType = pfnGetModelType;
 	clgame.pmove->PM_GetModelBounds = pfnGetModelBounds;	
-	clgame.pmove->PM_HullForBsp = pfnHullForBsp;
+	clgame.pmove->PM_HullForBsp = (void*)pfnHullForBsp;
 	clgame.pmove->PM_TraceModel = pfnTraceModel;
-	clgame.pmove->COM_FileSize = COM_FileSize;
-	clgame.pmove->COM_LoadFile = COM_LoadFile;
+	clgame.pmove->COM_FileSize = (void*)COM_FileSize;
+	clgame.pmove->COM_LoadFile = (void*)COM_LoadFile;
 	clgame.pmove->COM_FreeFile = COM_FreeFile;
 	clgame.pmove->memfgets = COM_MemFgets;
 	clgame.pmove->PM_PlaySound = pfnPlaySound;

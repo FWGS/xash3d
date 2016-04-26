@@ -221,7 +221,7 @@ qboolean BF_WriteBits( sizebuf_t *bf, const void *pData, int nBits )
 	int	nBitsLeft = nBits;
 
 	// get output dword-aligned.
-	while((( dword )pOut & 3 ) != 0 && nBitsLeft >= 8 )
+	while((( size_t )pOut & 3 ) != 0 && nBitsLeft >= 8 )
 	{
 		BF_WriteUBitLongExt( bf, *pOut, 8, false );
 
@@ -442,7 +442,7 @@ qboolean BF_ReadBits( sizebuf_t *bf, void *pOutData, int nBits )
 	int	nBitsLeft = nBits;
 	
 	// get output dword-aligned.
-	while((( dword )pOut & 3) != 0 && nBitsLeft >= 8 )
+	while((( size_t )pOut & 3) != 0 && nBitsLeft >= 8 )
 	{
 		*pOut = (byte)BF_ReadUBitLong( bf, 8 );
 		++pOut;

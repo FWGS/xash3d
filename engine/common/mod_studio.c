@@ -974,7 +974,7 @@ static server_studio_api_t gStudioAPI =
 {
 	Mod_Calloc,
 	Mod_CacheCheck,
-	Mod_LoadCacheFile,
+	(void*)Mod_LoadCacheFile,
 	Mod_Extradata,
 };
    

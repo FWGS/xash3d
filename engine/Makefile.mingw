@@ -4,18 +4,18 @@ CFLAGS ?= -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -mss
 LDFLAGS =
 LIBS = -lm
 TOPDIR = $(PWD)/..
-INCLUDES = -I../SDL2/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared -Icommon/sdl
+INCLUDES = -I../SDL2-2.0.4/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared -Icommon/sdl
 DEFINES =
 XASH_VGUI ?= 1
 ifeq ($(XASH_DEDICATED),1)
 DEFINES += -DXASH_DEDICATED
 else
 DEFINES += -DXASH_SDL
-LIBS += -lSDL2 -L../SDL2/lib/x86 -luser32 -lkernel32 -lgdi32
+LIBS += -lSDL2 -L../SDL2-2.0.4/lib/x64 -luser32 -lkernel32 -lgdi32 -lWs2_32
 endif
 
 
-DEFINES += -DSINGLE_BINARY
+DEFINES += -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DSINGLE_BINARY
 
 ifeq ($(XASH_VGUI),1)
 DEFINES += -DXASH_VGUI

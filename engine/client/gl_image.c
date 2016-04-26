@@ -1504,7 +1504,7 @@ int GL_LoadTexture( const char *name, const byte *buf, size_t size, int flags, i
 			return 0;
 
 		// parse image program
-		pic = R_LoadImage( &script, token, buf, size, &samples, &flags );
+		pic = R_LoadImage( &script, token, buf, size, &samples, (texFlags_t*)&flags );
 		if( !pic ) return 0; // couldn't loading image
 
 		// recalc image samples here

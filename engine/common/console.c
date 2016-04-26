@@ -1205,8 +1205,8 @@ void Con_CompleteCommand( field_t *field )
 	con.shortestMatch[0] = 0;
 
 	// find matching commands and variables
-	Cmd_LookupCmds( NULL, NULL, Con_AddCommandToList );
-	Cvar_LookupVars( 0, NULL, NULL, Con_AddCommandToList );
+	Cmd_LookupCmds( NULL, NULL, (void*)Con_AddCommandToList );
+	Cvar_LookupVars( 0, NULL, NULL, (void*)Con_AddCommandToList );
 
 	if( !con.matchCount ) return; // no matches
 
@@ -1253,7 +1253,7 @@ void Con_CompleteCommand( field_t *field )
 		char	*first, *last;
 		int	len = 0;
 
-		qsort( con.cmds, con.matchCount, sizeof( char* ), Con_SortCmds );
+		qsort( con.cmds, con.matchCount, sizeof( char* ), (void*)Con_SortCmds );
 
 		// find the number of matching characters between the first and
 		// the last element in the list and copy it
@@ -1278,8 +1278,8 @@ void Con_CompleteCommand( field_t *field )
 		Msg( "]%s\n", con.completionField->buffer );
 
 		// run through again, printing matches
-		Cmd_LookupCmds( NULL, NULL, Con_PrintMatches );
-		Cvar_LookupVars( 0, NULL, NULL, Con_PrintMatches );
+		Cmd_LookupCmds( NULL, NULL, (void*)Con_PrintMatches );
+		Cvar_LookupVars( 0, NULL, NULL, (void*)Con_PrintMatches );
 	}
 }
 

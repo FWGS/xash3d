@@ -227,7 +227,7 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 		pid_t id = fork( );
 		if( id == 0 )
 		{
-			execve( xdgOpen, argv, environ );
+			execve( xdgOpen, (char **)argv, environ );
 			fprintf( stderr, "error opening %s %s", xdgOpen, path );
 			_exit( 1 );
 		}
