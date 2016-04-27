@@ -22,7 +22,7 @@ GNU General Public License for more details.
 		#error "VGUI is exists only for x86. You must disable VGUI flag or build Xash3D for x86 target."
 	#endif
 
-	#if !(defined(__linux__) || defined(__APPLE__) || defined(_WIN32))
+	#if !(defined(__linux__) || defined(__APPLE__) || defined(_WIN32) || defined(DLL_LOADER))
 		#error "VGUI is exists only for Windows/Linux/Mac OS X. Disable it or build Xash3D SDL for one of these targets"
 	#endif
 #endif
