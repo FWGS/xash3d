@@ -847,11 +847,10 @@ int pfnCheckGameDll( void )
 
 	if( Cvar_VariableInteger("xashds_hacks") )
 		return true;
-
+	Com_ResetLibraryError();
 	if(( hInst = Com_LoadLibrary( SI.gamedll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
-		Com_ResetLibraryError();
 		return true;
 	}
 	MsgDev( D_WARN, "Could not load server library:\n%s", Com_GetLibraryError() );

@@ -944,8 +944,11 @@ before Sys_Quit or Sys_Error
 void SV_Shutdown( qboolean reconnect )
 {
 	// already freed
-	if( !SV_Active( ))
+	if( !SV_Active( )) // library may be loaded
+	{
+		SV_UnloadProgs();
 		return;
+	}
 
 	// rcon will be disconnected
 	SV_EndRedirect();
