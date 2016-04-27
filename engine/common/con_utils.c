@@ -876,6 +876,7 @@ autocomplete_list_t cmd_list[] =
 {
 { "gl_texturemode", Cmd_GetTextureModes },
 { "map_background", Cmd_GetMapList },
+{ "changelevel2", Cmd_GetMapList },
 { "changelevel", Cmd_GetMapList },
 { "playdemo", Cmd_GetDemoList, },
 { "playvol", Cmd_GetSoundList },
