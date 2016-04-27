@@ -144,7 +144,7 @@ char *Sys_GetCurrentUser( void )
 {
 #if defined(_WIN32)
 	static string	s_userName;
-	dword			size = sizeof( s_userName );
+	unsigned long size = sizeof( s_userName );
 
 	if( GetUserName( s_userName, &size ))
 		return s_userName;
@@ -467,7 +467,130 @@ Crash handler, called from system
 */
 #define DEBUG_BREAK
 /// TODO: implement on windows too
+
 #ifdef _WIN32
+#ifdef DBGHELP
+#include <winnt.h>
+#include <psapi.h>
+#include <dbghelp.h>
+int ModuleName( HANDLE process, char *name, void *address, int len )
+{
+	DWORD_PTR   baseAddress = 0;
+	static HMODULE     *moduleArray;
+	static unsigned int moduleCount;
+	LPBYTE      moduleArrayBytes;
+	DWORD       bytesRequired;
+	int i;
+
+	if(len < 3)
+		return 0;
+
+	if ( !moduleArray && EnumProcessModules( process, NULL, 0, &bytesRequired ) )
+	{
+		if ( bytesRequired )
+		{
+			moduleArrayBytes = (LPBYTE)LocalAlloc( LPTR, bytesRequired );
+
+			if ( moduleArrayBytes )
+			{
+				if( EnumProcessModules( process, (HMODULE *)moduleArrayBytes, bytesRequired, &bytesRequired ) )
+				{
+					moduleCount = bytesRequired / sizeof( HMODULE );
+					moduleArray = (HMODULE *)moduleArrayBytes;
+				}
+			}
+		}
+	}
+
+	for( i=0; i<moduleCount; i++ )
+	{
+		MODULEINFO info;
+		GetModuleInformation( process, moduleArray[i], &info, sizeof(MODULEINFO) );
+
+		if( ( address > info.lpBaseOfDll ) &&
+				( address < info.lpBaseOfDll + info.SizeOfImage ) )
+			return GetModuleBaseName( process, moduleArray[i], name, len );
+	}
+	return snprintf(name, len, "???");
+}
+static void stack_trace( PEXCEPTION_POINTERS pInfo )
+{
+	char message[1024];
+	int len = 0;
+	HANDLE process = GetCurrentProcess();
+	HANDLE thread = GetCurrentThread();
+
+	CONTEXT context;
+
+	memcpy( &context, pInfo->ContextRecord, sizeof(CONTEXT) );
+
+	SymInitialize(process, NULL, TRUE);
+
+	DWORD image;
+	STACKFRAME64 stackframe;
+	ZeroMemory( &stackframe, sizeof(STACKFRAME64) );
+
+#ifdef _M_IX86
+	image = IMAGE_FILE_MACHINE_I386;
+	stackframe.AddrPC.Offset = context.Eip;
+	stackframe.AddrPC.Mode = AddrModeFlat;
+	stackframe.AddrFrame.Offset = context.Ebp;
+	stackframe.AddrFrame.Mode = AddrModeFlat;
+	stackframe.AddrStack.Offset = context.Esp;
+	stackframe.AddrStack.Mode = AddrModeFlat;
+#elif _M_X64
+	image = IMAGE_FILE_MACHINE_AMD64;
+	stackframe.AddrPC.Offset = context.Rip;
+	stackframe.AddrPC.Mode = AddrModeFlat;
+	stackframe.AddrFrame.Offset = context.Rsp;
+	stackframe.AddrFrame.Mode = AddrModeFlat;
+	stackframe.AddrStack.Offset = context.Rsp;
+	stackframe.AddrStack.Mode = AddrModeFlat;
+#elif _M_IA64
+	image = IMAGE_FILE_MACHINE_IA64;
+	stackframe.AddrPC.Offset = context.StIIP;
+	stackframe.AddrPC.Mode = AddrModeFlat;
+	stackframe.AddrFrame.Offset = context.IntSp;
+	stackframe.AddrFrame.Mode = AddrModeFlat;
+	stackframe.AddrBStore.Offset = context.RsBSP;
+	stackframe.AddrBStore.Mode = AddrModeFlat;
+	stackframe.AddrStack.Offset = context.IntSp;
+	stackframe.AddrStack.Mode = AddrModeFlat;
+#endif
+	len += snprintf( message + len, 1024 - len, "Sys_Crash: address %p, code %p\n", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
+
+	for( size_t i = 0; i < 25; i++ )
+	{
+		BOOL result = StackWalk64(
+			image, process, thread,
+			&stackframe, &context, NULL,
+			SymFunctionTableAccess64, SymGetModuleBase64, NULL);
+
+		if( !result )
+			break;
+
+		char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+		PSYMBOL_INFO symbol = (PSYMBOL_INFO)buffer;
+		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+		symbol->MaxNameLen = MAX_SYM_NAME;
+
+		DWORD64 displacement = 0;
+		if( SymFromAddr( process, stackframe.AddrPC.Offset, &displacement, symbol ) )
+		{
+			len += snprintf( message + len, 1024 - len, "% 2d %p %s (", i, stackframe.AddrPC.Offset, symbol->Name );
+		}
+		else
+			len += snprintf( message + len, 1024 - len, "% 2d %p(", i, stackframe.AddrPC.Offset );
+		len += ModuleName( process, message + len, stackframe.AddrPC.Offset, 1024 - len );
+		len += snprintf( message + len, 1024 - len, ")\n");
+
+	}
+	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR,"Sys_Crash", message, host.hWnd );
+	//Sys_Warn("%s",message);
+
+	SymCleanup(process);
+}
+#endif //DBGHELP
 LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
@@ -478,11 +601,15 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		error_on_exit = true;
 		host.crashed = true;
 
+#ifdef DBGHELP
+		stack_trace( pInfo );
+#else
+		Sys_Warn( "Sys_Crash: call %p at address %p", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
+#endif
+
 		if( host.type == HOST_NORMAL )
 			CL_Crashed(); // tell client about crash
 		else host.state = HOST_CRASHED;
-
-		Msg( "Sys_Crash: call %p at address %p\n", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
 
 		if( host.developer <= 0 )
 		{
