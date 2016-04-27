@@ -502,7 +502,7 @@ int ModuleName( HANDLE process, char *name, void *address, int len )
 		}
 	}
 
-	for( i=0; i<moduleCount; i++ )
+	for( i = 0; i<moduleCount; i++ )
 	{
 		MODULEINFO info;
 		GetModuleInformation( process, moduleArray[i], &info, sizeof(MODULEINFO) );

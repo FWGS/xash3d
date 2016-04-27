@@ -90,7 +90,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		if(!pHandle)
 		{
 			string errorstring;
-			Q_snprintf( errorstring, MAX_STRING, "Failed to load dll with dll loader: %s", dllname )
+			Q_snprintf( errorstring, MAX_STRING, "Failed to load dll with dll loader: %s", dllname );
 			Com_PushLibraryError( errorstring );
 		}
 	}
@@ -118,7 +118,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 			if(!pHandle)
 			{
 				string errorstring;
-				Q_snprintf( errorstring, MAX_STRING, "Failed to load dll with dll loader: %s", dllname )
+				Q_snprintf( errorstring, MAX_STRING, "Failed to load dll with dll loader: %s", dllname );
 				Com_PushLibraryError( errorstring );
 			}
 		}

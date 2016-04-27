@@ -4911,7 +4911,7 @@ qboolean SV_LoadProgs( const char *name )
 #ifdef DLL_LOADER
 	if(dll)
 	{
-		GiveFnptrsToDll_w32 = (GIVEFNPTRSTODLL)Com_GetProcAddress( svgame.hInstance, "GiveFnptrsToDll" );
+		GiveFnptrsToDll_w32 = (void *)Com_GetProcAddress( svgame.hInstance, "GiveFnptrsToDll" );
 		if( !GiveFnptrsToDll_w32 )
 		{
 			Com_FreeLibrary(svgame.hInstance);
