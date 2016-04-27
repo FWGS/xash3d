@@ -1107,6 +1107,13 @@ void SV_PutClientInServer( edict_t *ent )
 			ent->v.flags |= (FL_GODMODE|FL_NOTARGET);
 
 		client->pViewEntity = NULL; // reset pViewEntity
+
+		if( svgame.globals->cdAudioTrack )
+		{
+			BF_WriteByte( &client->netchan.message, svc_stufftext );
+			BF_WriteString( &client->netchan.message, va( "cd loop %3d\n", svgame.globals->cdAudioTrack ));
+			svgame.globals->cdAudioTrack = 0;
+		}
 	}
 	else
 	{
@@ -1227,16 +1234,6 @@ void SV_New_f( sv_client_t *cl )
 
 	// refresh userinfo on spawn
 	SV_RefreshUserinfo();
-
-	if( svgame.globals->cdAudioTrack )
-	{
-		BF_WriteByte( &cl->netchan.message, svc_stufftext );
-		BF_WriteString( &cl->netchan.message, va( "cd loop %d\n", svgame.globals->cdAudioTrack ));
-		svgame.globals->cdAudioTrack = 0;
-	}
-
-	cl->resources_sent = 1;
-	cl->resources_count = 1;
 
 	// game server
 	if( sv.state == ss_active )
