@@ -845,7 +845,10 @@ int pfnCheckGameDll( void )
 	if( SV_Active( ) )
 		return true;
 
-	if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
+	if( Cvar_VariableInteger("xashds_hacks") )
+		return true;
+
+	if(( hInst = Com_LoadLibrary( SI.gamedll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
 		Com_ResetLibraryError();
