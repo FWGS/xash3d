@@ -202,6 +202,8 @@ void VGui_Startup( int width, int height )
 		char vguiloader[256];
 		char vguilib[256];
 
+		Com_ResetLibraryError();
+
 		// hack: load vgui with correct path first if specified.
 		// it will be reused while resolving vgui support and client deps
 		if( Sys_GetParmFromCmdLine( "-vguilib", vguilib ) )
@@ -217,9 +219,9 @@ void VGui_Startup( int width, int height )
 		if( !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
 			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
 
-		lib = Com_LoadLibrary( vguiloader, false);
+		lib = Com_LoadLibrary( vguiloader, false );
 		if(!lib)
-			MsgDev( D_ERROR, "Failed to load vgui_support library!\n" );
+			MsgDev( D_ERROR, "Failed to load vgui_support library: %s", Com_GetLibraryError() );
 		else
 		{
 			F = Com_GetProcAddress( lib, "InitAPI" );
