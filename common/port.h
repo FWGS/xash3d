@@ -22,9 +22,15 @@ GNU General Public License for more details.
 		#error "VGUI is exists only for x86. You must disable VGUI flag or build Xash3D for x86 target."
 	#endif
 
-	#if !(defined(__linux__) || defined(__APPLE__) || defined(_WIN32) || defined(DLL_LOADER))
+	#if !(defined(__GLIBC__) || defined(__APPLE__) || defined(_WIN32) || defined(DLL_LOADER))
 		#error "VGUI is exists only for Windows/Linux/Mac OS X. Disable it or build Xash3D SDL for one of these targets"
 	#endif
+#endif
+
+#ifdef __amd64__
+#define ARCH_SUFFIX "64"
+#else
+#define ARCH_SUFFIX
 #endif
 
 #if !defined(_WIN32)
@@ -56,8 +62,8 @@ GNU General Public License for more details.
 		#define SERVERDLL "libserver" POSTFIX "." OS_LIB_EXT
 		#define GAMEPATH "/sdcard/xash"
 	#else
-		#define MENUDLL "libxashmenu." OS_LIB_EXT
-		#define CLIENTDLL "client." OS_LIB_EXT
+		#define MENUDLL "libxashmenu"ARCH_SUFFIX"." OS_LIB_EXT
+		#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
 	#endif
 
 	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT
@@ -130,8 +136,8 @@ GNU General Public License for more details.
 	#undef HSPRITE
 
 	#define OS_LIB_EXT "dll"
-	#define MENUDLL "menu." OS_LIB_EXT
-	#define CLIENTDLL "client." OS_LIB_EXT
+	#define MENUDLL "menu"ARCH_SUFFIX"." OS_LIB_EXT
+	#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
 #endif
 
