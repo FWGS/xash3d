@@ -90,7 +90,7 @@ void SDLash_EventFilter( SDL_Event* event)
 			break;
 
 		case SDL_WINDOWEVENT:
-			if( ( host.state == HOST_SHUTDOWN ) || ( host.state == HOST_DEDICATED ) )
+			if( ( host.state == HOST_SHUTDOWN ) || ( host.type == HOST_DEDICATED ) )
 				break; // no need to activate
 			if( host.state != HOST_RESTART )
 			{
@@ -109,7 +109,7 @@ void SDLash_EventFilter( SDL_Event* event)
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
 					host.state = HOST_FRAME;
 					IN_ActivateMouse(true);
-					if(lostFocusOnce && snd_mute_losefocus && snd_mute_losefocus->integer)
+					if(lostFocusOnce && snd_mute_losefocus->integer)
 					{
 						Cvar_SetFloat("volume", oldVolume);
 						Cvar_SetFloat("musicvolume", oldMusicVolume);
@@ -118,7 +118,7 @@ void SDLash_EventFilter( SDL_Event* event)
 				case SDL_WINDOWEVENT_FOCUS_LOST:
 					host.state = HOST_NOFOCUS;
 					IN_DeactivateMouse();
-					if(snd_mute_losefocus && snd_mute_losefocus->integer)
+					if( snd_mute_losefocus->integer )
 					{
 						lostFocusOnce = true;
 						oldVolume = Cvar_VariableValue("volume");
