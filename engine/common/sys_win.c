@@ -517,6 +517,7 @@ static void stack_trace( PEXCEPTION_POINTERS pInfo )
 {
 	char message[1024];
 	int len = 0;
+	size_t i;
 	HANDLE process = GetCurrentProcess();
 	HANDLE thread = GetCurrentThread();
 
@@ -559,7 +560,7 @@ static void stack_trace( PEXCEPTION_POINTERS pInfo )
 #endif
 	len += snprintf( message + len, 1024 - len, "Sys_Crash: address %p, code %p\n", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
 
-	for( size_t i = 0; i < 25; i++ )
+	for( i = 0; i < 25; i++ )
 	{
 		BOOL result = StackWalk64(
 			image, process, thread,
