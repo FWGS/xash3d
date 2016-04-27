@@ -981,7 +981,9 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 
 	if( !hInst->hInstance )
 	{
-		MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed: %d\n", dllname, GetLastError() );
+		string errorstring;
+		Q_snprintf( errorstring, MAX_STRING, "LoadLibrary failed for %s:%d", dllname, GetLastError() );
+		Com_PushLibraryError( errorstring );
 		Com_FreeLibrary( hInst );
 		return NULL;
 	}
@@ -991,7 +993,11 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 	{
 		if( !LibraryLoadSymbols( hInst ))
 		{
-			MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed\n", dllname );
+			string errorstring;
+			Q_snprintf( errorstring, MAX_STRING, "Failed to build ordinals table for %s", dllname );
+			Com_PushLibraryError( errorstring );
+			//MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed\n", dllname );
+
 			Com_FreeLibrary( hInst );
 			return NULL;
 		}

@@ -11,7 +11,7 @@ ifeq ($(XASH_DEDICATED),1)
 DEFINES += -DXASH_DEDICATED
 else
 DEFINES += -DXASH_SDL
-LIBS += -lSDL2 -L../SDL2/lib/x86 -luser32 -lkernel32 -lgdi32
+LIBS += -lSDL2 -L../SDL2/lib/x86 -L../SDL2/lib/x64 -luser32 -lkernel32 -lgdi32
 endif
 
 
