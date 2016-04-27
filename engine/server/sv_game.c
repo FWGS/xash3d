@@ -2959,7 +2959,7 @@ string_t SV_AllocString( const char *szValue )
 
 	if( svgame.physFuncs.pfnAllocString != NULL )
 		return svgame.physFuncs.pfnAllocString( szValue );
-#ifdef __amd64
+#ifdef __amd64__
 	newString = pLastsStr;
 	pLastsStr += Q_strcpy(pLastsStr,szValue) + 1;
 
