@@ -470,6 +470,7 @@ Crash handler, called from system
 
 #ifdef _WIN32
 #ifdef DBGHELP
+#pragma comment( lib, "dbghelp" )
 #include <winnt.h>
 #include <psapi.h>
 #include <dbghelp.h>
