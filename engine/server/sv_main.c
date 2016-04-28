@@ -382,7 +382,8 @@ void SV_ReadPackets( void )
 
 			if( Netchan_Process( &cl->netchan, &net_message ))
 			{	
-				cl->send_message = true; // reply at end of frame
+				if( sv_maxclients->integer == 1 || cl->state != cs_spawned )
+					cl->send_message = true; // reply at end of frame
 
 				// this is a valid, sequenced packet, so process it
 				if( cl->state != cs_zombie )

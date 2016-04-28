@@ -1033,10 +1033,10 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 	}
 	else if( pField->flags & DT_TIMEWINDOW_8 )
 	{
-		val_a = (*(float *)((byte *)from + pField->offset )) * 100.0f;
-		val_b = (*(float *)((byte *)to + pField->offset )) * 100.0f;
-		val_a -= (timebase * 100.0f);
-		val_b -= (timebase * 100.0f);
+		val_a = Q_rint((*(float *)((byte *)from + pField->offset )) * 100.0f );
+		val_b = Q_rint((*(float *)((byte *)to + pField->offset )) * 100.0f );
+		val_a -= Q_rint(timebase * 100.0f);
+		val_b -= Q_rint(timebase * 100.0f);
 		fromF = *((int *)&val_a);
 		toF = *((int *)&val_b);
 	}
@@ -1145,7 +1145,7 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 		#else
 		flValue = *(float *)((byte *)to + pField->offset );
 		#endif
-		flTime = (timebase * 100.0f) - (flValue * 100.0f);
+		flTime = Q_rint( timebase * 100.0f ) - Q_rint(flValue * 100.0f);
 		#if 1
 		iValue = (uint)fabs( flTime );
 		#else

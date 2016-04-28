@@ -105,6 +105,8 @@ GNU General Public License for more details.
 
 float rsqrt( float number );
 float anglemod( const float a );
+word FloatToHalf( float v );
+float HalfToFloat( word h );
 int SignbitsForPlane( const vec3_t normal );
 int NearestPOW( int value, qboolean roundDown );
 void SinCos( float radians, float *sine, float *cosine );

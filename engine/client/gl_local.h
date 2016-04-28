@@ -75,6 +75,7 @@ typedef struct gltexture_s
 	GLuint		target;		// glTarget
 	GLuint		texnum;		// gl texture binding
 	GLint		format;		// uploaded format
+	GLint		encode;		// using GLSL decoder
 	texFlags_t	flags;
 
 	rgba_t		fogParams;	// some water textures

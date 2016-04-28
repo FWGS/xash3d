@@ -2117,7 +2117,7 @@ static void R_StudioDrawPoints( void )
 				if( g_nFaceFlags & STUDIO_NF_CHROME || ( g_nForceFaceFlags & STUDIO_NF_CHROME ))
 					pglTexCoord2f( g_chrome[ptricmds[1]][0] * s, g_chrome[ptricmds[1]][1] * t );
 				else if( g_nFaceFlags & STUDIO_NF_UV_COORDS )
-					pglTexCoord2f( ptricmds[2] * (1.0f / 32768.0f), ptricmds[3] * (1.0f / 32768.0f));
+					pglTexCoord2f( HalfToFloat( ptricmds[2] ), HalfToFloat( ptricmds[3] ));
 				else pglTexCoord2f( ptricmds[2] * s, ptricmds[3] * t );
 
 				if(!( g_nForceFaceFlags & STUDIO_NF_CHROME ))
@@ -3403,9 +3403,6 @@ static void R_StudioLoadTexture( model_t *mod, studiohdr_t *phdr, mstudiotexture
 	imgfilter_t	*filter = NULL;
 	texture_t		*tx = NULL;
 	
-	if( ptexture->flags & STUDIO_NF_TRANSPARENT )
-		flags |= (TF_CLAMP|TF_NOMIPMAP);
-
 	if( ptexture->flags & STUDIO_NF_NORMALMAP )
 		flags |= (TF_NORMALMAP);
 

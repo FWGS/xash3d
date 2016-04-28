@@ -501,6 +501,7 @@ void CL_ReadDemoUserCmd( qboolean discard )
 	byte	data[1024];
 	int	cmdnumber;
 	int	outgoing_sequence;
+	runcmd_t	*pcmd;
 	word	bytes;
 
 	FS_Read( cls.demofile, &outgoing_sequence, sizeof( int ));
@@ -516,8 +517,16 @@ void CL_ReadDemoUserCmd( qboolean discard )
 		Q_memset( &nullcmd, 0, sizeof( nullcmd ));
 		BF_Init( &buf, "UserCmd", data, sizeof( data ));
 
+		pcmd = &cl.commands[cmdnumber & CL_UPDATE_MASK];
+		pcmd->processedfuncs = false;
+		pcmd->senttime = 0.0f;
+		pcmd->receivedtime = 0.1f;
+		pcmd->frame_lerp = 0.1f;
+		pcmd->heldback = false;
+		pcmd->sendsize = 1;
+
 		// always delta'ing from null
-		cl.refdef.cmd = &cl.cmds[cmdnumber & CL_UPDATE_MASK ];
+		cl.refdef.cmd = &pcmd->cmd;
 
 		MSG_ReadDeltaUsercmd( &buf, &nullcmd, cl.refdef.cmd );
 

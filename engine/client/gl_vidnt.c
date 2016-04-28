@@ -29,6 +29,11 @@ GNU General Public License for more details.
 #include <X11/Xatom.h>
 #endif
 
+#ifdef WIN32
+// Enable NVIDIA High Performance Graphics while using Integrated Graphics.
+__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+#endif
+
 
 typedef enum
 {

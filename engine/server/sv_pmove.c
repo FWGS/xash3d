@@ -65,18 +65,24 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 	VectorCopy( ed->v.origin, pe->origin );
 	VectorCopy( ed->v.angles, pe->angles );
 
-	if( ed->v.flags & ( FL_CLIENT|FL_FAKECLIENT ))
+	if( ed->v.flags & FL_CLIENT )
 	{
-		// client or bot
+		// client
 		if ( svs.currentPlayer )
 			SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
 		Q_strncpy( pe->name, "player", sizeof( pe->name ));
 		pe->player = pe->info;
 	}
+	else if( ed->v.flags & FL_FAKECLIENT )
+	{
+		// bot
+		Q_strncpy( pe->name, "bot", sizeof( pe->name ));
+		pe->player = pe->info;
+	}
 	else
 	{
-		// otherwise copy the modelname
-		Q_strncpy( pe->name, mod->name, sizeof( pe->name ));
+		// otherwise copy the classname
+		Q_strncpy( pe->name, STRING( ed->v.classname ), sizeof( pe->name ));
 	}
 
 	pe->model = pe->studiomodel = NULL;
@@ -845,7 +851,7 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 {
 	int		i, j, clientnum;
 	float		finalpush, lerp_msec;
-	float		latency, temp, lerpFrac;
+	float		latency, lerpFrac;
 	client_frame_t	*frame, *frame2;
 	entity_state_t	*state, *lerpstate;
 	vec3_t		curpos, newpos;
@@ -886,10 +892,14 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 		latency = 1.5f;
 	else latency = cl->latency;
 
-	temp = sv_maxunlag->value;
+	if( sv_maxunlag->value != 0.0f )
+	{
+		if (sv_maxunlag->value < 0.0f )
+			Cvar_SetFloat( "sv_maxunlag", 0.0f );
 
-	if( temp > 0 && latency > temp )
-		latency = temp;
+		if( latency >= sv_maxunlag->value )
+			latency = sv_maxunlag->value;
+	}
 
 	lerp_msec = cl->lastcmd.lerp_msec * 0.001f;
 	if( lerp_msec > 0.1f ) lerp_msec = 0.1f;
@@ -897,10 +907,8 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 	if( lerp_msec < cl->cl_updaterate )
 		lerp_msec = cl->cl_updaterate;
 
-	finalpush = sv_unlagpush->value + (( host.realtime - latency ) - lerp_msec );
-
-	if( finalpush > host.realtime )
-		finalpush = host.realtime;
+	finalpush = ( host.realtime - latency - lerp_msec ) + sv_unlagpush->value;
+	if( finalpush > host.realtime ) finalpush = host.realtime; // pushed too much ?
 
 	frame = NULL;
 

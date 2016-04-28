@@ -1408,6 +1408,9 @@ static int GL_RenderGetParm( int parm, int arg )
 	case PARM_TEX_GLFORMAT:
 		glt = R_GetTexture( arg );
 		return glt->format;
+	case PARM_TEX_ENCODE:
+		glt = R_GetTexture( arg );
+		return glt->encode;
 	case PARM_TEX_SKYBOX:
 		ASSERT( arg >= 0 && arg < 6 );
 		return tr.skyboxTextures[arg];

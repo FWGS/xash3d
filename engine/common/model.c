@@ -37,6 +37,7 @@ int		bmodel_version;		// global stuff to detect bsp version
 char		modelname[64];		// short model name (without path and ext)
 convar_t		*mod_studiocache;
 convar_t		*mod_allow_materials;
+convar_t		*r_wadtextures;
 static wadlist_t	wadlist;
 		
 model_t		*loadmodel;
@@ -538,7 +539,8 @@ void Mod_Init( void )
 {
 	com_studiocache = Mem_AllocPool( "Studio Cache" );
 	mod_studiocache = Cvar_Get( "r_studiocache", "1", CVAR_ARCHIVE, "enables studio cache for speedup tracing hitboxes" );
-
+	r_wadtextures = Cvar_Get( "r_wadtextures", "1", CVAR_ARCHIVE, "completely ignore textures in the wad-files if disabled" );
+ 
 	if( host.type == HOST_NORMAL )
 		mod_allow_materials = Cvar_Get( "host_allow_materials", "0", CVAR_LATCH|CVAR_ARCHIVE, "allow HD textures" );
 	else mod_allow_materials = NULL; // no reason to load HD-textures for dedicated server
@@ -800,6 +802,11 @@ static void Mod_LoadTextures( const dlump_t *l )
 		}
 		else 
 		{
+			// texture loading order:
+			// 1. HQ from disk
+			// 2. from wad
+			// 3. internal from map
+
 			if( Mod_AllowMaterials( ))
 			{
 				if( mt.name[0] == '*' ) mt.name[0] = '!'; // replace unexpected symbol
@@ -817,24 +824,17 @@ static void Mod_LoadTextures( const dlump_t *l )
 				}
 				else load_external = true;
 			}
-load_wad_textures:
-			if( !load_external )
-				Q_snprintf( texname, sizeof( texname ), "%s%s.mip", ( mt.offsets[0] > 0 ) ? "#" : "", mt.name );
-			else MsgDev( D_NOTE, "loading HQ: %s\n", texname );
 
-			if( mt.offsets[0] > 0 && !load_external )
+			if( load_external )
 			{
-				// NOTE: imagelib detect miptex version by size
-				// 770 additional bytes is indicated custom palette
-				int size = (int)sizeof( mip_t ) + ((mt.width * mt.height * 85)>>6);
-				if( bmodel_version >= HLBSP_VERSION ) size += sizeof( short ) + 768;
-
-				tx->gl_texturenum = GL_LoadTexture( texname, buf, size, 0, filter );
+				tx->gl_texturenum = GL_LoadTexture( texname, NULL, 0, 0, filter );
+				if( !tx->gl_texturenum ) load_external = false; // for some reasons we can't load HQ texture
+				else MsgDev( D_NOTE, "loading HQ: %s\n", texname );
 			}
-			else
+			// trying wad texture (force while r_wadtextures is 1)
+			if( !load_external && ( r_wadtextures->integer || mt->offsets[0] <= 0 ))
 			{
-				// okay, loading it from wad
-				qboolean	fullpath_loaded = false;
+				Q_snprintf( texname, sizeof( texname ), "%s.mip", mt->name );
 
 				// check wads in reverse order
 				for( j = wadlist.count - 1; j >= 0; j-- )
@@ -844,21 +844,21 @@ load_wad_textures:
 					if( FS_FileExists( texpath, false ))
 					{
 						tx->gl_texturenum = GL_LoadTexture( texpath, NULL, 0, 0, filter );
-						fullpath_loaded = true;
 						break;
 					}
 				}
+			}
 
-				if( !fullpath_loaded ) // probably this never happens
-					tx->gl_texturenum = GL_LoadTexture( texname, NULL, 0, 0, filter );
+			// HQ failed, wad failed, so use internal texture (if present)
+			if( mt->offsets[0] > 0 && !tx->gl_texturenum )
+			{
+				// NOTE: imagelib detect miptex version by size
+				// 770 additional bytes is indicated custom palette
+				int size = (int)sizeof( mip_t ) + ((mt->width * mt->height * 85)>>6);
+				if( bmodel_version >= HLBSP_VERSION ) size += sizeof( short ) + 768;
 
-				if( !tx->gl_texturenum && load_external )
-				{
-					// in case we failed to loading 32-bit texture
-					MsgDev( D_ERROR, "Couldn't load %s\n", texname );
-					load_external = false;
-					goto load_wad_textures;
-				}
+				Q_snprintf( texname, sizeof( texname ), "#%s.mip", mt->name );
+				tx->gl_texturenum = GL_LoadTexture( texname, (byte *)mt, size, 0, filter );
 			}
 		}
 
@@ -2297,7 +2297,13 @@ static void Mod_LoadEntities( const dlump_t *l )
 				while( path )
 				{
 					char *end = Q_strchr( path, ';' );
-					if( !end ) break;
+					if( !end )
+					{
+						// if specified only once wad
+						if( !wadlist.count )
+							FS_FileBase( path, wadlist.wadnames[wadlist.count++] );
+						break;
+					}
 					Q_strncpy( wadpath, path, (end - path) + 1 );
 					FS_FileBase( wadpath, wadlist.wadnames[wadlist.count++] );
 					path += (end - path) + 1; // move pointer
@@ -3054,7 +3060,7 @@ Mod_LoadWorld
 Loads in the map and all submodels
 ==================
 */
-void Mod_LoadWorld( const char *name, uint *checksum, qboolean force )
+void Mod_LoadWorld( const char *name, uint *checksum, qboolean multiplayer )
 {
 	int	i;
 
@@ -3068,8 +3074,11 @@ void Mod_LoadWorld( const char *name, uint *checksum, qboolean force )
 		world.block_size = BLOCK_SIZE_MAX;
 	else world.block_size = BLOCK_SIZE_DEFAULT;
 
-	if( !Q_stricmp( cm_models[0].name, name ) && !force )
+	if( !Q_stricmp( cm_models[0].name, name ))
 	{
+		// recalc the checksum in force-mode
+		CRC32_MapFile( &world.checksum, worldmodel->name, multiplayer );
+
 		// singleplayer mode: server already loaded map
 		if( checksum ) *checksum = world.checksum;
 
@@ -3095,7 +3104,7 @@ void Mod_LoadWorld( const char *name, uint *checksum, qboolean force )
 	// load the newmap
 	world.loading = true;
 	worldmodel = Mod_ForName( name, true );
-	CRC32_MapFile( (dword *)&world.checksum, worldmodel->name );
+	CRC32_MapFile( (dword *)&world.checksum, worldmodel->name, multiplayer );
 	world.loading = false;
 
 	if( checksum ) *checksum = world.checksum;

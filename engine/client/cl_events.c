@@ -399,8 +399,8 @@ void CL_ParseEvent( sizebuf_t *msg )
 					VectorCopy( cl.refdef.cl_viewangles, args.angles );
 				}
 
-				VectorCopy( cl.frame.local.client.origin, args.origin );
-				VectorCopy( cl.frame.local.client.velocity, args.velocity );
+				VectorCopy( cl.frame.client.origin, args.origin );
+				VectorCopy( cl.frame.client.velocity, args.velocity );
 			}
 			else if( state )
 			{
@@ -492,12 +492,12 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 		VectorCopy( angles, args.angles );
 
 	if( !origin || VectorIsNull( origin ))
-		VectorCopy( cl.frame.local.client.origin, args.origin );
+		VectorCopy( cl.frame.client.origin, args.origin );
 	else
 		VectorCopy( origin, args.origin );
 
-	VectorCopy( cl.frame.local.client.velocity, args.velocity );
-	args.ducking = cl.frame.local.playerstate.usehull == 1;
+	VectorCopy( cl.frame.client.velocity, args.velocity );
+	args.ducking = cl.frame.client.bInDuck == 1;
 
 	args.fparam1 = fparam1;
 	args.fparam2 = fparam2;

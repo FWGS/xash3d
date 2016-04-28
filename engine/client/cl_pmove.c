@@ -158,7 +158,7 @@ void CL_AddLinksToPmove( void )
 		if( check->curstate.solid == SOLID_TRIGGER )
 			continue;
 
-		if( ( check->curstate.owner > 0) && cl.playernum == check->curstate.owner -1 )
+		if(( check->curstate.owner > 0 ) && cl.playernum == ( check->curstate.owner - 1 ))
 			continue;
 
 		// players will be added later
@@ -751,6 +751,114 @@ void CL_SetSolidEntities( void )
 	}
 }
 
+void CL_SetupPMove( playermove_t *pmove, local_state_t *from, usercmd_t *ucmd, qboolean runfuncs, double time )
+{
+	entity_state_t	*ps;
+	clientdata_t	*cd;
+
+	ps = &from->playerstate;
+	cd = &from->client;
+
+	pmove->player_index = ps->number - 1;
+	pmove->multiplayer = (cl.maxclients > 1) ? true : false;
+	pmove->runfuncs = runfuncs;
+	pmove->time = time * 1000.0f;
+	pmove->frametime = ucmd->msec / 1000.0f;
+	VectorCopy( ps->origin, pmove->origin );
+	VectorCopy( ps->angles, pmove->angles );
+	VectorCopy( pmove->angles, pmove->oldangles );
+	VectorCopy( cd->velocity, pmove->velocity );
+	VectorCopy( ps->basevelocity, pmove->basevelocity );
+	VectorCopy( cd->view_ofs, pmove->view_ofs );
+	VectorClear( pmove->movedir );
+	pmove->flDuckTime = cd->flDuckTime;
+	pmove->bInDuck = cd->bInDuck;
+	pmove->usehull = ps->usehull;
+	pmove->flTimeStepSound = cd->flTimeStepSound;
+	pmove->iStepLeft = ps->iStepLeft;
+	pmove->flFallVelocity = ps->flFallVelocity;
+	pmove->flSwimTime = cd->flSwimTime;
+	VectorCopy( cd->punchangle, pmove->punchangle );
+	pmove->flSwimTime = cd->flSwimTime;
+	pmove->flNextPrimaryAttack = 0.0f; // not used by PM_ code
+	pmove->effects = ps->effects;
+	pmove->flags = cd->flags;
+	pmove->gravity = ps->gravity;
+	pmove->friction = ps->friction;
+	pmove->oldbuttons = ps->oldbuttons;
+	pmove->waterjumptime = cd->waterjumptime;
+	pmove->dead = (cd->health <= 0.0f ) ? true : false;
+	pmove->deadflag = cd->deadflag;
+	pmove->spectator = (ps->spectator != 0);
+	pmove->movetype = ps->movetype;
+	pmove->onground = ps->onground;
+	pmove->waterlevel = cd->waterlevel;
+	pmove->watertype = cd->watertype;
+	pmove->maxspeed = clgame.movevars.maxspeed;
+	pmove->clientmaxspeed = cd->maxspeed;
+	pmove->iuser1 = cd->iuser1;
+	pmove->iuser2 = cd->iuser2;
+	pmove->iuser3 = cd->iuser3;
+	pmove->iuser4 = cd->iuser4;
+	pmove->fuser1 = cd->fuser1;
+	pmove->fuser2 = cd->fuser2;
+	pmove->fuser3 = cd->fuser3;
+	pmove->fuser4 = cd->fuser4;
+	VectorCopy( cd->vuser1, pmove->vuser1 );
+	VectorCopy( cd->vuser2, pmove->vuser2 );
+	VectorCopy( cd->vuser3, pmove->vuser3 );
+	VectorCopy( cd->vuser4, pmove->vuser4 );
+	pmove->cmd = *ucmd;	// setup current cmds	
+
+	Q_strncpy( pmove->physinfo, cd->physinfo, MAX_INFO_STRING );
+}
+
+void CL_FinishPMove( playermove_t *pmove, local_state_t *to )
+{
+	entity_state_t	*ps;
+	clientdata_t	*cd;
+
+	ps = &to->playerstate;
+	cd = &to->client;
+
+	cd->flags = pmove->flags;
+	cd->bInDuck = pmove->bInDuck;
+	cd->flTimeStepSound = pmove->flTimeStepSound;
+	cd->flDuckTime = pmove->flDuckTime;
+	cd->flSwimTime = (int)pmove->flSwimTime;
+	cd->waterjumptime = (int)pmove->waterjumptime;
+	cd->watertype = pmove->watertype;
+	cd->waterlevel = pmove->waterlevel;
+	cd->maxspeed = pmove->clientmaxspeed;
+	cd->deadflag = pmove->deadflag;
+	VectorCopy( pmove->velocity, cd->velocity );
+	VectorCopy( pmove->view_ofs, cd->view_ofs );
+	VectorCopy( pmove->origin, ps->origin );
+	VectorCopy( pmove->angles, ps->angles );
+	VectorCopy( pmove->basevelocity, ps->basevelocity );
+	VectorCopy( pmove->punchangle, cd->punchangle );
+	ps->oldbuttons = pmove->oldbuttons;
+	ps->friction = pmove->friction;
+	ps->movetype = pmove->movetype;
+	ps->onground = pmove->onground;
+	ps->effects = pmove->effects;
+	ps->usehull = pmove->usehull;
+	ps->iStepLeft = pmove->iStepLeft;
+	ps->flFallVelocity = pmove->flFallVelocity;
+	cd->iuser1 = pmove->iuser1;
+	cd->iuser2 = pmove->iuser2;
+	cd->iuser3 = pmove->iuser3;
+	cd->iuser4 = pmove->iuser4;
+	cd->fuser1 = pmove->fuser1;
+	cd->fuser2 = pmove->fuser2;
+	cd->fuser3 = pmove->fuser3;
+	cd->fuser4 = pmove->fuser4;
+	VectorCopy( pmove->vuser1, cd->vuser1 );
+	VectorCopy( pmove->vuser2, cd->vuser2 );
+	VectorCopy( pmove->vuser3, cd->vuser3 );
+	VectorCopy( pmove->vuser4, cd->vuser4 );
+}
+
 /*
 =================
 CL_RunUsercmd
@@ -758,124 +866,97 @@ CL_RunUsercmd
 Runs prediction code for user cmd
 =================
 */
-void CL_RunUsercmd(local_state_t * from, local_state_t * to, usercmd_t * u, qboolean runfuncs, double * pfElapsed, unsigned int random_seed)
+void CL_RunUsercmd( local_state_t *from, local_state_t *to, usercmd_t *u, qboolean runfuncs, double *time, unsigned int random_seed )
 {
 	usercmd_t cmd;
 	local_state_t temp;
 	usercmd_t split;
-	entity_state_t * fs;
-	entity_state_t * ts;
-	clientdata_t * fcd;
-	clientdata_t * tcd;
-	playermove_t *pmove = clgame.pmove;
 
-	while (u->msec > 50)
+	Q_memset( &temp, 0, sizeof( temp ));
+
+	while( u->msec > 50 )
 	{
 		split = *u;
 		split.msec /= 2.0;
-		CL_RunUsercmd( from, &temp, &split, runfuncs, pfElapsed, random_seed );
+		CL_RunUsercmd( from, &temp, &split, runfuncs, time, random_seed );
 
 		from = &temp;
 		u = &split;
 	}
 
-	cmd = *u;
+	cmd = *u;	// deal with local copy
 	*to = *from;
 
-	fs = &from->playerstate;
-	fcd = &from->client;
-	ts = &to->playerstate;
-	tcd = &to->client;
+	// setup playermove state
+	CL_SetupPMove( clgame.pmove, from, &cmd, runfuncs, *time );
 
-	pmove->time = *pfElapsed * 1000.0;
-	pmove->server = 0;
-	pmove->multiplayer = (cl.maxclients > 1);
-	pmove->runfuncs = runfuncs;
-	pmove->frametime = cmd.msec / 1000.0;
-	pmove->player_index = fs->number - 1;
-	pmove->flags = fcd->flags;
-	pmove->bInDuck = fcd->bInDuck;
-	pmove->flTimeStepSound = fcd->flTimeStepSound;
-	pmove->flDuckTime = fcd->flDuckTime;
-	pmove->flSwimTime = fcd->flSwimTime;
-	pmove->waterjumptime = fcd->waterjumptime;
-	pmove->waterlevel = fcd->waterlevel;
-	pmove->watertype = fcd->watertype;
-	pmove->onground = fcd->flags & FL_ONGROUND;
-	pmove->deadflag = fcd->deadflag;
-	VectorCopy(fcd->velocity, pmove->velocity);
-	VectorCopy(fcd->view_ofs, pmove->view_ofs);
-	VectorCopy(fs->origin, pmove->origin);
-	VectorCopy(fs->basevelocity, pmove->basevelocity);
-	VectorCopy(fcd->punchangle, pmove->punchangle);
-	VectorCopy(fs->angles, pmove->angles);
-	VectorCopy(fs->angles, pmove->oldangles);
-	pmove->friction = fs->friction;
-	pmove->usehull = fs->usehull;
-	pmove->oldbuttons = fs->oldbuttons;
-	pmove->dead = (fcd->health <= 0.0f ) ? true : false;
-	pmove->spectator = (fs->spectator != 0);
-	pmove->movetype = fs->movetype;
-	pmove->gravity = fs->gravity;
-	pmove->effects = fs->effects;
-	pmove->iStepLeft = fs->iStepLeft;
-	pmove->flFallVelocity = fs->flFallVelocity;
-	Q_strncpy( pmove->physinfo, fcd->physinfo, MAX_INFO_STRING );
-	pmove->maxspeed = clgame.movevars.maxspeed;
-	pmove->clientmaxspeed = fcd->maxspeed;
-	pmove->cmd = cmd;
-	pmove->iuser1 = fcd->iuser1;
-	pmove->iuser2 = fcd->iuser2;
-	pmove->iuser3 = fcd->iuser3;
-	pmove->iuser4 = fcd->iuser4;
-	pmove->fuser1 = fcd->fuser1;
-	pmove->fuser2 = fcd->fuser2;
-	pmove->fuser3 = fcd->fuser3;
-	pmove->fuser4 = fcd->fuser4;
-	VectorCopy(fcd->vuser1, pmove->vuser1);
-	VectorCopy(fcd->vuser2, pmove->vuser2);
-	VectorCopy(fcd->vuser3, pmove->vuser3);
-	VectorCopy(fcd->vuser4, pmove->vuser4);
+	// motor!
+	clgame.dllFuncs.pfnPlayerMove( clgame.pmove, false );
 
-	clgame.dllFuncs.pfnPlayerMove( pmove, false );
+	// copy results back to client
+	CL_FinishPMove( clgame.pmove, to );
 
-	tcd->flags = pmove->flags;
-	tcd->bInDuck = pmove->bInDuck;
-	tcd->flTimeStepSound = pmove->flTimeStepSound;
-	tcd->flDuckTime = (int)pmove->flDuckTime;
-	tcd->flSwimTime = (int)pmove->flSwimTime;
-	tcd->waterjumptime = (int)pmove->waterjumptime;
-	tcd->watertype = pmove->watertype;
-	tcd->waterlevel = pmove->waterlevel;
-	tcd->maxspeed = pmove->clientmaxspeed;
-	tcd->deadflag = pmove->deadflag;
-	VectorCopy(pmove->velocity, tcd->velocity);
-	VectorCopy(pmove->view_ofs, tcd->view_ofs);
-	VectorCopy(pmove->origin, ts->origin);
-	VectorCopy(pmove->basevelocity, ts->basevelocity);
-	VectorCopy(pmove->punchangle, tcd->punchangle);
-	ts->oldbuttons = pmove->oldbuttons;
-	ts->friction = pmove->friction;
-	ts->movetype = pmove->movetype;
-	ts->effects = pmove->effects;
-	ts->usehull = pmove->usehull;
-	ts->iStepLeft = pmove->iStepLeft;
-	ts->flFallVelocity = pmove->flFallVelocity;
-	tcd->iuser1 = pmove->iuser1;
-	tcd->iuser2 = pmove->iuser2;
-	tcd->iuser3 = pmove->iuser3;
-	tcd->iuser4 = pmove->iuser4;
-	tcd->fuser1 = pmove->fuser1;
-	tcd->fuser2 = pmove->fuser2;
-	tcd->fuser3 = pmove->fuser3;
-	tcd->fuser4 = pmove->fuser4;
-	VectorCopy(pmove->vuser1, tcd->vuser1);
-	VectorCopy(pmove->vuser2, tcd->vuser2);
-	VectorCopy(pmove->vuser3, tcd->vuser3);
-	VectorCopy(pmove->vuser4, tcd->vuser4);
+	clgame.dllFuncs.pfnPostRunCmd( from, to, &cmd, runfuncs, *time, random_seed );
+	*time += (double)cmd.msec / 1000.0;
+}
 
-	clgame.dllFuncs.pfnPostRunCmd(from, to, &cmd, runfuncs, *pfElapsed, random_seed);
-	*pfElapsed += cmd.msec / 1000.0;
+/*
+===================
+CL_CheckPredictionError
+===================
+*/
+void CL_CheckPredictionError( void )
+{
+	int	frame;
+	vec3_t	delta;
+	float	len, maxspd;
+
+	if( !CL_IsPredicted( )) return;
+
+	// calculate the last usercmd_t we sent that the server has processed
+	frame = ( cls.netchan.incoming_acknowledged ) & CL_UPDATE_MASK;
+
+	// compare what the server returned with what we had predicted it to be
+	VectorSubtract( cl.frame.playerstate[cl.playernum].origin, cl.predicted_origins[frame], delta );
+
+	maxspd = ( clgame.movevars.maxvelocity * host.frametime );
+	len = VectorLength( delta );
+
+	// save the prediction error for interpolation
+	if(( cl.frame.client.flags & EF_NOINTERP ) || len > maxspd )
+	{
+		// a teleport or something or gamepaused
+		VectorClear( cl.prediction_error );
+	}
+	else
+	{
+		if( cl_showerror->value && len > 0.5f )
+			MsgDev( D_ERROR, "prediction error on %i: %g\n", cl.parsecount, len );
+
+		VectorCopy( cl.frame.playerstate[cl.playernum].origin, cl.predicted_origins[frame] );
+
+		// save for error itnerpolation
+		VectorCopy( delta, cl.prediction_error );
+	}
+}
+
+/*
+===========
+CL_PostRunCmd
+
+used while predicting is off but local weapons is on
+===========
+*/
+void CL_PostRunCmd( usercmd_t *ucmd, int random_seed )
+{
+	local_state_t	from, to;
+
+	memcpy( from.weapondata, cl.frame.weapondata, sizeof( from.weapondata ));
+	from.playerstate = cl.frame.playerstate[cl.playernum];
+	from.client = cl.frame.client;
+	to = from;
+
+	clgame.dllFuncs.pfnPostRunCmd( &from, &to, ucmd, true, cl.time, random_seed );
 }
 
 /*
@@ -888,7 +969,9 @@ Sets cl.predicted_origin and cl.predicted_angles
 void CL_PredictMovement( void )
 {
 	double	time;
+	usercmd_t		*ucmd;
 	int		frame = 1;
+	qboolean		runfuncs = false;
 	int		ack, outgoing_command;
 	int		current_command;
 	int		current_command_mod;
@@ -902,7 +985,7 @@ void CL_PredictMovement( void )
 		VectorCopy( cl.refdef.cmd->viewangles, cl.refdef.cl_viewangles );
 	}
 
-	if( cl.refdef.paused || cls.key_dest == key_menu ) return;
+	if( !CL_IsInGame( )) return;
 	
 	pfnSetUpPlayerPrediction( false, false );
 
@@ -913,30 +996,35 @@ void CL_PredictMovement( void )
 	if( !cl_predict->value )
 	{
 		//simulate predict
-		local_state_t t1, t2;
+		/*local_state_t t1, t2;
 		Q_memset( &t1, 0, sizeof( local_state_t ));
 		Q_memset( &t2, 0, sizeof( local_state_t ));
 		t1.client = cl.frame.local.client;
 		Q_memcpy( t1.weapondata, cl.frame.local.weapondata, sizeof( t1.weapondata ));
 		t1.playerstate = cl.frame.playerstate[cl.playernum];
 		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, true, cl.time, cls.lastoutgoingcommand );
-		cl.predicted_viewmodel = t2.client.viewmodel;
+		cl.predicted_viewmodel = t2.client.viewmodel;*/
+
+		// run commands even if client predicting is disabled - client expected it
+		CL_PostRunCmd( cl.refdef.cmd, cls.lastoutgoingcommand );
 		cl.scr_fov = t2.client.fov;
+
 		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
 			cl.scr_fov = 90.0f;
+
 		return;
 	}
 
 	if( !CL_IsPredicted( ))
 	{
-		local_state_t t1, t2;
-		Q_memset( &t1, 0, sizeof( local_state_t ));
-		Q_memset( &t2, 0, sizeof( local_state_t ));
-		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, false, cl.time, cls.lastoutgoingcommand );
+		// run commands even if client predicting is disabled - client expected it
+		CL_PostRunCmd( cl.refdef.cmd, cls.lastoutgoingcommand );
 
 		cl.scr_fov = t2.client.fov;
+
 		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
 			cl.scr_fov = 90.0f;
+
 		return;
 	}
 
@@ -944,9 +1032,9 @@ void CL_PredictMovement( void )
 	outgoing_command = cls.netchan.outgoing_sequence;
 
 	from = &cl.predict[cl.parsecountmod];
+	Q_memcpy( from->weapondata, cl.frame.weapondata, sizeof( from->weapondata ));
 	from->playerstate = cl.frame.playerstate[cl.playernum];
-	from->client = cl.frame.local.client;
-	Q_memcpy( from->weapondata, cl.frame.local.weapondata, sizeof( from->weapondata ));
+	from->client = cl.frame.client;
 
 	time = cl.frame.time;
 
@@ -956,7 +1044,7 @@ void CL_PredictMovement( void )
 	while( 1 )
 	{
 		// we've run too far forward
-		if( frame >= CL_UPDATE_BACKUP - 1 )
+		if( frame >= CL_UPDATE_MASK )
 			break;
 
 		// Incoming_acknowledged is the last usercmd the server acknowledged having acted upon
@@ -968,26 +1056,28 @@ void CL_PredictMovement( void )
 			break;
 
 		to = &cl.predict[( cl.parsecountmod + frame ) & CL_UPDATE_MASK];
+		runfuncs = !cl.commands[current_command_mod].processedfuncs;
+		ucmd = &cl.commands[current_command_mod].cmd;
 
-		CL_RunUsercmd( from, to, &cl.cmds[current_command_mod],
-			cl.runfuncs[current_command_mod],
-			&time, cls.netchan.incoming_acknowledged + frame );
+		CL_RunUsercmd( from, to, ucmd, runfuncs, &time, cls.netchan.incoming_acknowledged + frame );
+		cl.commands[current_command_mod].processedfuncs = true;
 
-		cl.runfuncs[current_command_mod] = false;
+		// save for debug checking
+		VectorCopy( to->playerstate.origin, cl.predicted_origins[current_command_mod] );
 
 		from = to;
 		frame++;
 	}
 
 	if( to )
-{
-	cl.predicted_viewmodel = to->client.viewmodel;
-	cl.scr_fov = to->client.fov;
-	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
-		cl.scr_fov = 90.0f;
-	VectorCopy( to->playerstate.origin, cl.predicted_origin );
-	VectorCopy( to->client.velocity, cl.predicted_velocity );
-	VectorCopy( to->client.view_ofs, cl.predicted_viewofs );
-	VectorCopy( to->client.punchangle, cl.predicted_punchangle );
-}
+	{
+		cl.predicted_viewmodel = to->client.viewmodel;
+		cl.scr_fov = to->client.fov;
+		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+			cl.scr_fov = 90.0f;
+		VectorCopy( to->playerstate.origin, cl.predicted_origin );
+		VectorCopy( to->client.velocity, cl.predicted_velocity );
+		VectorCopy( to->client.view_ofs, cl.predicted_viewofs );
+		VectorCopy( to->client.punchangle, cl.predicted_punchangle );
+	}
 }

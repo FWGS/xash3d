@@ -229,7 +229,7 @@ qboolean CRC32_File( dword *crcvalue, const char *filename )
 	return true;
 }
 
-qboolean CRC32_MapFile( dword *crcvalue, const char *filename )
+qboolean CRC32_MapFile( dword *crcvalue, const char *filename, qboolean multiplayer )
 {
 	file_t	*f;
 	dheader_t	*header;
@@ -242,7 +242,7 @@ qboolean CRC32_MapFile( dword *crcvalue, const char *filename )
 	if( !crcvalue ) return false;
 
 	// always calc same checksum for singleplayer
-	if( cls.state >= ca_connected && SV_Active() && CL_GetMaxClients() == 1 )
+	if( multiplayer == false )
 	{
 		*crcvalue = (('H'<<24)+('S'<<16)+('A'<<8)+'X');
 		return true;

@@ -25,5 +25,6 @@ GNU General Public License for more details.
 #define ENGINE_COMPENSATE_QUAKE_BUG	(1<<5)	// compensate stupid quake bug (inverse pitch) for mods where this bug is fixed
 #define ENGINE_DISABLE_HDTEXTURES	(1<<6)	// disable support of HD-textures in case custom renderer have separate way to load them
 #define ENGINE_COMPUTE_STUDIO_LERP	(1<<7)	// enable MOVETYPE_STEP lerping back in engine
+#define ENGINE_THREADED_MAIN_LOOP	(1<<8) // simulate dedictated thread for main engine loop (prefomance)
 
 #endif//FEATURES_H

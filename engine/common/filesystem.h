@@ -62,7 +62,8 @@ infotable	dlumpinfo_t[dwadinfo_t->numlumps]
 #define IDWAD3HEADER	(('3'<<24)+('D'<<16)+('A'<<8)+'W')	// little-endian "WAD3" half-life wads
 
 #define WAD3_NAMELEN	16
-#define MAX_FILES_IN_WAD	8192
+#define HINT_NAMELEN	5	// e.g. _mask, _norm
+#define MAX_FILES_IN_WAD	65535	// real limit as above <2Gb size not a lumpcount
 
 // hidden virtual lump types
 #define TYP_ANY		-1	// any type can be accepted
@@ -79,14 +80,14 @@ typedef struct
 
 typedef struct
 {
-	int		filepos;
-	int		disksize;
+	int		filepos;		// file offset in WAD
+	int		disksize;		// compressed or uncompressed
 	int		size;		// uncompressed
 	signed char		type;
-	signed char		compression;	// probably not used
-	signed char		pad1;
-	signed char		pad2;
-	char		name[16];		// must be null terminated
+	signed char		attribs;		// file attribs
+	signed char		img_type;		// IMG_*
+	signed char		pad;
+	char		name[WAD3_NAMELEN];		// must be null terminated
 } dlumpinfo_t;
 
 

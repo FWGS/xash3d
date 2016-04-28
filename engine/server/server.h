@@ -179,12 +179,11 @@ typedef struct server_s
 typedef struct
 {
 	double		senttime;
-	float		raw_ping;
+	float		ping_time;
 	float		latency;
 
 	clientdata_t	clientdata;
-	weapon_data_t	weapondata[MAX_WEAPONS];
-	weapon_data_t	oldweapondata[MAX_WEAPONS];	// g-cont. The fucking Cry Of Fear a does corrupting memory after the weapondata!!!
+	weapon_data_t	weapondata[64];
 
 	int  		num_entities;
 	int  		first_entity;		// into the circular sv_packet_entities[]

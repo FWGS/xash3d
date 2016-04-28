@@ -107,6 +107,7 @@ void Image_Reset( void )
 	image.fogParams[1] = 0;
 	image.fogParams[2] = 0;
 	image.fogParams[3] = 0;
+	image.encode = 0;
 
 	// pointers will be saved with prevoius picture struct
 	// don't care about it
@@ -146,6 +147,7 @@ rgbdata_t *ImagePack( void )
 		pack->buffer = image.rgba;
 		pack->width = image.width;
 		pack->height = image.height;
+		pack->depth = image.depth;
 		pack->type = image.type;
 		pack->size = image.size;
 	}
@@ -159,7 +161,7 @@ rgbdata_t *ImagePack( void )
 	pack->flags = image.flags;
 	pack->numMips = image.num_mips;
 	pack->palette = image.palette;
-	pack->depth = image.depth;
+	pack->encode = image.encode;
 	
 	return pack;
 }

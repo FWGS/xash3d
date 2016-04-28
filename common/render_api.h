@@ -47,6 +47,7 @@ GNU General Public License for more details.
 #define PARM_TEX_TYPE	11
 #define PARM_TEX_CACHEFRAME	12	// compare with worldmodel->needload
 #define PARM_TEX_GLFORMAT	13	// get a texture GL-format
+#define PARM_TEX_ENCODE	14	// custom encoding for DXT image
 // reserved
 #define PARM_WORLD_VERSION	16	// return the version of bsp
 #define PARM_SKY_SPHERE	17	// sky is quake sphere ?
@@ -121,7 +122,7 @@ typedef enum
 	TF_STATIC		= (1<<21),	// a marker for purge mechanism (not used by engine)
 	TF_TEXTURE_RECTANGLE= (1<<22),	// this is GL_TEXTURE_RECTANGLE
 	TF_ALPHA_BORDER	= (1<<23),	// clamp to (0,0,0,255) (probably no difference)
-	TF_IMAGE_PROGRAM	= (1<<24),	// enable image program support like in Doom3
+
 	TF_ALPHACONTRAST	= (1<<25),	// special texture flags for internal usage
 	TF_FLOAT		= (1<<26),	// float textures
 	TF_NOCOMPARE	= (1<<27),	// disable comparing for depth textures

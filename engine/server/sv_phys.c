@@ -259,7 +259,7 @@ void SV_Impact( edict_t *e1, edict_t *e2, trace_t *trace )
 {
 	svgame.globals->time = sv.time;
 
-	if(( e1->v.flags|e2->v.flags ) & FL_SPECTATOR )
+	if(( e1->v.flags|e2->v.flags ) & FL_KILLME )
 		return;
 
 	if( e1->v.groupinfo && e2->v.groupinfo )

@@ -883,7 +883,7 @@ void CL_DrawCrosshair( void )
 
 	pPlayer = CL_GetLocalPlayer();
 
-	if( cl.frame.local.client.deadflag != DEAD_NO || cl.frame.local.client.flags & FL_FROZEN )
+	if( cl.frame.client.deadflag != DEAD_NO || cl.frame.client.flags & FL_FROZEN )
 		return;
 
 	// any camera on
@@ -1841,7 +1841,7 @@ pfnPhysInfo_ValueForKey
 */
 static const char* pfnPhysInfo_ValueForKey( const char *key )
 {
-	return Info_ValueForKey( cl.frame.local.client.physinfo, key );
+	return Info_ValueForKey( cl.frame.client.physinfo, key );
 }
 
 /*
@@ -1864,7 +1864,7 @@ value that come from server
 */
 static float pfnGetClientMaxspeed( void )
 {
-	return cl.frame.local.client.maxspeed;
+	return cl.frame.client.maxspeed;
 }
 
 /*
@@ -2216,7 +2216,7 @@ pfnLocalPlayerDucking
 */
 int pfnLocalPlayerDucking( void )
 {
-	return cl.frame.local.client.bInDuck;
+	return cl.frame.client.bInDuck;
 }
 
 /*
@@ -2228,7 +2228,11 @@ pfnLocalPlayerViewheight
 void pfnLocalPlayerViewheight( float *view_ofs )
 {
 	// predicted or smoothed
-	if( view_ofs ) VectorCopy( cl.frame.local.client.view_ofs, view_ofs );
+	if( !view_ofs ) return;
+
+	if( CL_IsPredicted( ))
+		VectorCopy( cl.predicted_viewofs, view_ofs );		
+	else VectorCopy( cl.frame.client.view_ofs, view_ofs );
 }
 
 /*

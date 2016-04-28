@@ -1,8 +1,8 @@
-CC ?= gcc
+CC ?= gcc-5.3.0
 CXX ?= g++
-CFLAGS ?= -Og -ggdb
+CFLAGS ?= -Og -ggdb -fsanitize=undefined -fsanitize=address
 LDFLAGS =
-LIBS = -lm
+LIBS = -lm -fsanitize=undefined -fsanitize=address
 LBITS := $(shell getconf LONG_BIT)
 
 ifeq ($(LBITS),64)

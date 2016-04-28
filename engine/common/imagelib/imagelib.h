@@ -68,6 +68,7 @@ typedef struct imglib_s
 	word			height;
 	word			depth;
 	byte			num_mips; // mipmap count
+	word			encode;		// custom encode type
 	uint			type;		// main type switcher
 	uint			flags;		// additional image flags
 	size_t			size;		// image rgba size (for bounds checking)

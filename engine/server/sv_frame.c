@@ -454,7 +454,7 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 	frame = &cl->frames[cl->netchan.outgoing_sequence & SV_UPDATE_MASK];
 
 	frame->senttime = host.realtime;
-	frame->raw_ping = -1.0f;
+	frame->ping_time = -1.0f;
 	frame->latency = -1.0f;
 
 	if( cl->chokecount != 0 )

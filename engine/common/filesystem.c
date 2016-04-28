@@ -3159,14 +3159,29 @@ WADSYSTEM PRIVATE COMMON FUNCTIONS
 =============================================================================
 */
 // associate extension with wad type
-static const wadtype_t wad_types[] =
+static const wadtype_t wad_types[6] =
 {
-{ "pal", TYP_QPAL	}, // palette
-{ "lmp", TYP_QPIC	}, // quake1, hl pic
-{ "fnt", TYP_QFONT	}, // hl qfonts
-{ "mip", TYP_MIPTEX	}, // hl/q1 mip
-{ "raw", TYP_RAW	}, // signed raw data
-{ NULL,  TYP_NONE	}
+{ "pal", TYP_PALETTE	}, // palette
+{ "dds", TYP_DDSTEX 	}, // DDS image
+{ "lmp", TYP_GFXPIC		}, // quake1, hl pic
+{ "fnt", TYP_QFONT		}, // hl qfonts
+{ "mip", TYP_MIPTEX		}, // hl/q1 mip
+{ NULL,  TYP_NONE		}
+};
+
+// suffix converts to img_type and back
+static const wadtype_t wad_hints[10] =
+{
+{ "",	 IMG_DIFFUSE	}, // no suffix
+{ "_mask", IMG_ALPHAMASK	}, // alpha-channel stored to another lump
+{ "_norm", IMG_NORMALMAP	}, // indexed normalmap
+{ "_spec", IMG_GLOSSMAP	}, // grayscale\color specular
+{ "_gpow", IMG_GLOSSPOWER	}, // grayscale gloss power
+{ "_hmap", IMG_HEIGHTMAP	}, // heightmap (can be converted to normalmap)
+{ "_luma", IMG_LUMA		}, // self-illuminate parts on the diffuse
+{ "_adec", IMG_DECAL_ALPHA	}, // classic HL-decal (with alpha-channel)
+{ "_cdec", IMG_DECAL_COLOR	}, // paranoia decal (base 127 127 127)
+{ NULL,    0		}  // terminator
 };
 
 static char W_TypeFromExt( const char *lumpname )
@@ -3180,12 +3195,19 @@ static char W_TypeFromExt( const char *lumpname )
 	
 	for( type = wad_types; type->ext; type++ )
 	{
-		if(!Q_stricmp( ext, type->ext ))
+		if( !Q_stricmp( ext, type->ext ))
 			return type->type;
 	}
 	return TYP_NONE;
 }
 
+/*
+===========
+W_ExtFromType
+
+Convert type to extension
+===========
+*/
 static const char *W_ExtFromType( char lumptype )
 {
 	const wadtype_t	*type;
@@ -3202,12 +3224,60 @@ static const char *W_ExtFromType( char lumptype )
 	return "";
 }
 
+/*
+===========
+W_HintFromSuf
+
+Convert name suffix into image type
+===========
+*/
+char W_HintFromSuf( const char *lumpname )
+{
+	char		barename[64];
+	char		suffix[8];
+	const wadtype_t	*hint;
+
+	// trying to extract hint from the name
+	FS_FileBase( lumpname, barename );
+	Q_strncpy( suffix, barename + Q_strlen( barename ) - HINT_NAMELEN, sizeof( suffix ));
+
+	// we not known about filetype, so match only by filename
+	for( hint = wad_hints; hint->ext; hint++ )
+	{
+		if( !Q_stricmp( suffix, hint->ext ))
+			return hint->type;
+	}
+
+	// no any special type was found
+	return IMG_DIFFUSE;
+}
+
 static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype )
 {
-	int	left, right, middle;
+	char		img_type = IMG_DIFFUSE;
+	char		barename[64], suffix[8];
+	int		left, right;
+	const wadtype_t	*hint;
 
 	if( !wad || !wad->lumps || matchtype == TYP_NONE )
 		return NULL;
+
+	// trying to extract hint from the name
+	FS_FileBase( name, barename );
+	Q_strncpy( suffix, barename + Q_strlen( barename ) - HINT_NAMELEN, sizeof( suffix ));
+
+	// we not known about filetype, so match only by filename
+	for( hint = wad_hints; hint->ext; hint++ )
+	{
+		if( !Q_stricmp( suffix, hint->ext ))
+		{
+			img_type = hint->type;
+			break;
+		}
+	}
+
+	if( img_type != IMG_DIFFUSE )
+		barename[Q_strlen( barename ) - HINT_NAMELEN] = '\0'; // kill the suffix
 
 	// look for the file (binary search)
 	left = 0;
@@ -3215,22 +3285,26 @@ static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char match
 	
 	while( left <= right )
 	{
-		int	diff;
+		int	middle = (left + right) / 2;
+		int	diff = Q_stricmp( wad->lumps[middle].name, barename );
 
-		middle = (left + right) / 2;
-		diff = Q_stricmp( wad->lumps[middle].name, name );
-
-		// Found it
 		if( !diff )
 		{
-			if( matchtype == TYP_ANY || matchtype == wad->lumps[middle].type )
+			if( wad->lumps[middle].img_type > img_type )
+				diff = 1;
+			else if( wad->lumps[middle].img_type < img_type )
+				diff = -1;
+			else if(( matchtype == TYP_ANY ) || ( matchtype == wad->lumps[middle].type ))
 				return &wad->lumps[middle]; // found
-			else break;
+			else if( wad->lumps[middle].type < matchtype )
+				diff = 1;
+			else if( wad->lumps[middle].type > matchtype )
+				diff = -1;
+			else break; // not found
 		}
 
 		// if we're too far in the list
-		if( diff > 0 )
-			right = middle - 1;
+		if( diff > 0 ) right = middle - 1;
 		else left = middle + 1;
 	}
 
@@ -3244,10 +3318,18 @@ FS_AddFileToWad
 Add a file to the list of files contained into a package
 ====================
 */
-static dlumpinfo_t *W_AddFileToWad( const char *name, wfile_t *wad, int filepos, int packsize, int realsize, char type, char compression )
+static dlumpinfo_t *W_AddFileToWad( const char *name, wfile_t *wad, dlumpinfo_t *newlump )
 {
-	int		left, right, middle;
+	int		left, right;
 	dlumpinfo_t	*plump;
+
+	// convert all qmip types to miptex
+	if( newlump->type == TYP_RAWDATA )
+		newlump->type = TYP_MIPTEX;
+
+	// check for Quake 'conchars' issues (only lmp loader supposed to read this lame pic)
+	if( !Q_stricmp( newlump->name, "conchars" ) && newlump->type == TYP_RAWDATA )
+		newlump->type = TYP_GFXPIC; 
 
 	// look for the slot we should put that file into (binary search)
 	left = 0;
@@ -3255,38 +3337,34 @@ static dlumpinfo_t *W_AddFileToWad( const char *name, wfile_t *wad, int filepos,
 
 	while( left <= right )
 	{
-		int	diff;
+		int	middle = ( left + right ) / 2;
+		int	diff = Q_stricmp( wad->lumps[middle].name, name );
 
-		middle = ( left + right ) / 2;
-		diff = Q_stricmp( wad->lumps[middle].name, name );
-
-		// If we found the file, there's a problem
-		if( !diff ) MsgDev( D_NOTE, "Wad %s contains the file %s several times\n", wad->filename, name );
+		if( !diff )
+		{
+			if( wad->lumps[middle].img_type > newlump->img_type )
+				diff = 1;
+			else if( wad->lumps[middle].img_type < newlump->img_type )			
+				diff = -1;
+			else if( wad->lumps[middle].type < newlump->type )
+				diff = 1;
+			else if( wad->lumps[middle].type > newlump->type )
+				diff = -1;
+			else MsgDev( D_NOTE, "Wad %s contains the file %s several times\n", wad->filename, name );
+		}
 
 		// If we're too far in the list
 		if( diff > 0 ) right = middle - 1;
 		else left = middle + 1;
 	}
 
-	// We have to move the right of the list by one slot to free the one we need
+	// we have to move the right of the list by one slot to free the one we need
 	plump = &wad->lumps[left];
-	Q_memmove( plump + 1, plump, ( wad->numlumps - left ) * sizeof( *plump ));
+	memmove( plump + 1, plump, ( wad->numlumps - left ) * sizeof( *plump ));
 	wad->numlumps++;
 
-	Q_memcpy( plump->name, name, sizeof( plump->name ));
-	plump->filepos = filepos;
-	plump->disksize = realsize;
-	plump->size = packsize;
-	plump->compression = compression;
-
-	// convert all qmip types to miptex
-	if( type == TYP_QMIP )
-		plump->type = TYP_MIPTEX;
-	else plump->type = type;
-
-	// check for Quake 'conchars' issues (only lmp loader supposed to read this lame pic)
-	if( !Q_stricmp( plump->name, "conchars" ) && plump->type == TYP_QMIP )
-		plump->type = TYP_QPIC; 
+	*plump = *newlump;
+	memcpy( plump->name, name, sizeof( plump->name ));
 
 	return plump;
 }
@@ -3325,7 +3403,7 @@ static qboolean W_ReadLumpTable( wfile_t *wad )
 		k = Q_strlen( Q_strrchr( name, '*' ));
 		if( k ) name[Q_strlen( name ) - k] = '!'; // quake1 issues (can't save images that contain '*' symbol)
 
-		W_AddFileToWad( name, wad, srclumps[i].filepos, srclumps[i].size, srclumps[i].disksize, srclumps[i].type, srclumps[i].compression );
+		W_AddFileToWad( name, wad, &srclumps[i] );
 	}
 
 	// release source lumps
