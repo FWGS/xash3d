@@ -578,10 +578,10 @@ static void stack_trace( PEXCEPTION_POINTERS pInfo )
 		DWORD64 displacement = 0;
 		if( SymFromAddr( process, stackframe.AddrPC.Offset, &displacement, symbol ) )
 		{
-			len += snprintf( message + len, 1024 - len, "% 2d %p %s (", i, stackframe.AddrPC.Offset, symbol->Name );
+			len += snprintf( message + len, 1024 - len, "% 2d %p %s (", i, (void*)stackframe.AddrPC.Offset, symbol->Name );
 		}
 		else
-			len += snprintf( message + len, 1024 - len, "% 2d %p(", i, stackframe.AddrPC.Offset );
+			len += snprintf( message + len, 1024 - len, "% 2d %p(", i, (void*)stackframe.AddrPC.Offset );
 		len += ModuleName( process, message + len, stackframe.AddrPC.Offset, 1024 - len );
 		len += snprintf( message + len, 1024 - len, ")\n");
 
