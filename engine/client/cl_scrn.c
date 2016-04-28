@@ -124,7 +124,7 @@ void SCR_DrawPos( void )
 	if( !cl_showpos->integer || cl.background ) return;
 
 	pPlayer = CL_GetLocalPlayer();
-	speed = VectorLength( cl.frame.local.client.velocity );
+	speed = VectorLength( cl.frame.client.velocity );
 
 	Q_snprintf( msg, MAX_SYSPATH,
 	"pos: %.2f %.2f %.2f\n"

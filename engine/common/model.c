@@ -832,9 +832,9 @@ static void Mod_LoadTextures( const dlump_t *l )
 				else MsgDev( D_NOTE, "loading HQ: %s\n", texname );
 			}
 			// trying wad texture (force while r_wadtextures is 1)
-			if( !load_external && ( r_wadtextures->integer || mt->offsets[0] <= 0 ))
+			if( !load_external && ( r_wadtextures->integer || mt.offsets[0] <= 0 ))
 			{
-				Q_snprintf( texname, sizeof( texname ), "%s.mip", mt->name );
+				Q_snprintf( texname, sizeof( texname ), "%s.mip", mt.name );
 
 				// check wads in reverse order
 				for( j = wadlist.count - 1; j >= 0; j-- )
@@ -850,15 +850,15 @@ static void Mod_LoadTextures( const dlump_t *l )
 			}
 
 			// HQ failed, wad failed, so use internal texture (if present)
-			if( mt->offsets[0] > 0 && !tx->gl_texturenum )
+			if( mt.offsets[0] > 0 && !tx->gl_texturenum )
 			{
 				// NOTE: imagelib detect miptex version by size
 				// 770 additional bytes is indicated custom palette
-				int size = (int)sizeof( mip_t ) + ((mt->width * mt->height * 85)>>6);
+				int size = (int)sizeof( mip_t ) + ((mt.width * mt.height * 85)>>6);
 				if( bmodel_version >= HLBSP_VERSION ) size += sizeof( short ) + 768;
 
-				Q_snprintf( texname, sizeof( texname ), "#%s.mip", mt->name );
-				tx->gl_texturenum = GL_LoadTexture( texname, (byte *)mt, size, 0, filter );
+				Q_snprintf( texname, sizeof( texname ), "#%s.mip", mt.name );
+				tx->gl_texturenum = GL_LoadTexture( texname, (byte*)&mt, size, 0, filter );
 			}
 		}
 

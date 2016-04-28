@@ -957,6 +957,9 @@ void CL_PostRunCmd( usercmd_t *ucmd, int random_seed )
 	to = from;
 
 	clgame.dllFuncs.pfnPostRunCmd( &from, &to, ucmd, true, cl.time, random_seed );
+	cl.scr_fov = to.client.fov;
+	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+	   cl.scr_fov = 90.0f;
 }
 
 /*
@@ -996,20 +999,20 @@ void CL_PredictMovement( void )
 	if( !cl_predict->value )
 	{
 		//simulate predict
-		/*local_state_t t1, t2;
+		local_state_t t1, t2;
 		Q_memset( &t1, 0, sizeof( local_state_t ));
 		Q_memset( &t2, 0, sizeof( local_state_t ));
 		t1.client = cl.frame.local.client;
 		Q_memcpy( t1.weapondata, cl.frame.local.weapondata, sizeof( t1.weapondata ));
 		t1.playerstate = cl.frame.playerstate[cl.playernum];
 		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, true, cl.time, cls.lastoutgoingcommand );
-		cl.predicted_viewmodel = t2.client.viewmodel;*/
+		cl.predicted_viewmodel = t2.client.viewmodel;
 
 		// run commands even if client predicting is disabled - client expected it
-		CL_PostRunCmd( cl.refdef.cmd, cls.lastoutgoingcommand );
-		cl.scr_fov = t2.client.fov;
+		//CL_PostRunCmd( cl.refdef.cmd, cls.lastoutgoingcommand );
 
-		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+		 cl.scr_fov = t2.client.fov;
+		 if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
 			cl.scr_fov = 90.0f;
 
 		return;
@@ -1020,10 +1023,10 @@ void CL_PredictMovement( void )
 		// run commands even if client predicting is disabled - client expected it
 		CL_PostRunCmd( cl.refdef.cmd, cls.lastoutgoingcommand );
 
-		cl.scr_fov = t2.client.fov;
+		/*cl.scr_fov = t2.client.fov;
 
 		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
-			cl.scr_fov = 90.0f;
+			cl.scr_fov = 90.0f;*/
 
 		return;
 	}
