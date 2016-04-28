@@ -471,9 +471,11 @@ Crash handler, called from system
 #ifdef _WIN32
 #ifdef DBGHELP
 #pragma comment( lib, "dbghelp" )
+#pragma comment( lib, "psapi" )
 #include <winnt.h>
-#include <psapi.h>
 #include <dbghelp.h>
+#include <psapi.h>
+
 int ModuleName( HANDLE process, char *name, void *address, int len )
 {
 	DWORD_PTR   baseAddress = 0;
@@ -509,7 +511,7 @@ int ModuleName( HANDLE process, char *name, void *address, int len )
 		GetModuleInformation( process, moduleArray[i], &info, sizeof(MODULEINFO) );
 
 		if( ( address > info.lpBaseOfDll ) &&
-				( address < info.lpBaseOfDll + info.SizeOfImage ) )
+				( (DWORD64)address < (DWORD64)info.lpBaseOfDll + (DWORD64)info.SizeOfImage ) )
 			return GetModuleBaseName( process, moduleArray[i], name, len );
 	}
 	return snprintf(name, len, "???");
@@ -521,15 +523,23 @@ static void stack_trace( PEXCEPTION_POINTERS pInfo )
 	size_t i;
 	HANDLE process = GetCurrentProcess();
 	HANDLE thread = GetCurrentThread();
-
+	IMAGEHLP_LINE64 line;
+	DWORD dline = 0;
+	DWORD options;
 	CONTEXT context;
+	STACKFRAME64 stackframe;
+	DWORD image;
 
 	memcpy( &context, pInfo->ContextRecord, sizeof(CONTEXT) );
+	options = SymGetOptions(); 
+	options |= SYMOPT_DEBUG;
+	options |= SYMOPT_LOAD_LINES;
+	SymSetOptions( options ); 
 
-	SymInitialize(process, NULL, TRUE);
+	SymInitialize( process, NULL, TRUE );
 
-	DWORD image;
-	STACKFRAME64 stackframe;
+	
+
 	ZeroMemory( &stackframe, sizeof(STACKFRAME64) );
 
 #ifdef _M_IX86
@@ -560,35 +570,53 @@ static void stack_trace( PEXCEPTION_POINTERS pInfo )
 	stackframe.AddrStack.Mode = AddrModeFlat;
 #endif
 	len += snprintf( message + len, 1024 - len, "Sys_Crash: address %p, code %p\n", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
-
+	if( SymGetLineFromAddr64( process, (DWORD64)pInfo->ExceptionRecord->ExceptionAddress, &dline, &line ) )
+	{
+		len += snprintf(message + len, 1024 - len,"Exception: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+	}
+	if( SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line ) )
+	{
+		len += snprintf(message + len, 1024 - len,"PC: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+	}
+	if( SymGetLineFromAddr64( process, stackframe.AddrFrame.Offset, &dline, &line ) )
+	{
+		len += snprintf(message + len, 1024 - len,"Frame: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+	}
 	for( i = 0; i < 25; i++ )
 	{
+		char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+		PSYMBOL_INFO symbol = (PSYMBOL_INFO)buffer;
 		BOOL result = StackWalk64(
 			image, process, thread,
 			&stackframe, &context, NULL,
 			SymFunctionTableAccess64, SymGetModuleBase64, NULL);
 
+		DWORD64 displacement = 0;
 		if( !result )
 			break;
 
-		char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
-		PSYMBOL_INFO symbol = (PSYMBOL_INFO)buffer;
+		
 		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 		symbol->MaxNameLen = MAX_SYM_NAME;
 
-		DWORD64 displacement = 0;
+		len += snprintf( message + len, 1024 - len, "% 2d %p", i, (void*)stackframe.AddrPC.Offset );
 		if( SymFromAddr( process, stackframe.AddrPC.Offset, &displacement, symbol ) )
 		{
-			len += snprintf( message + len, 1024 - len, "% 2d %p %s (", i, (void*)stackframe.AddrPC.Offset, symbol->Name );
+			len += snprintf( message + len, 1024 - len, " %s ", symbol->Name );
 		}
-		else
-			len += snprintf( message + len, 1024 - len, "% 2d %p(", i, (void*)stackframe.AddrPC.Offset );
-		len += ModuleName( process, message + len, stackframe.AddrPC.Offset, 1024 - len );
+		if( SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line ) )
+		{
+			len += snprintf(message + len, 1024 - len,"(%s:%d:%d) ", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+		}
+		len += snprintf( message + len, 1024 - len, "(");
+		len += ModuleName( process, message + len, (void*)stackframe.AddrPC.Offset, 1024 - len );
 		len += snprintf( message + len, 1024 - len, ")\n");
-
 	}
-	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR,"Sys_Crash", message, host.hWnd );
-	//Sys_Warn("%s",message);
+#ifdef XASH_SDL
+	if( host.type != HOST_DEDICATED ) // let system to restart server automaticly
+		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR,"Sys_Crash", message, host.hWnd );
+#endif
+	Sys_PrintLog(message);
 
 	SymCleanup(process);
 }
