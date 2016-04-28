@@ -21,8 +21,9 @@ GNU General Public License for more details.
 #endif
 #ifdef USE_VFW
 #ifdef __MINGW32__
-#include <msacm.h>
 #include <mmreg.h>
+#include <msacm.h>
+
 #endif
 #include <vfw.h> // video for windows
 
