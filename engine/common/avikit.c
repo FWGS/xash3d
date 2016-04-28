@@ -16,10 +16,14 @@ GNU General Public License for more details.
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
-#if defined(_WIN32) && !defined(__MINGW32__)
+#if defined(_WIN32)
 #define USE_VFW
 #endif
 #ifdef USE_VFW
+#ifdef __MINGW32__
+#include <msacm.h>
+#include <mmreg.h>
+#endif
 #include <vfw.h> // video for windows
 
 // msvfw32.dll exports
@@ -133,6 +137,13 @@ typedef struct movie_state_s
 
 static qboolean		avi_initialized = false;
 static movie_state_t	avi[2];
+#ifndef ACM_STREAMSIZEF_SOURCE
+#define ACM_STREAMSIZEF_SOURCE 0
+
+#define ACM_STREAMCONVERTF_BLOCKALIGN 0x00000004
+#define ACM_STREAMCONVERTF_START      0x00000010
+#define ACM_STREAMCONVERTF_END        0x00000020
+#endif
 #endif
 // Converts a compressed audio stream into uncompressed PCM.
 qboolean AVI_ACMConvertAudio( movie_state_t *Avi )
