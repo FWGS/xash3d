@@ -515,18 +515,9 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 
 		for( i = 0; i < 64; i++ )
 		{
-			if( i < MAX_WEAPONS )
-			{
-				if( cl->delta_sequence == -1 ) from_wd = &nullwd;
-				else from_wd = &cl->frames[cl->delta_sequence & SV_UPDATE_MASK].weapondata[i];
-				to_wd = &frame->weapondata[i];
-			}
-			else
-			{
-				if( cl->delta_sequence == -1 ) from_wd = &nullwd;
-				else from_wd = &cl->frames[cl->delta_sequence & SV_UPDATE_MASK].oldweapondata[i - MAX_WEAPONS];
-				to_wd = &frame->oldweapondata[i - MAX_WEAPONS];
-			}
+			if( cl->delta_sequence == -1 ) from_wd = &nullwd;
+			else from_wd = &cl->frames[cl->delta_sequence & SV_UPDATE_MASK].weapondata[i];
+			to_wd = &frame->weapondata[i];
 
 			MSG_WriteWeaponData( msg, from_wd, to_wd, sv.time, i );
 		}
