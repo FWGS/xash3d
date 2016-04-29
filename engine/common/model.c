@@ -858,7 +858,8 @@ static void Mod_LoadTextures( const dlump_t *l )
 				if( bmodel_version >= HLBSP_VERSION ) size += sizeof( short ) + 768;
 
 				Q_snprintf( texname, sizeof( texname ), "#%s.mip", mt.name );
-				tx->gl_texturenum = GL_LoadTexture( texname, (byte*)&mt, size, 0, filter );
+				Q_memcpy( buf, &mt, sizeof( mt ) );
+				tx->gl_texturenum = GL_LoadTexture( texname, buf, size, 0, filter );
 			}
 		}
 
