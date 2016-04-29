@@ -1,4 +1,4 @@
-#ifdef __ANDROID__
+#ifdef XASH_NANOGL
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -814,7 +814,9 @@ qboolean VID_SetMode( void )
 	return true;
 }
 
-
+#ifndef EGL_LIB
+#define EGL_LIB NULL
+#endif
 
 /*
 ==================
@@ -825,7 +827,7 @@ qboolean R_Init_OpenGL( void )
 {
 	GL_SetupAttributes();
 #ifdef XASH_SDL
-	if( SDL_GL_LoadLibrary( NULL ) )
+	if( SDL_GL_LoadLibrary( EGL_LIB ) )
 	{
 		MsgDev( D_ERROR, "Couldn't initialize OpenGL: %s\n", SDL_GetError());
 		return false;

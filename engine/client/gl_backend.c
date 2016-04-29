@@ -182,7 +182,7 @@ void GL_SelectTexture( GLint tmu )
 		if( tmu < glConfig.max_texture_coords )
 			pglClientActiveTextureARB( tmu + GL_TEXTURE0_ARB );
 	}
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 	else if( pglSelectTextureSGIS )
 	{
 		pglSelectTextureSGIS( tmu + GL_TEXTURE0_SGIS );
@@ -236,7 +236,7 @@ GL_MultiTexCoord2f
 */
 void GL_MultiTexCoord2f( GLenum texture, GLfloat s, GLfloat t )
 {
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 	if( pglMultiTexCoord2f )
 	{
 		pglMultiTexCoord2f( texture + GL_TEXTURE0_ARB, s, t );

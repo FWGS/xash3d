@@ -498,7 +498,7 @@ void R_NewMap( void );
 
 =======================================================================
 */
-#ifdef __ANDROID__
+#ifdef XASH_NANOGL
 #undef GL_TEXTURE_3D_EXT
 #undef GL_VERTEX_SHADER_EXT
 #endif
@@ -543,7 +543,7 @@ enum
 	GL_EXTCOUNT,		// must be last
 };
 
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 enum
 {
 	GL_KEEP_UNIT = -1,

@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_NANOGL
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -1246,3 +1246,4 @@ void R_Free_OpenGL( void )
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
 	glw_state.initialized = false;
 }
+#endif //XASH3D_NANOGL

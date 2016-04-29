@@ -2675,7 +2675,7 @@ static void R_StudioDrawPlanarShadow( void )
 	pglEnableClientState( GL_VERTEX_ARRAY );
 	pglVertexPointer( 3, GL_FLOAT, 12, g_xarrayverts );
 
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 	if( GL_Support( GL_DRAW_RANGEELEMENTS_EXT ))
 		pglDrawRangeElementsEXT( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
 	else

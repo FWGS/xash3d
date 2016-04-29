@@ -81,7 +81,7 @@ GL_Bind
 */
 void GL_Bind( GLint tmu, GLenum texnum )
 {
-#ifdef __ANDROID__
+#ifdef XASH_NANOGL
 	tmu = tmu - GL_TEXTURE0;
 #endif
 	gltexture_t	*texture;
@@ -1068,7 +1068,7 @@ static void GL_TextureImage( GLenum inFormat, GLenum outFormat, GLenum glTarget,
 
 static void GL_TextureImageDXT( GLenum format, GLenum glTarget, GLint side, GLint level, GLint width, GLint height, GLint depth, qboolean subImage, size_t size, const void *data )
 {
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 	if( glTarget == GL_TEXTURE_1D )
 	{
 		if( subImage ) pglCompressedTexSubImage1DARB( glTarget, level, 0, width, format, size, data );
