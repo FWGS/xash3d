@@ -26,7 +26,7 @@ else
 endif
 
 ifeq ($(NANOGL),1)
-DEFINES += -DXASH_GLES -DXASH_NANOGL
+DEFINES += -DXASH_GLES -DXASH_NANOGL -DEGL_LIB=\"libEGL.so\"
 endif
 # Some libc implementations cannot use libdl, so disable it by default
 ifeq ($(XASH_STATIC),1)
