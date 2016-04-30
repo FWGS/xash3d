@@ -718,11 +718,11 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	SDL_DisplayMode displayMode;
 
 	SDL_GetCurrentDisplayMode(0, &displayMode);
-
+#ifdef __ANDROID__
 	width = displayMode.w;
 	height = displayMode.h;
 	fullscreen = false;
-
+#endif
 	R_SaveVideoMode( width, height );
 
 	// check our desktop attributes
@@ -738,6 +738,41 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		if( !VID_CreateWindow( width, height, fullscreen ) )
 			return rserr_invalid_mode;
 	}
+#ifndef __ANDROID__
+else if( fullscreen )
+	{
+		SDL_DisplayMode want, got;
+
+		want.w = width;
+		want.h = height;
+		want.driverdata = NULL;
+		want.format = want.refresh_rate = 0; // don't care
+
+		if( !SDL_GetClosestDisplayMode(0, &want, &got) )
+			return rserr_invalid_mode;
+
+		MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
+
+		if( ( SDL_GetWindowFlags(host.hWnd) & SDL_WINDOW_FULLSCREEN ) == SDL_WINDOW_FULLSCREEN)
+			if( SDL_SetWindowFullscreen(host.hWnd, 0) == -1 )
+				return rserr_invalid_fullscreen;
+
+		if( SDL_SetWindowDisplayMode(host.hWnd, &got) )
+			return rserr_invalid_mode;
+
+		if( SDL_SetWindowFullscreen(host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
+			return rserr_invalid_fullscreen;
+
+		R_ChangeDisplaySettingsFast( got.w, got.h );
+	}
+	else
+	{
+		if( SDL_SetWindowFullscreen(host.hWnd, 0) )
+			return rserr_invalid_fullscreen;
+		SDL_SetWindowSize(host.hWnd, width, height);
+		R_ChangeDisplaySettingsFast( width, height );
+	}
+#endif
 #endif // XASH_SDL
 	return rserr_ok;
 }
