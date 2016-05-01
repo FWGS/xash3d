@@ -84,14 +84,14 @@ char		gs_basedir[MAX_SYSPATH];	// initial dir before loading gameinfo.txt (used 
 qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ paths 
 
 static void FS_InitMemory( void );
-static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype );
+static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const signed char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 static qboolean FS_SysFileExists( const char *path );
 static qboolean FS_SysFolderExists( const char *path );
 static int FS_SysFileTime( const char *filename );
-static char W_TypeFromExt( const char *lumpname );
-static const char *W_ExtFromType( char lumptype );
+static signed char W_TypeFromExt( const char *lumpname );
+static const char *W_ExtFromType( signed char lumptype );
 
 /*
 =============================================================================
@@ -3169,7 +3169,7 @@ static const wadtype_t wad_types[] =
 { NULL,  TYP_NONE	}
 };
 
-static char W_TypeFromExt( const char *lumpname )
+static signed char W_TypeFromExt( const char *lumpname )
 {
 	const char	*ext = FS_FileExtension( lumpname );
 	const wadtype_t	*type;
@@ -3186,7 +3186,7 @@ static char W_TypeFromExt( const char *lumpname )
 	return TYP_NONE;
 }
 
-static const char *W_ExtFromType( char lumptype )
+static const char *W_ExtFromType( signed char lumptype )
 {
 	const wadtype_t	*type;
 
@@ -3202,7 +3202,7 @@ static const char *W_ExtFromType( char lumptype )
 	return "";
 }
 
-static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype )
+static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const signed char matchtype )
 {
 	int	left, right, middle;
 

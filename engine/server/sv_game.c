@@ -2659,7 +2659,7 @@ pfnWriteChar
 */
 void pfnWriteChar( int iValue )
 {
-	BF_WriteChar( &sv.multicast, (char)iValue );
+	BF_WriteChar( &sv.multicast, (signed char)iValue );
 	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteChar( %i )\n", iValue );
 	svgame.msg_realsize++;
 }

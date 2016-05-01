@@ -342,7 +342,7 @@ qboolean BF_WriteString( sizebuf_t *bf, const char *pStr )
 	{
 		do
 		{
-			BF_WriteChar( bf, *pStr );
+			BF_WriteChar( bf, (signed char)*pStr );
 			pStr++;
 		} while( *( pStr - 1 ));
 	}
