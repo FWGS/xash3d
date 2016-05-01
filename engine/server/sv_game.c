@@ -715,7 +715,7 @@ char *SV_ReadEntityScript( const char *filename, int *flags )
 	ft1 = FS_FileTime( bspfilename, false );
 	ft2 = FS_FileTime( entfilename, true );
 
-	if( ft2 != -1 && ft1 < ft2 )
+	if( ft2 != (unsigned long)-1 && ft1 < ft2 )
 	{
 		// grab .ent files only from gamedir
 		ents = (char *)FS_LoadFile( entfilename, NULL, true ); 

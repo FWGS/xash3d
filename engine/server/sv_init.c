@@ -197,7 +197,7 @@ char *SV_EntityScript( void )
 	ft1 = FS_FileTime( sv.worldmodel->name, false );
 	ft2 = FS_FileTime( entfilename, true );
 
-	if( ft2 != -1 )
+	if( ft2 !=(unsigned long) -1 )
 	{
 		if( ft1 > ft2 )
 		{

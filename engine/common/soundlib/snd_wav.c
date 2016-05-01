@@ -290,7 +290,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	if( sound.width == 1 )
 	{
 		int	i, j;
-		char	*pData = (char *)sound.wav;
+		signed char	*pData = (signed char *)sound.wav;
 
 		for( i = 0; i < sound.samples; i++ )
 		{

@@ -465,7 +465,7 @@ convar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force )
 		// step through the string, only copying back in characters that are printable
 		while( *pS )
 		{
-			if( ((byte)*pS) < 32 || ((byte)*pS) > 255 )
+			if( ((byte)*pS) < 32 )
 			{
 				pS++;
 				continue;
