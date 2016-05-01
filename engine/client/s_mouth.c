@@ -57,7 +57,7 @@ void SND_CloseMouth( channel_t *ch )
 void SND_MoveMouth8( channel_t *ch, wavdata_t *pSource, int count )
 {
 	cl_entity_t	*clientEntity;
-	char		*pdata = NULL;
+	signed char		*pdata = NULL;
 	mouth_t		*pMouth = NULL;
 	int		savg, data;
 	int		scount, pos = 0;
