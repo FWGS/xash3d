@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #include "library.h"
 
 #ifdef XASH_VINTERFACE
-#include "factories.h"
+#include "vloader.h"
 #endif
 
 #define MAX_TOTAL_CMDS		16

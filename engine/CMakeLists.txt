@@ -110,7 +110,7 @@ if(XASH_DEDICATED)
     endif()
 endif()
 
-if(XASH_DLL_LOADER)
+if(XASH_VINTERFACE)
 	add_definitions(-DXASH_VINTERFACE)
 
 	include_directories(../vinterface)
