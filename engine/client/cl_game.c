@@ -33,7 +33,7 @@ GNU General Public License for more details.
 #include "port.h"
 
 #ifdef XASH_VINTERFACE
-#include "factories.h"
+#include "vloader.h"
 #endif
 
 #define MAX_TEXTCHANNELS	8		// must be power of two (GoldSrc uses 4 channels)

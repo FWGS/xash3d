@@ -24,7 +24,7 @@ GNU General Public License for more details.
 #include "vgui_draw.h"
 
 #ifdef XASH_VINTERFACE
-#include "factories.h"
+#include "vloader.h"
 #endif
 
 #define MAX_TOTAL_CMDS		16
