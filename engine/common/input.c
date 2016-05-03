@@ -51,12 +51,9 @@ static byte scan_to_key[128] =
 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
-#ifdef XASH_SDL
-convar_t *m_valvehack;
 convar_t *m_enginemouse;
 convar_t *m_pitch;
 convar_t *m_yaw;
-#endif
 
 convar_t *m_enginesens;
 convar_t *m_ignore;

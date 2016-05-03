@@ -76,7 +76,6 @@ LOCAL_SRC_FILES := \
            client/gl_rsurf.c \
            client/gl_sprite.c \
            client/gl_studio.c \
-           client/gl_vidnt_android.c \
            client/gl_vidnt_common.c \
            client/gl_warp.c \
            client/s_backend.c \
@@ -159,7 +158,10 @@ LOCAL_SRC_FILES := \
 	   common/soundlib/libmpg/common.c
 
 ifeq ($(XASH_SDL),1)
+LOCAL_SRC_FILES += client/gl_vidnt_nanogl.c
 LOCAL_SHARED_LIBRARIES += SDL2
+else
+LOCAL_SRC_FILES += client/gl_vidnt_android_nosdl.c
 endif
 LOCAL_STATIC_LIBRARIES := NanoGL
 

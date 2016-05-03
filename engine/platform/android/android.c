@@ -209,6 +209,16 @@ void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jin
 {
 }
 
+int Java_in_celest_xash3d_XashActivity_setenv
+  (JNIEnv* env, jclass clazz, jstring key, jstring value, jboolean overwrite)
+{
+	char* k = (char *) (*env)->GetStringUTFChars(env, key, NULL);
+	char* v = (char *) (*env)->GetStringUTFChars(env, value, NULL);
+	int err = setenv(k, v, overwrite);
+	(*env)->ReleaseStringUTFChars(env, key, k);
+	(*env)->ReleaseStringUTFChars(env, value, v);
+	return err;
+}
 void Android_SwapBuffers()
 {
 	nanoGL_Flush();
@@ -218,6 +228,10 @@ void Android_SwapBuffers()
 void Android_GetScreenRes(int *width, int *height)
 {
 	*width=gWidth, *height=gHeight;
+}
+void Android_Vibrate( float life, char flags )
+{
+	//stub
 }
 #endif
 #endif

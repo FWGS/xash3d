@@ -1,4 +1,4 @@
-#ifdef XASH_NANOGL
+#if defined(__ANDROID__) && defined(XASH_NANOGL) && !defined(XASH_SDL)
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -324,13 +324,7 @@ GL_GetProcAddress
 */
 void *GL_GetProcAddress( const char *name )
 {
-#ifdef XASH_SDL
-	void *func = SDL_GL_GetProcAddress(name);
-#elif defined (XASH_GLES)
 	void *func = nanoGL_GetProcAddress(name);
-#else //No opengl implementation
-	void *func = NULL;
-#endif
 	if(!func)
 	{
 		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
@@ -650,6 +644,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_y = height / 2;
 	SDL_ShowWindow( host.hWnd );
 #else
+	MsgDev( D_NOTE, "VID_CreateWindow(%d, %d)\n", width, height);
 	host.hWnd = 1; //fake window
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
@@ -702,6 +697,7 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 	//Cvar_SetFloat("vid_mode", VID_NOMODE);
 	Cvar_SetFloat("width", width);
 	Cvar_SetFloat("height", height);
+	MsgDev( D_NOTE, "R_ChangeDisplaySettingsFast(%d, %d)\n", width, height);
 
 	glState.width = width;
 	glState.height = height;
@@ -714,6 +710,12 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 
 rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 {
+	Android_GetScreenRes(&width, &height);
+	R_SaveVideoMode( width, height );
+	if( !host.hWnd )
+	VID_CreateWindow( width, height, fullscreen );
+
+	//R_ChangeDisplaySettingsFast( width, height );
 #ifdef XASH_SDL
 	SDL_DisplayMode displayMode;
 
@@ -788,6 +790,10 @@ Set the described video mode
 */
 qboolean VID_SetMode( void )
 {
+	int width, height;
+	Android_GetScreenRes( &width, &height );
+	MsgDev( D_NOTE, "VID_SetMode(%d, %d)\n", width, height);
+	R_ChangeDisplaySettings( width, height, false );
 #ifdef XASH_SDL
 	qboolean	fullscreen = false;
 	int iScreenWidth, iScreenHeight;
@@ -868,6 +874,7 @@ qboolean R_Init_OpenGL( void )
 		return false;
 	}
 #endif
+	MsgDev( D_NOTE, "R_Init_OpenGL()\n");
 	return VID_SetMode();
 }
 

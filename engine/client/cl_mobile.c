@@ -23,7 +23,9 @@ GNU General Public License for more details.
 #if defined(__ANDROID__)
 
 //#include "platform/android/android-gameif.h"
+#ifdef XASH_SDL
 #include "SDL_system.h"
+#endif
 #endif
 
 // we don't have our controls at this time
