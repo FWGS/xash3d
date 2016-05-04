@@ -130,6 +130,8 @@ void Android_Vibrate( float life, char flags )
 #else
 
 #include "nanogl.h" //use NanoGL
+#include <pthread.h>
+#include "touch.h"
 
 jclass gClass;
 JNIEnv *gEnv;
@@ -142,6 +144,67 @@ int gWidth, gHeight;
 	
 	return JNI_VERSION_1_6;
 }*/
+
+#define MAX_EVENTS 64
+#define MAX_FINGERS 10
+typedef enum event_type
+{
+	event_touch_down,
+	event_touch_up,
+	event_touch_move,
+	event_key_down,
+	event_key_up,
+	event_motion
+} eventtype_t;
+
+typedef struct event_s
+{
+	eventtype_t type;
+	int arg; // finger or key id
+	float x, y, dx, dy;
+} event_t;
+
+static struct {
+	pthread_mutex_t mutex;
+	event_t queue[MAX_EVENTS];
+	volatile int count;
+	float x[MAX_FINGERS];
+	float y[MAX_FINGERS];
+} events = { PTHREAD_MUTEX_INITIALIZER };
+
+#define Android_Lock() pthread_mutex_lock(&events.mutex);
+#define Android_Unlock() pthread_mutex_unlock(&events.mutex);
+#define Android_PushEvent() Android_Unlock()
+int IN_TouchEvent( int type, int fingerID, float x, float y, float dx, float dy );
+
+event_t *Android_AllocEvent()
+{
+	Android_Lock();
+	if( events.count == MAX_EVENTS )
+		events.count--; //override last event
+	return &events.queue[ events.count++ ];
+}
+
+void Android_RunEvents()
+{
+	int i;
+	Android_Lock();
+	for( i = 0; i < events.count; i++ )
+	{
+		switch( events.queue[i].type )
+		{
+		case event_touch_down:
+		case event_touch_up:
+		case event_touch_move:
+			IN_TouchEvent( events.queue[i].type, events.queue[i].arg, events.queue[i].x, events.queue[i].y, events.queue[i].dx, events.queue[i].dy );
+			Msg("T: %i %d %d %f %f %f %f\n", i,  events.queue[i].type, events.queue[i].arg, events.queue[i].x, events.queue[i].y, events.queue[i].dx, events.queue[i].dy );
+		break;
+		}
+	}
+	events.count = 0;
+	Android_Unlock();
+}
+
 int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
 {
     int i;
@@ -205,8 +268,32 @@ void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclass cls, jint 
 {
 }
 
-void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint x, jint y)
+
+
+void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint finger, jint action, jfloat x, jfloat y ) __attribute__((pcs("aapcs")));
+void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint finger, jint action, jfloat x, jfloat y )
 {
+	float dx, dy;
+	event_t *event;
+
+
+	x /= gWidth;
+	y /= gHeight;
+
+	if( action )
+		dx = x - events.x[finger], dy = y - events.y[finger];
+	else
+		dx = dy = 0.0f;
+	events.x[finger] = x, events.y[finger] = y;
+
+	event = Android_AllocEvent();
+	event->arg = finger;
+	event->type = action;
+	event->x = x;
+	event->y = y;
+	event->dx = dx;
+	event->dy = dy;
+	Android_PushEvent();
 }
 
 int Java_in_celest_xash3d_XashActivity_setenv
