@@ -131,7 +131,7 @@ void Android_Vibrate( float life, char flags )
 
 #include "nanogl.h" //use NanoGL
 #include <pthread.h>
-#include "touch.h"
+#include "common.h"
 
 jclass gClass;
 JNIEnv *gEnv;
@@ -164,12 +164,17 @@ typedef struct event_s
 	float x, y, dx, dy;
 } event_t;
 
+typedef struct finger_s
+{
+	float x, y;
+	qboolean down;
+} finger_t;
+
 static struct {
 	pthread_mutex_t mutex;
 	event_t queue[MAX_EVENTS];
 	volatile int count;
-	float x[MAX_FINGERS];
-	float y[MAX_FINGERS];
+	finger_t fingers[MAX_FINGERS];
 } events = { PTHREAD_MUTEX_INITIALIZER };
 
 #define Android_Lock() pthread_mutex_lock(&events.mutex);
@@ -276,15 +281,35 @@ void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jin
 	float dx, dy;
 	event_t *event;
 
+	if( finger > MAX_FINGERS )
+		return;
+
 
 	x /= gWidth;
 	y /= gHeight;
 
 	if( action )
-		dx = x - events.x[finger], dy = y - events.y[finger];
+		dx = x - events.fingers[finger].x, dy = y - events.fingers[finger].y;
 	else
 		dx = dy = 0.0f;
-	events.x[finger] = x, events.y[finger] = y;
+	events.fingers[finger].x = x, events.fingers[finger].y = y;
+
+	if( ( action == 2 ) && ( !dx || !dy ) )
+		return;
+
+	if( ( action == 0 ) && events.fingers[finger].down )
+		return;
+
+	if( ( action == 1 ) && !events.fingers[finger].down )
+		return;
+
+	if( action == 2 && !events.fingers[finger].down )
+			action = 0;
+
+	if( action == 0 )
+		events.fingers[finger].down = true;
+	else if( action == 1 )
+		events.fingers[finger].down = false;
 
 	event = Android_AllocEvent();
 	event->arg = finger;
