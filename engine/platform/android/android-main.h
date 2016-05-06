@@ -5,7 +5,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+void Android_Vibrate( float life, char flags );
 void Android_SwapBuffers();
 void Android_GetScreenRes( int *width, int *height );
 

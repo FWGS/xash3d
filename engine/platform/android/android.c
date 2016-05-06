@@ -174,6 +174,7 @@ static const int s_android_scantokey[] =
 jclass gClass;
 JNIEnv *gEnv;
 jmethodID gSwapBuffers;
+jmethodID gRestoreEGL;
 JavaVM *gVM;
 int gWidth, gHeight;
 /*JNIEXPORT jint JNICALL JNIOnLoad(JavaVM * vm, void*)
@@ -192,7 +193,8 @@ typedef enum event_type
 	event_touch_move,
 	event_key_down,
 	event_key_up,
-	event_motion
+	event_motion,
+	event_set_pause
 } eventtype_t;
 
 typedef struct event_s
@@ -210,11 +212,12 @@ typedef struct finger_s
 
 static struct {
 	pthread_mutex_t mutex;
+	pthread_mutex_t framemutex;
 	event_t queue[ANDROID_MAX_EVENTS];
 	volatile int count;
 	finger_t fingers[MAX_FINGERS];
 	char inputtext[256];
-} events = { PTHREAD_MUTEX_INITIALIZER };
+} events = { PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER };
 
 #define Android_Lock() pthread_mutex_lock(&events.mutex);
 #define Android_Unlock() pthread_mutex_unlock(&events.mutex);
@@ -233,6 +236,7 @@ void Android_RunEvents()
 {
 	int i;
 	Android_Lock();
+	pthread_mutex_unlock( &events.framemutex );
 	for( i = 0; i < events.count; i++ )
 	{
 		switch( events.queue[i].type )
@@ -248,6 +252,20 @@ void Android_RunEvents()
 			break;
 		case event_key_up:
 			Key_Event( events.queue[i].arg, false );
+			break;
+		case event_set_pause:
+			if( !events.queue[i].arg )
+			{
+				host.state = HOST_FRAME;
+				(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gRestoreEGL);
+
+			}
+			if( events.queue[i].arg )
+			{
+				host.state = HOST_NOFOCUS;
+			}
+			//sleep(1);
+			//pthread_cond_signal( &events.framecond );
 			break;
 		}
 	}
@@ -270,6 +288,7 @@ void Android_RunEvents()
 	}
 	events.inputtext[0] = 0;
 	Android_Unlock();
+	pthread_mutex_unlock( &events.framemutex );
 }
 
 int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
@@ -307,6 +326,7 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
     gEnv = env;
     gClass = (*env)->FindClass(env, "in/celest/xash3d/XashActivity");
     gSwapBuffers = (*env)->GetStaticMethodID(env, gClass, "swapBuffers", "()V");
+	gRestoreEGL = (*env)->GetStaticMethodID(env, gClass, "restoreEGL", "()V");
 
     nanoGL_Init();
     /* Run the application. */
@@ -329,6 +349,16 @@ void Java_in_celest_xash3d_XashActivity_onNativeResize(JNIEnv* env, jclass cls, 
 
 void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
 {
+}
+void Java_in_celest_xash3d_XashActivity_nativeSetPause(JNIEnv* env, jclass cls, jint pause )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_set_pause;
+	event->arg = pause;
+	Android_PushEvent();
+	pthread_mutex_lock( &events.framemutex );
+	pthread_mutex_unlock( &events.framemutex );
+	//pthread_cond_wait( &events.framecond, &events.mutex );
 }
 
 void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclass cls, jint down, jint code)
@@ -359,8 +389,9 @@ void Java_in_celest_xash3d_XashActivity_nativeString(JNIEnv* env, jclass cls, jo
 	(*env)->ReleaseStringUTFChars(env, string, str);
 }
 
-
+#ifdef SOFTFP_LINK
 void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint finger, jint action, jfloat x, jfloat y ) __attribute__((pcs("aapcs")));
+#endif
 void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint finger, jint action, jfloat x, jfloat y )
 {
 	float dx, dy;
