@@ -240,7 +240,6 @@ void IN_StartupMouse( void )
 	if( Sys_CheckParm( "-noenginemouse" )) return; 
 
 #ifdef XASH_SDL
-	m_valvehack = Cvar_Get("m_valvehack", "1", CVAR_ARCHIVE, "Enable mouse hack for client.so with different SDL binary");
 	m_enginemouse = Cvar_Get("m_enginemouse", "0", CVAR_ARCHIVE, "Read mouse events in engine instead of client");
 	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
 	m_pitch = Cvar_Get("m_pitch", "0.022", CVAR_ARCHIVE, "Mouse pitch value");
@@ -444,40 +443,27 @@ void IN_MouseEvent( int mstate )
 	{
 #if defined(XASH_SDL)
 		static qboolean ignore; // igonre mouse warp event
-		if( m_valvehack->integer == 0 )
+		int x, y;
+		SDL_GetMouseState(&x, &y);
+		if( host.mouse_visible )
+			SDL_ShowCursor( SDL_TRUE );
+		else
+			SDL_ShowCursor( SDL_FALSE );
+		if( x < host.window_center_x / 2 || y < host.window_center_y / 2 ||  x > host.window_center_x + host.window_center_x/2 || y > host.window_center_y + host.window_center_y / 2 )
 		{
-			if( host.mouse_visible )
-			{
-				SDL_SetRelativeMouseMode( SDL_FALSE );
-				SDL_ShowCursor( SDL_TRUE );
-			}
-			else
-				SDL_SetRelativeMouseMode( SDL_TRUE );
+			SDL_WarpMouseInWindow(host.hWnd, host.window_center_x, host.window_center_y);
+			ignore = 1; // next mouse event will be mouse warp
+			return;
+		}
+		if ( !ignore )
+		{
+			if( !m_enginemouse->integer )
+				clgame.dllFuncs.IN_MouseEvent( mstate );
 		}
 		else
 		{
-			int x, y;
-			SDL_GetMouseState(&x, &y);
-			if( host.mouse_visible )
-				SDL_ShowCursor( SDL_TRUE );
-			else
-				SDL_ShowCursor( SDL_FALSE );
-			if( x < host.window_center_x / 2 || y < host.window_center_y / 2 ||  x > host.window_center_x + host.window_center_x/2 || y > host.window_center_y + host.window_center_y / 2 )
-			{
-				SDL_WarpMouseInWindow(host.hWnd, host.window_center_x, host.window_center_y);
-				ignore = 1; // next mouse event will be mouse warp
-				return;
-			}
-			if ( !ignore )
-			{
-				if( !m_enginemouse->integer )
-					clgame.dllFuncs.IN_MouseEvent( mstate );
-			}
-			else
-			{
-				SDL_GetRelativeMouseState( 0, 0 ); // reset relative state
-				ignore = 0;
-			}
+			SDL_GetRelativeMouseState( 0, 0 ); // reset relative state
+			ignore = 0;
 		}
 #endif
 		return;
