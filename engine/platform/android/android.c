@@ -245,7 +245,7 @@ void Android_RunEvents()
 		case event_touch_up:
 		case event_touch_move:
 			IN_TouchEvent( events.queue[i].type, events.queue[i].arg, events.queue[i].x, events.queue[i].y, events.queue[i].dx, events.queue[i].dy );
-			Msg("T: %i %d %d %f %f %f %f\n", i,  events.queue[i].type, events.queue[i].arg, events.queue[i].x, events.queue[i].y, events.queue[i].dx, events.queue[i].dy );
+			//Msg("T: %i %d %d %f %f %f %f\n", i,  events.queue[i].type, events.queue[i].arg, events.queue[i].x, events.queue[i].y, events.queue[i].dx, events.queue[i].dy );
 		break;
 		case event_key_down:
 			Key_Event( events.queue[i].arg, true );
