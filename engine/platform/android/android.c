@@ -174,7 +174,7 @@ static const int s_android_scantokey[] =
 jclass gClass;
 JNIEnv *gEnv;
 jmethodID gSwapBuffers;
-jmethodID gRestoreEGL;
+jmethodID gToggleEGL;
 JavaVM *gVM;
 int gWidth, gHeight;
 /*JNIEXPORT jint JNICALL JNIOnLoad(JavaVM * vm, void*)
@@ -257,12 +257,13 @@ void Android_RunEvents()
 			if( !events.queue[i].arg )
 			{
 				host.state = HOST_FRAME;
-				(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gRestoreEGL);
+				(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gToggleEGL, 1);
 
 			}
 			if( events.queue[i].arg )
 			{
 				host.state = HOST_NOFOCUS;
+				(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gToggleEGL, 10);
 			}
 			//sleep(1);
 			//pthread_cond_signal( &events.framecond );
@@ -288,7 +289,7 @@ void Android_RunEvents()
 	}
 	events.inputtext[0] = 0;
 	Android_Unlock();
-	pthread_mutex_unlock( &events.framemutex );
+	pthread_mutex_lock( &events.framemutex );
 }
 
 int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
@@ -326,12 +327,12 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
     gEnv = env;
     gClass = (*env)->FindClass(env, "in/celest/xash3d/XashActivity");
     gSwapBuffers = (*env)->GetStaticMethodID(env, gClass, "swapBuffers", "()V");
-	gRestoreEGL = (*env)->GetStaticMethodID(env, gClass, "restoreEGL", "()V");
+	gToggleEGL = (*env)->GetStaticMethodID(env, gClass, "toggleEGL", "(I)V");
 
     nanoGL_Init();
     /* Run the application. */
 
-    status = Host_Main(argc, argv, GAME_PATH, false, NULL);
+	status = Host_Main(argc, argv, getenv("XASH3D_GAMEDIR"), false, NULL);
 
     /* Release the arguments. */
 
@@ -414,7 +415,7 @@ void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jin
 	events.fingers[finger].x = x, events.fingers[finger].y = y;
 
 	// check if we should skip some events
-	if( ( action == 2 ) && ( !dx || !dy ) )
+	if( ( action == 2 ) && ( !dx && !dy ) )
 		return;
 
 	if( ( action == 0 ) && events.fingers[finger].down )
