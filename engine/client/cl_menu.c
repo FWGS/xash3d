@@ -909,9 +909,7 @@ static void pfnStartBackgroundTrack( const char *introTrack, const char *mainTra
 
 static void pfnEnableTextInput( int enable )
 {
-#ifdef XASH_SDL
-	SDLash_EnableTextInput( enable );
-#endif
+	Key_EnableTextInput( enable, false );
 }
 
 // engine callbacks

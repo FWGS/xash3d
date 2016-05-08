@@ -134,6 +134,8 @@ void Android_Vibrate( float life, char flags )
 #include "common.h"
 #include "input.h"
 #include "client.h"
+
+convar_t *android_sleep;
 static const int s_android_scantokey[] =
 {
 	0,				K_LEFTARROW,	K_RIGHTARROW,	0,				K_ESCAPE,		// 0
@@ -175,6 +177,8 @@ jclass gClass;
 JNIEnv *gEnv;
 jmethodID gSwapBuffers;
 jmethodID gToggleEGL;
+jmethodID gEnableTextInput;
+jmethodID gVibrate;
 JavaVM *gVM;
 int gWidth, gHeight;
 /*JNIEXPORT jint JNICALL JNIOnLoad(JavaVM * vm, void*)
@@ -194,7 +198,8 @@ typedef enum event_type
 	event_key_down,
 	event_key_up,
 	event_motion,
-	event_set_pause
+	event_set_pause,
+	event_resize
 } eventtype_t;
 
 typedef struct event_s
@@ -230,7 +235,7 @@ event_t *Android_AllocEvent()
 	if( events.count == ANDROID_MAX_EVENTS )
 	{
 		events.count--; //override last event
-		__android_log_print(ANDROID_LOG_DEBUG,"Xash","Too many events!!!");
+		__android_log_print( ANDROID_LOG_DEBUG, "Xash", "Too many events!!!" );
 	}
 	return &events.queue[ events.count++ ];
 }
@@ -260,13 +265,13 @@ void Android_RunEvents()
 			if( !events.queue[i].arg )
 			{
 				host.state = HOST_FRAME;
-				(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gToggleEGL, 1);
+				(*gEnv)->CallStaticVoidMethod( gEnv, gClass, gToggleEGL, 1 );
 
 			}
 			if( events.queue[i].arg )
 			{
 				host.state = HOST_NOFOCUS;
-				(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gToggleEGL, 10);
+				(*gEnv)->CallStaticVoidMethod( gEnv, gClass, gToggleEGL, 0 );
 			}
 			//sleep(1);
 			//pthread_cond_signal( &events.framecond );
@@ -331,6 +336,8 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
     gClass = (*env)->FindClass(env, "in/celest/xash3d/XashActivity");
     gSwapBuffers = (*env)->GetStaticMethodID(env, gClass, "swapBuffers", "()V");
 	gToggleEGL = (*env)->GetStaticMethodID(env, gClass, "toggleEGL", "(I)V");
+	gEnableTextInput = (*env)->GetStaticMethodID(env, gClass, "showKeyboard", "(I)V");
+	gVibrate = (*env)->GetStaticMethodID(env, gClass, "vibrate", "(I)V" );
 
     nanoGL_Init();
     /* Run the application. */
@@ -348,7 +355,11 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
 
 void Java_in_celest_xash3d_XashActivity_onNativeResize(JNIEnv* env, jclass cls, jint width, jint height)
 {
+	event_t *event;
 	gWidth=width, gHeight=height;
+	event = Android_AllocEvent();
+	event->type = event_resize;
+	Android_PushEvent();
 }
 
 void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
@@ -360,11 +371,13 @@ void Java_in_celest_xash3d_XashActivity_nativeSetPause(JNIEnv* env, jclass cls, 
 	event->type = event_set_pause;
 	event->arg = pause;
 	Android_PushEvent();
-	if(pause)
-	pthread_mutex_lock( &events.framemutex );
-	else
-	pthread_mutex_unlock( &events.framemutex );
-	//pthread_cond_wait( &events.framecond, &events.mutex );
+	if( android_sleep && android_sleep->value )
+	{
+		if(pause)
+			pthread_mutex_lock( &events.framemutex );
+		else
+			pthread_mutex_unlock( &events.framemutex );
+	}
 }
 
 void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclass cls, jint down, jint code)
@@ -467,9 +480,36 @@ void Android_GetScreenRes(int *width, int *height)
 {
 	*width=gWidth, *height=gHeight;
 }
+
+// initialize android related cvars
+void Android_Init()
+{
+	android_sleep = Cvar_Get( "android_sleep", "1", CVAR_ARCHIVE, "Enable sleep in background" );
+}
+
+void Android_EnableTextInput( qboolean enable, qboolean force )
+{
+	if( force )
+		(*gEnv)->CallStaticVoidMethod( gEnv, gClass, gEnableTextInput, enable );
+	else if( enable )
+	{
+		if( !host.textmode )
+		{
+			(*gEnv)->CallStaticVoidMethod( gEnv, gClass, gEnableTextInput, 1 );
+		}
+		host.textmode = true;
+	}
+	else
+	{
+		(*gEnv)->CallStaticVoidMethod( gEnv, gClass, gEnableTextInput, 0 );
+		host.textmode = false;
+	}
+}
+
 void Android_Vibrate( float life, char flags )
 {
-	//stub
+	if( life )
+		(*gEnv)->CallStaticVoidMethod( gEnv, gClass, gVibrate, (int)life );
 }
 #endif
 #endif

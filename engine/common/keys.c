@@ -636,7 +636,6 @@ void Key_Event( int key, qboolean down )
 	if( cls.key_dest == key_menu )
 	{
 		// only non printable keys passed
-#ifdef XASH_SDL
 		// shift + click enables text mode (old menu compatibility)
 		/*if( down && !host.textmode && Key_IsDown( K_SHIFT ) && ( key == 241 ) )
 		{
@@ -648,8 +647,7 @@ void Key_Event( int key, qboolean down )
 			SDLash_EnableTextInput( false );
 		*/
 		if( !menu.use_text_api )
-			SDLash_EnableTextInput( true );
-#endif
+			Key_EnableTextInput( true, false );
 		//pass printable chars for old menus
 		if( !menu.use_text_api && !host.textmode && down && ( key >= 32 ) && ( key <= 'z' ) )
 		{
@@ -749,6 +747,15 @@ void Key_Event( int key, qboolean down )
 	}
 }
 
+void Key_EnableTextInput( qboolean enable, qboolean force )
+{
+#ifdef XASH_SDL
+	SDLash_EnableTextInput( enable, force );
+#elif defined(__ANDROID__)
+	Android_EnableTextInput( enable, force );
+#endif
+}
+
 /*
 =========
 Key_SetKeyDest
@@ -761,9 +768,7 @@ void Key_SetKeyDest( int key_dest )
 	switch( key_dest )
 	{
 	case key_game:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( false );
-	#endif
+		Key_EnableTextInput( false, false );
 		if( host_xashds_hacks->value )
 		{
 			Cbuf_Execute();
@@ -775,21 +780,15 @@ void Key_SetKeyDest( int key_dest )
 		cls.key_dest = key_game;
 		break;
 	case key_menu:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( false );
-	#endif
+		Key_EnableTextInput( false, false );
 		cls.key_dest = key_menu;
 		break;
 	case key_console:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( true );
-	#endif
+		Key_EnableTextInput( true, false );
 		cls.key_dest = key_console;
 		break;
 	case key_message:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( true );
-	#endif
+		Key_EnableTextInput( true, false );
 		cls.key_dest = key_message;
 		break;
 	default:

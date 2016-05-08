@@ -68,9 +68,7 @@ static void Vibrate_f()
 
 static void pfnEnableTextInput( int enable )
 {
-#if defined(XASH_SDL)
-	SDLash_EnableTextInput(enable);
-#endif
+	Key_EnableTextInput( enable, false );
 }
 
 static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b, float scale )

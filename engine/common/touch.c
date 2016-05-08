@@ -1269,9 +1269,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		// Hack for keyboard, hope it help
 		if( cls.key_dest == key_console || cls.key_dest == key_message ) 
 		{
-#ifdef XASH_SDL
-			SDL_StartTextInput();
-#endif
+			Key_EnableTextInput( true, true );
 			if( cls.key_dest == key_console )
 			{
 				static float y = 0;

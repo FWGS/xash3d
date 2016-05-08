@@ -778,6 +778,7 @@ int Key_StringToKeynum( const char *str );
 int Key_GetKey( const char *binding );
 void Key_EnumCmds_f( void );
 void Key_SetKeyDest( int key_dest );
+void Key_EnableTextInput( qboolean enable, qboolean force );
 
 //
 // avikit.c

@@ -275,9 +275,16 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 	}
 }
 
-void SDLash_EnableTextInput( int enable )
+void SDLash_EnableTextInput( int enable, qboolean force )
 {
-	if( enable )
+	if( force )
+	{
+		if( enable )
+			SDL_StartTextInput();
+		else
+			SDL_StopTextInput();
+	}
+	else if( enable )
 	{
 		if( !host.textmode )
 		{
