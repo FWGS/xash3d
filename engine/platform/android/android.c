@@ -228,7 +228,10 @@ event_t *Android_AllocEvent()
 {
 	Android_Lock();
 	if( events.count == ANDROID_MAX_EVENTS )
+	{
 		events.count--; //override last event
+		__android_log_print(ANDROID_LOG_DEBUG,"Xash","Too many events!!!");
+	}
 	return &events.queue[ events.count++ ];
 }
 
@@ -357,7 +360,9 @@ void Java_in_celest_xash3d_XashActivity_nativeSetPause(JNIEnv* env, jclass cls, 
 	event->type = event_set_pause;
 	event->arg = pause;
 	Android_PushEvent();
+	if(pause)
 	pthread_mutex_lock( &events.framemutex );
+	else
 	pthread_mutex_unlock( &events.framemutex );
 	//pthread_cond_wait( &events.framecond, &events.mutex );
 }
