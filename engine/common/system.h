@@ -31,6 +31,11 @@ extern "C" {
 #define MSGBOX( x )		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Xash Error", x, NULL )
 #define MSGBOX2( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Error", x, NULL )
 #define MSGBOX3( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Recursive Error", x, NULL )
+#elif defined(__ANDROID__)
+#define MSGBOX( x )		Android_MessageBox("Xash Error", x )
+#define MSGBOX2( x )	Android_MessageBox("Host Error", x )
+#define MSGBOX3( x )	Android_MessageBox("Host Recursive Error", x )
+
 #else
 #define BORDER1 "======================================\n"
 #define MSGBOX( x )	 fprintf(stderr, BORDER1"Xash Error: %s\n"BORDER1,x)

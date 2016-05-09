@@ -107,6 +107,7 @@ static struct jnimethods_s
 	jmethodID toggleEGL;
 	jmethodID enableTextInput;
 	jmethodID vibrate;
+	jmethodID messageBox;
 	int width, height;
 } jni;
 
@@ -174,7 +175,7 @@ void Android_RunEvents()
 
 		case event_resize:
 			// reinitialize EGL and change engine screen size
-			if( scr_width->integer != jni.width || scr_height->integer != jni.height )
+			if( host.state == HOST_NORMAL && ( scr_width->integer != jni.width || scr_height->integer != jni.height ) )
 			{
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 0 );
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 1 );
@@ -250,6 +251,7 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
 	jni.toggleEGL = (*env)->GetStaticMethodID(env, jni.actcls, "toggleEGL", "(I)V");
 	jni.enableTextInput = (*env)->GetStaticMethodID(env, jni.actcls, "showKeyboard", "(I)V");
 	jni.vibrate = (*env)->GetStaticMethodID(env, jni.actcls, "vibrate", "(I)V" );
+	jni.messageBox = (*env)->GetStaticMethodID(env, jni.actcls, "messageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -268,6 +270,9 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
 void Java_in_celest_xash3d_XashActivity_onNativeResize( JNIEnv* env, jclass cls, jint width, jint height )
 {
 	event_t *event;
+
+	if( !width || !height )
+		return;
 
 	jni.width=width, jni.height=height;
 
@@ -432,4 +437,10 @@ void Android_Vibrate( float life, char flags )
 	if( life )
 		(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.vibrate, (int)life );
 }
+
+void Android_MessageBox(const char *title, const char *text)
+{
+	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.messageBox, (*jni.env)->NewStringUTF( jni.env, title ), (*jni.env)->NewStringUTF( jni.env ,text ) );
+}
+
 #endif
