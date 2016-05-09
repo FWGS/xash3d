@@ -55,6 +55,9 @@ static SLresult SLAPIENTRY (*pslCreateEngine)(
 
 void S_Activate( qboolean active )
 {
+	if( !dma.initialized )
+		return;
+
 	if( active )
 	{
 		memset( dma.buffer, 0, snddma_android_size * 2 );
