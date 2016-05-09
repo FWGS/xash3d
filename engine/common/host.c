@@ -1119,8 +1119,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 #ifdef XASH_SDL
 		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
-#endif
+#elif defined(__ANDROID__)
 		Android_RunEvents();
+#endif
 		newtime = Sys_DoubleTime ();
 		Host_Frame( newtime - oldtime );
 
