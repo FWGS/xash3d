@@ -242,6 +242,10 @@ check vid modes and fullscreen
 */
 void VID_CheckChanges( void )
 {
+	// check if screen cvars registered
+
+	SCR_Init();
+
 	if( cl_allow_levelshots->modified )
 	{
 		GL_FreeTexture( cls.loadingBar );
