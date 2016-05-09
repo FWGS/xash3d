@@ -612,6 +612,7 @@ void SV_SendClientDatagram( sv_client_t *cl )
 	svs.currentPlayer = cl;
 	svs.currentPlayerNum = (cl - svs.clients);
 
+	Q_memset( msg_buf, 0, NET_MAX_PAYLOAD );
 	BF_Init( &msg, "Datagram", msg_buf, sizeof( msg_buf ));
 
 	// always send servertime at new frame
