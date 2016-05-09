@@ -43,7 +43,7 @@ LOCAL_C_INCLUDES := \
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 
 LOCAL_SRC_FILES := \
-           platform/android/android.c \
+		   platform/android/android_nosdl.c \
 	   platform/android/dlsym-weak.cpp \
 	   client/cl_cmds.c \
            client/cl_demo.c \
@@ -60,7 +60,7 @@ LOCAL_SRC_FILES := \
            client/cl_tent.c \
            client/cl_video.c \
            client/cl_view.c \
-           client/gl_backend.c \
+		   client/gl_backend.c \
            client/gl_beams.c \
            client/gl_cull.c \
            client/gl_decals.c \
@@ -78,7 +78,7 @@ LOCAL_SRC_FILES := \
            client/gl_studio.c \
            client/gl_vidnt_common.c \
            client/gl_warp.c \
-           client/s_backend.c \
+		   client/s_backend_opensles.c \
            client/s_dsp.c \
            client/s_load.c \
            client/s_main.c \
