@@ -10,6 +10,8 @@ void Android_Init( void );
 void Android_EnableTextInput( qboolean enable, qboolean force );
 void Android_RunEvents( void );
 void Android_MessageBox( const char *title, const char *text );
+void Android_SwapInterval( int interval );
+qboolean Android_InitGL();
 #endif
 
 #endif // ANDROID_MAIN_H

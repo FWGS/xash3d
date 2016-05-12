@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "client.h"
 #include <android/log.h>
 #include <jni.h>
+#include <EGL/egl.h> // nanogl
 convar_t *android_sleep;
 
 static const int s_android_scantokey[] =
@@ -108,8 +109,16 @@ static struct jnimethods_s
 	jmethodID enableTextInput;
 	jmethodID vibrate;
 	jmethodID messageBox;
+	jmethodID createGLContext;
 	int width, height;
 } jni;
+
+static struct nativeegl_s
+{
+	qboolean initialized;
+	EGLDisplay dpy;
+	EGLSurface surface;
+} negl;
 
 #define Android_Lock() pthread_mutex_lock(&events.mutex);
 #define Android_Unlock() pthread_mutex_unlock(&events.mutex);
@@ -163,13 +172,15 @@ void Android_RunEvents()
 				host.state = HOST_FRAME;
 				S_Activate( true );
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 1 );
-
+				Android_UpdateSurface();
+				Android_SwapInterval( Cvar_VariableInteger( "gl_swapinterval" ) );
 			}
 			if( events.queue[i].arg )
 			{
 				host.state = HOST_NOFOCUS;
 				S_Activate( false );
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 0 );
+				negl.initialized = false;
 			}
 			break;
 
@@ -179,6 +190,8 @@ void Android_RunEvents()
 			{
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 0 );
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 1 );
+				Android_UpdateSurface();
+				Android_SwapInterval( Cvar_VariableInteger( "gl_swapinterval" ) );
 				VID_SetMode();
 			}
 			break;
@@ -252,6 +265,7 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
 	jni.enableTextInput = (*env)->GetStaticMethodID(env, jni.actcls, "showKeyboard", "(I)V");
 	jni.vibrate = (*env)->GetStaticMethodID(env, jni.actcls, "vibrate", "(I)V" );
 	jni.messageBox = (*env)->GetStaticMethodID(env, jni.actcls, "messageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
+	jni.createGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "createGLContext", "()Z");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -399,7 +413,11 @@ int Java_in_celest_xash3d_XashActivity_setenv( JNIEnv* env, jclass clazz, jstrin
 void Android_SwapBuffers()
 {
 	nanoGL_Flush();
-	(*jni.env)->CallStaticVoidMethod(jni.env, jni.actcls, jni.swapBuffers);
+	if( negl.initialized )
+		eglSwapBuffers( negl.dpy, negl.surface );
+	else
+		(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.swapBuffers );
+
 }
 
 void Android_GetScreenRes(int *width, int *height)
@@ -411,6 +429,29 @@ void Android_GetScreenRes(int *width, int *height)
 void Android_Init()
 {
 	android_sleep = Cvar_Get( "android_sleep", "1", CVAR_ARCHIVE, "Enable sleep in background" );
+}
+void Android_UpdateSurface()
+{
+	if( Sys_CheckParm("-nonativeegl") )
+	{
+		negl.initialized = false;
+		return;
+	}
+	negl.dpy = eglGetCurrentDisplay();
+	if( negl.dpy == EGL_NO_DISPLAY )
+		return;
+	negl.surface = eglGetCurrentSurface(EGL_DRAW);
+	if( negl.surface == EGL_NO_SURFACE )
+		return;
+	negl.initialized = true;
+}
+
+qboolean Android_InitGL()
+{
+	qboolean result;
+	result = (*jni.env)->CallStaticBooleanMethod( jni.env, jni.actcls, jni.createGLContext );
+	Android_UpdateSurface();
+	return result;
 }
 
 void Android_EnableTextInput( qboolean enable, qboolean force )
@@ -441,6 +482,12 @@ void Android_Vibrate( float life, char flags )
 void Android_MessageBox(const char *title, const char *text)
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.messageBox, (*jni.env)->NewStringUTF( jni.env, title ), (*jni.env)->NewStringUTF( jni.env ,text ) );
+}
+
+void Android_SwapInterval( int interval )
+{
+	if( negl.initialized )
+		eglSwapInterval( negl.dpy, interval );
 }
 
 #endif

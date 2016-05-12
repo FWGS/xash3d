@@ -477,10 +477,7 @@ void GL_UpdateSwapInterval( void )
 	if( gl_swapInterval->modified )
 	{
 		gl_swapInterval->modified = false;
-#if 0
-		if( SDL_GL_SetSwapInterval(gl_swapInterval->integer) )
-			MsgDev(D_ERROR, "SDL_GL_SetSwapInterval: %s\n", SDL_GetError());
-#endif
+		Android_SwapInterval( gl_swapInterval->integer );
 	}
 }
 
@@ -638,6 +635,7 @@ qboolean R_Init_OpenGL( void )
 {
 	VID_StartupGamma();
 	MsgDev( D_NOTE, "R_Init_OpenGL()\n");
+	Android_InitGL();
 	return VID_SetMode();
 }
 
