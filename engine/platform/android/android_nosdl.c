@@ -135,7 +135,7 @@ void S_Activate( qboolean active );
 Android_AllocEvent
 
 Lock event queue and return pointer to next event.
-caller must do Android_PushEvent() to unlock queue after setting parameters.
+Caller must do Android_PushEvent() to unlock queue after setting parameters.
 ========================
 */
 event_t *Android_AllocEvent()

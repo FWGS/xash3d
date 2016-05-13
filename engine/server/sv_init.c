@@ -201,7 +201,7 @@ char *SV_EntityScript( void )
 	{
 		if( ft1 > ft2 )
 		{
-			MsgDev( D_INFO, "^1Entity patch is older than BSP. Ignored.\n", entfilename );			
+			MsgDev( D_INFO, "^1Entity patch %s is older than BSP. Ignored.\n", entfilename );
 		}
 		else if(( ents = (char *)FS_LoadFile( entfilename, NULL, true )) != NULL )
 		{
