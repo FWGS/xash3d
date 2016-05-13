@@ -115,7 +115,7 @@ static struct jnimethods_s
 
 static struct nativeegl_s
 {
-	qboolean initialized;
+	qboolean valid;
 	EGLDisplay dpy;
 	EGLSurface surface;
 } negl;
@@ -124,22 +124,38 @@ static struct nativeegl_s
 #define Android_Unlock() pthread_mutex_unlock(&events.mutex);
 #define Android_PushEvent() Android_Unlock()
 
+void Android_UpdateSurface( void );
 int IN_TouchEvent( int type, int fingerID, float x, float y, float dx, float dy );
 int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, void *func );
 void VID_SetMode( void );
 void S_Activate( qboolean active );
 
+/*
+========================
+Android_AllocEvent
+
+Lock event queue and return pointer to next event.
+caller must do Android_PushEvent() to unlock queue after setting parameters.
+========================
+*/
 event_t *Android_AllocEvent()
 {
 	Android_Lock();
 	if( events.count == ANDROID_MAX_EVENTS )
 	{
 		events.count--; //override last event
-		__android_log_print( ANDROID_LOG_DEBUG, "Xash", "Too many events!!!" );
+		__android_log_print( ANDROID_LOG_ERROR, "Xash", "Too many events!!!" );
 	}
 	return &events.queue[ events.count++ ];
 }
 
+/*
+========================
+Android_RunEvents
+
+Execute all events from queue
+========================
+*/
 void Android_RunEvents()
 {
 	int i;
@@ -180,7 +196,7 @@ void Android_RunEvents()
 				host.state = HOST_NOFOCUS;
 				S_Activate( false );
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 0 );
-				negl.initialized = false;
+				negl.valid = false;
 			}
 			break;
 
@@ -226,6 +242,21 @@ void Android_RunEvents()
 	pthread_mutex_lock( &events.framemutex );
 }
 
+/*
+=====================================================
+JNI callbacks
+
+On application start, setenv and onNativeResize called from
+ui thread to set up engine configuration
+nativeInit called directly from engine thread and will not return until exit.
+These functions may be called from other threads at any time:
+nativeKey
+nativeTouch
+onNativeResize
+nativeString
+nativeSetPause
+=====================================================
+*/
 int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
 {
 	int i;
@@ -410,42 +441,92 @@ int Java_in_celest_xash3d_XashActivity_setenv( JNIEnv* env, jclass clazz, jstrin
 	(*env)->ReleaseStringUTFChars(env, value, v);
 	return err;
 }
+
+
+/*
+========================
+Android_SwapBuffers
+
+Update screen. Use native EGL if possible
+========================
+*/
 void Android_SwapBuffers()
 {
-	nanoGL_Flush();
-	if( negl.initialized )
+	if( negl.valid )
 		eglSwapBuffers( negl.dpy, negl.surface );
 	else
+	{
+		nanoGL_Flush();
 		(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.swapBuffers );
-
+	}
 }
 
+/*
+========================
+Android_GetScreenRes
+
+Resolution got from last resize event
+========================
+*/
 void Android_GetScreenRes(int *width, int *height)
 {
 	*width=jni.width, *height=jni.height;
 }
 
-// initialize android related cvars
+/*
+========================
+Android_Init
+
+Initialize android-related cvars
+========================
+*/
 void Android_Init()
 {
 	android_sleep = Cvar_Get( "android_sleep", "1", CVAR_ARCHIVE, "Enable sleep in background" );
 }
-void Android_UpdateSurface()
+
+/*
+========================
+Android_UpdateSurface
+
+Check if we may use native EGL without jni calls
+========================
+*/
+void Android_UpdateSurface( void )
 {
+	negl.valid = false;
+
 	if( Sys_CheckParm("-nonativeegl") )
-	{
-		negl.initialized = false;
-		return;
-	}
+		return; //disabled by user
+
 	negl.dpy = eglGetCurrentDisplay();
+
 	if( negl.dpy == EGL_NO_DISPLAY )
 		return;
+
 	negl.surface = eglGetCurrentSurface(EGL_DRAW);
+
 	if( negl.surface == EGL_NO_SURFACE )
 		return;
-	negl.initialized = true;
+
+	// now check if swapBuffers does not give error
+	if( eglSwapBuffers( negl.dpy, negl.surface ) == EGL_FALSE )
+		return;
+
+	// double check
+	if( eglGetError() != EGL_SUCCESS )
+		return;
+
+	__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "native EGL enabled" );
+
+	negl.valid = true;
 }
 
+/*
+========================
+Android_InitGL
+========================
+*/
 qboolean Android_InitGL()
 {
 	qboolean result;
@@ -454,6 +535,14 @@ qboolean Android_InitGL()
 	return result;
 }
 
+
+/*
+========================
+Android_EnableTextInput
+
+Show virtual keyboard
+========================
+*/
 void Android_EnableTextInput( qboolean enable, qboolean force )
 {
 	if( force )
@@ -473,20 +562,42 @@ void Android_EnableTextInput( qboolean enable, qboolean force )
 	}
 }
 
+/*
+========================
+Android_Vibrate
+========================
+*/
 void Android_Vibrate( float life, char flags )
 {
 	if( life )
 		(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.vibrate, (int)life );
 }
 
+
+/*
+========================
+Android_MessageBox
+
+Show messagebox and wait for OK button press
+========================
+*/
 void Android_MessageBox(const char *title, const char *text)
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.messageBox, (*jni.env)->NewStringUTF( jni.env, title ), (*jni.env)->NewStringUTF( jni.env ,text ) );
 }
 
+
+
+/*
+========================
+Android_SwapInterval
+========================
+*/
 void Android_SwapInterval( int interval )
 {
-	if( negl.initialized )
+	// there is no eglSwapInterval in EGL10/EGL11 classes,
+	// so only native backend supported
+	if( negl.valid )
 		eglSwapInterval( negl.dpy, interval );
 }
 
