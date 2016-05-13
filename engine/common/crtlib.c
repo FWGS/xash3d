@@ -54,6 +54,7 @@ qboolean Q_isdigit( const char *str )
 	return false;
 }
 
+#ifndef XASH_SKIPCRTLIB
 int Q_strlen( const char *string )
 {
 	int		len;
@@ -152,7 +153,7 @@ size_t Q_strncpy( char *dst, const char *src, size_t size )
 	}
 	return ( s - src - 1 ); // count does not include NULL
 }
-
+#endif
 char *_copystring( byte *mempool, const char *s, const char *filename, int fileline )
 {
 	char	*b;
@@ -165,7 +166,7 @@ char *_copystring( byte *mempool, const char *s, const char *filename, int filel
 
 	return b;
 }
-
+#ifndef XASH_SKIPCRTLIB
 int Q_atoi( const char *str )
 {
 	int       val = 0;
@@ -282,7 +283,7 @@ float Q_atof( const char *str )
 	
 	return val * sign;
 }
-
+#endif
 void Q_atov( float *vec, const char *str, size_t siz )
 {
 	string	buffer;
@@ -306,7 +307,7 @@ void Q_atov( float *vec, const char *str, size_t siz )
 		pfront = pstr;
 	}
 }
-
+#ifndef XASH_SKIPCRTLIB
 char *Q_strchr( const char *s, char c )
 {
 	int	len = Q_strlen( s );
@@ -394,7 +395,7 @@ int Q_strncmp( const char *s1, const char *s2, int n )
 	// strings are equal
 	return 0;
 }
-
+#endif
 static qboolean Q_starcmp( const char *pattern, const char *text )
 {
 	char		c, c1;
@@ -485,7 +486,7 @@ const char* Q_timestamp( int format )
 
 	return timestamp;
 }
-
+#ifndef XASH_SKIPCRTLIB
 char *Q_strstr( const char *string, const char *string2 )
 {
 	int	c, len;
@@ -571,7 +572,7 @@ int Q_sprintf( char *buffer, const char *format, ... )
 
 	return result;
 }
-
+#endif
 char *Q_pretifymem( float value, int digitsafterdecimal )
 {
 	static char	output[8][32];

@@ -32,8 +32,8 @@ void Com_ResetLibraryError()
 
 void Com_PushLibraryError( const char *error )
 {
-	Q_strncat( lasterror, error, 1024 );
-	Q_strncat( lasterror, "\n", 1024 );
+	Q_strncat( lasterror, error, sizeof( lasterror ) );
+	Q_strncat( lasterror, "\n", sizeof( lasterror ) );
 }
 
 #ifndef _WIN32
