@@ -701,7 +701,7 @@ void Host_Error( const char *error, ... )
 	if( recursive )
 	{ 
 		Msg( "Host_RecursiveError: %s", hosterror2 );
-		Sys_Error( hosterror1 );
+		Sys_Error( "%s", hosterror1 );
 		return; // don't multiple executes
 	}
 

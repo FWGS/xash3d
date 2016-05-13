@@ -93,9 +93,9 @@ double Sys_DoubleTime( void );
 char *Sys_GetClipboardData( void );
 char *Sys_GetCurrentUser( void );
 int Sys_CheckParm( const char *parm );
-void Sys_Error( const char *format, ... );
-void Sys_Break( const char *format, ... );
-void Sys_Warn( const char *format, ... );
+void Sys_Error( const char *format, ... ) _format(1);
+void Sys_Break( const char *format, ... ) _format(1);
+void Sys_Warn( const char *format, ... ) _format(1);
 qboolean Sys_LoadLibrary( dll_info_t *dll );
 void* Sys_GetProcAddress( dll_info_t *dll, const char* name );
 qboolean Sys_FreeLibrary( dll_info_t *dll );
@@ -130,8 +130,8 @@ void Con_DisableInput( void );
 char *Con_Input( void );
 
 // text messages
-void Msg( const char *pMsg, ... );
-void MsgDev( int level, const char *pMsg, ... );
+void Msg( const char *pMsg, ... ) _format(1);
+void MsgDev( int level, const char *pMsg, ... ) _format(2);
 
 #ifdef __cplusplus
 }

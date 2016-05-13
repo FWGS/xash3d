@@ -162,7 +162,7 @@ void SV_DirectConnect( netadr_t from )
 			return;
 		}
 
-		MsgDev( D_NOTE, "Client %i connecting with challenge %p\n", i, challenge );
+		MsgDev( D_NOTE, "Client %i connecting with challenge %x\n", i, challenge );
 		svs.challenges[i].connected = true;
 	}
 
@@ -411,7 +411,7 @@ edict_t *SV_FakeConnect( const char *netname )
 	// parse some info from the info strings
 	SV_UserinfoChanged( newcl, userinfo );
 
-	MsgDev( D_NOTE, "Bot %i connecting with challenge %p\n", i, -1 );
+	MsgDev( D_NOTE, "Bot %i connecting with challenge %x\n", i, -1 );
 
 	ent->v.flags |= FL_FAKECLIENT;	// mark it as fakeclient
 	newcl->state = cs_spawned;
@@ -594,7 +594,7 @@ char *SV_StatusString( void )
 		cl = &svs.clients[i];
 		if( cl->state == cs_connected || cl->state == cs_spawned )
 		{
-			Q_sprintf( player, "%i %i \"%s\"\n", (int)cl->edict->v.frags, cl->ping, cl->name );
+			Q_sprintf( player, "%i %i \"%s\"\n", (int)cl->edict->v.frags, (int)cl->ping, cl->name );
 			playerLength = Q_strlen( player );
 			if( statusLength + playerLength >= sizeof( status ))
 				break; // can't hold any more
@@ -628,7 +628,7 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 	if( cl->authentication_method == 0 )
 	{
 		// probably some old compatibility code.
-		Q_snprintf( result, sizeof( result ), "%010lu", cl->WonID );
+		Q_snprintf( result, sizeof( result ), "%010lu", (unsigned long)cl->WonID );
 	}
 	else if( cl->authentication_method == 2 )
 	{
@@ -642,7 +642,7 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 		}
 		else
 		{
-			Q_snprintf( result, sizeof( result ), "VALVE_%010lu", cl->WonID );
+			Q_snprintf( result, sizeof( result ), "VALVE_%010lu", (unsigned long)cl->WonID );
 		}
 	}
 	else Q_strncpy( result, "UNKNOWN", sizeof( result ));
@@ -710,9 +710,9 @@ void SV_Info( netadr_t from )
 
 		Info_SetValueForKey( string, "host", hostname->string );
 		Info_SetValueForKey( string, "map", sv.name );
-		Info_SetValueForKey( string, "dm", va( "%i", svgame.globals->deathmatch ));
-		Info_SetValueForKey( string, "team", va( "%i", svgame.globals->teamplay ));
-		Info_SetValueForKey( string, "coop", va( "%i", svgame.globals->coop ));
+		Info_SetValueForKey( string, "dm", va( "%i", (int)svgame.globals->deathmatch ));
+		Info_SetValueForKey( string, "team", va( "%i", (int)svgame.globals->teamplay ));
+		Info_SetValueForKey( string, "coop", va( "%i", (int)svgame.globals->coop ));
 		Info_SetValueForKey( string, "numcl", va( "%i", count ));
 		Info_SetValueForKey( string, "maxcl", va( "%i", sv_maxclients->integer ));
 		Info_SetValueForKey( string, "gamedir", gamedir );
@@ -766,7 +766,7 @@ void SV_BuildNetAnswer( netadr_t from )
 			{
 				edict_t *ed = svs.clients[i].edict;
 				float time = host.realtime - svs.clients[i].lastconnect;
-				Q_strncat( string, va( "%c\\%s\\%i\\%f\\", count, svs.clients[i].name, ed->v.frags, time ), sizeof( string )); 
+				Q_strncat( string, va( "%c\\%s\\%i\\%f\\", count, svs.clients[i].name, (int)ed->v.frags, time ), sizeof( string ));
 				count++;
 			}
 		}
@@ -2357,8 +2357,7 @@ void SV_EntSendVars( sv_client_t *cl, edict_t *ent )
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );
 	BF_WriteString( &cl->netchan.message, va( "set ent_last_inst !%i_%i\n", NUM_FOR_EDICT( ent ), ent->serialnumber ));
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );
-	BF_WriteString( &cl->netchan.message, va( "set ent_last_origin \"%f %f %f\"\n", NUM_FOR_EDICT( ent ),
-											  ent->v.origin[0], ent->v.origin[1], ent->v.origin[2]));
+	BF_WriteString( &cl->netchan.message, va( "set ent_last_origin \"%f %f %f\"\n", ent->v.origin[0], ent->v.origin[1], ent->v.origin[2]));
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );
 	BF_WriteString( &cl->netchan.message, va( "set ent_last_class \"%s\"\n", STRING( ent->v.classname )));
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );

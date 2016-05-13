@@ -1849,7 +1849,7 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 			opt |= O_BINARY;
 			break;
 		default:
-			MsgDev( D_ERROR, "FS_SysOpen: %s: unknown char in mode (%c)\n", filepath, mode, mode[ind] );
+			MsgDev( D_ERROR, "FS_SysOpen: %s: unknown char in mode %s (%c)\n", filepath, mode, mode[ind] );
 			break;
 		}
 	}
@@ -3439,7 +3439,7 @@ wfile_t *W_Open( const char *filename, const char *mode )
 		wad->numlumps = header.numlumps;
 		if( wad->numlumps >= MAX_FILES_IN_WAD && wad->mode == O_APPEND )
 		{
-			MsgDev( D_WARN, "W_Open: %s is full (%i lumps)\n", wad->numlumps );
+			MsgDev( D_WARN, "W_Open: %s is full (%i lumps)\n", filename, wad->numlumps );
 			wad->mode = O_RDONLY; // set read-only mode
 		}
 		wad->infotableofs = header.infotableofs; // save infotableofs position

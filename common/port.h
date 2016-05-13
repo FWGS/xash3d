@@ -141,4 +141,9 @@ GNU General Public License for more details.
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
 #endif
 
+#ifdef __GNUC__
+#define _format(x) __attribute__((format(printf, x, x+1)))
+#else
+#define _format(x)
+#endif
 #endif

@@ -458,7 +458,7 @@ void CL_DrawDemoRecording( void )
 		return;
 
 	pos = FS_Tell( cls.demofile );
-	Q_snprintf( string, sizeof( string ), "RECORDING %s: %ik", cls.demoname, pos / 1024 );
+	Q_snprintf( string, sizeof( string ), "RECORDING %s: %ik", cls.demoname, (int)(pos / 1024) );
 
 	Con_DrawStringLen( string, &len, NULL );
 	Con_DrawString(( scr_width->integer - len) >> 1, scr_height->integer >> 2, string, color );

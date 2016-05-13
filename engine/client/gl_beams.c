@@ -2179,7 +2179,7 @@ void CL_ReadLineFile_f( void )
 
 		if( token[0] != '-' )
 		{
-			MsgDev( D_ERROR, "%s is corrupted\n" );
+			MsgDev( D_ERROR, "%s is corrupted\n", filename );
 			break;
 		}
 

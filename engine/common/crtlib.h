@@ -173,11 +173,11 @@ char *Q_stristr( const char *string, const char *string2 );
 char *Q_strstr( const char *string, const char *string2 );
 #define Q_vsprintf( buffer, format, args ) Q_vsnprintf( buffer, 99999, format, args )
 int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list args );
-int Q_snprintf( char *buffer, size_t buffersize, const char *format, ... );
-int Q_sprintf( char *buffer, const char *format, ... );
+int Q_snprintf( char *buffer, size_t buffersize, const char *format, ... ) _format(3);
+int Q_sprintf( char *buffer, const char *format, ... ) _format(2);
 #define Q_memprint( val ) Q_pretifymem( val, 2 )
 char *Q_pretifymem( float value, int digitsafterdecimal );
-char *va( const char *format, ... );
+char *va( const char *format, ... ) _format(1);
 #define Q_memcpy( dest, src, size ) _Q_memcpy( dest, src, size, __FILE__, __LINE__ )
 #define Q_memset( dest, val, size ) _Q_memset( dest, val, size, __FILE__, __LINE__ )
 #define Q_memcmp( src0, src1, siz ) _Q_memcmp( src0, src1, siz, __FILE__, __LINE__ )

@@ -2100,7 +2100,7 @@ SV_StartMusic
 void SV_StartMusic( const char *curtrack, const char *looptrack, fs_offset_t position )
 {
 	BF_WriteByte( &sv.multicast, svc_stufftext );
-	BF_WriteString( &sv.multicast, va( "music \"%s\" \"%s\" %i\n", curtrack, looptrack, position ));
+	BF_WriteString( &sv.multicast, va( "music \"%s\" \"%s\" %i\n", curtrack, looptrack, (int)position ));
 	SV_Send( MSG_ALL, NULL, NULL );
 }
 
@@ -2787,7 +2787,7 @@ void pfnWriteEntity( int iValue )
 	if( iValue < 0 || iValue >= svgame.numEntities )
 		Host_Error( "BF_WriteEntity: invalid entnumber %i\n", iValue );
 	BF_WriteShort( &sv.multicast, (short)iValue );
-	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteEntity( %s )\n", iValue );
+	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteEntity( %i )\n", iValue );
 	svgame.msg_realsize += 2;
 }
 
@@ -3247,7 +3247,7 @@ void pfnClientPrintf( edict_t* pEdict, PRINT_TYPE ptype, const char *szMsg )
 	if( sv.state != ss_active )
 	{
 		// send message into console during loading
-		MsgDev( D_INFO, szMsg );
+		MsgDev( D_INFO, "%s\n", szMsg );
 		return;
 	}
 
@@ -3260,7 +3260,7 @@ void pfnClientPrintf( edict_t* pEdict, PRINT_TYPE ptype, const char *szMsg )
 	switch( ptype )
 	{
 	case print_console:
-		if( client->fakeclient ) MsgDev( D_INFO, szMsg );
+		if( client->fakeclient ) MsgDev( D_INFO, "%s", szMsg );
 		else SV_ClientPrintf( client, PRINT_HIGH, "%s", szMsg );
 		break;
 	case print_chat:
@@ -3284,7 +3284,7 @@ pfnServerPrint
 void pfnServerPrint( const char *szMsg )
 {
 	// while loading in-progress we can sending message only for local client
-	if( sv.state != ss_active ) MsgDev( D_INFO, szMsg );	
+	if( sv.state != ss_active ) MsgDev( D_INFO, "%s", szMsg );
 	else SV_BroadcastPrintf( PRINT_HIGH, "%s", szMsg );
 }
 

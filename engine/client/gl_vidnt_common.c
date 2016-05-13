@@ -372,7 +372,7 @@ void R_RenderInfo_f( void )
 	}
 
 	Msg( "\n" );
-	Msg( "MODE: %i x %i %s\n", scr_width->integer, scr_height->integer );
+	Msg( "MODE: %i x %i\n", scr_width->integer, scr_height->integer );
 	Msg( "GAMMA: %s\n", (glConfig.deviceSupportsGamma) ? "hardware" : "software" );
 	Msg( "\n" );
 	Msg( "PICMIP: %i\n", gl_picmip->integer );
