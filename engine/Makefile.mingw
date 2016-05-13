@@ -40,7 +40,7 @@ clean:
 ifneq ($(RM),)
 	$(RM) $(OBJS) $(OBJS_CPP) xash_bin.exe
 else
-	del $(subst /,\,$(OBJS) $(OBJS_CPP) xash_bin.exe)
+	cmd /c del $(subst /,\,$(OBJS) $(OBJS_CPP) xash_bin.exe)
 endif
 list:
 	@echo Sources:
