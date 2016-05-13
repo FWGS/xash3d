@@ -294,6 +294,7 @@ gotnewcl:
 	newcl->lastconnect = host.realtime;
 	newcl->next_messagetime = host.realtime + newcl->cl_updaterate;
 	newcl->delta_sequence = -1;
+	newcl->resources_sent = 1;
 
 	// if this was the first client on the server, or the last client
 	// the server can hold, send a heartbeat to the master.
