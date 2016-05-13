@@ -812,7 +812,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 			len += line;
 		}
 	// Put MessageBox as Sys_Error
-	Msg( message );
+	Msg( "%s\n", message );
 #ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
 	//SDL_MouseQuit();

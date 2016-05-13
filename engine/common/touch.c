@@ -1374,7 +1374,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				if( button->type == touch_command )
 				{
 					char command[256];
-					Q_snprintf( command, 256, "%s\n", button->command, 256 );
+					Q_snprintf( command, 256, "%s\n", button->command );
 					if( B(flags) & TOUCH_FL_PRECISION )
 						touch.precision = true;
 					Cbuf_AddText( command );
@@ -1447,7 +1447,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				if( ( button->type == touch_command ) && ( button->command[0] == '+' ) )
 				{
 					char command[256];
-					Q_snprintf( command, 256, "%s\n", button->command, 256 );
+					Q_snprintf( command, 256, "%s\n", button->command );
 					command[0] = '-';
 					Cbuf_AddText( command );
 					if( B(flags) & TOUCH_FL_PRECISION )

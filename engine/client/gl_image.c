@@ -1799,7 +1799,7 @@ void GL_FreeImage( const char *name )
 
 	if( Q_strlen( name ) >= sizeof( r_textures->name ))
 	{
-		MsgDev( D_ERROR, "GL_FreeImage: too long name %s\n", name, sizeof( r_textures->name ));
+		MsgDev( D_ERROR, "GL_FreeImage: too long name %s\n", name );
 		return;
 	}
 
