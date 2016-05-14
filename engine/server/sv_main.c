@@ -798,7 +798,9 @@ void SV_Init( void )
 	Cvar_Get( "sv_allow_PhysX", "1", CVAR_ARCHIVE, "allow XashXT to use PhysX engine" ); // XashXT cvar
 	Cvar_Get( "sv_precache_meshes", "1", CVAR_ARCHIVE, "cache SOLID_CUSTOM meshes before level loads" ); // Paranoia 2 cvar
 	Cvar_Get( "mp_allowmonsters", "0", CVAR_SERVERNOTIFY | CVAR_LATCH, "allow monsters in multiplayer" );
-		
+	Cvar_Get( "port", va( "%i", PORT_SERVER ), 0, "network default port" );
+	Cvar_Get( "ip_hostport", "0", 0, "network server port" );
+
 	// half-life shared variables
 	sv_zmax = Cvar_Get ("sv_zmax", "4096", CVAR_PHYSICINFO, "zfar server value" );
 	sv_wateramp = Cvar_Get ("sv_wateramp", "0", CVAR_PHYSICINFO, "global water wave height" );
