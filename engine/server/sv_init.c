@@ -361,14 +361,6 @@ void SV_ActivateServer( void )
 
 	if( sv_maxclients->integer > 1 )
 	{
-		// listenserver is executed on every map change in multiplayer
-		if( host.type != HOST_DEDICATED )
-		{
-			char *plservercfgfile = Cvar_VariableString( "lservercfgfile" );
-			if( *plservercfgfile )
-				Cbuf_AddText( va( "exec %s\n", plservercfgfile ) );
-		}
-
 		if( public_server->integer )
 		{
 			MsgDev( D_INFO, "Adding your server to master server list\n" );
