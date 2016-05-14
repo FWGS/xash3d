@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef GL_EXPORT_H
 #define GL_EXPORT_H
 
-#ifdef __ANDROID__
+#if defined __ANDROID__
 
 #include "platform/android/gl_mangle.h"
 #undef pglMultiTexCoord2f
@@ -123,7 +123,7 @@ typedef void GLvoid;
 typedef signed char GLbyte;
 typedef short GLshort;
 typedef int GLint;
-typedef byte GLubyte;
+typedef unsigned char GLubyte;
 typedef word GLushort;
 typedef uint GLuint;
 typedef int GLsizei;
@@ -133,7 +133,7 @@ typedef double GLdouble;
 typedef double GLclampd;
 typedef int GLintptrARB;
 typedef int GLsizeiptrARB;
-typedef char GLcharARB;
+typedef char GLchar;
 typedef uint GLhandleARB;
 typedef float GLmatrix[16];
 
@@ -829,13 +829,36 @@ typedef float GLmatrix[16];
 #define ERROR_INVALID_VERSION_ARB		0x2095
 #define ERROR_INVALID_PROFILE_ARB		0x2096
 
+#if defined XASH_GLES2_RENDER
+#define GL_VERTEX_SHADER                  0x8B31
+#define GL_FRAGMENT_SHADER                0x8B30
+
+void ( APIENTRY *pglEnableVertexAttribArray) (GLuint index);
+void ( APIENTRY *pglVertexAttribPointer)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
+void ( APIENTRY *pglDisableVertexAttribArray)(GLuint index);
+
+GLuint (APIENTRY *pglCreateProgram) (void);
+GLuint (APIENTRY *pglCreateShader) (GLenum type);
+void (APIENTRY *pglShaderSource) (GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+void (APIENTRY *pglCompileShader) (GLuint shader);
+void (APIENTRY *pglAttachShader) (GLuint program, GLuint shader);
+void (APIENTRY *pglLinkProgram) (GLuint program);
+void (APIENTRY *pglUseProgram) (GLuint program);
+
+GLint (APIENTRY *pglGetUniformLocation) (GLuint program, const GLchar *name);
+void (APIENTRY *pglUniform4f) (GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+void (APIENTRY *pglUniform4fv) (GLint location, GLsizei count, const GLfloat *value);
+
+#endif
+
 // helper opengl functions
 GLenum ( APIENTRY *pglGetError )(void);
 const GLubyte * ( APIENTRY *pglGetString )(GLenum name);
 
 // base gl functions
 void ( APIENTRY *pglAccum )(GLenum op, GLfloat value);
-void ( APIENTRY *pglAlphaFunc )(GLenum func, GLclampf ref);
+//void ( APIENTRY *pglAlphaFunc )(GLenum func, GLclampf ref);
+void pglAlphaFunc (GLenum func, GLclampf ref);
 void ( APIENTRY *pglArrayElement )(GLint i);
 void ( APIENTRY *pglBegin )(GLenum mode);
 void ( APIENTRY *pglBindTexture )(GLenum target, GLuint texture);
@@ -873,14 +896,17 @@ void ( APIENTRY *pglColor4b )(GLbyte red, GLbyte green, GLbyte blue, GLbyte alph
 void ( APIENTRY *pglColor4bv )(const GLbyte *v);
 void ( APIENTRY *pglColor4d )(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha);
 void ( APIENTRY *pglColor4dv )(const GLdouble *v);
-void ( APIENTRY *pglColor4f )(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+//void ( APIENTRY *pglColor4f )(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+void pglColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 void ( APIENTRY *pglColor4fv )(const GLfloat *v);
 void ( APIENTRY *pglColor4i )(GLint red, GLint green, GLint blue, GLint alpha);
 void ( APIENTRY *pglColor4iv )(const GLint *v);
 void ( APIENTRY *pglColor4s )(GLshort red, GLshort green, GLshort blue, GLshort alpha);
 void ( APIENTRY *pglColor4sv )(const GLshort *v);
-void ( APIENTRY *pglColor4ub )(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
-void ( APIENTRY *pglColor4ubv )(const GLubyte *v);
+//void ( APIENTRY *pglColor4ub )(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
+void pglColor4ub (GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
+//void ( APIENTRY *pglColor4ubv )(const GLubyte *v);
+void pglColor4ubv (const GLubyte *v);
 void ( APIENTRY *pglColor4ui )(GLuint red, GLuint green, GLuint blue, GLuint alpha);
 void ( APIENTRY *pglColor4uiv )(const GLuint *v);
 void ( APIENTRY *pglColor4us )(GLushort red, GLushort green, GLushort blue, GLushort alpha);
@@ -898,7 +924,8 @@ void ( APIENTRY *pglDeleteLists )(GLuint list, GLsizei range);
 void ( APIENTRY *pglDeleteTextures )(GLsizei n, const GLuint *textures);
 void ( APIENTRY *pglDepthFunc )(GLenum func);
 void ( APIENTRY *pglDepthMask )(GLboolean flag);
-void ( APIENTRY *pglDepthRange )(GLclampd zNear, GLclampd zFar);
+//void ( APIENTRY *pglDepthRange )(GLclampd zNear, GLclampd zFar);
+void ( APIENTRY *pglDepthRangef )(GLfloat zNear, GLfloat zFar);
 void ( APIENTRY *pglDisable )(GLenum cap);
 void ( APIENTRY *pglDisableClientState )(GLenum array);
 void ( APIENTRY *pglDrawArrays )(GLenum mode, GLint first, GLsizei count);
@@ -987,9 +1014,11 @@ void ( APIENTRY *pglLightiv )(GLenum light, GLenum pname, const GLint *params);
 void ( APIENTRY *pglLineStipple )(GLint factor, GLushort pattern);
 void ( APIENTRY *pglLineWidth )(GLfloat width);
 void ( APIENTRY *pglListBase )(GLuint base);
-void ( APIENTRY *pglLoadIdentity )(void);
+//void ( APIENTRY *pglLoadIdentity )(void);
+void pglLoadIdentity ();
 void ( APIENTRY *pglLoadMatrixd )(const GLdouble *m);
-void ( APIENTRY *pglLoadMatrixf )(const GLfloat *m);
+//void ( APIENTRY *pglLoadMatrixf )(const GLfloat *m);
+void pglLoadMatrixf (const GLfloat *m);
 void ( APIENTRY *pglLoadName )(GLuint name);
 void ( APIENTRY *pglLogicOp )(GLenum opcode);
 void ( APIENTRY *pglMap1d )(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points);
@@ -1004,7 +1033,8 @@ void ( APIENTRY *pglMaterialf )(GLenum face, GLenum pname, GLfloat param);
 void ( APIENTRY *pglMaterialfv )(GLenum face, GLenum pname, const GLfloat *params);
 void ( APIENTRY *pglMateriali )(GLenum face, GLenum pname, GLint param);
 void ( APIENTRY *pglMaterialiv )(GLenum face, GLenum pname, const GLint *params);
-void ( APIENTRY *pglMatrixMode )(GLenum mode);
+//void ( APIENTRY *pglMatrixMode )(GLenum mode);
+void pglMatrixMode (GLenum mode);
 void ( APIENTRY *pglMultMatrixd )(const GLdouble *m);
 void ( APIENTRY *pglMultMatrixf )(const GLfloat *m);
 void ( APIENTRY *pglNewList )(GLuint list, GLenum mode);
@@ -1019,7 +1049,8 @@ void ( APIENTRY *pglNormal3iv )(const GLint *v);
 void ( APIENTRY *pglNormal3s )(GLshort nx, GLshort ny, GLshort nz);
 void ( APIENTRY *pglNormal3sv )(const GLshort *v);
 void ( APIENTRY *pglNormalPointer )(GLenum type, GLsizei stride, const GLvoid *pointer);
-void ( APIENTRY *pglOrtho )(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
+//void ( APIENTRY *pglOrtho )(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar);
+void pglOrtho (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 void ( APIENTRY *pglPassThrough )(GLfloat token);
 void ( APIENTRY *pglPixelMapfv )(GLenum map, GLsizei mapsize, const GLfloat *values);
 void ( APIENTRY *pglPixelMapuiv )(GLenum map, GLsizei mapsize, const GLuint *values);
@@ -1029,8 +1060,10 @@ void ( APIENTRY *pglPixelStorei )(GLenum pname, GLint param);
 void ( APIENTRY *pglPixelTransferf )(GLenum pname, GLfloat param);
 void ( APIENTRY *pglPixelTransferi )(GLenum pname, GLint param);
 void ( APIENTRY *pglPixelZoom )(GLfloat xfactor, GLfloat yfactor);
-void ( APIENTRY *pglPointSize )(GLfloat size);
-void ( APIENTRY *pglPolygonMode )(GLenum face, GLenum mode);
+//void ( APIENTRY *pglPointSize )(GLfloat size);
+void pglPointSize (GLfloat size);
+//void ( APIENTRY *pglPolygonMode )(GLenum face, GLenum mode);
+void pglPolygonMode (GLenum face, GLenum mode);
 void ( APIENTRY *pglPolygonOffset )(GLfloat factor, GLfloat units);
 void ( APIENTRY *pglPolygonStipple )(const GLubyte *mask);
 void ( APIENTRY *pglPopAttrib )(void);
@@ -1081,7 +1114,8 @@ void ( APIENTRY *pglScaled )(GLdouble x, GLdouble y, GLdouble z);
 void ( APIENTRY *pglScalef )(GLfloat x, GLfloat y, GLfloat z);
 void ( APIENTRY *pglScissor )(GLint x, GLint y, GLsizei width, GLsizei height);
 void ( APIENTRY *pglSelectBuffer )(GLsizei size, GLuint *buffer);
-void ( APIENTRY *pglShadeModel )(GLenum mode);
+//void ( APIENTRY *pglShadeModel )(GLenum mode);
+void pglShadeModel (GLenum mode);
 void ( APIENTRY *pglStencilFunc )(GLenum func, GLint ref, GLuint mask);
 void ( APIENTRY *pglStencilMask )(GLuint mask);
 void ( APIENTRY *pglStencilOp )(GLenum fail, GLenum zfail, GLenum zpass);
@@ -1120,7 +1154,8 @@ void ( APIENTRY *pglTexCoord4sv )(const GLshort *v);
 void ( APIENTRY *pglTexCoordPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 void ( APIENTRY *pglTexEnvf )(GLenum target, GLenum pname, GLfloat param);
 void ( APIENTRY *pglTexEnvfv )(GLenum target, GLenum pname, const GLfloat *params);
-void ( APIENTRY *pglTexEnvi )(GLenum target, GLenum pname, GLint param);
+//void ( APIENTRY *pglTexEnvi )(GLenum target, GLenum pname, GLint param);
+void pglTexEnvi (GLenum target, GLenum pname, GLint param);
 void ( APIENTRY *pglTexEnviv )(GLenum target, GLenum pname, const GLint *params);
 void ( APIENTRY *pglTexGend )(GLenum coord, GLenum pname, GLdouble param);
 void ( APIENTRY *pglTexGendv )(GLenum coord, GLenum pname, const GLdouble *params);
@@ -1128,13 +1163,13 @@ void ( APIENTRY *pglTexGenf )(GLenum coord, GLenum pname, GLfloat param);
 void ( APIENTRY *pglTexGenfv )(GLenum coord, GLenum pname, const GLfloat *params);
 void ( APIENTRY *pglTexGeni )(GLenum coord, GLenum pname, GLint param);
 void ( APIENTRY *pglTexGeniv )(GLenum coord, GLenum pname, const GLint *params);
-void ( APIENTRY *pglTexImage1D )(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+//void ( APIENTRY *pglTexImage1D )(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
 void ( APIENTRY *pglTexImage2D )(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
 void ( APIENTRY *pglTexParameterf )(GLenum target, GLenum pname, GLfloat param);
 void ( APIENTRY *pglTexParameterfv )(GLenum target, GLenum pname, const GLfloat *params);
 void ( APIENTRY *pglTexParameteri )(GLenum target, GLenum pname, GLint param);
 void ( APIENTRY *pglTexParameteriv )(GLenum target, GLenum pname, const GLint *params);
-void ( APIENTRY *pglTexSubImage1D )(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *pixels);
+//void ( APIENTRY *pglTexSubImage1D )(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *pixels);
 void ( APIENTRY *pglTexSubImage2D )(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
 void ( APIENTRY *pglTranslated )(GLdouble x, GLdouble y, GLdouble z);
 void ( APIENTRY *pglTranslatef )(GLfloat x, GLfloat y, GLfloat z);
@@ -1189,47 +1224,12 @@ void ( APIENTRY *pglDeleteObjectARB)(GLhandleARB obj);
 GLhandleARB ( APIENTRY *pglGetHandleARB)(GLenum pname);
 void ( APIENTRY *pglDetachObjectARB)(GLhandleARB containerObj, GLhandleARB attachedObj);
 GLhandleARB ( APIENTRY *pglCreateShaderObjectARB)(GLenum shaderType);
-void ( APIENTRY *pglShaderSourceARB)(GLhandleARB shaderObj, GLsizei count, const GLcharARB **string, const GLint *length);
-void ( APIENTRY *pglCompileShaderARB)(GLhandleARB shaderObj);
 GLhandleARB ( APIENTRY *pglCreateProgramObjectARB)(void);
-void ( APIENTRY *pglAttachObjectARB)(GLhandleARB containerObj, GLhandleARB obj);
-void ( APIENTRY *pglLinkProgramARB)(GLhandleARB programObj);
-void ( APIENTRY *pglUseProgramObjectARB)(GLhandleARB programObj);
-void ( APIENTRY *pglValidateProgramARB)(GLhandleARB programObj);
-void ( APIENTRY *pglBindProgramARB)(GLenum target, GLuint program);
-void ( APIENTRY *pglDeleteProgramsARB)(GLsizei n, const GLuint *programs);
-void ( APIENTRY *pglGenProgramsARB)(GLsizei n, GLuint *programs);
-void ( APIENTRY *pglProgramStringARB)(GLenum target, GLenum format, GLsizei len, const GLvoid *string);
-void ( APIENTRY *pglProgramEnvParameter4fARB)(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void ( APIENTRY *pglProgramLocalParameter4fARB)(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void ( APIENTRY *pglUniform1fARB)(GLint location, GLfloat v0);
-void ( APIENTRY *pglUniform2fARB)(GLint location, GLfloat v0, GLfloat v1);
-void ( APIENTRY *pglUniform3fARB)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
-void ( APIENTRY *pglUniform4fARB)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
-void ( APIENTRY *pglUniform1iARB)(GLint location, GLint v0);
-void ( APIENTRY *pglUniform2iARB)(GLint location, GLint v0, GLint v1);
-void ( APIENTRY *pglUniform3iARB)(GLint location, GLint v0, GLint v1, GLint v2);
-void ( APIENTRY *pglUniform4iARB)(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
-void ( APIENTRY *pglUniform1fvARB)(GLint location, GLsizei count, const GLfloat *value);
-void ( APIENTRY *pglUniform2fvARB)(GLint location, GLsizei count, const GLfloat *value);
-void ( APIENTRY *pglUniform3fvARB)(GLint location, GLsizei count, const GLfloat *value);
-void ( APIENTRY *pglUniform4fvARB)(GLint location, GLsizei count, const GLfloat *value);
-void ( APIENTRY *pglUniform1ivARB)(GLint location, GLsizei count, const GLint *value);
-void ( APIENTRY *pglUniform2ivARB)(GLint location, GLsizei count, const GLint *value);
-void ( APIENTRY *pglUniform3ivARB)(GLint location, GLsizei count, const GLint *value);
-void ( APIENTRY *pglUniform4ivARB)(GLint location, GLsizei count, const GLint *value);
-void ( APIENTRY *pglUniformMatrix2fvARB)(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-void ( APIENTRY *pglUniformMatrix3fvARB)(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-void ( APIENTRY *pglUniformMatrix4fvARB)(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 void ( APIENTRY *pglGetObjectParameterfvARB)(GLhandleARB obj, GLenum pname, GLfloat *params);
 void ( APIENTRY *pglGetObjectParameterivARB)(GLhandleARB obj, GLenum pname, GLint *params);
-void ( APIENTRY *pglGetInfoLogARB)(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
 void ( APIENTRY *pglGetAttachedObjectsARB)(GLhandleARB containerObj, GLsizei maxCount, GLsizei *count, GLhandleARB *obj);
-GLint ( APIENTRY *pglGetUniformLocationARB)(GLhandleARB programObj, const GLcharARB *name);
-void ( APIENTRY *pglGetActiveUniformARB)(GLhandleARB programObj, GLuint index, GLsizei maxLength, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name);
 void ( APIENTRY *pglGetUniformfvARB)(GLhandleARB programObj, GLint location, GLfloat *params);
 void ( APIENTRY *pglGetUniformivARB)(GLhandleARB programObj, GLint location, GLint *params);
-void ( APIENTRY *pglGetShaderSourceARB)(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *source);
 void ( APIENTRY *pglTexImage3D)( GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels );
 void ( APIENTRY *pglTexSubImage3D)( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels );
 void ( APIENTRY *pglCopyTexSubImage3D)( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height );
@@ -1240,9 +1240,6 @@ void ( APIENTRY *pglActiveStencilFaceEXT)(GLenum);
 void ( APIENTRY *pglVertexAttribPointerARB)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid *pointer);
 void ( APIENTRY *pglEnableVertexAttribArrayARB)(GLuint index);
 void ( APIENTRY *pglDisableVertexAttribArrayARB)(GLuint index);
-void ( APIENTRY *pglBindAttribLocationARB)(GLhandleARB programObj, GLuint index, const GLcharARB *name);
-void ( APIENTRY *pglGetActiveAttribARB)(GLhandleARB programObj, GLuint index, GLsizei maxLength, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name);
-GLint ( APIENTRY *pglGetAttribLocationARB)(GLhandleARB programObj, const GLcharARB *name);
 void ( APIENTRY *pglBindBufferARB) (GLenum target, GLuint buffer);
 void ( APIENTRY *pglDeleteBuffersARB) (GLsizei n, const GLuint *buffers);
 void ( APIENTRY *pglGenBuffersARB) (GLsizei n, GLuint *buffers);

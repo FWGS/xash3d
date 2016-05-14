@@ -1044,12 +1044,12 @@ static void GL_TextureImage( GLenum inFormat, GLenum outFormat, GLenum glTarget,
 {
 	GLint	dataType = GL_UNSIGNED_BYTE;
 
-	if( glTarget == GL_TEXTURE_1D )
+	/*if( glTarget == GL_TEXTURE_1D )
 	{
 		if( subImage ) pglTexSubImage1D( glTarget, level, 0, width, inFormat, dataType, data );
 		else pglTexImage1D( glTarget, level, outFormat, width, 0, inFormat, dataType, data );
 	}
-	else if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
+	else*/ if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
 	{
 		if( subImage ) pglTexSubImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side, level, 0, 0, width, height, inFormat, dataType, data );
 		else pglTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side, level, outFormat, width, height, 0, inFormat, dataType, data );
@@ -1348,11 +1348,11 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 			tex->flags &= ~TF_CUBEMAP;
 		}
 	}
-	else if( tex->flags & TF_TEXTURE_1D )
+	/*else if( tex->flags & TF_TEXTURE_1D )
 	{
 		// determine target
 		tex->target = glTarget = GL_TEXTURE_1D;
-	}
+	}*/
 	else if( tex->flags & TF_TEXTURE_RECTANGLE )
 	{
 		if( glConfig.max_2d_rectangle_size )
@@ -1402,14 +1402,14 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 		{
 			if(!( tex->flags & TF_NOMIPMAP ) && !( tex->flags & TF_SKYSIDE ) && !( tex->flags & TF_TEXTURE_3D ))
 				data = GL_ApplyGamma( data, tex->width * tex->height, ( tex->flags & TF_NORMALMAP ));
-		}		
+		}
 
-		if( glTarget == GL_TEXTURE_1D )
+		/*if( glTarget == GL_TEXTURE_1D )
 		{
 			if( subImage ) pglTexSubImage1D( tex->target, 0, 0, tex->width, inFormat, dataType, data );
 			else pglTexImage1D( tex->target, 0, outFormat, tex->width, 0, inFormat, dataType, data );
 		}
-		else if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
+		else */if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
 		{
 			if( GL_Support( GL_SGIS_MIPMAPS_EXT ) && !( tex->flags & TF_NORMALMAP ))
 				GL_GenerateMipmaps( data, pic, tex, glTarget, inFormat, i, subImage );
@@ -1441,7 +1441,7 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 		err = pglGetError();
 
 		if( err != GL_NO_ERROR )
-			MsgDev( D_ERROR, "GL_UploadTexture: error %x while uploading %s [%s]\n", err, tex->name, GL_Target( glTarget ));
+			MsgDev( D_ERROR, "GL_UploadTexture: error %x while uploading %s [%s] %xx%x\n", err, tex->name, GL_Target( glTarget ),tex->width,tex->height);
 	}
 }
 

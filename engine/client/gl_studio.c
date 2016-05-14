@@ -3358,7 +3358,7 @@ void R_DrawViewModel( void )
 	RI.currententity->curstate.renderamt = R_ComputeFxBlend( RI.currententity );
 
 	// hack the depth range to prevent view model from poking into walls
-	pglDepthRange( gldepthmin, gldepthmin + 0.3f * ( gldepthmax - gldepthmin ));
+	pglDepthRangef( gldepthmin, gldepthmin + 0.3f * ( gldepthmax - gldepthmin ));
 
 	// backface culling for left-handed weapons
 	if( r_lefthand->integer == 1 || g_iBackFaceCull )
@@ -3373,7 +3373,7 @@ void R_DrawViewModel( void )
 	pStudioDraw->StudioDrawModel( STUDIO_RENDER );
 
 	// restore depth range
-	pglDepthRange( gldepthmin, gldepthmax );
+	pglDepthRangef( gldepthmin, gldepthmax );
 
 	// backface culling for left-handed weapons
 	if( r_lefthand->integer == 1 || g_iBackFaceCull )

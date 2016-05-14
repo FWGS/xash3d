@@ -506,7 +506,7 @@ static void R_Clear( int bitMask )
 	}
 
 	pglDepthFunc( GL_LEQUAL );
-	pglDepthRange( gldepthmin, gldepthmax );
+	pglDepthRangef( gldepthmin, gldepthmax );
 }
 
 //=============================================================================
@@ -894,7 +894,8 @@ static void R_SetupGL( void )
 
 	pglDisable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
-	pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+	//pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+	R_ColorUniform(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 /*
@@ -1257,7 +1258,7 @@ void R_BeginFrame( qboolean clearScene )
 	R_Set2DMode( true );
 
 	// draw buffer stuff
-	pglDrawBuffer( GL_BACK );
+	//pglDrawBuffer( GL_BACK );
 
 	// texturemode stuff
 	// update texture parameters

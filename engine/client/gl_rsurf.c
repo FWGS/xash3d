@@ -762,6 +762,20 @@ void DrawGLPoly( glpoly_t *p, float xScale, float yScale )
 	if( xScale != 0.0f && yScale != 0.0f )
 		hasScale = true;
 
+	R_UseWorldProgram();
+
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
+
+	pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,28,p->verts[0]);
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,28,&p->verts[0][3]);//TODO: implement scale
+
+	pglDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
+
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
+
+	/*
 	pglBegin( GL_POLYGON );
 
 	for( i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE )
@@ -774,6 +788,7 @@ void DrawGLPoly( glpoly_t *p, float xScale, float yScale )
 	}
 
 	pglEnd();
+	*/
 
 	// special hack for non-lightmapped surfaces
 	if( p->flags & SURF_DRAWTILED )
@@ -799,7 +814,28 @@ void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 		float	*v;
 		int	i;
 
-		pglBegin( GL_POLYGON );
+		R_UseWorldProgram();
+
+		pglEnableVertexAttribArray(0);
+		pglEnableVertexAttribArray(1);
+
+		pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,28,p->verts[0]);
+
+		GLfloat lmverts[p->numverts*2];
+		v = p->verts[0];
+		for(i = 0; i < p->numverts; i++, v += VERTEXSIZE )
+		{
+			lmverts[i*2] = v[5] - soffset;
+			lmverts[i*2+1] = v[6] - toffset;
+		}
+		pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,8,lmverts);
+
+		pglDrawArrays(GL_TRIANGLE_FAN, 0, p->numverts);
+
+		pglDisableVertexAttribArray(0);
+		pglDisableVertexAttribArray(1);
+
+		/*pglBegin( GL_POLYGON );
 
 		v = p->verts[0];
 		for( i = 0; i < p->numverts; i++, v += VERTEXSIZE )
@@ -808,7 +844,7 @@ void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 			else pglTexCoord2f( v[5] - soffset, v[6] - toffset );
 			pglVertex3fv( v );
 		}
-		pglEnd ();
+		pglEnd ();*/
 	}
 }
 

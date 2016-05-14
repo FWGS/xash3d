@@ -285,7 +285,8 @@ static void GL_SetDefaults( void )
 	pglDepthFunc( GL_LEQUAL );
 	pglDepthMask( GL_FALSE );
 
-	pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+	//pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+	R_ColorUniform(1.0f, 1.0f, 1.0f, 1.0f);
 
 	if( glState.stencilEnabled )
 	{
@@ -494,6 +495,7 @@ qboolean R_Init( void )
 	r_temppool = Mem_AllocPool( "Render Zone" );
 
 	GL_InitExtensions();
+	R_InitShaders();
 	GL_SetDefaults();
 	R_InitImages();
 	R_SpriteInit();

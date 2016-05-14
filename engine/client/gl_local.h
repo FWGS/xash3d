@@ -420,6 +420,14 @@ void Mod_LoadStudioModel( model_t *mod, const void *buffer, qboolean *loaded );
 struct mstudiotex_s *R_StudioGetTexture( cl_entity_t *e );
 void R_DrawStudioModel( cl_entity_t *e );
 
+//
+// gl_shader.c
+//
+void R_InitShaders();
+void R_Use2DProgram();
+void R_UseWorldProgram();
+void R_ColorUniform(GLfloat r,GLfloat g, GLfloat b, GLfloat a);
+
 #include "wadfile.h"
 
 //
@@ -503,6 +511,7 @@ void R_NewMap( void );
 enum
 {
 	GL_OPENGL_110 = 0,		// base
+	GL_OPENGL_ES_20,
 	GL_WGL_SWAPCONTROL,		
 	GL_WGL_PROCADDRESS,
 	GL_HARDWARE_GAMMA_CONTROL,
