@@ -915,7 +915,7 @@ void SV_FinalMessage( char *message, qboolean reconnect )
 	{
 		BF_WriteByte( &msg, svc_changing );
 
-		if( sv.loadgame || sv_maxclients->integer > 1 || sv.changelevel )
+		if( sv.loadgame || svgame.globals->maxClients > 1 || sv.changelevel )
 			BF_WriteOneBit( &msg, 1 ); // changelevel
 		else BF_WriteOneBit( &msg, 0 );
 	}
@@ -926,11 +926,11 @@ void SV_FinalMessage( char *message, qboolean reconnect )
 
 	// send it twice
 	// stagger the packets to crutch operating system limited buffers
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, cl = svs.clients; i < svgame.globals->maxClients; i++, cl++ )
 		if( cl->state >= cs_connected && !cl->fakeclient )
 			Netchan_Transmit( &cl->netchan, BF_GetNumBytesWritten( &msg ), BF_GetData( &msg ));
 
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, cl = svs.clients; i < svgame.globals->maxClients; i++, cl++ )
 		if( cl->state >= cs_connected && !cl->fakeclient )
 			Netchan_Transmit( &cl->netchan, BF_GetNumBytesWritten( &msg ), BF_GetData( &msg ));
 }
