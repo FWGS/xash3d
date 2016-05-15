@@ -427,6 +427,8 @@ void R_InitShaders();
 void R_Use2DProgram();
 void R_UseWorldProgram();
 void R_ColorUniform(GLfloat r,GLfloat g, GLfloat b, GLfloat a);
+void R_ModelViewMtxUniform(const matrix4x4 source);
+void R_ProjMtxUniform(const matrix4x4 source);
 
 #include "wadfile.h"
 

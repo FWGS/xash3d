@@ -2,16 +2,28 @@
 #include "common.h"
 #include "gl_local.h"
 
-GLuint glsl_CurProgramId=0;
-GLuint glsl_2DprogramId=0;
-GLuint glsl_WorldProgramId=0;
-GLint u_color=-1;
+GLuint glsl_CurProgramId = 0;
+GLuint glsl_2DprogramId = 0;
+GLuint glsl_WorldProgramId = 0;
+GLint u_color = -1;
+GLint u_mvMtx = -1;
+GLint u_projMtx = -1;
 
 GLuint R_CreateShader(char *src, GLint type)
 {
 	GLuint id = pglCreateShader(type);
 	pglShaderSource(id,1,&src,NULL);
 	pglCompileShader(id);
+
+	GLint compile_ok=GL_FALSE;
+	pglGetShaderiv(id,GL_COMPILE_STATUS, &compile_ok);
+	if(compile_ok==GL_FALSE)
+	{
+		printf("Error glCompileShader: %x\n",id);
+		//print_log(id);
+		pglDeleteShader(id);
+		return -1;
+	}
 
 	return id;
 }
@@ -25,6 +37,14 @@ GLuint R_CreateProgram(char *vert, char *frag)
 	pglAttachShader(id,vs);
 	pglAttachShader(id,fs);
 	pglLinkProgram(id);
+	GLint link_ok=GL_FALSE;
+	pglGetProgramiv(id,GL_LINK_STATUS,&link_ok);
+	if(!link_ok)
+	{
+		printf("Error glLinkProgram: %x\n",id);
+		//print_log(id);
+		return -1;
+	}
 
 	return id;
 }
@@ -50,8 +70,10 @@ void R_InitShaders()
 	char WorldVertS[]="attribute vec4 a_position;\n"\
 	"attribute vec2 a_uv;\n"\
 	"varying vec2 v_uv;\n"\
+	"uniform mat4 u_mvMtx;"\
+	"uniform mat4 u_projMtx;"\
 	"void main(){\n"\
-	"	gl_Position = a_position;\n"\
+	"	gl_Position = u_projMtx*u_mvMtx*a_position;\n"\
 	"	v_uv = a_uv;\n"\
 	"}";
 	char WorldFragS[]="varying vec2 v_uv;\n"\
@@ -68,6 +90,10 @@ void R_InitShaders()
 	//R_ColorUniform(1, 1, 1, 1);
 
 	glsl_WorldProgramId=R_CreateProgram(WorldVertS,WorldFragS);
+	//printf("glsl_WorldProgramId %x\n",glsl_WorldProgramId);
+
+	u_mvMtx = pglGetUniformLocation(glsl_WorldProgramId,"u_mvMtx");
+	u_projMtx = pglGetUniformLocation(glsl_WorldProgramId,"u_projMtx");
 }
 
 void R_Use2DProgram()
@@ -88,4 +114,22 @@ void R_ColorUniform(GLfloat r,GLfloat g, GLfloat b, GLfloat a)
 		return;
 
 	pglUniform4f(u_color,r,g,b,a);
+}
+
+void R_ProjMtxUniform(const matrix4x4 source)
+{
+	GLfloat	dest[16];
+
+	Matrix4x4_ToArrayFloatGL( source, dest );
+	R_UseWorldProgram();
+	pglUniformMatrix4fv(u_projMtx,1,GL_FALSE,dest);
+}
+
+void R_ModelViewMtxUniform(const matrix4x4 source)
+{
+	GLfloat	dest[16];
+
+	Matrix4x4_ToArrayFloatGL( source, dest );
+	R_UseWorldProgram();
+	pglUniformMatrix4fv(u_mvMtx,1,GL_FALSE,dest);
 }

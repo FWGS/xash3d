@@ -867,11 +867,13 @@ static void R_SetupGL( void )
 		pglViewport( RI.viewport[0], RI.viewport[1], RI.viewport[2], RI.viewport[3] );
 	}
 
-	pglMatrixMode( GL_PROJECTION );
-	GL_LoadMatrix( RI.projectionMatrix );
+	//pglMatrixMode( GL_PROJECTION );
+	//GL_LoadMatrix( RI.projectionMatrix );
+	R_ProjMtxUniform(RI.projectionMatrix);
 
-	pglMatrixMode( GL_MODELVIEW );
-	GL_LoadMatrix( RI.worldviewMatrix );
+	//pglMatrixMode( GL_MODELVIEW );
+	//GL_LoadMatrix( RI.worldviewMatrix );
+	R_ModelViewMtxUniform(RI.worldviewMatrix);
 
 	if( RI.params & RP_CLIPPLANE )
 	{

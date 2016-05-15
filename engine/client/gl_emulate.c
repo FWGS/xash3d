@@ -3,6 +3,10 @@
 #include "common.h"
 #include "gl_local.h"
 
+//GLenum curMatrixMode;
+//float projMtx[16];
+//float modelViewMtx[16];
+
 void pglColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
 	R_ColorUniform(red,green,blue,alpha);
@@ -19,16 +23,24 @@ void pglPolygonMode(GLenum face, GLenum mode){}
 void pglAlphaFunc(GLenum func, GLclampf ref){}
 void pglShadeModel (GLenum mode){}
 void pglPointSize (GLfloat size){}
-void pglMatrixMode (GLenum mode){}
+void pglMatrixMode (GLenum mode)
+{
+//	curMatrixMode=mode;
+}
 void pglLoadIdentity (){}
 void pglOrtho (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar){}
 void pglTexEnvi(GLenum target, GLenum pname, GLint param){}
-void pglLoadMatrixf (const GLfloat *m){}
+void pglLoadMatrixf (const GLfloat *m)
+{
+/*	if(curMatrixMode==GL_PROJECTION)
+		memcpy(projMtx,m,64);
+	else
+		memcpy(modelViewMtx,m,64);*/
+}
 /*
 void glTexEnvf (GLenum target, GLenum pname, GLfloat param){}
 void glColor3f (GLfloat red, GLfloat green, GLfloat blue){}
 void glColor3ub (GLubyte red, GLubyte green, GLubyte blue){}
-void glColor4ubv (const GLubyte *v){}
 void glBegin(GLenum mode){}
 void glTexCoord2f(GLfloat s, GLfloat t){}
 void glVertex2f (GLfloat x, GLfloat y){}
