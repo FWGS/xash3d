@@ -58,6 +58,12 @@ extern "C" {
 
 #define Mod_AllowMaterials()	( mod_allow_materials != NULL && mod_allow_materials->integer && !( host.features & ENGINE_DISABLE_HDTEXTURES ))
 
+#ifdef XASH_FORCEINLINE
+#define xash_force_inline static inline
+#else
+#define xash_force_inline
+#endif
+
 typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];

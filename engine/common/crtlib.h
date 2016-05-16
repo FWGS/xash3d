@@ -153,13 +153,10 @@ void Q_strnupr( const char *in, char *out, size_t size_out );
 #define Q_strlwr( int, out ) Q_strnlwr( in, out, 99999 )
 void Q_strnlwr( const char *in, char *out, size_t size_out );
 #ifndef XASH_SKIPCRTLIB
-int Q_strlen( const char *string );
+
 char Q_toupper( const char in );
 char Q_tolower( const char in );
-#define Q_strcat( dst, src ) Q_strncat( dst, src, 99999 )
-size_t Q_strncat( char *dst, const char *src, size_t siz );
-#define Q_strcpy( dst, src ) Q_strncpy( dst, src, 99999 )
-size_t Q_strncpy( char *dst, const char *src, size_t siz );
+
 #else
 static inline int Q_strlen( const char *str )
 {
@@ -169,10 +166,15 @@ static inline int Q_strlen( const char *str )
 }
 #define Q_toupper toupper
 #define Q_tolower tolower
-#define Q_strcat strcat
-#define Q_strncat strncat
-#define Q_strcpy strcpy
-#define Q_strncpy strncpy
+#endif
+#define Q_strcat( dst, src ) Q_strncat( dst, src, 99999 )
+#define Q_strcpy( dst, src ) Q_strncpy( dst, src, 99999 )
+#ifndef XASH_FORCEINLINE
+size_t Q_strncat( char *dst, const char *src, size_t siz );
+size_t Q_strncpy( char *dst, const char *src, size_t siz );
+int Q_strlen( const char *string );
+#else
+#include "crtlib_inline.h"
 #endif
 #define copystring( s ) _copystring( host.mempool, s, __FILE__, __LINE__ )
 char *_copystring( byte *mempool, const char *s, const char *filename, int fileline );
@@ -186,12 +188,14 @@ float Q_atof( const char *str );
 #endif
 void Q_atov( float *vec, const char *str, size_t siz );
 #ifndef XASH_SKIPCRTLIB
+#ifndef XASH_FORCEINLINE
 char *Q_strchr( const char *s, char c );
 char *Q_strrchr( const char *s, char c );
 #define Q_stricmp( s1, s2 ) Q_strnicmp( s1, s2, 99999 )
 int Q_strnicmp( const char *s1, const char *s2, int n );
 #define Q_strcmp( s1, s2 ) Q_strncmp( s1, s2, 99999 )
 int Q_strncmp( const char *s1, const char *s2, int n );
+#endif
 #else
 #define Q_strchr strchr
 #define Q_strrchr strrchr

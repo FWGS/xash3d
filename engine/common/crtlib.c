@@ -55,22 +55,6 @@ qboolean Q_isdigit( const char *str )
 }
 
 #ifndef XASH_SKIPCRTLIB
-int Q_strlen( const char *string )
-{
-	int		len;
-	const char	*p;
-
-	if( !string ) return 0;
-
-	len = 0;
-	p = string;
-	while( *p )
-	{
-		p++;
-		len++;
-	}
-	return len;
-}
 
 char Q_toupper( const char in )
 {
@@ -93,67 +77,8 @@ char Q_tolower( const char in )
 
 	return out;
 }
-
-size_t Q_strncat( char *dst, const char *src, size_t size )
-{
-	register char	*d = dst;
-	register const char	*s = src;
-	register size_t	n = size;
-	size_t		dlen;
-
-	if( !dst || !src || !size )
-		return 0;
-
-	// find the end of dst and adjust bytes left but don't go past end
-	while( n-- != 0 && *d != '\0' ) d++;
-	dlen = d - dst;
-	n = size - dlen;
-
-	if( n == 0 ) return( dlen + Q_strlen( s ));
-
-	while( *s != '\0' )
-	{
-		if( n != 1 )
-		{
-			*d++ = *s;
-			n--;
-		}
-		s++;
-	}
-
-	*d = '\0';
-	return( dlen + ( s - src )); // count does not include NULL
-}
-
-size_t Q_strncpy( char *dst, const char *src, size_t size )
-{
-	register char	*d = dst;
-	register const char	*s = src;
-	register size_t	n = size;
-
-	if( !dst || !src || !size )
-		return 0;
-
-	// copy as many bytes as will fit
-	if( n != 0 && --n != 0 )
-	{
-		do
-		{
-			if(( *d++ = *s++ ) == 0 )
-				break;
-		} while( --n != 0 );
-	}
-
-	// not enough room in dst, add NULL and traverse rest of src
-	if( n == 0 )
-	{
-		if( size != 0 )
-			*d = '\0'; // NULL-terminate dst
-		while( *s++ );
-	}
-	return ( s - src - 1 ); // count does not include NULL
-}
 #endif
+
 char *_copystring( byte *mempool, const char *s, const char *filename, int fileline )
 {
 	char	*b;
@@ -307,95 +232,7 @@ void Q_atov( float *vec, const char *str, size_t siz )
 		pfront = pstr;
 	}
 }
-#ifndef XASH_SKIPCRTLIB
-char *Q_strchr( const char *s, char c )
-{
-	int	len = Q_strlen( s );
 
-	while( len-- )
-	{
-		if( *++s == c )
-			return (char *)s;
-	}
-	return NULL;
-}
-
-char *Q_strrchr( const char *s, char c )
-{
-	int	len = Q_strlen( s );
-
-	s += len;
-
-	while( len-- )
-	{
-		if( *--s == c )
-			return (char *)s;
-	}
-	return NULL;
-}
-
-int Q_strnicmp( const char *s1, const char *s2, int n )
-{
-	int	c1, c2;
-
-	if( s1 == NULL )
-	{
-		if( s2 == NULL )
-			return 0;
-		else return -1;
-	}
-	else if( s2 == NULL )
-	{
-		return 1;
-          }
-
-	do {
-		c1 = *s1++;
-		c2 = *s2++;
-
-		if( !n-- ) return 0; // strings are equal until end point
-		
-		if( c1 != c2 )
-		{
-			if( c1 >= 'a' && c1 <= 'z' ) c1 -= ('a' - 'A');
-			if( c2 >= 'a' && c2 <= 'z' ) c2 -= ('a' - 'A');
-			if( c1 != c2 ) return c1 < c2 ? -1 : 1;
-		}
-	} while( c1 );
-
-	// strings are equal
-	return 0;
-}
-
-int Q_strncmp( const char *s1, const char *s2, int n )
-{
-	int	c1, c2;
-
-	if( s1 == NULL )
-	{
-		if( s2 == NULL )
-			return 0;
-		else return -1;
-	}
-	else if( s2 == NULL )
-	{
-		return 1;
-	}	
-
-	do {
-		c1 = *s1++;
-		c2 = *s2++;
-
-		// strings are equal until end point
-		if( !n-- ) return 0;
-		if( c1 != c2 ) return c1 < c2 ? -1 : 1;
-
-	} while( c1 );
-	
-	// strings are equal
-	return 0;
-}
-#endif
 static qboolean Q_starcmp( const char *pattern, const char *text )
 {
 	char		c, c1;
@@ -695,3 +532,6 @@ void _Q_memmove( void *dest, const void *src, size_t count, const char *filename
 	if( dest == NULL ) Sys_Error( "memmove: dest == NULL (called at %s:%i)\n", filename, fileline );
 	memmove( dest, src, count );
 }
+#ifndef XASH_FORCEINLINE
+#include "crtlib_inline.h"
+#endif
