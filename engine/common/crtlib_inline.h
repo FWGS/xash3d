@@ -1,20 +1,65 @@
 #ifndef XASH_SKIPCRTLIB
+#ifdef XASH_FASTSTR
 xash_force_inline int Q_strlen( const char *string )
 {
-	int		len;
+	register const char	*pchr;
+	register const unsigned int *plongword;
+
+	const unsigned int himagic = 0x80808080, lomagic = 0x01010101;
+
+	if( !string ) return 0;
+
+	// first, count all unaligned bytes
+	for( pchr = string; ( ( unsigned long int )pchr & ( sizeof( int ) - 1) ) != 0; pchr++ )
+		if( *pchr == '\0' )
+			return pchr - string;
+
+	plongword = ( unsigned long int * ) pchr;
+
+	// plongword is aligned now, read by 4 bytes
+	while( true )
+	{
+		register unsigned int longword = *plongword++;
+
+		// if magic check failed,
+		if( ( ( longword - lomagic ) & himagic ) != 0 )
+		 {
+			 const char *pchar = ( const char * )( plongword - 1 );
+
+			 if( pchar[0] == 0 )
+				 return pchar - string;
+			 if( pchar[1] == 0 )
+				 return pchar - string + 1;
+			 if( pchar[2] == 0 )
+				 return pchar - string + 2;
+			 if( pchar[3] == 0 )
+				 return pchar - string + 3;
+		 }
+	}
+	return 0;
+#warning "fastcrtlib"
+}
+#else
+xash_force_inline int Q_strlen( const char *string )
+{
+	int	len;
 	const char	*p;
 
 	if( !string ) return 0;
 
 	len = 0;
 	p = string;
+
 	while( *p )
 	{
 		p++;
 		len++;
 	}
+
 	return len;
 }
+
+#endif
 #endif
 
 xash_force_inline size_t Q_strncat( char *dst, const char *src, size_t size )
