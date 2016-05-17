@@ -191,11 +191,11 @@ void Q_atov( float *vec, const char *str, size_t siz );
 #ifndef XASH_FORCEINLINE
 char *Q_strchr( const char *s, char c );
 char *Q_strrchr( const char *s, char c );
-#define Q_stricmp( s1, s2 ) Q_strnicmp( s1, s2, 99999 )
 int Q_strnicmp( const char *s1, const char *s2, int n );
-#define Q_strcmp( s1, s2 ) Q_strncmp( s1, s2, 99999 )
 int Q_strncmp( const char *s1, const char *s2, int n );
 #endif
+#define Q_strcmp( s1, s2 ) Q_strncmp( s1, s2, 99999 )
+#define Q_stricmp( s1, s2 ) Q_strnicmp( s1, s2, 99999 )
 #else
 #define Q_strchr strchr
 #define Q_strrchr strrchr
