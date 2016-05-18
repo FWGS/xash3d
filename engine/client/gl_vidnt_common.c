@@ -35,6 +35,7 @@ convar_t	*gl_finish;
 convar_t	*gl_nosort;
 convar_t	*gl_clear;
 convar_t	*gl_test;
+convar_t	*gl_msaa;
 
 convar_t	*r_xpos;
 convar_t	*r_ypos;
@@ -283,6 +284,11 @@ static void GL_SetDefaults( void )
 
 	pglClearColor( 0.5f, 0.5f, 0.5f, 1.0f );
 
+#ifdef GL_MULTISAMPLE
+	if( gl_msaa->integer )
+		pglEnable( GL_MULTISAMPLE );
+#endif
+
 	pglDisable( GL_DEPTH_TEST );
 	pglDisable( GL_CULL_FACE );
 	pglDisable( GL_SCISSOR_TEST );
@@ -433,6 +439,7 @@ void GL_InitCommands( void )
 	gl_texture_lodbias =  Cvar_Get( "gl_texture_lodbias", "0.0", CVAR_ARCHIVE, "LOD bias for mipmapped textures" );
 	gl_compress_textures = Cvar_Get( "gl_compress_textures", "0", CVAR_GLCONFIG, "compress textures to safe video memory" );
 	gl_luminance_textures = Cvar_Get( "gl_luminance_textures", "0", CVAR_GLCONFIG, "force all textures to luminance" );
+	gl_msaa = Cvar_Get( "gl_msaa", "0", CVAR_GLCONFIG, "MSAA samples. Use with caution, engine may fail with some values" );
 	gl_compensate_gamma_screenshots = Cvar_Get( "gl_compensate_gamma_screenshots", "0", CVAR_ARCHIVE, "allow to apply gamma value for screenshots and snapshots" );
 	gl_keeptjunctions = Cvar_Get( "gl_keeptjunctions", "1", CVAR_ARCHIVE, "disable to reduce vertexes count but removing tjuncs causes blinking pixels" );
 	gl_allow_static = Cvar_Get( "gl_allow_static", "0", CVAR_ARCHIVE, "force to drawing non-moveable brushes as part of world (save FPS)" );
@@ -444,7 +451,6 @@ void GL_InitCommands( void )
 	gl_test = Cvar_Get( "gl_test", "0", 0, "engine developer cvar for quick testing new features" );
 	gl_wireframe = Cvar_Get( "gl_wireframe", "0", 0, "show wireframe overlay" );
 	gl_overview = Cvar_Get( "dev_overview", "0", 0, "show level overview" );
-
 	// these cvar not used by engine but some mods requires this
 	Cvar_Get( "gl_polyoffset", "-0.1", 0, "polygon offset for decals" );
 
