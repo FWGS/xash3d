@@ -28,6 +28,10 @@ GNU General Public License for more details.
 #include "vloader.h"
 #endif
 
+#ifdef XASH_VINTERFACE
+#include "vloader.h"
+#endif
+
 #define MAX_TOTAL_CMDS		16
 #define MIN_CMD_RATE		10.0
 #define MAX_CMD_BUFFER		4000
