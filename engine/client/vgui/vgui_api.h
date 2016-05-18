@@ -197,7 +197,7 @@ typedef struct  vguiapi_s
 	int		(*GenerateTexture)( void );
 	void	*(*EngineMalloc)( size_t size );
 	void	(*CursorSelect)( enum VGUI_DefaultCursor cursor );
-	byte		(*GetColor)( int i, int j );
+	byte	(*GetColor)( int i, int j );
 	qboolean	(*IsInGame)( void );
 	void	(*SetVisible)( qboolean state );
 	void	(*GetCursorPos)( int *x, int *y );
@@ -206,7 +206,11 @@ typedef struct  vguiapi_s
 	void	(*Shutdown)( void );
 	void	*(*GetPanel)( void );
 	void	(*Paint)( void );
-	void	(*Mouse)(enum VGUI_MouseAction action, int code );
-	void	(*Key)(enum VGUI_KeyAction action,enum VGUI_KeyCode code );
+	void	(*Mouse)( enum VGUI_MouseAction action, int code );
+	void	(*Key)( enum VGUI_KeyAction action,enum VGUI_KeyCode code );
 	void	(*MouseMove)( int x, int y );
+	void	(*SetCursorPos)( int x, int y );
+	void	(*Cvar_SetFloat)( const char *var, float value );
+	void	(*Cvar_Set)( const char *var, char *value );
+	qboolean (*R_DescribeVIDMode)( int width, int height );
 } vguiapi_t;

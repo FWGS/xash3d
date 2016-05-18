@@ -634,6 +634,7 @@ void PicAdjustSize( float *x, float *y, float *w, float *h );
 void CL_PlayerTrace( float *start, float *end, int traceFlags, int ignore_pe, pmtrace_t *tr );
 void CL_PlayerTraceExt( float *start, float *end, int traceFlags, int (*pfnIgnore)( physent_t *pe ), pmtrace_t *tr );
 void CL_SetTraceHull( int hull );
+void pfnSetMousePos( int mx, int my );
 
 _inline cl_entity_t *CL_EDICT_NUM( int n )
 {

@@ -247,6 +247,7 @@ void VID_CheckChanges( void )
 
 	SCR_Init();
 
+
 	if( cl_allow_levelshots->modified )
 	{
 		GL_FreeTexture( cls.loadingBar );

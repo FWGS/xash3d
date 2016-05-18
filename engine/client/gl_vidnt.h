@@ -33,5 +33,6 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 void R_SaveVideoMode( int w, int h );
 void GL_SetExtension( int r_ext, int enable );
 void GL_BuildGammaTable( void );
+qboolean R_DescribeVIDMode( int width, int height );
 
 #endif

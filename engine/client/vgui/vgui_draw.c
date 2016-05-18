@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "vgui_api.h"
 #include "library.h"
 #include <string.h>
+#include "gl_vidnt.h"
 
 
 int	g_textures[VGUI_MAX_TEXTURES];
@@ -178,7 +179,11 @@ vguiapi_t vgui =
 	NULL,
 	NULL,
 	NULL,
-} ;
+	pfnSetMousePos,
+	Cvar_SetFloat,
+	Cvar_Set,
+	R_DescribeVIDMode
+};
 
 
 void *lib; //vgui_support library
@@ -194,9 +199,11 @@ Load vgui_support library and call VGui_Startup
 void VGui_Startup( int width, int height )
 {
 	static qboolean failed = false;
+
 	if( failed )
 		return;
-	if(!vgui.initialized)
+
+	if( !vgui.initialized )
 	{
 		void (*F) ( vguiapi_t * );
 		char vguiloader[256];
@@ -209,15 +216,16 @@ void VGui_Startup( int width, int height )
 		if( Sys_GetParmFromCmdLine( "-vguilib", vguilib ) )
 		{
 			if( Q_strstr( vguilib, ".dll") )
-				Q_strncpy( vguiloader, "vgui_support.dll", 256 );
+				Q_strncpy( vguiloader, "vgui_support.dll", sizeof( vguiloader ) );
 			else
-				Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
+				Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, sizeof( vguiloader ) );
+
 			if( !Com_LoadLibrary( vguilib, false ) )
 				MsgDev( D_WARN, "VGUI preloading failed. Default library will be used!\n");
 		}
 
 		if( !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
-			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
+			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, sizeof( vguiloader ) );
 
 		lib = Com_LoadLibrary( vguiloader, false );
 		if(!lib)

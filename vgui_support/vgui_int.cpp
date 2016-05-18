@@ -31,7 +31,7 @@ FontCache *g_FontCache = 0;
 
 CEnginePanel	*rootpanel = NULL;
 CEngineSurface	*surface = NULL;
-CEngineApp          *pApp = NULL;
+CEngineApp      *pApp = NULL;
 
 SurfaceBase* CEnginePanel::getSurfaceBase( void )
 {
@@ -45,9 +45,7 @@ App* CEnginePanel::getApp( void )
 
 void CEngineApp :: setCursorPos( int x, int y )
 {
-#ifdef XASH_SDL
-	//SDL_WarpMouseInWindow(host.hWnd, x, y);
-#endif
+	g_api->SetCursorPos( x, y );
 }
 
 void CEngineApp :: getCursorPos( int &x,int &y )
