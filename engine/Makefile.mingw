@@ -1,6 +1,6 @@
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?= -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -mssse3 -ftree-vectorize -mincoming-stack-boundary=2 -mpreferred-stack-boundary=2 -finline-limit=512 -march=nocona
+CFLAGS ?= -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -mssse3 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=nocona
 LDFLAGS =
 LIBS = -lm
 TOPDIR = $(PWD)/..
@@ -15,7 +15,7 @@ LIBS += -lSDL2 -L../SDL2/lib/x86 -L../SDL2/lib/x64 -luser32 -lkernel32 -lgdi32 -
 endif
 
 
-DEFINES += -DDEBUGNAN -DSINGLE_BINARY
+DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FASTSTR -DXASH_FORCEINLINE
 
 ifeq ($(XASH_VGUI),1)
 DEFINES += -DXASH_VGUI
