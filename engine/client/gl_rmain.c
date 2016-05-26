@@ -896,8 +896,7 @@ static void R_SetupGL( void )
 
 	pglDisable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
-	//pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-	R_ColorUniform(1.0f, 1.0f, 1.0f, 1.0f);
+	R_ColorUniform( 1.0f, 1.0f, 1.0f, 1.0f );
 }
 
 /*

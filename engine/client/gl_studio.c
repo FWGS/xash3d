@@ -3232,6 +3232,9 @@ void R_DrawStudioModelInternal( cl_entity_t *e, qboolean follow_entity )
 	int	i, flags, result;
 	float	prevFrame;
 
+	if( !r_drawstudiomodels->integer )
+		return;
+
 	if( RI.params & RP_ENVVIEW )
 		return;
 

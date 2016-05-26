@@ -1,7 +1,6 @@
 CC ?= gcc
 CXX ?= g++
 #CFLAGS ?= -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -mssse3 -ftree-vectorize -mstackrealign -finline-limit=512 -march=nocona
-#-Og 
 CFLAGS ?= -ggdb -Wall
 LDFLAGS =
 LIBS = -lm

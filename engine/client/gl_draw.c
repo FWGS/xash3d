@@ -66,44 +66,24 @@ R_DrawStretchPic
 */
 void R_DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, int texnum )
 {
-	GL_Bind( GL_TEXTURE0, texnum );
-
 	GLfloat verts[] = {
-		s1, t1, x,		y,
-		s2, t1, x + w, 	y,
-		s2, t2, x + w, 	y + h,
-		s1, t1, x, 		y,
-		s2, t2, x + w, 	y + h,
-		s1, t2, x, 		y + h };
+		x,	   y,	  s1, t1,
+		x + w, y,	  s2, t1,
+		x + w, y + h, s2, t2,
+		x, 	   y + h, s1, t2 };
 
-	R_Use2DProgram();
+	GL_Bind( GL_TEXTURE0, texnum );
 
 	pglEnableVertexAttribArray(0);
 	pglEnableVertexAttribArray(1);
 
-	//pglTexCoordPointer(2, GL_FLOAT, 16, verts);
-	//pglVertexPointer(2, GL_FLOAT, 16, &verts[2]);
-	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,16,verts);
-	pglVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,16,&verts[2]);
+	pglVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,16,verts);
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,16,&verts[2]);
 
-	pglDrawArrays(GL_TRIANGLES, 0, 6);
+	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	pglDisableVertexAttribArray(0);
 	pglDisableVertexAttribArray(1);
-
-	/*pglBegin( GL_QUADS );
-		pglTexCoord2f( s1, t1 );
-		pglVertex2f( x, y );
-
-		pglTexCoord2f( s2, t1 );
-		pglVertex2f( x + w, y );
-
-		pglTexCoord2f( s2, t2 );
-		pglVertex2f( x + w, y + h );
-
-		pglTexCoord2f( s1, t2 );
-		pglVertex2f( x, y + h );
-	pglEnd();*/
 }
 
 /*
@@ -120,7 +100,6 @@ void R_DrawTileClear( int x, int y, int w, int h )
 	gltexture_t	*glt;
 
 	GL_SetRenderMode( kRenderNormal );
-	//pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 	R_ColorUniform(1.0f, 1.0f, 1.0f, 1.0f);
 	GL_Bind( GL_TEXTURE0, cls.tileImage );
 
@@ -282,7 +261,7 @@ void R_Set2DMode( qboolean enable )
 
 		pglDepthMask( GL_FALSE );
 		pglDisable( GL_DEPTH_TEST );
-		//pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+		R_Use2DProgram();
 		R_ColorUniform(1.0f, 1.0f, 1.0f, 1.0f);
 
 		glState.in2DMode = true;

@@ -361,6 +361,10 @@ void R_DrawSkyBox( void )
 {
 	int	i;
 
+#if defined XASH_GLES2_RENDER
+	return;
+#endif
+
 	if( clgame.movevars.skyangle )
 	{	
 		// check for no sky at all
@@ -587,6 +591,9 @@ Does a water warp on the pre-fragmented glpoly_t chain
 */
 void EmitWaterPolys( glpoly_t *polys, qboolean noCull )
 {
+#if defined XASH_GLES2_RENDER
+	return;
+#endif
 	glpoly_t	*p;
 	float	*v, nv, waveHeight;
 	float	s, t, os, ot;

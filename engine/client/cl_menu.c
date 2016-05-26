@@ -347,7 +347,6 @@ static void PIC_DrawGeneric( float x, float y, float width, float height, const 
 
 	PicAdjustSize( &x, &y, &width, &height );
 	R_DrawStretchPic( x, y, width, height, s1, t1, s2, t2, menu.ds.gl_texturenum );
-	//pglColor4ub( 255, 255, 255, 255 );
 	R_ColorUniform(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
@@ -587,7 +586,6 @@ static void pfnDrawCharacter( int ix, int iy, int iwidth, int iheight, int ch, i
 	color[1] = (ulRGBA & 0xFF00) >> 8;
 	color[2] = (ulRGBA & 0xFF) >> 0;
 	pglColor4ubv( color );
-	//R_ColorUniform(color[0], color[1], color[2], color[3]);
 
 	col = (ch & 15) * 0.0625f + (0.5f / 256.0f);
 	row = (ch >> 4) * 0.0625f + (0.5f / 256.0f);
@@ -604,7 +602,6 @@ static void pfnDrawCharacter( int ix, int iy, int iwidth, int iheight, int ch, i
 
 	GL_SetRenderMode( kRenderTransTexture );
 	R_DrawStretchPic( x, y, width, height, s1, t1, s2, t2, hFont );
-	//pglColor4ub( 255, 255, 255, 255 );
 	R_ColorUniform(1.0f, 1.0f, 1.0f, 1.0f);
 }
 

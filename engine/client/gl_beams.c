@@ -260,14 +260,16 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 
 	SetBeamRenderMode( rendermode );
 	GL_Bind( GL_TEXTURE0, m_hSprite );
-	pglBegin( GL_TRIANGLE_STRIP );
 
-	// specify all the segments.
+	int numVerts = segments*2;
+	GLfloat verts[numVerts*12];
+	int v = 0;
+
 	for( i = 0; i < segments; i++ )
 	{
 		beamseg_t	nextSeg;
 		vec3_t	vPoint1, vPoint2;
-	
+
 		ASSERT( noiseIndex < ( NOISE_DIVISIONS << 16 ));
 		nextSeg.alpha = 1.0f;
 
@@ -324,7 +326,7 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 		nextSeg.width = width * 2.0f;
 		nextSeg.texcoord = vLast;
 
- 		if( segs_drawn > 0 )
+		if( segs_drawn > 0 )
 		{
 			// Get a vector that is perpendicular to us and perpendicular to the beam.
 			// This is used to fatten the beam.
@@ -350,43 +352,96 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 			VectorMA( curSeg.pos, ( curSeg.width * 0.5f ), vAveNormal, vPoint1 );
 			VectorMA( curSeg.pos, (-curSeg.width * 0.5f ), vAveNormal, vPoint2 );
 
-			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
-			pglTexCoord2f( 0.0f, curSeg.texcoord );
-			pglNormal3fv( vAveNormal );
-			pglVertex3fv( vPoint1 );
+			verts[v   ] = vPoint1[0];
+			verts[v+ 1] = vPoint1[1];
+			verts[v+ 2] = vPoint1[2];
+			verts[v+ 3] = 0.0f;
+			verts[v+ 4] = curSeg.texcoord;
+			verts[v+ 5] = curSeg.color[0];
+			verts[v+ 6] = curSeg.color[1];
+			verts[v+ 7] = curSeg.color[2];
+			verts[v+ 8] = curSeg.alpha;
+			verts[v+ 9] = vAveNormal[0];
+			verts[v+10] = vAveNormal[1];
+			verts[v+11] = vAveNormal[2];
+			v+=12;
 
-			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
-			pglTexCoord2f( 1.0f, curSeg.texcoord );
-			pglNormal3fv( vAveNormal );
-			pglVertex3fv( vPoint2 );
+			verts[v   ] = vPoint2[0];
+			verts[v+ 1] = vPoint2[1];
+			verts[v+ 2] = vPoint2[2];
+			verts[v+ 3] = 1.0f;
+			verts[v+ 4] = curSeg.texcoord;
+			verts[v+ 5] = curSeg.color[0];
+			verts[v+ 6] = curSeg.color[1];
+			verts[v+ 7] = curSeg.color[2];
+			verts[v+ 8] = curSeg.alpha;
+			verts[v+ 9] = vAveNormal[0];
+			verts[v+10] = vAveNormal[1];
+			verts[v+11] = vAveNormal[2];
+			v+=12;
 		}
 
 		curSeg = nextSeg;
 		segs_drawn++;
 
- 		if( segs_drawn == total_segs )
+		if( segs_drawn == total_segs )
 		{
 			// draw the last segment
 			VectorMA( curSeg.pos, ( curSeg.width * 0.5f ), vLastNormal, vPoint1 );
 			VectorMA( curSeg.pos, (-curSeg.width * 0.5f ), vLastNormal, vPoint2 );
 
 			// specify the points.
-			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
-			pglTexCoord2f( 0.0f, curSeg.texcoord );
-			pglNormal3fv( vLastNormal );
-			pglVertex3fv( vPoint1 );
+			verts[v   ] = vPoint1[0];
+			verts[v+ 1] = vPoint1[1];
+			verts[v+ 2] = vPoint1[2];
+			verts[v+ 3] = 0.0f;
+			verts[v+ 4] = curSeg.texcoord;
+			verts[v+ 5] = curSeg.color[0];
+			verts[v+ 6] = curSeg.color[1];
+			verts[v+ 7] = curSeg.color[2];
+			verts[v+ 8] = curSeg.alpha;
+			verts[v+ 9] = vLastNormal[0];
+			verts[v+10] = vLastNormal[1];
+			verts[v+11] = vLastNormal[2];
+			v+=12;
 
-			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
-			pglTexCoord2f( 1.0f, curSeg.texcoord );
-			pglNormal3fv( vLastNormal );
-			pglVertex3fv( vPoint2 );
+			verts[v   ] = vPoint2[0];
+			verts[v+ 1] = vPoint2[1];
+			verts[v+ 2] = vPoint2[2];
+			verts[v+ 3] = 1.0f;
+			verts[v+ 4] = curSeg.texcoord;
+			verts[v+ 5] = curSeg.color[0];
+			verts[v+ 6] = curSeg.color[1];
+			verts[v+ 7] = curSeg.color[2];
+			verts[v+ 8] = curSeg.alpha;
+			verts[v+ 9] = vLastNormal[0];
+			verts[v+10] = vLastNormal[1];
+			verts[v+11] = vLastNormal[2];
+			v+=12;
 		}
 
 		vLast += vStep; // Advance texture scroll (v axis only)
 		noiseIndex += noiseStep;
 	}
 
-	pglEnd();
+	R_UseBeamProgram();
+
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
+	pglEnableVertexAttribArray(2);
+	pglEnableVertexAttribArray(3);
+
+	pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,48,verts);//pos
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,48,&verts[3]);//uv
+	pglVertexAttribPointer(2,4,GL_FLOAT,GL_FALSE,48,&verts[5]);//col
+	pglVertexAttribPointer(3,3,GL_FLOAT,GL_FALSE,48,&verts[9]);//nrm
+
+	pglDrawArrays(GL_TRIANGLE_STRIP, 0, numVerts);
+
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
+	pglDisableVertexAttribArray(2);
+	pglDisableVertexAttribArray(3);
 }
 
 /*
@@ -771,24 +826,50 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 	fraction = ( die - cl.time ) * div;
 
 	VectorScale( color, fraction, scaledColor );
-	nColor[0] = (byte)bound( 0, (int)(scaledColor[0] * 255.0f), 255 );
-	nColor[1] = (byte)bound( 0, (int)(scaledColor[1] * 255.0f), 255 );
-	nColor[2] = (byte)bound( 0, (int)(scaledColor[2] * 255.0f), 255 );
+	nColor[0] = bound( 0.0f, scaledColor[0], 1.0f );
+	nColor[1] = bound( 0.0f, scaledColor[1], 1.0f );
+	nColor[2] = bound( 0.0f, scaledColor[2], 1.0f );
 
 	SetBeamRenderMode( rendermode );
 	GL_Bind( GL_TEXTURE0, m_hSprite );
 
-	pglBegin( GL_TRIANGLES );
-
+	particle_t *firstpHead=pHead;
+	int numVerts=0;
 	while( pHead )
 	{
-		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
-		pglTexCoord2f( 1.0f, 1.0f );
-		pglVertex3fv( last2 );
+		numVerts+=6;
+		//if( pHead->next != NULL )
+		//{}
+		pHead = pHead->next;
+	}
 
-		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
-		pglTexCoord2f( 0.0f, 1.0f );
-		pglVertex3fv( last1 );
+	GLfloat verts[numVerts*9];
+
+	pHead=firstpHead;
+	int i=0;
+	while( pHead )
+	{
+		verts[i  ] = last2[0];
+		verts[i+1] = last2[1];
+		verts[i+2] = last2[2];
+		verts[i+3] = 1.0f;
+		verts[i+4] = 1.0f;
+		verts[i+5] = nColor[0];
+		verts[i+6] = nColor[1];
+		verts[i+7] = nColor[2];
+		verts[i+8] = 1.0f;
+		i+=9;
+
+		verts[i  ] = last1[0];
+		verts[i+1] = last1[1];
+		verts[i+2] = last1[2];
+		verts[i+3] = 0.0f;
+		verts[i+4] = 1.0f;
+		verts[i+5] = nColor[0];
+		verts[i+6] = nColor[1];
+		verts[i+7] = nColor[2];
+		verts[i+8] = 1.0f;
+		i+=9;
 
 		VectorCopy( last2, saved_last2 );
 		saved_nColor[0] = nColor[0];
@@ -818,38 +899,80 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 		{
 			fraction = (pHead->die - cl.time ) * div;
 			VectorScale( color, fraction, scaledColor );
-			nColor[0] = (byte)bound( 0, (int)(scaledColor[0] * 255.0f), 255 );
-			nColor[1] = (byte)bound( 0, (int)(scaledColor[1] * 255.0f), 255 );
-			nColor[2] = (byte)bound( 0, (int)(scaledColor[2] * 255.0f), 255 );
+			nColor[0] = bound( 0.0f, scaledColor[0], 1.0f );
+			nColor[1] = bound( 0.0f, scaledColor[1], 1.0f );
+			nColor[2] = bound( 0.0f, scaledColor[2], 1.0f );
 		}
 		else
 		{
 			VectorClear( nColor );
 			fraction = 0.0;
 		}
-	
-		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
-		pglTexCoord2f( 0.0f, 0.0f );
-		pglVertex3fv( last1 );
-		
-        pglColor4ub( saved_nColor[0], saved_nColor[1], saved_nColor[2], 255 );
-        pglTexCoord2f( 1.0f, 1.0f );
-        pglVertex3fv( saved_last2 );
-       
-        pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
-        pglTexCoord2f( 0.0f, 0.0f );
-        pglVertex3fv( last1 );
 
-		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
-		pglTexCoord2f( 1.0f, 0.0f );
-		pglVertex3fv( last2 );
-		
+		verts[i  ] = last1[0];
+		verts[i+1] = last1[1];
+		verts[i+2] = last1[2];
+		verts[i+3] = 0.0f;
+		verts[i+4] = 0.0f;
+		verts[i+5] = nColor[0];
+		verts[i+6] = nColor[1];
+		verts[i+7] = nColor[2];
+		verts[i+8] = 1.0f;
+		i+=9;
+
+		verts[i  ] = saved_last2[0];
+		verts[i+1] = saved_last2[1];
+		verts[i+2] = saved_last2[2];
+		verts[i+3] = 1.0f;
+		verts[i+4] = 1.0f;
+		verts[i+5] = saved_nColor[0];
+		verts[i+6] = saved_nColor[1];
+		verts[i+7] = saved_nColor[2];
+		verts[i+8] = 1.0f;
+		i+=9;
+
+		verts[i  ] = last1[0];
+		verts[i+1] = last1[1];
+		verts[i+2] = last1[2];
+		verts[i+3] = 0.0f;
+		verts[i+4] = 0.0f;
+		verts[i+5] = nColor[0];
+		verts[i+6] = nColor[1];
+		verts[i+7] = nColor[2];
+		verts[i+8] = 1.0f;
+		i+=9;
+
+		verts[i  ] = last2[0];
+		verts[i+1] = last2[1];
+		verts[i+2] = last2[2];
+		verts[i+3] = 1.0f;
+		verts[i+4] = 0.0f;
+		verts[i+5] = nColor[0];
+		verts[i+6] = nColor[1];
+		verts[i+7] = nColor[2];
+		verts[i+8] = 1.0f;
+		i+=9;
+
 		VectorCopy( screen, screenLast );
 
 		pHead = pHead->next;
 	}
 
-	pglEnd();
+	R_UseBeamProgram();
+
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
+	pglEnableVertexAttribArray(2);
+
+	pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,36,verts);//pos
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,36,&verts[3]);//uv
+	pglVertexAttribPointer(2,4,GL_FLOAT,GL_FALSE,36,&verts[5]);//col
+
+	pglDrawArrays(GL_TRIANGLES, 0, numVerts);
+
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
+	pglDisableVertexAttribArray(2);
 }
 
 /*

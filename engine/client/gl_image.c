@@ -1348,11 +1348,6 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 			tex->flags &= ~TF_CUBEMAP;
 		}
 	}
-	/*else if( tex->flags & TF_TEXTURE_1D )
-	{
-		// determine target
-		tex->target = glTarget = GL_TEXTURE_1D;
-	}*/
 	else if( tex->flags & TF_TEXTURE_RECTANGLE )
 	{
 		if( glConfig.max_2d_rectangle_size )
@@ -1404,12 +1399,7 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 				data = GL_ApplyGamma( data, tex->width * tex->height, ( tex->flags & TF_NORMALMAP ));
 		}
 
-		/*if( glTarget == GL_TEXTURE_1D )
-		{
-			if( subImage ) pglTexSubImage1D( tex->target, 0, 0, tex->width, inFormat, dataType, data );
-			else pglTexImage1D( tex->target, 0, outFormat, tex->width, 0, inFormat, dataType, data );
-		}
-		else */if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
+		if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
 		{
 			if( GL_Support( GL_SGIS_MIPMAPS_EXT ) && !( tex->flags & TF_NORMALMAP ))
 				GL_GenerateMipmaps( data, pic, tex, glTarget, inFormat, i, subImage );

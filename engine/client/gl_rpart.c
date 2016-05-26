@@ -314,7 +314,7 @@ static void CL_BulletTracerDraw( particle_t *p, float frametime )
 	float	dDistance, dTotal, fOffset;
 	int	alpha = (int)(traceralpha->value * 255);
 	float	width = 3.0f, life, frac, length;
-	vec3_t	tmp;
+	vec3_t	tmp[4];
 
 	// calculate distance
 	VectorCopy( p->vel, vecDir );
@@ -363,27 +363,33 @@ static void CL_BulletTracerDraw( particle_t *p, float frametime )
 	GL_SetRenderMode( kRenderTransTexture );
 
 	GL_Bind( GL_TEXTURE0, cls.particleImage );
-	pglBegin( GL_QUADS );
+	//TODO color
+	GLfloat uv[] = {
+		1.0f, 0.0f,
+		0.0f, 0.0f,
+		0.0f, fOffset,
+		1.0f, fOffset
+	};
+
+	VectorMA( vecStart, -width, cross, tmp[0] );
+	VectorMA( vecStart, width, cross, tmp[1] );
+	VectorMA( vecEnd, width, cross, tmp[2] );
+	VectorMA( vecEnd, -width, cross, tmp[3] );
+
+	R_UseParticlesProgram();
+
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
 
 	pglColor4ub( clgame.palette[p->color][0], clgame.palette[p->color][1], clgame.palette[p->color][2], alpha );
 
-	VectorMA( vecStart, -width, cross, tmp );	
-	pglTexCoord2f( 1.0f, 0.0f );
-	pglVertex3fv( tmp );
+	pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,12,tmp);
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,8,uv);
 
-	VectorMA( vecStart, width, cross, tmp );
-	pglTexCoord2f( 0.0f, 0.0f );
-	pglVertex3fv( tmp );
+	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	VectorMA( vecEnd, width, cross, tmp );
-	pglTexCoord2f( 0.0f, fOffset );
-	pglVertex3fv( tmp );
-
-	VectorMA( vecEnd, -width, cross, tmp );
-	pglTexCoord2f( 1.0f, fOffset );
-	pglVertex3fv( tmp );
-
-	pglEnd();
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
 }
 
 /*
@@ -500,6 +506,8 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	p->color = bound( 0, p->color, 255 );
 	VectorSet( color, clgame.palette[p->color][0], clgame.palette[p->color][1], clgame.palette[p->color][2] );
 
+	R_UseParticlesProgram();
+
 	GL_SetRenderMode( kRenderTransTexture );
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
@@ -509,18 +517,23 @@ void CL_UpdateParticle( particle_t *p, float ft )
 		GL_Bind(GL_TEXTURE0, cls.particleImage);
 
 	// add the 4 corner vertices.
-	pglBegin( GL_QUADS );
+	GLfloat verts[] = {
+		p->org[0] - right[0] + up[0], p->org[1] - right[1] + up[1], p->org[2] - right[2] + up[2], 0.0f, 1.0f,
+		p->org[0] + right[0] + up[0], p->org[1] + right[1] + up[1], p->org[2] + right[2] + up[2], 0.0f, 0.0f,
+		p->org[0] + right[0] - up[0], p->org[1] + right[1] - up[1], p->org[2] + right[2] - up[2], 1.0f, 0.0f,
+		p->org[0] - right[0] - up[0], p->org[1] - right[1] - up[1], p->org[2] - right[2] - up[2], 1.0f, 1.0f
+	};
 
-	pglTexCoord2f( 0.0f, 1.0f );
-	pglVertex3f( p->org[0] - right[0] + up[0], p->org[1] - right[1] + up[1], p->org[2] - right[2] + up[2] );
-	pglTexCoord2f( 0.0f, 0.0f );
-	pglVertex3f( p->org[0] + right[0] + up[0], p->org[1] + right[1] + up[1], p->org[2] + right[2] + up[2] );
-	pglTexCoord2f( 1.0f, 0.0f );
-	pglVertex3f( p->org[0] + right[0] - up[0], p->org[1] + right[1] - up[1], p->org[2] + right[2] - up[2] );
-	pglTexCoord2f( 1.0f, 1.0f );
-	pglVertex3f( p->org[0] - right[0] - up[0], p->org[1] - right[1] - up[1], p->org[2] - right[2] - up[2] );
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
 
-	pglEnd();
+	pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,20,verts);
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,20,&verts[3]);
+
+	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
 
 	if( p->type != pt_clientcustom )
 	{
@@ -1412,24 +1425,29 @@ void CL_DrawTracer( vec3_t start, vec3_t delta, float width, rgb_t color, int al
 
 	GL_SetRenderMode( kRenderTransTexture );
 
+	R_UseParticlesProgram();
+
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
 	GL_Bind( GL_TEXTURE0, cls.particleImage );
-	pglBegin( GL_QUADS );
 
-	pglTexCoord2f( 0.0f, endV );
-	pglVertex3fv( verts[2] );
+	GLfloat uv[] = {
+		0.0f, endV,
+		1.0f, endV,
+		1.0f, startV,
+		0.0f, startV
+	};
 
-	pglTexCoord2f( 1.0f, endV );
-	pglVertex3fv( verts[3] );
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
 
-	pglTexCoord2f( 1.0f, startV );
-	pglVertex3fv( verts[1] );
+	pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,12,verts);
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,8,uv);
 
-	pglTexCoord2f( 0.0f, startV );
-	pglVertex3fv( verts[0] );
+	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-	pglEnd();
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
 }
 
 /*

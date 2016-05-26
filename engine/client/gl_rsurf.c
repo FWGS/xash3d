@@ -834,17 +834,6 @@ void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 
 		pglDisableVertexAttribArray(0);
 		pglDisableVertexAttribArray(1);
-
-		/*pglBegin( GL_POLYGON );
-
-		v = p->verts[0];
-		for( i = 0; i < p->numverts; i++, v += VERTEXSIZE )
-		{
-			if( !dynamic ) pglTexCoord2f( v[5], v[6] );
-			else pglTexCoord2f( v[5] - soffset, v[6] - toffset );
-			pglVertex3fv( v );
-		}
-		pglEnd ();*/
 	}
 }
 
