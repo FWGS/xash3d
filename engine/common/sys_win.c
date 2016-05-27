@@ -815,9 +815,9 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	Msg( "%s\n", message );
 #ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
-	//SDL_MouseQuit();
-	MSGBOX( message );
 #endif
+	MSGBOX( message );
+
 	// Log saved, now we can try to save configs and close log correctly, it may crash
 	if( host.type == HOST_NORMAL )
 			CL_Crashed();
