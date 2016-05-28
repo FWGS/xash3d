@@ -7,6 +7,7 @@ GLuint glsl_2DprogramId = 0;
 GLuint glsl_WorldProgramId = 0;
 GLuint glsl_ParticlesProgramId = 0;
 GLuint glsl_BeamProgramId = 0;
+GLuint glsl_StudioProgramId = 0;
 GLint u_color = -1;
 GLint u_colorPart = -1;
 GLint u_mvMtx = -1;
@@ -133,20 +134,44 @@ void R_InitShaders()
 	"	gl_FragColor = vec4(0.0,1.0,0.0,1.0)+(texture2D(u_tex,v_uv)*v_color*0.01);\n"\
 	"}";
 
-	glsl_2DprogramId=R_CreateProgram(Vert2DS,Frag2DS);
+	char StudioVertS[] =
+	"attribute vec4 a_position;\n"\
+	"attribute vec2 a_uv;\n"\
+	"attribute vec4 a_color;\n"\
+	"varying vec2 v_uv;\n"\
+	"varying vec4 v_color;\n"\
+	"uniform mat4 u_mvMtx;\n"\
+	"uniform mat4 u_projMtx;\n"\
+	"void main(){\n"\
+	"	gl_Position = u_projMtx*u_mvMtx*a_position;\n"\
+	"	v_uv = a_uv;\n"\
+	"	v_color = a_color;\n"\
+	"}";
+	char StudioFragS[] =
+	"varying vec2 v_uv;\n"\
+	"varying vec4 v_color;\n"\
+	"uniform sampler2D u_tex;\n"\
+	"void main(){\n"\
+	"	gl_FragColor = texture2D(u_tex,v_uv)*v_color;\n"\
+	"}";
+
+	glsl_2DprogramId = R_CreateProgram(Vert2DS,Frag2DS);
 	u_color = pglGetUniformLocation(glsl_2DprogramId,"u_color");
 
-	glsl_WorldProgramId=R_CreateProgram(WorldVertS,WorldFragS);
+	glsl_WorldProgramId = R_CreateProgram(WorldVertS,WorldFragS);
 	u_mvMtx = pglGetUniformLocation(glsl_WorldProgramId,"u_mvMtx");
 	u_projMtx = pglGetUniformLocation(glsl_WorldProgramId,"u_projMtx");
 
-	glsl_BeamProgramId=R_CreateProgram(BeamVertS,BeamFragS);
-	glsl_ParticlesProgramId=R_CreateProgram(ParticlesVertS,ParticlesFragS);
+	glsl_BeamProgramId = R_CreateProgram(BeamVertS,BeamFragS);
+
+	glsl_ParticlesProgramId = R_CreateProgram(ParticlesVertS,ParticlesFragS);
 	u_mvMtxPart = pglGetUniformLocation(glsl_ParticlesProgramId,"u_mvMtx");
 	u_projMtxPart = pglGetUniformLocation(glsl_ParticlesProgramId,"u_projMtx");
 	u_colorPart = pglGetUniformLocation(glsl_ParticlesProgramId,"u_color");
-	if(u_color!=u_colorPart)
+	if(u_color != u_colorPart)
 		MsgDev( D_ERROR, "u_color!=u_colorPart %i %i\n",u_color,u_colorPart);
+
+	glsl_StudioProgramId = R_CreateProgram(StudioVertS, StudioFragS);
 
 	MsgDev( D_INFO, "Init shaders\n" );
 }
@@ -175,6 +200,12 @@ void R_UseBeamProgram()
 	pglUseProgram(glsl_BeamProgramId);
 }
 
+void R_UseStudioProgram()
+{
+	glsl_CurProgramId = glsl_StudioProgramId;
+	pglUseProgram(glsl_StudioProgramId);
+}
+
 void R_ColorUniform(GLfloat r,GLfloat g, GLfloat b, GLfloat a)
 {
 	if(!glsl_CurProgramId)
@@ -197,6 +228,8 @@ void R_ProjMtxUniform(const matrix4x4 source)
 	pglUniformMatrix4fv(u_projMtx,1,GL_FALSE,dest);
 	R_UseParticlesProgram();
 	pglUniformMatrix4fv(u_projMtxPart,1,GL_FALSE,dest);
+	R_UseStudioProgram();
+	pglUniformMatrix4fv(u_projMtx,1,GL_FALSE,dest);
 }
 
 void R_ModelViewMtxUniform(const matrix4x4 source)
@@ -210,4 +243,6 @@ void R_ModelViewMtxUniform(const matrix4x4 source)
 	pglUniformMatrix4fv(u_mvMtx,1,GL_FALSE,dest);
 	R_UseParticlesProgram();
 	pglUniformMatrix4fv(u_mvMtxPart,1,GL_FALSE,dest);
+	R_UseStudioProgram();
+	pglUniformMatrix4fv(u_mvMtx,1,GL_FALSE,dest);
 }

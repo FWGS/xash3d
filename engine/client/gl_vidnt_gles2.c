@@ -168,6 +168,7 @@ static dllfunc_t opengl_es20funcs[] =
 { "glEnableVertexAttribArray"	, (void **)&pglEnableVertexAttribArray },
 { "glVertexAttribPointer"		, (void **)&pglVertexAttribPointer },
 { "glDrawArrays"				, (void **)&pglDrawArrays },
+{ "glDrawElements"				, (void **)&pglDrawElements },
 { "glDisableVertexAttribArray"	, (void **)&pglDisableVertexAttribArray },
 { "glBlendFunc"					, (void **)&pglBlendFunc },
 { "glCreateProgram"				, (void **)&pglCreateProgram },
