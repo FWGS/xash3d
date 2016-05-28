@@ -181,6 +181,7 @@ static dllfunc_t opengl_es20funcs[] =
 { "glCullFace"					, (void **)&pglCullFace },
 { "glDepthRangef"				, (void **)&pglDepthRangef },
 { "glGetUniformLocation"		, (void **)&pglGetUniformLocation },
+{ "glUniform2f"					, (void **)&pglUniform2f },
 { "glUniform4f"					, (void **)&pglUniform4f },
 { "glUniform4fv"				, (void **)&pglUniform4fv },
 { "glTexSubImage2D"				, (void **)&pglTexSubImage2D },

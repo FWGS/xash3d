@@ -681,8 +681,9 @@ void R_LoadIdentity( void )
 	Matrix4x4_LoadIdentity( RI.objectMatrix );
 	Matrix4x4_Copy( RI.modelviewMatrix, RI.worldviewMatrix );
 
-	pglMatrixMode( GL_MODELVIEW );
-	GL_LoadMatrix( RI.modelviewMatrix );
+	//pglMatrixMode( GL_MODELVIEW );
+	//GL_LoadMatrix( RI.modelviewMatrix );
+	R_ModelViewMtxUniform(RI.modelviewMatrix);
 	tr.modelviewIdentity = true;
 }
 
@@ -707,8 +708,9 @@ void R_RotateForEntity( cl_entity_t *e )
 	Matrix4x4_CreateFromEntity( RI.objectMatrix, e->angles, e->origin, scale );
 	Matrix4x4_ConcatTransforms( RI.modelviewMatrix, RI.worldviewMatrix, RI.objectMatrix );
 
-	pglMatrixMode( GL_MODELVIEW );
-	GL_LoadMatrix( RI.modelviewMatrix );
+	//pglMatrixMode( GL_MODELVIEW );
+	//GL_LoadMatrix( RI.modelviewMatrix );
+	R_ModelViewMtxUniform(RI.modelviewMatrix);
 	tr.modelviewIdentity = false;
 }
 
@@ -733,8 +735,9 @@ void R_TranslateForEntity( cl_entity_t *e )
 	Matrix4x4_CreateFromEntity( RI.objectMatrix, vec3_origin, e->origin, scale );
 	Matrix4x4_ConcatTransforms( RI.modelviewMatrix, RI.worldviewMatrix, RI.objectMatrix );
 
-	pglMatrixMode( GL_MODELVIEW );
-	GL_LoadMatrix( RI.modelviewMatrix );
+	//pglMatrixMode( GL_MODELVIEW );
+	//GL_LoadMatrix( RI.modelviewMatrix );
+	R_ModelViewMtxUniform(RI.modelviewMatrix);
 	tr.modelviewIdentity = false;
 }
 

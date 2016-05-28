@@ -9,6 +9,7 @@ GLuint glsl_ParticlesProgramId = 0;
 GLuint glsl_BeamProgramId = 0;
 GLuint glsl_StudioProgramId = 0;
 GLint u_color = -1;
+GLint u_screen = -1;
 GLint u_colorPart = -1;
 GLint u_mvMtx = -1;
 GLint u_projMtx = -1;
@@ -61,11 +62,11 @@ void R_InitShaders()
 	"attribute vec4 a_position;\n"\
 	"attribute vec2 a_uv;\n"\
 	"varying vec2 v_uv;\n"\
-	"const vec2 screen= vec2(0.0025,0.003333333);\n"\
+	"uniform vec2 u_screen;\n"\
 	"void main(){\n"\
-	"	gl_Position = vec4((a_position.xy*screen)-1.0,0.0,1.0);\n"\
-	"	gl_Position.y*=-1.0;\n"\
-	"	v_uv=a_uv;\n"\
+	"	gl_Position = vec4((a_position.xy*u_screen) - 1.0, 0.0, 1.0);\n"\
+	"	gl_Position.y *= -1.0;\n"\
+	"	v_uv = a_uv;\n"\
 	"}";
 	char Frag2DS[]=
 	"varying vec2 v_uv;\n"\
@@ -108,7 +109,7 @@ void R_InitShaders()
 	"uniform vec4 u_color;\n"\
 	"void main(){\n"\
 	"	vec4 tex = texture2D(u_tex,v_uv);\n"\
-	"	if(tex.a==0.0)\n"\
+	"	if(tex.a == 0.0)\n"\
 	"		discard;\n"\
 	"	gl_FragColor = tex*u_color;\n"\
 	"}";
@@ -131,7 +132,7 @@ void R_InitShaders()
 	"varying vec4 v_color;\n"\
 	"uniform sampler2D u_tex;\n"\
 	"void main(){\n"\
-	"	gl_FragColor = vec4(0.0,1.0,0.0,1.0)+(texture2D(u_tex,v_uv)*v_color*0.01);\n"\
+	"	gl_FragColor = texture2D(u_tex,v_uv)*v_color;\n"\
 	"}";
 
 	char StudioVertS[] =
@@ -157,6 +158,7 @@ void R_InitShaders()
 
 	glsl_2DprogramId = R_CreateProgram(Vert2DS,Frag2DS);
 	u_color = pglGetUniformLocation(glsl_2DprogramId,"u_color");
+	u_screen = pglGetUniformLocation(glsl_2DprogramId,"u_screen");
 
 	glsl_WorldProgramId = R_CreateProgram(WorldVertS,WorldFragS);
 	u_mvMtx = pglGetUniformLocation(glsl_WorldProgramId,"u_mvMtx");
@@ -215,6 +217,14 @@ void R_ColorUniform(GLfloat r,GLfloat g, GLfloat b, GLfloat a)
 		pglUniform4f(u_colorPart,r,g,b,a);
 	else
 		pglUniform4f(u_color,r,g,b,a);
+}
+
+void R_ScreenUniform(GLfloat w, GLfloat h)
+{
+	if(!glsl_CurProgramId)
+		return;
+
+	pglUniform2f(u_screen,w,h);
 }
 
 void R_ProjMtxUniform(const matrix4x4 source)
