@@ -965,6 +965,7 @@ void DrawSingleDecal( decal_t *pDecal, msurface_t *fa )
 
 	GL_Bind( GL_TEXTURE0, pDecal->texture );
 
+	/*
 	pglBegin( GL_POLYGON );
 
 	for( i = 0; i < numVerts; i++, v += VERTEXSIZE )
@@ -973,7 +974,20 @@ void DrawSingleDecal( decal_t *pDecal, msurface_t *fa )
 		pglVertex3fv( v );
 	}
 
-	pglEnd();
+	pglEnd();*/
+
+	R_UseWorldProgram();
+
+	pglEnableVertexAttribArray( 0 );
+	pglEnableVertexAttribArray( 1 );
+
+	pglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, VERTEXSIZE * 4, v );
+	pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, VERTEXSIZE * 4, &v[3] );
+	pglDrawArrays( GL_TRIANGLE_FAN, 0, numVerts );
+
+	pglDisableVertexAttribArray( 0 );
+	pglDisableVertexAttribArray( 1 );
+
 }
 
 void DrawSurfaceDecals( msurface_t *fa )
