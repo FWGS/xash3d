@@ -189,7 +189,7 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 	int	i, total_segs, segs_drawn;
 	float	div, length, fraction, factor;
 	float	flMaxWidth, vLast, vStep, brightness;
-	vec3_t	perp1, vLastNormal;
+	vec3_t	perp1, vLastNormal = {0, 0, 0};
 	HSPRITE	m_hSprite;
 	beamseg_t	curSeg;
 #ifdef XASH_GLES2_RENDER

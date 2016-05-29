@@ -1951,6 +1951,8 @@ static void R_StudioDrawMesh(short *ptricmds, float s, float t )
 			tri_strip = true;
 		}
 
+		r_stats.c_studio_polys += (i - 2);
+
 		for( ; i > 0; i--, ptricmds += 4 )
 		{
 			// build in indices
@@ -2220,7 +2222,7 @@ static void R_StudioDrawPoints( void )
 	if( r_studio_sort_textures->integer )
 	{
 		// sort opaque and translucent for right results
-		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), R_StudioMeshCompare );
+		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), (void *)R_StudioMeshCompare );
 	}
 
 	R_StudioDrawMeshes(ptexture,pskinref);
@@ -3024,7 +3026,7 @@ static int R_StudioDrawPlayer( int flags, entity_state_t *pplayer )
 {
 	int	m_nPlayerIndex;
 	float	gaitframe = 0.0f, gaityaw = 0.0f;
-	vec3_t	dir, prevgaitorigin;
+	vec3_t	dir, prevgaitorigin = {0, 0, 0};
 	alight_t	lighting;
 
 	m_nPlayerIndex = pplayer->number - 1;
@@ -3296,6 +3298,10 @@ void R_DrawStudioModelInternal( cl_entity_t *e, qboolean follow_entity )
 {
 	int	i, flags, result;
 	float	prevFrame;
+
+	if( !r_drawstudiomodels->integer )
+		return;
+
 
 	if( RI.params & RP_ENVVIEW )
 		return;
