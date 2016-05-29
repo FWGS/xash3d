@@ -101,7 +101,7 @@ xash_force_inline size_t Q_strncpy( char *dst, const char *src, size_t size )
 
 	len = 0;
 
-	if( ( unsigned long int )src & ( sizeof( int ) - 1) != ( unsigned long int )dst & ( sizeof( int ) - 1) )
+	if( ( ( unsigned long int )src & ( sizeof( int ) - 1) ) != ( ( unsigned long int )dst & ( sizeof( int ) - 1) ) )
 		return Q_strncpy_unaligned( dst, src, size - len );
 
 	// first, copy all unaligned bytes
@@ -170,7 +170,7 @@ xash_force_inline size_t Q_strncat( char *dst, const char *src, size_t size )
 	dst += len;
 		
 
-	if( ( unsigned long int )src & ( sizeof( int ) - 1) != ( unsigned long int )dst & ( sizeof( int ) - 1) )
+	if( (( unsigned long int )src & ( sizeof( int ) - 1)) != (( unsigned long int )dst & ( sizeof( int ) - 1)) )
 		return len + Q_strncpy_unaligned( dst, src, size - len );
 	// first, copy all unaligned bytes
 	for( pchr = src; ( ( unsigned long int )pchr & ( sizeof( int ) - 1) ) != 0; pchr++, len++, dst++ )
