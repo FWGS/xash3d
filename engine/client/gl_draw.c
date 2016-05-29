@@ -66,6 +66,28 @@ R_DrawStretchPic
 */
 void R_DrawStretchPic( float x, float y, float w, float h, float s1, float t1, float s2, float t2, int texnum )
 {
+#ifdef XASH_GLES2_RENDER
+	GLfloat verts[] = {
+		x, y, s1, t1,
+		x + w, y, s2, t1,
+		x + w, y + h, s2, t2,
+		x, y + h, s1, t2
+	};
+
+	GL_Bind( GL_TEXTURE0, texnum );
+
+	pglEnableVertexAttribArray( 0 );
+	pglEnableVertexAttribArray( 1 );
+
+	pglVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 16, verts );
+	pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 16, &verts[2] );
+
+	pglDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
+
+	pglDisableVertexAttribArray( 0 );
+	pglDisableVertexAttribArray( 1 );
+
+#else
 	GL_Bind( GL_TEXTURE0, texnum );
 
 	pglBegin( GL_QUADS );
@@ -81,6 +103,7 @@ void R_DrawStretchPic( float x, float y, float w, float h, float s1, float t1, f
 		pglTexCoord2f( s1, t2 );
 		pglVertex2f( x, y + h );
 	pglEnd();
+#endif
 }
 
 /*
@@ -248,11 +271,17 @@ void R_Set2DMode( qboolean enable )
 
 		// set 2D virtual screen size
 		pglViewport( 0, 0, glState.width, glState.height );
+
+#ifdef XASH_GLES2_RENDER
+		R_UseProgram( PROGRAM_2D );
+		R_ScreenUniform( 1.0f / glState.width * 2.0f, 1.0f / glState.height * 2.0f );
+#else
 		pglMatrixMode( GL_PROJECTION );
 		pglLoadIdentity();
 		pglOrtho( 0, glState.width, glState.height, 0, -99999, 99999 );
 		pglMatrixMode( GL_MODELVIEW );
 		pglLoadIdentity();
+#endif
 
 		GL_Cull( 0 );
 

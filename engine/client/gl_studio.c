@@ -103,6 +103,8 @@ static int		g_chromeage[MAXSTUDIOBONES];	// last time chrome vectors were update
 static vec3_t		g_xformverts[MAXSTUDIOVERTS];
 static vec3_t		g_xformnorms[MAXSTUDIOVERTS];
 static vec3_t		g_xarrayverts[MAXARRAYVERTS];
+static vec2_t		g_xarraycoord[MAXARRAYVERTS];
+static GLubyte		g_xarraycolor[MAXARRAYVERTS][4];
 static uint		g_xarrayelems[MAXARRAYVERTS*6];
 static uint		g_nNumArrayVerts;
 static uint		g_nNumArrayElems;
@@ -1921,6 +1923,228 @@ static int R_StudioMeshCompare( const sortedmesh_t *a, const sortedmesh_t *b )
 
 /*
 ===============
+R_StudioDrawMesh
+
+===============
+*/
+static void R_StudioDrawMesh(short *ptricmds, float s, float t )
+{
+	GLubyte alpha = 255;
+	int i;
+	vec2_t uv;
+	float *av, *lv;
+
+	g_nNumArrayVerts = g_nNumArrayElems = 0;
+
+	while( ( i = *( ptricmds++ ) ) )
+	{
+		int	vertexState = 0;
+		qboolean	tri_strip;
+
+		if( i < 0 )
+		{
+			tri_strip = false;
+			i = -i;
+		}
+		else
+		{
+			tri_strip = true;
+		}
+
+		for( ; i > 0; i--, ptricmds += 4 )
+		{
+			// build in indices
+			if( vertexState++ < 3 )
+			{
+				g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
+			}
+			else if( tri_strip )
+			{
+				// flip triangles between clockwise and counter clockwise
+				if( vertexState & 1 )
+				{
+					// draw triangle [n-2 n-1 n]
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 2;
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
+				}
+				else
+				{
+					// draw triangle [n-1 n-2 n]
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 2;
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
+				}
+			}
+			else
+			{
+				// draw triangle fan [0 n-1 n]
+				g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - ( vertexState - 1 );
+				g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
+				g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
+			}
+			if( g_nFaceFlags & STUDIO_NF_CHROME || ( g_nForceFaceFlags & STUDIO_NF_CHROME ))
+			{
+				uv[0] = g_chrome[ptricmds[1]][0] * s;
+				uv[1] = g_chrome[ptricmds[1]][1] * t ;
+			}
+			else if( g_nFaceFlags & STUDIO_NF_UV_COORDS )
+			{
+				uv[0] = ptricmds[2] * (1.0f / 32768.0f);
+				uv[1] = ptricmds[3] * (1.0f / 32768.0f);
+			}
+			else
+			{
+				uv[0] = ptricmds[2] * s;
+				uv[1] = ptricmds[3] * t;
+			}
+			g_xarraycoord[g_nNumArrayVerts][0] = uv[0];
+			g_xarraycoord[g_nNumArrayVerts][1] = uv[1];
+
+			GLubyte cl[4];
+
+			lv = (float *)g_lightvalues[ptricmds[1]];
+			cl[0] = lv[0]*255;
+			cl[1] = lv[1]*255;
+			cl[2] = lv[2]*255;
+			cl[3] = alpha;
+
+			Q_memcpy( g_xarraycolor[g_nNumArrayVerts], cl, sizeof(cl) );
+
+			av = g_xformverts[ptricmds[0]];
+			/*if( g_nForceFaceFlags & STUDIO_NF_CHROME )
+			{
+				vec3_t	scaled_vertex;
+				nv = (float *)g_xformnorms[ptricmds[1]];
+				VectorMA( av, scale, nv, scaled_vertex );
+				pglVertex3fv( scaled_vertex );
+			}
+			else*/
+			{
+				//pglVertex3f( av[0], av[1], av[2] );
+				ASSERT( g_nNumArrayVerts < MAXARRAYVERTS );
+				VectorCopy( av, g_xarrayverts[g_nNumArrayVerts] ); // store off vertex
+				g_nNumArrayVerts++;
+			}
+		}
+	}
+#ifdef XASH_GLES2_RENDER
+	R_UseProgram( PROGRAM_STUDIO );
+
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
+	pglEnableVertexAttribArray(2);
+	//pglEnableVertexAttribArray(3);
+
+	pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,12,g_xarrayverts);//pos
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,g_xarraycoord);//uv
+	pglVertexAttribPointer(2,4,GL_UNSIGNED_BYTE,GL_TRUE,0,g_xarraycolor);//col
+	//pglVertexAttribPointer(3,3,GL_FLOAT,GL_FALSE,48,&verts[9]);//nrm
+
+	pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
+
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
+	pglDisableVertexAttribArray(2);
+	//pglDisableVertexAttribArray(3);
+#else
+	pglEnableClientState( GL_VERTEX_ARRAY );
+	pglVertexPointer( 3, GL_FLOAT, 12, g_xarrayverts );
+
+	pglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	pglTexCoordPointer( 2, GL_FLOAT, 0, g_xarraycoord );
+
+	pglEnableClientState( GL_COLOR_ARRAY );
+	pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_xarraycolor );
+
+	pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
+	pglDisableClientState( GL_VERTEX_ARRAY );
+	pglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	pglDisableClientState( GL_COLOR_ARRAY );
+
+#endif
+}
+
+/*
+===============
+R_StudioDrawMeshes
+
+===============
+*/
+static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref )
+{
+	int		j;
+	mstudiomesh_t	*pmesh;
+
+	for( j = 0; j < m_pSubModel->nummesh; j++ )
+	{
+		float	s, t, alpha;
+		short	*ptricmds;
+
+		pmesh = g_sortedMeshes[j].mesh;
+		ptricmds = (short *)((byte *)m_pStudioHeader + pmesh->triindex);
+
+		g_nFaceFlags = ptexture[pskinref[pmesh->skinref]].flags;
+		s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
+		t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
+
+		if( g_iRenderMode != kRenderTransAdd )
+			pglDepthMask( GL_TRUE );
+		else pglDepthMask( GL_FALSE );
+
+		// check bounds
+		if( ptexture[pskinref[pmesh->skinref]].index < 0 || ptexture[pskinref[pmesh->skinref]].index > MAX_TEXTURES )
+			ptexture[pskinref[pmesh->skinref]].index = tr.defaultTexture;
+
+		if( g_nForceFaceFlags & STUDIO_NF_CHROME )
+		{
+			color24	*clr;
+			clr = &RI.currententity->curstate.rendercolor;
+			pglColor4ub( clr->r, clr->g, clr->b, 255 );
+			alpha = 1.0f;
+		}
+		else if( g_nFaceFlags & STUDIO_NF_TRANSPARENT && R_StudioOpaque( RI.currententity ))
+		{
+			GL_SetRenderMode( kRenderTransAlpha );
+			pglAlphaFunc( GL_GREATER, 0.0f );
+			alpha = 1.0f;
+		}
+		else if( g_nFaceFlags & STUDIO_NF_ADDITIVE )
+		{
+			GL_SetRenderMode( kRenderTransAdd );
+			alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
+			pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
+			pglDepthMask( GL_FALSE );
+		}
+		else if( g_nFaceFlags & STUDIO_NF_ALPHA && !( host.features & ENGINE_DISABLE_HDTEXTURES )) // Paranoia2 collision flag
+		{
+			GL_SetRenderMode( kRenderTransTexture );
+			alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
+			pglDepthMask( GL_FALSE );
+		}
+		else
+		{
+			GL_SetRenderMode( g_iRenderMode );
+
+			if( g_iRenderMode == kRenderNormal )
+			{
+				pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+				alpha = 1.0f;
+			}
+			else alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
+		}
+
+		if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ))
+		{
+			GL_Bind( GL_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
+		}
+
+		R_StudioDrawMesh(ptricmds, s, t);
+	}
+}
+
+/*
+===============
 R_StudioDrawPoints
 
 ===============
@@ -1996,173 +2220,10 @@ static void R_StudioDrawPoints( void )
 	if( r_studio_sort_textures->integer )
 	{
 		// sort opaque and translucent for right results
-		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), (void*)R_StudioMeshCompare );
+		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), R_StudioMeshCompare );
 	}
 
-	for( j = 0; j < m_pSubModel->nummesh; j++ ) 
-	{
-		float	s, t, alpha;
-		short	*ptricmds;
-
-		pmesh = g_sortedMeshes[j].mesh;
-		ptricmds = (short *)((byte *)m_pStudioHeader + pmesh->triindex);
-
-		g_nFaceFlags = ptexture[pskinref[pmesh->skinref]].flags;
-		s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
-		t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
-
-		if( g_iRenderMode != kRenderTransAdd )
-			pglDepthMask( GL_TRUE );
-		else pglDepthMask( GL_FALSE );
-
-		// check bounds
-		if( ptexture[pskinref[pmesh->skinref]].index < 0 || ptexture[pskinref[pmesh->skinref]].index > MAX_TEXTURES )
-			ptexture[pskinref[pmesh->skinref]].index = tr.defaultTexture;
-
-		if( g_nForceFaceFlags & STUDIO_NF_CHROME )
-		{
-			color24	*clr;
-			clr = &RI.currententity->curstate.rendercolor;
-			pglColor4ub( clr->r, clr->g, clr->b, 255 );
-			alpha = 1.0f;
-		}
-		else if( g_nFaceFlags & STUDIO_NF_TRANSPARENT && R_StudioOpaque( RI.currententity ))
-		{
-			GL_SetRenderMode( kRenderTransAlpha );
-			pglAlphaFunc( GL_GREATER, 0.0f );
-			alpha = 1.0f;
-		}
-		else if( g_nFaceFlags & STUDIO_NF_ADDITIVE )
-		{
-			GL_SetRenderMode( kRenderTransAdd );
-			alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
-			pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
-			pglDepthMask( GL_FALSE );
-		}
-		else if( g_nFaceFlags & STUDIO_NF_ALPHA && !( host.features & ENGINE_DISABLE_HDTEXTURES )) // Paranoia2 collision flag
-		{
-			GL_SetRenderMode( kRenderTransTexture );
-			alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
-			pglDepthMask( GL_FALSE );
-		}
-		else
-		{
-			GL_SetRenderMode( g_iRenderMode );
-
-			if( g_iRenderMode == kRenderNormal )
-			{
-				pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-				alpha = 1.0f;
-			}
-			else alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
-		}
-
-		if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ))
-		{
-			GL_Bind( GL_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
-		}
-
-		while( ( i = *( ptricmds++ ) ) )
-		{
-			int	vertexState = 0;
-			qboolean	tri_strip;
-
-			if( i < 0 )
-			{
-				pglBegin( GL_TRIANGLE_FAN );
-				tri_strip = false;
-				i = -i;
-			}
-			else
-			{
-				pglBegin( GL_TRIANGLE_STRIP );
-				tri_strip = true;
-			}
-
-			r_stats.c_studio_polys += (i - 2);
-
-			for( ; i > 0; i--, ptricmds += 4 )
-			{
-				// build in indices
-				if( vertexState++ < 3 )
-				{
-					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
-				}
-				else if( tri_strip )
-				{
-					// flip triangles between clockwise and counter clockwise
-					if( vertexState & 1 )
-					{
-						// draw triangle [n-2 n-1 n]
-						g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 2;
-						g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
-						g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
-					}
-					else
-					{
-						// draw triangle [n-1 n-2 n]
-						g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
-						g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 2;
-						g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
-					}
-				}
-				else
-				{
-					// draw triangle fan [0 n-1 n]
-					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - ( vertexState - 1 );
-					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
-					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
-				}
-
-				if( g_nFaceFlags & STUDIO_NF_CHROME || ( g_nForceFaceFlags & STUDIO_NF_CHROME ))
-					pglTexCoord2f( g_chrome[ptricmds[1]][0] * s, g_chrome[ptricmds[1]][1] * t );
-				else if( g_nFaceFlags & STUDIO_NF_UV_COORDS )
-					pglTexCoord2f( ptricmds[2] * (1.0f / 32768.0f), ptricmds[3] * (1.0f / 32768.0f));
-				else pglTexCoord2f( ptricmds[2] * s, ptricmds[3] * t );
-
-				if(!( g_nForceFaceFlags & STUDIO_NF_CHROME ))
-                                        {
-					if( g_iRenderMode == kRenderTransAdd )
-					{
-						pglColor4f( 1.0f, 1.0f, 1.0f, alpha );
-					}
-					else if( g_iRenderMode == kRenderTransColor )
-					{
-						color24	*clr;
-						clr = &RI.currententity->curstate.rendercolor;
-						pglColor4ub( clr->r, clr->g, clr->b, alpha * 255 );
-					}
-					else if( g_nFaceFlags & STUDIO_NF_FULLBRIGHT )
-					{
-						pglColor4f( 1.0f, 1.0f, 1.0f, alpha );
-					}
-					else
-					{
-						lv = (float *)g_lightvalues[ptricmds[1]];
-						pglColor4f( lv[0], lv[1], lv[2], alpha );
-					}
-				}
-
-				av = g_xformverts[ptricmds[0]];
-
-				if( g_nForceFaceFlags & STUDIO_NF_CHROME )
-				{
-					vec3_t	scaled_vertex;
-					nv = (float *)g_xformnorms[ptricmds[1]];
-					VectorMA( av, scale, nv, scaled_vertex );
-					pglVertex3fv( scaled_vertex );
-				}
-				else
-				{
-					pglVertex3f( av[0], av[1], av[2] );
-					ASSERT( g_nNumArrayVerts < MAXARRAYVERTS ); 
-					VectorCopy( av, g_xarrayverts[g_nNumArrayVerts] ); // store off vertex
-					g_nNumArrayVerts++;
-				}
-			}
-			pglEnd();
-		}
-	}
+	R_StudioDrawMeshes(ptexture,pskinref);
 
 	// restore depthmask for next call StudioDrawPoints
 	if( g_iRenderMode != kRenderTransAdd )
@@ -2577,14 +2638,14 @@ R_StudioSetupRenderer
 static void R_StudioSetupRenderer( int rendermode )
 {
 	g_iRenderMode = bound( 0, rendermode, kRenderTransAdd );
-	pglShadeModel( GL_SMOOTH );	// enable gouraud shading
+	//pglShadeModel( GL_SMOOTH );	// enable gouraud shading
 	if( clgame.ds.cullMode != GL_NONE ) GL_Cull( GL_FRONT );
 
 	// enable depthmask on studiomodels
 	if( glState.drawTrans && g_iRenderMode != kRenderTransAdd )
 		pglDepthMask( GL_TRUE );
 
-	pglAlphaFunc( GL_GREATER, 0.0f );
+	//pglAlphaFunc( GL_GREATER, 0.0f );
 
 	if( g_iBackFaceCull )
 		GL_FrontFace( true );
@@ -2598,8 +2659,8 @@ R_StudioRestoreRenderer
 */
 static void R_StudioRestoreRenderer( void )
 {
-	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-	pglShadeModel( GL_FLAT );
+	//pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+	//pglShadeModel( GL_FLAT );
 
 	// restore depthmask state for sprites etc
 	if( glState.drawTrans && g_iRenderMode != kRenderTransAdd )

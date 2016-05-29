@@ -134,6 +134,7 @@ typedef double GLclampd;
 typedef int GLintptrARB;
 typedef int GLsizeiptrARB;
 typedef char GLcharARB;
+typedef char GLchar;
 typedef uint GLhandleARB;
 typedef float GLmatrix[16];
 
@@ -844,6 +845,39 @@ typedef float GLmatrix[16];
 // helper opengl functions
 GLenum ( APIENTRY *pglGetError )(void);
 const GLubyte * ( APIENTRY *pglGetString )(GLenum name);
+
+#if defined XASH_GLES2_RENDER
+
+#define GL_VERTEX_SHADER 0x8B31
+#define GL_FRAGMENT_SHADER 0x8B30
+#define GL_LINK_STATUS 0x8B82
+#define GL_COMPILE_STATUS 0x8B81
+
+void ( APIENTRY *pglEnableVertexAttribArray) (GLuint index);
+void ( APIENTRY *pglVertexAttribPointer)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
+void ( APIENTRY *pglDisableVertexAttribArray)(GLuint index);
+
+GLuint (APIENTRY *pglCreateProgram) (void);
+GLuint (APIENTRY *pglCreateShader) (GLenum type);
+void (APIENTRY *pglShaderSource) (GLuint shader, GLsizei count, const GLchar *const*string, const GLint *length);
+void (APIENTRY *pglCompileShader) (GLuint shader);
+void (APIENTRY *pglAttachShader) (GLuint program, GLuint shader);
+void (APIENTRY *pglLinkProgram) (GLuint program);
+void (APIENTRY *pglUseProgram) (GLuint program);
+
+GLint (APIENTRY *pglGetUniformLocation) (GLuint program, const GLchar *name);
+void (APIENTRY *pglUniform2f) (GLint location, GLfloat v0, GLfloat v1);
+void (APIENTRY *pglUniform4f) (GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+void (APIENTRY *pglUniform4fv) (GLint location, GLsizei count, const GLfloat *value);
+void (APIENTRY *pglUniformMatrix4fv) (GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void (APIENTRY *pglGetProgramiv) (GLuint program, GLenum pname, GLint *params);
+void (APIENTRY *pglGetProgramInfoLog) (GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+void (APIENTRY *pglGetShaderiv) (GLuint shader, GLenum pname, GLint *params);
+void (APIENTRY *pglDeleteShader) (GLuint shader);
+void ( APIENTRY *pglDepthRangef )(GLfloat n, GLfloat f);
+
+#endif
+
 
 // base gl functions
 void ( APIENTRY *pglAccum )(GLenum op, GLfloat value);

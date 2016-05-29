@@ -48,6 +48,7 @@ convar_t	*r_lighting_ambient;
 convar_t	*r_detailtextures;
 convar_t	*r_faceplanecull;
 convar_t	*r_drawentities;
+convar_t	*r_drawstudiomodels;
 convar_t	*r_adjust_fov;
 convar_t	*r_flaresize;
 convar_t	*r_lefthand;
@@ -415,6 +416,7 @@ void GL_InitCommands( void )
 	r_lightmap = Cvar_Get( "r_lightmap", "0", CVAR_CHEAT, "lightmap debugging tool" );
 	r_fastsky = Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE, "enable algorhytm fo fast sky rendering (for old machines)" );
 	r_drawentities = Cvar_Get( "r_drawentities", "1", CVAR_CHEAT|CVAR_ARCHIVE, "render entities" );
+	r_drawstudiomodels = Cvar_Get( "r_drawstudiomodels", "1", CVAR_CHEAT|CVAR_ARCHIVE, "render studio models" );
 	r_flaresize = Cvar_Get( "r_flaresize", "200", CVAR_ARCHIVE, "set flares size" );
 	r_lefthand = Cvar_Get( "hand", "0", CVAR_ARCHIVE, "viewmodel handedness" );
 	r_decals = Cvar_Get( "r_decals", "4096", 0, "sets the maximum number of decals" );

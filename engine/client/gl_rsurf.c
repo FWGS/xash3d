@@ -762,6 +762,20 @@ void DrawGLPoly( glpoly_t *p, float xScale, float yScale )
 	if( xScale != 0.0f && yScale != 0.0f )
 		hasScale = true;
 
+#ifdef XASH_GLES2_RENDER
+	R_UseProgram( PROGRAM_WORLD );
+
+	pglEnableVertexAttribArray( 0 );
+	pglEnableVertexAttribArray( 1 );
+
+	pglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, VERTEXSIZE * sizeof( vec_t ), p->verts[0] );
+	pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, VERTEXSIZE * sizeof( vec_t ), &p->verts[0][3] );//TODO: implement scale
+
+	pglDrawArrays( GL_TRIANGLE_FAN, 0, p->numverts );
+
+	pglDisableVertexAttribArray( 0 );
+	pglDisableVertexAttribArray( 1 );
+#else
 	pglBegin( GL_POLYGON );
 
 	for( i = 0, v = p->verts[0]; i < p->numverts; i++, v += VERTEXSIZE )
@@ -774,7 +788,7 @@ void DrawGLPoly( glpoly_t *p, float xScale, float yScale )
 	}
 
 	pglEnd();
-
+#endif
 	// special hack for non-lightmapped surfaces
 	if( p->flags & SURF_DRAWTILED )
 		GL_SetupFogColorForSurfaces();
@@ -797,8 +811,39 @@ void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 	for( ; p != NULL; p = p->chain )
 	{
 		float	*v;
-		int	i;
+		int	i = 0;
+#ifdef XASH_GLES2_RENDER
+		GLfloat lmverts[256];
+		float *pverts = p->verts[0];
 
+		v = pverts;
+
+		R_UseProgram( PROGRAM_WORLD );
+
+		while( i < p->numverts )
+		{
+			int numverts;
+
+			for( numverts = 0; ( numverts < p->numverts ) && ( numverts < 128 ) && i < p->numverts; numverts++, i++, v += VERTEXSIZE )
+			{
+				lmverts[numverts * 2] = v[5] - soffset;
+				lmverts[numverts * 2 + 1] = v[6] - toffset;
+
+			}
+
+			pglEnableVertexAttribArray( 0 );
+			pglEnableVertexAttribArray( 1 );
+
+			pglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 28, p->verts[0] );
+			pverts = v;
+			pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 8, lmverts );
+
+			pglDrawArrays( GL_TRIANGLE_FAN, 0, numverts );
+
+			pglDisableVertexAttribArray( 0 );
+			pglDisableVertexAttribArray( 1 );
+		}
+#else
 		pglBegin( GL_POLYGON );
 
 		v = p->verts[0];
@@ -809,6 +854,7 @@ void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 			pglVertex3fv( v );
 		}
 		pglEnd ();
+#endif
 	}
 }
 

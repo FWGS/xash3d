@@ -361,6 +361,9 @@ void R_DrawSkyBox( void )
 {
 	int	i;
 
+#if defined XASH_GLES2_RENDER
+	return;
+#endif
 	if( clgame.movevars.skyangle )
 	{	
 		// check for no sky at all
@@ -592,6 +595,9 @@ void EmitWaterPolys( glpoly_t *polys, qboolean noCull )
 	float	s, t, os, ot;
 	int	i;
 
+#if defined XASH_GLES2_RENDER
+	return;
+#endif
 	if( noCull ) pglDisable( GL_CULL_FACE );
 
 	// set the current waveheight

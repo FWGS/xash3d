@@ -192,6 +192,11 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 	vec3_t	perp1, vLastNormal;
 	HSPRITE	m_hSprite;
 	beamseg_t	curSeg;
+#ifdef XASH_GLES2_RENDER
+	float verts[9600];
+	int v = 0;
+	float *pverts = verts;
+#endif
 
 	if( !cl_draw_beams->integer )
 		return;
@@ -260,8 +265,11 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 
 	SetBeamRenderMode( rendermode );
 	GL_Bind( GL_TEXTURE0, m_hSprite );
+#ifdef XASH_GLES2_RENDER
+	int numVerts = segments * 2;
+#else
 	pglBegin( GL_TRIANGLE_STRIP );
-
+#endif
 	// specify all the segments.
 	for( i = 0; i < segments; i++ )
 	{
@@ -350,6 +358,26 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 			VectorMA( curSeg.pos, ( curSeg.width * 0.5f ), vAveNormal, vPoint1 );
 			VectorMA( curSeg.pos, (-curSeg.width * 0.5f ), vAveNormal, vPoint2 );
 
+#ifdef XASH_GLES2_RENDER
+			VectorCopy( vPoint1, pverts );
+			pverts[3] = 0.0f;
+			pverts[4] = curSeg.texcoord;
+			VectorCopy( curSeg.color, pverts + 5 );
+			pverts[8] = curSeg.alpha;
+			VectorCopy( vAveNormal, pverts + 9 );
+			pverts += 12;
+			v += 1;
+
+			VectorCopy( vPoint2, pverts );
+			pverts[3] = 1.0f;
+			pverts[4] = curSeg.texcoord;
+			VectorCopy( curSeg.color, pverts + 5 );
+			pverts[8] = curSeg.alpha;
+			VectorCopy( vAveNormal, pverts + 9 );
+			pverts += 12;
+			v += 1;
+
+#else
 			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
 			pglTexCoord2f( 0.0f, curSeg.texcoord );
 			pglNormal3fv( vAveNormal );
@@ -359,34 +387,85 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 			pglTexCoord2f( 1.0f, curSeg.texcoord );
 			pglNormal3fv( vAveNormal );
 			pglVertex3fv( vPoint2 );
+#endif
 		}
 
 		curSeg = nextSeg;
 		segs_drawn++;
 
- 		if( segs_drawn == total_segs )
+		if( segs_drawn == total_segs )
 		{
 			// draw the last segment
 			VectorMA( curSeg.pos, ( curSeg.width * 0.5f ), vLastNormal, vPoint1 );
 			VectorMA( curSeg.pos, (-curSeg.width * 0.5f ), vLastNormal, vPoint2 );
 
 			// specify the points.
+#ifdef XASH_GLES2_RENDER
+			VectorCopy( vPoint1, pverts );
+			pverts[3] = 0.0f;
+			pverts[4] = curSeg.texcoord;
+			VectorCopy( curSeg.color, pverts + 5 );
+			pverts[8] = curSeg.alpha;
+			VectorCopy( vLastNormal, pverts + 9 );
+			pverts += 12;
+			v += 1;
+
+			VectorCopy( vPoint2, pverts );
+			pverts[3] = 1.0f;
+			pverts[4] = curSeg.texcoord;
+			VectorCopy( curSeg.color, pverts + 5 );
+			pverts[8] = curSeg.alpha;
+			VectorCopy( vLastNormal, pverts + 9 );
+			pverts += 12;
+			v += 1;
+
+#else
 			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
 			pglTexCoord2f( 0.0f, curSeg.texcoord );
 			pglNormal3fv( vLastNormal );
 			pglVertex3fv( vPoint1 );
-
 			pglColor4f( curSeg.color[0], curSeg.color[1], curSeg.color[2], curSeg.alpha );
 			pglTexCoord2f( 1.0f, curSeg.texcoord );
 			pglNormal3fv( vLastNormal );
 			pglVertex3fv( vPoint2 );
+#endif
+
+
+
 		}
 
 		vLast += vStep; // Advance texture scroll (v axis only)
 		noiseIndex += noiseStep;
+#ifdef XASH_GLES2_RENDER
+		if( (i >= segments - 1 ) || (v >= 9600 / 12 - 4) )
+		{
+			R_UseProgram( PROGRAM_BEAM );
+
+			pglEnableVertexAttribArray( 0 );
+			pglEnableVertexAttribArray( 1 );
+			pglEnableVertexAttribArray( 2 );
+			pglEnableVertexAttribArray( 3 );
+
+			pglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 48, verts  ); //pos
+			pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 48, &verts[3] ); //uv
+			pglVertexAttribPointer( 2, 4, GL_FLOAT, GL_FALSE, 48, &verts[5] ); //col
+			pglVertexAttribPointer( 3, 3, GL_FLOAT, GL_FALSE, 48, &verts[9] ); //nrm
+
+			pglDrawArrays( GL_TRIANGLE_STRIP, 0, v );
+
+			pglDisableVertexAttribArray( 0 );
+			pglDisableVertexAttribArray( 1 );
+			pglDisableVertexAttribArray( 2 );
+			pglDisableVertexAttribArray( 3 );
+			v = 0;
+			pverts = verts;
+		}
+#endif
 	}
 
+#ifndef XASH_GLES2_RENDER
 	pglEnd();
+#endif
 }
 
 /*
@@ -745,8 +824,19 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 	float	vStep = 1.0;
 	vec3_t	last1, last2, tmp, normal, scaledColor, saved_last2;
 	HSPRITE	m_hSprite;
-	rgb_t	nColor, saved_nColor;
-
+	vec3_t	nColor, saved_nColor;
+#ifdef XASH_GLES2_RENDER
+	float verts[256 * 9];
+	float *pverts = verts;
+	struct beamverts_s
+	{
+		vec3_t vert;
+		vec2_t tex;
+		vec3_t color;
+		vec_t alpha;
+	} beamverts, pbeamverts = beamverts;
+	int numVerts = 0;
+#endif
 	m_hSprite = R_GetSpriteTexture( Mod_Handle( modelIndex ), frame );
 	if( !m_hSprite ) return;
 
@@ -771,29 +861,42 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 	fraction = ( die - cl.time ) * div;
 
 	VectorScale( color, fraction, scaledColor );
-	nColor[0] = (byte)bound( 0, (int)(scaledColor[0] * 255.0f), 255 );
-	nColor[1] = (byte)bound( 0, (int)(scaledColor[1] * 255.0f), 255 );
-	nColor[2] = (byte)bound( 0, (int)(scaledColor[2] * 255.0f), 255 );
+	nColor[0] = bound( 0.0f, scaledColor[0], 1.0f );
+	nColor[1] = bound( 0.0f, scaledColor[1], 1.0f );
+	nColor[2] = bound( 0.0f, scaledColor[2], 1.0f );
 
 	SetBeamRenderMode( rendermode );
 	GL_Bind( GL_TEXTURE0, m_hSprite );
-
+#ifndef XASH_GLES2_RENDER
 	pglBegin( GL_TRIANGLES );
-
+#endif
 	while( pHead )
 	{
-		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
+#ifdef XASH_GLES2_RENDER
+		numVerts += 6;
+
+		VectorCopy( last2, pverts );
+		pverts[3] = pverts[4] = 1.0f;
+		VectorCopy( nColor, pverts + 5 );
+		pverts[8] = 1.0f;
+		pverts += 9;
+
+		VectorCopy( last2, pverts );
+		pverts[3] = 0.0f, pverts[4] = 1.0f;
+		VectorCopy( nColor, pverts + 5 );
+		pverts[8] = 1.0f;
+		pverts += 9;
+#else
+		pglColor4f( nColor[0], nColor[1], nColor[2], 1.0f );
 		pglTexCoord2f( 1.0f, 1.0f );
 		pglVertex3fv( last2 );
 
-		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
+		pglColor4f( nColor[0], nColor[1], nColor[2], 1.0f );
 		pglTexCoord2f( 0.0f, 1.0f );
 		pglVertex3fv( last1 );
-
+#endif
 		VectorCopy( last2, saved_last2 );
-		saved_nColor[0] = nColor[0];
-		saved_nColor[1] = nColor[1];
-		saved_nColor[2] = nColor[2];
+		VectorCopy( nColor, saved_nColor );
 
 		// Transform point into screen space
 		TriWorldToScreen( pHead->org, screen );
@@ -818,38 +921,89 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 		{
 			fraction = (pHead->die - cl.time ) * div;
 			VectorScale( color, fraction, scaledColor );
-			nColor[0] = (byte)bound( 0, (int)(scaledColor[0] * 255.0f), 255 );
-			nColor[1] = (byte)bound( 0, (int)(scaledColor[1] * 255.0f), 255 );
-			nColor[2] = (byte)bound( 0, (int)(scaledColor[2] * 255.0f), 255 );
+			nColor[0] = bound( 0.0f, scaledColor[0], 1.0f );
+			nColor[1] = bound( 0.0f, scaledColor[1], 1.0f );
+			nColor[2] = bound( 0.0f, scaledColor[2], 1.0f );
 		}
 		else
 		{
 			VectorClear( nColor );
 			fraction = 0.0;
 		}
-	
-		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
+#ifdef XASH_GLES2_RENDER
+		VectorCopy( last1, pverts );
+		pverts[3] = pverts[4] = 0.0f;
+		VectorCopy( nColor, pverts + 5 );
+		pverts[8] = 1.0f;
+		pverts += 9;
+
+		VectorCopy( saved_last2, pverts );
+		pverts[3] = pverts[4] = 1.0f;
+		VectorCopy( saved_nColor, pverts + 5 );
+		pverts[8] = 1.0f;
+		pverts += 9;
+
+		VectorCopy( last1, pverts );
+		pverts[3] = pverts[4] = 0.0f;
+		VectorCopy( nColor, pverts + 5 );
+		pverts[8] = 1.0f;
+		pverts += 9;
+
+		VectorCopy( last2, pverts );
+		pverts[3] = 1.0f, pverts[4] = 0.0f;
+		VectorCopy( nColor, pverts + 5 );
+		pverts[8] = 1.0f;
+		pverts += 9;
+#else
+		pglColor4f( nColor[0], nColor[1], nColor[2], 1.0f );
 		pglTexCoord2f( 0.0f, 0.0f );
 		pglVertex3fv( last1 );
 		
-        pglColor4ub( saved_nColor[0], saved_nColor[1], saved_nColor[2], 255 );
+		pglColor4f( saved_nColor[0], saved_nColor[1], saved_nColor[2], 1.0f );
         pglTexCoord2f( 1.0f, 1.0f );
         pglVertex3fv( saved_last2 );
        
-        pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
+		pglColor4f( nColor[0], nColor[1], nColor[2], 1.0f );
         pglTexCoord2f( 0.0f, 0.0f );
         pglVertex3fv( last1 );
 
-		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
+		pglColor4f( nColor[0], nColor[1], nColor[2], 1.0f );
 		pglTexCoord2f( 1.0f, 0.0f );
 		pglVertex3fv( last2 );
+#endif
 		
 		VectorCopy( screen, screenLast );
 
 		pHead = pHead->next;
+
+
+#ifdef XASH_GLES2_RENDER
+		if( !pHead || numVerts > ( 256 - 6 ) )
+		{
+			R_UseProgram( PROGRAM_BEAM );
+			pglEnableVertexAttribArray( 0 );
+			pglEnableVertexAttribArray( 1 );
+			pglEnableVertexAttribArray( 2 );
+
+			pglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 36, verts ); //pos
+			pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 36, &verts[3] ); //uv
+			pglVertexAttribPointer( 2, 4, GL_FLOAT, GL_FALSE, 36, &verts[5] ); //col
+
+			pglDrawArrays( GL_TRIANGLES, 0, numVerts );
+
+			pglDisableVertexAttribArray( 0 );
+			pglDisableVertexAttribArray( 1 );
+			pglDisableVertexAttribArray( 2 );
+
+			pverts = verts;
+			numVerts = 0;
+		}
+#endif
 	}
 
+#ifndef XASH_GLES2_RENDER
 	pglEnd();
+#endif
 }
 
 /*
