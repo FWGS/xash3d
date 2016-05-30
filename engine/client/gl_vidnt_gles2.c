@@ -85,6 +85,7 @@ static dllfunc_t opengl_es20funcs[] =
 { "glGetProgramInfoLog"			, (void **)&pglGetProgramInfoLog },
 { "glGetShaderiv"				, (void **)&pglGetShaderiv },
 { "glDeleteShader"				, (void **)&pglDeleteShader },
+{ "glGetShaderInfoLog"			, (void **)&pglGetShaderInfoLog },
 { NULL, NULL }
 };
 static dllfunc_t pointparametersfunc[] =
@@ -1000,7 +1001,13 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		SDL_SetWindowSize(host.hWnd, width, height);
 		R_ChangeDisplaySettingsFast( width, height );
 	}
-#endif // XASH_SDL
+#elif defined __ANDROID__
+	Android_GetScreenRes(&width, &height);
+	R_SaveVideoMode( width, height );
+
+	host.window_center_x = width / 2;
+	host.window_center_y = height / 2;
+#endif
 	return rserr_ok;
 }
 
@@ -1070,6 +1077,11 @@ qboolean VID_SetMode( void )
 			return false;
 		}
 	}
+#elif defined __ANDROID__
+	int width, height;
+	Android_GetScreenRes( &width, &height );
+	MsgDev( D_NOTE, "VID_SetMode(%d, %d)\n", width, height);
+	R_ChangeDisplaySettings( width, height, false );
 #endif
 	return true;
 }
@@ -1090,6 +1102,8 @@ qboolean R_Init_OpenGL( void )
 		MsgDev( D_ERROR, "Couldn't initialize OpenGL: %s\n", SDL_GetError());
 		return false;
 	}
+#elif defined __ANDROID__
+	Android_InitGL();
 #endif
 	return VID_SetMode();
 }

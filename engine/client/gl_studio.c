@@ -105,7 +105,7 @@ static vec3_t		g_xformnorms[MAXSTUDIOVERTS];
 static vec3_t		g_xarrayverts[MAXARRAYVERTS];
 static vec2_t		g_xarraycoord[MAXARRAYVERTS];
 static GLubyte		g_xarraycolor[MAXARRAYVERTS][4];
-static uint		g_xarrayelems[MAXARRAYVERTS*6];
+static unsigned short		g_xarrayelems[MAXARRAYVERTS*6];
 static uint		g_nNumArrayVerts;
 static uint		g_nNumArrayElems;
 static vec3_t		g_lightvalues[MAXSTUDIOVERTS];
@@ -2042,8 +2042,10 @@ static void R_StudioDrawMesh(short *ptricmds, float s, float t )
 	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,g_xarraycoord);//uv
 	pglVertexAttribPointer(2,4,GL_UNSIGNED_BYTE,GL_TRUE,0,g_xarraycolor);//col
 	//pglVertexAttribPointer(3,3,GL_FLOAT,GL_FALSE,48,&verts[9]);//nrm
-
-	pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
+	//if( pglDrawRangeElements )
+	//	pglDrawRangeElements( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
+	//else
+		pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
 
 	pglDisableVertexAttribArray(0);
 	pglDisableVertexAttribArray(1);
@@ -2059,7 +2061,10 @@ static void R_StudioDrawMesh(short *ptricmds, float s, float t )
 	pglEnableClientState( GL_COLOR_ARRAY );
 	pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_xarraycolor );
 
-	pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
+	//if( pglDrawRangeElements )
+		//pglDrawRangeElements( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
+	//else
+		pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
 	pglDisableClientState( GL_VERTEX_ARRAY );
 	pglDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	pglDisableClientState( GL_COLOR_ARRAY );

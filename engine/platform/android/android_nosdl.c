@@ -601,4 +601,10 @@ void Android_SwapInterval( int interval )
 		eglSwapInterval( negl.dpy, interval );
 }
 
+
+void *Android_GL_GetProcAddress( const char *name )
+{
+	return eglGetProcAddress( name );
+}
+
 #endif

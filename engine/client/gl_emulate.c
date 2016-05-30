@@ -6,6 +6,7 @@
 //GLenum curMatrixMode;
 //float projMtx[16];
 //float modelViewMtx[16];
+void pglemuColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) __attribute__((pcs("aapcs")));
 
 void pglemuColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
@@ -37,11 +38,24 @@ void pglemuLoadMatrixf (const GLfloat *m)
 	else
 		memcpy(modelViewMtx,m,64);*/
 }
-
+void pglemuDepthRange( GLclampd zNear, GLclampd zFar ) __attribute__((pcs("aapcs")));
 void pglemuDepthRange( GLclampd zNear, GLclampd zFar )
 {
 	pglDepthRangef( zNear, zFar );
 }
+
+GLenum pglemuGetError()
+{
+	return GL_NO_ERROR;
+}
+void (*prealglTexImage2D)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) __attribute__((pcs("aapcs")));
+void pemuglTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) __attribute__((pcs("aapcs")));
+void pglemuTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
+{
+	internalformat = format;
+	prealglTexImage2D( target, level, internalformat, width, height, border, format, type, pixels );
+}
+
 
 void R_InitGLEmu( void )
 {
@@ -58,6 +72,9 @@ void R_InitGLEmu( void )
 	pglTexEnvi = pglemuTexEnvi;
 	pglLoadMatrixf = pglemuLoadMatrixf;
 	pglDepthRange = pglemuDepthRange;
+	pglGetError = pglemuGetError;
+	prealglTexImage2D = pglTexImage2D;
+	pglTexImage2D = pglemuTexImage2D;
 }
 /*
 void glTexEnvf (GLenum target, GLenum pname, GLfloat param){}
