@@ -27,12 +27,12 @@ convar_t *android_sleep;
 
 static const int s_android_scantokey[] =
 {
-	0,				K_LEFTARROW,	K_RIGHTARROW,	0,				K_ESCAPE,		// 0
-	0,				0,				'0',			'1',			'2',			// 5
+	0,				K_LEFTARROW,	K_RIGHTARROW,	K_AUX26,		K_ESCAPE,		// 0
+	K_AUX26,		K_AUX25,		'0',			'1',			'2',			// 5
 	'3',			'4',			'5',			'6',			'7',			// 10
 	'8',			'9',			'*',			'#',			K_UPARROW,		// 15
-	K_DOWNARROW,	K_LEFTARROW,	K_RIGHTARROW,	K_ENTER,		0,				// 20
-	0,				0,				0,				0,				'a',			// 25
+	K_DOWNARROW,	K_LEFTARROW,	K_RIGHTARROW,	K_ENTER,		K_AUX32,		// 20
+	K_AUX31,		K_AUX29,		K_AUX28,		K_AUX27,		'a',			// 25
 	'b',			'c',			'd',			'e',			'f',			// 30
 	'g',			'h',			'i',			'j',			'k',			// 35
 	'l',			'm',			'n',			'o',			'p',			// 40
@@ -42,8 +42,8 @@ static const int s_android_scantokey[] =
 	K_SHIFT,		K_TAB,			K_SPACE,		0,				0,				// 60
 	0,				K_ENTER,		K_BACKSPACE,	'`',			'-',			// 65
 	'=',			'[',			']',			'\\',			';',			// 70
-	'\'',			'/',			'@',			K_KP_NUMLOCK,		0,				// 75
-	0,				'+',			0,				0,				0,				// 80
+	'\'',			'/',			'@',			K_KP_NUMLOCK,	0,				// 75
+	0,				'+',			'`',			0,				0,				// 80
 	0,				0,				0,				0,				0,				// 85
 	0,				0,				K_PGUP,			K_PGDN,			0,				// 90
 	0,				K_A_BUTTON,		K_B_BUTTON,		K_C_BUTTON,		K_X_BUTTON,		// 95
