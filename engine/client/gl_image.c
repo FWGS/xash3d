@@ -1181,11 +1181,13 @@ static void GL_UploadTextureDXT( rgbdata_t *pic, gltexture_t *tex, qboolean subI
 			tex->flags &= ~TF_CUBEMAP;
 		}
 	}
+#ifndef XASH_GLES2_RENDER
 	else if( tex->flags & TF_TEXTURE_1D || pic->height <= 1 )
 	{
 		// determine target
 		tex->target = glTarget = GL_TEXTURE_1D;
 	}
+#endif
 	else if( tex->flags & TF_TEXTURE_RECTANGLE )
 	{
 		if( glConfig.max_2d_rectangle_size )

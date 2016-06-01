@@ -2645,15 +2645,17 @@ R_StudioSetupRenderer
 static void R_StudioSetupRenderer( int rendermode )
 {
 	g_iRenderMode = bound( 0, rendermode, kRenderTransAdd );
-	//pglShadeModel( GL_SMOOTH );	// enable gouraud shading
+#ifndef XASH_GLES2_RENDER
+	pglShadeModel( GL_SMOOTH );	// enable gouraud shading
+#endif
 	if( clgame.ds.cullMode != GL_NONE ) GL_Cull( GL_FRONT );
 
 	// enable depthmask on studiomodels
 	if( glState.drawTrans && g_iRenderMode != kRenderTransAdd )
 		pglDepthMask( GL_TRUE );
-
-	//pglAlphaFunc( GL_GREATER, 0.0f );
-
+#ifndef XASH_GLES2_RENDER
+	pglAlphaFunc( GL_GREATER, 0.0f );
+#endif
 	if( g_iBackFaceCull )
 		GL_FrontFace( true );
 }
