@@ -81,10 +81,12 @@ GL_Bind
 */
 void GL_Bind( GLint tmu, GLenum texnum )
 {
+	gltexture_t	*texture;
+
 #ifdef XASH_NANOGL
 	tmu = tmu - GL_TEXTURE0;
 #endif
-	gltexture_t	*texture;
+	
 
 	// missed texture ?
 	if( texnum <= 0 ) texnum = tr.defaultTexture;
