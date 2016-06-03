@@ -1,6 +1,7 @@
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?= -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -mssse3 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=nocona
+#CFGAGS = -O0 -ggdb
+CFLAGS = -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse4 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -mtune=btver2
 LDFLAGS =
 LIBS = -lm
 TOPDIR = $(PWD)/..
@@ -13,9 +14,13 @@ else
 DEFINES += -DXASH_SDL
 LIBS += -lSDL2 -L../SDL2/lib/x86 -L../SDL2/lib/x64 -luser32 -lkernel32 -lgdi32 -ldbghelp -lpsapi
 endif
+ifeq ($(NANOGL),1)
+INCLUDES += -I../nanogl -I../nanogl/GL
+DEFINES += -DXASH_GLES -DXASH_NANOGL -DUSE_CORE_PROFILE
+LIBS += -lstdc++
+endif
 
-
-DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FASTSTR -DXASH_FORCEINLINE
+DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FASTSTR -DXASH_FORCEINLINE -DVECTORIZE_SINCOS
 
 ifeq ($(XASH_VGUI),1)
 DEFINES += -DXASH_VGUI
@@ -25,9 +30,13 @@ endif
 	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
 
 %.o : %.cpp
-	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
+	$(CXX) -O0 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse4 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -mtune=btver2 $(INCLUDES) $(DEFINES) -c $< -o $@
 
 SRCS_CPP =
+
+ifeq ($(NANOGL),1)
+SRCS_CPP += $(wildcard ../nanogl/*.cpp)
+endif
 OBJS_CPP = $(SRCS_CPP:.cpp=.o)
 SRCS = $(wildcard server/*.c) $(wildcard client/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
 OBJS = $(SRCS:.c=.o)
