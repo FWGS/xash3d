@@ -537,7 +537,7 @@ void CL_WritePacket( void )
 		for( i = numcmds - 1; i >= 0; i-- )
 		{
 			cmdnumber = ( cls.netchan.outgoing_sequence - i ) & CL_UPDATE_MASK;
-			if( i == 0 ) cl.commands[cmdnumber].processedfuncs = true; // only last cmd allow to run funcs
+			//if( i == 0 ) cl.commands[cmdnumber].processedfuncs = true; // only last cmd allow to run funcs
 
 			to = cmdnumber;
 			CL_WriteUsercmd( &buf, from, to );
