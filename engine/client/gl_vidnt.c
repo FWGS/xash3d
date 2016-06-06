@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_NANOGL
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -469,6 +469,8 @@ GL_SetupAttributes
 void GL_SetupAttributes()
 {
 #ifdef XASH_SDL
+	int samples;
+
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
@@ -477,6 +479,29 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+	switch( gl_msaa->integer )
+	{
+	case 2:
+	case 4:
+	case 8:
+	case 16:
+		samples = gl_msaa->integer;
+		break;
+	default:
+		samples = 0; // don't use, because invalid parameter is passed
+	}
+
+	if( samples )
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
+	}
+	else
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+	}
 #endif // XASH_SDL
 }
 
@@ -706,7 +731,8 @@ GL_DeleteContext
 qboolean GL_DeleteContext( void )
 {
 #ifdef XASH_SDL
-	SDL_GL_DeleteContext(glw_state.context);
+	if( glw_state.context )
+		SDL_GL_DeleteContext(glw_state.context);
 #endif
 	glw_state.context = NULL;
 
@@ -955,6 +981,17 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	if( !host.hWnd )
 	{
 		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s': %s\n", wndname, SDL_GetError());
+
+		// remove MSAA, if it present, because
+		// window creating may fail on GLX visual choose
+		if( gl_msaa->integer )
+		{
+			Cvar_Set("gl_msaa", "0");
+			GL_SetupAttributes(); // re-choose attributes
+
+			// try again
+			return VID_CreateWindow( width, height, fullscreen );
+		}
 		return false;
 	}
 
@@ -1020,7 +1057,9 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	if( !glw_state.initialized )
 	{
 		if( !GL_CreateContext( ))
+		{
 			return false;
+		}
 
 		VID_StartupGamma();
 	}
@@ -1251,3 +1290,4 @@ void R_Free_OpenGL( void )
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
 	glw_state.initialized = false;
 }
+#endif //XASH3D_NANOGL

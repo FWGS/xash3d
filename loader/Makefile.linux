@@ -1,5 +1,5 @@
-CC = gcc -m32 -ggdb -Og
-CXX = g++ -m32 -ggdb -Og
+CC = gcc -m32 -ggdb -O0 -mstackrealign  -mpreferred-stack-boundary=12
+CXX = g++ -m32 -ggdb -O0
 CFLAGS ?= -O1
 TOPDIR = $(PWD)/..
 XASHXT ?= $(TOPDIR)/../xashXT

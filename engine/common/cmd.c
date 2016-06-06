@@ -916,8 +916,8 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 				text++;
 				while( ( *text >= '0' && *text <= '9' ) ||
 					   ( *text >= 'A' && *text <= 'Z' ) ||
-					   ( *text >= 'a' && *text <= 'z' )
-					   || (*text == '_' ) )
+					   ( *text >= 'a' && *text <= 'z' ) ||
+					   (*text == '_' ) )
 					*ptoken++ = *text++;
 				*ptoken = 0;
 

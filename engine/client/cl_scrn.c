@@ -614,9 +614,12 @@ void SCR_VidInit( void )
 	Q_memset( &menu.ds, 0, sizeof( menu.ds )); // reset a draw state
 	Q_memset( &clgame.centerPrint, 0, sizeof( clgame.centerPrint ));
 
-	// update screen sizes for menu
-	menu.globals->scrWidth = scr_width->integer;
-	menu.globals->scrHeight = scr_height->integer;
+	if( menu.globals )
+	{
+		// update screen sizes for menu
+		menu.globals->scrWidth = scr_width->integer;
+		menu.globals->scrHeight = scr_height->integer;
+	}
 
 	SCR_RebuildGammaTable();
 #ifdef XASH_VGUI

@@ -1779,7 +1779,7 @@ qboolean S_Init( void )
 		MsgDev( D_ERROR, "Audio: SDL: %s \n", SDL_GetError() );
 		return false;
 	}
-#else
+#elif !defined(XASH_OPENSL)
 	return false;
 #endif
 

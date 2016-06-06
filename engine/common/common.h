@@ -58,6 +58,12 @@ extern "C" {
 
 #define Mod_AllowMaterials()	( mod_allow_materials != NULL && mod_allow_materials->integer && !( host.features & ENGINE_DISABLE_HDTEXTURES ))
 
+#ifdef XASH_FORCEINLINE
+#define xash_force_inline _inline
+#else
+#define xash_force_inline
+#endif
+
 typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
@@ -407,7 +413,7 @@ fs_offset_t FS_Write( file_t *file, const void *data, size_t datasize );
 fs_offset_t FS_Read( file_t *file, void *buffer, size_t buffersize );
 int FS_VPrintf( file_t *file, const char *format, va_list ap );
 int FS_Seek( file_t *file, fs_offset_t offset, int whence );
-int FS_Printf( file_t *file, const char *format, ... );
+int FS_Printf( file_t *file, const char *format, ... ) _format(2);
 fs_offset_t FS_FileSize( const char *filename, qboolean gamedironly );
 fs_offset_t FS_FileTime( const char *filename, qboolean gamedironly );
 int FS_Print( file_t *file, const char *msg );
@@ -676,8 +682,8 @@ qboolean Host_IsLocalGame( void );
 qboolean Host_IsLocalClient( void );
 void Host_ShutdownServer( void );
 void Host_Print( const char *txt );
-void Host_Error( const char *error, ... );
-void Host_MapDesignError( const char *error, ... );
+void Host_Error( const char *error, ... ) _format(1);
+void Host_MapDesignError( const char *error, ... ) _format(1);
 void Host_PrintEngineFeatures( void );
 void Host_InitDecals( void );
 void Host_Credits( void );
@@ -722,8 +728,8 @@ void pfnGetGameDir( char *szGetGameDir );
 int pfnDecalIndex( const char *m );
 int pfnGetModelType( model_t *mod );
 int pfnIsMapValid( char *filename );
-void Con_DPrintf( char *fmt, ... );
-void Con_Printf( char *szFmt, ... );
+void Con_DPrintf( char *fmt, ... ) _format(1);
+void Con_Printf( char *szFmt, ... ) _format(1);
 int pfnIsInGame( void );
 
 // CS:CS engfuncs (stubs)
@@ -792,6 +798,7 @@ int Key_StringToKeynum( const char *str );
 int Key_GetKey( const char *binding );
 void Key_EnumCmds_f( void );
 void Key_SetKeyDest( int key_dest );
+void Key_EnableTextInput( qboolean enable, qboolean force );
 
 //
 // avikit.c
@@ -852,8 +859,7 @@ struct pmtrace_s *PM_TraceLine( float *start, float *end, int flags, int usehull
 void SV_StartSound( edict_t *ent, int chan, const char *sample, float vol, float attn, int flags, int pitch );
 void SV_StartMusic( const char *curtrack, const char *looptrack, fs_offset_t position );
 void SV_CreateDecal( struct sizebuf_s *msg, const float *origin, int decalIndex, int entityIndex, int modelIndex, int flags, float scale );
-void SV_CreateStudioDecal( struct sizebuf_s *msg, const float *origin, const float *start, int decalIndex, int entityIndex, int modelIndex,
-int flags, struct modelstate_s *state );
+void SV_CreateStudioDecal( struct sizebuf_s *msg, const float *origin, const float *start, int decalIndex, int entityIndex, int modelIndex, int flags, struct modelstate_s *state );
 struct sizebuf_s *SV_GetReliableDatagram( void );
 qboolean SV_RestoreCustomDecal( struct decallist_s *entry, edict_t *pEdict, qboolean adjacent );
 int R_CreateDecalList( struct decallist_s *pList, qboolean changelevel );
@@ -895,10 +901,10 @@ int SCR_GetAudioChunk( char *rawdata, int length );
 wavdata_t *SCR_GetMovieInfo( void );
 void SCR_Shutdown( void );
 void Con_Print( const char *txt );
-void Con_NPrintf( int idx, char *fmt, ... );
-void Con_NXPrintf( struct con_nprint_s *info, char *fmt, ... );
-void UI_NPrintf( int idx, char *fmt, ... );
-void UI_NXPrintf( struct con_nprint_s *info, char *fmt, ... );
+void Con_NPrintf( int idx, char *fmt, ... ) _format(2);
+void Con_NXPrintf( struct con_nprint_s *info, char *fmt, ... ) _format(2);
+void UI_NPrintf( int idx, char *fmt, ... ) _format(2);
+void UI_NXPrintf( struct con_nprint_s *info, char *fmt, ... ) _format(2);
 char *Info_ValueForKey( const char *s, const char *key );
 void Info_RemovePrefixedKeys( char *start, char prefix );
 qboolean Info_RemoveKey( char *s, const char *key );

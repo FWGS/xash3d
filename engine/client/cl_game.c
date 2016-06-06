@@ -252,7 +252,7 @@ void CL_InitCDAudio( const char *filename )
 
 		if( ++c > MAX_CDTRACKS - 1 )
 		{
-			MsgDev( D_WARN, "CD_Init: too many tracks %i in %s\n", filename, MAX_CDTRACKS );
+			MsgDev( D_WARN, "CD_Init: too many tracks %i in %s (only %d allowed)\n", c, filename, MAX_CDTRACKS );
 			break;
 		}
 	}
@@ -1762,7 +1762,7 @@ static void pfnConsolePrint( const char *string )
 {
 	if( !string || !*string ) return;
 	if( *string != 1 ) Msg( "%s", string ); // show notify
-	else Con_NPrintf( 0, (char *)string + 1 ); // skip notify
+	else Con_NPrintf( 0, "%s", (char *)string + 1 ); // skip notify
 }
 
 /*
@@ -2115,7 +2115,7 @@ static void pfnHookEvent( const char *filename, pfnEventHook pfn )
 
 		if( !Q_stricmp( name, ev->name ) && ev->func != NULL )
 		{
-			MsgDev( D_WARN, "CL_HookEvent: %s already hooked!\n" );
+			MsgDev( D_WARN, "CL_HookEvent: %s already hooked!\n", name );
 			return;
 		}
 	}

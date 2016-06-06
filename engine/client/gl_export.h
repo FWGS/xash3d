@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef GL_EXPORT_H
 #define GL_EXPORT_H
 
-#ifdef __ANDROID__
+#ifdef XASH_NANOGL
 
 #include "platform/android/gl_mangle.h"
 #undef pglMultiTexCoord2f
@@ -530,6 +530,18 @@ typedef float GLmatrix[16];
 #define GL_TEXTURE_WRAP_R			0x8072
 #define GL_MAX_3D_TEXTURE_SIZE		0x8073
 #define GL_TEXTURE_BINDING_3D			0x806A
+
+/* multisample */
+#define GL_MULTISAMPLE				0x809D
+#define GL_SAMPLE_ALPHA_TO_COVERAGE		0x809E
+#define GL_SAMPLE_ALPHA_TO_ONE			0x809F
+#define GL_SAMPLE_COVERAGE			0x80A0
+#define GL_SAMPLE_BUFFERS			0x80A8
+#define GL_SAMPLES				0x80A9
+#define GL_SAMPLE_COVERAGE_VALUE		0x80AA
+#define GL_SAMPLE_COVERAGE_INVERT		0x80AB
+#define GL_MULTISAMPLE_BIT			0x20000000
+
 
 #define GL_STENCIL_TEST_TWO_SIDE_EXT		0x8910
 #define GL_ACTIVE_STENCIL_FACE_EXT		0x8911

@@ -261,6 +261,8 @@ qboolean AVI_ACMConvertAudio( movie_state_t *Avi )
 	Avi->audio_bytes_per_sample = (bits >> 3 ) * Avi->audio_header->nChannels;
 
 	return true;
+#else
+	return false;
 #endif
 }
 
@@ -282,6 +284,8 @@ qboolean AVI_GetVideoInfo( movie_state_t *Avi, long *xres, long *yres, float *du
 		*duration = (float)Avi->video_frames / Avi->video_fps;
 
 	return true;
+#else
+	return false;
 #endif
 }
 
@@ -295,6 +299,8 @@ long AVI_GetVideoFrameNumber( movie_state_t *Avi, float time )
 		return 0;
 
 	return (time * Avi->video_fps);
+#else
+	return 0;
 #endif
 }
 
@@ -328,6 +334,8 @@ byte *AVI_GetVideoFrame( movie_state_t *Avi, long frame )
 	}
 
 	return Avi->pframe_data;
+#else
+	return NULL;
 #endif
 }
 
@@ -352,6 +360,8 @@ qboolean AVI_GetAudioInfo( movie_state_t *Avi, wavdata_t *snd_info )
 	snd_info->loopStart = 0;	// HACKHACK: use loopStart as streampos
 
 	return true;
+#else
+	return false;
 #endif
 }
 
@@ -405,6 +415,8 @@ qboolean AVI_SeekPosition( movie_state_t *Avi, dword offset )
 	Avi->cpa_blockpos = offset - Avi->cpa_blockoffset;
 
 	return true;
+#else
+	return false;
 #endif
 }
 
@@ -481,6 +493,8 @@ fs_offset_t AVI_GetAudioChunk( movie_state_t *Avi, char *audiodata, long offset,
 
 		return result;
 	}
+#else
+	return 0;
 #endif
 }
 
@@ -717,6 +731,8 @@ movie_state_t *AVI_LoadVideo( const char *filename, qboolean load_audio, qboolea
 
 	// all done
 	return Avi;
+#else
+	return NULL;
 #endif
 }
 

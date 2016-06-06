@@ -394,8 +394,8 @@ qboolean Sys_LoadLibrary( dll_info_t *dll )
 error:
 	MsgDev( D_NOTE, " - failed\n" );
 	Sys_FreeLibrary( dll ); // trying to free 
-	if( dll->crash ) Sys_Error( errorstring );
-	else MsgDev( D_ERROR, errorstring );			
+	if( dll->crash ) Sys_Error( "%s", errorstring );
+	else MsgDev( D_ERROR, "%s", errorstring );
 
 	return false;
 }
@@ -672,7 +672,7 @@ void Sys_RestoreCrashHandler( void )
 
 #elif defined (CRASHHANDLER)
 // Posix signal handler
-
+#include "library.h"
 #if defined(__FreeBSD__) || defined(__NetBSD__)
 #define HAVE_UCONTEXT_H 1
 #endif
@@ -812,12 +812,12 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 			len += line;
 		}
 	// Put MessageBox as Sys_Error
-	Msg( message );
+	Msg( "%s\n", message );
 #ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
-	//SDL_MouseQuit();
-	MSGBOX( message );
 #endif
+	MSGBOX( message );
+
 	// Log saved, now we can try to save configs and close log correctly, it may crash
 	if( host.type == HOST_NORMAL )
 			CL_Crashed();

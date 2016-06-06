@@ -1,4 +1,4 @@
-#ifdef __ANDROID__
+#if defined(XASH_NANOGL) && defined(XASH_SDL)
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -510,6 +510,8 @@ GL_SetupAttributes
 void GL_SetupAttributes()
 {
 #ifdef XASH_SDL
+	int samples;
+
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
@@ -524,6 +526,28 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 
+	switch( gl_msaa->integer )
+	{
+	case 2:
+	case 4:
+	case 8:
+	case 16:
+		samples = gl_msaa->integer;
+		break;
+	default:
+		samples = 0; // don't use, because invalid parameter is passed
+	}
+
+	if( samples )
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
+	}
+	else
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+	}
 #endif // XASH_SDL
 }
 
@@ -572,7 +596,8 @@ GL_DeleteContext
 qboolean GL_DeleteContext( void )
 {
 #ifdef XASH_SDL
-	SDL_GL_DeleteContext(glw_state.context);
+	if( glw_state.context )
+		SDL_GL_DeleteContext(glw_state.context);
 #endif
 	glw_state.context = NULL;
 
@@ -621,6 +646,17 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	if( !host.hWnd )
 	{
 		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s': %s\n", wndname, SDL_GetError());
+
+		// remove MSAA, if it present, because
+		// window creating may fail on GLX visual choose
+		if( gl_msaa->integer )
+		{
+			Cvar_Set("gl_msaa", "0");
+			GL_SetupAttributes(); // re-choose attributes
+
+			// try again
+			return VID_CreateWindow( width, height, fullscreen );
+		}
 		return false;
 	}
 
@@ -656,8 +692,10 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 #endif
 	if( !glw_state.initialized )
 	{
-		if( !GL_CreateContext( ))
+		if( !GL_CreateContext( ) )
+		{
 			return false;
+		}
 
 		VID_StartupGamma();
 	}
@@ -718,11 +756,11 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	SDL_DisplayMode displayMode;
 
 	SDL_GetCurrentDisplayMode(0, &displayMode);
-
+#ifdef __ANDROID__
 	width = displayMode.w;
 	height = displayMode.h;
 	fullscreen = false;
-
+#endif
 	R_SaveVideoMode( width, height );
 
 	// check our desktop attributes
@@ -738,6 +776,41 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		if( !VID_CreateWindow( width, height, fullscreen ) )
 			return rserr_invalid_mode;
 	}
+#ifndef __ANDROID__
+else if( fullscreen )
+	{
+		SDL_DisplayMode want, got;
+
+		want.w = width;
+		want.h = height;
+		want.driverdata = NULL;
+		want.format = want.refresh_rate = 0; // don't care
+
+		if( !SDL_GetClosestDisplayMode(0, &want, &got) )
+			return rserr_invalid_mode;
+
+		MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
+
+		if( ( SDL_GetWindowFlags(host.hWnd) & SDL_WINDOW_FULLSCREEN ) == SDL_WINDOW_FULLSCREEN)
+			if( SDL_SetWindowFullscreen(host.hWnd, 0) == -1 )
+				return rserr_invalid_fullscreen;
+
+		if( SDL_SetWindowDisplayMode(host.hWnd, &got) )
+			return rserr_invalid_mode;
+
+		if( SDL_SetWindowFullscreen(host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
+			return rserr_invalid_fullscreen;
+
+		R_ChangeDisplaySettingsFast( got.w, got.h );
+	}
+	else
+	{
+		if( SDL_SetWindowFullscreen(host.hWnd, 0) )
+			return rserr_invalid_fullscreen;
+		SDL_SetWindowSize(host.hWnd, width, height);
+		R_ChangeDisplaySettingsFast( width, height );
+	}
+#endif
 #endif // XASH_SDL
 	return rserr_ok;
 }
@@ -814,7 +887,9 @@ qboolean VID_SetMode( void )
 	return true;
 }
 
-
+#ifndef EGL_LIB
+#define EGL_LIB NULL
+#endif
 
 /*
 ==================
@@ -825,7 +900,7 @@ qboolean R_Init_OpenGL( void )
 {
 	GL_SetupAttributes();
 #ifdef XASH_SDL
-	if( SDL_GL_LoadLibrary( NULL ) )
+	if( SDL_GL_LoadLibrary( EGL_LIB ) )
 	{
 		MsgDev( D_ERROR, "Couldn't initialize OpenGL: %s\n", SDL_GetError());
 		return false;

@@ -197,11 +197,11 @@ char *SV_EntityScript( void )
 	ft1 = FS_FileTime( sv.worldmodel->name, false );
 	ft2 = FS_FileTime( entfilename, true );
 
-	if( ft2 != -1 )
+	if( ft2 !=(unsigned long) -1 )
 	{
 		if( ft1 > ft2 )
 		{
-			MsgDev( D_INFO, "^1Entity patch is older than BSP. Ignored.\n", entfilename );			
+			MsgDev( D_INFO, "^1Entity patch %s is older than BSP. Ignored.\n", entfilename );
 		}
 		else if(( ents = (char *)FS_LoadFile( entfilename, NULL, true )) != NULL )
 		{

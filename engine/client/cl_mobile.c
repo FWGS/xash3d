@@ -23,7 +23,9 @@ GNU General Public License for more details.
 #if defined(__ANDROID__)
 
 //#include "platform/android/android-gameif.h"
+#ifdef XASH_SDL
 #include "SDL_system.h"
+#endif
 #endif
 
 // we don't have our controls at this time
@@ -66,9 +68,7 @@ static void Vibrate_f()
 
 static void pfnEnableTextInput( int enable )
 {
-#if defined(XASH_SDL)
-	SDLash_EnableTextInput(enable);
-#endif
+	Key_EnableTextInput( enable, false );
 }
 
 static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b, float scale )

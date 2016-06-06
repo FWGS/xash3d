@@ -499,7 +499,7 @@ void R_NewMap( void );
 
 =======================================================================
 */
-#ifdef __ANDROID__
+#ifdef XASH_NANOGL
 #undef GL_TEXTURE_3D_EXT
 #undef GL_VERTEX_SHADER_EXT
 #endif
@@ -544,7 +544,7 @@ enum
 	GL_EXTCOUNT,		// must be last
 };
 
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 enum
 {
 	GL_KEEP_UNIT = -1,
@@ -668,6 +668,7 @@ extern convar_t	*gl_finish;
 extern convar_t	*gl_nosort;
 extern convar_t	*gl_clear;
 extern convar_t	*gl_test;		// cvar to testify new effects
+extern convar_t	*gl_msaa;
 
 extern convar_t	*r_ypos;
 extern convar_t	*r_xpos;

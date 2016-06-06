@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_OPENSL
 #include "port.h"
 
 #include "common.h"
@@ -248,3 +248,4 @@ void S_PrintDeviceName( void )
 	Msg( "Audio: SDL (driver: %s)\n", SDL_GetCurrentAudioDriver() );
 #endif
 }
+#endif

@@ -127,7 +127,7 @@ struct StaticData
 
 #define FRAMES_AND_BYTES	(FRAMES_FLAG|BYTES_FLAG)
 
-const static char	VBRTag[] = { "Xing" };
+static const char	VBRTag[] = { "Xing" };
 
 /*structure to receive extracted header */
 /* toc may be NULL*/
@@ -236,7 +236,7 @@ extern void init_layer2( struct StaticData *psd );
 extern void make_decode_tables( struct StaticData *psd, int scaleval );
 extern void dct64( struct StaticData *psd, float*, float*, float* );
 
-const extern int freqs[9];
+extern const int freqs[9];
 
 #ifdef __cplusplus
 }

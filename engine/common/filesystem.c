@@ -84,14 +84,14 @@ char		gs_basedir[MAX_SYSPATH];	// initial dir before loading gameinfo.txt (used 
 qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ paths 
 
 static void FS_InitMemory( void );
-static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype );
+static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const signed char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 static qboolean FS_SysFileExists( const char *path );
 static qboolean FS_SysFolderExists( const char *path );
 static int FS_SysFileTime( const char *filename );
-static char W_TypeFromExt( const char *lumpname );
-static const char *W_ExtFromType( char lumptype );
+static signed char W_TypeFromExt( const char *lumpname );
+static const char *W_ExtFromType( signed char lumptype );
 
 /*
 =============================================================================
@@ -1849,7 +1849,7 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 			opt |= O_BINARY;
 			break;
 		default:
-			MsgDev( D_ERROR, "FS_SysOpen: %s: unknown char in mode (%c)\n", filepath, mode, mode[ind] );
+			MsgDev( D_ERROR, "FS_SysOpen: %s: unknown char in mode %s (%c)\n", filepath, mode, mode[ind] );
 			break;
 		}
 	}
@@ -3184,7 +3184,7 @@ static const wadtype_t wad_hints[10] =
 { NULL,    0		}  // terminator
 };
 
-static char W_TypeFromExt( const char *lumpname )
+static signed char W_TypeFromExt( const char *lumpname )
 {
 	const char	*ext = FS_FileExtension( lumpname );
 	const wadtype_t	*type;
@@ -3208,7 +3208,7 @@ W_ExtFromType
 Convert type to extension
 ===========
 */
-static const char *W_ExtFromType( char lumptype )
+static const char *W_ExtFromType( signed char lumptype )
 {
 	const wadtype_t	*type;
 
@@ -3231,7 +3231,7 @@ W_HintFromSuf
 Convert name suffix into image type
 ===========
 */
-char W_HintFromSuf( const char *lumpname )
+signed char W_HintFromSuf( const char *lumpname )
 {
 	char		barename[64];
 	char		suffix[8];
@@ -3252,9 +3252,9 @@ char W_HintFromSuf( const char *lumpname )
 	return IMG_DIFFUSE;
 }
 
-static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype )
+static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const signed char matchtype )
 {
-	char		img_type = IMG_DIFFUSE;
+	signed char		img_type = IMG_DIFFUSE;
 	char		barename[64], suffix[8];
 	int		left, right;
 	const wadtype_t	*hint;
@@ -3521,7 +3521,7 @@ wfile_t *W_Open( const char *filename, const char *mode )
 		wad->numlumps = header.numlumps;
 		if( wad->numlumps >= MAX_FILES_IN_WAD && wad->mode == O_APPEND )
 		{
-			MsgDev( D_WARN, "W_Open: %s is full (%i lumps)\n", wad->numlumps );
+			MsgDev( D_WARN, "W_Open: %s is full (%i lumps)\n", filename, wad->numlumps );
 			wad->mode = O_RDONLY; // set read-only mode
 		}
 		wad->infotableofs = header.infotableofs; // save infotableofs position

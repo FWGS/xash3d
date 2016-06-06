@@ -161,6 +161,19 @@ void Com_PushLibraryError( const char *error );
 void Com_ResetLibraryError();
 const char *Com_GetLibraryError();
 
+#ifdef XASH_DYNAMIC_DLADDR
+#define Dl_info d_Dl_info
+typedef struct
+{
+  const char *dli_fname;	/* File name of defining object.  */
+  void *dli_fbase;		/* Load address of that object.  */
+  const char *dli_sname;	/* Name of nearest symbol.  */
+  void *dli_saddr;		/* Exact value of nearest symbol.  */
+} Dl_info;
+int d_dladdr( void *sym, Dl_info *info );
+#define dladdr d_dladdr
+#endif
+
 #ifdef DLL_LOADER // wine-based dll loader
 void * Loader_LoadLibrary (const char *name);
 void * Loader_GetProcAddress (void *hndl, const char *name);

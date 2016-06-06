@@ -533,7 +533,7 @@ void RestoreSound( soundlist_t *entry )
 		return;
 	}
 
-	if( entry->channel < 0 || entry->channel > 7 )
+	if( entry->channel > 7 )
 	{
 		MsgDev( D_ERROR, "SV_RestoreSound: channel must be in range 0-7\n" );
 		return;

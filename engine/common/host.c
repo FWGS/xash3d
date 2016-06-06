@@ -701,7 +701,7 @@ void Host_Error( const char *error, ... )
 	if( recursive )
 	{ 
 		Msg( "Host_RecursiveError: %s", hosterror2 );
-		Sys_Error( hosterror1 );
+		Sys_Error( "%s", hosterror1 );
 		return; // don't multiple executes
 	}
 
@@ -1106,6 +1106,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
 #endif
+#if defined(__ANDROID__) && !defined( XASH_SDL )
+	Android_Init();
+#endif
 
 	if( host.state == HOST_INIT )
 		host.state = HOST_FRAME; // initialization is finished
@@ -1116,6 +1119,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 #ifdef XASH_SDL
 		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
+#elif defined(__ANDROID__)
+		Android_RunEvents();
 #endif
 		newtime = Sys_DoubleTime ();
 		Host_Frame( newtime - oldtime );
