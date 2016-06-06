@@ -698,6 +698,28 @@ void VGUI_DrawQuad( const vpoint_t *ul, const vpoint_t *lr )
 {
 	ASSERT( ul != NULL && lr != NULL );
 
+#ifdef XASH_GLES2_RENDER
+	{
+		GLfloat verts[] = {
+			ul->point[0], ul->point[1],ul->coord[0], ul->coord[1],
+			lr->point[0], ul->point[1],lr->coord[0], ul->coord[1],
+			lr->point[0], lr->point[1],lr->coord[0], lr->coord[1],
+			ul->point[0], lr->point[1],ul->coord[0], lr->coord[1]
+		};
+
+		pglEnableVertexAttribArray( 0 );
+		pglEnableVertexAttribArray( 1 );
+
+		pglVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 16, verts );
+		pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 16, &verts[2] );
+
+
+		pglDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
+
+		pglDisableVertexAttribArray( 0 );
+		pglDisableVertexAttribArray( 1 );
+	}
+#else
 	pglBegin( GL_QUADS );
 		pglTexCoord2f( ul->coord[0], ul->coord[1] );
 		pglVertex2f( ul->point[0], ul->point[1] );
@@ -711,6 +733,7 @@ void VGUI_DrawQuad( const vpoint_t *ul, const vpoint_t *lr )
 		pglTexCoord2f( ul->coord[0], lr->coord[1] );
 		pglVertex2f( ul->point[0], lr->point[1] );
 	pglEnd();
+#endif
 }
 
 void VGui_Paint()

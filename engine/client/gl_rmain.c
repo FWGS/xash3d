@@ -681,8 +681,12 @@ void R_LoadIdentity( void )
 	Matrix4x4_LoadIdentity( RI.objectMatrix );
 	Matrix4x4_Copy( RI.modelviewMatrix, RI.worldviewMatrix );
 
+#ifdef XASH_GLES2_RENDER
+	R_ModelViewMtxUniform( RI.modelviewMatrix );
+#else
 	pglMatrixMode( GL_MODELVIEW );
 	GL_LoadMatrix( RI.modelviewMatrix );
+#endif
 	tr.modelviewIdentity = true;
 }
 
@@ -707,8 +711,12 @@ void R_RotateForEntity( cl_entity_t *e )
 	Matrix4x4_CreateFromEntity( RI.objectMatrix, e->angles, e->origin, scale );
 	Matrix4x4_ConcatTransforms( RI.modelviewMatrix, RI.worldviewMatrix, RI.objectMatrix );
 
+#ifdef XASH_GLES2_RENDER
+	R_ModelViewMtxUniform( RI.modelviewMatrix );
+#else
 	pglMatrixMode( GL_MODELVIEW );
 	GL_LoadMatrix( RI.modelviewMatrix );
+#endif
 	tr.modelviewIdentity = false;
 }
 
@@ -733,8 +741,12 @@ void R_TranslateForEntity( cl_entity_t *e )
 	Matrix4x4_CreateFromEntity( RI.objectMatrix, vec3_origin, e->origin, scale );
 	Matrix4x4_ConcatTransforms( RI.modelviewMatrix, RI.worldviewMatrix, RI.objectMatrix );
 
+#ifdef XASH_GLES2_RENDER
+	R_ModelViewMtxUniform( RI.modelviewMatrix );
+#else
 	pglMatrixMode( GL_MODELVIEW );
 	GL_LoadMatrix( RI.modelviewMatrix );
+#endif
 	tr.modelviewIdentity = false;
 }
 
@@ -866,12 +878,19 @@ static void R_SetupGL( void )
 		// envpass, mirrorpass
 		pglViewport( RI.viewport[0], RI.viewport[1], RI.viewport[2], RI.viewport[3] );
 	}
-
+#ifdef XASH_GLES2_RENDER
+	R_ProjMtxUniform( RI.projectionMatrix );
+#else
 	pglMatrixMode( GL_PROJECTION );
 	GL_LoadMatrix( RI.projectionMatrix );
+#endif
 
+#ifdef XASH_GLES2_RENDER
+	R_ModelViewMtxUniform( RI.worldviewMatrix );
+#else
 	pglMatrixMode( GL_MODELVIEW );
 	GL_LoadMatrix( RI.worldviewMatrix );
+#endif
 
 	if( RI.params & RP_CLIPPLANE )
 	{
@@ -1256,8 +1275,10 @@ void R_BeginFrame( qboolean clearScene )
 
 	R_Set2DMode( true );
 
+#ifndef XASH_GLES2_RENDER
 	// draw buffer stuff
 	pglDrawBuffer( GL_BACK );
+#endif
 
 	// texturemode stuff
 	// update texture parameters

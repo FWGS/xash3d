@@ -1066,12 +1066,15 @@ static void GL_TextureImage( GLenum inFormat, GLenum outFormat, GLenum glTarget,
 {
 	GLint	dataType = GL_UNSIGNED_BYTE;
 
+#ifndef XASH_GLES2_RENDER
 	if( glTarget == GL_TEXTURE_1D )
 	{
 		if( subImage ) pglTexSubImage1D( glTarget, level, 0, width, inFormat, dataType, data );
 		else pglTexImage1D( glTarget, level, outFormat, width, 0, inFormat, dataType, data );
 	}
-	else if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
+	else
+#endif
+	if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
 	{
 		if( subImage ) pglTexSubImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side, level, 0, 0, width, height, inFormat, dataType, data );
 		else pglTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + side, level, outFormat, width, height, 0, inFormat, dataType, data );
@@ -1201,11 +1204,13 @@ static void GL_UploadTextureDXT( rgbdata_t *pic, gltexture_t *tex, qboolean subI
 			tex->flags &= ~TF_CUBEMAP;
 		}
 	}
+#ifndef XASH_GLES2_RENDER
 	else if( tex->flags & TF_TEXTURE_1D || pic->height <= 1 )
 	{
 		// determine target
 		tex->target = glTarget = GL_TEXTURE_1D;
 	}
+#endif
 	else if( tex->flags & TF_TEXTURE_RECTANGLE )
 	{
 		if( glConfig.max_2d_rectangle_size )
@@ -1372,11 +1377,13 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 			tex->flags &= ~TF_CUBEMAP;
 		}
 	}
+#ifndef XASH_GLES2_RENDER
 	else if( tex->flags & TF_TEXTURE_1D )
 	{
 		// determine target
 		tex->target = glTarget = GL_TEXTURE_1D;
 	}
+#endif
 	else if( tex->flags & TF_TEXTURE_RECTANGLE )
 	{
 		if( glConfig.max_2d_rectangle_size )
@@ -1427,13 +1434,15 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 			if(!( tex->flags & TF_NOMIPMAP ) && !( tex->flags & TF_SKYSIDE ) && !( tex->flags & TF_TEXTURE_3D ))
 				data = GL_ApplyGamma( data, tex->width * tex->height, ( tex->flags & TF_NORMALMAP ));
 		}		
-
+#ifndef XASH_GLES2_RENDER
 		if( glTarget == GL_TEXTURE_1D )
 		{
 			if( subImage ) pglTexSubImage1D( tex->target, 0, 0, tex->width, inFormat, dataType, data );
 			else pglTexImage1D( tex->target, 0, outFormat, tex->width, 0, inFormat, dataType, data );
 		}
-		else if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
+		else
+#endif
+		if( glTarget == GL_TEXTURE_CUBE_MAP_ARB )
 		{
 			if( GL_Support( GL_SGIS_MIPMAPS_EXT ) && !( tex->flags & TF_NORMALMAP ))
 				GL_GenerateMipmaps( data, pic, tex, glTarget, inFormat, i, subImage );
@@ -1465,7 +1474,7 @@ static void GL_UploadTexture( rgbdata_t *pic, gltexture_t *tex, qboolean subImag
 		err = pglGetError();
 
 		if( err != GL_NO_ERROR )
-			MsgDev( D_ERROR, "GL_UploadTexture: error %x while uploading %s [%s]\n", err, tex->name, GL_Target( glTarget ));
+			MsgDev( D_ERROR, "GL_UploadTexture: error %x while uploading %s [%s] %dx%d\n", err, tex->name, GL_Target( glTarget ), tex->width, tex->height );
 	}
 }
 

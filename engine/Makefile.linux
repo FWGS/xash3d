@@ -17,7 +17,7 @@ ifeq ($(NANOGL),1)
 INCLUDES += -I../nanogl -I../nanogl/GL
 endif
 INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui -Icommon/sdl
-DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FASTSTR -DXASH_FORCEINLINE
+DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FASTSTR -DXASH_FORCEINLINE -DXASH_GLES2_RENDER
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
 else

@@ -422,6 +422,31 @@ void R_StudioInit( void );
 void Mod_LoadStudioModel( model_t *mod, const void *buffer, qboolean *loaded );
 struct mstudiotex_s *R_StudioGetTexture( cl_entity_t *e );
 void R_DrawStudioModel( cl_entity_t *e );
+#ifdef XASH_GLES2_RENDER
+//
+// gl_shader.c
+//
+typedef enum progtype_e{
+	PROGRAM_2D,
+	PROGRAM_WORLD,
+	PROGRAM_PARTICLES,
+	PROGRAM_BEAM,
+	PROGRAM_STUDIO
+} progtype_t;
+
+void R_InitShaders( void );
+void R_UseProgram( progtype_t program );
+
+void R_ColorUniform( GLfloat r,GLfloat g, GLfloat b, GLfloat a );
+void R_ScreenUniform( GLfloat w, GLfloat h );
+void R_ModelViewMtxUniform( cmatrix4x4 source );
+void R_ProjMtxUniform( cmatrix4x4 source );
+
+//
+// gl_emulate.c
+//
+void R_InitGLEmu( void );
+#endif
 
 #include "wadfile.h"
 
@@ -506,6 +531,7 @@ void R_NewMap( void );
 enum
 {
 	GL_OPENGL_110 = 0,		// base
+	GL_OPENGL_ES_20,
 	GL_WGL_SWAPCONTROL,		
 	GL_WGL_PROCADDRESS,
 	GL_HARDWARE_GAMMA_CONTROL,
@@ -683,6 +709,7 @@ extern convar_t	*r_lighting_ambient;
 extern convar_t	*r_detailtextures;
 extern convar_t	*r_faceplanecull;
 extern convar_t	*r_drawentities;
+extern convar_t	*r_drawstudiomodels;
 extern convar_t	*r_adjust_fov;
 extern convar_t	*r_lefthand;
 extern convar_t	*r_flaresize;

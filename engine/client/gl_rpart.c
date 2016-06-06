@@ -314,8 +314,18 @@ static void CL_BulletTracerDraw( particle_t *p, float frametime )
 	float	dDistance, dTotal, fOffset;
 	int	alpha = (int)(traceralpha->value * 255);
 	float	width = 3.0f, life, frac, length;
+#ifdef XASH_GLES2_RENDER
+	//TODO color
+	GLfloat uv[] = {
+	1.0f, 0.0f,
+	0.0f, 0.0f,
+	0.0f, 0.0f,
+	1.0f, 0.0f
+	};
+	vec3_t	tmp[4];
+#else
 	vec3_t	tmp;
-
+#endif
 	// calculate distance
 	VectorCopy( p->vel, vecDir );
 	totalDist = VectorNormalizeLength( vecDir );
@@ -363,6 +373,27 @@ static void CL_BulletTracerDraw( particle_t *p, float frametime )
 	GL_SetRenderMode( kRenderTransTexture );
 
 	GL_Bind( GL_TEXTURE0, cls.particleImage );
+#ifdef XASH_GLES2_RENDER
+	uv[5] = uv[7] = fOffset;
+
+	VectorMA( vecStart, -width, cross, tmp[0] );
+	VectorMA( vecStart, width, cross, tmp[1] );
+	VectorMA( vecEnd, width, cross, tmp[2] );
+	VectorMA( vecEnd, -width, cross, tmp[3] );
+
+	R_UseProgram( PROGRAM_PARTICLES );
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
+	pglColor4ub( clgame.palette[p->color][0], clgame.palette[p->color][1], clgame.palette[p->color][2], alpha );
+
+	pglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 12, tmp );
+	pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 8, uv );
+
+	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
+#else
 	pglBegin( GL_QUADS );
 
 	pglColor4ub( clgame.palette[p->color][0], clgame.palette[p->color][1], clgame.palette[p->color][2], alpha );
@@ -384,6 +415,7 @@ static void CL_BulletTracerDraw( particle_t *p, float frametime )
 	pglVertex3fv( tmp );
 
 	pglEnd();
+#endif
 }
 
 /*
@@ -500,6 +532,9 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	p->color = bound( 0, p->color, 255 );
 	VectorSet( color, clgame.palette[p->color][0], clgame.palette[p->color][1], clgame.palette[p->color][2] );
 
+#ifdef XASH_GLES2_RENDER
+	R_UseProgram( PROGRAM_PARTICLES );
+#endif
 	GL_SetRenderMode( kRenderTransTexture );
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
@@ -507,7 +542,27 @@ void CL_UpdateParticle( particle_t *p, float ft )
 		GL_Bind(GL_TEXTURE0, cls.oldParticleImage);
 	else
 		GL_Bind(GL_TEXTURE0, cls.particleImage);
+#ifdef XASH_GLES2_RENDER
+	{
+		GLfloat verts[] = {
+			p->org[0] - right[0] + up[0], p->org[1] - right[1] + up[1], p->org[2] - right[2] + up[2], 0.0f, 1.0f,
+			p->org[0] + right[0] + up[0], p->org[1] + right[1] + up[1], p->org[2] + right[2] + up[2], 0.0f, 0.0f,
+			p->org[0] + right[0] - up[0], p->org[1] + right[1] - up[1], p->org[2] + right[2] - up[2], 1.0f, 0.0f,
+			p->org[0] - right[0] - up[0], p->org[1] - right[1] - up[1], p->org[2] - right[2] - up[2], 1.0f, 1.0f
+		};
 
+		pglEnableVertexAttribArray( 0 );
+		pglEnableVertexAttribArray( 1 );
+
+		pglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 20, verts );
+		pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 20, &verts[3] );
+
+		pglDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
+
+		pglDisableVertexAttribArray( 0 );
+		pglDisableVertexAttribArray( 1 );
+	}
+#else
 	// add the 4 corner vertices.
 	pglBegin( GL_QUADS );
 
@@ -521,6 +576,7 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	pglVertex3f( p->org[0] - right[0] - up[0], p->org[1] - right[1] - up[1], p->org[2] - right[2] - up[2] );
 
 	pglEnd();
+#endif
 
 	if( p->type != pt_clientcustom )
 	{
@@ -1412,9 +1468,35 @@ void CL_DrawTracer( vec3_t start, vec3_t delta, float width, rgb_t color, int al
 
 	GL_SetRenderMode( kRenderTransTexture );
 
+#ifdef XASH_GLES2_RENDER
+	R_UseProgram( PROGRAM_PARTICLES );
+#endif
+
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
 	GL_Bind( GL_TEXTURE0, cls.particleImage );
+
+#ifdef XASH_GLES2_RENDER
+	{
+		GLfloat uv[] = {
+			0.0f, endV,
+			1.0f, endV,
+			1.0f, startV,
+			0.0f, startV
+		};
+
+		pglEnableVertexAttribArray( 0 );
+		pglEnableVertexAttribArray( 1 );
+
+		pglVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 12, verts );
+		pglVertexAttribPointer( 1, 2, GL_FLOAT, GL_FALSE, 8, uv );
+
+		pglDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
+
+		pglDisableVertexAttribArray( 0 );
+		pglDisableVertexAttribArray( 1 );
+	}
+#else
 	pglBegin( GL_QUADS );
 
 	pglTexCoord2f( 0.0f, endV );
@@ -1430,6 +1512,7 @@ void CL_DrawTracer( vec3_t start, vec3_t delta, float width, rgb_t color, int al
 	pglVertex3fv( verts[0] );
 
 	pglEnd();
+#endif
 }
 
 /*

@@ -861,8 +861,42 @@ static void R_DrawSpriteQuad( mspriteframe_t *frame, vec3_t org, vec3_t v_right,
 {
 	vec3_t	point;
 
-	r_stats.c_sprite_polys++;
 
+#ifdef XASH_GLES2_RENDER
+	GLfloat verts[] = {
+		0, 0, 0, 0.0f, 1.0f,
+		0, 0, 0, 0.0f, 0.0f,
+		0, 0, 0, 1.0f, 0.0f,
+		0, 0, 0, 1.0f, 1.0f
+	};
+
+	VectorMA( org, frame->down * scale, v_up, point );
+	VectorMA( point, frame->left * scale, v_right, point );
+	verts[0] = point[0]; verts[1] = point[1]; verts[2] = point[2];
+
+	VectorMA( org, frame->up * scale, v_up, point );
+	VectorMA( point, frame->left * scale, v_right, point );
+	verts[5] = point[0]; verts[6] = point[1]; verts[7] = point[2];
+
+	VectorMA( org, frame->up * scale, v_up, point );
+	VectorMA( point, frame->right * scale, v_right, point );
+	verts[10] = point[0]; verts[11] = point[1]; verts[12] = point[2];
+
+	VectorMA( org, frame->down * scale, v_up, point );
+	VectorMA( point, frame->right * scale, v_right, point );
+	verts[15] = point[0]; verts[16] = point[1]; verts[17] = point[2];
+
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
+
+	pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,20,verts);
+	pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,20,&verts[3]);
+
+	pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
+#else
 	pglBegin( GL_QUADS );
 		pglTexCoord2f( 0.0f, 1.0f );
 		VectorMA( org, frame->down * scale, v_up, point );
@@ -881,6 +915,8 @@ static void R_DrawSpriteQuad( mspriteframe_t *frame, vec3_t org, vec3_t v_right,
 		VectorMA( point, frame->right * scale, v_right, point );
 		pglVertex3fv( point );
 	pglEnd();
+#endif
+	r_stats.c_sprite_polys++;
 }
 
 static qboolean R_SpriteHasLightmap( cl_entity_t *e, int texFormat )
@@ -1071,7 +1107,11 @@ void R_DrawSpriteModel( cl_entity_t *e )
 
 	if( psprite->facecull == SPR_CULL_NONE )
 		GL_Cull( GL_NONE );
-		
+
+#ifdef XASH_GLES2_RENDER
+	R_UseProgram( PROGRAM_PARTICLES );
+#endif
+
 	if( oldframe == frame )
 	{
 		// draw the single non-lerped frame
