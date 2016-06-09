@@ -1934,7 +1934,4 @@ void CL_Shutdown( void )
 	SCR_FreeCinematic (); // release AVI's *after* client.dll because custom renderer may use them
 	S_Shutdown ();
 	R_Shutdown ();
-#ifdef XASH_VINTERFACE
-	VLoader_Shutdown ();
-#endif
 }

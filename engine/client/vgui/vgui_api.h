@@ -13,6 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#pragma once
+#ifndef VGUI_API_H
+#define VGUI_API_H
 #include "system.h"
 
 // VGUI generic vertex
@@ -202,15 +205,20 @@ typedef struct  vguiapi_s
 	void	(*SetVisible)( qboolean state );
 	void	(*GetCursorPos)( int *x, int *y );
 	int		(*ProcessUtfChar)( int ch );
+	// START VGUI1 CALLBACKS
 	void	(*Startup)( int width, int height );
 	void	(*Shutdown)( void );
 	void	*(*GetPanel)( void );
 	void	(*Paint)( void );
 	void	(*Mouse)( enum VGUI_MouseAction action, int code );
-	void	(*Key)( enum VGUI_KeyAction action,enum VGUI_KeyCode code );
+	void	(*Key)( enum VGUI_KeyAction action, enum VGUI_KeyCode code );
 	void	(*MouseMove)( int x, int y );
+	void	(*InitializeVLoader)( void *module );
+	// END VGUI1 CALLBACKS
 	void	(*SetCursorPos)( int x, int y );
 	void	(*Cvar_SetFloat)( const char *var, float value );
 	void	(*Cvar_Set)( const char *var, char *value );
 	qboolean (*R_DescribeVIDMode)( int width, int height );
 } vguiapi_t;
+
+#endif

@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 #include "port.h"
+#include "vgui_api.h"
 
 #define VGUI_MAX_TEXTURES	2048	// a half of total textures count
 
@@ -33,7 +34,7 @@ typedef SDL_Event Xash_Event;
 typedef void Xash_Event;
 #endif
 
-//extern vguiapi_t vgui;
+extern vguiapi_t vgui;
 /*
 void VGUI_DrawInit( void );
 void VGUI_DrawShutdown( void );

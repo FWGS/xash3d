@@ -4123,10 +4123,11 @@ qboolean CL_LoadProgs( const char *name )
 	}
 	Mobile_Init(); // Xash3D extension: mobile interface
 
-#ifdef XASH_VINTERFACE
 	if( clgame.dllFuncs.pfnGetClientFactory )
-		VLoader_ClientDLLFactory(clgame.hInstance);
-#endif
+	{
+		MsgDev( D_WARN, "Client seems uses VGUI2. Engine may crash. If you have vgui_support with VGUI2 support, ignore this warning.\n");
+		vgui.InitializeVLoader( clgame.hInstance );
+	}
 
 	// initialize game
 	clgame.dllFuncs.pfnInit();
