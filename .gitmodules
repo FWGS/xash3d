@@ -1,6 +1,6 @@
 [submodule "hlsdk"]
 	path = hlsdk
 	url = https://github.com/SDLash3D/halflife
-[submodule "vinterface"]
-	path = vinterface
+[submodule "vgui_support/vinterface"]
+	path = vgui_support/vinterface
 	url = https://github.com/SDLash3D/libvinterface
