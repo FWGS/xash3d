@@ -32,8 +32,37 @@ set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -O3")
 
 set (VGUI_SUPPORT_LIBRARY vgui_support)
 
-file (GLOB VGUI_SUPPORT_SOURCES *.cpp *.c)
-include_directories (. ../common ../engine ../engine/common ../engine/client ../engine/client/vgui ${HL_SDK_DIR}/utils/vgui/include/)
+set (VINTERFACE_SOURCES
+	vinterface/library.cpp
+	vinterface/vloader.cpp
+	vinterface/surface.cpp
+)
+
+set (VGUI_LOADER_SOURCES
+	vgui_clip.cpp
+	vgui_font.cpp
+	vgui_input.cpp
+	vgui_int.cpp
+	vgui_surf.cpp
+)
+
+set(VGUI_SUPPORT_SOURCES ${VGUI_LOADER_SOURCES} ${VINTERFACE_SOURCES} )
+
+include_directories (
+	.
+	./vinterface
+	./vinterface/Interface
+	../common
+	../engine
+	../engine/common
+	../engine/client
+	../engine/client/vgui
+	${HL_SDK_DIR}/utils/vgui/include/
+)
+
+if(XASH_VINTERFACE)
+	add_definitions(-DXASH_VINTERFACE)
+endif()
 
 add_library (${VGUI_SUPPORT_LIBRARY} SHARED ${VGUI_SUPPORT_SOURCES})
 
@@ -41,7 +70,6 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(${VGUI_SUPPORT_LIBRARY} -L${HL_SDK_DIR}/linux/release/ ${HL_SDK_DIR}/linux/release/vgui.dylib)
 endif()
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-
     #Make GCC don't put full path to vgui.so
     add_custom_command(TARGET vgui_support PRE_LINK COMMAND
 	${CMAKE_COMMAND} -E copy ${HL_SDK_DIR}/linux/vgui.so $<TARGET_SONAME_FILE_DIR:vgui_support>)

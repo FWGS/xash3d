@@ -25,6 +25,11 @@ from your version.
 #ifdef XASH_VGUI
 #include "vgui_main.h"
 
+#ifdef XASH_VINTERFACE
+#include "vloader.h"
+#endif
+
+
 vguiapi_t *g_api;
 
 FontCache *g_FontCache = 0;
@@ -93,6 +98,8 @@ void VGui_Startup( int width, int height )
 
 void VGui_Shutdown( void )
 {
+	VLoader_Shutdown();
+
 	if( pApp ) pApp->stop();
 
 	delete rootpanel;
@@ -131,11 +138,18 @@ void VGui_Paint( void )
 
 	EnableScissor( false );
 }
+
 void *VGui_GetPanel( void )
 {
 	return (void *)rootpanel;
 }
 
+void VLoader_Initialize( void *module )
+{
+#ifdef XASH_VINTERFACE
+	VLoader_ClientDLLFactory( module );
+#endif
+}
 
 #ifdef _WIN32
 extern "C" void _declspec( dllexport ) InitAPI(vguiapi_t * api)
@@ -151,5 +165,6 @@ extern "C" void InitAPI(vguiapi_t * api)
 	g_api->Mouse = VGUI_Mouse;
 	g_api->MouseMove = VGUI_MouseMove;
 	g_api->Key = VGUI_Key;
+	g_api->InitializeVLoader = VLoader_Initialize;
 }
 #endif

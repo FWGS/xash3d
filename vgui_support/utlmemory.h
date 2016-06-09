@@ -52,8 +52,10 @@ inline void Destruct( T* pMemory )
 #endif
 }
 
+#ifdef MSC_VER
 #pragma warning (disable:4100)
 #pragma warning (disable:4514)
+#endif
 
 //-----------------------------------------------------------------------------
 // The CUtlMemory class:
