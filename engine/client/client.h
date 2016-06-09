@@ -71,6 +71,19 @@ extern int CL_UPDATE_BACKUP;
 
 #define INVALID_HANDLE	0xFFFF		// for XashXT cache system
 
+// used by SetUpPlayerPrediction
+#if 0
+typedef struct
+{
+	int movetype;
+	int solid;
+	int usehull;
+	qboolean active;
+	vec3_t origin;
+	vec3_t angles;
+} predicted_player_t;
+#endif
+
 // the client_t structure is wiped completely at every
 // server map change
 typedef struct
@@ -148,6 +161,9 @@ typedef struct
 	int predicted_viewmodel;
 	float weaponstarttime;
 	int weaponseq;
+#if 0 // used by SetUpPlayerPrediction
+	predicted_player_t predicted_players[MAX_CLIENTS];
+#endif
 } client_t;
 
 /*
@@ -476,16 +492,6 @@ extern client_t		cl;
 extern client_static_t	cls;
 extern clgame_static_t	clgame;
 extern menu_static_t	menu;
-
-extern struct predicted_player {
-	int flags;
-	int movetype;
-	int solid;
-	int usehull;
-	qboolean active;
-	vec3_t origin; // predicted origin
-	vec3_t angles;
-} predicted_players[MAX_CLIENTS];
 
 #ifdef __cplusplus
 }

@@ -2278,66 +2278,68 @@ physent_t *pfnGetPhysent( int idx )
 	return NULL;
 }
 
-struct predicted_player predicted_players[MAX_CLIENTS];
-
 /*
 =============
 pfnSetUpPlayerPrediction
 
 =============
 */
-void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
+void pfnSetUpPlayerPrediction( int dopred, int includeLocal )
 {
-	int j;
-	struct predicted_player *pPlayer = predicted_players;
-	entity_state_t *entState = cl.frames[cl.parsecountmod].playerstate;
+#if 0
+	int i;
+	entity_state_t     *state;
+	predicted_player_t *player;
+	cl_entity_t        *ent;
 
-	cl_entity_t *clEntity;
-
-	for( j = 0, pPlayer = predicted_players, entState = cl.frames[cl.parsecountmod].playerstate;
-		 j < MAX_CLIENTS;
-		 j++, pPlayer++, entState++)
+	for( i = 0; i < MAX_CLIENTS; i++ )
 	{
-		pPlayer->active = false;
+		state = cl.frames[cl.parsecountmod].playerstate[i];
 
-		// Does not work in xash3d
-		//if( entState->messagenum != cl.parsecount )
-			//continue; // not present this frame
+		player = cl.predicted_players[j];
+		player->active = false;
 
-		if( !entState->modelindex )
+		if( state->messagenum != cl.parsecount )
+			continue; // not present this frame
+
+		if( !state->modelindex )
 			continue;
 
-		clEntity = CL_EDICT_NUM( j + 1 );
-		//special for EF_NODRAW and local client?
-		if( ( entState->effects & EF_NODRAW ) && ( bIncludeLocalClient == false ) )
+		ent = CL_GetEntityByIndex( j + 1 );
+
+		if( !ent ) // in case
+			continue;
+
+		// special for EF_NODRAW and local client?
+		if( state->effects & EF_NODRAW && !includeLocal )
 		{
-			// don't include local player?
 			if( cl.playernum == j )
 				continue;
-			else
-			{
-				pPlayer->active = true;
-				pPlayer->movetype = entState->movetype;
-				pPlayer->solid = entState->solid;
-				pPlayer->usehull = entState->usehull;
 
-				VectorCopy( clEntity->origin, pPlayer->origin );
-				VectorCopy( clEntity->angles, pPlayer->angles );
-			}
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			VectorCopy( ent->origin, player->origin );
+			VectorCopy( ent->angles, player->angles );
 		}
 		else
 		{
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			// don't rewrite origin and angles of local client
 			if( cl.playernum == j )
 				continue;
-			pPlayer->active = true;
-			pPlayer->movetype = entState->movetype;
-			pPlayer->solid = entState->solid;
-			pPlayer->usehull = entState->usehull;
 
-			VectorCopy(cl.frames[cl.parsecountmod].playerstate[j].origin, pPlayer->origin);
-			VectorCopy(cl.frames[cl.parsecountmod].playerstate[j].angles, pPlayer->angles);
+			VectorCopy(state->origin, player->origin);
+			VectorCopy(state->angles, player->angles);
 		}
 	}
+#endif
 }
 
 /*

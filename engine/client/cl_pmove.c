@@ -214,11 +214,10 @@ pmove must be setup with world and solid entity hulls before calling
 */
 void CL_SetSolidPlayers( int playernum )
 {
-	int		j;
-	extern	vec3_t	player_mins;
-	extern	vec3_t	player_maxs;
-	cl_entity_t	*ent;
-	physent_t		*pe;
+	int		       j;
+	cl_entity_t	   *ent;
+	entity_state_t *state;
+	physent_t      *pe;
 
 	if( !cl_solid_players->integer )
 		return;
@@ -226,15 +225,27 @@ void CL_SetSolidPlayers( int playernum )
 	for( j = 0; j < cl.maxclients; j++ )
 	{
 		// the player object never gets added
-		if( j == playernum ) continue;
+		if( j == playernum )
+			continue;
 
 		ent = CL_GetEntityByIndex( j + 1 );		
 
 		if( !ent || !ent->player )
 			continue; // not present this frame
 
-		if( !predicted_players[j].active )
-			continue; // dead players are not solid
+
+#if 1 // came from SetUpPlayerPrediction
+		state = cl.frames[cl.parsecountmod].playerstate + j;
+
+		if( state->messagenum != cl.parsecount )
+			continue; // not present this frame [2]
+
+		if( state->effects & EF_NODRAW )
+			continue; // skip invisible
+
+		if( !state->solid )
+			continue; // not solid
+#endif
 
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
 		if( CL_CopyEntityToPhysEnt( pe, ent ))
