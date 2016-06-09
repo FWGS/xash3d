@@ -237,8 +237,9 @@ void CL_SetSolidPlayers( int playernum )
 #if 1 // came from SetUpPlayerPrediction
 		state = cl.frames[cl.parsecountmod].playerstate + j;
 
-		if( state->messagenum != cl.parsecount )
-			continue; // not present this frame [2]
+		// This makes all players non solid.
+		//if( state->messagenum != cl.parsecount )
+		//	continue; // not present this frame [2]*/
 
 		if( state->effects & EF_NODRAW )
 			continue; // skip invisible
