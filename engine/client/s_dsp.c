@@ -444,15 +444,15 @@ _inline int dly_allpass( int D, int t, int *w, int **p, int a, int b, int x )
 ///////////////////////////////////////////////////////////////////////////////////
 // fixed point math for real-time wave table traversing, pitch shifting, resampling
 ///////////////////////////////////////////////////////////////////////////////////
-#define FIX20_BITS		20					// 20 bits of fractional part
-#define FIX20_SCALE		(1U << FIX20_BITS)
-#define FIX20_INTMAX	((1U << (32 - FIX20_BITS))-1)			// maximum step integer
-#define FLOAT_TO_FIX20(a)	((int)((a) * (float)FIX20_SCALE))		// convert float to fixed point
-#define INT_TO_FIX20(a)	(((int)(a)) << FIX20_BITS)			// convert int to fixed point
-#define FIX20_TO_FLOAT(a)	((float)(a) / (float)FIX20_SCALE)		// convert fix20 to float
-#define FIX20_INTPART(a)	(((int)(a)) >> FIX20_BITS)			// get integer part of fixed point
-#define FIX20_FRACPART(a)	((a) - (((a) >> FIX20_BITS) << FIX20_BITS))	// get fractional part of fixed point
-#define FIX20_FRACTION(a,b)	(FIX(a)/(b))			// convert int a to fixed point, divide by b
+#define FIX20_BITS          20					                        // 20 bits of fractional part
+#define FIX20_SCALE         (1U << FIX20_BITS)
+#define FIX20_INTMAX        ((1U << (32 - FIX20_BITS))-1)               // maximum step integer
+#define FLOAT_TO_FIX20(a)   ((int)((a) * (float)FIX20_SCALE))           // convert float to fixed point
+#define INT_TO_FIX20(a)     (((int)(a)) << FIX20_BITS)                  // convert int to fixed point
+#define FIX20_TO_FLOAT(a)   ((float)(a) / (float)FIX20_SCALE)           // convert fix20 to float
+#define FIX20_INTPART(a)    (((int)(a)) >> FIX20_BITS)                  // get integer part of fixed point
+#define FIX20_FRACPART(a)   ((a) - (((a) >> FIX20_BITS) << FIX20_BITS)) // get fractional part of fixed point
+#define FIX20_FRACTION(a,b) (FIX(a)/(b))                                // convert int a to fixed point, divide by b
 
 typedef int fix20int;
 
@@ -462,59 +462,59 @@ typedef int fix20int;
 
 // NOTE: these prototypes must match the XXX_Params ( prc_t *pprc ) and XXX_GetNext ( XXX_t *p, int x ) functions
 
-typedef void * (*prc_Param_t)( void *pprc );			// individual processor allocation functions
-typedef int (*prc_GetNext_t)( void *pdata, int x );		// get next function for processor
-typedef int (*prc_GetNextN_t)( void *pdata,  portable_samplepair_t *pbuffer, int SampleCount, int op);	// batch version of getnext
-typedef void (*prc_Free_t)( void *pdata );			// free function for processor
-typedef void (*prc_Mod_t)(void *pdata, float v);			// modulation function for processor	
+typedef void*(*prc_Param_t)( void *pprc );           // individual processor allocation functions
+typedef int  (*prc_GetNext_t)( void *pdata, int x ); // get next function for processor
+typedef int  (*prc_GetNextN_t)( void *pdata,  portable_samplepair_t *pbuffer, int SampleCount, int op);	// batch version of getnext
+typedef void (*prc_Free_t)( void *pdata );           // free function for processor
+typedef void (*prc_Mod_t)( void *pdata, float v );   // modulation function for processor
 
-#define	OP_LEFT			0		// batch process left channel in place
-#define OP_RIGHT			1		// batch process right channel in place
-#define OP_LEFT_DUPLICATE		2		// batch process left channel in place, duplicate to right channel
+#define	OP_LEFT             0   // batch process left channel in place
+#define OP_RIGHT            1   // batch process right channel in place
+#define OP_LEFT_DUPLICATE   2   // batch process left channel in place, duplicate to right channel
 
-#define PRC_NULL			0		// pass through - must be 0
-#define PRC_DLY			1		// simple feedback reverb
-#define PRC_RVA			2		// parallel reverbs
-#define PRC_FLT			3		// lowpass or highpass filter
-#define PRC_CRS			4		// chorus
-#define	PRC_PTC			5		// pitch shifter
-#define PRC_ENV			6		// adsr envelope
-#define PRC_LFO			7		// lfo
-#define PRC_EFO			8		// envelope follower
-#define PRC_MDY			9		// mod delay
-#define PRC_DFR			10		// diffusor - n series allpass delays
-#define PRC_AMP			11		// amplifier with distortion
+#define PRC_NULL        0       // pass through - must be 0
+#define PRC_DLY         1       // simple feedback reverb
+#define PRC_RVA         2       // parallel reverbs
+#define PRC_FLT         3       // lowpass or highpass filter
+#define PRC_CRS         4       // chorus
+#define	PRC_PTC         5       // pitch shifter
+#define PRC_ENV         6       // adsr envelope
+#define PRC_LFO         7       // lfo
+#define PRC_EFO	        8       // envelope follower
+#define PRC_MDY         9       // mod delay
+#define PRC_DFR         10      // diffusor - n series allpass delays
+#define PRC_AMP         11      // amplifier with distortion
 
-#define QUA_LO			0		// quality of filter or reverb.  Must be 0,1,2,3.
-#define QUA_MED			1
-#define QUA_HI			2
-#define QUA_VHI			3
+#define QUA_LO          0       // quality of filter or reverb.  Must be 0,1,2,3.
+#define QUA_MED         1
+#define QUA_HI          2
+#define QUA_VHI         3
 #define QUA_MAX			QUA_VHI
 
-#define CPRCPARAMS			16		// up to 16 floating point params for each processor type
+#define CPRCPARAMS      16       // up to 16 floating point params for each processor type
 
 // processor definition - one for each running instance of a dsp processor
 typedef struct
 {
-	int	type;			// PRC type
+	int             type;            // PRC type
 
-	float	prm[CPRCPARAMS];		// dsp processor parameters - array of floats
+	float           prm[CPRCPARAMS]; // dsp processor parameters - array of floats
 
-	prc_Param_t	pfnParam;		// allocation function - takes ptr to prc, returns ptr to specialized data struct for proc type
-	prc_GetNext_t	pfnGetNext;	// get next function
-	prc_GetNextN_t	pfnGetNextN;	// batch version of get next
-	prc_Free_t	pfnFree;		// free function
-	prc_Mod_t		pfnMod;		// modulation function
+	prc_Param_t     pfnParam;        // allocation function - takes ptr to prc, returns ptr to specialized data struct for proc type
+	prc_GetNext_t   pfnGetNext;      // get next function
+	prc_GetNextN_t  pfnGetNextN;     // batch version of get next
+	prc_Free_t      pfnFree;         // free function
+	prc_Mod_t       pfnMod;          // modulation function
 
-	void		*pdata;		// processor state data - ie: pdly, pflt etc.
+	void            *pdata;          // processor state data - ie: pdly, pflt etc.
 } prc_t;
 
 // processor parameter ranges - for validating parameters during allocation of new processor
 typedef struct prm_rng_s
 {
-	int		iprm;		// parameter index
-	float		lo;		// min value of parameter
-	float		hi;		// max value of parameter
+	int	  iprm; // parameter index
+	float lo;   // min value of parameter
+	float hi;   // max value of parameter
 } prm_rng_t;
 
 void PRC_CheckParams( prc_t *pprc, prm_rng_t *prng );
@@ -546,11 +546,28 @@ typedef struct
 // flt flts
 flt_t	flts[CFLTS];
 
-void FLT_Init( flt_t *pf ) { if( pf ) Q_memset( pf, 0, sizeof( flt_t )); }
-void FLT_InitAll( void ) { int i; for( i = 0; i < CFLTS; i++ ) FLT_Init( &flts[i] ); }
-void FLT_Free( flt_t *pf ) { if( pf ) Q_memset( pf, 0, sizeof( flt_t )); }
-void FLT_FreeAll( void ) { int i; for( i = 0; i < CFLTS; i++ ) FLT_Free( &flts[i] ); }
-
+void FLT_Init( flt_t *pf )
+{
+	if( pf )
+		Q_memset( pf, 0, sizeof( flt_t ));
+}
+void FLT_InitAll( void )
+{
+	int i;
+	for ( i = 0; i < CFLTS; i++ )
+		FLT_Init( &flts[i] );
+}
+void FLT_Free( flt_t *pf )
+{
+	if ( pf )
+		Q_memset( pf, 0, sizeof( flt_t ) );
+}
+void FLT_FreeAll( void )
+{
+	int i;
+	for ( i = 0; i < CFLTS; i++ )
+		FLT_Free( &flts[i] );
+}
 
 // find a free filter from the filter pool
 // initialize filter numerator, denominator b[0..M], a[0..L]
@@ -4267,8 +4284,8 @@ void PRC_CheckParams( prc_t *pprc, prm_rng_t *prng )
 
 #define CPSETS		64		// max number of presets simultaneously active
 
-#define CPSET_PRCS		6		// max # of processors per dsp preset
-#define CPSET_STATES	(CPSET_PRCS+3)	// # of internal states
+#define CPSET_PRCS	 6		// max # of processors per dsp preset
+#define CPSET_STATES (CPSET_PRCS+3)	// # of internal states
 
 // NOTE: do not reorder members of pset_t - psettemplates relies on it!!!
 typedef struct
@@ -4291,80 +4308,80 @@ pset_t psettemplates[] =
 {
 // presets 0-29 map to legacy room_type 0-29
 
-// type		#	proc	 P0	P1	P2	P3	P4    P5	GAIN
-{PSET_SIMPLE,	1, { PRC_NULL1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // OFF	0
-{PSET_SIMPLE,	1, { PRC_RVA18,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.4, WZERO }, // GENERIC	1	// general, low reflective, diffuse room
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA3,	PRC0,	PRC0,	PRC0,	PRC0	},1.4, WZERO }, // METALIC_S	2	// highly reflective, parallel surfaces 
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA4,	PRC0,	PRC0,	PRC0,	PRC0	},1.4, WZERO }, // METALIC_M	3
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA5,	PRC0,	PRC0,	PRC0,	PRC0	},1.4, WZERO }, // METALIC_L	4
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA6,	PRC0,	PRC0,	PRC0,	PRC0	},2.0, WZERO }, // TUNNEL_S	5	// resonant reflective, long surfaces
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA7,	PRC0,	PRC0,	PRC0,	PRC0	},1.8, WZERO }, // TUNNEL_M	6
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA8,	PRC0,	PRC0,	PRC0,	PRC0	},1.7, WZERO }, // TUNNEL_L	7
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA12,PRC0,	PRC0,	PRC0,	PRC0	},1.7, WZERO }, // CHAMBER_S	8	// diffuse, moderately reflective surfaces
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA13,PRC0,	PRC0,	PRC0,	PRC0	},1.7, WZERO }, // CHAMBER_M	9
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA14,PRC0,	PRC0,	PRC0,	PRC0	},1.9, WZERO }, // CHAMBER_L	10
-{PSET_SIMPLE,	1, { PRC_RVA15,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.5, WZERO }, // BRITE_S	11	// diffuse, highly reflective
-{PSET_SIMPLE,	1, { PRC_RVA16,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.6, WZERO }, // BRITE_M	12
-{PSET_SIMPLE,	1, { PRC_RVA17,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.7, WZERO }, // BRITE_L	13
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA22,PRC0,	PRC0,	PRC0,	PRC0	},1.8, WZERO }, // WATER1	14	// underwater fx
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA23,PRC0,	PRC0,	PRC0,	PRC0	},1.8, WZERO }, // WATER2	15
-{PSET_LINEAR,	3, { PRC_DFR1,	PRC_RVA24,PRC_MDY5,	PRC0,	PRC0,	PRC0	},1.8, WZERO }, // WATER3	16
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA19,PRC0,	PRC0,	PRC0,	PRC0	},1.7, WZERO }, // CONCRTE_S	17	// bare, reflective, parallel surfaces
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA20,PRC0,	PRC0,	PRC0,	PRC0	},1.8, WZERO }, // CONCRTE_M	18
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA21,PRC0,	PRC0,	PRC0,	PRC0	},1.9, WZERO }, // CONCRTE_L	19
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_DLY3,	PRC0,	PRC0,	PRC0,	PRC0	},1.7, WZERO }, // OUTSIDE1	20	// echoing, moderately reflective
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_DLY4,	PRC0,	PRC0,	PRC0,	PRC0	},1.7, WZERO }, // OUTSIDE2	21	// echoing, dull
-{PSET_LINEAR,	3, { PRC_DFR1,	PRC_DFR1,	PRC_DLY5,	PRC0,	PRC0,	PRC0	},1.6, WZERO }, // OUTSIDE3	22	// echoing, very dull
-{PSET_LINEAR,	2, { PRC_DLY10,	PRC_RVA10,PRC0,	PRC0,	PRC0,	PRC0	},2.8, WZERO }, // CAVERN_S	23	// large, echoing area
-{PSET_LINEAR,	2, { PRC_DLY11,	PRC_RVA10,PRC0,	PRC0,	PRC0,	PRC0	},2.6, WZERO }, // CAVERN_M	24
-{PSET_LINEAR,	3, { PRC_DFR1,	PRC_DLY12,PRC_RVA11,PRC0,	PRC0,	PRC0	},2.6, WZERO }, // CAVERN_L	25
-{PSET_LINEAR,	2, { PRC_DLY7,	PRC_DFR1,	PRC0,	PRC0,	PRC0,	PRC0	},2.0, WZERO }, // WEIRDO1	26
-{PSET_LINEAR,	2, { PRC_DLY8,	PRC_DFR1,	PRC0,	PRC0,	PRC0,	PRC0	},1.9, WZERO }, // WEIRDO2	27
-{PSET_LINEAR,	2, { PRC_DLY9,	PRC_DFR1,	PRC0,	PRC0,	PRC0,	PRC0	},1.8, WZERO }, // WEIRDO3	28
-{PSET_LINEAR,	2, { PRC_DLY9,	PRC_DFR1,	PRC0,	PRC0,	PRC0,	PRC0	},1.8, WZERO }, // WEIRDO4	29
+// type         #    proc       P0         P1        P2        P3        P4          GAIN
+{PSET_SIMPLE,   1, { PRC_NULL1, PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // OFF          0
+{PSET_SIMPLE,   1, { PRC_RVA18, PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.4,  WZERO }, // GENERIC      1	// general, low reflective, diffuse room
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA3,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.4,  WZERO }, // METALIC_S    2	// highly reflective, parallel surfaces
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA4,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.4,  WZERO }, // METALIC_M    3
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA5,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.4,  WZERO }, // METALIC_L    4
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA6,  PRC0,     PRC0,     PRC0,     PRC0     }, 2.0,  WZERO }, // TUNNEL_S     5	// resonant reflective, long surfaces
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA7,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.8,  WZERO }, // TUNNEL_M     6
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA8,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.7,  WZERO }, // TUNNEL_L     7
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA12, PRC0,     PRC0,     PRC0,     PRC0     }, 1.7,  WZERO }, // CHAMBER_S    8	// diffuse, moderately reflective surfaces
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA13, PRC0,     PRC0,     PRC0,     PRC0     }, 1.7,  WZERO }, // CHAMBER_M    9
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA14, PRC0,     PRC0,     PRC0,     PRC0     }, 1.9,  WZERO }, // CHAMBER_L    10
+{PSET_SIMPLE,   1, { PRC_RVA15, PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.5,  WZERO }, // BRITE_S      11// diffuse, highly reflective
+{PSET_SIMPLE,   1, { PRC_RVA16, PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.6,  WZERO }, // BRITE_M      12
+{PSET_SIMPLE,   1, { PRC_RVA17, PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.7,  WZERO }, // BRITE_L      13
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA22, PRC0,     PRC0,     PRC0,     PRC0     }, 1.8,  WZERO }, // WATER1       14	// underwater fx
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA23, PRC0,     PRC0,     PRC0,     PRC0     }, 1.8,  WZERO }, // WATER2       15
+{PSET_LINEAR,   3, { PRC_DFR1,  PRC_RVA24, PRC_MDY5, PRC0,     PRC0,     PRC0     }, 1.8,  WZERO }, // WATER3       16
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA19, PRC0,     PRC0,     PRC0,     PRC0     }, 1.7,  WZERO }, // CONCRTE_S    17	// bare, reflective, parallel surfaces
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA20, PRC0,     PRC0,     PRC0,     PRC0     }, 1.8,  WZERO }, // CONCRTE_M    18
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA21, PRC0,     PRC0,     PRC0,     PRC0     }, 1.9,  WZERO }, // CONCRTE_L    19
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_DLY3,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.7,  WZERO }, // OUTSIDE1     20	// echoing, moderately reflective
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_DLY4,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.7,  WZERO }, // OUTSIDE2     21	// echoing, dull
+{PSET_LINEAR,   3, { PRC_DFR1,  PRC_DFR1,  PRC_DLY5, PRC0,     PRC0,     PRC0     }, 1.6,  WZERO }, // OUTSIDE3     22	// echoing, very dull
+{PSET_LINEAR,   2, { PRC_DLY10, PRC_RVA10, PRC0,     PRC0,     PRC0,     PRC0     }, 2.8,  WZERO }, // CAVERN_S     23	// large, echoing area
+{PSET_LINEAR,   2, { PRC_DLY11, PRC_RVA10, PRC0,     PRC0,     PRC0,     PRC0     }, 2.6,  WZERO }, // CAVERN_M     24
+{PSET_LINEAR,   3, { PRC_DFR1,  PRC_DLY12, PRC_RVA11,PRC0,     PRC0,     PRC0     }, 2.6,  WZERO }, // CAVERN_L     25
+{PSET_LINEAR,   2, { PRC_DLY7,  PRC_DFR1,  PRC0,     PRC0,     PRC0,     PRC0     }, 2.0,  WZERO }, // WEIRDO1      26
+{PSET_LINEAR,   2, { PRC_DLY8,  PRC_DFR1,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.9,  WZERO }, // WEIRDO2      27
+{PSET_LINEAR,   2, { PRC_DLY9,  PRC_DFR1,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.8,  WZERO }, // WEIRDO3      28
+{PSET_LINEAR,   2, { PRC_DLY9,  PRC_DFR1,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.8,  WZERO }, // WEIRDO4      29
 
 // presets 30-40 are new presets
-{PSET_SIMPLE,	1, { PRC_FLT2,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 30 lowpass - facing away
-{PSET_LINEAR,	2, { PRC_FLT3,	PRC_DLY14,PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 31 lowpass - facing away+80ms delay
-//{PSET_PARALLEL2,2, { PRC_AMP6,	PRC_LFO2,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 32 explosion ring 1
-//{PSET_PARALLEL2,2, { PRC_AMP7,	PRC_LFO3,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 33 explosion ring 2
-//{PSET_PARALLEL2,2, { PRC_AMP8,	PRC_LFO4,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 34 explosion ring 3
-{PSET_LINEAR,	3, { PRC_DFR1,	PRC_DFR1, PRC_FLT3, PRC0,	PRC0,	PRC0	},0.25, WZERO }, // 32 explosion ring 
-{PSET_LINEAR,	3, { PRC_DFR1,	PRC_DFR1, PRC_FLT3,	PRC0,	PRC0,	PRC0	},0.25, WZERO }, // 33 explosion ring 2
-{PSET_LINEAR,	3, { PRC_DFR1,	PRC_DFR1, PRC_FLT3,	PRC0,	PRC0,	PRC0	},0.25, WZERO }, // 34 explosion ring 3
-{PSET_PARALLEL2,2, { PRC_DFR1,	PRC_LFO2,	PRC0,	PRC0,	PRC0,	PRC0	},0.25, WZERO }, // 35 shock muffle 1
-{PSET_PARALLEL2,2, { PRC_DFR1,	PRC_LFO2,	PRC0,	PRC0,	PRC0,	PRC0	},0.25, WZERO }, // 36 shock muffle 2
-{PSET_PARALLEL2,2, { PRC_DFR1,	PRC_LFO2,	PRC0,	PRC0,	PRC0,	PRC0	},0.25, WZERO }, // 37 shock muffle 3
-//{PSET_LINEAR,	3, { PRC_DFR1,	PRC_LFO4, PRC_FLT3,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 35 shock muffle 1
-//{PSET_LINEAR,	3, { PRC_DFR1,	PRC_LFO4, PRC_FLT3,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 36 shock muffle 2
-//{PSET_LINEAR,	3, { PRC_DFR1,	PRC_LFO4, PRC_FLT3,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 37 shock muffle 3
-{PSET_FEEDBACK3,3, { PRC_DLY13,	PRC_PTC4,	PRC_FLT2,	PRC0,	PRC0,	PRC0	},0.25, WZERO }, // 38 fade pitchdown 1
-{PSET_LINEAR,	3, { PRC_AMP3,	PRC_FLT5,	PRC_FLT6,	PRC0,	PRC0,	PRC0	},2.0, WZERO }, // 39 distorted speaker 1
+{PSET_SIMPLE,   1, { PRC_FLT2,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 30 lowpass - facing away
+{PSET_LINEAR,   2, { PRC_FLT3,  PRC_DLY14, PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 31 lowpass - facing away+80ms delay
+//{PSET_PARALLEL2,2,{PRC_AMP6,  PRC_LFO2,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 32 explosion ring 1
+//{PSET_PARALLEL2,2,{PRC_AMP7,  PRC_LFO3,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 33 explosion ring 2
+//{PSET_PARALLEL2,2,{PRC_AMP8,  PRC_LFO4,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 34 explosion ring 3
+{PSET_LINEAR,   3, { PRC_DFR1,  PRC_DFR1,  PRC_FLT3, PRC0,     PRC0,     PRC0     }, 0.25, WZERO }, // 32 explosion ring 2
+{PSET_LINEAR,   3, { PRC_DFR1,  PRC_DFR1,  PRC_FLT3, PRC0,     PRC0,     PRC0     }, 0.25, WZERO }, // 33 explosion ring 2
+{PSET_LINEAR,   3, { PRC_DFR1,  PRC_DFR1,  PRC_FLT3, PRC0,     PRC0,     PRC0     }, 0.25, WZERO }, // 34 explosion ring 3
+{PSET_PARALLEL2,2, { PRC_DFR1,  PRC_LFO2,  PRC0,     PRC0,     PRC0,     PRC0     }, 0.25, WZERO }, // 35 shock muffle 1
+{PSET_PARALLEL2,2, { PRC_DFR1,  PRC_LFO2,  PRC0,     PRC0,     PRC0,     PRC0     }, 0.25, WZERO }, // 36 shock muffle 2
+{PSET_PARALLEL2,2, { PRC_DFR1,  PRC_LFO2,  PRC0,     PRC0,     PRC0,     PRC0     }, 0.25, WZERO }, // 37 shock muffle 3
+//{PSET_LINEAR, 3, { PRC_DFR1,  PRC_LFO4,  PRC_FLT3, PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 35 shock muffle 1
+//{PSET_LINEAR, 3, { PRC_DFR1,  PRC_LFO4,  PRC_FLT3, PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 36 shock muffle 2
+//{PSET_LINEAR, 3, { PRC_DFR1,  PRC_LFO4,  PRC_FLT3, PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 37 shock muffle 3
+{PSET_FEEDBACK3,3, { PRC_DLY13, PRC_PTC4,  PRC_FLT2, PRC0,     PRC0,     PRC0     }, 0.25, WZERO }, // 38 fade pitchdown 1
+{PSET_LINEAR,   3, { PRC_AMP3,  PRC_FLT5,  PRC_FLT6, PRC0,     PRC0,     PRC0     }, 2.0,  WZERO }, // 39 distorted speaker 1
 
 // fade out fade in
 
 // presets 40+ are test presets
-{PSET_SIMPLE,	1, { PRC_NULL1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 39 null
-{PSET_SIMPLE,	1, { PRC_DLY1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 40 delay
-{PSET_SIMPLE,	1, { PRC_RVA1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 41 parallel reverb
-{PSET_SIMPLE,	1, { PRC_DFR1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 42 series diffusor
-{PSET_LINEAR,	2, { PRC_DFR1,	PRC_RVA1,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 43 diff & reverb
-{PSET_SIMPLE,	1, { PRC_DLY2,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 44 lowpass delay
-{PSET_SIMPLE,	1, { PRC_MDY2,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 45 modulating delay
-{PSET_SIMPLE,	1, { PRC_PTC1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 46 pitch shift
-{PSET_SIMPLE,	1, { PRC_PTC2,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 47 pitch shift
-{PSET_SIMPLE,	1, { PRC_FLT1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 48 filter
-{PSET_SIMPLE,	1, { PRC_CRS1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 49 chorus
-{PSET_SIMPLE,	1, { PRC_ENV1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 50 
-{PSET_SIMPLE,	1, { PRC_LFO1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 51 lfo
-{PSET_SIMPLE,	1, { PRC_EFO1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 52
-{PSET_SIMPLE,	1, { PRC_MDY1,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 53 modulating delay
-{PSET_SIMPLE,	1, { PRC_FLT2,	PRC0,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 54 lowpass - facing away
-{PSET_PARALLEL2,	2, { PRC_PTC2,	PRC_PTC1,	PRC0,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 55 ptc1/ptc2
-{PSET_FEEDBACK,	6, { PRC_DLY1,	PRC0,	PRC0,	PRC_PTC1,	PRC_FLT1,	PRC0	},1.0, WZERO }, // 56 dly/ptc1
-{PSET_MOD,	4, { PRC_EFO1,	PRC0,	PRC_PTC1,	PRC0,	PRC0,	PRC0	},1.0, WZERO }, // 57 efo mod ptc
-{PSET_LINEAR,	3, { PRC_DLY1,	PRC_RVA1,	PRC_CRS1,	PRC0,	PRC0,	PRC0	},1.0, WZERO }  // 58 dly/rvb/crs
-};				
+{PSET_SIMPLE,   1, { PRC_NULL1, PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 39 null
+{PSET_SIMPLE,   1, { PRC_DLY1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 40 delay
+{PSET_SIMPLE,   1, { PRC_RVA1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 41 parallel reverb
+{PSET_SIMPLE,   1, { PRC_DFR1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 42 series diffusor
+{PSET_LINEAR,   2, { PRC_DFR1,  PRC_RVA1,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 43 diff & reverb
+{PSET_SIMPLE,   1, { PRC_DLY2,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 44 lowpass delay
+{PSET_SIMPLE,   1, { PRC_MDY2,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 45 modulating delay
+{PSET_SIMPLE,   1, { PRC_PTC1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 46 pitch shift
+{PSET_SIMPLE,   1, { PRC_PTC2,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 47 pitch shift
+{PSET_SIMPLE,   1, { PRC_FLT1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 48 filter
+{PSET_SIMPLE,   1, { PRC_CRS1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 49 chorus
+{PSET_SIMPLE,   1, { PRC_ENV1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 50
+{PSET_SIMPLE,   1, { PRC_LFO1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 51 lfo
+{PSET_SIMPLE,   1, { PRC_EFO1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 52
+{PSET_SIMPLE,   1, { PRC_MDY1,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 53 modulating delay
+{PSET_SIMPLE,   1, { PRC_FLT2,  PRC0,      PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 54 lowpass - facing away
+{PSET_PARALLEL2,2, { PRC_PTC2,  PRC_PTC1,  PRC0,     PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 55 ptc1/ptc2
+{PSET_FEEDBACK, 6, { PRC_DLY1,  PRC0,      PRC0,     PRC_PTC1, PRC_FLT1, PRC0     }, 1.0,  WZERO }, // 56 dly/ptc1
+{PSET_MOD,      4, { PRC_EFO1,  PRC0,      PRC_PTC1, PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }, // 57 efo mod ptc
+{PSET_LINEAR,   3, { PRC_DLY1,  PRC_RVA1,  PRC_CRS1, PRC0,     PRC0,     PRC0     }, 1.0,  WZERO }  // 58 dly/rvb/crs
+};
 
 
 // number of presets currently defined above
@@ -4401,7 +4418,12 @@ void PSET_Free( pset_t *ppset )
 	}
 }
 
-void PSET_FreeAll() { int i; for( i = 0; i < CPSETS; i++ ) PSET_Free( &psets[i] ); };
+void PSET_FreeAll()
+{
+	int i;
+	for( i = 0; i < CPSETS; i++ )
+		PSET_Free( &psets[i] );
+};
 
 // return preset struct, given index into preset template array
 // NOTE: should not ever be more than 2 or 3 of these active simultaneously
@@ -4812,37 +4834,37 @@ _inline int PSET_GetNext( pset_t *ppset, int x )
 
 // Dsp presets
 
-convar_t	*dsp_room;	// room dsp preset - sounds more distant from player (1ch)
+convar_t  *dsp_room;	// room dsp preset - sounds more distant from player (1ch)
 
-int	ipset_room_prev;
+int       ipset_room_prev;
 
 // legacy room_type support
-convar_t	*dsp_room_type;
-int	ipset_room_typeprev;
+convar_t  *dsp_room_type;
+int       ipset_room_typeprev;
 
 
 // DSP processors
 
-int	idsp_room;
-convar_t	*dsp_stereo;	// set to 1 for true stereo processing.  2x perf hit.
+int	      idsp_room;
+convar_t  *dsp_stereo;	// set to 1 for true stereo processing.  2x perf hit.
 
 // DSP preset executor
-#define CDSPS		32	// max number dsp executors active
-#define DSPCHANMAX		4	// max number of channels dsp can process (allocs a separte processor for each chan)
+#define CDSPS       32  // max number dsp executors active
+#define DSPCHANMAX  4   // max number of channels dsp can process (allocs a separte processor for each chan)
 
 typedef struct
 {
-	qboolean	fused;
-	int	cchan;			// 1-4 channels, ie: mono, FrontLeft, FrontRight, RearLeft, RearRight
-	pset_t	*ppset[DSPCHANMAX];		// current preset (1-4 channels)
-	int	ipset;			// current ipreset
-	pset_t	*ppsetprev[DSPCHANMAX];	// previous preset (1-4 channels)
-	int	ipsetprev;		// previous ipreset
-	float	xfade;			// crossfade time between previous preset and new
-	rmp_t	xramp;			// crossfade ramp
+	qboolean  fused;
+	int       cchan;                  // 1-4 channels, ie: mono, FrontLeft, FrontRight, RearLeft, RearRight
+	pset_t    *ppset[DSPCHANMAX];     // current preset (1-4 channels)
+	int       ipset;                  // current ipreset
+	pset_t    *ppsetprev[DSPCHANMAX]; // previous preset (1-4 channels)
+	int       ipsetprev;              // previous ipreset
+	float     xfade;                  // crossfade time between previous preset and new
+	rmp_t     xramp;                  // crossfade ramp
 } dsp_t;
 
-dsp_t	dsps[CDSPS];
+dsp_t     dsps[CDSPS];
 
 void DSP_Init( int idsp ) 
 { 
