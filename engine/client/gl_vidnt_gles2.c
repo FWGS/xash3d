@@ -192,6 +192,7 @@ static dllfunc_t opengl_es20funcs[] =
 { "glGetProgramInfoLog"			, (void **)&pglGetProgramInfoLog },
 { "glGetShaderiv"				, (void **)&pglGetShaderiv },
 { "glDeleteShader"				, (void **)&pglDeleteShader },
+{ "glHint"						, (void **)&pglHint },
 { NULL, NULL }
 };
 
@@ -578,8 +579,8 @@ void GL_InitExtensions( void )
 		}
 	}
 */
-	//GL_CheckExtension( "GL_SGIS_generate_mipmap", NULL, "gl_sgis_generate_mipmaps", GL_SGIS_MIPMAPS_EXT );
-	GL_SetExtension( GL_SGIS_MIPMAPS_EXT, false );
+	GL_CheckExtension( "GL_SGIS_generate_mipmap", NULL, "gl_sgis_generate_mipmaps", GL_SGIS_MIPMAPS_EXT );
+	//GL_SetExtension( GL_SGIS_MIPMAPS_EXT, false );
 
 	// hardware cubemaps
 	//GL_CheckExtension( "GL_ARB_texture_cube_map", NULL, "gl_texture_cubemap", GL_TEXTURECUBEMAP_EXT );
@@ -597,10 +598,10 @@ void GL_InitExtensions( void )
 	//GL_CheckExtension( "GL_EXT_point_parameters", pointparametersfunc, NULL, GL_EXT_POINTPARAMETERS );
 	GL_SetExtension( GL_EXT_POINTPARAMETERS, false );
 
-	//GL_CheckExtension( "GL_ARB_texture_non_power_of_two", NULL, "gl_texture_npot", GL_ARB_TEXTURE_NPOT_EXT );
+	GL_CheckExtension( "GL_ARB_texture_non_power_of_two", NULL, "gl_texture_npot", GL_ARB_TEXTURE_NPOT_EXT );
 	//GL_CheckExtension( "GL_ARB_texture_compression", texturecompressionfuncs, "gl_dds_hardware_support", GL_TEXTURE_COMPRESSION_EXT );
 	//GL_CheckExtension( "GL_EXT_compiled_vertex_array", compiledvertexarrayfuncs, "gl_cva_support", GL_CUSTOM_VERTEX_ARRAY_EXT );
-	GL_SetExtension( GL_ARB_TEXTURE_NPOT_EXT, false );
+	//GL_SetExtension( GL_ARB_TEXTURE_NPOT_EXT, false );
 	GL_SetExtension( GL_TEXTURE_COMPRESSION_EXT, false );
 	GL_SetExtension( GL_CUSTOM_VERTEX_ARRAY_EXT, false );
 

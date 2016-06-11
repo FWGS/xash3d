@@ -1086,7 +1086,7 @@ void R_DrawSpriteModel( cl_entity_t *e )
 	if( psprite->facecull == SPR_CULL_NONE )
 		GL_Cull( GL_NONE );
 		
-	R_UseParticlesProgram();
+	R_UseProgram(PROGRAM_PARTICLES);
 
 	if( oldframe == frame )
 	{

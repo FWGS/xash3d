@@ -976,7 +976,7 @@ void DrawSingleDecal( decal_t *pDecal, msurface_t *fa )
 
 	pglEnd();*/
 
-	R_UseWorldProgram();
+	R_UseProgram(PROGRAM_WORLD);
 
 	pglEnableVertexAttribArray( 0 );
 	pglEnableVertexAttribArray( 1 );

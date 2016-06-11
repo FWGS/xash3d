@@ -256,7 +256,7 @@ void R_Set2DMode( qboolean enable )
 		//pglOrtho( 0, glState.width, glState.height, 0, -99999, 99999 );
 		//pglMatrixMode( GL_MODELVIEW );
 		//pglLoadIdentity();
-		R_Use2DProgram();
+		R_UseProgram(PROGRAM_2D);
 		R_ScreenUniform(1.0f/glState.width*2.0f, 1.0f/glState.height*2.0f);
 
 		GL_Cull( 0 );

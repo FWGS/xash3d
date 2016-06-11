@@ -2,19 +2,27 @@
 #include "common.h"
 #include "gl_local.h"
 
-GLuint glsl_CurProgramId = 0;
-GLuint glsl_2DprogramId = 0;
-GLuint glsl_WorldProgramId = 0;
-GLuint glsl_ParticlesProgramId = 0;
-GLuint glsl_BeamProgramId = 0;
-GLuint glsl_StudioProgramId = 0;
-GLint u_color = -1;
+typedef struct program_s
+{
+	GLuint id;
+	GLint u_mvMtx;
+	GLint u_projMtx;
+	GLint u_color;
+} program_t;
+
+static program_t *glsl_CurProgram=NULL;
+static program_t glslpr_2D={0,-1,-1,-1};
+static program_t glslpr_WorldNormal={0,-1,-1,-1};
+static program_t glslpr_WorldAlphatest={0,-1,-1,-1};
+static program_t glslpr_WorldTransColor={0,-1,-1,-1};
+static program_t glslpr_WorldTransTexture={0,-1,-1,-1};
+static program_t glslpr_Particles={0,-1,-1,-1};
+static program_t glslpr_Beam={0,-1,-1,-1};
+static program_t glslpr_Studio={0,-1,-1,-1};
 GLint u_screen = -1;
-GLint u_colorPart = -1;
-GLint u_mvMtx = -1;
-GLint u_projMtx = -1;
-GLint u_mvMtxPart = -1;
-GLint u_projMtxPart = -1;
+
+int lastRendermode=kRenderNormal;
+static vec4_t g_lastColor = {0.0f,0.0f,0.0f,0.0f};
 
 GLuint R_CreateShader(const char *src, GLint type)
 {
@@ -58,170 +66,118 @@ GLuint R_CreateProgram(char *vert, char *frag)
 
 void R_InitShaders()
 {
-	char Vert2DS[]=
-	"attribute vec4 a_position;\n"\
-	"attribute vec2 a_uv;\n"\
-	"varying vec2 v_uv;\n"\
-	"uniform vec2 u_screen;\n"\
-	"void main(){\n"\
-	"	gl_Position = vec4((a_position.xy*u_screen) - 1.0, 0.0, 1.0);\n"\
-	"	gl_Position.y *= -1.0;\n"\
-	"	v_uv = a_uv;\n"\
-	"}";
-	char Frag2DS[]=
-	"varying vec2 v_uv;\n"\
-	"uniform sampler2D u_tex;\n"\
-	"uniform vec4 u_color;\n"\
-	"void main(){\n"\
-	"	gl_FragColor = texture2D(u_tex,v_uv)*u_color;\n"\
-	"}";
+#include "gl_shader_strings.h"
 
-	char WorldVertS[] =
-	"attribute vec4 a_position;\n"\
-	"attribute vec2 a_uv;\n"\
-	"varying vec2 v_uv;\n"\
-	"uniform mat4 u_mvMtx;\n"\
-	"uniform mat4 u_projMtx;\n"\
-	"void main(){\n"\
-	"	gl_Position = u_projMtx*u_mvMtx*a_position;\n"\
-	"	v_uv = a_uv;\n"\
-	"}";
-	char WorldFragS[] =
-	"varying vec2 v_uv;\n"\
-	"uniform sampler2D u_tex;\n"\
-	"void main(){\n"\
-	"	gl_FragColor = texture2D(u_tex,v_uv);\n"\
-	"}";
+	glslpr_2D.id = R_CreateProgram(Vert2DS,Frag2DS);
+	glslpr_2D.u_color = pglGetUniformLocation(glslpr_2D.id,"u_color");
+	u_screen = pglGetUniformLocation(glslpr_2D.id,"u_screen");
 
-	char ParticlesVertS[] =
-	"attribute vec4 a_position;\n"\
-	"attribute vec2 a_uv;\n"\
-	"varying vec2 v_uv;\n"\
-	"uniform mat4 u_mvMtx;\n"\
-	"uniform mat4 u_projMtx;\n"\
-	"void main(){\n"\
-	"	gl_Position = u_projMtx*u_mvMtx*a_position;\n"\
-	"	v_uv = a_uv;\n"\
-	"}";
-	char ParticlesFragS[] =
-	"varying vec2 v_uv;\n"\
-	"uniform sampler2D u_tex;\n"\
-	"uniform vec4 u_color;\n"\
-	"void main(){\n"\
-	"	vec4 tex = texture2D(u_tex,v_uv);\n"\
-	"	if(tex.a == 0.0)\n"\
-	"		discard;\n"\
-	"	gl_FragColor = tex*u_color;\n"\
-	"}";
+	glslpr_WorldNormal.id = R_CreateProgram(WorldNormalVertS,WorldNormalFragS);
+	glslpr_WorldNormal.u_mvMtx = pglGetUniformLocation(glslpr_WorldNormal.id,"u_mvMtx");
+	glslpr_WorldNormal.u_projMtx = pglGetUniformLocation(glslpr_WorldNormal.id,"u_projMtx");
 
-	char BeamVertS[] =
-	"attribute vec4 a_position;\n"\
-	"attribute vec2 a_uv;\n"\
-	"attribute vec4 a_color;\n"\
-	"varying vec2 v_uv;\n"\
-	"varying vec4 v_color;\n"\
-	"uniform mat4 u_mvMtx;\n"\
-	"uniform mat4 u_projMtx;\n"\
-	"void main(){\n"\
-	"	gl_Position = u_projMtx*u_mvMtx*a_position;\n"\
-	"	v_color = a_color;\n"\
-	"	v_uv = a_uv;\n"\
-	"}";
-	char BeamFragS[]=
-	"varying vec2 v_uv;\n"\
-	"varying vec4 v_color;\n"\
-	"uniform sampler2D u_tex;\n"\
-	"void main(){\n"\
-	"	gl_FragColor = texture2D(u_tex,v_uv)*v_color;\n"\
-	"}";
+	glslpr_WorldAlphatest.id = R_CreateProgram(WorldNormalVertS,WorldAlphatestFragS);
+	glslpr_WorldAlphatest.u_mvMtx = pglGetUniformLocation(glslpr_WorldAlphatest.id,"u_mvMtx");
+	glslpr_WorldAlphatest.u_projMtx = pglGetUniformLocation(glslpr_WorldAlphatest.id,"u_projMtx");
 
-	char StudioVertS[] =
-	"attribute vec4 a_position;\n"\
-	"attribute vec2 a_uv;\n"\
-	"attribute vec4 a_color;\n"\
-	"varying vec2 v_uv;\n"\
-	"varying vec4 v_color;\n"\
-	"uniform mat4 u_mvMtx;\n"\
-	"uniform mat4 u_projMtx;\n"\
-	"void main(){\n"\
-	"	gl_Position = u_projMtx*u_mvMtx*a_position;\n"\
-	"	v_uv = a_uv;\n"\
-	"	v_color = a_color;\n"\
-	"}";
-	char StudioFragS[] =
-	"varying vec2 v_uv;\n"\
-	"varying vec4 v_color;\n"\
-	"uniform sampler2D u_tex;\n"\
-	"void main(){\n"\
-	"	gl_FragColor = texture2D(u_tex,v_uv)*v_color;\n"\
-	"}";
+	glslpr_WorldTransColor.id = R_CreateProgram(WorldNormalVertS,WorldTransColorFragS);
+	glslpr_WorldTransColor.u_mvMtx = pglGetUniformLocation(glslpr_WorldTransColor.id,"u_mvMtx");
+	glslpr_WorldTransColor.u_projMtx = pglGetUniformLocation(glslpr_WorldTransColor.id,"u_projMtx");
+	glslpr_WorldTransColor.u_color = pglGetUniformLocation(glslpr_WorldTransColor.id,"u_color");
 
-	glsl_2DprogramId = R_CreateProgram(Vert2DS,Frag2DS);
-	u_color = pglGetUniformLocation(glsl_2DprogramId,"u_color");
-	u_screen = pglGetUniformLocation(glsl_2DprogramId,"u_screen");
+	glslpr_WorldTransTexture.id = R_CreateProgram(WorldNormalVertS,WorldTransTextureFragS);
+	glslpr_WorldTransTexture.u_mvMtx = pglGetUniformLocation(glslpr_WorldTransTexture.id,"u_mvMtx");
+	glslpr_WorldTransTexture.u_projMtx = pglGetUniformLocation(glslpr_WorldTransTexture.id,"u_projMtx");
+	glslpr_WorldTransTexture.u_color = pglGetUniformLocation(glslpr_WorldTransTexture.id,"u_color");
 
-	glsl_WorldProgramId = R_CreateProgram(WorldVertS,WorldFragS);
-	u_mvMtx = pglGetUniformLocation(glsl_WorldProgramId,"u_mvMtx");
-	u_projMtx = pglGetUniformLocation(glsl_WorldProgramId,"u_projMtx");
+	glslpr_Beam.id = R_CreateProgram(BeamVertS,BeamFragS);
+	glslpr_Beam.u_mvMtx = pglGetUniformLocation(glslpr_Beam.id,"u_mvMtx");
+	glslpr_Beam.u_projMtx = pglGetUniformLocation(glslpr_Beam.id,"u_projMtx");
 
-	glsl_BeamProgramId = R_CreateProgram(BeamVertS,BeamFragS);
+	glslpr_Particles.id = R_CreateProgram(ParticlesVertS,ParticlesFragS);
+	glslpr_Particles.u_mvMtx = pglGetUniformLocation(glslpr_Particles.id,"u_mvMtx");
+	glslpr_Particles.u_projMtx = pglGetUniformLocation(glslpr_Particles.id,"u_projMtx");
+	glslpr_Particles.u_color = pglGetUniformLocation(glslpr_Particles.id,"u_color");
 
-	glsl_ParticlesProgramId = R_CreateProgram(ParticlesVertS,ParticlesFragS);
-	u_mvMtxPart = pglGetUniformLocation(glsl_ParticlesProgramId,"u_mvMtx");
-	u_projMtxPart = pglGetUniformLocation(glsl_ParticlesProgramId,"u_projMtx");
-	u_colorPart = pglGetUniformLocation(glsl_ParticlesProgramId,"u_color");
-	if(u_color != u_colorPart)
-		MsgDev( D_ERROR, "u_color!=u_colorPart %i %i\n",u_color,u_colorPart);
-
-	glsl_StudioProgramId = R_CreateProgram(StudioVertS, StudioFragS);
+	glslpr_Studio.id = R_CreateProgram(StudioVertS, StudioFragS);
+	glslpr_Studio.u_mvMtx = pglGetUniformLocation(glslpr_Studio.id,"u_mvMtx");
+	glslpr_Studio.u_projMtx = pglGetUniformLocation(glslpr_Studio.id,"u_projMtx");
 
 	MsgDev( D_INFO, "Init shaders\n" );
 }
 
-void R_Use2DProgram()
+void R_ShaderSetRendermode(int m)
 {
-	glsl_CurProgramId = glsl_2DprogramId;
-	pglUseProgram(glsl_2DprogramId);
+	lastRendermode = m;
 }
 
-void R_UseWorldProgram()
+void R_UseProgram(progtype_t type)
 {
-	glsl_CurProgramId = glsl_WorldProgramId;
-	pglUseProgram(glsl_WorldProgramId);
-}
-
-void R_UseParticlesProgram()
-{
-	glsl_CurProgramId = glsl_ParticlesProgramId;
-	pglUseProgram(glsl_ParticlesProgramId);
-}
-
-void R_UseBeamProgram()
-{
-	glsl_CurProgramId = glsl_BeamProgramId;
-	pglUseProgram(glsl_BeamProgramId);
-}
-
-void R_UseStudioProgram()
-{
-	glsl_CurProgramId = glsl_StudioProgramId;
-	pglUseProgram(glsl_StudioProgramId);
+	switch (type)
+	{
+	case PROGRAM_2D:
+		glsl_CurProgram = &glslpr_2D;
+		pglUseProgram(glsl_CurProgram->id);
+		pglUniform4f(glsl_CurProgram->u_color,g_lastColor[0],g_lastColor[1],g_lastColor[2],g_lastColor[3]);
+		break;
+	case PROGRAM_WORLD:
+		if(lastRendermode == kRenderTransAlpha )
+		{
+			glsl_CurProgram = &glslpr_WorldAlphatest;
+			pglUseProgram(glsl_CurProgram->id);
+		}
+		else if(lastRendermode == kRenderTransColor)
+		{
+			glsl_CurProgram = &glslpr_WorldTransColor;
+			pglUseProgram(glsl_CurProgram->id);
+			pglUniform4f(glsl_CurProgram->u_color,g_lastColor[0],g_lastColor[1],g_lastColor[2],g_lastColor[3]);
+		}
+		else if(lastRendermode == kRenderTransTexture)
+		{
+			glsl_CurProgram = &glslpr_WorldTransTexture;
+			pglUseProgram(glsl_CurProgram->id);
+			pglUniform4f(glsl_CurProgram->u_color,g_lastColor[0],g_lastColor[1],g_lastColor[2],g_lastColor[3]);
+		}
+		else
+		{
+			glsl_CurProgram = &glslpr_WorldNormal;
+			pglUseProgram(glsl_CurProgram->id);
+		}
+		break;
+	case PROGRAM_PARTICLES:
+		glsl_CurProgram = &glslpr_Particles;
+		pglUseProgram(glsl_CurProgram->id);
+		pglUniform4f(glsl_CurProgram->u_color,g_lastColor[0],g_lastColor[1],g_lastColor[2],g_lastColor[3]);
+		break;
+	case PROGRAM_BEAM:
+		glsl_CurProgram = &glslpr_Beam;
+		pglUseProgram(glsl_CurProgram->id);
+		break;
+	case PROGRAM_STUDIO:
+		glsl_CurProgram = &glslpr_Studio;
+		pglUseProgram(glsl_CurProgram->id);
+		break;
+	}
 }
 
 void R_ColorUniform(GLfloat r,GLfloat g, GLfloat b, GLfloat a)
 {
-	if(!glsl_CurProgramId)
+	g_lastColor[0] = r;
+	g_lastColor[1] = g;
+	g_lastColor[2] = b;
+	g_lastColor[3] = a;
+
+	if(!glsl_CurProgram)
 		return;
 
-	if(glsl_CurProgramId==glsl_ParticlesProgramId)
-		pglUniform4f(u_colorPart,r,g,b,a);
-	else
-		pglUniform4f(u_color,r,g,b,a);
+	if(glsl_CurProgram==&glslpr_Particles || glsl_CurProgram==&glslpr_WorldTransTexture || glsl_CurProgram==&glslpr_WorldTransColor || glsl_CurProgram==&glslpr_2D)
+		pglUniform4f(glsl_CurProgram->u_color,r,g,b,a);
+
 }
 
 void R_ScreenUniform(GLfloat w, GLfloat h)
 {
-	if(!glsl_CurProgramId)
+	if(!glsl_CurProgram)
 		return;
 
 	pglUniform2f(u_screen,w,h);
@@ -232,14 +188,20 @@ void R_ProjMtxUniform(const matrix4x4 source)
 	GLfloat	dest[16];
 
 	Matrix4x4_ToArrayFloatGL( source, dest );
-	R_UseWorldProgram();
-	pglUniformMatrix4fv(u_projMtx,1,GL_FALSE,dest);
-	R_UseBeamProgram();
-	pglUniformMatrix4fv(u_projMtx,1,GL_FALSE,dest);
-	R_UseParticlesProgram();
-	pglUniformMatrix4fv(u_projMtxPart,1,GL_FALSE,dest);
-	R_UseStudioProgram();
-	pglUniformMatrix4fv(u_projMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldNormal.id);
+	pglUniformMatrix4fv(glslpr_WorldNormal.u_projMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldAlphatest.id);
+	pglUniformMatrix4fv(glslpr_WorldAlphatest.u_projMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldTransColor.id);
+	pglUniformMatrix4fv(glslpr_WorldTransColor.u_projMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldTransTexture.id);
+	pglUniformMatrix4fv(glslpr_WorldTransTexture.u_projMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_Beam.id);
+	pglUniformMatrix4fv(glslpr_Beam.u_projMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_Particles.id);
+	pglUniformMatrix4fv(glslpr_Particles.u_projMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_Studio.id);
+	pglUniformMatrix4fv(glslpr_Studio.u_projMtx,1,GL_FALSE,dest);
 }
 
 void R_ModelViewMtxUniform(const matrix4x4 source)
@@ -247,12 +209,18 @@ void R_ModelViewMtxUniform(const matrix4x4 source)
 	GLfloat	dest[16];
 
 	Matrix4x4_ToArrayFloatGL( source, dest );
-	R_UseWorldProgram();
-	pglUniformMatrix4fv(u_mvMtx,1,GL_FALSE,dest);
-	R_UseBeamProgram();
-	pglUniformMatrix4fv(u_mvMtx,1,GL_FALSE,dest);
-	R_UseParticlesProgram();
-	pglUniformMatrix4fv(u_mvMtxPart,1,GL_FALSE,dest);
-	R_UseStudioProgram();
-	pglUniformMatrix4fv(u_mvMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldNormal.id);
+	pglUniformMatrix4fv(glslpr_WorldNormal.u_mvMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldAlphatest.id);
+	pglUniformMatrix4fv(glslpr_WorldAlphatest.u_mvMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldTransColor.id);
+	pglUniformMatrix4fv(glslpr_WorldTransColor.u_mvMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldTransTexture.id);
+	pglUniformMatrix4fv(glslpr_WorldTransTexture.u_mvMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_Beam.id);
+	pglUniformMatrix4fv(glslpr_Beam.u_mvMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_Particles.id);
+	pglUniformMatrix4fv(glslpr_Particles.u_mvMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_Studio.id);
+	pglUniformMatrix4fv(glslpr_Studio.u_mvMtx,1,GL_FALSE,dest);
 }

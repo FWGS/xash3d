@@ -385,6 +385,8 @@ void GL_SetRenderMode( int mode )
 {
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
+	R_ShaderSetRendermode(mode);
+
 	switch( mode )
 	{
 	case kRenderNormal:

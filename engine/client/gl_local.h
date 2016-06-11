@@ -423,12 +423,22 @@ void R_DrawStudioModel( cl_entity_t *e );
 //
 // gl_shader.c
 //
+typedef enum progtype_e
+{
+	PROGRAM_2D,
+	PROGRAM_WORLD,
+	PROGRAM_PARTICLES,
+	PROGRAM_BEAM,
+	PROGRAM_STUDIO
+} progtype_t;
+
 void R_InitShaders();
-void R_Use2DProgram();
-void R_UseWorldProgram();
+void R_ShaderSetRendermode(int m);
+void R_UseProgram(progtype_t type);
+/*void R_UseWorldProgram();
 void R_UseParticlesProgram();
 void R_UseBeamProgram();
-void R_UseStudioProgram();
+void R_UseStudioProgram();*/
 void R_ColorUniform(GLfloat r,GLfloat g, GLfloat b, GLfloat a);
 void R_ScreenUniform(GLfloat w, GLfloat h);
 void R_ModelViewMtxUniform(const matrix4x4 source);

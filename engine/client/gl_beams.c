@@ -424,7 +424,7 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 		noiseIndex += noiseStep;
 	}
 
-	R_UseBeamProgram();
+	R_UseProgram(PROGRAM_BEAM);
 
 	pglEnableVertexAttribArray(0);
 	pglEnableVertexAttribArray(1);
@@ -958,7 +958,7 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 		pHead = pHead->next;
 	}
 
-	R_UseBeamProgram();
+	R_UseProgram(PROGRAM_BEAM);
 
 	pglEnableVertexAttribArray(0);
 	pglEnableVertexAttribArray(1);

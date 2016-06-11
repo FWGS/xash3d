@@ -1073,6 +1073,9 @@ R_DrawFog
 */
 void R_DrawFog( void )
 {
+#if defined XASH_GLES2_RENDER
+	return;
+#endif
 	if( !RI.fogEnabled || RI.refdef.onlyClientDraw )
 		return;
 

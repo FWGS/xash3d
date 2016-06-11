@@ -240,11 +240,17 @@ void GL_SetupFogColorForSurfaces( void )
 	fogColor[0] = pow( RI.fogColor[0] / div, ( 1.0f / factor ));
 	fogColor[1] = pow( RI.fogColor[1] / div, ( 1.0f / factor ));
 	fogColor[2] = pow( RI.fogColor[2] / div, ( 1.0f / factor ));
+#if defined XASH_GLES2_RENDER
+	return;
+#endif
 	pglFogfv( GL_FOG_COLOR, fogColor );
 }
 
 void GL_ResetFogColor( void )
 {
+#if defined XASH_GLES2_RENDER
+	return;
+#endif
 	// restore fog here
 	if(( RI.fogEnabled || RI.fogCustom ) && !RI.refdef.onlyClientDraw )
 		pglFogfv( GL_FOG_COLOR, RI.fogColor );
@@ -762,7 +768,7 @@ void DrawGLPoly( glpoly_t *p, float xScale, float yScale )
 	if( xScale != 0.0f && yScale != 0.0f )
 		hasScale = true;
 
-	R_UseWorldProgram();
+	R_UseProgram(PROGRAM_WORLD);
 
 	pglEnableVertexAttribArray(0);
 	pglEnableVertexAttribArray(1);
@@ -814,7 +820,7 @@ void DrawGLPolyChain( glpoly_t *p, float soffset, float toffset )
 		float	*v;
 		int	i;
 
-		R_UseWorldProgram();
+		R_UseProgram(PROGRAM_WORLD);
 
 		pglEnableVertexAttribArray(0);
 		pglEnableVertexAttribArray(1);

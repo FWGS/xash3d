@@ -2055,7 +2055,7 @@ static void R_StudioDrawMesh(short *ptricmds, float s, float t )
 		//pglEnd();
 	}
 
-	R_UseStudioProgram();
+	R_UseProgram(PROGRAM_STUDIO);
 
 	pglEnableVertexAttribArray(0);
 	pglEnableVertexAttribArray(1);

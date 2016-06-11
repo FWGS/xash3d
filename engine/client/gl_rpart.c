@@ -376,7 +376,7 @@ static void CL_BulletTracerDraw( particle_t *p, float frametime )
 	VectorMA( vecEnd, width, cross, tmp[2] );
 	VectorMA( vecEnd, -width, cross, tmp[3] );
 
-	R_UseParticlesProgram();
+	R_UseProgram(PROGRAM_PARTICLES);
 
 	pglEnableVertexAttribArray(0);
 	pglEnableVertexAttribArray(1);
@@ -506,7 +506,7 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	p->color = bound( 0, p->color, 255 );
 	VectorSet( color, clgame.palette[p->color][0], clgame.palette[p->color][1], clgame.palette[p->color][2] );
 
-	R_UseParticlesProgram();
+	R_UseProgram(PROGRAM_PARTICLES);
 
 	GL_SetRenderMode( kRenderTransTexture );
 	pglColor4ub( color[0], color[1], color[2], alpha );
@@ -1425,7 +1425,7 @@ void CL_DrawTracer( vec3_t start, vec3_t delta, float width, rgb_t color, int al
 
 	GL_SetRenderMode( kRenderTransTexture );
 
-	R_UseParticlesProgram();
+	R_UseProgram(PROGRAM_PARTICLES);
 
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
