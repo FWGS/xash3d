@@ -55,6 +55,7 @@ convar_t	*cl_trace_events;
 convar_t	*cl_trace_stufftext;
 convar_t	*cl_charset;
 convar_t	*cl_sprite_nearest;
+convar_t	*cl_updaterate;
 convar_t	*hud_scale;
 convar_t	*cl_maxpacket;
 //
@@ -317,6 +318,7 @@ void CL_CreateCmd( void )
 
 	// build list of all solid entities per next frame (exclude clients)
 	CL_SetSolidEntities ();
+	CL_PushPMStates();
 	CL_SetSolidPlayers ( cl.playernum );
 	VectorCopy( cl.refdef.cl_viewangles, angles );
 	VectorCopy( cl.frame.client.origin, cl.data.origin );
@@ -363,7 +365,9 @@ void CL_CreateCmd( void )
 	pcmd->sendsize = 0;
 
 	active = ( cls.state == ca_active && !cl.refdef.paused && !cls.demoplayback );
+
 	clgame.dllFuncs.CL_CreateMove( cl.time - cl.oldtime, &pcmd->cmd, active );
+	CL_PopPMStates();
 
 	// after command generated in client,
 	// add motion events from engine controls
@@ -1711,10 +1715,10 @@ void CL_InitLocal( void )
 	cl_lightstyle_lerping = Cvar_Get( "cl_lightstyle_lerping", "0", CVAR_ARCHIVE, "enable animated light lerping (perfomance option)" );
 	cl_sprite_nearest = Cvar_Get( "cl_sprite_nearest", "0", CVAR_ARCHIVE, "disable texture filtering on sprites" );
 	cl_showerror = Cvar_Get( "cl_showerror", "0", CVAR_ARCHIVE, "show prediction error" );
+	cl_updaterate = Cvar_Get( "cl_updaterate", "60", CVAR_USERINFO|CVAR_ARCHIVE, "refresh rate of server messages" );
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
-	Cvar_Get( "cl_updaterate", "60", CVAR_USERINFO|CVAR_ARCHIVE, "refresh rate of server messages" );
 	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicates that background map is running" );
 
 	// these two added to shut up CS 1.5 about 'unknown' commands

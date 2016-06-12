@@ -22,8 +22,6 @@ GNU General Public License for more details.
 #include "studio.h"
 #include "library.h" // Loader_GetDllHandle( )
 
-void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient );
-
 void CL_ClearPhysEnts( void )
 {
 	clgame.pmove->numtouch = 0;
@@ -31,6 +29,112 @@ void CL_ClearPhysEnts( void )
 	clgame.pmove->nummoveent = 0;
 	clgame.pmove->numphysent = 0;
 }
+
+/*
+=============
+CL_PushPMStates
+
+=============
+*/
+void CL_PushPMStates( void )
+{
+	if( clgame.pushed )
+	{
+		MsgDev( D_WARN, "CL_PushPMStates called with pushed stack\n");
+	}
+	else
+	{
+		clgame.oldphyscount = clgame.pmove->numphysent;
+		clgame.oldviscount  = clgame.pmove->numvisent;
+		clgame.pushed = true;
+	}
+
+}
+
+/*
+=============
+CL_PopPMStates
+
+=============
+*/
+void CL_PopPMStates( void )
+{
+	if( clgame.pushed )
+	{
+		clgame.pmove->numphysent = clgame.oldphyscount;
+		clgame.pmove->numvisent  = clgame.oldviscount;
+		clgame.pushed = false;
+	}
+	else
+	{
+		MsgDev( D_WARN, "CL_PopPMStates called without stack\n");
+	}
+}
+
+/*
+=============
+CL_SetUpPlayerPrediction
+
+=============
+*/
+void CL_SetUpPlayerPrediction( int dopred, int includeLocal )
+{
+#if 0
+	int i;
+	entity_state_t     *state;
+	predicted_player_t *player;
+	cl_entity_t        *ent;
+
+	for( i = 0; i < MAX_CLIENTS; i++ )
+	{
+		state = cl.frames[cl.parsecountmod].playerstate[i];
+
+		player = cl.predicted_players[j];
+		player->active = false;
+
+		if( state->messagenum != cl.parsecount )
+			continue; // not present this frame
+
+		if( !state->modelindex )
+			continue;
+
+		ent = CL_GetEntityByIndex( j + 1 );
+
+		if( !ent ) // in case
+			continue;
+
+		// special for EF_NODRAW and local client?
+		if( state->effects & EF_NODRAW && !includeLocal )
+		{
+			if( cl.playernum == j )
+				continue;
+
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			VectorCopy( ent->origin, player->origin );
+			VectorCopy( ent->angles, player->angles );
+		}
+		else
+		{
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			// don't rewrite origin and angles of local client
+			if( cl.playernum == j )
+				continue;
+
+			VectorCopy(state->origin, player->origin);
+			VectorCopy(state->angles, player->angles);
+		}
+	}
+#endif
+}
+
 
 void CL_ClipPMoveToEntity( physent_t *pe, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, pmtrace_t *tr )
 {
@@ -214,11 +318,10 @@ pmove must be setup with world and solid entity hulls before calling
 */
 void CL_SetSolidPlayers( int playernum )
 {
-	int		j;
-	extern	vec3_t	player_mins;
-	extern	vec3_t	player_maxs;
-	cl_entity_t	*ent;
-	physent_t		*pe;
+	int		       j;
+	cl_entity_t	   *ent;
+	entity_state_t *state;
+	physent_t      *pe;
 
 	if( !cl_solid_players->integer )
 		return;
@@ -226,16 +329,28 @@ void CL_SetSolidPlayers( int playernum )
 	for( j = 0; j < cl.maxclients; j++ )
 	{
 		// the player object never gets added
-		if( j == playernum ) continue;
+		if( j == playernum )
+			continue;
 
 		ent = CL_GetEntityByIndex( j + 1 );		
 
 		if( !ent || !ent->player )
 			continue; // not present this frame
 
-		if( !predicted_players[j].active )
-			continue; // dead players are not solid
 
+#if 1 // came from SetUpPlayerPrediction
+		state = cl.frames[cl.parsecountmod].playerstate + j;
+
+		// This makes all players no
+		//if( state->messagenum != cl.parsecount )
+		//	continue; // not present this frame [2]*/
+
+		if( state->effects & EF_NODRAW )
+			continue; // skip invisible
+
+		if( !state->solid )
+			continue; // not solid
+#endif
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
 		if( CL_CopyEntityToPhysEnt( pe, ent ))
 			clgame.pmove->numphysent++;
@@ -990,7 +1105,7 @@ void CL_PredictMovement( void )
 
 	if( !CL_IsInGame( )) return;
 	
-	pfnSetUpPlayerPrediction( false, false );
+	CL_SetUpPlayerPrediction( false, false );
 
 	// unpredicted pure angled values converted into axis
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );

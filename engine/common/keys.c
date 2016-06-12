@@ -569,7 +569,7 @@ void Key_Event( int key, qboolean down )
 	//Con_Printf( "Keycode %d\n", key );
 	if ( key > 255 || key < 0) 
 	{
-		Con_Printf ("Keynum %d out of range\n", key);
+		MsgDev (D_NOTE, "Keynum %d out of range\n", key);
 		return;
 	}
 	// update auto-repeat status and BUTTON_ANY status

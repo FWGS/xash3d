@@ -73,11 +73,14 @@ static void pfnEnableTextInput( int enable )
 
 static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b, float scale )
 {
-	int width  = clgame.scrInfo.charWidths[number] * scale;
-	int height = clgame.scrInfo.iCharHeight        * scale;
+	int width  = clgame.scrInfo.charWidths[number] * scale * hud_scale->value;
+	int height = clgame.scrInfo.iCharHeight        * scale * hud_scale->value;
 
 	if( !cls.creditsFont.valid )
 		return 0;
+
+	x *= hud_scale->value;
+	y *= hud_scale->value;
 
 	number &= 255;
 	number = Con_UtfProcessChar( number );

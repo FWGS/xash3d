@@ -2282,89 +2282,7 @@ physent_t *pfnGetPhysent( int idx )
 	return NULL;
 }
 
-struct predicted_player predicted_players[MAX_CLIENTS];
 
-/*
-=============
-pfnSetUpPlayerPrediction
-
-=============
-*/
-void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
-{
-	int j;
-	struct predicted_player *pPlayer = predicted_players;
-	entity_state_t *entState = cl.frames[cl.parsecountmod].playerstate;
-
-	cl_entity_t *clEntity;
-
-	for( j = 0, pPlayer = predicted_players, entState = cl.frames[cl.parsecountmod].playerstate;
-		 j < MAX_CLIENTS;
-		 j++, pPlayer++, entState++)
-	{
-		pPlayer->active = false;
-
-		// Does not work in xash3d
-		//if( entState->messagenum != cl.parsecount )
-			//continue; // not present this frame
-
-		if( !entState->modelindex )
-			continue;
-
-		clEntity = CL_EDICT_NUM( j + 1 );
-		//special for EF_NODRAW and local client?
-		if( ( entState->effects & EF_NODRAW ) && ( bIncludeLocalClient == false ) )
-		{
-			// don't include local player?
-			if( cl.playernum == j )
-				continue;
-			else
-			{
-				pPlayer->active = true;
-				pPlayer->movetype = entState->movetype;
-				pPlayer->solid = entState->solid;
-				pPlayer->usehull = entState->usehull;
-
-				VectorCopy( clEntity->origin, pPlayer->origin );
-				VectorCopy( clEntity->angles, pPlayer->angles );
-			}
-		}
-		else
-		{
-			if( cl.playernum == j )
-				continue;
-			pPlayer->active = true;
-			pPlayer->movetype = entState->movetype;
-			pPlayer->solid = entState->solid;
-			pPlayer->usehull = entState->usehull;
-
-			VectorCopy(cl.frames[cl.parsecountmod].playerstate[j].origin, pPlayer->origin);
-			VectorCopy(cl.frames[cl.parsecountmod].playerstate[j].angles, pPlayer->angles);
-		}
-	}
-}
-
-/*
-=============
-pfnPushPMStates
-
-=============
-*/
-void pfnPushPMStates( void )
-{
-	clgame.oldcount = clgame.pmove->numphysent;
-}
-
-/*
-=============
-pfnPopPMStates
-
-=============
-*/
-void pfnPopPMStates( void )
-{
-	clgame.pmove->numphysent = clgame.oldcount;
-}
 
 /*
 =============
@@ -2376,7 +2294,6 @@ void CL_SetTraceHull( int hull )
 {
 	clgame.old_trace_hull = clgame.pmove->usehull;
 	clgame.pmove->usehull = bound( 0, hull, 3 );
-
 }
 
 /*
@@ -3800,9 +3717,9 @@ static event_api_t gEventApi =
 	pfnLocalPlayerBounds,
 	pfnIndexFromTrace,
 	pfnGetPhysent,
-	pfnSetUpPlayerPrediction,
-	pfnPushPMStates,
-	pfnPopPMStates,
+	CL_SetUpPlayerPrediction,
+	CL_PushPMStates,
+	CL_PopPMStates,
 	CL_SetSolidPlayers,
 	CL_SetTraceHull,
 	CL_PlayerTrace,
