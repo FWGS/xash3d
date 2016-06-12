@@ -2301,7 +2301,7 @@ static void Mod_LoadEntities( const dlump_t *l )
 					if( !end )
 					{
 						// if specified only once wad
-						if( !wadlist.count )
+						//if( !wadlist.count )
 							FS_FileBase( path, wadlist.wadnames[wadlist.count++] );
 						break;
 					}
