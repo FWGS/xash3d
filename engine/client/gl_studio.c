@@ -81,6 +81,7 @@ convar_t			*r_studio_lerping;
 convar_t			*r_studio_lambert;
 convar_t			*r_studio_lighting;
 convar_t			*r_studio_sort_textures;
+convar_t			*r_studio_drawelements;
 convar_t			*r_drawviewmodel;
 convar_t			*r_customdraw_playermodel;
 convar_t			*cl_himodels;
@@ -103,7 +104,9 @@ static int		g_chromeage[MAXSTUDIOBONES];	// last time chrome vectors were update
 static vec3_t		g_xformverts[MAXSTUDIOVERTS];
 static vec3_t		g_xformnorms[MAXSTUDIOVERTS];
 static vec3_t		g_xarrayverts[MAXARRAYVERTS];
-static uint		g_xarrayelems[MAXARRAYVERTS*6];
+static vec2_t		g_xarraycoord[MAXARRAYVERTS];
+static GLubyte		g_xarraycolor[MAXARRAYVERTS][4];
+static unsigned short		g_xarrayelems[MAXARRAYVERTS*6];
 static uint		g_nNumArrayVerts;
 static uint		g_nNumArrayElems;
 static vec3_t		g_lightvalues[MAXSTUDIOVERTS];
@@ -146,7 +149,7 @@ void R_StudioInit( void )
 	cl_himodels = Cvar_Get( "cl_himodels", "1", CVAR_ARCHIVE, "draw high-resolution player models in multiplayer" );
 	r_studio_lighting = Cvar_Get( "r_studio_lighting", "1", CVAR_ARCHIVE, "studio lighting models ( 0 - normal, 1 - extended, 2 - experimental )" );
 	r_studio_sort_textures = Cvar_Get( "r_studio_sort_textures", "0", CVAR_ARCHIVE, "sort additive and normal textures for right drawing" );
-
+	r_studio_drawelements = Cvar_Get( "r_studio_drawelements", "1", CVAR_ARCHIVE, "Use glDrawElements for studio render" );
 	// NOTE: some mods with custom studiomodel renderer may cause error when menu trying draw player model out of the loaded game
 	r_customdraw_playermodel = Cvar_Get( "r_customdraw_playermodel", "0", CVAR_ARCHIVE, "allow to drawing playermodel in menu with client renderer" );
 
@@ -1919,13 +1922,14 @@ static int R_StudioMeshCompare( const sortedmesh_t *a, const sortedmesh_t *b )
 	return 0;
 }
 
+
 /*
 ===============
 R_StudioDrawPoints
 
 ===============
 */
-static void R_StudioDrawPoints( void )
+static void R_StudioDrawPoints_legacy( void )
 {
 	int		i, j, m_skinnum;
 	byte		*pvertbone;
@@ -1946,7 +1950,7 @@ static void R_StudioDrawPoints( void )
 		g_nStudioCount++;
 
 	// safety bounding the skinnum
-	m_skinnum = bound( 0, RI.currententity->curstate.skin, ( m_pTextureHeader->numskinfamilies - 1 ));	    
+	m_skinnum = bound( 0, RI.currententity->curstate.skin, ( m_pTextureHeader->numskinfamilies - 1 ));
 	pvertbone = ((byte *)m_pStudioHeader + m_pSubModel->vertinfoindex);
 	pnormbone = ((byte *)m_pStudioHeader + m_pSubModel->norminfoindex);
 
@@ -1976,7 +1980,7 @@ static void R_StudioDrawPoints( void )
 	}
 
 	lv = (float *)g_lightvalues;
-	for( j = 0; j < m_pSubModel->nummesh; j++ ) 
+	for( j = 0; j < m_pSubModel->nummesh; j++ )
 	{
 		g_nFaceFlags = ptexture[pskinref[pmesh[j].skinref]].flags;
 
@@ -1999,7 +2003,7 @@ static void R_StudioDrawPoints( void )
 		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), (void*)R_StudioMeshCompare );
 	}
 
-	for( j = 0; j < m_pSubModel->nummesh; j++ ) 
+	for( j = 0; j < m_pSubModel->nummesh; j++ )
 	{
 		float	s, t, alpha;
 		short	*ptricmds;
@@ -2121,7 +2125,7 @@ static void R_StudioDrawPoints( void )
 				else pglTexCoord2f( ptricmds[2] * s, ptricmds[3] * t );
 
 				if(!( g_nForceFaceFlags & STUDIO_NF_CHROME ))
-                                        {
+										{
 					if( g_iRenderMode == kRenderTransAdd )
 					{
 						pglColor4f( 1.0f, 1.0f, 1.0f, alpha );
@@ -2155,7 +2159,7 @@ static void R_StudioDrawPoints( void )
 				else
 				{
 					pglVertex3f( av[0], av[1], av[2] );
-					ASSERT( g_nNumArrayVerts < MAXARRAYVERTS ); 
+					ASSERT( g_nNumArrayVerts < MAXARRAYVERTS );
 					VectorCopy( av, g_xarrayverts[g_nNumArrayVerts] ); // store off vertex
 					g_nNumArrayVerts++;
 				}
@@ -2163,6 +2167,306 @@ static void R_StudioDrawPoints( void )
 			pglEnd();
 		}
 	}
+
+	// restore depthmask for next call StudioDrawPoints
+	if( g_iRenderMode != kRenderTransAdd )
+		pglDepthMask( GL_TRUE );
+}
+
+/*
+===============
+R_StudioDrawMesh
+
+===============
+*/
+static void R_StudioDrawMesh(short *ptricmds, float s, float t )
+{
+	GLubyte alpha = 255;
+	int i;
+	vec2_t uv;
+	float *av, *lv;
+
+	g_nNumArrayVerts = g_nNumArrayElems = 0;
+
+	while( ( i = *( ptricmds++ ) ) )
+	{
+		int	vertexState = 0;
+		qboolean	tri_strip;
+
+		if( i < 0 )
+		{
+			tri_strip = false;
+			i = -i;
+		}
+		else
+		{
+			tri_strip = true;
+		}
+
+		r_stats.c_studio_polys += (i - 2);
+
+		for( ; i > 0; i--, ptricmds += 4 )
+		{
+
+			GLubyte cl[4];
+			// build in indices
+			if( vertexState++ < 3 )
+			{
+				g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
+			}
+			else if( tri_strip )
+			{
+				// flip triangles between clockwise and counter clockwise
+				if( vertexState & 1 )
+				{
+					// draw triangle [n-2 n-1 n]
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 2;
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
+				}
+				else
+				{
+					// draw triangle [n-1 n-2 n]
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 2;
+					g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
+				}
+			}
+			else
+			{
+				// draw triangle fan [0 n-1 n]
+				g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - ( vertexState - 1 );
+				g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts - 1;
+				g_xarrayelems[g_nNumArrayElems++] = g_nNumArrayVerts;
+			}
+			if( g_nFaceFlags & STUDIO_NF_CHROME || ( g_nForceFaceFlags & STUDIO_NF_CHROME ))
+			{
+				uv[0] = g_chrome[ptricmds[1]][0] * s;
+				uv[1] = g_chrome[ptricmds[1]][1] * t ;
+			}
+			else if( g_nFaceFlags & STUDIO_NF_UV_COORDS )
+			{
+				uv[0] = ptricmds[2] * (1.0f / 32768.0f);
+				uv[1] = ptricmds[3] * (1.0f / 32768.0f);
+			}
+			else
+			{
+				uv[0] = ptricmds[2] * s;
+				uv[1] = ptricmds[3] * t;
+			}
+			g_xarraycoord[g_nNumArrayVerts][0] = uv[0];
+			g_xarraycoord[g_nNumArrayVerts][1] = uv[1];
+
+			lv = (float *)g_lightvalues[ptricmds[1]];
+			cl[0] = lv[0]*255;
+			cl[1] = lv[1]*255;
+			cl[2] = lv[2]*255;
+			cl[3] = alpha;
+
+			Q_memcpy( g_xarraycolor[g_nNumArrayVerts], cl, sizeof(cl) );
+
+			av = g_xformverts[ptricmds[0]];
+			/*if( g_nForceFaceFlags & STUDIO_NF_CHROME )
+			{
+				vec3_t	scaled_vertex;
+				nv = (float *)g_xformnorms[ptricmds[1]];
+				VectorMA( av, scale, nv, scaled_vertex );
+				pglVertex3fv( scaled_vertex );
+			}
+			else*/
+			{
+				//pglVertex3f( av[0], av[1], av[2] );
+				ASSERT( g_nNumArrayVerts < MAXARRAYVERTS );
+				VectorCopy( av, g_xarrayverts[g_nNumArrayVerts] ); // store off vertex
+				g_nNumArrayVerts++;
+			}
+		}
+	}
+
+	pglEnableClientState( GL_VERTEX_ARRAY );
+	pglVertexPointer( 3, GL_FLOAT, 12, g_xarrayverts );
+
+	pglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	pglTexCoordPointer( 2, GL_FLOAT, 0, g_xarraycoord );
+
+	pglEnableClientState( GL_COLOR_ARRAY );
+	pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_xarraycolor );
+#ifndef XASH_NANOGL
+	if( pglDrawRangeElements )
+		pglDrawRangeElements( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
+	else
+#endif
+		pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
+	pglDisableClientState( GL_VERTEX_ARRAY );
+	pglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	pglDisableClientState( GL_COLOR_ARRAY );
+}
+
+/*
+===============
+R_StudioDrawMeshes
+
+===============
+*/
+static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref )
+{
+	int		j;
+	mstudiomesh_t	*pmesh;
+
+	for( j = 0; j < m_pSubModel->nummesh; j++ )
+	{
+		float	s, t, alpha;
+		short	*ptricmds;
+
+		pmesh = g_sortedMeshes[j].mesh;
+		ptricmds = (short *)((byte *)m_pStudioHeader + pmesh->triindex);
+
+		g_nFaceFlags = ptexture[pskinref[pmesh->skinref]].flags;
+		s = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].width;
+		t = 1.0f / (float)ptexture[pskinref[pmesh->skinref]].height;
+
+		if( g_iRenderMode != kRenderTransAdd )
+			pglDepthMask( GL_TRUE );
+		else pglDepthMask( GL_FALSE );
+
+		// check bounds
+		if( ptexture[pskinref[pmesh->skinref]].index < 0 || ptexture[pskinref[pmesh->skinref]].index > MAX_TEXTURES )
+			ptexture[pskinref[pmesh->skinref]].index = tr.defaultTexture;
+
+		if( g_nForceFaceFlags & STUDIO_NF_CHROME )
+		{
+			color24	*clr;
+			clr = &RI.currententity->curstate.rendercolor;
+			pglColor4ub( clr->r, clr->g, clr->b, 255 );
+			alpha = 1.0f;
+		}
+		else if( g_nFaceFlags & STUDIO_NF_TRANSPARENT && R_StudioOpaque( RI.currententity ))
+		{
+			GL_SetRenderMode( kRenderTransAlpha );
+			pglAlphaFunc( GL_GREATER, 0.0f );
+			alpha = 1.0f;
+		}
+		else if( g_nFaceFlags & STUDIO_NF_ADDITIVE )
+		{
+			GL_SetRenderMode( kRenderTransAdd );
+			alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
+			pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
+			pglDepthMask( GL_FALSE );
+		}
+		else if( g_nFaceFlags & STUDIO_NF_ALPHA && !( host.features & ENGINE_DISABLE_HDTEXTURES )) // Paranoia2 collision flag
+		{
+			GL_SetRenderMode( kRenderTransTexture );
+			alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
+			pglDepthMask( GL_FALSE );
+		}
+		else
+		{
+			GL_SetRenderMode( g_iRenderMode );
+
+			if( g_iRenderMode == kRenderNormal )
+			{
+				pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+				alpha = 1.0f;
+			}
+			else alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
+		}
+
+		if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ))
+		{
+			GL_Bind( GL_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
+		}
+
+		R_StudioDrawMesh(ptricmds, s, t);
+	}
+}
+
+/*
+===============
+R_StudioDrawPoints
+
+===============
+*/
+static void R_StudioDrawPoints( void )
+{
+	int		i, j, m_skinnum;
+	byte		*pvertbone;
+	byte		*pnormbone;
+	vec3_t		*pstudioverts;
+	vec3_t		*pstudionorms;
+	mstudiotexture_t	*ptexture;
+	mstudiomesh_t	*pmesh;
+	short		*pskinref;
+	float		*av, *lv, *nv, scale = 0.0f;
+
+	if( !r_studio_drawelements->integer )
+	{
+		R_StudioDrawPoints_legacy();
+		return;
+	}
+
+	R_StudioSetupTextureHeader ();
+
+	g_nNumArrayVerts = g_nNumArrayElems = 0;
+
+	if( !m_pTextureHeader ) return;
+	if( RI.currententity->curstate.renderfx == kRenderFxGlowShell )
+		g_nStudioCount++;
+
+	// safety bounding the skinnum
+	m_skinnum = bound( 0, RI.currententity->curstate.skin, ( m_pTextureHeader->numskinfamilies - 1 ));
+	pvertbone = ((byte *)m_pStudioHeader + m_pSubModel->vertinfoindex);
+	pnormbone = ((byte *)m_pStudioHeader + m_pSubModel->norminfoindex);
+
+	// NOTE: user can comment call StudioRemapColors and remap_info will be unavailable
+	if( m_fDoRemap ) ptexture = CL_GetRemapInfoForEntity( RI.currententity )->ptexture;
+	else ptexture = (mstudiotexture_t *)((byte *)m_pTextureHeader + m_pTextureHeader->textureindex);
+
+	ASSERT( ptexture != NULL );
+
+	pmesh = (mstudiomesh_t *)((byte *)m_pStudioHeader + m_pSubModel->meshindex);
+	pstudioverts = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->vertindex);
+	pstudionorms = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->normindex);
+
+	pskinref = (short *)((byte *)m_pTextureHeader + m_pTextureHeader->skinindex);
+	if( m_skinnum != 0 && m_skinnum < m_pTextureHeader->numskinfamilies )
+		pskinref += (m_skinnum * m_pTextureHeader->numskinref);
+
+	for( i = 0; i < m_pSubModel->numverts; i++ )
+		Matrix3x4_VectorTransform( g_bonestransform[pvertbone[i]], pstudioverts[i], g_xformverts[i] );
+
+	if( g_nForceFaceFlags & STUDIO_NF_CHROME )
+	{
+		scale = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
+
+		for( i = 0; i < m_pSubModel->numnorms; i++ )
+			Matrix3x4_VectorRotate( g_bonestransform[pnormbone[i]], pstudionorms[i], g_xformnorms[i] );
+	}
+
+	lv = (float *)g_lightvalues;
+	for( j = 0; j < m_pSubModel->nummesh; j++ )
+	{
+		g_nFaceFlags = ptexture[pskinref[pmesh[j].skinref]].flags;
+
+		// fill in sortedmesh info
+		g_sortedMeshes[j].mesh = &pmesh[j];
+		g_sortedMeshes[j].flags = g_nFaceFlags;
+
+		for( i = 0; i < pmesh[j].numnorms; i++, lv += 3, pstudionorms++, pnormbone++ )
+		{
+			R_StudioLighting( lv, *pnormbone, g_nFaceFlags, (float *)pstudionorms );
+
+			if(( g_nFaceFlags & STUDIO_NF_CHROME ) || ( g_nForceFaceFlags & STUDIO_NF_CHROME ))
+				R_StudioSetupChrome( g_chrome[(float (*)[3])lv - g_lightvalues], *pnormbone, (float *)pstudionorms );
+		}
+	}
+
+	if( r_studio_sort_textures->integer )
+	{
+		// sort opaque and translucent for right results
+		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), (void *)R_StudioMeshCompare );
+	}
+
+	R_StudioDrawMeshes(ptexture,pskinref);
 
 	// restore depthmask for next call StudioDrawPoints
 	if( g_iRenderMode != kRenderTransAdd )
