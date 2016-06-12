@@ -82,7 +82,7 @@ void V_SetupRefDef( void )
 	cl.refdef.viewport[0] = (scr_width->integer - cl.refdef.viewport[2]) / 2;
 	cl.refdef.viewport[1] = (scr_height->integer - sb_lines - cl.refdef.viewport[3]) / 2;
 
-	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+	if( cl.scr_fov < 1.0f || cl.scr_fov > 170.0f )
 		cl.scr_fov = 90.0f;
 	// calc FOV
 	cl.refdef.fov_x = cl.scr_fov; // this is a final fov value
@@ -94,11 +94,11 @@ void V_SetupRefDef( void )
 
 	if( CL_IsPredicted( ) && !cl.refdef.demoplayback )
 	{
-		VectorMA( cl.predicted_origin, -cl.lerpBack, cl.prediction_error, cl.refdef.simorg );
-		VectorCopy( cl.predicted_origin, cl.refdef.simorg );
-		VectorCopy( cl.predicted_velocity, cl.refdef.simvel );
-		VectorCopy( cl.predicted_viewofs, cl.refdef.viewheight );
-		VectorCopy( cl.predicted_punchangle, cl.refdef.punchangle );
+		VectorMA( cl.predicted.origin, -cl.lerpBack, cl.predicted.error, cl.refdef.simorg );
+		VectorCopy( cl.predicted.origin, cl.refdef.simorg );
+		VectorCopy( cl.predicted.velocity, cl.refdef.simvel );
+		VectorCopy( cl.predicted.viewofs, cl.refdef.viewheight );
+		VectorCopy( cl.predicted.punchangle, cl.refdef.punchangle );
 	}
 	else
 	{

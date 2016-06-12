@@ -3620,7 +3620,7 @@ void R_RunViewmodelEvents( void )
 		return;
 
 #warning "check this"
-	if( cl_lw->value && cl.frame.client.viewmodel != cl.predicted_viewmodel )
+	if( cl_lw->value && cl.frame.client.viewmodel != cl.predicted.viewmodel )
 		return;
 
 	RI.currententity = &clgame.viewent;
@@ -3658,7 +3658,7 @@ void R_DrawViewModel( void )
 		return;
 
 #warning "check this"
-	if( cl_lw->value && cl.frame.client.viewmodel != cl.predicted_viewmodel )
+	if( cl_lw->value && cl.frame.client.viewmodel != cl.predicted.viewmodel )
 		return;
 
 	RI.currententity = &clgame.viewent;

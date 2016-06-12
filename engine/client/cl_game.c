@@ -2231,7 +2231,7 @@ void pfnLocalPlayerViewheight( float *view_ofs )
 	if( !view_ofs ) return;
 
 	if( CL_IsPredicted( ))
-		VectorCopy( cl.predicted_viewofs, view_ofs );		
+		VectorCopy( cl.predicted.viewofs, view_ofs );
 	else VectorCopy( cl.frame.client.view_ofs, view_ofs );
 }
 
