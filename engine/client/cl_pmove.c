@@ -1066,12 +1066,16 @@ void CL_PostRunCmd( usercmd_t *ucmd, int random_seed )
 {
 	local_state_t	from, to;
 
-	memcpy( from.weapondata, cl.frame.weapondata, sizeof( from.weapondata ));
+	Q_memset( &from, 0, sizeof( local_state_t ) );
+	Q_memset( &to, 0, sizeof( local_state_t ) );
+	Q_memcpy( from.weapondata, cl.frame.weapondata, sizeof( from.weapondata ));
+
 	from.playerstate = cl.frame.playerstate[cl.playernum];
 	from.client = cl.frame.client;
 	to = from;
 
 	clgame.dllFuncs.pfnPostRunCmd( &from, &to, ucmd, true, cl.time, random_seed );
+
 	cl.scr_fov = to.client.fov;
 	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
 	   cl.scr_fov = 90.0f;
@@ -1135,14 +1139,22 @@ void CL_PredictMovement( void )
 
 	if( !CL_IsPredicted( ))
 	{
-		// run commands even if client predicting is disabled - client expected it
-		CL_PostRunCmd( cl.refdef.cmd, cls.lastoutgoingcommand );
+		local_state_t	from, to;
 
-		/*cl.scr_fov = t2.client.fov;
+		Q_memset( &from, 0, sizeof( local_state_t ) );
+		Q_memset( &to, 0, sizeof( local_state_t ) );
 
+		Q_memcpy( from.weapondata, cl.frame.weapondata, sizeof( from.weapondata ));
+
+		from.playerstate = cl.frame.playerstate[cl.playernum];
+		from.client = cl.frame.client;
+		to = from;
+
+		clgame.dllFuncs.pfnPostRunCmd( &from, &to, cl.refdef.cmd, false, cl.time, cls.lastoutgoingcommand );
+
+		cl.scr_fov = to.client.fov;
 		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
-			cl.scr_fov = 90.0f;*/
-
+		   cl.scr_fov = 90.0f;
 		return;
 	}
 
