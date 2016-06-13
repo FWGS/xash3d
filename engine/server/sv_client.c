@@ -1299,17 +1299,6 @@ void SV_New_f( sv_client_t *cl )
 		}
 		else
 		{
-			// transfer fastdl servers list
-			if( *sv_downloadurl->string )
-			{
-				char *data = sv_downloadurl->string;
-				char token[256];
-				while( ( data = COM_ParseFile( data, token ) ) )
-				{
-					BF_WriteByte( &cl->netchan.message, svc_stufftext );
-					BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", token ));
-				}
-			}
 			// request resource list
 			BF_WriteByte( &cl->netchan.message, svc_stufftext );
 			BF_WriteString( &cl->netchan.message, va( "cmd getresourcelist\n" ));
@@ -1364,6 +1353,18 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	char *pfile;
 
 	Q_memset( &reslist, 0, sizeof( resourcelist_t ));
+
+	// transfer fastdl servers list
+	if( *sv_downloadurl->string )
+	{
+		char *data = sv_downloadurl->string;
+		char token[256];
+		while( ( data = COM_ParseFile( data, token ) ) )
+		{
+			BF_WriteByte( &cl->netchan.message, svc_stufftext );
+			BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", token ));
+		}
+	}
 
 	reslist.restype[rescount] = t_world; // terminator
 	Q_strcpy( reslist.resnames[rescount], "NULL" );
