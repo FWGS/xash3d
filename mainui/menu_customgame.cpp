@@ -166,7 +166,7 @@ static void UI_CustomGame_GetModList( void )
 	// see if the load button should be grayed
 	if( !stricmp( gMenu.m_gameinfo.gamefolder, uiCustomGame.modsDir[uiCustomGame.modList.curItem] ))
 		uiCustomGame.load.generic.flags |= QMF_GRAYED;
-	if( strlen( uiCustomGame.modsWebSites[uiCustomGame.modList.curItem] ) == 0 )
+	if( uiCustomGame.modsWebSites[uiCustomGame.modList.curItem][0] == '\0' )
 		uiCustomGame.go2url.generic.flags |= QMF_GRAYED;
 }
 
@@ -186,7 +186,7 @@ static void UI_CustomGame_Callback( void *self, int event )
 			uiCustomGame.load.generic.flags |= QMF_GRAYED;
 		else uiCustomGame.load.generic.flags &= ~QMF_GRAYED;
 
-		if( strlen( uiCustomGame.modsWebSites[uiCustomGame.modList.curItem] ) == 0 )
+		if( uiCustomGame.modsWebSites[uiCustomGame.modList.curItem][0] == '\0' )
 			uiCustomGame.go2url.generic.flags |= QMF_GRAYED;
 		else uiCustomGame.go2url.generic.flags &= ~QMF_GRAYED;
 		return;
@@ -201,7 +201,7 @@ static void UI_CustomGame_Callback( void *self, int event )
 		UI_PopMenu();
 		break;
 	case ID_GOTOSITE:
-		if( strlen( uiCustomGame.modsWebSites[uiCustomGame.modList.curItem] ))
+		if( uiCustomGame.modsWebSites[uiCustomGame.modList.curItem][0] )
 			SHELL_EXECUTE( uiCustomGame.modsWebSites[uiCustomGame.modList.curItem], NULL, false );
 		break;
 	case ID_ACTIVATE:

@@ -75,7 +75,7 @@ void BF_InitExt( sizebuf_t *bf, const char *pDebugName, void *pData, int nBytes,
 void BF_StartWriting( sizebuf_t *bf, void *pData, int nBytes, int iStartBit, int nBits )
 {
 	// make sure it's dword aligned and padded.
-	Assert(((dword)pData & 3 ) == 0 );
+	Assert(((size_t)pData & 3 ) == 0 );
 
 	bf->pData = (byte *)pData;
 

@@ -103,8 +103,8 @@ void SDLash_EventFilter( SDL_Event* event)
 						Cvar_SetFloat("r_ypos", (float)event->window.data2);
 					}
 					break;
-				case SDL_WINDOWEVENT_MINIMIZED:
-					host.state = HOST_SLEEP;
+				case SDL_WINDOWEVENT_RESTORED:
+					host.state = HOST_FRAME;
 					break;
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
 					host.state = HOST_FRAME;
@@ -114,6 +114,9 @@ void SDLash_EventFilter( SDL_Event* event)
 						Cvar_SetFloat("volume", oldVolume);
 						Cvar_SetFloat("musicvolume", oldMusicVolume);
 					}
+					break;
+				case SDL_WINDOWEVENT_MINIMIZED:
+					host.state = HOST_SLEEP;
 					break;
 				case SDL_WINDOWEVENT_FOCUS_LOST:
 					host.state = HOST_NOFOCUS;
@@ -200,6 +203,8 @@ void SDLash_KeyEvent(SDL_KeyboardEvent key)
 		keynum = K_AUX31; break;
 	case SDLK_VOLUMEUP:
 		keynum = K_AUX32; break;
+	case SDLK_PAUSE:
+		keynum = K_PAUSE; break;
 #ifdef __ANDROID__
 	case SDLK_MENU:
 		keynum = K_AUX30;
@@ -237,8 +242,9 @@ void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 
 void SDLash_InputEvent(SDL_TextInputEvent input)
 {
-	int i, f, t;
+	int i;
 #if 0
+	int f, t;
 	// Try convert to selected charset
 	unsigned char buf[32];
 

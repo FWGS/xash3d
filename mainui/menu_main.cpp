@@ -325,7 +325,7 @@ static void UI_Main_Init( void )
 	memset( &uiMain, 0, sizeof( uiMain_t ));
 
 	// training map is present and not equal to startmap
-	if( strlen( gMenu.m_gameinfo.trainmap ) && stricmp( gMenu.m_gameinfo.trainmap, gMenu.m_gameinfo.startmap ))
+	if( gMenu.m_gameinfo.trainmap[0] && stricmp( gMenu.m_gameinfo.trainmap, gMenu.m_gameinfo.startmap ) != 0 )
 		bTrainMap = true;
 	else bTrainMap = false;
 

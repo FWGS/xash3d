@@ -115,7 +115,7 @@ static void UI_PlayerSetup_FindModels( void )
 	for( i = 0; i < numFiles; i++ )
 	{
 		COM_FileBase( filenames[i], name );
-		sprintf( path, "models/player/%s/%s.mdl", name, name );
+		snprintf( path, sizeof(path), "models/player/%s/%s.mdl", name, name );
 		if( !FILE_EXISTS( path )) continue;
 
 		strcpy( uiPlayerSetup.models[uiPlayerSetup.num_models], name );
@@ -190,7 +190,7 @@ static void UI_PlayerSetup_UpdateConfig( void )
 	int	topColor, bottomColor;
 
 	// see if the model has changed
-	if( stricmp( uiPlayerSetup.currentModel, uiPlayerSetup.models[(int)uiPlayerSetup.model.curValue] ))
+	if( stricmp( uiPlayerSetup.currentModel, uiPlayerSetup.models[(int)uiPlayerSetup.model.curValue] ) != 0 )
 	{
 		strcpy( uiPlayerSetup.currentModel, uiPlayerSetup.models[(int)uiPlayerSetup.model.curValue] );
 	}
@@ -205,8 +205,8 @@ static void UI_PlayerSetup_UpdateConfig( void )
 	}
 	else
 	{
-		sprintf( path, "models/player/%s/%s.mdl", name, name );
-		sprintf( newImage, "models/player/%s/%s.bmp", name, name );
+		snprintf( path, sizeof(path), "models/player/%s/%s.mdl", name, name );
+		snprintf( newImage, sizeof(newImage), "models/player/%s/%s.bmp", name, name );
 	}
 
 	topColor = (int)(uiPlayerSetup.topColor.curValue * 255 );
@@ -225,7 +225,7 @@ static void UI_PlayerSetup_UpdateConfig( void )
 
 	if( !ui_showmodels->value )
 	{
-		if( stricmp( lastImage, newImage ))
+		if( stricmp( lastImage, newImage ) != 0 )
 		{
 			if( lastImage[0] && playerImage )
 			{
@@ -235,9 +235,9 @@ static void UI_PlayerSetup_UpdateConfig( void )
 				playerImage = 0;
 			}
 
-			if( stricmp( name, "player" ))
+			if( stricmp( name, "player" ) != 0 )
 			{
-				sprintf( lastImage, "models/player/%s/%s.bmp", name, name );
+				snprintf( lastImage, sizeof(lastImage), "models/player/%s/%s.bmp", name, name );
 				playerImage = PIC_Load( lastImage, PIC_KEEP_8BIT ); // if present of course
 			}
 			else if( lastImage[0] && playerImage )
@@ -479,7 +479,7 @@ static void UI_PlayerSetup_Init( void )
 		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.view );
 	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.name );
 
-	if( !gMenu.m_gameinfo.flags & GFL_NOMODELS )
+	if( !(gMenu.m_gameinfo.flags & GFL_NOMODELS) )
 	{
 		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.model );
 		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.topColor );

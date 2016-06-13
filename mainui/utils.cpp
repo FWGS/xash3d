@@ -663,14 +663,14 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 			static float ac_y = 0;
 			ac_y += cursorDY;
 			cursorDY = 0;
-			if( ac_y > sl->generic.charHeight / 2 )
+			if( ac_y > sl->generic.charHeight / 2.0f )
 			{
 				sl->topItem -= ac_y/ sl->generic.charHeight - 0.5;
 				if( sl->topItem < 0 )
 					sl->topItem = 0;
 				ac_y = 0;
 			}
-			if( ac_y < -sl->generic.charHeight / 2 )
+			if( ac_y < -sl->generic.charHeight / 2.0f )
 			{
 				sl->topItem -= ac_y/ sl->generic.charHeight - 0.5 ;
 				if( sl->topItem > sl->numItems - sl->numRows )
@@ -1081,8 +1081,8 @@ void UI_SpinControl_Draw( menuSpinControl_s *sc )
 	if( sc->generic.flags & QMF_HIGHLIGHTIFFOCUS )
 	{
 		UI_DrawString( x, y, w, h, sc->generic.name, sc->generic.focusColor, false, sc->generic.charWidth, sc->generic.charHeight, justify, shadow );
-		UI_DrawPic( leftX, leftY, arrowWidth, arrowHeight, (leftFocus) ? sc->generic.color : sc->generic.color, (leftFocus) ? sc->leftArrowFocus : sc->leftArrow );
-		UI_DrawPic( rightX, rightY, arrowWidth, arrowHeight, (rightFocus) ? sc->generic.color : sc->generic.color, (rightFocus) ? sc->rightArrowFocus : sc->rightArrow );
+		UI_DrawPic( leftX, leftY, arrowWidth, arrowHeight, sc->generic.color, (leftFocus) ? sc->leftArrowFocus : sc->leftArrow );
+		UI_DrawPic( rightX, rightY, arrowWidth, arrowHeight, sc->generic.color, (rightFocus) ? sc->rightArrowFocus : sc->rightArrow );
 	}
 	else if( sc->generic.flags & QMF_PULSEIFFOCUS )
 	{

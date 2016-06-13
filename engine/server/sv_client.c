@@ -2769,7 +2769,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 	if( !ent->v.targetname )
 	{
 		char newname[256], clientname[256];
-		for( i = 0; i < 256; i++ )
+		for( i = 0; i < sizeof( cl->name ); i++ )
 		{
 			char c = Q_tolower( cl->name[i] );
 			if( c < 'a' || c > 'z' )
@@ -3054,7 +3054,6 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 	usercmd_t		cmds[32], *to;
 	edict_t		*player;
 
-	numbackup = 2;
 	player = cl->edict;
 
 	frame = &cl->frames[cl->netchan.incoming_acknowledged & SV_UPDATE_MASK];

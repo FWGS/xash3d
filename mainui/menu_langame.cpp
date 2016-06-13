@@ -127,7 +127,7 @@ static void UI_LanGame_GetGamesList( void )
 #if 1
 		// NOTE: Xash3D is support hot switching between games in multiplayer
 		// but this feature not detail tested and may be bugly
-		if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )))
+		if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )) != 0 )
 			continue;	// filter by game
 #endif 
 		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "host" ), GAME_LENGTH );

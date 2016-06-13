@@ -1003,7 +1003,7 @@ void CL_SetIdealPitch( void )
 	vec3_t	top, bottom;
 	float	z[MAX_FORWARD];
 	int	i, j;
-	int	step, dir, steps;
+	float	step, dir, steps;
 	pmtrace_t	tr;
 
 	if( !( cl.frame.client.flags & FL_ONGROUND ))

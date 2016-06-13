@@ -2318,8 +2318,8 @@ static void Mod_LoadEntities( const dlump_t *l )
 			else if( !Q_stricmp( keyname, "message" ))
 				Q_strncpy( world.message, token, sizeof( world.message ));
 		}
-		return;	// all done
 	}
+	return;	// all done
 }
 
 /*

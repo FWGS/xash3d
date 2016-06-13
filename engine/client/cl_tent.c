@@ -527,7 +527,7 @@ void CL_Bubbles( const vec3_t mins, const vec3_t maxs, float height, int modelIn
 
 		pTemp->x = origin[0];
 		pTemp->y = origin[1];
-		angle = Com_RandomLong( -M_PI, M_PI );
+		angle = Com_RandomFloat( -M_PI, M_PI );
 		SinCos( angle, &sine, &cosine );
 		
 		zspeed = Com_RandomLong( 80, 140 );
@@ -572,7 +572,7 @@ void CL_BubbleTrail( const vec3_t start, const vec3_t end, float flWaterZ, int m
 
 		pTemp->x = origin[0];
 		pTemp->y = origin[1];
-		angle = Com_RandomLong( -M_PI, M_PI );
+		angle = Com_RandomFloat( -M_PI, M_PI );
 
 		zspeed = Com_RandomLong( 80, 140 );
 		VectorSet( pTemp->entity.baseline.origin, speed * cos( angle ), speed * sin( angle ), zspeed );
@@ -2653,7 +2653,7 @@ int CL_DecalIndexFromName( const char *name )
 		return 0;
 
 	// look through the loaded sprite name list for SpriteName
-	for( i = 0; i < MAX_DECALS && host.draw_decals[i+1][0]; i++ )
+	for( i = 0; i < MAX_DECALS - 1 && host.draw_decals[i+1][0]; i++ )
 	{
 		if( !Q_stricmp( name, (char *)host.draw_decals[i+1] ))
 			return i+1;

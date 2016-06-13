@@ -54,7 +54,7 @@ byte TextureToTexGamma( byte b )
 	if( glConfig.deviceSupportsGamma )
 		return b;	// passthrough
 
-	b = bound( 0, b, 255 );
+	//b = bound( 0, b, 255 );
 	return texgammatable[b];
 }
 
@@ -63,6 +63,6 @@ byte TextureToGamma( byte b )
 	if( glConfig.deviceSupportsGamma )
 		return b; // passthrough
 
-	b = bound( 0, b, 255 );
+	//b = bound( 0, b, 255 );
 	return gammatable[b];
 }

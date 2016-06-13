@@ -723,7 +723,7 @@ void Con_DrawStringLen( const char *pText, int *length, int *height )
 	{
 		byte	c = *pText;
 
-		if( *pText == '\n' )
+		if( *pText == '\n' ) //-V595
 		{
 			pText++;
 			curLength = 0;

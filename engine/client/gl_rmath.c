@@ -229,14 +229,17 @@ void Matrix4x4_CreateRotate( matrix4x4 out, float angle, float x, float y, float
 	out[0][1]=x * y * (1 - c) + z * s;
 	out[0][2]=z * x * (1 - c) - y * s;
 	out[0][3]=0.0f;
+
 	out[1][0]=x * y * (1 - c) - z * s;
 	out[1][1]=y * y + c * (1 - y * y);
 	out[1][2]=y * z * (1 - c) + x * s;
 	out[1][3]=0.0f;
+	
 	out[2][0]=z * x * (1 - c) + y * s;
 	out[2][1]=y * z * (1 - c) - x * s;
 	out[2][2]=z * z + c * (1 - z * z);
 	out[2][3]=0.0f;
+	
 	out[3][0]=0.0f;
 	out[3][1]=0.0f;
 	out[3][2]=0.0f;

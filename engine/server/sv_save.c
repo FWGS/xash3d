@@ -443,8 +443,11 @@ void ReapplyDecal( SAVERESTOREDATA *pSaveData, decallist_t *entry, qboolean adja
 
 	// restore entity and model index
 	pEdict = pSaveData->pTable[entry->entityIndex].pent;
-	if( SV_IsValidEdict( pEdict )) modelIndex = pEdict->v.modelindex;
-	if( SV_IsValidEdict( pEdict )) entityIndex = NUM_FOR_EDICT( pEdict );
+	if( SV_IsValidEdict( pEdict ) )
+	{
+		modelIndex = pEdict->v.modelindex;
+		entityIndex = NUM_FOR_EDICT( pEdict );
+	}
 
 	if( SV_RestoreCustomDecal( entry, pEdict, adjacent ))
 		return; // decal was sucessfully restored at the game-side
@@ -2358,14 +2361,14 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	size += tokenSize;
 
 	// sanity check.
-	if( tokenCount < 0 || tokenCount > ( 1024 * 1024 * 32 ))
+	if( tokenCount <= 0 || tokenCount > ( 1024 * 1024 * 32 ))
 	{
 		Q_strncpy( comment, "<corrupted>", MAX_STRING );
 		FS_Close( f );
 		return 0;
 	}
 
-	if( tokenSize < 0 || tokenSize > ( 1024 * 1024 * 32 ))
+	if( tokenSize <= 0 || tokenSize > ( 1024 * 1024 * 32 ))
 	{
 		Q_strncpy( comment, "<corrupted>", MAX_STRING );
 		FS_Close( f );
@@ -2377,18 +2380,24 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	pData = pSaveData;
 
 	// allocate a table for the strings, and parse the table
-	if( tokenSize > 0 )
-	{
-		pTokenList = Mem_Alloc( host.mempool, tokenCount * sizeof( char* ));
+	pTokenList = Mem_Alloc( host.mempool, tokenCount * sizeof( char* ));
 
-		// make sure the token strings pointed to by the pToken hashtable.
-		for( i = 0; i < tokenCount; i++ )
-		{
-			pTokenList[i] = *pData ? pData : NULL;	// point to each string in the pToken table
-			while( *pData++ );			// find next token (after next null)
-		}
+	if( !pTokenList || !pSaveData )
+	{
+		Q_strncpy( comment, "<corrupted>", MAX_STRING );
+
+		FS_Close( f );
+		Z_Free( pTokenList );
+		Z_Free( pSaveData );
+		return 0;
 	}
-	else pTokenList = NULL;
+
+	// make sure the token strings pointed to by the pToken hashtable.
+	for( i = 0; i < tokenCount; i++ )
+	{
+		pTokenList[i] = *pData ? pData : NULL;	// point to each string in the pToken table
+		while( *pData++ );			// find next token (after next null)
+	}
 
 	// short, short (size, index of field name)
 	Q_memcpy(&shortpool, pData, sizeof(short));
@@ -2401,8 +2410,8 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	if( Q_stricmp( pFieldName, "GameHeader" ))
 	{
 		Q_strncpy( comment, "<missing GameHeader>", MAX_STRING );
-		if( pTokenList ) Mem_Free( pTokenList );
-		if( pSaveData ) Mem_Free( pSaveData );
+		Mem_Free( pTokenList );
+		Mem_Free( pSaveData );
 		FS_Close( f );
 		return 0;
 	}
@@ -2441,8 +2450,8 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	}
 
 	// delete the string table we allocated
-	if( pTokenList ) Mem_Free( pTokenList );
-	if( pSaveData ) Mem_Free( pSaveData );
+	Mem_Free( pTokenList );
+	Mem_Free( pSaveData );
 	FS_Close( f );	
 
 	if( Q_strlen( name ) > 0 && Q_strlen( description ) > 0 )

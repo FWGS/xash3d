@@ -370,16 +370,16 @@ int R_ComputeFxBlend( cl_entity_t *e )
 		break;	
 	}
 
-	if( e->model->type != mod_brush )
+	if( e->model && e->model->type != mod_brush )
 	{
 		// NOTE: never pass sprites with rendercolor '0 0 0' it's a stupid Valve Hammer Editor bug
 		if( !e->curstate.rendercolor.r && !e->curstate.rendercolor.g && !e->curstate.rendercolor.b )
 			e->curstate.rendercolor.r = e->curstate.rendercolor.g = e->curstate.rendercolor.b = 255;
-	}
 
-	// apply scale to studiomodels and sprites only
-	if( e->model && e->model->type != mod_brush && !e->curstate.scale )
-		e->curstate.scale = 1.0f;
+		// apply scale to studiomodels and sprites only
+		if( !e->curstate.scale )
+			e->curstate.scale = 1.0f;
+	}
 
 	blend = bound( 0, blend, 255 );
 

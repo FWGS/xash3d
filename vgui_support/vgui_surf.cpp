@@ -40,6 +40,8 @@ CEngineSurface :: CEngineSurface( Panel *embeddedPanel ):SurfaceBase( embeddedPa
 	embeddedPanel->getSize(_surfaceExtents[2], _surfaceExtents[3]);
 	_drawTextPos[0] = _drawTextPos[1] = 0;
 	_hCurrentFont = null;
+	_hCurrentCursor = null;
+	_translateX = _translateY = 0;
 }
 
 CEngineSurface :: ~CEngineSurface( void )

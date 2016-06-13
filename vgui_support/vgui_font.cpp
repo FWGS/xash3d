@@ -123,8 +123,12 @@ bool FontCache::AllocatePageForChar( int charWide, int charTall, int &pageIndex,
 {
 	// see if there is room in the last page for this character
 	int nPageType = ComputePageType( charTall );
-	pageIndex = m_pCurrPage[nPageType];
 
+	if( nPageType < 0 )
+		return false;
+
+	pageIndex = m_pCurrPage[nPageType];
+	
 	int nNextX = 0;
 	bool bNeedsNewPage = true;
 

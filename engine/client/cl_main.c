@@ -382,7 +382,7 @@ void CL_CreateCmd( void )
 	// because is potential backdoor for cheating
 	pcmd->cmd.msec = ms;
 	pcmd->cmd.lerp_msec = cl_interp->value * 1000;
-	pcmd->cmd.lerp_msec = bound( 0, cmd.lerp_msec, 250 );
+	pcmd->cmd.lerp_msec = bound( 0, pcmd->cmd.lerp_msec, 250 );
 
 	V_ProcessOverviewCmds( &pcmd->cmd );
 	V_ProcessShowTexturesCmds( &pcmd->cmd );
@@ -1174,7 +1174,7 @@ void CL_PrepSound( void )
 
 	S_BeginRegistration();
 
-	for( i = 0; i < MAX_SOUNDS && cl.sound_precache[i+1][0]; i++ )
+	for( i = 0; i < MAX_SOUNDS - 1 && cl.sound_precache[i+1][0]; i++ )
 	{
 		cl.sound_index[i+1] = S_RegisterSound( cl.sound_precache[i+1] );
 		Cvar_SetFloat( "scr_loading", scr_loading->value + 5.0f / sndcount );
@@ -1194,8 +1194,8 @@ void CL_PrepSound( void )
 			{
 				MsgDev( D_NOTE, "Restarting sound %s...\n", entry->name );
 				S_AmbientSound( entry->origin, entry->entnum,
-				S_RegisterSound( entry->name ), entry->volume, entry->attenuation,
-				entry->pitch, 0 );
+					S_RegisterSound( entry->name ), entry->volume, entry->attenuation,
+					entry->pitch, 0 );
 			}
 		}
 	}
@@ -1241,7 +1241,7 @@ void CL_PrepVideo( void )
 		mdlcount++; // total num models
 	step = mdlcount/10;
 
-	for( i = 0; i < MAX_MODELS && cl.model_precache[i+1][0]; i++ )
+	for( i = 0; i < MAX_MODELS - 1 && cl.model_precache[i+1][0]; i++ )
 	{
 		Q_strncpy( mdlname, cl.model_precache[i+1], MAX_STRING );
 		Mod_RegisterModel( mdlname, i+1 );

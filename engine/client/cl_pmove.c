@@ -1287,7 +1287,7 @@ void CL_PredictMovement( void )
 			cl.predicted.correction_time = cl.predicted.correction_time - host.frametime;
 
 			if ( cl_smoothtime->value <= 0.0 )
-				Cvar_DirectSet(cl_smoothtime, "0.1");
+				Cvar_Set("cl_smoothtime", "0.1");
 
 			if ( cl.predicted.correction_time < 0.0f )
 				cl.predicted.correction_time = 0.0f;

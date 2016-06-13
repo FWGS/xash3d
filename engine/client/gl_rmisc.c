@@ -197,8 +197,8 @@ void R_CreateDetailTexturesList( const char *filename )
 
 			if( pic )
 			{
-				xScale = (pic->width / tex->width) * gl_detailscale->value;
-				yScale = (pic->height / tex->height) * gl_detailscale->value;
+				xScale = (pic->width / (float)tex->width) * gl_detailscale->value;
+				yScale = (pic->height / (float)tex->height) * gl_detailscale->value;
 				FS_FreeImage( pic );
 			}
 			else xScale = yScale = 10.0f;

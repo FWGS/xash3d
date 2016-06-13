@@ -991,7 +991,7 @@ eventually rotation) of the end points
 */
 void SV_ClipMoveToEntity( edict_t *ent, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, trace_t *trace )
 {
-	hull_t	*hull;
+	hull_t	*hull = NULL;
 	model_t	*model;
 	vec3_t	start_l, end_l;
 	vec3_t	offset, temp;
@@ -1017,6 +1017,10 @@ void SV_ClipMoveToEntity( edict_t *ent, const vec3_t start, vec3_t mins, vec3_t 
 		hull = SV_HullForEntity( ent, mins, maxs, offset );
 		hullcount = 1;
 	}
+
+	// prevent crash on incorrect hull
+	if( !hull )
+		return;
 
 	// rotate start and end into the models frame of reference
 	if( ent->v.solid == SOLID_BSP && !VectorIsNull( ent->v.angles ))
@@ -1046,7 +1050,7 @@ void SV_ClipMoveToEntity( edict_t *ent, const vec3_t start, vec3_t mins, vec3_t 
 		if( transform_bbox )
 		{
 			World_TransformAABB( matrix, mins, maxs, out_mins, out_maxs );
-			VectorSubtract( hull->clip_mins, out_mins, offset ); // calc new local offset
+			VectorSubtract( hull[0].clip_mins, out_mins, offset ); // calc new local offset
 
 			for( j = 0; j < 3; j++ )
 			{
@@ -1064,10 +1068,6 @@ void SV_ClipMoveToEntity( edict_t *ent, const vec3_t start, vec3_t mins, vec3_t 
 		VectorSubtract( start, offset, start_l );
 		VectorSubtract( end, offset, end_l );
 	}
-
-	// prevent crash on incorrect hull
-	if( !hull )
-		return;
 
 	if( hullcount == 1 )
 	{

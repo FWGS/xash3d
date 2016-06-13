@@ -858,7 +858,7 @@ void Delta_Shutdown( void )
 
 		if( dt_info[i].pFields )
 		{
-			Z_Free( dt_info[i].pFields );
+			Mem_Free( dt_info[i].pFields );
 			dt_info[i].pFields = NULL;
 		}
 
@@ -884,63 +884,63 @@ int Delta_ClampIntegerField( int iValue, qboolean bSigned, int bits )
 		break;
 	case 2:
 		if( bSigned ) iValue = bound( -2, (short)iValue, 1 );
-		else iValue = bound( 0, (word)iValue, 3 );
+		else iValue = boundmax( (word)iValue, 3 );
 		break;
 	case 3:
 		if( bSigned ) iValue = bound( -4, (short)iValue, 3 );
-		else iValue = bound( 0, (word)iValue, 7 );
+		else iValue = boundmax( (word)iValue, 7 );
 		break;
 	case 4:
 		if( bSigned ) iValue = bound( -8, (short)iValue, 7 );
-		else iValue = bound( 0, (word)iValue, 15 );
+		else iValue = boundmax( (word)iValue, 15 );
 		break;
 	case 5:
 		if( bSigned ) iValue = bound( -16, (short)iValue, 15 );
-		else iValue = bound( 0, (word)iValue, 31 );
+		else iValue = boundmax( (word)iValue, 31 );
 		break;
 	case 6:
 		if( bSigned ) iValue = bound( -32, (short)iValue, 31 );
-		else iValue = bound( 0, (word)iValue, 63 );
+		else iValue = boundmax( (word)iValue, 63 );
 		break;
 	case 7:
 		if( bSigned ) iValue = bound( -64, (short)iValue, 63 );
-		else iValue = bound( 0, (word)iValue, 127 );
+		else iValue = boundmax( (word)iValue, 127 );
 		break;
 	case 8:
 		if( bSigned ) iValue = bound( -128, (short)iValue, 127 );
-		else iValue = bound( 0, (word)iValue, 255 );
+		else iValue = boundmax( (word)iValue, 255 );
 		break;
 	case 9:
 		if( bSigned ) iValue = bound( -256, (short)iValue, 255 );
-		else iValue = bound( 0, (word)iValue, 511 );
+		else iValue = boundmax( (word)iValue, 511 );
 		break;
 	case 10:
 		if( bSigned ) iValue = bound( -512, (short)iValue, 511 );
-		else iValue = bound( 0, (word)iValue, 1023 );
+		else iValue = boundmax( (word)iValue, 1023 );
 		break;
 	case 11:
 		if( bSigned ) iValue = bound( -1024, (short)iValue, 1023 );
-		else iValue = bound( 0, (word)iValue, 2047 );
+		else iValue = boundmax( (word)iValue, 2047 );
 		break;
 	case 12:
 		if( bSigned ) iValue = bound( -2048, (short)iValue, 2047 );
-		else iValue = bound( 0, (word)iValue, 4095 );
+		else iValue = boundmax( (word)iValue, 4095 );
 		break;
 	case 13:
 		if( bSigned ) iValue = bound( -4096, (short)iValue, 4095 );
-		else iValue = bound( 0, (word)iValue, 8191 );
+		else iValue = boundmax( (word)iValue, 8191 );
 		break;
 	case 14:
 		if( bSigned ) iValue = bound( -8192, (short)iValue, 8191 );
-		else iValue = bound( 0, (word)iValue, 16383 );
+		else iValue = boundmax( (word)iValue, 16383 );
 		break;
 	case 15:
 		if( bSigned ) iValue = bound( -16384, (short)iValue, 16383 );
-		else iValue = bound( 0, (word)iValue, 32767 );
+		else iValue = boundmax( (word)iValue, 32767 );
 		break;
 	case 16:
 		if( bSigned ) iValue = bound( -32768, (short)iValue, 32767 );
-		else iValue = bound( 0, (word)iValue, 65535 );
+		else iValue = boundmax( (word)iValue, 65535 );
 		break;
 	}
 
@@ -986,8 +986,11 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 
 		fromF = Delta_ClampIntegerField( fromF, bSigned, pField->bits );
 		toF = Delta_ClampIntegerField( toF, bSigned, pField->bits );
-		if ( pField->multiplier != 1.0f ) fromF *= pField->multiplier;
-		if ( pField->multiplier != 1.0f ) toF *= pField->multiplier;
+		if( pField->multiplier != 1.0f )
+		{
+			fromF *= pField->multiplier;
+			toF *= pField->multiplier;
+		}
 	}
 	else if( pField->flags & DT_SHORT )
 	{
@@ -1004,8 +1007,11 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 
 		fromF = Delta_ClampIntegerField( fromF, bSigned, pField->bits );
 		toF = Delta_ClampIntegerField( toF, bSigned, pField->bits );
-		if ( pField->multiplier != 1.0f ) fromF *= pField->multiplier;
-		if ( pField->multiplier != 1.0f ) toF *= pField->multiplier;
+		if( pField->multiplier != 1.0f )
+		{
+			fromF *= pField->multiplier;
+			toF *= pField->multiplier;
+		}
 	}
 	else if( pField->flags & DT_INTEGER )
 	{
@@ -1022,8 +1028,11 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 
 		fromF = Delta_ClampIntegerField( fromF, bSigned, pField->bits );
 		toF = Delta_ClampIntegerField( toF, bSigned, pField->bits );
-		if ( pField->multiplier != 1.0f ) fromF *= pField->multiplier;
-		if ( pField->multiplier != 1.0f ) toF *= pField->multiplier;
+		if( pField->multiplier != 1.0f )
+		{
+			fromF *= pField->multiplier;
+			toF *= pField->multiplier;
+		}
 	}
 	else if( pField->flags & ( DT_FLOAT|DT_ANGLE ))
 	{

@@ -128,7 +128,7 @@ void Mobile_Init( void )
 		MsgDev( D_INFO, "Mobility interface not found\n");
 	}
 
-	Cmd_AddCommand( "vibrate", Vibrate_f, "Vibrate for specified time");
+	Cmd_AddCommand( "vibrate", (xcommand_t)Vibrate_f, "Vibrate for specified time");
 	vibration_length = Cvar_Get( "vibration_length", "1.0", CVAR_ARCHIVE, "Vibration length");
 	vibration_enable = Cvar_Get( "vibration_enable", "1", CVAR_ARCHIVE, "Enable vibration");
 }

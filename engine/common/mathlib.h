@@ -101,7 +101,10 @@ GNU General Public License for more details.
 #define MakeRGBA( out, x, y, z, w ) Vector4Set( out, x, y, z, w )
 #define PlaneDist(point,plane) ((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal))
 #define PlaneDiff(point,plane) (((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal)) - (plane)->dist)
-#define bound( min, num, max ) ((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
+#define boundmax( num, high ) ( (num) < (high) ? (num) : (high) )
+#define boundmin( num, low )  ( (num) >= (low) ? (num) : (low)  )
+#define bound( low, num, high ) ( boundmin( boundmax(num, high), low ))
+//#define bound( min, num, max ) ((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
 
 float rsqrt( float number );
 float anglemod( const float a );

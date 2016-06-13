@@ -1107,7 +1107,7 @@ void UI_KeyEvent( int key, int down )
 		return;
 	if( key == K_MOUSE1 )
 	{
-		cursorDown = down;
+		cursorDown = !!down;
 	}
 
 	if( uiStatic.menuActive->keyFunc )
@@ -1297,7 +1297,7 @@ void UI_AddServerToList( netadr_t adr, const char *info )
 	if( uiStatic.numServers == UI_MAX_SERVERS )
 		return;	// full
 
-	if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )))
+	if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )) != 0 )
 		return;
 
 	// ignore if duplicated

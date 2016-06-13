@@ -231,8 +231,9 @@ void SNDDMA_Shutdown( void )
 	if (SDL_WasInit(SDL_INIT_AUDIO != 0))
 		 SDL_QuitSubSystem(SDL_INIT_AUDIO);
 #endif
-	if (dma.buffer) {
-		 Z_Free(dma.buffer);
+	if (dma.buffer) 
+	{
+		 Mem_Free(dma.buffer);
 		 dma.buffer = NULL;
 	}
 }

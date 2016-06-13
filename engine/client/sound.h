@@ -149,9 +149,8 @@ typedef struct
 typedef struct
 {
 	double		sample;
-
-	wavdata_t		*pData;
 	double 		forcedEndSample;
+	wavdata_t		*pData;
 	qboolean		finished;
 } mixer_t;
 

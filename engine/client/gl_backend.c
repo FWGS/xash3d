@@ -675,8 +675,8 @@ rebuild_page:
 	end = total * gl_showtextures->integer;
 	if( end > MAX_TEXTURES ) end = MAX_TEXTURES;
 
-	w = glState.width / base_w;
-	h = glState.height / base_h;
+	w = glState.width / (float)base_w;
+	h = glState.height / (float)base_h;
 
 	Con_DrawStringLen( NULL, NULL, &charHeight );
 
@@ -703,7 +703,7 @@ rebuild_page:
 			continue;
 
 		x = k % base_w * w;
-		y = k / base_w * h;
+		y = k / (float)base_w * h;
 
 		pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 		GL_Bind( GL_TEXTURE0, i ); // NOTE: don't use image->texnum here, because skybox has a 'wrong' indexes

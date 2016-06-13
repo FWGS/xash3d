@@ -149,7 +149,7 @@ void SV_CalcPings( void )
 		}
 
 		if( !count ) cl->ping = 0;
-		else cl->ping = total / count;
+		else cl->ping = (float)total / (float)count;
 	}
 }
 
@@ -821,7 +821,7 @@ void SV_Init( void )
 	rcon_password = Cvar_Get( "rcon_password", "", 0, "remote connect password" );
 	sv_stepsize = Cvar_Get( "sv_stepsize", "18", CVAR_ARCHIVE|CVAR_PHYSICINFO, "how high you can step up" );
 	sv_newunit = Cvar_Get( "sv_newunit", "0", 0, "sets to 1 while new unit is loading" );
-	hostname = Cvar_Get( "hostname", "unnamed", CVAR_SERVERNOTIFY|CVAR_SERVERNOTIFY|CVAR_ARCHIVE, "host name" );
+	hostname = Cvar_Get( "hostname", "unnamed", CVAR_SERVERNOTIFY|CVAR_ARCHIVE, "host name" );
 	sv_timeout = Cvar_Get( "sv_timeout", "125", CVAR_SERVERNOTIFY, "connection timeout" );
 	zombietime = Cvar_Get( "zombietime", "2", CVAR_SERVERNOTIFY, "timeout for clients-zombie (who died but not respawned)" );
 	sv_pausable = Cvar_Get( "pausable", "1", CVAR_SERVERNOTIFY, "allow players to pause or not" );
@@ -973,19 +973,19 @@ void SV_Shutdown( qboolean reconnect )
 	// free server static data
 	if( svs.clients )
 	{
-		Z_Free( svs.clients );
+		Mem_Free( svs.clients );
 		svs.clients = NULL;
 	}
 
 	if( svs.baselines )
 	{
-		Z_Free( svs.baselines );
+		Mem_Free( svs.baselines );
 		svs.baselines = NULL;
 	}
 
 	if( svs.packet_entities )
 	{
-		Z_Free( svs.packet_entities );
+		Mem_Free( svs.packet_entities );
 		svs.packet_entities = NULL;
 		svs.num_client_entities = 0;
 		svs.next_client_entities = 0;

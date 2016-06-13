@@ -472,7 +472,7 @@ qboolean SV_CheckWater( edict_t *ent )
 		}
 	}
 
-	return (ent->v.waterlevel > 1);
+	return (ent->v.waterlevel > 1); //-V602
 }
 
 /*

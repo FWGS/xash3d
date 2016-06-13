@@ -2529,7 +2529,7 @@ const char *PlayerInfo_ValueForKey( int playerNum, const char *key )
 	if(( playerNum > cl.maxclients ) || ( playerNum < 1 ))
 		return NULL;
 
-	if(( cl.players[playerNum-1].name == NULL ) || (*(cl.players[playerNum-1].name) == 0 ))
+	if( !cl.players[playerNum-1].name[0] )
 		return NULL;
 
 	return Info_ValueForKey( cl.players[playerNum-1].userinfo, key );

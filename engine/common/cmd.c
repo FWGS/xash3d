@@ -813,10 +813,11 @@ Cmd_If_f
 Compare and et condition bit if true
 ============
 */
+#define BIT64(x) ( (uint64_t)1 << x )
 void Cmd_If_f( void )
 {
 	// reset bit first
-	cmd_cond &= ~BIT( cmd_condlevel );
+	cmd_cond &= ~BIT64( cmd_condlevel );
 
 	// usage
 	if( cmd_argc == 1 )
@@ -834,7 +835,7 @@ void Cmd_If_f( void )
 	else if( cmd_argc == 2 )
 	{
 		if( Q_atof( cmd_argv[1] ) )
-			cmd_cond |= BIT( cmd_condlevel );
+			cmd_cond |= BIT64( cmd_condlevel );
 	}
 	else if( cmd_argc == 4 )
 	{
@@ -850,20 +851,20 @@ void Cmd_If_f( void )
 		{
 			if( !Q_strcmp( cmd_argv[1], cmd_argv[3] ) || 
 				( ( f1 || f2 ) && ( f1 == f2 ) ) )
-				cmd_cond |= BIT( cmd_condlevel );
+				cmd_cond |= BIT64( cmd_condlevel );
 		}
 
 		if( cmd_argv[2][0] == '!' ) 					// !=
 		{
-			cmd_cond ^= BIT( cmd_condlevel );
+			cmd_cond ^= BIT64( cmd_condlevel );
 			return;
 		}
 
 		if( ( cmd_argv[2][0] == '>' ) && ( f1 > f2 ) )	// >, >=
-			cmd_cond |= BIT( cmd_condlevel );
+			cmd_cond |= BIT64( cmd_condlevel );
 		
 		if( ( cmd_argv[2][0] == '<' ) && ( f1 < f2 ) )	// <, <=
-			cmd_cond |= BIT( cmd_condlevel );
+			cmd_cond |= BIT64( cmd_condlevel );
 	}
 }
 
@@ -877,7 +878,7 @@ Invert condition bit
 */
 void Cmd_Else_f( void )
 {
-	cmd_cond ^= BIT( cmd_condlevel );
+	cmd_cond ^= BIT64( cmd_condlevel );
 }
 
 /*
@@ -935,7 +936,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 
 		while( *text == ':' )
 		{
-			if( !( cmd_cond & BIT( cmd_condlevel ) ) )
+			if( !( cmd_cond & BIT64( cmd_condlevel ) ) )
 				return;
 			cmd_condlevel++;
 			text++;
@@ -1139,7 +1140,7 @@ static void Cmd_Apropos_f( void )
 	{
 		// proceed a bit differently here as an alias value always got a final \n
 		if( !matchpattern_with_separator( alias->name, partial, true, "", false ))
-		if( !matchpattern_with_separator( alias->value, partial, true, "\n", false )) // when \n is a separator, wildcards don't match it
+		if( !matchpattern_with_separator( alias->value, partial, true, "\n", false )) // when \n is a separator, wildcards don't match it //-V666
 			continue;
 
 		Msg( "alias ^5%s^7: %s", alias->name, alias->value ); // do not print an extra \n

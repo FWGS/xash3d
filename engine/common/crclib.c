@@ -433,7 +433,7 @@ void MD5Final( byte digest[16], MD5Context_t *ctx )
 
 	MD5Transform( ctx->buf, (uint *)ctx->in );
 	Q_memcpy( digest, ctx->buf, 16 );
-	Q_memset( ctx, 0, sizeof( ctx ));	// in case it's sensitive
+	Q_memset( ctx, 0, sizeof( *ctx ));	// in case it's sensitive
 }
 
 // The four core functions

@@ -58,18 +58,21 @@ UI_Credits_DrawFunc
 static void UI_Credits_DrawFunc( void )
 {
 	int	i, y;
-	float	speed = 40.0f;
+	float	speed;
 	int	w = UI_MED_CHAR_WIDTH;
 	int	h = UI_MED_CHAR_HEIGHT;
 	int	color = 0;
 
 	// draw the background first
-	if( !uiCredits.finalCredits && !CVAR_GET_FLOAT( "cl_background" ))
+	if( !uiCredits.finalCredits && !CVAR_GET_FLOAT( "cl_background" ) )
+	{
 		UI_DrawPic( 0, 0, 1024 * uiStatic.scaleX, 768 * uiStatic.scaleY, uiColorWhite, ART_BACKGROUND );
+		
+		// otherwise running on cutscene
+		speed = 32.0f * ( 768.0f / ScreenHeight );
+	}
 	else speed = 45.0f;	// syncronize with final background track :-)
 
-	// otherwise running on cutscene
-	speed = 32.0f * (768.0f / ScreenHeight);
 
 	// now draw the credits
 	UI_ScaleCoords( NULL, NULL, &w, &h );

@@ -1043,7 +1043,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		if( SDL_GetWindowWMInfo( host.hWnd, &info ) )
 		{
 			// info.info.info.info.info... Holy shit, SDL?
-			SetClassLong( info.info.win.window, GCL_HICON, ico );
+			SetClassLong( info.info.win.window, GCL_HICON, (LONG)ico );
 		}
 	}
 #endif

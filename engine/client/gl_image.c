@@ -119,7 +119,7 @@ R_GetTexture
 */
 gltexture_t *R_GetTexture( GLenum texnum )
 {
-	ASSERT( texnum >= 0 && texnum < MAX_TEXTURES );
+	ASSERT( texnum < MAX_TEXTURES );
 	return &r_textures[texnum];
 }
 
@@ -132,8 +132,7 @@ Just for debug (r_showtextures uses it)
 */
 void GL_SetTextureType( GLenum texnum, GLenum type )
 {
-	if( texnum <= 0 ) return;
-	ASSERT( texnum >= 0 && texnum < MAX_TEXTURES );
+	ASSERT( texnum < MAX_TEXTURES );
 	r_textures[texnum].texType = type;
 }
 
@@ -1484,7 +1483,7 @@ int GL_LoadTexture( const char *name, const byte *buf, size_t size, int flags, i
 	if( !name || !name[0] || !glw_state.initialized )
 		return 0;
 
-	if( Q_strlen( name ) >= sizeof( r_textures->name ))
+	if( Q_strlen( name ) >= sizeof( r_textures[0].name ))
 	{
 		MsgDev( D_ERROR, "GL_LoadTexture: too long name %s\n", name );
 		return 0;
@@ -1573,7 +1572,7 @@ int GL_LoadTextureInternal( const char *name, rgbdata_t *pic, texFlags_t flags, 
 	if( !name || !name[0] || !glw_state.initialized )
 		return 0;
 
-	if( Q_strlen( name ) >= sizeof( r_textures->name ))
+	if( Q_strlen( name ) >= sizeof( r_textures[0].name ) )
 	{
 		MsgDev( D_ERROR, "GL_LoadTexture: too long name %s\n", name );
 		return 0;
@@ -1758,7 +1757,7 @@ int GL_FindTexture( const char *name )
 	if( !name || !name[0] || !glw_state.initialized )
 		return 0;
 
-	if( Q_strlen( name ) >= sizeof( r_textures->name ))
+	if( Q_strlen( name ) >= sizeof( r_textures[0].name ) )
 	{
 		MsgDev( D_ERROR, "GL_FindTexture: too long name %s\n", name );
 		return 0;
@@ -1795,7 +1794,7 @@ void GL_FreeImage( const char *name )
 	if( !name || !name[0] || !glw_state.initialized )
 		return;
 
-	if( Q_strlen( name ) >= sizeof( r_textures->name ))
+	if( Q_strlen( name ) >= sizeof( r_textures[0].name ) )
 	{
 		MsgDev( D_ERROR, "GL_FreeImage: too long name %s\n", name );
 		return;
@@ -4555,9 +4554,9 @@ void R_InitImages( void )
 	Q_memset( r_texturesHashTable, 0, sizeof( r_texturesHashTable ));
 
 	// create unused 0-entry
-	Q_strncpy( r_textures->name, "*unused*", sizeof( r_textures->name ));
-	hash = Com_HashKey( r_textures->name, TEXTURES_HASH_SIZE );
-	r_textures->nextHash = r_texturesHashTable[hash];
+	Q_strncpy( r_textures[0].name, "*unused*", sizeof( r_textures[0].name ));
+	hash = Com_HashKey( r_textures[0].name, TEXTURES_HASH_SIZE );
+	r_textures[0].nextHash = r_texturesHashTable[hash];
 	r_texturesHashTable[hash] = r_textures;
 	r_numTextures = 1;
 

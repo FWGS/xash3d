@@ -142,7 +142,7 @@ static void UI_LoadGame_GetGameList( void )
 		
 		if( !GET_SAVE_COMMENT( filenames[i], comment ))
 		{
-			if( strlen( comment ))
+			if( comment[0] )
 			{
 				// get name string even if not found - SV_GetComment can be mark saves
 				// as <CORRUPTED> <OLD VERSION> etc
@@ -177,11 +177,11 @@ static void UI_LoadGame_GetGameList( void )
 
 	uiLoadGame.savesList.itemNames = (const char **)uiLoadGame.saveDescriptionPtr;
 
-	if ( strlen( uiLoadGame.saveName[0] ) == 0 )
+	if ( uiLoadGame.saveName[0][0] == '\0' )
 		uiLoadGame.load.generic.flags |= QMF_GRAYED;
 	else uiLoadGame.load.generic.flags &= ~QMF_GRAYED;
 
-	if ( strlen( uiLoadGame.delName[0] ) == 0 )
+	if ( uiLoadGame.delName[0][0] == '\0' )
 		uiLoadGame.remove.generic.flags |= QMF_GRAYED;
 	else uiLoadGame.remove.generic.flags &= ~QMF_GRAYED;
 }
@@ -197,11 +197,11 @@ static void UI_LoadGame_Callback( void *self, int event )
 
 	if( event == QM_CHANGED )
 	{
-		if( strlen( uiLoadGame.saveName[uiLoadGame.savesList.curItem] ) == 0 )
+		if( uiLoadGame.saveName[uiLoadGame.savesList.curItem][0] == '\0' )
 			uiLoadGame.load.generic.flags |= QMF_GRAYED;
 		else uiLoadGame.load.generic.flags &= ~QMF_GRAYED;
 
-		if( strlen( uiLoadGame.delName[uiLoadGame.savesList.curItem] ) == 0 )
+		if( uiLoadGame.delName[uiLoadGame.savesList.curItem][0] == '\0' )
 			uiLoadGame.remove.generic.flags |= QMF_GRAYED;
 		else uiLoadGame.remove.generic.flags &= ~QMF_GRAYED;
 		return;
@@ -216,7 +216,7 @@ static void UI_LoadGame_Callback( void *self, int event )
 		UI_PopMenu();
 		break;
 	case ID_LOAD:
-		if( strlen( uiLoadGame.saveName[uiLoadGame.savesList.curItem] ))
+		if( uiLoadGame.saveName[uiLoadGame.savesList.curItem][0] )
 		{
 			char	cmd[128];
 			sprintf( cmd, "load \"%s\"\n", uiLoadGame.saveName[uiLoadGame.savesList.curItem] );
@@ -231,7 +231,7 @@ static void UI_LoadGame_Callback( void *self, int event )
 		UI_DeleteDialog();
 		break;
 	case ID_YES:
-		if( strlen( uiLoadGame.delName[uiLoadGame.savesList.curItem] ))
+		if( uiLoadGame.delName[uiLoadGame.savesList.curItem][0] )
 		{
 			char	cmd[128];
 			sprintf( cmd, "killsave \"%s\"\n", uiLoadGame.delName[uiLoadGame.savesList.curItem] );
@@ -272,7 +272,7 @@ static void UI_LoadGame_Ownerdraw( void *self )
 		
 		UI_ScaleCoords( &x, &y, &w, &h );
 
-		if( strlen( uiLoadGame.saveName[uiLoadGame.savesList.curItem] ))
+		if( uiLoadGame.saveName[uiLoadGame.savesList.curItem][0] )
 		{
 			char	saveshot[128];
 

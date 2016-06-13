@@ -312,7 +312,7 @@ void Con_CreateConsole( void )
 	wc.hInstance     = host.hInst;
 	wc.hIcon         = LoadIcon( host.hInst, MAKEINTRESOURCE( IDI_ICON1 ));
 	wc.hCursor       = LoadCursor( NULL, IDC_ARROW );
-	wc.hbrBackground = (void *)COLOR_3DSHADOW;
+	wc.hbrBackground = (HBRUSH)COLOR_3DSHADOW;
 	wc.lpszClassName = SYSCONSOLE;
 	wc.lpszMenuName  = 0;
 
@@ -391,9 +391,9 @@ void Con_CreateConsole( void )
 
 	if( host.type == HOST_DEDICATED )
 	{
-		s_wcd.SysInputLineWndProc = (WNDPROC)SetWindowLong( s_wcd.hwndInputLine, GWL_WNDPROC, (long)Con_InputLineProc );
+		s_wcd.SysInputLineWndProc = (WNDPROC)SetWindowLong( s_wcd.hwndInputLine, GWL_WNDPROC, (LONG)Con_InputLineProc );
 		SendMessage( s_wcd.hwndInputLine, WM_SETFONT, ( WPARAM )s_wcd.hfBufferFont, 0 );
-          }
+    }
 
 	// show console if needed
 	if( host.con_showalways )

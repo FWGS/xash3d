@@ -834,11 +834,13 @@ void CL_CharEvent( int key )
 #ifdef _WIN32
 	if( key == '`' || key == '~' ) return;
 
+#if 0
 	if( cls.key_dest == key_console && !Con_Visible( ))
 	{
 		if((char)key == '�' || (char)key == '�' )
 			return; // don't pass '�' when we open the console 
 	}
+#endif
 #endif
 	// distribute the key down event to the apropriate handler
 	if( cls.key_dest == key_console || cls.key_dest == key_message )

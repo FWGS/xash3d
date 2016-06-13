@@ -396,7 +396,7 @@ static void UI_TouchButtons_Callback( void *self, int event )
         uiTouchButtons.yes.generic.flags |= QMF_HIDDEN;
 		break;
 	case ID_SAVE:
-		if( strlen(uiTouchButtons.name.buffer) > 0)
+		if( uiTouchButtons.name.buffer[0] )
 		{
 			char command[256];
 			snprintf( command, 256, "touch_addbutton \"%s\" \"%s\" \"%s\"\n", uiTouchButtons.name.buffer,
@@ -404,7 +404,7 @@ static void UI_TouchButtons_Callback( void *self, int event )
 			CLIENT_COMMAND(0, command);
 			snprintf( command, 256, "touch_setflags \"%s\" %i\n", uiTouchButtons.name.buffer, uiTouchButtons.curflags );
 			CLIENT_COMMAND(0, command);
-			snprintf( command, 256, "touch_setcolor \"%s\" %d %d %d %d\n", uiTouchButtons.name.buffer, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
+			snprintf( command, 256, "touch_setcolor \"%s\" %u %u %u %u\n", uiTouchButtons.name.buffer, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
 			CLIENT_COMMAND(1, command);
 			uiTouchButtons.name.buffer[0] = 0;
 			uiTouchButtons.name.cursor = 0;
@@ -418,7 +418,7 @@ static void UI_TouchButtons_Callback( void *self, int event )
 			CLIENT_COMMAND(0, command);
 			snprintf( command, 256, "touch_setflags \"%s\" %i\n", uiTouchButtons.selectedName, uiTouchButtons.curflags );
 			CLIENT_COMMAND(0, command);
-			snprintf( command, 256, "touch_setcolor \"%s\" %d %d %d %d\n", uiTouchButtons.selectedName, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
+			snprintf( command, 256, "touch_setcolor \"%s\" %u %u %u %u\n", uiTouchButtons.selectedName, CURCOLOR1(red), CURCOLOR1(green), CURCOLOR1(blue),CURCOLOR1(alpha) );
 			CLIENT_COMMAND(1, command);
 		}
 		UI_TouchButtons_GetButtonList();

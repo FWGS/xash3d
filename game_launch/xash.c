@@ -45,7 +45,7 @@ GNU General Public License for more details.
  #define dlmount(x) LoadLibraryA(x)
  #define dlclose(x) FreeLibrary(x)
  #define dlsym(x,y) GetProcAddress(x,y)
-#ifdef XASH_SDL
+#ifndef XASH_DEDICATED
  #define XASHLIB                 "xash_sdl.dll"
 #else
  #define XASHLIB                 "xash_dedicated.dll"
@@ -70,8 +70,9 @@ void Xash_Error( const char *errorstring )
 {
 #ifdef XASH_SDL
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
-#endif
+#else
 	fprintf(stderr, "Xash Error: %s\n", errorstring);
+#endif
 	exit( 1 );
 }
 
@@ -117,14 +118,17 @@ void Sys_ChangeGame( const char *progname )
 
 	Xash_Main( szArgc, szArgv, szGameDir, true, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
 }
-#if _MSC_VER == 1200
+
+
+#if _MSC_VER == 1200 || !defined(XASH_SDL)
+#pragma comment(lib, "shell32.lib")
 int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow)
 #else // _WIN32
 int main( int argc, char **argv )
 #endif
 {
 
-#if _MSC_VER == 1200
+#if _MSC_VER == 1200 || !defined(XASH_SDL)
 	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
 	int size, i = 0;
 	szArgv = (char**)malloc(szArgc*sizeof(char*));

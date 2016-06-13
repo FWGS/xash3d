@@ -244,7 +244,7 @@ void S_PaintStereoFrom8( portable_samplepair_t *pbuf, int *volume, byte *pData, 
 
 	for( i = 0; i < outCount; i++, data++ )
 	{
-		left = (byte)((*data & 0x00FF));
+		left = (byte)(*data & 0x00FF);
 		right = (byte)((*data & 0xFF00) >> 8);
 		pbuf[i].left += lscale[left];
 		pbuf[i].right += rscale[right];
@@ -276,9 +276,9 @@ void S_PaintStereoFrom16( portable_samplepair_t *pbuf, int *volume, short *pData
 		
 	for( i = 0; i < outCount; i++, data++ )
 	{
-		left = (signed short)((*data & 0x0000FFFF));
+		left = (signed short)(*data & 0x0000FFFF);
 		right = (signed short)((*data & 0xFFFF0000) >> 16);
-
+		
 		left =  (left * volume[0]) >> 8;
 		right = (right * volume[1]) >> 8;
 

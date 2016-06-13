@@ -1984,7 +1984,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 	// search through the path, one element at a time
 	for( search = fs_searchpaths; search; search = search->next )
 	{
-		if( gamedironly & !( search->flags & ( FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
+		if( gamedironly && !( search->flags & ( FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
 			continue;
 
 		// is the element a pak file?
@@ -3416,7 +3416,7 @@ static qboolean W_ReadLumpTable( wfile_t *wad )
 	return true;
 }
 
-byte *W_ReadLump( wfile_t *wad, dlumpinfo_t *lump, size_t *lumpsizeptr )
+byte *W_ReadLump( wfile_t *wad, dlumpinfo_t *lump, fs_offset_t *lumpsizeptr )
 {
 	byte	*buf;
 	size_t	size = 0;
@@ -3609,6 +3609,6 @@ static byte *W_LoadFile( const char *path, fs_offset_t *lumpsizeptr, qboolean ga
 
 	search = FS_FindFile( path, &index, gamedironly );
 	if( search && search->wad )
-		return W_ReadLump( search->wad, &search->wad->lumps[index], (size_t *)lumpsizeptr ); 
+		return W_ReadLump( search->wad, &search->wad->lumps[index], lumpsizeptr ); 
 	return NULL;
 }

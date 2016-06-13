@@ -779,7 +779,7 @@ void R_StudioCalcBoneAdj( float dadt, float *adj, const byte *pcontroller1, cons
 				}
 				else 
 				{
-					value = ((pcontroller1[i] * dadt + (pcontroller2[i]) * (1.0f - dadt))) * (360.0f / 256.0f) + pbonecontroller[j].start;
+					value = (pcontroller1[i] * dadt + (pcontroller2[i]) * (1.0f - dadt)) * (360.0f / 256.0f) + pbonecontroller[j].start;
 				}
 			}
 			else 
@@ -1491,7 +1491,7 @@ void R_StudioDynamicLight( cl_entity_t *ent, alight_t *lightinfo )
 	VectorCopy( plight->lightvec, lightinfo->plightvec );
 
 	// setup ambient lighting
-	invLight = (ent->curstate.effects & EF_INVLIGHT) ? true : false;
+	invLight = (ent && ent->curstate.effects & EF_INVLIGHT) ? true : false;
 	R_LightForPoint( origin, &ambient, invLight, true, 0.0f ); // ignore dlights
 
 	R_GetLightSpot( plight->lightspot );	// shadow stuff
@@ -3619,7 +3619,9 @@ void R_RunViewmodelEvents( void )
 	if( !Mod_Extradata( clgame.viewent.model ))
 		return;
 
+#ifndef _MSC_VER
 #warning "check this"
+#endif
 	if( cl_lw->value && cl.frame.client.viewmodel != cl.predicted.viewmodel )
 		return;
 
@@ -3656,8 +3658,9 @@ void R_DrawViewModel( void )
 
 	if( !Mod_Extradata( clgame.viewent.model ))
 		return;
-
+#ifndef _MSC_VER
 #warning "check this"
+#endif
 	if( cl_lw->value && cl.frame.client.viewmodel != cl.predicted.viewmodel )
 		return;
 

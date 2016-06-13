@@ -337,9 +337,9 @@ typedef struct
 typedef struct
 {
 	net_response_t		resp;
-	net_api_response_func_t	pfnFunc;
 	double			timeout;
 	double			timesend;	// time when request was sent
+	net_api_response_func_t	pfnFunc;
 	int			flags;	// FNETAPI_MULTIPLE_RESPONSE etc
 } net_request_t;
 
