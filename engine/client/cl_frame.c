@@ -131,7 +131,10 @@ int CL_InterpolateModel( cl_entity_t *e )
 	VectorCopy( e->curstate.origin, e->origin );
 	VectorCopy( e->curstate.angles, e->angles );
 
-	if( cls.timedemo || e->model == NULL || RP_LOCALCLIENT( e ) || cl.maxclients <= 1 )
+	if ( cls.timedemo || !e->model || e->model->name[0] == '*' && !r_bmodelinterp->value || cl.maxclients == 1 )
+		return 1;
+
+	if( cl.predicted.moving && cl.predicted.onground == e->index )
 		return 1;
 
 	t = cl.time - cl_interp->value;
@@ -217,7 +220,7 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 		ent->angles[PITCH] = -ent->angles[PITCH] / 3.0f;
 
 	// make me lerp
-	if( ent->model && ent->model->type == mod_brush && ent->curstate.animtime != 0.0f )
+	if( ent->model && ent->model->type == mod_brush && (ent->curstate.animtime != 0.0f || ent->index == cl.predicted.onground && cl.predicted.moving ))
 	{
 		float		d, f = 0.0f;
 		int		i;
@@ -1014,9 +1017,9 @@ void CL_SetIdealPitch( void )
 
 	for( i = 0; i < MAX_FORWARD; i++ )
 	{
-		top[0] = cl.frame.client.origin[0] + cosval * (i + 3.0f) * 12.0f;
-		top[1] = cl.frame.client.origin[1] + sinval * (i + 3.0f) * 12.0f;
-		top[2] = cl.frame.client.origin[2] + cl.frame.client.view_ofs[2];
+		top[0] = cl.predicted.origin[0] + cosval * (i + 3.0f) * 12.0f;
+		top[1] = cl.predicted.origin[1] + sinval * (i + 3.0f) * 12.0f;
+		top[2] = cl.predicted.origin[2] + cl.predicted.viewofs[2];
 		
 		bottom[0] = top[0];
 		bottom[1] = top[1];

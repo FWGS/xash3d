@@ -33,7 +33,6 @@ convar_t	*r_oldparticles;
 convar_t	*rcon_client_password;
 convar_t	*rcon_address;
 
-convar_t	*cl_smooth;
 convar_t	*cl_timeout;
 convar_t	*cl_predict;
 convar_t	*cl_showfps;
@@ -60,6 +59,8 @@ convar_t	*cl_sprite_nearest;
 convar_t	*cl_updaterate;
 convar_t	*hud_scale;
 convar_t	*cl_maxpacket;
+convar_t    *r_bmodelinterp;
+
 //
 // userinfo
 //
@@ -1709,7 +1710,6 @@ void CL_InitLocal( void )
 	hltv = Cvar_Get( "hltv", "0", CVAR_USERINFO|CVAR_LATCH, "HLTV mode" );
 	cl_showfps = Cvar_Get( "cl_showfps", "1", CVAR_ARCHIVE, "show client fps" );
 	cl_showpos = Cvar_Get( "cl_showpos", "0", CVAR_ARCHIVE, "show local player position and velocity" );
-	cl_smooth = Cvar_Get ("cl_smooth", "0", CVAR_ARCHIVE, "smooth up stair climbing and interpolate position in multiplayer" );
 	cl_cmdbackup = Cvar_Get( "cl_cmdbackup", "10", CVAR_ARCHIVE, "how many additional history commands are sent" );
 	cl_cmdrate = Cvar_Get( "cl_cmdrate", "30", CVAR_ARCHIVE, "max number of command packets sent to server per second" );
 	cl_draw_particles = Cvar_Get( "cl_draw_particles", "1", CVAR_ARCHIVE, "disable particle effects" );
@@ -1718,8 +1718,9 @@ void CL_InitLocal( void )
 	cl_sprite_nearest = Cvar_Get( "cl_sprite_nearest", "0", CVAR_ARCHIVE, "disable texture filtering on sprites" );
 	cl_showerror = Cvar_Get( "cl_showerror", "0", CVAR_ARCHIVE, "show prediction error" );
 	cl_updaterate = Cvar_Get( "cl_updaterate", "60", CVAR_USERINFO|CVAR_ARCHIVE, "refresh rate of server messages" );
-	cl_nosmooth = Cvar_Get( "cl_nosmooth", "0", CVAR_ARCHIVE, "TODO" );
-	cl_smoothtime = Cvar_Get( "cl_smoothtime", "0.1", CVAR_ARCHIVE, "TODO" );
+	cl_nosmooth = Cvar_Get( "cl_nosmooth", "0", CVAR_ARCHIVE, "smooth up stair climbing and interpolate position in multiplayer" );
+	cl_smoothtime = Cvar_Get( "cl_smoothtime", "0.1", CVAR_ARCHIVE, "time to smooth up" );
+	r_bmodelinterp = Cvar_Get( "r_bmodelinterp", "1", 0, "enable bmodel interpolation" );
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar

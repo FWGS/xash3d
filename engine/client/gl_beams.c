@@ -131,7 +131,10 @@ static qboolean ComputeBeamEntPosition( int beamEnt, vec3_t pt )
 	// get attachment
 	if( nAttachment > 0 )
 		VectorCopy( pEnt->attachment[nAttachment - 1], pt );
-	else VectorCopy( pEnt->origin, pt );
+	else
+	{
+		VectorCopy( pEnt->origin, pt );
+	}
 
 	return true;
 }

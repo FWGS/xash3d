@@ -107,13 +107,14 @@ typedef struct
 	vec3_t  punchangle;
 	vec3_t  origins[CMD_BACKUP];
 	vec3_t  error;
+	vec3_t  lastorigin;
+	double  correction_time;
 	int     viewmodel;
 	int     onground;
 	int     waterlevel;
 	int     usehull;
 	int     moving;
 	int     lastground;
-	int     correction_time;
 } cl_predicted_data_t; // data we got from prediction system
 
 // the client_t structure is wiped completely at every
@@ -534,7 +535,6 @@ extern menu_static_t	menu;
 //
 extern convar_t *r_oldparticles;
 extern convar_t	*cl_predict;
-extern convar_t	*cl_smooth;
 extern convar_t	*cl_showfps;
 extern convar_t *cl_showpos;
 extern convar_t	*cl_envshot_size;
@@ -560,6 +560,7 @@ extern convar_t *cl_trace_events;
 extern convar_t *cl_trace_stufftext;
 extern convar_t	*cl_sprite_nearest;
 extern convar_t *cl_updaterate;
+extern convar_t *r_bmodelinterp;
 extern convar_t *hud_scale;
 extern convar_t	*scr_centertime;
 extern convar_t	*scr_viewsize;
