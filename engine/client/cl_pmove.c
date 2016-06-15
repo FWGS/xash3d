@@ -1123,29 +1123,6 @@ void CL_PredictMovement( void )
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );
 
 	ASSERT( cl.refdef.cmd != NULL );
-#if 0 // Dmitry, eto realno kakaeto hueta
-	if( !cl_predict->value )
-	{
-		//simulate predict
-		local_state_t t1, t2;
-		Q_memset( &t1, 0, sizeof( local_state_t ));
-		Q_memset( &t2, 0, sizeof( local_state_t ));
-		t1.client = cl.frame.client;
-		Q_memcpy( t1.weapondata, cl.frame.weapondata, sizeof( t1.weapondata ));
-		t1.playerstate = cl.frame.playerstate[cl.playernum];
-		clgame.dllFuncs.pfnPostRunCmd( &t1, &t2, cl.refdef.cmd, true, cl.time, cls.lastoutgoingcommand );
-		cl.predicted.viewmodel = t2.client.viewmodel;
-
-		// run commands even if client predicting is disabled - client expected it
-		//CL_PostRunCmd( cl.refdef.cmd, cls.lastoutgoingcommand );
-
-		 cl.scr_fov = t2.client.fov;
-		 if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
-			cl.scr_fov = 90.0f;
-
-		return;
-	}
-#endif
 
 	if( !CL_IsPredicted( ))
 	{
@@ -1157,7 +1134,7 @@ void CL_PredictMovement( void )
 
 		to = from;
 
-		clgame.dllFuncs.pfnPostRunCmd( &from, &to, cl.refdef.cmd, false, cl.time, cls.lastoutgoingcommand );
+		clgame.dllFuncs.pfnPostRunCmd( &from, &to, cl.refdef.cmd, !cl_predict->integer ? true : false, cl.time, cls.lastoutgoingcommand );
 
 		// fake unpredicted values
 		VectorCopy( to.client.origin, cl.predicted.origin );
@@ -1295,6 +1272,8 @@ void CL_PredictMovement( void )
 		{
 			float d;
 			vec3_t delta;
+			int i;
+
 			cl.predicted.correction_time = cl.predicted.correction_time - host.frametime;
 
 			if( cl_smoothtime->value <= 0 )
@@ -1308,7 +1287,7 @@ void CL_PredictMovement( void )
 
 			d = cl.predicted.correction_time / cl_smoothtime->value;
 
-			for( int i = 0; i < 3; i++ )
+			for( i = 0; i < 3; i++ )
 			{
 				cl.predicted.origin[i] = cl.predicted.lastorigin[i] + ( cl.predicted.origin[i] - cl.predicted.lastorigin[i] ) * (1.0 - d);
 			}
