@@ -239,7 +239,7 @@ void IN_StartupMouse( void )
 	// -noenginemouse will disable all mouse input
 	if( Sys_CheckParm( "-noenginemouse" )) return; 
 
-#ifdef XASH_SDL
+#if defined XASH_SDL || defined USE_EVDEV
 	m_enginemouse = Cvar_Get("m_enginemouse", "0", CVAR_ARCHIVE, "Read mouse events in engine instead of client");
 	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
 	m_pitch = Cvar_Get("m_pitch", "0.022", CVAR_ARCHIVE, "Mouse pitch value");
