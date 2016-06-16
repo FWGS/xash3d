@@ -673,7 +673,7 @@ void Sys_RestoreCrashHandler( void )
 #elif defined (CRASHHANDLER)
 // Posix signal handler
 #include "library.h"
-#if defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined __ANDROID__
 #define HAVE_UCONTEXT_H 1
 #endif
 
