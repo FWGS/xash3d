@@ -111,7 +111,7 @@ typedef struct
 	uint	bitmapDataOffset;	// bmfh.bfOffBits
 	uint	bitmapHeaderSize;	// bmih.biSize
 	uint	width;		// bmih.biWidth
-	uint	height;		// bmih.biHeight
+	int	height;		// bmih.biHeight
 	word	planes;		// bmih.biPlanes
 	word	bitsPerPixel;	// bmih.biBitCount
 	uint	compression;	// bmih.biCompression
