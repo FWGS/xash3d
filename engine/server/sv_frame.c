@@ -572,6 +572,11 @@ void SV_WriteEntitiesToClient( sv_client_t *cl, sizebuf_t *msg )
 
 	// copy the entity states out
 	frame->num_entities = 0;
+
+	// It will break all connected clients, but it takes more than one week to overflow it
+	if( ( (unsigned int) svs.next_client_entities ) + frame_ents.num_entities >= 0x7FFFFFFE )
+		svs.next_client_entities = 0;
+
 	frame->first_entity = svs.next_client_entities;
 
 	for( i = 0; i < frame_ents.num_entities; i++ )
@@ -582,8 +587,8 @@ void SV_WriteEntitiesToClient( sv_client_t *cl, sizebuf_t *msg )
 		svs.next_client_entities++;
 
 		// this should never hit, map should always be restarted first in SV_Frame
-		if( svs.next_client_entities >= 0x7FFFFFFE )
-			Host_Error( "svs.next_client_entities wrapped\n" );
+		//if( svs.next_client_entities >= 0x7FFFFFFE )
+			//Host_Error( "svs.next_client_entities wrapped\n" );
 		frame->num_entities++;
 	}
 
