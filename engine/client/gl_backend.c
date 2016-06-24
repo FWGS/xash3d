@@ -105,8 +105,8 @@ GL_LoadTexMatrix
 */
 void GL_LoadTexMatrix( const matrix4x4 m )
 {
-	pglMatrixMode( GL_TEXTURE );
-	GL_LoadMatrix( m );
+	//pglMatrixMode( GL_TEXTURE );
+	//GL_LoadMatrix( m );
 	glState.texIdentityMatrix[glState.activeTMU] = false;
 }
 
@@ -118,8 +118,8 @@ GL_LoadTexMatrixExt
 void GL_LoadTexMatrixExt( const float *glmatrix )
 {
 	ASSERT( glmatrix != NULL );
-	pglMatrixMode( GL_TEXTURE );
-	pglLoadMatrixf( glmatrix );
+	//pglMatrixMode( GL_TEXTURE );
+	//pglLoadMatrixf( glmatrix );
 	glState.texIdentityMatrix[glState.activeTMU] = false;
 }
 
@@ -146,8 +146,8 @@ void GL_LoadIdentityTexMatrix( void )
 	if( glState.texIdentityMatrix[glState.activeTMU] )
 		return;
 
-	pglMatrixMode( GL_TEXTURE );
-	pglLoadIdentity();
+	//pglMatrixMode( GL_TEXTURE );
+	//pglLoadIdentity();
 	glState.texIdentityMatrix[glState.activeTMU] = true;
 }
 
@@ -713,6 +713,7 @@ rebuild_page:
 		if(( image->flags & TF_DEPTHMAP ) && !( image->flags & TF_NOCOMPARE ))
 			pglTexParameteri( image->target, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
 
+#if !defined XASH_GLES2_RENDER
 		pglBegin( GL_QUADS );
 		pglTexCoord2f( 0, 0 );
 		pglVertex2f( x, y );
@@ -729,6 +730,24 @@ rebuild_page:
 		else pglTexCoord2f( 0, 1 );
 		pglVertex2f( x, y + h );
 		pglEnd();
+#else
+		GLfloat verts[] = {
+				x,	   y,	  0, 0,
+				x + w, y,	  1, 0,
+				x + w, y + h, 1, 1,
+				x, 	   y + h, 0, 1 };
+
+			pglEnableVertexAttribArray(0);
+			pglEnableVertexAttribArray(1);
+
+			pglVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,16,verts);
+			pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,16,&verts[2]);
+
+			pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+			pglDisableVertexAttribArray(0);
+			pglDisableVertexAttribArray(1);
+#endif
 
 		if(( image->flags & TF_DEPTHMAP ) && !( image->flags & TF_NOCOMPARE ))
 			pglTexParameteri( image->target, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE_ARB );

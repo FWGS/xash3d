@@ -165,7 +165,7 @@ void R_DrawStretchRaw( float x, float y, float w, float h, int cols, int rows, c
 	{
 		if( dirty )
 		{
-			pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, cols, rows, GL_BGRA, GL_UNSIGNED_BYTE, raw );
+			pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, cols, rows, GL_RGBA, GL_UNSIGNED_BYTE, raw );
 		}
 	}
 	else
@@ -174,7 +174,7 @@ void R_DrawStretchRaw( float x, float y, float w, float h, int cols, int rows, c
 		tex->height = rows;
 		if( dirty )
 		{
-			pglTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, cols, rows, 0, GL_BGRA, GL_UNSIGNED_BYTE, raw );
+			pglTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw );
 		}
 	}
 
@@ -275,12 +275,12 @@ void R_Set2DMode( qboolean enable )
 		pglDepthMask( GL_TRUE );
 		pglEnable( GL_DEPTH_TEST );
 		glState.in2DMode = false;
-
+/*
 		pglMatrixMode( GL_PROJECTION );
 		GL_LoadMatrix( RI.projectionMatrix );
 
 		pglMatrixMode( GL_MODELVIEW );
 		GL_LoadMatrix( RI.worldviewMatrix );
-
+*/
 	}
 }

@@ -12,17 +12,24 @@ typedef struct program_s
 
 static program_t *glsl_CurProgram=NULL;
 static program_t glslpr_2D={0,-1,-1,-1};
+
 static program_t glslpr_WorldNormal={0,-1,-1,-1};
 static program_t glslpr_WorldAlphatest={0,-1,-1,-1};
 static program_t glslpr_WorldTransColor={0,-1,-1,-1};
 static program_t glslpr_WorldTransTexture={0,-1,-1,-1};
+
+static program_t glslpr_WorldFogNormal={0,-1,-1,-1};
+
 static program_t glslpr_Particles={0,-1,-1,-1};
 static program_t glslpr_Beam={0,-1,-1,-1};
 static program_t glslpr_Studio={0,-1,-1,-1};
 GLint u_screen = -1;
+GLint u_fogParams = -1;
 
 int lastRendermode=kRenderNormal;
 static vec4_t g_lastColor = {0.0f,0.0f,0.0f,0.0f};
+static boolean needFog = false;
+static vec4_t g_lastFogParams = {0.5f,0.5f,0.5f,0.002f};
 
 GLuint R_CreateShader(const char *src, GLint type)
 {
@@ -90,6 +97,11 @@ void R_InitShaders()
 	glslpr_WorldTransTexture.u_projMtx = pglGetUniformLocation(glslpr_WorldTransTexture.id,"u_projMtx");
 	glslpr_WorldTransTexture.u_color = pglGetUniformLocation(glslpr_WorldTransTexture.id,"u_color");
 
+	glslpr_WorldFogNormal.id = R_CreateProgram(WorldFogNormalVertS,WorldFogNormalFragS);
+	glslpr_WorldFogNormal.u_mvMtx = pglGetUniformLocation(glslpr_WorldFogNormal.id,"u_mvMtx");
+	glslpr_WorldFogNormal.u_projMtx = pglGetUniformLocation(glslpr_WorldFogNormal.id,"u_projMtx");
+	u_fogParams = pglGetUniformLocation(glslpr_WorldFogNormal.id,"u_fogParams");
+
 	glslpr_Beam.id = R_CreateProgram(BeamVertS,BeamFragS);
 	glslpr_Beam.u_mvMtx = pglGetUniformLocation(glslpr_Beam.id,"u_mvMtx");
 	glslpr_Beam.u_projMtx = pglGetUniformLocation(glslpr_Beam.id,"u_projMtx");
@@ -121,6 +133,13 @@ void R_UseProgram(progtype_t type)
 		pglUniform4f(glsl_CurProgram->u_color,g_lastColor[0],g_lastColor[1],g_lastColor[2],g_lastColor[3]);
 		break;
 	case PROGRAM_WORLD:
+		if(needFog)
+		{
+			glsl_CurProgram = &glslpr_WorldFogNormal;
+			pglUseProgram(glsl_CurProgram->id);
+			pglUniform4f(u_fogParams,g_lastFogParams[0],g_lastFogParams[1],g_lastFogParams[2],g_lastFogParams[3]);
+		}
+		else
 		if(lastRendermode == kRenderTransAlpha )
 		{
 			glsl_CurProgram = &glslpr_WorldAlphatest;
@@ -183,6 +202,29 @@ void R_ScreenUniform(GLfloat w, GLfloat h)
 	pglUniform2f(u_screen,w,h);
 }
 
+void R_SetFogEnable(boolean state)
+{
+	needFog=state;
+}
+
+void R_SetFogColor(vec3_t fogColor)
+{
+	g_lastFogParams[0] = fogColor[0];
+	g_lastFogParams[1] = fogColor[1];
+	g_lastFogParams[2] = fogColor[2];
+
+	if(glsl_CurProgram == &glslpr_WorldFogNormal )
+		pglUniform4f(u_fogParams,g_lastFogParams[0],g_lastFogParams[1],g_lastFogParams[2],g_lastFogParams[3]);
+}
+
+void R_SetFogDensity(float fogDensity)
+{
+	g_lastFogParams[3] = fogDensity;
+
+	if(glsl_CurProgram == &glslpr_WorldFogNormal )
+		pglUniform4f(u_fogParams,g_lastFogParams[0],g_lastFogParams[1],g_lastFogParams[2],g_lastFogParams[3]);
+}
+
 void R_ProjMtxUniform(const matrix4x4 source)
 {
 	GLfloat	dest[16];
@@ -196,6 +238,8 @@ void R_ProjMtxUniform(const matrix4x4 source)
 	pglUniformMatrix4fv(glslpr_WorldTransColor.u_projMtx,1,GL_FALSE,dest);
 	pglUseProgram(glslpr_WorldTransTexture.id);
 	pglUniformMatrix4fv(glslpr_WorldTransTexture.u_projMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldFogNormal.id);
+	pglUniformMatrix4fv(glslpr_WorldFogNormal.u_projMtx,1,GL_FALSE,dest);
 	pglUseProgram(glslpr_Beam.id);
 	pglUniformMatrix4fv(glslpr_Beam.u_projMtx,1,GL_FALSE,dest);
 	pglUseProgram(glslpr_Particles.id);
@@ -217,6 +261,8 @@ void R_ModelViewMtxUniform(const matrix4x4 source)
 	pglUniformMatrix4fv(glslpr_WorldTransColor.u_mvMtx,1,GL_FALSE,dest);
 	pglUseProgram(glslpr_WorldTransTexture.id);
 	pglUniformMatrix4fv(glslpr_WorldTransTexture.u_mvMtx,1,GL_FALSE,dest);
+	pglUseProgram(glslpr_WorldFogNormal.id);
+	pglUniformMatrix4fv(glslpr_WorldFogNormal.u_mvMtx,1,GL_FALSE,dest);
 	pglUseProgram(glslpr_Beam.id);
 	pglUniformMatrix4fv(glslpr_Beam.u_mvMtx,1,GL_FALSE,dest);
 	pglUseProgram(glslpr_Particles.id);

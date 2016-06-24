@@ -65,6 +65,31 @@ char WorldTransTextureFragS[] =
 "	gl_FragColor = col * u_color;\n"\
 "}";
 
+char WorldFogNormalVertS[] =
+"precision mediump float;\n"\
+"attribute vec4 a_position;\n"\
+"attribute vec2 a_uv;\n"\
+"varying vec2 v_uv;\n"\
+"varying vec4 v_viewSpace;\n"\
+"uniform mat4 u_mvMtx;\n"\
+"uniform mat4 u_projMtx;\n"\
+"void main(){\n"\
+"	v_viewSpace = u_mvMtx*a_position;\n"\
+"	gl_Position = u_projMtx*v_viewSpace;\n"\
+"	v_uv = a_uv;\n"\
+"}";
+char WorldFogNormalFragS[] =
+"precision mediump float;\n"\
+"varying vec2 v_uv;\n"\
+"varying vec4 v_viewSpace;\n"\
+"uniform sampler2D u_tex;\n"\
+"uniform vec4 u_fogParams;\n"\
+"void main(){\n"\
+"	vec4 col = texture2D(u_tex,v_uv);\n"\
+"	//gl_FragColor = mix(vec4(u_fogParams.rgb,1.0),col,clamp(1.0 /exp(abs(v_viewSpace.z) * u_fogParams.w),0.0,1.0));\n"\
+"	gl_FragColor = u_fogParams*5.0;\n"\
+"}";
+
 char ParticlesVertS[] =
 "precision mediump float;\n"\
 "attribute vec4 a_position;\n"\

@@ -994,7 +994,8 @@ void R_DrawSpriteModel( cl_entity_t *e )
 	case kRenderGlow:
 	case kRenderTransAdd:
 	case kRenderWorldGlow:
-		pglDisable( GL_FOG );
+		//pglDisable( GL_FOG );
+		R_SetFogEnable(false);
 		pglEnable( GL_BLEND );
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
 		break;
@@ -1148,5 +1149,6 @@ void R_DrawSpriteModel( cl_entity_t *e )
 	pglColor4ub( 255, 255, 255, 255 );
 
 	if( RI.fogCustom || ( RI.fogEnabled && !glState.drawTrans ))
-		pglEnable( GL_FOG );
+		//pglEnable( GL_FOG );
+		R_SetFogEnable(true);
 }

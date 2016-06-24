@@ -137,9 +137,9 @@ typedef char GLchar;
 typedef uint GLhandleARB;
 typedef float GLmatrix[16];
 
-#define GL_MODELVIEW			0x1700
-#define GL_PROJECTION			0x1701
-#define GL_TEXTURE				0x1702
+//#define GL_MODELVIEW			0x1700
+//#define GL_PROJECTION			0x1701
+//#define GL_TEXTURE				0x1702
 #define GL_MATRIX_MODE			0x0BA0
 #define GL_MODELVIEW_MATRIX			0x0BA6
 #define GL_PROJECTION_MATRIX			0x0BA7
@@ -180,7 +180,7 @@ typedef float GLmatrix[16];
 #define GL_TEXTURE_ENV			0x2300
 #define GL_TEXTURE_ENV_MODE			0x2200
 #define GL_TEXTURE_ENV_COLOR			0x2201
-#define GL_TEXTURE_1D			0x0DE0
+//#define GL_TEXTURE_1D			0x0DE0
 #define GL_TEXTURE_2D			0x0DE1
 #define GL_TEXTURE_WRAP_S			0x2802
 #define GL_TEXTURE_WRAP_T			0x2803
@@ -190,7 +190,7 @@ typedef float GLmatrix[16];
 #define GL_TEXTURE_MIN_FILTER			0x2801
 #define GL_PACK_ALIGNMENT			0x0D05
 #define GL_UNPACK_ALIGNMENT			0x0CF5
-#define GL_TEXTURE_BINDING_1D			0x8068
+//#define GL_TEXTURE_BINDING_1D			0x8068
 #define GL_TEXTURE_BINDING_2D			0x8069
 #define GL_CLAMP_TO_EDGE                  	0x812F
 #define GL_CLAMP_TO_BORDER                	0x812D
@@ -210,8 +210,6 @@ typedef float GLmatrix[16];
 #define GL_MAX_TEXTURE_LOD_BIAS_EXT		0x84FD
 #define GL_TEXTURE_FILTER_CONTROL_EXT		0x8500
 #define GL_TEXTURE_LOD_BIAS_EXT		0x8501
-
-#define GL_CLAMP_TO_BORDER_ARB		0x812D
 
 #define GL_ADD				0x0104
 #define GL_DECAL				0x2101
@@ -328,7 +326,7 @@ typedef float GLmatrix[16];
 #define GL_TEXTURE_ALPHA_SIZE             	0x805F
 #define GL_TEXTURE_LUMINANCE_SIZE         	0x8060
 #define GL_TEXTURE_INTENSITY_SIZE         	0x8061
-#define GL_PROXY_TEXTURE_1D               	0x8063
+//#define GL_PROXY_TEXTURE_1D               	0x8063
 #define GL_PROXY_TEXTURE_2D               	0x8064
 #define GL_MAX_TEXTURE_SIZE			0x0D33
 
@@ -511,11 +509,11 @@ typedef float GLmatrix[16];
 #define GL_FLOAT_MAT2_ARB			0x8B5A
 #define GL_FLOAT_MAT3_ARB			0x8B5B
 #define GL_FLOAT_MAT4_ARB			0x8B5C
-#define GL_SAMPLER_1D_ARB			0x8B5D
+//#define GL_SAMPLER_1D_ARB			0x8B5D
 #define GL_SAMPLER_2D_ARB			0x8B5E
 #define GL_SAMPLER_3D_ARB			0x8B5F
 #define GL_SAMPLER_CUBE_ARB			0x8B60
-#define GL_SAMPLER_1D_SHADOW_ARB		0x8B61
+//#define GL_SAMPLER_1D_SHADOW_ARB		0x8B61
 #define GL_SAMPLER_2D_SHADOW_ARB		0x8B62
 #define GL_SAMPLER_2D_RECT_ARB		0x8B63
 #define GL_SAMPLER_2D_RECT_SHADOW_ARB		0x8B64
@@ -866,8 +864,7 @@ const GLubyte * ( APIENTRY *pglGetString )(GLenum name);
 
 // base gl functions
 void ( APIENTRY *pglAccum )(GLenum op, GLfloat value);
-//void ( APIENTRY *pglAlphaFunc )(GLenum func, GLclampf ref);
-void pglAlphaFunc (GLenum func, GLclampf ref);
+void ( APIENTRY *pglAlphaFunc )(GLenum func, GLclampf ref);
 void ( APIENTRY *pglArrayElement )(GLint i);
 void ( APIENTRY *pglBegin )(GLenum mode);
 void ( APIENTRY *pglBindTexture )(GLenum target, GLuint texture);
@@ -905,17 +902,14 @@ void ( APIENTRY *pglColor4b )(GLbyte red, GLbyte green, GLbyte blue, GLbyte alph
 void ( APIENTRY *pglColor4bv )(const GLbyte *v);
 void ( APIENTRY *pglColor4d )(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha);
 void ( APIENTRY *pglColor4dv )(const GLdouble *v);
-//void ( APIENTRY *pglColor4f )(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
-void pglColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+void ( APIENTRY *pglColor4f )(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 void ( APIENTRY *pglColor4fv )(const GLfloat *v);
 void ( APIENTRY *pglColor4i )(GLint red, GLint green, GLint blue, GLint alpha);
 void ( APIENTRY *pglColor4iv )(const GLint *v);
 void ( APIENTRY *pglColor4s )(GLshort red, GLshort green, GLshort blue, GLshort alpha);
 void ( APIENTRY *pglColor4sv )(const GLshort *v);
-//void ( APIENTRY *pglColor4ub )(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
-void pglColor4ub (GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
-//void ( APIENTRY *pglColor4ubv )(const GLubyte *v);
-void pglColor4ubv (const GLubyte *v);
+void ( APIENTRY *pglColor4ub )(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
+void ( APIENTRY *pglColor4ubv )(const GLubyte *v);
 void ( APIENTRY *pglColor4ui )(GLuint red, GLuint green, GLuint blue, GLuint alpha);
 void ( APIENTRY *pglColor4uiv )(const GLuint *v);
 void ( APIENTRY *pglColor4us )(GLushort red, GLushort green, GLushort blue, GLushort alpha);
@@ -924,9 +918,9 @@ void ( APIENTRY *pglColorMask )(GLboolean red, GLboolean green, GLboolean blue, 
 void ( APIENTRY *pglColorMaterial )(GLenum face, GLenum mode);
 void ( APIENTRY *pglColorPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 void ( APIENTRY *pglCopyPixels )(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type);
-void ( APIENTRY *pglCopyTexImage1D )(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLint border);
+//void ( APIENTRY *pglCopyTexImage1D )(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLint border);
 void ( APIENTRY *pglCopyTexImage2D )(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
-void ( APIENTRY *pglCopyTexSubImage1D )(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width);
+//void ( APIENTRY *pglCopyTexSubImage1D )(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width);
 void ( APIENTRY *pglCopyTexSubImage2D )(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 void ( APIENTRY *pglCullFace )(GLenum mode);
 void ( APIENTRY *pglDeleteLists )(GLuint list, GLsizei range);
@@ -1023,11 +1017,9 @@ void ( APIENTRY *pglLightiv )(GLenum light, GLenum pname, const GLint *params);
 void ( APIENTRY *pglLineStipple )(GLint factor, GLushort pattern);
 void ( APIENTRY *pglLineWidth )(GLfloat width);
 void ( APIENTRY *pglListBase )(GLuint base);
-//void ( APIENTRY *pglLoadIdentity )(void);
-void pglLoadIdentity ();
+void ( APIENTRY *pglLoadIdentity )(void);
 void ( APIENTRY *pglLoadMatrixd )(const GLdouble *m);
-//void ( APIENTRY *pglLoadMatrixf )(const GLfloat *m);
-void pglLoadMatrixf (const GLfloat *m);
+void ( APIENTRY *pglLoadMatrixf )(const GLfloat *m);
 void ( APIENTRY *pglLoadName )(GLuint name);
 void ( APIENTRY *pglLogicOp )(GLenum opcode);
 void ( APIENTRY *pglMap1d )(GLenum target, GLdouble u1, GLdouble u2, GLint stride, GLint order, const GLdouble *points);
@@ -1042,8 +1034,7 @@ void ( APIENTRY *pglMaterialf )(GLenum face, GLenum pname, GLfloat param);
 void ( APIENTRY *pglMaterialfv )(GLenum face, GLenum pname, const GLfloat *params);
 void ( APIENTRY *pglMateriali )(GLenum face, GLenum pname, GLint param);
 void ( APIENTRY *pglMaterialiv )(GLenum face, GLenum pname, const GLint *params);
-//void ( APIENTRY *pglMatrixMode )(GLenum mode);
-void pglMatrixMode (GLenum mode);
+void ( APIENTRY *pglMatrixMode )(GLenum mode);
 void ( APIENTRY *pglMultMatrixd )(const GLdouble *m);
 void ( APIENTRY *pglMultMatrixf )(const GLfloat *m);
 void ( APIENTRY *pglNewList )(GLuint list, GLenum mode);
@@ -1069,10 +1060,8 @@ void ( APIENTRY *pglPixelStorei )(GLenum pname, GLint param);
 void ( APIENTRY *pglPixelTransferf )(GLenum pname, GLfloat param);
 void ( APIENTRY *pglPixelTransferi )(GLenum pname, GLint param);
 void ( APIENTRY *pglPixelZoom )(GLfloat xfactor, GLfloat yfactor);
-//void ( APIENTRY *pglPointSize )(GLfloat size);
-void pglPointSize (GLfloat size);
-//void ( APIENTRY *pglPolygonMode )(GLenum face, GLenum mode);
-void pglPolygonMode (GLenum face, GLenum mode);
+void ( APIENTRY *pglPointSize )(GLfloat size);
+void ( APIENTRY *pglPolygonMode )(GLenum face, GLenum mode);
 void ( APIENTRY *pglPolygonOffset )(GLfloat factor, GLfloat units);
 void ( APIENTRY *pglPolygonStipple )(const GLubyte *mask);
 void ( APIENTRY *pglPopAttrib )(void);
@@ -1123,8 +1112,7 @@ void ( APIENTRY *pglScaled )(GLdouble x, GLdouble y, GLdouble z);
 void ( APIENTRY *pglScalef )(GLfloat x, GLfloat y, GLfloat z);
 void ( APIENTRY *pglScissor )(GLint x, GLint y, GLsizei width, GLsizei height);
 void ( APIENTRY *pglSelectBuffer )(GLsizei size, GLuint *buffer);
-//void ( APIENTRY *pglShadeModel )(GLenum mode);
-void pglShadeModel (GLenum mode);
+void ( APIENTRY *pglShadeModel )(GLenum mode);
 void ( APIENTRY *pglStencilFunc )(GLenum func, GLint ref, GLuint mask);
 void ( APIENTRY *pglStencilMask )(GLuint mask);
 void ( APIENTRY *pglStencilOp )(GLenum fail, GLenum zfail, GLenum zpass);
@@ -1163,8 +1151,7 @@ void ( APIENTRY *pglTexCoord4sv )(const GLshort *v);
 void ( APIENTRY *pglTexCoordPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 void ( APIENTRY *pglTexEnvf )(GLenum target, GLenum pname, GLfloat param);
 void ( APIENTRY *pglTexEnvfv )(GLenum target, GLenum pname, const GLfloat *params);
-//void ( APIENTRY *pglTexEnvi )(GLenum target, GLenum pname, GLint param);
-void pglTexEnvi (GLenum target, GLenum pname, GLint param);
+void ( APIENTRY *pglTexEnvi )(GLenum target, GLenum pname, GLint param);
 void ( APIENTRY *pglTexEnviv )(GLenum target, GLenum pname, const GLint *params);
 void ( APIENTRY *pglTexGend )(GLenum coord, GLenum pname, GLdouble param);
 void ( APIENTRY *pglTexGendv )(GLenum coord, GLenum pname, const GLdouble *params);
@@ -1225,10 +1212,10 @@ void ( APIENTRY *pglActiveTexture) (GLenum);
 void ( APIENTRY *pglClientActiveTexture) (GLenum);
 void ( APIENTRY *pglCompressedTexImage3DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void *data);
 void ( APIENTRY *pglCompressedTexImage2DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border,  GLsizei imageSize, const void *data);
-void ( APIENTRY *pglCompressedTexImage1DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLint border, GLsizei imageSize, const void *data);
+//void ( APIENTRY *pglCompressedTexImage1DARB)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLint border, GLsizei imageSize, const void *data);
 void ( APIENTRY *pglCompressedTexSubImage3DARB)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *data);
 void ( APIENTRY *pglCompressedTexSubImage2DARB)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *data);
-void ( APIENTRY *pglCompressedTexSubImage1DARB)(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const void *data);
+//void ( APIENTRY *pglCompressedTexSubImage1DARB)(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const void *data);
 GLhandleARB ( APIENTRY *pglGetHandleARB)(GLenum pname);
 void ( APIENTRY *pglTexImage3D)( GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels );
 void ( APIENTRY *pglTexSubImage3D)( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels );

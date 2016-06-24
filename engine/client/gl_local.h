@@ -435,14 +435,18 @@ typedef enum progtype_e
 void R_InitShaders();
 void R_ShaderSetRendermode(int m);
 void R_UseProgram(progtype_t type);
-/*void R_UseWorldProgram();
-void R_UseParticlesProgram();
-void R_UseBeamProgram();
-void R_UseStudioProgram();*/
 void R_ColorUniform(GLfloat r,GLfloat g, GLfloat b, GLfloat a);
 void R_ScreenUniform(GLfloat w, GLfloat h);
+void R_SetFogEnable(boolean state);
+void R_SetFogColor(vec3_t fogColor);
+void R_SetFogDensity(float fogDensity);
 void R_ModelViewMtxUniform(const matrix4x4 source);
 void R_ProjMtxUniform(const matrix4x4 source);
+
+//
+// gl_emulate.c
+//
+void R_InitGLEmu( void );
 
 #include "wadfile.h"
 

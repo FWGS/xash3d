@@ -1073,17 +1073,18 @@ R_DrawFog
 */
 void R_DrawFog( void )
 {
-#if defined XASH_GLES2_RENDER
-	return;
-#endif
 	if( !RI.fogEnabled || RI.refdef.onlyClientDraw )
 		return;
 
-	pglEnable( GL_FOG );
-	pglFogi( GL_FOG_MODE, GL_EXP );
-	pglFogf( GL_FOG_DENSITY, RI.fogDensity );
-	pglFogfv( GL_FOG_COLOR, RI.fogColor );
-	pglHint( GL_FOG_HINT, GL_NICEST );
+	R_SetFogEnable(true);
+	R_SetFogColor(RI.fogColor);
+	R_SetFogDensity(RI.fogDensity);
+
+	//pglEnable( GL_FOG );
+	//pglFogi( GL_FOG_MODE, GL_EXP );
+	//pglFogf( GL_FOG_DENSITY, RI.fogDensity );
+	//pglFogfv( GL_FOG_COLOR, RI.fogColor );
+	//pglHint( GL_FOG_HINT, GL_NICEST );
 }
 
 /*
@@ -1142,7 +1143,8 @@ void R_DrawEntitiesOnList( void )
 
 	// don't fogging translucent surfaces
 	if( !RI.fogCustom )
-		pglDisable( GL_FOG );
+		//pglDisable( GL_FOG );
+		R_SetFogEnable(false);
 	pglDepthMask( GL_FALSE );
 	glState.drawTrans = true;
 

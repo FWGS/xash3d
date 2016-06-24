@@ -230,8 +230,9 @@ void GL_SetupFogColorForSurfaces( void )
 		return;
 
 	if( RI.currententity->curstate.rendermode == kRenderTransTexture )
-          {
-		pglFogfv( GL_FOG_COLOR, RI.fogColor );
+	{
+		//pglFogfv( GL_FOG_COLOR, RI.fogColor );
+		R_SetFogColor(RI.fogColor);
 		return;
 	}
 
@@ -240,20 +241,17 @@ void GL_SetupFogColorForSurfaces( void )
 	fogColor[0] = pow( RI.fogColor[0] / div, ( 1.0f / factor ));
 	fogColor[1] = pow( RI.fogColor[1] / div, ( 1.0f / factor ));
 	fogColor[2] = pow( RI.fogColor[2] / div, ( 1.0f / factor ));
-#if defined XASH_GLES2_RENDER
-	return;
-#endif
-	pglFogfv( GL_FOG_COLOR, fogColor );
+
+	//pglFogfv( GL_FOG_COLOR, fogColor );
+	R_SetFogColor(fogColor);
 }
 
 void GL_ResetFogColor( void )
 {
-#if defined XASH_GLES2_RENDER
-	return;
-#endif
 	// restore fog here
 	if(( RI.fogEnabled || RI.fogCustom ) && !RI.refdef.onlyClientDraw )
-		pglFogfv( GL_FOG_COLOR, RI.fogColor );
+		//pglFogfv( GL_FOG_COLOR, RI.fogColor );
+		R_SetFogColor(RI.fogColor);
 }
 
 /*
@@ -1019,7 +1017,8 @@ void R_RenderFullbrights( void )
 		return;
 
 	if( RI.fogEnabled && !RI.refdef.onlyClientDraw )
-		pglDisable( GL_FOG );
+		//pglDisable( GL_FOG );
+		R_SetFogEnable(false);
 
 	pglEnable( GL_BLEND );
 	pglDepthMask( GL_FALSE );
@@ -1052,7 +1051,8 @@ void R_RenderFullbrights( void )
 
 	// restore for here
 	if( RI.fogEnabled && !RI.refdef.onlyClientDraw )
-		pglEnable( GL_FOG );
+		//pglEnable( GL_FOG );
+		R_SetFogEnable(true);
 }
 
 /*
@@ -1494,7 +1494,8 @@ void R_DrawBrushModel( cl_entity_t *e )
 	{
 	case kRenderTransAdd:
 		if( RI.fogCustom )
-			pglDisable( GL_FOG );
+			//pglDisable( GL_FOG );
+			R_SetFogEnable(false);
 	case kRenderTransTexture:
 		need_sort = true;
 	case kRenderGlow:
@@ -1553,7 +1554,8 @@ void R_DrawBrushModel( cl_entity_t *e )
 	if( e->curstate.rendermode == kRenderTransAdd )
 	{
 		if( RI.fogCustom )
-			pglEnable( GL_FOG );
+			//pglEnable( GL_FOG );
+			R_SetFogEnable(true);
 	}
 
 	R_LoadIdentity();	// restore worldmatrix

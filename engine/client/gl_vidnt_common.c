@@ -496,6 +496,7 @@ qboolean R_Init( void )
 	r_temppool = Mem_AllocPool( "Render Zone" );
 
 	GL_InitExtensions();
+	R_InitGLEmu();
 	R_InitShaders();
 	GL_SetDefaults();
 	R_InitImages();

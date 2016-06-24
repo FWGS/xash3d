@@ -242,6 +242,9 @@ loc1:
 	ClipSkyPolygon( newc[1], newv[1][0], stage + 1 );
 }
 
+GLfloat skyVec[20];
+int curSkyVec=0;
+
 void MakeSkyVec( float s, float t, int axis )
 {
 	int	j, k, farclip;
@@ -275,8 +278,13 @@ void MakeSkyVec( float s, float t, int axis )
 
 	t = 1.0f - t;
 
-	pglTexCoord2f( s, t );
-	pglVertex3fv( v );
+	//pglTexCoord2f( s, t );
+	//pglVertex3fv( v );
+	skyVec[curSkyVec++]=v[0];
+	skyVec[curSkyVec++]=v[1];
+	skyVec[curSkyVec++]=v[2];
+	skyVec[curSkyVec++]=s;
+	skyVec[curSkyVec++]=t;
 }
 
 /*
@@ -357,13 +365,10 @@ void R_UnloadSkybox( void )
 R_DrawSkybox
 ==============
 */
+
 void R_DrawSkyBox( void )
 {
 	int	i;
-
-#if defined XASH_GLES2_RENDER
-	return;
-#endif
 
 	if( clgame.movevars.skyangle )
 	{	
@@ -381,7 +386,8 @@ void R_DrawSkyBox( void )
 
 	// don't fogging skybox (this fix old Half-Life bug)
 	if( !RI.fogCustom )
-		pglDisable( GL_FOG );
+		//pglDisable( GL_FOG );
+		R_SetFogEnable(false);
 	pglDisable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
@@ -392,9 +398,15 @@ void R_DrawSkyBox( void )
 		Matrix4x4_CreateRotate( m, clgame.movevars.skyangle, clgame.movevars.skydir_x, clgame.movevars.skydir_y, clgame.movevars.skydir_z );
 		Matrix4x4_ConcatTranslate( m, -RI.vieworg[0], -RI.vieworg[1], -RI.vieworg[2] );
 		Matrix4x4_ConcatTransforms( RI.modelviewMatrix, RI.worldviewMatrix, m );
-		GL_LoadMatrix( RI.modelviewMatrix );
+		//GL_LoadMatrix( RI.modelviewMatrix );
+		R_ModelViewMtxUniform(RI.modelviewMatrix);
 		tr.modelviewIdentity = false;
 	}
+
+	R_ShaderSetRendermode(kRenderNormal);
+	R_UseProgram(PROGRAM_WORLD);
+	pglEnableVertexAttribArray(0);
+	pglEnableVertexAttribArray(1);
 
 	for( i = 0; i < 6; i++ )
 	{
@@ -403,13 +415,21 @@ void R_DrawSkyBox( void )
 
 		GL_Bind( GL_TEXTURE0, tr.skyboxTextures[r_skyTexOrder[i]] );
 
-		pglBegin( GL_QUADS );
+		curSkyVec=0;
+		//pglBegin( GL_QUADS );
 		MakeSkyVec( RI.skyMins[0][i], RI.skyMins[1][i], i );
 		MakeSkyVec( RI.skyMins[0][i], RI.skyMaxs[1][i], i );
 		MakeSkyVec( RI.skyMaxs[0][i], RI.skyMaxs[1][i], i );
 		MakeSkyVec( RI.skyMaxs[0][i], RI.skyMins[1][i], i );
-		pglEnd();
+		//pglEnd();
+
+		pglVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,20,skyVec);
+		pglVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,20,&skyVec[3]);
+		pglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	}
+
+	pglDisableVertexAttribArray(0);
+	pglDisableVertexAttribArray(1);
 
 	R_LoadIdentity();
 }

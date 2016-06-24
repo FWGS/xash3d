@@ -127,9 +127,9 @@ static dllfunc_t opengl_110funcs[] =
 { "glTexImage2D"         , (void **)&pglTexImage2D },
 //{ "glTexSubImage1D"      , (void **)&pglTexSubImage1D },
 { "glTexSubImage2D"      , (void **)&pglTexSubImage2D },
-{ "glCopyTexImage1D"     , (void **)&pglCopyTexImage1D },
+//{ "glCopyTexImage1D"     , (void **)&pglCopyTexImage1D },
 { "glCopyTexImage2D"     , (void **)&pglCopyTexImage2D },
-{ "glCopyTexSubImage1D"  , (void **)&pglCopyTexSubImage1D },
+//{ "glCopyTexSubImage1D"  , (void **)&pglCopyTexSubImage1D },
 { "glCopyTexSubImage2D"  , (void **)&pglCopyTexSubImage2D },
 { "glScissor"            , (void **)&pglScissor },
 { "glGetTexEnviv"        , (void **)&pglGetTexEnviv },
@@ -193,6 +193,7 @@ static dllfunc_t opengl_es20funcs[] =
 { "glGetShaderiv"				, (void **)&pglGetShaderiv },
 { "glDeleteShader"				, (void **)&pglDeleteShader },
 { "glHint"						, (void **)&pglHint },
+{ "glIsTexture"					, (void **)&pglIsTexture },
 { NULL, NULL }
 };
 
@@ -609,7 +610,7 @@ void GL_InitExtensions( void )
 	//	GL_CheckExtension( "GL_SGI_compiled_vertex_array", compiledvertexarrayfuncs, "gl_cva_support", GL_CUSTOM_VERTEX_ARRAY_EXT );
 
 	//GL_CheckExtension( "GL_EXT_texture_edge_clamp", NULL, "gl_clamp_to_edge", GL_CLAMPTOEDGE_EXT );
-	GL_SetExtension( GL_CLAMPTOEDGE_EXT, false );
+	GL_SetExtension( GL_CLAMPTOEDGE_EXT, true );
 
 	//if( !GL_Support( GL_CLAMPTOEDGE_EXT ))
 	//	GL_CheckExtension("GL_SGIS_texture_edge_clamp", NULL, "gl_clamp_to_edge", GL_CLAMPTOEDGE_EXT );
