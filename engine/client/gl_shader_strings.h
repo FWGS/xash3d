@@ -86,8 +86,8 @@ char WorldFogNormalFragS[] =
 "uniform vec4 u_fogParams;\n"\
 "void main(){\n"\
 "	vec4 col = texture2D(u_tex,v_uv);\n"\
-"	//gl_FragColor = mix(vec4(u_fogParams.rgb,1.0),col,clamp(1.0 /exp(abs(v_viewSpace.z) * u_fogParams.w),0.0,1.0));\n"\
-"	gl_FragColor = u_fogParams*5.0;\n"\
+"	gl_FragColor = mix(vec4(u_fogParams.rgb,1.0),col,clamp(1.0 /exp(abs(v_viewSpace.z) * u_fogParams.w),0.0,1.0));\n"\
+"	//gl_FragColor = u_fogParams*5.0;\n"\
 "}";
 
 char ParticlesVertS[] =
