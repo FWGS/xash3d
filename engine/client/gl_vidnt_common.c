@@ -210,7 +210,7 @@ void R_SaveVideoMode( int w, int h )
 	if( vid_mode->integer >= 0 && vid_mode->integer <= num_vidmodes )
 		glState.wideScreen = vidmode[vid_mode->integer].wideScreen;
 
-	MsgDev( D_INFO, "Set: [%dx%d]\n", w, h );
+	MsgDev( D_NOTE, "Set: [%dx%d]\n", w, h );
 }
 
 

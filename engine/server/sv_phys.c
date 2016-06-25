@@ -207,7 +207,7 @@ qboolean SV_RunThink( edict_t *ent )
 
 	if( ent->v.flags & FL_KILLME )
 	{
-		MsgDev( D_NOTE, "SV_RunThink: FreeEdict\n");
+		//MsgDev( D_NOTE, "SV_RunThink: FreeEdict\n");
 		SV_FreeEdict( ent );
 	}
 

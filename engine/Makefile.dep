@@ -395,6 +395,15 @@ cl_tent.o: client/cl_tent.c common/common.h ../common/port.h \
  client/cl_tent.h common/pm_local.h client/gl_local.h client/gl_export.h \
  ../common/dlight.h ../common/wadfile.h studio.h client/sound.h \
  client/vox.h
+s_utils.o: client/s_utils.c common/common.h ../common/port.h \
+ common/system.h ../common/const.h ../common/ref_params.h \
+ ../common/com_model.h ../common/bspfile.h custom.h common/crtlib.h \
+ ../common/cvardef.h common/crtlib_inline.h ../common/netadr.h \
+ ../common/con_nprint.h ../common/cl_entity.h ../common/entity_state.h \
+ ../pm_shared/pm_info.h ../common/weaponinfo.h ../common/event_args.h \
+ ../common/studio_event.h ../pm_shared/pm_defs.h ../pm_shared/pm_info.h \
+ ../common/pmtrace.h ../common/usercmd.h client/sound.h common/mathlib.h \
+ client/vox.h
 cl_pmove.o: client/cl_pmove.c common/common.h ../common/port.h \
  common/system.h ../common/const.h ../common/ref_params.h \
  ../common/com_model.h ../common/bspfile.h custom.h common/crtlib.h \
@@ -506,15 +515,24 @@ gl_mirror.o: client/gl_mirror.c common/common.h ../common/port.h \
  ../pm_shared/pm_shared.h ../common/event_api.h ../common/event_args.h \
  client/gl_local.h client/gl_export.h ../common/dlight.h \
  ../common/wadfile.h
-s_utils.o: client/s_utils.c common/common.h ../common/port.h \
+gl_rsurf.o: client/gl_rsurf.c common/common.h ../common/port.h \
  common/system.h ../common/const.h ../common/ref_params.h \
  ../common/com_model.h ../common/bspfile.h custom.h common/crtlib.h \
  ../common/cvardef.h common/crtlib_inline.h ../common/netadr.h \
  ../common/con_nprint.h ../common/cl_entity.h ../common/entity_state.h \
  ../pm_shared/pm_info.h ../common/weaponinfo.h ../common/event_args.h \
  ../common/studio_event.h ../pm_shared/pm_defs.h ../pm_shared/pm_info.h \
- ../common/pmtrace.h ../common/usercmd.h client/sound.h common/mathlib.h \
- client/vox.h
+ ../common/pmtrace.h ../common/usercmd.h client/client.h common/mathlib.h \
+ cdll_int.h ../common/wrect.h menu_int.h ../common/gameinfo.h \
+ mobility_int.h common/mod_local.h common/common.h ../common/bspfile.h \
+ edict.h progdefs.h eiface.h custom.h ../pm_shared/pm_movevars.h \
+ ../common/render_api.h ../common/lightstyle.h ../common/dlight.h \
+ cdll_exp.h ../common/screenfade.h common/protocol.h common/netchan.h \
+ common/net_buffer.h ../common/engine_features.h ../common/net_api.h \
+ ../common/netadr.h common/world.h ../common/lightstyle.h \
+ ../pm_shared/pm_shared.h ../common/event_api.h ../common/event_args.h \
+ client/gl_local.h client/gl_export.h ../common/dlight.h \
+ ../common/wadfile.h
 cl_demo.o: client/cl_demo.c common/common.h ../common/port.h \
  common/system.h ../common/const.h ../common/ref_params.h \
  ../common/com_model.h ../common/bspfile.h custom.h common/crtlib.h \
@@ -844,24 +862,6 @@ gl_vidnt.o: client/gl_vidnt.c common/common.h ../common/port.h \
  ../pm_shared/pm_shared.h ../common/event_api.h ../common/event_args.h \
  client/gl_local.h client/gl_export.h ../common/dlight.h \
  ../common/wadfile.h common/input.h keydefs.h client/gl_vidnt.h
-gl_rsurf.o: client/gl_rsurf.c common/common.h ../common/port.h \
- common/system.h ../common/const.h ../common/ref_params.h \
- ../common/com_model.h ../common/bspfile.h custom.h common/crtlib.h \
- ../common/cvardef.h common/crtlib_inline.h ../common/netadr.h \
- ../common/con_nprint.h ../common/cl_entity.h ../common/entity_state.h \
- ../pm_shared/pm_info.h ../common/weaponinfo.h ../common/event_args.h \
- ../common/studio_event.h ../pm_shared/pm_defs.h ../pm_shared/pm_info.h \
- ../common/pmtrace.h ../common/usercmd.h client/client.h common/mathlib.h \
- cdll_int.h ../common/wrect.h menu_int.h ../common/gameinfo.h \
- mobility_int.h common/mod_local.h common/common.h ../common/bspfile.h \
- edict.h progdefs.h eiface.h custom.h ../pm_shared/pm_movevars.h \
- ../common/render_api.h ../common/lightstyle.h ../common/dlight.h \
- cdll_exp.h ../common/screenfade.h common/protocol.h common/netchan.h \
- common/net_buffer.h ../common/engine_features.h ../common/net_api.h \
- ../common/netadr.h common/world.h ../common/lightstyle.h \
- ../pm_shared/pm_shared.h ../common/event_api.h ../common/event_args.h \
- client/gl_local.h client/gl_export.h ../common/dlight.h \
- ../common/wadfile.h
 gl_vidnt_android_nosdl.o: client/gl_vidnt_android_nosdl.c
 cl_mobile.o: client/cl_mobile.c common/common.h ../common/port.h \
  common/system.h ../common/const.h ../common/ref_params.h \

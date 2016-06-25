@@ -13,9 +13,7 @@ include $(XASH3D_CONFIG)
 
 LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -DXASH_NANOGL -DUSE_EVDEV -DXASH_DYNAMIC_DLADDR -DCRASHHANDLER -DXASH_OPENSL -DXASH_SKIPCRTLIB -DXASH_FORCEINLINE -DXASH_FASTCRTLIB
 
-ifeq ($(XASH_SDL),1)
-LOCAL_CFLAGS += -DXASH_SDL
-endif
+
 
 LOCAL_CONLYFLAGS += -std=c99
 
@@ -43,7 +41,6 @@ LOCAL_C_INCLUDES := \
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 
 LOCAL_SRC_FILES := \
-		   platform/android/android_nosdl.c \
 	   platform/android/dlsym-weak.cpp \
 	   client/cl_cmds.c \
            client/cl_demo.c \
@@ -157,11 +154,15 @@ LOCAL_SRC_FILES := \
 	   common/soundlib/libmpg/tabinit.c \
 	   common/soundlib/libmpg/common.c
 
+
 ifeq ($(XASH_SDL),1)
-LOCAL_SRC_FILES += client/gl_vidnt_nanogl.c
+LOCAL_SRC_FILES += client/gl_vidnt_nanogl.c \
+				platform/android/android.c
 LOCAL_SHARED_LIBRARIES += SDL2
+LOCAL_CFLAGS += -DXASH_SDL
 else
-LOCAL_SRC_FILES += client/gl_vidnt_android_nosdl.c
+LOCAL_SRC_FILES += client/gl_vidnt_android_nosdl.c \
+		   platform/android/android_nosdl.c
 endif
 LOCAL_STATIC_LIBRARIES := NanoGL
 
