@@ -1,6 +1,6 @@
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?= -Og -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
+CFLAGS ?=  -Og -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
 LIBS = -lm
 LBITS := $(shell getconf LONG_BIT)
@@ -13,11 +13,13 @@ TOPDIR = $(PWD)/..
 XASHXT ?= $(TOPDIR)/../xashXT
 HLSDK ?= $(TOPDIR)/../halflife/
 INCLUDES :=
+XASH_SINGLE_BINARY ?= 1
+INSTALL_DIR ?= ./install/
 ifeq ($(NANOGL),1)
 INCLUDES += -I../nanogl -I../nanogl/GL
 endif
 INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui -Icommon/sdl
-DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FASTSTR -DXASH_FORCEINLINE
+DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DXASH_FASTSTR
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
 else
@@ -65,12 +67,13 @@ ifeq ($(XASH_VGUI),1)
 endif
 
 %.o : %.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@  -Wno-unused-result -fvisibility=hidden -DGDB_BREAK
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"  -Wno-unused-result -fvisibility=hidden -DGDB_BREAK
 
 %.o : %.cpp
-	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"
 
 SRCS_CPP =
+
 #ifeq ($(XASH_VGUI),1)
 #    SRCS_CPP += $(wildcard client/vgui/*.cpp)
 #endif
@@ -81,14 +84,16 @@ endif
 OBJS_CPP = $(SRCS_CPP:.cpp=.o)
 SRCS = $(wildcard server/*.c) $(wildcard client/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
 OBJS = $(SRCS:.c=.o)
-
+ifeq ($(XASH_SINGLE_BINARY),0)
+BINARIES = libxash.so
 libxash.so : $(OBJS) $(OBJS_CPP)
 ifeq ($(XASH_DLL_LOADER),1)
 	cp $(TOPDIR)/loader/libloader.so .
 endif
 	$(CC) -fvisibility=hidden -o libxash.so $(LDFLAGS) -shared $(OBJS) $(OBJS_CPP) $(LIBS) 
 
-ifeq ($(XASH_SINGLE_BINARY),1)
+else
+BINARIES = xash
 xash: $(OBJS) $(OBJS_CPP)
 
     ifeq ($(XASH_STATIC),1)
@@ -99,10 +104,12 @@ xash: $(OBJS) $(OBJS_CPP)
 
 endif
 
-.PHONY: depend clean list
+default: $(BINARIES)
+
+.PHONY: depend clean list install
 
 clean:
-	$(RM) $(OBJS) $(OBJS_CPP) libxash.so xash
+	$(RM) $(OBJS) $(OBJS_CPP) $(BINARIES)
 
 list:
 	@echo Sources:
@@ -112,8 +119,28 @@ list:
 	@echo Objects:
 	@echo $(OBJS) $(OBJS_CPP)
 
-depend: $(SRCS) $(SRCS_CPP)
-	touch Makefile.dep
-	makedepend -fMakefile.dep -- $(DEFINES) -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -- $^
+#depend: $(SRCS) $(SRCS_CPP)
+#touch Makefile.dep
+#	makedepend -fMakefile.dep -- $(DEFINES) -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -- $^
+
+depend: Makefile.dep
+
+Makefile.dep: $(SRCS)
+	rm -f ./Makefile.dep
+	$(CC) $(CFLAGS) $(filter-out -I/usr/include/SDL2,$(INCLUDES)) $(filter-out -DXASH_SDL,$(DEFINES)) -MM $^>>./Makefile.dep
+
+include Makefile.dep
+
+install: $(BINARIES)
+
+	mkdir -p $(INSTALL_DIR)
+
+ifeq ($(XASH_SINGLE_BINARY),1)
+	cp xash $(INSTALL_DIR)/xash_bin
+else
+	cp libxash.so $(INSTALL_DIR)/
+	cp libloader.so $(INSTALL_DIR)/
+endif
+	
 
 include Makefile.dep
