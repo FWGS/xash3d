@@ -575,7 +575,13 @@ void SV_WriteEntitiesToClient( sv_client_t *cl, sizebuf_t *msg )
 
 	// It will break all connected clients, but it takes more than one week to overflow it
 	if( ( (unsigned int) svs.next_client_entities ) + frame_ents.num_entities >= 0x7FFFFFFE )
+	{
+		// just reset counter
 		svs.next_client_entities = 0;
+
+		// delta is broken now, cannot keep connected clients
+		SV_FinalMessage( "Server is running to long, reconnecting!", true );
+	}
 
 	frame->first_entity = svs.next_client_entities;
 
