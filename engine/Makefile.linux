@@ -1,6 +1,6 @@
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?=  -Og -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
+CFLAGS ?=  -O1 -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
 LIBS = -lm
 LBITS := $(shell getconf LONG_BIT)
