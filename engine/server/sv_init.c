@@ -408,6 +408,9 @@ void SV_DeactivateServer( void )
 
 	svgame.dllFuncs.pfnServerDeactivate();
 
+	if( sv_maxclients->integer > 32 )
+		Cvar_SetFloat( "maxplayers", 32.0f );
+
 	for( i = 0; i < sv_maxclients->integer; i++ )
 	{
 		// release client frames
