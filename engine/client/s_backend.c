@@ -75,23 +75,24 @@ qboolean SNDDMA_Init( void *hInst )
 	}
 
 	Q_memset(&desired, 0, sizeof(desired));
-	switch (s_khz->integer) {
-	case 48:
-		desired.freq = 48000;
-		break;
+	switch (s_khz->integer)
+	{
 	case 44:
-		desired.freq = 44100;
+		desired.freq = SOUND_44k;
+		break;
+	case 32:
+		desired.freq = SOUND_32k;
 		break;
 	case 22:
-		desired.freq = 22050;
+		desired.freq = SOUND_22k;
 		break;
 	default:
-		desired.freq = 11025;
+		desired.freq = SOUND_11k;
 		break;
 	}
 
 	desired.format = AUDIO_S16LSB;
-	desired.samples = 512;
+	desired.samples = 1024;
 	desired.channels = 2;
 	desired.callback = SDL_SoundCallback;
 	ret = SDL_OpenAudio(&desired, &obtained);

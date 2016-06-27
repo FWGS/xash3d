@@ -153,25 +153,11 @@ void SX_Init( void )
 	SX_ReloadRoomFX();
 	sxamodr = sxamodl = sxamodrt = sxamodlt = 255;
 
-	// Xash always have hires sound
-	sxhires = sxhiresprev = 1;
-	switch( s_khz->integer )
-	{
-	case 11:
-		speed = SOUND_11k; break;
-	case 22:
-		speed = SOUND_22k; break;
-	case 32:
-		speed = SOUND_32k; break;
-	case 44:
-		speed = SOUND_44k; break;
-	default:
-		speed = SOUND_DMA_SPEED; break;
-	}
+	sxhires = sxhiresprev = 0;
+	speed = dma.format.speed;
 
 	sxmod1cur = sxmod1 = 350 * ( speed / SOUND_11k );
 	sxmod2cur = sxmod2 = 450 * ( speed / SOUND_11k );
-
 
 	room_off         = Cvar_Get( "room_off", "0", 0, "disable DSP processing" );
 	roomwater_type   = Cvar_Get( "waterroom_type", "14", 0, "water room type" );
@@ -273,7 +259,7 @@ DLY_MovePointer
 Checks overflow and moves pointer
 ============
 */
-__inline void DLY_MovePointer(dly_t *dly)
+_inline void DLY_MovePointer(dly_t *dly)
 {
 	if( ++dly->idelayinput >= dly->cdelaysamplesmax )
 		dly->idelayinput = 0;
