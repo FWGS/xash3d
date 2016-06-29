@@ -1195,6 +1195,9 @@ void R_RenderBrushPoly( msurface_t *fa )
 			goto dynamic;
 	}
 
+	if( maps == MAXLIGHTMAPS )
+		maps--;
+
 	// dynamic this frame or dynamic previously
 	if( fa->dlightframe == tr.framecount )
 	{

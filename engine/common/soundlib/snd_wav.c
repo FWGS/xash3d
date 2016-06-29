@@ -148,7 +148,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	if( !buffer || filesize <= 0 )
 		return false;
 
-	MsgDev( D_NOTE, "Sound_LoadWAV: ( %s, %p, %u )\n", name, buffer, filesize );
+	//MsgDev( D_NOTE, "Sound_LoadWAV: ( %s, %p, %u )\n", name, buffer, filesize );
 
 	iff_data = buffer;
 	iff_end = buffer + filesize;
