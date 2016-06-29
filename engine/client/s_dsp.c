@@ -14,6 +14,834 @@ GNU General Public License for more details.
 */
 
 #include "common.h"
+#include "client.h"
+#include "sound.h"
+#if 1
+typedef struct sx_preset_s {
+	float room_lp; // lowpass
+	float room_mod; // modulation
+
+	// reverb
+	float room_size;
+	float room_refl;
+	float room_rvblp;
+
+	// delay
+	float room_delay;
+	float room_feedback;
+	float room_dlylp;
+	float room_left;
+} sx_preset_t;
+
+typedef struct dly_s {
+	int cdelaysamplesmax;
+	int lp;
+	int idelayinput;
+	int idelayoutput;
+	int idelayoutputxf;
+	int xfade;
+	int delaysamples;
+	int delayfeed;
+	int lp0;
+	int lp1;
+	int lp2;
+	int mod;
+	int modcur;
+	short *lpdelayline; // short
+} dly_t;
+
+
+const sx_preset_t rgsxpre[] =
+{
+// lp  mod  size   refl   rvblp  delay  feedback  dlylp  left
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.0,   0.0,      2.0,   0.0    }, // 0
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.065, 0.1,      0.0,   0.01   }, // 1
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.02,  0.75,     0.0,   0.01   }, // 2
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.03,  0.78,     0.0,   0.02   }, // 3
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.06,  0.77,     0.0,   0.03   }, // 4
+{ 0.0, 0.0, 0.05,  0.85,  1.0,   0.008, 0.96,     2.0,   0.01   }, // 5
+{ 0.0, 0.0, 0.05,  0.88,  1.0,   0.01,  0.98,     2.0,   0.02   }, // 6
+{ 0.0, 0.0, 0.05,  0.92,  1.0,   0.015, 0.995,    2.0,   0.04   }, // 7
+{ 0.0, 0.0, 0.05,  0.84,  1.0,   0.0,   0.0,      2.0,   0.012  }, // 8
+{ 0.0, 0.0, 0.05,  0.9,   1.0,   0.0,   0.0,      2.0,   0.008  }, // 9
+{ 0.0, 0.0, 0.05,  0.95,  1.0,   0.0,   0.0,      2.0,   0.004  }, // 10
+{ 0.0, 0.0, 0.05,  0.7,   0.0,   0.0,   0.0,      2.0,   0.012  }, // 11
+{ 0.0, 0.0, 0.055, 0.78,  0.0,   0.0,   0.0,      2.0,   0.008  }, // 12
+{ 0.0, 0.0, 0.05,  0.86,  0.0,   0.0,   0.0,      2.0,   0.002  }, // 13
+{ 1.0, 0.0, 0.0,   0.0,   1.0,   0.0,   0.0,      2.0,   0.01   }, // 14
+{ 1.0, 0.0, 0.0,   0.0,   1.0,   0.06,  0.85,     2.0,   0.02   }, // 15
+{ 1.0, 0.0, 0.0,   0.0,   1.0,   0.2,   0.6,      2.0,   0.05   }, // 16
+{ 0.0, 0.0, 0.05,  0.8,   1.0,   0.0,   0.48,     2.0,   0.016  }, // 17
+{ 0.0, 0.0, 0.06,  0.9,   1.0,   0.0,   0.52,     2.0,   0.01   }, // 18
+{ 0.0, 0.0, 0.07,  0.94,  1.0,   0.3,   0.6,      2.0,   0.008  }, // 19
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.3,   0.42,     2.0,   0.0    }, // 20
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.35,  0.48,     2.0,   0.0    }, // 21
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.38,  0.6,      2.0,   0.0    }, // 22
+{ 0.0, 0.0, 0.05,  0.9,   1.0,   0.2,   0.28,     0.0,   0.0    }, // 23
+{ 0.0, 0.0, 0.07,  0.9,   1.0,   0.3,   0.4,      0.0,   0.0    }, // 24
+{ 0.0, 0.0, 0.09,  0.9,   1.0,   0.35,  0.5,      0.0,   0.0    }, // 25
+{ 0.0, 1.0, 0.01,  0.9,   0.0,   0.0,   0.0,      2.0,   0.05   }, // 26
+{ 0.0, 0.0, 0.0,   0.0,   1.0,   0.009, 0.999,    2.0,   0.04   }, // 27
+{ 0.0, 0.0, 0.001, 0.999, 0.0,   0.2,   0.8,      2.0,   0.05   }  // 28
+};
+
+// cvars
+convar_t *room_off;
+convar_t *roomwater_type;
+convar_t *room_type;
+convar_t *sxmod_mod;
+convar_t *sxmod_lowpass;
+convar_t *sxste_delay;
+convar_t *sxrvb_lp;
+convar_t *sxrvb_feedback;
+convar_t *sxrvb_size;
+convar_t *sxdly_lp;
+convar_t *sxdly_feedback;
+convar_t *sxdly_delay;
+
+convar_t *dsp_room;
+int idsp_room;
+
+// routines
+float sxdly_delayprev, sxrvb_sizeprev, sxste_delayprev, room_typeprev;
+int sxamodl, sxamodlt, sxamodr, sxamodrt;
+int sxhires, sxhiresprev;
+int sxmod1, sxmod1cur, sxmod2, sxmod2cur;
+
+int speed;
+
+portable_samplepair_t *paintto = NULL;
+
+#define MAX_DELAY 0.4f
+#define MAX_ROOM_TYPES ( sizeof( rgsxpre ) / sizeof( rgsxpre[0] ) )
+
+#define MONODLY 0
+#define MAX_MONO_DELAY 0.4f
+
+#define REVERBPOS 1
+#define MAX_REVERB_DELAY 0.1f
+
+#define STEREODLY 3
+#define MAX_STEREO_DELAY 0.1f
+
+dly_t rgsxdly[STEREODLY + 1]; // stereo is last
+int       rgsxlp[10];
+
+/*
+============
+SX_ReloadRoomFX
+
+============
+*/
+void SX_ReloadRoomFX( void )
+{
+	room_typeprev = sxdly_delayprev = sxrvb_sizeprev = sxste_delayprev = -1;
+}
+
+/*
+============
+SX_Init()
+
+Starts sound crackling system
+============
+*/
+void SX_Init( void )
+{
+	Q_memset( rgsxdly, 0, sizeof( rgsxdly ) );
+	Q_memset( rgsxlp, 0,  sizeof( rgsxlp ) );
+
+	SX_ReloadRoomFX();
+	sxamodr = sxamodl = sxamodrt = sxamodlt = 255;
+
+	sxhires = sxhiresprev = 0;
+	speed = dma.format.speed;
+
+	sxmod1cur = sxmod1 = 350 * ( speed / SOUND_11k );
+	sxmod2cur = sxmod2 = 450 * ( speed / SOUND_11k );
+
+	room_off         = Cvar_Get( "room_off", "0", 0, "disable DSP processing" );
+	roomwater_type   = Cvar_Get( "waterroom_type", "14", 0, "water room type" );
+	room_type        = Cvar_Get( "room_type", "0", 0, "current room type preset" );
+	sxdly_delay      = Cvar_Get( "room_delay", "0", 0, "mono delay: delay time" );
+	sxdly_lp         = Cvar_Get( "room_dlylp", "2", 0, "mono delay: low pass filtering level" );
+	sxdly_feedback   = Cvar_Get( "room_feedback", "0", 0, "mono delay: decay time" );
+	sxmod_mod        = Cvar_Get( "room_mod", "0", 0, "stereo amptitude modulation for room" );
+	sxmod_lowpass    = Cvar_Get( "room_lp", "0", 0, "for water fx, lowpass for entire room" );
+	sxste_delay      = Cvar_Get( "room_left", "0", 0, "left channel delay time" );
+	sxrvb_lp         = Cvar_Get( "room_rvblp", "1", 0, "reverb: low pass filtering level" );
+	sxrvb_feedback   = Cvar_Get( "room_refl", "0", 0, "reverb: decay time" );
+	sxrvb_size       = Cvar_Get( "room_size", "0", 0, "reverb: initial reflection size" );
+
+	// for compability
+	dsp_room         = room_type;
+}
+
+
+/*
+===========
+DLY_Free
+
+Free memory allocated for DSP
+===========
+*/
+void DLY_Free( int idelay )
+{
+	Assert( idelay >= 0 && idelay < sizeof( rgsxdly ) / sizeof( rgsxdly[0] ) );
+
+	if ( rgsxdly[idelay].lpdelayline )
+	{
+		free( rgsxdly[idelay].lpdelayline );
+		rgsxdly[idelay].lpdelayline = NULL;
+	}
+}
+
+/*
+==========
+SX_Shutdown
+
+Stop DSP processor
+==========
+*/
+void SX_Free( )
+{
+	int i;
+	for( i = 0; i <= 3; i++ )
+		DLY_Free( i );
+}
+
+
+/*
+===========
+DLY_Init
+
+Initialize dly
+===========
+*/
+int DLY_Init( int idelay, float delay )
+{
+	dly_t * const cur = &rgsxdly[idelay];
+	int size = ((int)(delay * speed) << sxhires) + 1;
+
+	if( !delay )
+		return 1;
+
+	if( delay > MAX_DELAY )
+		delay = MAX_DELAY;
+
+	DLY_Free( idelay ); // free dly if it's allocated
+
+	cur->cdelaysamplesmax = size;
+
+	cur->lpdelayline = (short *) malloc( size * sizeof( short ) );
+
+	if( !cur->lpdelayline )
+	{
+		MsgDev( D_ERROR, "Failed to allocate memory for SoundFX!\n");
+		return 0;
+	}
+
+	Q_memset( cur->lpdelayline, 0, size * sizeof( short ) );
+	cur->xfade = 0;
+	cur->lp = 1;
+	cur->mod = cur->modcur = 0;
+	cur->lp0 = cur->lp1 = cur->lp2 = 0;
+	cur->idelayinput = 0;
+	// cur->delaysamples must be set!
+	cur->idelayoutput = size - cur->delaysamples;
+
+	return 1;
+}
+
+/*
+============
+DLY_MovePointer
+
+Checks overflow and moves pointer
+============
+*/
+_inline void DLY_MovePointer(dly_t *dly)
+{
+	if( ++dly->idelayinput >= dly->cdelaysamplesmax )
+		dly->idelayinput = 0;
+
+	if( ++dly->idelayoutput >= dly->cdelaysamplesmax )
+		dly->idelayoutput = 0;
+}
+
+
+
+/*
+=============
+DLY_CheckNewStereoDelayVal
+
+Update stereo processor settings if we are in new room
+=============
+*/
+void DLY_CheckNewStereoDelayVal( )
+{
+	dly_t * const dly = &rgsxdly[STEREODLY];
+	float delay = sxste_delay->value;
+
+	if ( delay == sxste_delayprev )
+		return;
+
+	if ( delay == 0 )
+	{
+		DLY_Free( STEREODLY );
+		sxste_delayprev = 0;
+	}
+	else
+	{
+		int samples;
+
+		delay = min( delay, MAX_STEREO_DELAY );
+		samples = (int)(delay * speed) << sxhires;
+
+		// re-init dly
+		if( !dly->lpdelayline )
+		{
+			dly->delaysamples = samples;
+			DLY_Init( STEREODLY, MAX_STEREO_DELAY );
+		}
+
+		if( dly->delaysamples != samples )
+		{
+			dly->xfade = 128;
+			dly->idelayoutputxf = dly->idelayinput - samples;
+			if( dly->idelayoutputxf < 0 )
+				dly->idelayoutputxf += dly->cdelaysamplesmax;
+		}
+		dly->modcur = dly->mod = 0;
+
+		if( dly->delaysamples == 0 )
+			DLY_Free( STEREODLY );
+
+		sxste_delayprev = delay;
+	}
+}
+
+/*
+=============
+DLY_DoStereoDelay
+
+Do stereo processing
+=============
+*/
+void DLY_DoStereoDelay( int count )
+{
+	short delay;
+	short samplexf;
+	dly_t *const dly = &rgsxdly[STEREODLY];
+	portable_samplepair_t *paint = paintto;
+
+	if( !dly->lpdelayline )
+		return;
+
+	for( ; count; count--, paint++ )
+	{
+		if( dly->mod && --dly->modcur < 0 )
+			dly->modcur = dly->mod;
+
+		delay = dly->lpdelayline[dly->idelayoutput];
+
+		if( delay || paint->left || dly->xfade )
+		{
+			if( !dly->xfade && !dly->modcur && dly->mod )
+			{
+				dly->idelayoutputxf = dly->idelayoutput +
+						((Com_RandomLong( 0, 255 ) * dly->delaysamples ) >> 9 );
+				if( dly->idelayoutputxf >= dly->cdelaysamplesmax )
+					dly->idelayoutputxf -= dly->cdelaysamplesmax;
+				dly->xfade = 128;
+			}
+
+			if( dly->xfade )
+			{
+				samplexf = dly->lpdelayline[dly->idelayoutputxf] * (128 - dly->xfade) >> 7;
+				delay = samplexf + ((delay + dly->xfade) >> 7);
+				if( ++dly->idelayoutputxf >= dly->cdelaysamplesmax )
+					dly->idelayoutputxf = 0;
+
+				if( --dly->xfade == 0 )
+					dly->idelayoutput = dly->idelayoutputxf;
+			}
+
+			dly->lpdelayline[dly->idelayinput] = paint->left;
+			paint->left = CLIP(delay);
+		}
+		else
+			dly->lpdelayline[dly->idelayinput] = 0;
+
+		DLY_MovePointer( dly );
+	}
+}
+
+
+/*
+=============
+DLY_CheckNewDelayVal
+
+Update delay processor settings if we are in new room
+=============
+*/
+void DLY_CheckNewDelayVal( )
+{
+	float delay = sxdly_delay->value;
+	dly_t * const dly = &rgsxdly[MONODLY];
+
+	if( delay == sxdly_delayprev )
+	{
+		rgsxdly[0].lp = sxdly_lp->value ;
+		rgsxdly[0].delayfeed = 255 * sxdly_feedback->value;
+		return;
+	}
+
+	if( delay == 0 )
+	{
+		DLY_Free( MONODLY );
+		sxdly_delayprev = delay;
+	}
+	else
+	{
+		delay = min(delay, MAX_MONO_DELAY);
+		dly->delaysamples = (int)(delay * speed) << sxhires;
+
+		// init dly
+		if( !dly->lpdelayline )
+		{
+			DLY_Init( MONODLY, MAX_MONO_DELAY );
+		}
+
+		if( dly->lpdelayline )
+		{
+			Q_memset( dly->lpdelayline, 0, dly->cdelaysamplesmax );
+			dly->lp0 = dly->lp1 = dly->lp2 = 0;
+		}
+
+		dly->idelayinput = 0;
+		dly->idelayoutput = dly->cdelaysamplesmax - dly->delaysamples;
+
+		if( !dly->delaysamples )
+			DLY_Free( MONODLY );
+
+		sxdly_delayprev = sxdly_delay->value;
+	}
+
+	rgsxdly[0].lp = sxdly_lp->value ;
+	rgsxdly[0].delayfeed = 255.0 * sxdly_feedback->value;
+}
+
+/*
+=============
+DLY_DoDelay
+
+Do delay processing
+=============
+*/
+void DLY_DoDelay( int count )
+{
+	dly_t * const dly = &rgsxdly[MONODLY];
+	portable_samplepair_t *paint = paintto;
+	short delay;
+
+	if( !dly->lpdelayline || !count )
+		return;
+
+	for( ; count; count--, paint++ )
+	{
+		delay = dly->lpdelayline[dly->idelayoutput];
+
+		if( delay || paint->left || paint->right )
+		{
+			int lp = (( paint->left + paint->right) >> 1) +
+					((dly->delayfeed * delay) >> 8);
+			lp = CLIP( lp );
+
+			if( dly->lp )
+			{
+#ifdef XASH_DSP_FIXES
+				dly->lp0 = dly->lp1;
+				dly->lp1 = dly->lp2;
+				dly->lp2 = lp;
+				lp = ( dly->lp0 + dly->lp1 + dly->lp2 + lp * 2 ) >> 2;
+#else
+				dly->lp0 = dly->lp1;
+				dly->lp1 = lp;
+				lp = ( dly->lp0 + dly->lp1 + 2 * lp ) >> 2;
+#endif
+			}
+
+			dly->lpdelayline[dly->idelayinput] = lp;
+
+			paint->left = CLIP( paint->left + lp >> 2 );
+			paint->right = CLIP( paint->right + lp >> 2 );
+		}
+		else
+		{
+			dly->lpdelayline[dly->idelayinput] = 0;
+			dly->lp0 = 0;
+			dly->lp1 = 0;
+			dly->lp2 = 0;
+		}
+
+		DLY_MovePointer( dly );
+	}
+}
+
+/*
+===========
+RVB_SetUpDly
+
+Set up dly for reverb
+===========
+*/
+void RVB_SetUpDly( int pos, float delay, int kmod )
+{
+	int samples = (int)(delay * speed) << sxhires;
+	delay = min( delay, MAX_REVERB_DELAY );
+
+	if( !rgsxdly[pos].lpdelayline )
+	{
+		rgsxdly[pos].delaysamples = samples;
+		DLY_Init( pos, MAX_REVERB_DELAY );
+	}
+	rgsxdly[pos].modcur = rgsxdly[pos].mod = (int)(kmod * speed / SOUND_11k) << sxhires;
+
+	if( rgsxdly[pos].delaysamples != samples )
+	{
+		rgsxdly[pos].idelayoutputxf = rgsxdly[pos].idelayinput - samples;
+		if( rgsxdly[pos].idelayoutputxf < 0 )
+			rgsxdly[pos].idelayoutputxf += rgsxdly[pos].cdelaysamplesmax;
+		rgsxdly[pos].xfade = 32;
+	}
+
+	if( !rgsxdly[pos].delaysamples )
+		DLY_Free( pos );
+
+}
+
+
+/*
+===========
+RVB_CheckNewReverbVal
+
+Update reverb settings if we are in new room
+===========
+*/
+void RVB_CheckNewReverbVal( )
+{
+	float delay = sxrvb_size->value;
+	dly_t *const dly1 = &rgsxdly[REVERBPOS],
+			  *const dly2 = &rgsxdly[REVERBPOS + 1];
+	int samples;
+
+	if( delay == sxrvb_sizeprev )
+		goto fail;
+
+	sxrvb_sizeprev = delay;
+
+	if( delay == 0.0f )
+	{
+		DLY_Free( REVERBPOS );
+		DLY_Free( REVERBPOS + 1 );
+		goto fail;
+	}
+
+	RVB_SetUpDly( REVERBPOS, sxrvb_size->value, 500 );
+	RVB_SetUpDly( REVERBPOS+1, sxrvb_size->value*0.71, 700 );
+
+fail:
+	dly1->lp = dly2->lp = (int)sxrvb_lp->value;
+	dly1->delayfeed = dly2->delayfeed = (int)(255 * sxrvb_feedback->value);
+}
+
+/*
+===========
+RVB_DoReverbForOneDly
+
+Do reverberation for one dly
+===========
+*/
+int RVB_DoReverbForOneDly( dly_t *dly, const int vlr, const portable_samplepair_t *samplepair )
+{
+	short delay;
+	short samplexf;
+	int val;
+	int valt;
+	int voutm = 0;
+
+	if( --dly->modcur <= 0 )
+		dly->modcur = dly->mod;
+
+	delay = dly->lpdelayline[dly->idelayoutput];
+
+	if( dly->xfade || delay || samplepair->left || samplepair->right )
+	{
+		if( dly->xfade )
+		{
+			samplexf = (dly->lpdelayline[dly->idelayoutputxf] * (32 - dly->xfade)) / 32;
+			delay = delay * dly->xfade / 32 + samplexf;
+
+			if( ++dly->idelayoutputxf >= dly->cdelaysamplesmax )
+				dly->idelayoutputxf = 0;
+
+			if( --dly->xfade == 0 )
+				dly->idelayoutput = dly->idelayoutputxf;
+		}
+
+		val = delay ? vlr + ((dly->delayfeed * delay) >> 8) : vlr;
+		val = CLIP(val);
+
+		if( dly->lp )
+		{
+			valt = (dly->lp0 + dly->lp1 + (val << 1)) >> 2;
+			dly->lp1 = dly->lp0;
+			dly->lp0 = val;
+		}
+		else
+			valt = val;
+
+		voutm = dly->lpdelayline[dly->idelayinput] = valt;
+	}
+	else
+	{
+		voutm = dly->lpdelayline[dly->idelayinput] = 0;
+		dly->lp0 = dly->lp1 = 0;
+	}
+
+	DLY_MovePointer( dly );
+
+	return voutm;
+
+}
+
+/*
+===========
+RVB_DoReverb
+
+Do reverberation processing
+===========
+*/
+void RVB_DoReverb( int count )
+{
+	int vlr;
+	dly_t *const dly1 = &rgsxdly[REVERBPOS],
+			  *const dly2 = &rgsxdly[REVERBPOS+1];
+	portable_samplepair_t *paint = paintto;
+
+	if( !dly1->lpdelayline || !count )
+		return;
+
+	for( ; count; count--, paint++ )
+	{
+		int voutm;
+		vlr = ( paint->left + paint->right ) >> 1;
+
+		voutm = RVB_DoReverbForOneDly( dly1, vlr, paint );
+		voutm += RVB_DoReverbForOneDly( dly2, vlr, paint );
+
+		paint->left = CLIP(voutm);
+		paint->right = CLIP(voutm);
+	}
+}
+
+/*
+===========
+RVB_DoAMod
+
+Do amplification modulation processing
+===========
+*/
+void RVB_DoAMod( int count )
+{
+	portable_samplepair_t *paint = paintto;
+
+	if( !sxmod_lowpass->integer && !sxmod_mod->integer )
+		return;
+
+	if( !count )
+		return;
+
+	for( ; count; count--, paint++ )
+	{
+		portable_samplepair_t res = *paint;
+		if( sxmod_lowpass->value )
+		{
+			res.left  = rgsxlp[0] + rgsxlp[1] + rgsxlp[2] + rgsxlp[3] + rgsxlp[4] + res.left;
+			res.right = rgsxlp[5] + rgsxlp[6] + rgsxlp[7] + rgsxlp[8] + rgsxlp[9] + res.right;
+
+			res.left = ((res.left << 1) + (res.left << 3)) >> 6;
+			res.right = ((res.right << 1) + (res.right << 3)) >> 6;
+
+			rgsxlp[0] = rgsxlp[1];
+			rgsxlp[1] = rgsxlp[2];
+			rgsxlp[2] = rgsxlp[3];
+			rgsxlp[3] = rgsxlp[4];
+			rgsxlp[4] = paint->left;
+
+			rgsxlp[5] = rgsxlp[6];
+			rgsxlp[6] = rgsxlp[7];
+			rgsxlp[7] = rgsxlp[8];
+			rgsxlp[8] = rgsxlp[9];
+			rgsxlp[9] = paint->right;
+		}
+
+		if( sxmod_mod->integer )
+		{
+			if( --sxmod1cur < 0 )
+				sxmod1cur = sxmod1;
+
+			if( !sxmod1 )
+				sxamodlt = Com_RandomLong( 32, 255 );
+
+			if( --sxmod2cur < 0 )
+				sxmod2cur = sxmod2;
+
+			if( !sxmod2 )
+#ifndef XASH_DSP_FIXES
+				sxamodlt = Com_RandomLong( 32, 255 ); // rt maybe???
+#else
+				sxamodrt = Com_RandomLong( 32, 255 );
+#endif
+
+			res.left = (sxamodl * res.left) >> 8;
+			res.right = (sxamodr * res.right) >> 8;
+
+			if( sxamodl < sxamodlt )
+				sxamodl++;
+			else if( sxamodl > sxamodlt )
+				sxamodl--;
+
+			if( sxamodr < sxamodrt )
+				sxamodr++;
+			else if( sxamodr > sxamodrt )
+				sxamodr--;
+		}
+
+		paint->left = CLIP(res.left);
+		paint->right = CLIP(res.right);
+	}
+}
+
+
+/*
+===========
+DSP_Process
+
+(xash dsp interface)
+===========
+*/
+void DSP_Process(int idsp, portable_samplepair_t *pbfront, int sampleCount)
+{
+	// preset is already installed by CheckNewDspPresets
+	paintto = pbfront;
+
+	RVB_DoAMod( sampleCount );
+	RVB_DoReverb( sampleCount );
+	DLY_DoDelay( sampleCount );
+	DLY_DoStereoDelay( sampleCount );
+}
+
+
+/*
+===========
+DSP_ClearState
+
+(xash dsp interface)
+===========
+*/
+void DSP_ClearState( void )
+{
+	SX_ReloadRoomFX();
+	Cvar_SetFloat( "room_type", 0.0f );
+}
+
+/*
+===========
+AllocDsps
+
+(xash dsp interface)
+===========
+*/
+qboolean AllocDsps( void )
+{
+	SX_Init();
+
+	return 1;
+}
+
+/*
+===========
+FreeDsps
+
+(xash dsp interface)
+===========
+*/
+void FreeDsps( void )
+{
+	SX_Free();
+}
+
+/*
+===========
+CheckNewDspPresets
+
+(xash dsp interface)
+===========
+*/
+void CheckNewDspPresets( void )
+{
+	sxhires = 1;
+	sxhiresprev = 1;
+
+	if( room_off->value != 0.0f )
+		return;
+
+	if( cl.predicted.waterlevel > 2 )
+		idsp_room = roomwater_type->value;
+	else
+		idsp_room = room_type->value;
+
+	/*if( roomtype == 0 )
+		return;*/
+
+	if( idsp_room > MAX_ROOM_TYPES )
+		return;
+
+	if( idsp_room != room_typeprev)
+	{
+		const sx_preset_t *cur = rgsxpre + idsp_room;
+
+		Cvar_SetFloat( "room_lp", cur->room_lp );
+		Cvar_SetFloat( "room_mod", cur->room_mod );
+		Cvar_SetFloat( "room_size", cur->room_size );
+		Cvar_SetFloat( "room_refl", cur->room_refl );
+		Cvar_SetFloat( "room_rvblp", cur->room_rvblp );
+		Cvar_SetFloat( "room_delay", cur->room_delay );
+		Cvar_SetFloat( "room_feedback", cur->room_feedback );
+		Cvar_SetFloat( "room_dlylp", cur->room_dlylp );
+		Cvar_SetFloat( "room_left", cur->room_left );
+	}
+
+	RVB_CheckNewReverbVal( );
+	DLY_CheckNewDelayVal( );
+	DLY_CheckNewStereoDelayVal();
+}
+
+/*
+===========
+DSP_GetGain
+
+(xash dsp interface)
+===========
+*/
+float DSP_GetGain( int idsp )
+{
+	return 0.8f;
+}
+
+#else
+#include "common.h"
 #include "sound.h"
 
 #define SIGN( d )		(( d ) < 0 ? -1 : 1 )
@@ -816,7 +1644,7 @@ prm_rng_t flt_rng[] =
 { flt_cparam,	0, 0 },		// first entry is # of parameters
 { flt_iftype,	0, FTR_MAX },	// filter type FLT_LP, FLT_HP, FLT_BP (UNDONE: FLT_BP currently ignored)			
 { flt_icutoff,	10, 22050 },	// cutoff frequency in hz at -3db gain
-{ flt_iqwidth,	100, 11025 },	// width of BP, or steepness of LP/HP (ie: fcutoff + qwidth = -60db gain point)
+{ flt_iqwidth,	100, SOUND_11k },	// width of BP, or steepness of LP/HP (ie: fcutoff + qwidth = -60db gain point)
 { flt_iquality,	0, QUA_MAX },	// QUA_LO, _MED, _HI 0,1,2,3 
 };
 
@@ -1279,7 +2107,7 @@ prm_rng_t dly_rng[] =
 // filter params if dly type DLY_LOWPASS
 { dly_iftype,	0, FTR_MAX },			
 { dly_icutoff,	10.0, 22050.0 },
-{ dly_iqwidth,	100.0, 11025.0 },
+{ dly_iqwidth,	100.0, SOUND_11k.0 },
 { dly_iquality,	0, QUA_MAX },
 };
 
@@ -1671,7 +2499,7 @@ prm_rng_t rva_rng[] =
 // filter params for each parallel reverb (quality set to 0 for max execution speed)
 { rva_iftype,	0, FTR_MAX },			
 { rva_icutoff,	10, 22050 },
-{ rva_iqwidth,	100, 11025 },
+{ rva_iqwidth,	100, SOUND_11k },
 { rva_ifparallel,	0, 1 }		// if 1, then all filters operate in parallel with delays. otherwise filter output only
 };
 
@@ -3164,7 +3992,7 @@ void MDY_FreeAll() { int i; for( i = 0; i < CMDYS; i++ ) MDY_Free( &mdys[i] ); }
 // allocate mod delay, given previously allocated dly
 // ramptime is time in seconds for delay to change from dcur to dnew
 // modtime is time in seconds between modulations. 0 if no self-modulation
-// depth is 0-1.0 multiplier, new delay values when modulating are Dnew = randomlong (D - D*depth, D)
+// depth is 0-1.0 multiplier, new delay values when modulating are Dnew = Com_RandomLong (D - D*depth, D)
 mdy_t *MDY_Alloc( dly_t *pdly, float ramptime, float modtime, float depth )
 {
 	int	i;
@@ -3344,7 +4172,7 @@ prm_rng_t mdy_rng[] =
 // filter params if mdy type DLY_LOWPASS
 { mdy_iftype,	0, FTR_MAX },		
 { mdy_icutoff,	10.0, 22050.0 },
-{ mdy_iqwidth,	100.0, 11025.0 },
+{ mdy_iqwidth,	100.0, SOUND_11k.0 },
 { mdy_iquality,	0, QUA_MAX },
 { mdy_imodrate,	0.01, 200.0 },		// frequency at which delay values change to new random value. 0 is no self-modulation
 { mdy_imoddepth,	0.0, 1.0 },		// how much delay changes (decreases) from current value (0-1.0) 
@@ -4004,13 +4832,12 @@ _inline void * NULL_VParams( void *p ) { return (void *)(&nuls[0]); }
 // moddepth: how much delay changes (decreases) from current value (0-1.0) 
 // modglide: glide time between dcur and dnew in milliseconds
 
-//		prctype	dtype		delay	feedback	gain	ftype	cutoff	qwidth	qual	modrate	moddepth modglide
-#define PRC_MDY1	{PRC_MDY,	{DLY_PLAIN,	500.0,	0.5,	1.0,	0,	0,	0,	0,	10,	0.8,	5,}, PFNZERO}			
-#define PRC_MDY2	{PRC_MDY,	{DLY_PLAIN,	50.0,	0.8,	1.0,	0,	0,	0,	0,	5,	0.8,	5,}, PFNZERO}
-
-#define PRC_MDY3	{PRC_MDY,	{DLY_PLAIN,	300.0,	0.2,	1.0,	0,	0,	0,	0,	30,	0.01,	15,}, PFNZERO }	// weird 1
-#define PRC_MDY4	{PRC_MDY,	{DLY_PLAIN,	400.0,	0.3,	1.0,	0,	0,	0,	0,	0.25,	0.01,	15,}, PFNZERO }	// weird 2
-#define PRC_MDY5	{PRC_MDY,	{DLY_PLAIN,	500.0,	0.4,	1.0,	0,	0,	0,	0,	0.25,	0.01,	15,}, PFNZERO }	// weird 3
+//                prctype	 dtype      delay	feedback gain	ftype	cutoff	qwidth	qual	modrate	moddepth modglide
+#define PRC_MDY1 {PRC_MDY,	{DLY_PLAIN,	500.0,	0.5,     1.0,   0,	0,	0,	0,	10,	0.8,	5,}, PFNZERO}
+#define PRC_MDY2 {PRC_MDY,	{DLY_PLAIN,	50.0,	0.8,     1.0,   0,	0,	0,	0,	5,	0.8,	5,}, PFNZERO}
+#define PRC_MDY3 {PRC_MDY,	{DLY_PLAIN,	300.0,	0.2,     1.0,   0,	0,	0,	0,	30,	0.01,	15,}, PFNZERO }	// weird 1
+#define PRC_MDY4 {PRC_MDY,	{DLY_PLAIN,	400.0,	0.3,     1.0,   0,	0,	0,	0,	0.25,	0.01,	15,}, PFNZERO }	// weird 2
+#define PRC_MDY5 {PRC_MDY,	{DLY_PLAIN,	500.0,	0.4,     1.0,0,	0,	0,	0,	0.25,	0.01,	15,}, PFNZERO }	// weird 3
 
 //////////
 // Chorus	
@@ -4038,7 +4865,7 @@ _inline void * NULL_VParams( void *p ) { return (void *)(&nuls[0]); }
 // count - number of elements in the array
 // returns false if failed to init one or more processors
 
-qboolean PRC_InitAll( prc_t *prcs, int count ) 
+qboolean PRC_InitAll( prc_t *prcs, int count )
 { 
 	int		i;
 	prc_Param_t	pfnParam;		// allocation function - takes ptr to prc, returns ptr to specialized data struct for proc type
@@ -5482,3 +6309,4 @@ void CheckNewDspPresets( void )
 		ipset_room_typeprev = iroom;
 	}
 }
+#endif

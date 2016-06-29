@@ -131,7 +131,7 @@ int CL_InterpolateModel( cl_entity_t *e )
 	VectorCopy( e->curstate.origin, e->origin );
 	VectorCopy( e->curstate.angles, e->angles );
 
-	if ( cls.timedemo || !e->model || e->model->name[0] == '*' && !r_bmodelinterp->value || cl.maxclients == 1 )
+	if ( cls.timedemo || !e->model || e->model->name[0] == '*' && !r_bmodelinterp->value || RP_LOCALCLIENT(e) || cl.maxclients == 1 )
 		return 1;
 
 	if( cl.predicted.moving && cl.predicted.onground == e->index )
@@ -195,6 +195,36 @@ int CL_InterpolateModel( cl_entity_t *e )
 	return 1;
 }
 
+void CL_InterpolateMovingEntity( cl_entity_t *ent )
+{
+	float		d, f = 0.0f;
+	int		i;
+
+	// don't do it if the goalstarttime hasn't updated in a while.
+	// NOTE: Because we need to interpolate multiplayer characters, the interpolation time limit
+	// was increased to 1.0 s., which is 2x the max lag we are accounting for.
+	if(( cl.time < ent->curstate.animtime + 1.0f ) && ( ent->curstate.animtime != ent->latched.prevanimtime ))
+		f = ( cl.time - ent->curstate.animtime ) / ( ent->curstate.animtime - ent->latched.prevanimtime );
+
+	f = f - 1.0f;
+
+	ent->origin[0] += ( ent->origin[0] - ent->latched.prevorigin[0] ) * f;
+	ent->origin[1] += ( ent->origin[1] - ent->latched.prevorigin[1] ) * f;
+	ent->origin[2] += ( ent->origin[2] - ent->latched.prevorigin[2] ) * f;
+
+	for( i = 0; i < 3; i++ )
+	{
+		float	ang1, ang2;
+
+		ang1 = ent->angles[i];
+		ang2 = ent->latched.prevangles[i];
+		d = ang1 - ang2;
+		if( d > 180.0f ) d -= 360.0f;
+		else if( d < -180.0f ) d += 360.0f;
+		ent->angles[i] += d * f;
+	}
+}
+
 void CL_UpdateEntityFields( cl_entity_t *ent )
 {
 	// parametric rockets code
@@ -216,11 +246,14 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 
 	CL_InterpolateModel( ent );
 
+
 	if( ent->player && RP_LOCALCLIENT( ent )) // stupid Half-Life bug
 		ent->angles[PITCH] = -ent->angles[PITCH] / 3.0f;
 
 	// make me lerp
-	if( ent->model && ent->model->type == mod_brush && (ent->curstate.animtime != 0.0f || ent->index == cl.predicted.onground && cl.predicted.moving ))
+	if( ent->index == cl.predicted.onground && cl.predicted.moving )
+		CL_InterpolateMovingEntity( ent );
+	else if( ent->model && ent->model->type == mod_brush && ent->curstate.animtime != 0.0f)
 	{
 		float		d, f = 0.0f;
 		int		i;
