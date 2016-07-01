@@ -22,8 +22,6 @@ GNU General Public License for more details.
 #include "studio.h"
 #include "library.h" // Loader_GetDllHandle( )
 
-void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient );
-
 void CL_ClearPhysEnts( void )
 {
 	clgame.pmove->numtouch = 0;
@@ -31,6 +29,112 @@ void CL_ClearPhysEnts( void )
 	clgame.pmove->nummoveent = 0;
 	clgame.pmove->numphysent = 0;
 }
+
+/*
+=============
+CL_PushPMStates
+
+=============
+*/
+void CL_PushPMStates( void )
+{
+	if( clgame.pushed )
+	{
+		MsgDev( D_WARN, "CL_PushPMStates called with pushed stack\n");
+	}
+	else
+	{
+		clgame.oldphyscount = clgame.pmove->numphysent;
+		clgame.oldviscount  = clgame.pmove->numvisent;
+		clgame.pushed = true;
+	}
+
+}
+
+/*
+=============
+CL_PopPMStates
+
+=============
+*/
+void CL_PopPMStates( void )
+{
+	if( clgame.pushed )
+	{
+		clgame.pmove->numphysent = clgame.oldphyscount;
+		clgame.pmove->numvisent  = clgame.oldviscount;
+		clgame.pushed = false;
+	}
+	else
+	{
+		MsgDev( D_WARN, "CL_PopPMStates called without stack\n");
+	}
+}
+
+/*
+=============
+CL_SetUpPlayerPrediction
+
+=============
+*/
+void CL_SetUpPlayerPrediction( int dopred, int includeLocal )
+{
+#if 0
+	int i;
+	entity_state_t     *state;
+	predicted_player_t *player;
+	cl_entity_t        *ent;
+
+	for( i = 0; i < MAX_CLIENTS; i++ )
+	{
+		state = cl.frames[cl.parsecountmod].playerstate[i];
+
+		player = cl.predicted_players[j];
+		player->active = false;
+
+		if( state->messagenum != cl.parsecount )
+			continue; // not present this frame
+
+		if( !state->modelindex )
+			continue;
+
+		ent = CL_GetEntityByIndex( j + 1 );
+
+		if( !ent ) // in case
+			continue;
+
+		// special for EF_NODRAW and local client?
+		if( state->effects & EF_NODRAW && !includeLocal )
+		{
+			if( cl.playernum == j )
+				continue;
+
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			VectorCopy( ent->origin, player->origin );
+			VectorCopy( ent->angles, player->angles );
+		}
+		else
+		{
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			// don't rewrite origin and angles of local client
+			if( cl.playernum == j )
+				continue;
+
+			VectorCopy(state->origin, player->origin);
+			VectorCopy(state->angles, player->angles);
+		}
+	}
+#endif
+}
+
 
 void CL_ClipPMoveToEntity( physent_t *pe, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, pmtrace_t *tr )
 {
@@ -237,7 +341,7 @@ void CL_SetSolidPlayers( int playernum )
 #if 1 // came from SetUpPlayerPrediction
 		state = cl.frames[cl.parsecountmod].playerstate + j;
 
-		// This makes all players non solid.
+		// This makes all players no
 		//if( state->messagenum != cl.parsecount )
 		//	continue; // not present this frame [2]*/
 
@@ -247,7 +351,6 @@ void CL_SetSolidPlayers( int playernum )
 		if( !state->solid )
 			continue; // not solid
 #endif
-
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
 		if( CL_CopyEntityToPhysEnt( pe, ent ))
 			clgame.pmove->numphysent++;
@@ -916,7 +1019,7 @@ void CL_PredictMovement( void )
 
 	if( cl.refdef.paused || cls.key_dest == key_menu ) return;
 	
-	pfnSetUpPlayerPrediction( false, false );
+	CL_SetUpPlayerPrediction( false, false );
 
 	// unpredicted pure angled values converted into axis
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );
@@ -992,14 +1095,14 @@ void CL_PredictMovement( void )
 	}
 
 	if( to )
-{
-	cl.predicted_viewmodel = to->client.viewmodel;
-	cl.scr_fov = to->client.fov;
-	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
-		cl.scr_fov = 90.0f;
-	VectorCopy( to->playerstate.origin, cl.predicted_origin );
-	VectorCopy( to->client.velocity, cl.predicted_velocity );
-	VectorCopy( to->client.view_ofs, cl.predicted_viewofs );
-	VectorCopy( to->client.punchangle, cl.predicted_punchangle );
-}
+	{
+		cl.predicted_viewmodel = to->client.viewmodel;
+		cl.scr_fov = to->client.fov;
+		if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
+			cl.scr_fov = 90.0f;
+		VectorCopy( to->playerstate.origin, cl.predicted_origin );
+		VectorCopy( to->client.velocity, cl.predicted_velocity );
+		VectorCopy( to->client.view_ofs, cl.predicted_viewofs );
+		VectorCopy( to->client.punchangle, cl.predicted_punchangle );
+	}
 }

@@ -320,56 +320,58 @@ typedef void (*CL_EXPORT_FUNCS)( void *pv );
 
 typedef struct
 {
-	void		*hInstance;		// pointer to client.dll
-	cldll_func_t	dllFuncs;			// dll exported funcs
-	render_interface_t	drawFuncs;		// custom renderer support
-	byte		*mempool;			// client edicts pool
-	string		mapname;			// map name
-	string		maptitle;			// display map title
-	string		itemspath;		// path to items description for auto-complete func
+	void                 *hInstance;                 // pointer to client.dll
+	cldll_func_t         dllFuncs;                   // dll exported funcs
+	render_interface_t   drawFuncs;                  // custom renderer support
+	byte                 *mempool;                   // client edicts pool
+	string               mapname;                    // map name
+	string               maptitle;                   // display map title
+	string               itemspath;                  // path to items description for auto-complete func
 
-	cl_entity_t	*entities;		// dynamically allocated entity array
-	cl_entity_t	*static_entities;		// dynamically allocated static entity array
-	remap_info_t	**remap_info;		// store local copy of all remap textures for each entity
+	cl_entity_t          *entities;                  // dynamically allocated entity array
+	cl_entity_t          *static_entities;           // dynamically allocated static entity array
+	remap_info_t         **remap_info;               // store local copy of all remap textures for each entity
 
-	int		maxEntities;
-	int		maxRemapInfos;		// maxEntities + cl.viewEnt; also used for catch entcount
-	int		numStatics;		// actual static entity count
+	int                  maxEntities;
+	int                  maxRemapInfos;              // maxEntities + cl.viewEnt; also used for catch entcount
+	int                  numStatics;                 // actual static entity count
 
 	// movement values from server
-	movevars_t	movevars;
-	movevars_t	oldmovevars;
-	playermove_t	*pmove;			// pmove state
+	movevars_t           movevars;
+	movevars_t           oldmovevars;
+	playermove_t         *pmove;                     // pmove state
 
-	int		old_trace_hull;		// used by PM_Push\Pop state
-	int		oldcount;			// used by PM_Push\Pop state
+	int                  old_trace_hull;             // used by PM_Push\Pop state
+	qboolean             pushed;                     // used by PM_Push\Pop state
+	int                  oldviscount;                // used by PM_Push\Pop state
+	int                  oldphyscount;               // used by PM_Push\Pop state
 
-	vec3_t		player_mins[MAX_MAP_HULLS];	// 4 hulls allowed
-	vec3_t		player_maxs[MAX_MAP_HULLS];	// 4 hulls allowed
+	vec3_t               player_mins[MAX_MAP_HULLS]; // 4 hulls allowed
+	vec3_t               player_maxs[MAX_MAP_HULLS]; // 4 hulls allowed
 
-	cl_user_message_t	msg[MAX_USER_MESSAGES];	// keep static to avoid fragment memory
-	cl_user_event_t	*events[MAX_EVENTS];
+	cl_user_message_t    msg[MAX_USER_MESSAGES];     // keep static to avoid fragment memory
+	cl_user_event_t      *events[MAX_EVENTS];
 
-	string		cdtracks[MAX_CDTRACKS];	// 32 cd-tracks read from cdaudio.txt
+	string               cdtracks[MAX_CDTRACKS];     // 32 cd-tracks read from cdaudio.txt
 
-	model_t		sprites[MAX_IMAGES];	// client spritetextures
-	int		load_sequence;		// for unloading unneeded sprites
+	model_t              sprites[MAX_IMAGES];        // client spritetextures
+	int                  load_sequence;              // for unloading unneeded sprites
 
-	client_draw_t	ds;			// draw2d stuff (hud, weaponmenu etc)
-	screenfade_t	fade;			// screen fade
-	screen_shake_t	shake;			// screen shake
-	center_print_t	centerPrint;		// centerprint variables
-	SCREENINFO	scrInfo;			// actual screen info
-	ref_overview_t	overView;			// overView params
-	rgb_t		palette[256];		// palette used for particle colors
+	client_draw_t        ds;                         // draw2d stuff (hud, weaponmenu etc)
+	screenfade_t         fade;                       // screen fade
+	screen_shake_t       shake;                      // screen shake
+	center_print_t       centerPrint;                // centerprint variables
+	SCREENINFO           scrInfo;                    // actual screen info
+	ref_overview_t       overView;                   // overView params
+	rgb_t                palette[256];               // palette used for particle colors
 
-	client_textmessage_t *titles;			// title messages, not network messages
-	int		numTitles;
+	client_textmessage_t *titles;                    // title messages, not network messages
+	int                  numTitles;
 
-	net_request_t	net_requests[MAX_REQUESTS];	// no reason to keep more
+	net_request_t        net_requests[MAX_REQUESTS]; // no reason to keep more
 
-	efrag_t		*free_efrags;		// linked efrags
-	cl_entity_t	viewent;			// viewmodel
+	efrag_t              *free_efrags;               // linked efrags
+	cl_entity_t          viewent;                    // viewmodel
 } clgame_static_t;
 
 typedef struct
@@ -524,6 +526,7 @@ extern convar_t	*cl_lw;
 extern convar_t *cl_trace_events;
 extern convar_t *cl_trace_stufftext;
 extern convar_t	*cl_sprite_nearest;
+extern convar_t *cl_updaterate;
 extern convar_t *hud_scale;
 extern convar_t	*scr_centertime;
 extern convar_t	*scr_viewsize;
@@ -641,6 +644,7 @@ void CL_PlayerTrace( float *start, float *end, int traceFlags, int ignore_pe, pm
 void CL_PlayerTraceExt( float *start, float *end, int traceFlags, int (*pfnIgnore)( physent_t *pe ), pmtrace_t *tr );
 void CL_SetTraceHull( int hull );
 
+
 _inline cl_entity_t *CL_EDICT_NUM( int n )
 {
 	if( !clgame.entities )
@@ -711,6 +715,9 @@ cl_entity_t *CL_GetWaterEntity( const float *rgflPos );
 void CL_SetupPMove( playermove_t *pmove, clientdata_t *cd, entity_state_t *state, usercmd_t *ucmd );
 pmtrace_t CL_TraceLine( vec3_t start, vec3_t end, int flags );
 void CL_ClearPhysEnts( void );
+void CL_PushPMStates( void );
+void CL_PopPMStates( void );
+void CL_SetUpPlayerPrediction( int dopred, int bIncludeLocalClient );
 
 //
 // cl_studio.c
