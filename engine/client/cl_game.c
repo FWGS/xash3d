@@ -2278,7 +2278,91 @@ physent_t *pfnGetPhysent( int idx )
 	return NULL;
 }
 
+/*
+=============
+pfnSetUpPlayerPrediction
 
+=============
+*/
+void pfnSetUpPlayerPrediction( int dopred, int includeLocal )
+{
+#if 0
+	int i;
+	entity_state_t     *state;
+	predicted_player_t *player;
+	cl_entity_t        *ent;
+
+	for( i = 0; i < MAX_CLIENTS; i++ )
+	{
+		state = cl.frames[cl.parsecountmod].playerstate[i];
+
+		player = cl.predicted_players[j];
+		player->active = false;
+
+		if( state->messagenum != cl.parsecount )
+			continue; // not present this frame
+
+		if( !state->modelindex )
+			continue;
+
+		ent = CL_GetEntityByIndex( j + 1 );
+
+		if( !ent ) // in case
+			continue;
+
+		// special for EF_NODRAW and local client?
+		if( state->effects & EF_NODRAW && !includeLocal )
+		{
+			if( cl.playernum == j )
+				continue;
+
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			VectorCopy( ent->origin, player->origin );
+			VectorCopy( ent->angles, player->angles );
+		}
+		else
+		{
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			// don't rewrite origin and angles of local client
+			if( cl.playernum == j )
+				continue;
+
+			VectorCopy(state->origin, player->origin);
+			VectorCopy(state->angles, player->angles);
+		}
+	}
+#endif
+}
+
+/*
+=============
+pfnPushPMStates
+
+=============
+*/
+void pfnPushPMStates( void )
+{
+	clgame.oldcount = clgame.pmove->numphysent;
+}
+
+/*
+=============
+pfnPopPMStates
+
+=============
+*/
+void pfnPopPMStates( void )
+{
+	clgame.pmove->numphysent = clgame.oldcount;
+}
 
 /*
 =============
@@ -2290,6 +2374,7 @@ void CL_SetTraceHull( int hull )
 {
 	clgame.old_trace_hull = clgame.pmove->usehull;
 	clgame.pmove->usehull = bound( 0, hull, 3 );
+
 }
 
 /*
@@ -3713,9 +3798,9 @@ static event_api_t gEventApi =
 	pfnLocalPlayerBounds,
 	pfnIndexFromTrace,
 	pfnGetPhysent,
-	CL_SetUpPlayerPrediction,
-	CL_PushPMStates,
-	CL_PopPMStates,
+	pfnSetUpPlayerPrediction,
+	pfnPushPMStates,
+	pfnPopPMStates,
 	CL_SetSolidPlayers,
 	CL_SetTraceHull,
 	CL_PlayerTrace,

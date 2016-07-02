@@ -104,20 +104,21 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 
 int CL_InterpolateModel( cl_entity_t *e )
 {
-	position_history_t  *ph0 = NULL, *ph1 = NULL;
-	vec3_t              origin, angles, delta;
-	float		        t, t1, t2, frac;
-	int		            i;
+	position_history_t	*ph0, *ph1;
+	vec3_t		origin, angles, delta;
+	float		t, t1, t2, frac;
+	int		i;
 
 	VectorCopy( e->curstate.origin, e->origin );
 	VectorCopy( e->curstate.angles, e->angles );
 
-	if( cls.timedemo || e->model == NULL || RP_LOCALCLIENT( e )|| cl.maxclients == 1 )
+	if( e->model == NULL )
 		return 1;
 
 	t = cl.time - cl_interp->value;
 
-	CL_FindInterpolationUpdates( e, t, &ph0, &ph1, NULL );
+	if( !CL_FindInterpolationUpdates( e, t, &ph0, &ph1, NULL ))
+		return 0;
 
 	if( ph0 == NULL || ph1 == NULL )
 		return 0;
