@@ -490,15 +490,15 @@ qboolean VID_ScreenShot( const char *filename, int shot_type )
 	r_shot = Mem_Alloc( r_temppool, sizeof( rgbdata_t ));
 	r_shot->width = (glState.width + 3) & ~3;
 	r_shot->height = (glState.height + 3) & ~3;
-	r_shot->flags = IMAGE_HAS_COLOR;
-	r_shot->type = PF_RGB_24;
+	r_shot->flags = IMAGE_HAS_COLOR | IMAGE_HAS_ALPHA;
+	r_shot->type = PF_RGBA_32;
 	r_shot->size = r_shot->width * r_shot->height * PFDesc[r_shot->type].bpp;
 	r_shot->palette = NULL;
 	r_shot->buffer = Mem_Alloc( r_temppool, r_shot->size );
 
 	// get screen frame
 	pglPixelStorei(GL_PACK_ALIGNMENT, 1);	// PANDORA, just in case
-	pglReadPixels( 0, 0, r_shot->width, r_shot->height, GL_RGB, GL_UNSIGNED_BYTE, r_shot->buffer );
+	pglReadPixels( 0, 0, r_shot->width, r_shot->height, GL_RGBA, GL_UNSIGNED_BYTE, r_shot->buffer );
 	switch( shot_type )
 	{
 	case VID_SCREENSHOT:
