@@ -392,10 +392,11 @@ void DLY_DoStereoDelay( int count )
 			{
 				dly->idelayoutputxf = dly->idelayoutput +
 						((Com_RandomLong( 0, 255 ) * dly->delaysamples ) >> 9 );
-				if( dly->idelayoutputxf >= dly->cdelaysamplesmax )
-					dly->idelayoutputxf -= dly->cdelaysamplesmax;
+
 				dly->xfade = 128;
 			}
+
+			dly->idelayoutputxf %= dly->cdelaysamplesmax;
 
 			// modify delay, if crossfading
 			if( dly->xfade )
@@ -616,12 +617,13 @@ int RVB_DoReverbForOneDly( dly_t *dly, const int vlr, const portable_samplepair_
 		if( !dly->xfade && !dly->modcur && dly->mod )
 		{
 			dly->idelayoutputxf = dly->idelayoutput + ((Com_RandomLong( 0, 255 ) * delay) >> 9 );
-			if( dly->idelayoutputxf >= dly->cdelaysamplesmax )
-				dly->idelayoutputxf -= dly->cdelaysamplesmax;
 
 			//dly->xfade = 32;
 		}
 #endif
+
+		dly->idelayoutputxf %= dly->cdelaysamplesmax;
+
 
 		if( dly->xfade )
 		{
