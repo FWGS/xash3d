@@ -352,7 +352,7 @@ xash_force_inline int Q_strnicmp( const char *s1, const char *s2, int n )
 	else if( s2 == NULL )
 	{
 		return 1;
-		  }
+	}
 
 	do {
 		c1 = *s1++;
