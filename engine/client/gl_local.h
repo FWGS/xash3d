@@ -544,20 +544,16 @@ enum
 	GL_EXTCOUNT,		// must be last
 };
 
-#ifndef XASH_NANOGL
 enum
 {
 	GL_KEEP_UNIT = -1,
-	GL_TEXTURE0 = 0,
-	GL_TEXTURE1,
-	GL_TEXTURE2,
-	GL_TEXTURE3,		// g-cont. 4 units should be enough
+	XASH_TEXTURE0 = 0,
+	XASH_TEXTURE1,
+	XASH_TEXTURE2,
+	XASH_TEXTURE3,		// g-cont. 4 units should be enough
 	MAX_TEXTURE_UNITS = 32	// can't acess to all over units without GLSL or cg
 };
-#else
-#define GL_KEEP_UNIT -1
-#define MAX_TEXTURE_UNITS 32
-#endif
+
 
 typedef struct
 {

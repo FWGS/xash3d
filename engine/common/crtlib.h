@@ -197,12 +197,74 @@ int Q_strncmp( const char *s1, const char *s2, int n );
 #define Q_strcmp( s1, s2 ) Q_strncmp( s1, s2, 99999 )
 #define Q_stricmp( s1, s2 ) Q_strnicmp( s1, s2, 99999 )
 #else
-#define Q_strchr strchr
-#define Q_strrchr strrchr
-#define Q_stricmp strcasecmp
-#define Q_strnicmp strncasecmp
-#define Q_strcmp strcmp
-#define Q_strncmp strncmp
+static inline char *Q_strchr( const char *s, char c )
+{
+	if( !s )
+		return NULL;
+	return strchr( s, c );
+}
+static inline char *Q_strrchr( const char *s, char c )
+{
+	if( !s )
+		return NULL;
+	return strrchr( s, c );
+}
+static inline int Q_stricmp( const char *s1, const char *s2 )
+{
+	if( s1 == NULL )
+	{
+		if( s2 == NULL )
+			return 0;
+		else return -1;
+	}
+	else if( s2 == NULL )
+	{
+		return 1;
+	}
+	return strcasecmp( s1, s2 );
+}
+static inline int Q_strnicmp( const char *s1, const char *s2, int n )
+{
+	if( s1 == NULL )
+	{
+		if( s2 == NULL )
+			return 0;
+		else return -1;
+	}
+	else if( s2 == NULL )
+	{
+		return 1;
+	}
+	return strncasecmp( s1, s2, n );
+}
+static inline int Q_strcmp( const char *s1, const char *s2 )
+{
+	if( s1 == NULL )
+	{
+		if( s2 == NULL )
+			return 0;
+		else return -1;
+	}
+	else if( s2 == NULL )
+	{
+		return 1;
+	}
+	return strcmp( s1, s2 );
+}
+static inline int Q_strncmp( const char *s1, const char *s2, int n )
+{
+	if( s1 == NULL )
+	{
+		if( s2 == NULL )
+			return 0;
+		else return -1;
+	}
+	else if( s2 == NULL )
+	{
+		return 1;
+	}
+	return strncmp( s1, s2, n );
+}
 #endif
 qboolean Q_stricmpext( const char *s1, const char *s2 );
 const char *Q_timestamp( int format );

@@ -397,7 +397,7 @@ void R_DrawSkyBox( void )
 		if( RI.skyMins[0][i] >= RI.skyMaxs[0][i] || RI.skyMins[1][i] >= RI.skyMaxs[1][i] )
 			continue;
 
-		GL_Bind( GL_TEXTURE0, tr.skyboxTextures[r_skyTexOrder[i]] );
+		GL_Bind( XASH_TEXTURE0, tr.skyboxTextures[r_skyTexOrder[i]] );
 
 		pglBegin( GL_QUADS );
 		MakeSkyVec( RI.skyMins[0][i], RI.skyMins[1][i], i );
@@ -686,7 +686,7 @@ void R_DrawSkyChain( msurface_t *s )
 	msurface_t	*fa;
 
 	GL_SetRenderMode( kRenderNormal );
-	GL_Bind( GL_TEXTURE0, tr.solidskyTexture );
+	GL_Bind( XASH_TEXTURE0, tr.solidskyTexture );
 
 	speedscale = cl.time * 8.0f;
 	speedscale -= (int)speedscale & ~127;
@@ -695,7 +695,7 @@ void R_DrawSkyChain( msurface_t *s )
 		EmitSkyPolys( fa );
 
 	GL_SetRenderMode( kRenderTransTexture );
-	GL_Bind( GL_TEXTURE0, tr.alphaskyTexture );
+	GL_Bind( XASH_TEXTURE0, tr.alphaskyTexture );
 
 	speedscale = cl.time * 16.0f;
 	speedscale -= (int)speedscale & ~127;
@@ -718,7 +718,7 @@ will have them chained together.
 void EmitSkyLayers( msurface_t *fa )
 {
 	GL_SetRenderMode( kRenderNormal );
-	GL_Bind( GL_TEXTURE0, tr.solidskyTexture );
+	GL_Bind( XASH_TEXTURE0, tr.solidskyTexture );
 
 	speedscale = cl.time * 8.0f;
 	speedscale -= (int)speedscale & ~127;
@@ -726,7 +726,7 @@ void EmitSkyLayers( msurface_t *fa )
 	EmitSkyPolys( fa );
 
 	GL_SetRenderMode( kRenderTransTexture );
-	GL_Bind( GL_TEXTURE0, tr.alphaskyTexture );
+	GL_Bind( XASH_TEXTURE0, tr.alphaskyTexture );
 
 	speedscale = cl.time * 16.0f;
 	speedscale -= (int)speedscale & ~127;

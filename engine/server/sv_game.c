@@ -2838,6 +2838,8 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 		if( host.developer < D_ERROR )
 			return;
 		break;
+	default:
+		break;
 	}
 
 	if( *buffer == '\n' ) // skip \n in line start
