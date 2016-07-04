@@ -853,7 +853,7 @@ void CheckNewDspPresets( void )
 	if( dsp_off->value != 0.0f )
 		return;
 
-	if( cl.predicted.waterlevel > 2 )
+	if( cl.frame.local.client.waterlevel > 2 )
 		idsp_room = roomwater_type->value;
 	else
 		idsp_room = room_type->value;
