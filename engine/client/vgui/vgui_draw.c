@@ -642,14 +642,14 @@ void VGUI_BindTexture( int id )
 {
 	if( id > 0 && id < VGUI_MAX_TEXTURES && g_textures[id] )
 	{
-		GL_Bind( GL_TEXTURE0, g_textures[id] );
+		GL_Bind( XASH_TEXTURE0, g_textures[id] );
 		g_iBoundTexture = id;
 	}
 	else
 	{
 		// NOTE: same as bogus index 2700 in GoldSrc
 		id = g_iBoundTexture = 1;
-		GL_Bind( GL_TEXTURE0, g_textures[id] );
+		GL_Bind( XASH_TEXTURE0, g_textures[id] );
 	}
 }
 

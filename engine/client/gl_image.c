@@ -83,11 +83,6 @@ void GL_Bind( GLint tmu, GLenum texnum )
 {
 	gltexture_t	*texture;
 
-#ifdef XASH_NANOGL
-	tmu = tmu - GL_TEXTURE0;
-#endif
-	
-
 	// missed texture ?
 	if( texnum <= 0 ) texnum = tr.defaultTexture;
 	ASSERT( texnum > 0 && texnum < MAX_TEXTURES );
@@ -96,12 +91,17 @@ void GL_Bind( GLint tmu, GLenum texnum )
 		GL_SelectTexture( tmu );
 	else tmu = glState.activeTMU;
 
+	// wrong texture unit
+	//if( tmu < 0 || tmu >= MAX_TEXTURE_UNITS )
+		//return;
+
 	texture = &r_textures[texnum];
 
 	if( glState.currentTextureTargets[tmu] != texture->target )
 	{
 		if( glState.currentTextureTargets[tmu] != GL_NONE )
 			pglDisable( glState.currentTextureTargets[tmu] );
+
 		glState.currentTextureTargets[tmu] = texture->target;
 		pglEnable( glState.currentTextureTargets[tmu] );
 	}
@@ -357,7 +357,7 @@ void R_SetTextureParameters( void )
 	for( i = 0, texture = r_textures; i < r_numTextures; i++, texture++ )
 	{
 		if( !texture->texnum ) continue;	// free slot
-		GL_Bind( GL_TEXTURE0, i );
+		GL_Bind( XASH_TEXTURE0, i );
 		GL_TexFilter( texture, true );
 	}
 }

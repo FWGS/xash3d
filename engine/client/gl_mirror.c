@@ -164,7 +164,7 @@ int R_AllocateMirrorTexture( void )
 		texture = tr.mirrorTextures[i];
 	}
 
-	GL_Bind( GL_TEXTURE0, texture );
+	GL_Bind( XASH_TEXTURE0, texture );
 	pglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, RI.viewport[0], RI.viewport[1], RI.viewport[2], RI.viewport[3], 0 );
 
 	return texture;

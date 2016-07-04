@@ -620,8 +620,8 @@ static void LM_UploadBlock( qboolean dynamic )
 		}
 
 		if( host.features & ENGINE_LARGE_LIGHTMAPS )
-			GL_Bind( GL_TEXTURE0, tr.dlightTexture2 );
-		else GL_Bind( GL_TEXTURE0, tr.dlightTexture );
+			GL_Bind( XASH_TEXTURE0, tr.dlightTexture2 );
+		else GL_Bind( XASH_TEXTURE0, tr.dlightTexture );
 
 		pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, BLOCK_SIZE, height, GL_RGBA, GL_UNSIGNED_BYTE, gl_lms.lightmap_buffer );
 	}
@@ -865,7 +865,7 @@ void R_BlendLightmaps( void )
 	{
 		if( gl_lms.lightmap_surfaces[i] )
 		{
-			GL_Bind( GL_TEXTURE0, tr.lightmapTextures[i] );
+			GL_Bind( XASH_TEXTURE0, tr.lightmapTextures[i] );
 
 			for( surf = gl_lms.lightmap_surfaces[i]; surf != NULL; surf = surf->lightmapchain )
 			{
@@ -880,8 +880,8 @@ void R_BlendLightmaps( void )
 		LM_InitBlock();
 
 		if( host.features & ENGINE_LARGE_LIGHTMAPS )
-			GL_Bind( GL_TEXTURE0, tr.dlightTexture2 );
-		else GL_Bind( GL_TEXTURE0, tr.dlightTexture );
+			GL_Bind( XASH_TEXTURE0, tr.dlightTexture2 );
+		else GL_Bind( XASH_TEXTURE0, tr.dlightTexture );
 
 		newsurf = gl_lms.dynamic_surfaces;
 
@@ -1000,7 +1000,7 @@ void R_RenderFullbrights( void )
 	{
 		if( !fullbright_polys[i] )
 			continue;
-		GL_Bind( GL_TEXTURE0, i );
+		GL_Bind( XASH_TEXTURE0, i );
 
 		for( p = fullbright_polys[i]; p; p = p->next )
 		{
@@ -1053,7 +1053,7 @@ void R_RenderDetails( void )
 		es = detail_surfaces[i];
 		if( !es ) continue;
 
-		GL_Bind( GL_TEXTURE0, i );
+		GL_Bind( XASH_TEXTURE0, i );
 
 		for( p = es; p; p = p->detailchain )
 		{
@@ -1110,23 +1110,23 @@ void R_RenderBrushPoly( msurface_t *fa )
 	{
 		if( SURF_INFO( fa, RI.currentmodel )->mirrortexturenum )
 		{
-			GL_Bind( GL_TEXTURE0, SURF_INFO( fa, RI.currentmodel )->mirrortexturenum );
+			GL_Bind( XASH_TEXTURE0, SURF_INFO( fa, RI.currentmodel )->mirrortexturenum );
 			is_mirror = true;
 
 			// BEGIN WATER STUFF
 			if( fa->flags & SURF_DRAWTURB )
 			{
 				R_BeginDrawMirror( fa );
-				GL_Bind( GL_TEXTURE1, t->gl_texturenum );
+				GL_Bind( XASH_TEXTURE1, t->gl_texturenum );
 				pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 			}
 		}
-		else GL_Bind( GL_TEXTURE0, t->gl_texturenum ); // dummy
+		else GL_Bind( XASH_TEXTURE0, t->gl_texturenum ); // dummy
 
 		// DEBUG: reset the mirror texture after drawing
 		SURF_INFO( fa, RI.currentmodel )->mirrortexturenum = 0;
 	}
-	else GL_Bind( GL_TEXTURE0, t->gl_texturenum );
+	else GL_Bind( XASH_TEXTURE0, t->gl_texturenum );
 
 	if( fa->flags & SURF_DRAWTURB )
 	{	
@@ -1219,7 +1219,7 @@ dynamic:
 			R_BuildLightMap( fa, temp, smax * 4, true );
 			R_SetCacheState( fa );
                               
-			GL_Bind( GL_TEXTURE0, tr.lightmapTextures[fa->lightmaptexturenum] );
+			GL_Bind( XASH_TEXTURE0, tr.lightmapTextures[fa->lightmaptexturenum] );
 
 			pglTexSubImage2D( GL_TEXTURE_2D, 0, fa->light_s, fa->light_t, smax, tmax,
 			GL_RGBA, GL_UNSIGNED_BYTE, temp );
@@ -1332,7 +1332,7 @@ void R_DrawWaterSurfaces( void )
 			continue;
 
 		// set modulate mode explicitly
-		GL_Bind( GL_TEXTURE0, t->gl_texturenum );
+		GL_Bind( XASH_TEXTURE0, t->gl_texturenum );
 
 		for( ; s; s = s->texturechain )
 			EmitWaterPolys( s->polys, ( s->flags & SURF_NOCULL ));

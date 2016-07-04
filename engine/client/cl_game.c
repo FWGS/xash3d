@@ -3214,7 +3214,7 @@ int TriSpriteTexture( model_t *pSpriteModel, int frame )
 		pglAlphaFunc( GL_GREATER, 0.0f );
 	}
 
-	GL_Bind( GL_TEXTURE0, gl_texturenum );
+	GL_Bind( XASH_TEXTURE0, gl_texturenum );
 
 	return 1;
 }

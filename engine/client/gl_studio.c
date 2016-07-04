@@ -1799,7 +1799,7 @@ static void R_StudioSetupSkin( mstudiotexture_t *ptexture, int index )
 	if( m_skinnum != 0 && m_skinnum < m_pTextureHeader->numskinfamilies )
 		pskinref += (m_skinnum * m_pTextureHeader->numskinref);
 
-	GL_Bind( GL_TEXTURE0, ptexture[pskinref[index]].index );
+	GL_Bind( XASH_TEXTURE0, ptexture[pskinref[index]].index );
 }
 
 /*
@@ -2063,7 +2063,7 @@ static void R_StudioDrawPoints_legacy( void )
 
 		if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ))
 		{
-			GL_Bind( GL_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
+			GL_Bind( XASH_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
 		}
 
 		while( ( i = *( ptricmds++ ) ) )
@@ -2373,7 +2373,7 @@ static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref )
 
 		if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ))
 		{
-			GL_Bind( GL_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
+			GL_Bind( XASH_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
 		}
 
 		R_StudioDrawMesh(ptricmds, s, t);
