@@ -357,7 +357,7 @@ void SV_ReadPackets( void )
 				c = Cmd_Argv( 0 );
 
 				if( !Q_strcmp( c, "rcon" ))
-					SV_RemoteCommand( cl, &net_message );
+					SV_RemoteCommand( net_from, &net_message );
 			}
 			continue;
 		}
