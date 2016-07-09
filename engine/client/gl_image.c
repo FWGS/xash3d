@@ -1622,7 +1622,7 @@ int GL_LoadTextureInternal( const char *name, rgbdata_t *pic, texFlags_t flags, 
 		}
 
 		tex = &r_textures[i];
-		hash = Com_HashKey( name, TEXTURES_HASH_SIZE );
+		//hash = Com_HashKey( name, TEXTURES_HASH_SIZE );
 		Q_strncpy( tex->name, name, sizeof( tex->name ));
 		tex->texnum = i;	// texnum is used for fast acess into r_textures array too
 		tex->flags = flags;
@@ -1636,7 +1636,7 @@ int GL_LoadTextureInternal( const char *name, rgbdata_t *pic, texFlags_t flags, 
 	GL_TexFilter( tex, update ); // update texture filter, wrap etc
 
 	if( !update )
-          {
+	{
 		// add to hash table
 		hash = Com_HashKey( tex->name, TEXTURES_HASH_SIZE );
 		tex->nextHash = r_texturesHashTable[hash];

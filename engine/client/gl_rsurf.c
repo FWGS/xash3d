@@ -231,7 +231,7 @@ void GL_SetupFogColorForSurfaces( void )
 		return;
 	}
 
-	Q_memset(fogColor, 0, 3 * sizeof(float)); //Result pow( RI.fogColor[i] / div, ( 1.0f / factor )) may be nan.
+	fogColor[0] = fogColor[1] = fogColor[2] = 0.0f; //Result pow( RI.fogColor[i] / div, ( 1.0f / factor )) may be nan.
 
 	div = (r_detailtextures->integer) ? 2.0f : 1.0f;
 	factor = (r_detailtextures->integer) ? 3.0f : 2.0f;
