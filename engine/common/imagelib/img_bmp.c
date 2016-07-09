@@ -45,10 +45,10 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 		return false; 
 
 	buf_p = (byte *)buffer;
-	magic[0] = *buf_p++
-	magic[1] = *buf_p++
+	magic[0] = *buf_p++;// move pointer
+	magic[1] = *buf_p++;
 	Q_memcpy( &bhdr, buf_p, sizeof( bmp_t ) );
-	buf_p += sizeof( bmp_t );// move pointer
+	buf_p += sizeof( bmp_t );
 
 	// bogus file header check
 	if( bhdr.reserved0 != 0 ) return false;
