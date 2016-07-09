@@ -133,7 +133,6 @@ Allocate the screen texture and make copy
 */
 int R_AllocateMirrorTexture( void )
 {
-	rgbdata_t	r_screen;
 	int	i, texture;
 	char	txName[16];
 
@@ -149,8 +148,7 @@ int R_AllocateMirrorTexture( void )
 
 	if( !texture )
 	{
-		// not initialized ?
-		Q_memset( &r_screen, 0, sizeof( r_screen ));
+		rgbdata_t r_screen = {};// not initialized ?
 		Q_snprintf( txName, sizeof( txName ), "*screen%i", i );
 
 		r_screen.width = RI.viewport[2];

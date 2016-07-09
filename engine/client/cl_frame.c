@@ -746,8 +746,7 @@ Read and ignore whole entity packet.
 void CL_FlushEntityPacket( sizebuf_t *msg )
 {
 	int		newnum;
-	entity_state_t	from, to;
-	Q_memset( &from, 0, sizeof( from ));
+	entity_state_t	from = {}, to;
 
 	cl.frames[cl.parsecountmod].valid = false;
 	cl.validsequence = 0; // can't render a frame

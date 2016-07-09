@@ -328,10 +328,8 @@ void SV_SendConsistencyList( sizebuf_t *msg )
    
 void SV_SendResources( sizebuf_t *msg )
 {
-	byte	nullrguc[32];
+	byte	nullrguc[32] = {};
 	int	i;
-
-	Q_memset( nullrguc, 0, sizeof( nullrguc ));
 
 	BF_WriteByte( msg, svc_customization );
 	BF_WriteLong( msg, svs.spawncount );

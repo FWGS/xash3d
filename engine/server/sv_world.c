@@ -694,10 +694,8 @@ void SV_WaterLinks( const vec3_t origin, int *pCont, areanode_t *node )
 	link_t	*l, *next;
 	edict_t	*touch;
 	hull_t	*hull;
-	vec3_t	test, offset;
+	vec3_t	test, offset = {};
 	model_t	*mod;
-
-	Q_memset( offset, 0, 3 * sizeof( float ) );
 
 	// get water edicts
 	for( l = node->water_edicts.next; l != &node->water_edicts; l = next )
@@ -1282,11 +1280,10 @@ SV_Move
 */
 trace_t SV_Move( const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int type, edict_t *e )
 {
-	moveclip_t	clip;
+	moveclip_t	clip = {};
 	vec3_t		trace_endpos;
 	float		trace_fraction;
 
-	Q_memset( &clip, 0, sizeof( moveclip_t ));
 	SV_ClipMoveToEntity( EDICT_NUM( 0 ), start, mins, maxs, end, &clip.trace );
 
 	if( clip.trace.fraction != 0.0f )
@@ -1332,11 +1329,10 @@ SV_MoveNoEnts
 */
 trace_t SV_MoveNoEnts( const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int type, edict_t *e )
 {
-	moveclip_t	clip;
+	moveclip_t	clip = {};
 	vec3_t		trace_endpos;
 	float		trace_fraction;
 
-	Q_memset( &clip, 0, sizeof( moveclip_t ));
 	SV_ClipMoveToEntity( EDICT_NUM( 0 ), start, mins, maxs, end, &clip.trace );
 
 	if( clip.trace.fraction != 0.0f )
@@ -1458,10 +1454,8 @@ trace_t SV_MoveToss( edict_t *tossent, edict_t *ignore )
 	vec3_t	original_velocity;
 	vec3_t	original_angles;
 	vec3_t	original_avelocity;
-	trace_t	trace;
+	trace_t	trace = {};
 	int	i;
-
-	Q_memset( &trace, 0, sizeof( trace_t ) );
 
 	VectorCopy( tossent->v.origin, original_origin );
 	VectorCopy( tossent->v.velocity, original_velocity );

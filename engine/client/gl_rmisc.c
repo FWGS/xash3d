@@ -302,9 +302,8 @@ void R_ParseTexFilters( const char *filename )
 	// format: 'texturename' 'filtername' 'factor' 'bias' 'blendmode' 'grayscale'
 	while(( pfile = COM_ParseFile( pfile, token )) != NULL )
 	{
-		imgfilter_t	filter;
+		imgfilter_t	filter = {};
 
-		Q_memset( &filter, 0, sizeof( filter ));
 		Q_strncpy( texname, token, sizeof( texname ));
 
 		// parse filter

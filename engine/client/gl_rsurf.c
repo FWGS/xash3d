@@ -82,10 +82,8 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 	vec3_t	mins, maxs;
 	float	m, frac, s, t, *v, vertsDiv, *verts_p;
 	vec3_t	front[SUBDIVIDE_SIZE], back[SUBDIVIDE_SIZE], total;
-	float	dist[SUBDIVIDE_SIZE], total_s, total_t, total_ls, total_lt;
+	float	dist[SUBDIVIDE_SIZE] = {}, total_s, total_t, total_ls, total_lt;
 	glpoly_t	*poly;
-
-	Q_memset( dist, 0, SUBDIVIDE_SIZE * sizeof( float ) );
 
 	if( numverts > ( SUBDIVIDE_SIZE - 4 ))
 		Host_Error( "Mod_SubdividePolygon: too many vertexes on face ( %i )\n", numverts );
@@ -224,16 +222,16 @@ void GL_SetupFogColorForSurfaces( void )
 	vec3_t	fogColor;
 	float	factor, div;
 
-	Q_memset(fogColor, 0, 3 * sizeof(float)); //Result pow( RI.fogColor[i] / div, ( 1.0f / factor )) may be nan.
-
-	if(( !RI.fogEnabled && !RI.fogCustom ) || RI.refdef.onlyClientDraw || !RI.currententity )
+	if( ( !RI.fogEnabled && !RI.fogCustom ) || RI.refdef.onlyClientDraw || !RI.currententity )
 		return;
 
 	if( RI.currententity->curstate.rendermode == kRenderTransTexture )
-          {
+	{
 		pglFogfv( GL_FOG_COLOR, RI.fogColor );
 		return;
 	}
+
+	Q_memset(fogColor, 0, 3 * sizeof(float)); //Result pow( RI.fogColor[i] / div, ( 1.0f / factor )) may be nan.
 
 	div = (r_detailtextures->integer) ? 2.0f : 1.0f;
 	factor = (r_detailtextures->integer) ? 3.0f : 2.0f;
@@ -627,13 +625,12 @@ static void LM_UploadBlock( qboolean dynamic )
 	}
 	else
 	{
-		rgbdata_t	r_lightmap;
+		rgbdata_t	r_lightmap = {};
 		char	lmName[16];
 
 		i = gl_lms.current_lightmap_texture;
 
 		// upload static lightmaps only during loading
-		Q_memset( &r_lightmap, 0, sizeof( r_lightmap ));
 		Q_snprintf( lmName, sizeof( lmName ), "*lightmap%i", i );
 
 		r_lightmap.width = BLOCK_SIZE;

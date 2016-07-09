@@ -841,11 +841,10 @@ to totally exit after returning from this function.
 void SV_FinalMessage( char *message, qboolean reconnect )
 {
 	sv_client_t	*cl;
-	byte		msg_buf[1024];
+	byte		msg_buf[1024] = {};
 	sizebuf_t		msg;
 	int		i;
 
-	Q_memset( msg_buf, 0, 1024 );
 	BF_Init( &msg, "FinalMessage", msg_buf, sizeof( msg_buf ));
 	BF_WriteByte( &msg, svc_print );
 	BF_WriteByte( &msg, PRINT_HIGH );
