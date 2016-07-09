@@ -695,9 +695,6 @@ void SV_Info( netadr_t from )
 	version = Q_atoi( Cmd_Argv( 1 ));
 	string[0] = '\0';
 
-	if( *sv_fakegamedir->string )
-		gamedir = sv_fakegamedir->string;
-
 	if( version != PROTOCOL_VERSION )
 	{
 		Q_snprintf( string, sizeof( string ), "%s: wrong version\n", hostname->string );
@@ -2972,8 +2969,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 
 	args = BF_ReadStringLine( msg );
 	Cmd_TokenizeString( args );
-	if( *sv_fakegamedir->string )
-		gamedir = sv_fakegamedir->string;
 
 	c = Cmd_Argv( 0 );
 	MsgDev( D_NOTE, "SV_ConnectionlessPacket: %s : %s\n", NET_AdrToString( from ), c );
