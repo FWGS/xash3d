@@ -752,7 +752,7 @@ void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 	Info_SetValueForKey(s, "bots",      va( "%d", bots ) ); // bot count
 	Info_SetValueForKey(s, "gamedir",   GI->gamedir ); // gamedir
 	Info_SetValueForKey(s, "map",       sv.name ); // current map
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		Info_SetValueForKey(s, "type",  "d" ); // dedicated
 	else
 		Info_SetValueForKey(s, "type",  "l" ); // local
@@ -965,7 +965,7 @@ void SV_Shutdown( qboolean reconnect )
 	// rcon will be disconnected
 	SV_EndRedirect();
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		MsgDev( D_INFO, "SV_Shutdown: %s\n", host.finalmsg );
 
 	if( svs.clients )

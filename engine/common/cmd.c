@@ -972,7 +972,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 #ifndef XASH_DEDICATED
 	// forward the command line to the server, so the entity DLL can parse it
 	// UCyborg: Is src_client used anywhere?
-	if( cmd_source == src_command && host.type == HOST_NORMAL )
+	if( cmd_source == src_command && !Host_IsDedicated() )
 	{
 		if( cls.state >= ca_connected )
 			Cmd_ForwardToServer();

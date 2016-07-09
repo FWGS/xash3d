@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "client.h"
@@ -1059,3 +1061,4 @@ void MIX_PaintChannels( int endtime )
 		paintedtime = end;
 	}
 }
+#endif // XASH_DEDICATED

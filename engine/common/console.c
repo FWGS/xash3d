@@ -872,7 +872,7 @@ void Con_Print( const char *txt )
 	int	y, c, l, color;
 
 	// client not running
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
           if( !con.initialized ) return;
 	
 	color = ColorIndex( COLOR_DEFAULT );

@@ -341,13 +341,13 @@ void SV_ActivateServer( void )
 	else
 	{
 		// clear the ugly moving delay in singleplayer
-		if( host.type != HOST_DEDICATED )
+		if( !Host_IsDedicated() )
 			Cvar_SetFloat( "clockwindow", 0.0f );
 		MsgDev( D_INFO, "Game started\n" );
 	}
 	Log_Printf( "Started map \"%s\" (CRC \"0\")\n", STRING( svgame.globals->mapname ) );
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		Mod_FreeUnused ();
 	}
@@ -362,7 +362,7 @@ void SV_ActivateServer( void )
 	if( sv_maxclients->integer > 1 )
 	{
 		// listenserver is executed on every map change in multiplayer
-		if( host.type != HOST_DEDICATED )
+		if( !Host_IsDedicated() )
 		{
 			char *plservercfgfile = Cvar_VariableString( "lservercfgfile" );
 			if( *plservercfgfile )
@@ -653,7 +653,7 @@ void SV_InitGame( void )
 
 	// dedicated servers are can't be single player and are usually DM
 	// so unless they explicity set coop, force it to deathmatch
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		if( !Cvar_VariableValue( "coop" ) && !Cvar_VariableValue( "teamplay" ))
 			Cvar_FullSet( "deathmatch", "1",  CVAR_LATCH );
@@ -679,7 +679,7 @@ void SV_InitGame( void )
 	}
 
 	svgame.globals->maxClients = sv_maxclients->integer;
-	SV_UPDATE_BACKUP = ( svgame.globals->maxClients == 1 && host.type != HOST_DEDICATED ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
+	SV_UPDATE_BACKUP = ( svgame.globals->maxClients == 1 && !Host_IsDedicated() ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
 
 	svs.clients = Z_Malloc( sizeof( sv_client_t ) * sv_maxclients->integer );
 	svs.num_client_entities = sv_maxclients->integer * SV_UPDATE_BACKUP * 64;

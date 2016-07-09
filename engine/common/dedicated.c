@@ -772,7 +772,7 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 	buffer += sizeof(dsprite_t);
 	Q_memcpy(&numi, buffer, sizeof(short));
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		// skip frames loading
 		if( loaded ) *loaded = true;	// done

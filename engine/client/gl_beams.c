@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "r_efx.h"
@@ -2211,3 +2213,4 @@ void CL_ReadLineFile_f( void )
 	if( count ) Msg( "%i lines read\n", count );
 	else Msg( "map %s has no leaks!\n", clgame.mapname );
 }
+#endif // XASH_DEDICATED

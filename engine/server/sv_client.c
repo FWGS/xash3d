@@ -2894,7 +2894,7 @@ void SV_TSourceEngineQuery( netadr_t from )
 	BF_WriteByte( &buf, count );
 	BF_WriteByte( &buf, sv_maxclients->integer );
 	BF_WriteByte( &buf, bots );
-	BF_WriteByte( &buf, host.type == HOST_DEDICATED ? 'd' : 'l');
+	BF_WriteByte( &buf, Host_IsDedicated() ? 'd' : 'l');
 #if defined(_WIN32)
 	BF_WriteByte( &buf, 'w' );
 #elif defined(__APPLE__)
@@ -2914,7 +2914,7 @@ void SV_TSourceEngineQuery( netadr_t from )
 	BF_WriteByte( &buf, count );
 	BF_WriteByte( &buf, sv_maxclients->integer );
 	BF_WriteByte( &buf, PROTOCOL_VERSION );
-	BF_WriteByte( &buf, host.type == HOST_DEDICATED ? 'D' : 'L');
+	BF_WriteByte( &buf, Host_IsDedicated() ? 'D' : 'L');
 #if defined(_WIN32)
 	BF_WriteByte( &buf, 'W' );
 #else

@@ -300,7 +300,7 @@ void Sys_MergeCommandLine( )
 	for( i = 0; i < host.argc; i++ )
 	{
 		// second call
-		if( host.type == HOST_DEDICATED && !Q_strnicmp( "+menu_", host.argv[i], 6 ))
+		if( Host_IsDedicated() && !Q_strnicmp( "+menu_", host.argv[i], 6 ))
 			host.argv[i] = (char *)blank;
 	}
 }
@@ -888,7 +888,7 @@ void Sys_Warn( const char *format, ... )
 	va_start( argptr, format );
 	Q_vsprintf( text, format, argptr );
 	va_end( argptr );
-	if( host.type != HOST_DEDICATED ) // dedicated server should not hang on messagebox
+	if( !Host_IsDedicated() ) // dedicated server should not hang on messagebox
 		MSGBOX(text);
 	Msg( "Sys_Warn: %s\n", text );
 }
@@ -922,7 +922,7 @@ void Sys_Error( const char *format, ... )
 
 	SV_SysError( text );
 
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 	{
 #ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
@@ -969,7 +969,7 @@ void Sys_Break( const char *format, ... )
 	Q_vsprintf( text, format, argptr );
 	va_end( argptr );
 
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 	{
 #ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
@@ -977,7 +977,7 @@ void Sys_Break( const char *format, ... )
 		VID_RestoreGamma();
 	}
 
-	if( host.type != HOST_NORMAL || host.developer > 0 )
+	if( Host_IsDedicated() || host.developer > 0 )
 	{
 		Con_ShowConsole( true );
 		Con_DisableInput();	// disable input line for dedicated server
@@ -1014,7 +1014,7 @@ print into window console
 */
 void Sys_Print( const char *pMsg )
 {
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 		Con_Print( pMsg );
 #ifdef _WIN32
 

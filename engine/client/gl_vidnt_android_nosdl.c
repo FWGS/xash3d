@@ -1,4 +1,21 @@
+/*
+gl_vid_android.c - Android video backend
+Copyright (C) 2016 mittorn
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
+#ifndef XASH_DEDICATED
 #if defined(__ANDROID__) && defined(XASH_NANOGL) && !defined(XASH_SDL)
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -658,3 +675,4 @@ void R_Free_OpenGL( void )
 	glw_state.initialized = false;
 }
 #endif
+#endif // XASH_DEDICATED

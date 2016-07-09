@@ -449,7 +449,7 @@ pmtrace_t PM_PlayerTraceExt( playermove_t *pmove, vec3_t start, vec3_t end, int 
 		else if( pe->solid == SOLID_CUSTOM )
 		{
 			// run custom sweep callback
-			if( pmove->server || Host_IsLocalClient( ) || host.type == HOST_DEDICATED )
+			if( pmove->server || Host_IsLocalClient( ) || Host_IsDedicated() )
 				SV_ClipPMoveToEntity( pe, start, mins, maxs, end, &trace_bbox );
 #ifndef XASH_DEDICATED
 			else CL_ClipPMoveToEntity( pe, start, mins, maxs, end, &trace_bbox );
@@ -616,7 +616,7 @@ int PM_TestPlayerPosition( playermove_t *pmove, vec3_t pos, pmtrace_t *ptrace, p
 			trace.fraction = 1.0f;
 
 			// run custom sweep callback
-			if( pmove->server || Host_IsLocalClient( ) || host.type == HOST_DEDICATED )
+			if( pmove->server || Host_IsLocalClient( ) || Host_IsDedicated() )
 				SV_ClipPMoveToEntity( pe, pos, mins, maxs, pos, &trace );
 #ifndef XASH_DEDICATED
 			else CL_ClipPMoveToEntity( pe, pos, mins, maxs, pos, &trace );

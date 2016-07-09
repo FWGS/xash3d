@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "net_encode.h"
@@ -1241,3 +1243,4 @@ void CL_Stop_f( void )
 		S_StopBackgroundTrack();
 	}
 }
+#endif // XASH_DEDICATED

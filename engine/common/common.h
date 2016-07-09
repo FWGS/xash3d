@@ -96,6 +96,12 @@ typedef enum
 	HOST_DEDICATED,
 } instance_t;
 
+#ifdef XASH_DEDICATED
+#define Host_IsDedicated() ( true )
+#else
+#define Host_IsDedicated() ( host.type == HOST_DEDICATED )
+#endif
+
 #include "system.h"
 #include "ref_params.h"
 #include "com_model.h"

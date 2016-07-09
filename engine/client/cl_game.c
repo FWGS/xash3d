@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "const.h"
@@ -4147,3 +4149,4 @@ qboolean CL_LoadProgs( const char *name )
 
 	return true;
 }
+#endif // XASH_DEDICATED

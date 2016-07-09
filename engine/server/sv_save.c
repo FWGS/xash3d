@@ -611,7 +611,7 @@ int SV_IsValidSave( void )
 		}
 	}
 
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 	{
 		// Enable save/load in xashds
 
@@ -2169,7 +2169,7 @@ qboolean SV_LoadGame( const char *pName )
 		return false;
 	}
 
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 	{
 		Cvar_FullSet( "coop", "0", CVAR_LATCH );
 		Cvar_FullSet( "teamplay", "0", CVAR_LATCH );

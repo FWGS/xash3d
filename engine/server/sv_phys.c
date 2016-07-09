@@ -1842,7 +1842,7 @@ Called from renderer for debug purposes
 */
 void SV_DrawDebugTriangles( void )
 {
-	if( host.type != HOST_NORMAL )
+	if( Host_IsDedicated() )
 		return;
 
 	if( svgame.physFuncs.DrawNormalTriangles != NULL )
@@ -1876,7 +1876,7 @@ Called from renderer for debug purposes
 */
 void SV_DrawOrthoTriangles( void )
 {
-	if( host.type != HOST_NORMAL )
+	if( Host_IsDedicated() )
 		return;
 
 	if( svgame.physFuncs.DrawOrthoTriangles != NULL )

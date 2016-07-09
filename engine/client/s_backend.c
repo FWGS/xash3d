@@ -12,9 +12,11 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-#ifndef XASH_OPENSL
-#include "port.h"
 
+#ifndef XASH_DEDICATED
+#ifndef XASH_OPENSL
+
+#include "port.h"
 #include "common.h"
 #include "sound.h"
 #ifdef XASH_SDL
@@ -250,3 +252,4 @@ void S_PrintDeviceName( void )
 #endif
 }
 #endif
+#endif // XASH_DEDICATED
