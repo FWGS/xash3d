@@ -932,6 +932,18 @@ typedef struct autocomplete_list_s
 } autocomplete_list_t;
 
 extern autocomplete_list_t cmd_list[];
+
+typedef struct
+{
+	string		buffer;
+	int		cursor;
+	int		scroll;
+	int		widthInChars;
+} field_t;
+
+void Con_CompleteCommand( field_t *field );
+void Con_ClearAutoComplete();
+
 extern const char *svc_strings[256];
 
 // soundlib shared exports

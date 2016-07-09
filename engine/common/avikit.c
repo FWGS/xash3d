@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(XASH_DEDICATED)
 #define USE_VFW
 #endif
 #ifdef USE_VFW

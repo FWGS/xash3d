@@ -393,7 +393,7 @@ void Con_CreateConsole( void )
 	{
 		s_wcd.SysInputLineWndProc = (WNDPROC)SetWindowLong( s_wcd.hwndInputLine, GWL_WNDPROC, (long)Con_InputLineProc );
 		SendMessage( s_wcd.hwndInputLine, WM_SETFONT, ( WPARAM )s_wcd.hfBufferFont, 0 );
-          }
+	}
 
 	// show console if needed
 	if( host.con_showalways )

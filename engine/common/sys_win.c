@@ -41,6 +41,29 @@ extern char **environ;
 
 qboolean	error_on_exit = false;	// arg for exit();
 
+#if defined _WIN32 && !defined XASH_SDL
+#include <winbase.h>
+/*
+================
+Sys_DoubleTime
+================
+*/
+double Sys_DoubleTime( void )
+{
+	static LARGE_INTEGER g_PerformanceFrequency;
+	static LARGE_INTEGER g_ClockStart;
+	LARGE_INTEGER CurrentTime;
+
+	if( !g_PerformanceFrequency.QuadPart )
+	{
+		QueryPerformanceFrequency( &g_PerformanceFrequency );
+		QueryPerformanceCounter( &g_ClockStart );
+	}
+
+	QueryPerformanceCounter( &CurrentTime );
+	return (double)( CurrentTime.QuadPart - g_ClockStart.QuadPart ) / (double)( g_PerformanceFrequency.QuadPart );
+}
+#else
 /*
 ================
 Sys_DoubleTime
@@ -59,15 +82,6 @@ double Sys_DoubleTime( void )
 	}
 	CurrentTime = SDL_GetPerformanceCounter();
 	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
-#elif _WIN32
-	if( !g_PerformanceFrequency )
-	{
-		g_PerformanceFrequency = GetPerformanceFrequency();
-		g_ClockStart = GetPerformanceCounter();
-	}
-	CurrentTime = GetPerformanceCounter();
-	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
-
 #else
 	struct timespec ts;
 	if( !g_PerformanceFrequency )
@@ -80,6 +94,7 @@ double Sys_DoubleTime( void )
 	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
 #endif
 }
+#endif
 
 /*
 ================

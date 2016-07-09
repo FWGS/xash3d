@@ -606,6 +606,10 @@ void Host_Frame( float time )
 	if( !Host_FilterTime( time ))
 		return;
 
+	rand (); // keep the random time dependent
+
+	Sys_SendKeyEvents (); // call WndProc on WIN32
+
 	Host_InputFrame ();	// input frame
 
 	Host_GetConsoleCommands ();
@@ -1040,6 +1044,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ));
 		// intentional fallthrough
 	case HOST_DEDICATED:
+		Cbuf_Execute(); // force stuffcmds run if it is in cbuf
 		// if stuffcmds wasn't run, then init.rc is probably missing, use default
 		if( !host.stuffcmdsrun ) Cbuf_AddText( "stuffcmds\n" );
 

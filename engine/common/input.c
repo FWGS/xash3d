@@ -756,10 +756,6 @@ void Host_InputFrame( void )
 	qboolean	shutdownMouse = false;
 	float forward = 0, side = 0, pitch = 0, yaw = 0;
 
-	rand (); // keep the random time dependent
-
-	Sys_SendKeyEvents ();
-
 #ifdef USE_EVDEV
 	IN_EvdevFrame();
 #endif

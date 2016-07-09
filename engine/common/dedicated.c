@@ -874,4 +874,9 @@ imgfilter_t *R_FindTexFilter( const char *texname )
 {
 	return NULL;
 }
+
+void CL_Crashed()
+{
+
+}
 #endif
