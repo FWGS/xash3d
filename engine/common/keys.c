@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_DEDICATED
 #include "common.h"
 #include "input.h"
 #include "client.h"
@@ -850,3 +850,4 @@ void CL_CharEvent( int key )
 		UI_CharEvent( key );
 	}
 }
+#endif

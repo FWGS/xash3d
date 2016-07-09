@@ -82,7 +82,10 @@ ifeq ($(NANOGL),1)
 SRCS_CPP += $(wildcard ../nanogl/*.cpp)
 endif
 OBJS_CPP = $(SRCS_CPP:.cpp=.o)
-SRCS = $(wildcard server/*.c) $(wildcard client/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
+SRCS = $(wildcard server/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
+ifneq ($(XASH_DEDICATED),1)
+SRCS += $(wildcard client/*.c)
+endif
 OBJS = $(SRCS:.c=.o)
 ifeq ($(XASH_SINGLE_BINARY),0)
 BINARIES = libxash.so

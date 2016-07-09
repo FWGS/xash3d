@@ -498,11 +498,9 @@ void Host_GetConsoleCommands( void )
 {
 	char	*cmd;
 
-	//if( host.type == HOST_DEDICATED )
-	{
-		cmd = Con_Input();
-		if( cmd ) Cbuf_AddText( cmd );
-	}
+	while( ( cmd = Con_Input() ) )
+		Cbuf_AddText( cmd );
+	Cbuf_Execute();
 }
 
 /*
@@ -1106,7 +1104,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
 #endif
-#if defined(__ANDROID__) && !defined( XASH_SDL )
+#if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined(XASH_DEDICATED)
 	Android_Init();
 #endif
 
@@ -1159,7 +1157,6 @@ void EXPORT Host_Shutdown( void )
 			// restore all latched cheat cvars
 			Cvar_SetCheatState( true );
 			Host_WriteConfig();
-			IN_TouchWriteConfig();
 		}
 		host.state = HOST_SHUTDOWN; // prepare host to normal shutdown
 	}

@@ -485,6 +485,7 @@ qboolean Cmd_GetItemsList( const char *s, char *completedname, int length )
 	string		matchbuf;
 	int		i, numitems;
 
+#ifndef XASH_DEDICATED
 	if( !clgame.itemspath[0] ) return false; // not in game yet
 	t = FS_Search( va( "%s/%s*.txt", clgame.itemspath, s ), true, false );
 	if( !t ) return false;
@@ -515,7 +516,11 @@ qboolean Cmd_GetItemsList( const char *s, char *completedname, int length )
 				completedname[i] = 0;
 		}
 	}
+
 	return true;
+#else
+	return false;
+#endif
 }
 
 /*
@@ -967,7 +972,7 @@ void Host_WriteConfig( void )
 {
 	kbutton_t	*mlook, *jlook;
 	file_t	*f;
-
+#ifndef XASH_DEDICATED
 	// if client not loaded, client cvars will lost
 	if( !clgame.hInstance )
 	{
@@ -1019,6 +1024,8 @@ void Host_WriteConfig( void )
 	}
 	else
 		MsgDev( D_NOTE, "Keyboard configuration not changed\n" );
+	IN_TouchWriteConfig();
+#endif
 }
 
 /*

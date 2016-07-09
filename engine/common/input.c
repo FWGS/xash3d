@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_DEDICATED
 #include "port.h"
 
 #include "common.h"
@@ -807,3 +807,4 @@ void Host_InputFrame( void )
 	IN_ActivateMouse( false );
 	IN_MouseMove();
 }
+#endif

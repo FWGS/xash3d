@@ -1936,7 +1936,11 @@ static server_physics_api_t gPhysicsAPI =
 	SV_GetHeadNode,
 	SV_ServerState,
 	Host_Error,
+#ifndef XASH_DEDICATED
 	&gTriApi,	// ouch!
+#else
+	NULL,
+#endif
 	pfnDrawConsoleString,
 	pfnDrawSetTextColor,
 	pfnDrawConsoleStringLen,

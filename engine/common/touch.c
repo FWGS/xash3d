@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
 #include "common.h"
 #include "gl_local.h"
 #include "input.h"
@@ -1542,3 +1543,4 @@ void IN_TouchShutdown( void )
 	touch.initialized = false;
 	Mem_FreePool( &touch.mempool );
 }
+#endif

@@ -969,7 +969,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 
 	// check cvars
 	if( Cvar_Command( )) return;
-
+#ifndef XASH_DEDICATED
 	// forward the command line to the server, so the entity DLL can parse it
 	// UCyborg: Is src_client used anywhere?
 	if( cmd_source == src_command && host.type == HOST_NORMAL )
@@ -977,6 +977,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 		if( cls.state >= ca_connected )
 			Cmd_ForwardToServer();
 	}
+#endif
 }
 
 /*
@@ -991,7 +992,8 @@ so when they are typed in at the console, they will need to be forwarded.
 void Cmd_ForwardToServer( void )
 {
 	char	str[MAX_CMD_BUFFER];
-	
+
+#ifndef XASH_DEDICATED
 	if( cls.demoplayback )
 	{
 		if( !Q_stricmp( Cmd_Argv( 0 ), "pause" ))
@@ -1019,6 +1021,7 @@ void Cmd_ForwardToServer( void )
 	else Q_strcat( str, "\n" );
 
 	BF_WriteString( &cls.netchan.message, str );
+#endif
 }
 
 /*
