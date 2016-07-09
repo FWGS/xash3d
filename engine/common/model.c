@@ -1458,7 +1458,7 @@ static void Mod_SubdividePolygon( mextrasurf_t *info, msurface_t *surf, int numV
 {
 	vec3_t		vTotal, nTotal, tTotal, bTotal;
 	vec3_t		front[MAX_SIDE_VERTS], back[MAX_SIDE_VERTS];
-	float		*v, m, oneDivVerts, dist, dists[MAX_SIDE_VERTS] = {};
+	float		*v, m, oneDivVerts, dist, dists[MAX_SIDE_VERTS] = {0};
 	qboolean		lightmap = (surf->flags & SURF_DRAWTILED) ? false : true;
 	vec3_t		normal, tangent, binormal, mins, maxs;
 	mtexinfo_t	*texinfo = surf->texinfo;

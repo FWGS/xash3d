@@ -535,7 +535,7 @@ Never called by the game logic, just the system event queing
 qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *length )
 {
 	int 		ret;
-	struct sockaddr	addr = {};
+	struct sockaddr	addr = {0};
 	socklen_t	addr_len;
 	int		net_socket = 0;
 	int		protocol;
@@ -684,7 +684,7 @@ NET_IPSocket
 static int NET_IPSocket( const char *netInterface, int port )
 {
 	int		net_socket;
-	struct sockaddr_in	addr = {};
+	struct sockaddr_in	addr = {0};
 	dword		_true = 1;
 
 	MsgDev( D_NOTE, "NET_UDPSocket( %s, %i )\n", netInterface, port );

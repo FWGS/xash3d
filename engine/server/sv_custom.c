@@ -328,7 +328,7 @@ void SV_SendConsistencyList( sizebuf_t *msg )
    
 void SV_SendResources( sizebuf_t *msg )
 {
-	byte	nullrguc[32] = {};
+	byte	nullrguc[32] = {0};
 	int	i;
 
 	BF_WriteByte( msg, svc_customization );

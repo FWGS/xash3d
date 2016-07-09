@@ -510,7 +510,7 @@ void CL_ReadDemoUserCmd( qboolean discard )
 
 	if( !discard )
 	{
-		usercmd_t	nullcmd = {};
+		usercmd_t	nullcmd = {0};
 		sizebuf_t	buf;
 
 		BF_Init( &buf, "UserCmd", data, sizeof( data ));

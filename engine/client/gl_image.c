@@ -1655,7 +1655,7 @@ creates an empty 32-bit texture (just reserve slot)
 */
 int GL_CreateTexture( const char *name, int width, int height, const void *buffer, texFlags_t flags )
 {
-	rgbdata_t	r_empty = {};
+	rgbdata_t	r_empty = {0};
 	int	texture;
 
 	r_empty.width = width;

@@ -82,7 +82,7 @@ static void SubdividePolygon_r( msurface_t *warpface, int numverts, float *verts
 	vec3_t	mins, maxs;
 	float	m, frac, s, t, *v, vertsDiv, *verts_p;
 	vec3_t	front[SUBDIVIDE_SIZE], back[SUBDIVIDE_SIZE], total;
-	float	dist[SUBDIVIDE_SIZE] = {}, total_s, total_t, total_ls, total_lt;
+	float	dist[SUBDIVIDE_SIZE] = {0.0f}, total_s, total_t, total_ls, total_lt;
 	glpoly_t	*poly;
 
 	if( numverts > ( SUBDIVIDE_SIZE - 4 ))
@@ -625,7 +625,7 @@ static void LM_UploadBlock( qboolean dynamic )
 	}
 	else
 	{
-		rgbdata_t	r_lightmap = {};
+		rgbdata_t	r_lightmap = {0};
 		char	lmName[16];
 
 		i = gl_lms.current_lightmap_texture;

@@ -841,7 +841,7 @@ to totally exit after returning from this function.
 void SV_FinalMessage( char *message, qboolean reconnect )
 {
 	sv_client_t	*cl;
-	byte		msg_buf[1024] = {};
+	byte		msg_buf[1024] = {0};
 	sizebuf_t		msg;
 	int		i;
 

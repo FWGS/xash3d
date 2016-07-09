@@ -694,7 +694,7 @@ void SV_WaterLinks( const vec3_t origin, int *pCont, areanode_t *node )
 	link_t	*l, *next;
 	edict_t	*touch;
 	hull_t	*hull;
-	vec3_t	test, offset = {};
+	vec3_t	test, offset = {0.0f};
 	model_t	*mod;
 
 	// get water edicts
@@ -1280,7 +1280,7 @@ SV_Move
 */
 trace_t SV_Move( const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int type, edict_t *e )
 {
-	moveclip_t	clip = {};
+	moveclip_t	clip = {0};
 	vec3_t		trace_endpos;
 	float		trace_fraction;
 
@@ -1329,7 +1329,7 @@ SV_MoveNoEnts
 */
 trace_t SV_MoveNoEnts( const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, int type, edict_t *e )
 {
-	moveclip_t	clip = {};
+	moveclip_t	clip = {0};
 	vec3_t		trace_endpos;
 	float		trace_fraction;
 
@@ -1454,7 +1454,7 @@ trace_t SV_MoveToss( edict_t *tossent, edict_t *ignore )
 	vec3_t	original_velocity;
 	vec3_t	original_angles;
 	vec3_t	original_avelocity;
-	trace_t	trace = {};
+	trace_t	trace = {0};
 	int	i;
 
 	VectorCopy( tossent->v.origin, original_origin );

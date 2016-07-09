@@ -499,7 +499,7 @@ static void Mod_StudioCalcRotations( int boneused[], int numbones, const byte *p
 {
 	int		i, j, frame;
 	mstudiobone_t	*pbone;
-	float		adj[MAXSTUDIOCONTROLLERS] = {};
+	float		adj[MAXSTUDIOCONTROLLERS] = {0.0f};
 	float		s;
 
 	if( f > pseqdesc->numframes - 1 )

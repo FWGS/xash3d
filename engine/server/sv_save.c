@@ -790,8 +790,8 @@ SAVERESTOREDATA *SV_SaveInit( int size )
 void SV_SaveGameStateGlobals( SAVERESTOREDATA *pSaveData )
 {
 	sv_client_t	*cl;
-	SAVE_HEADER	header = {};
-	SAVE_LIGHTSTYLE	light = {};
+	SAVE_HEADER	header = {0};
+	SAVE_LIGHTSTYLE	light = {0};
 	int		i;
 	
 	// write global data
@@ -1817,7 +1817,7 @@ int SV_CreateEntityTransitionList( SAVERESTOREDATA *pSaveData, int levelMask )
 void SV_LoadAdjacentEnts( const char *pOldLevel, const char *pLandmarkName )
 {
 	SAVE_HEADER	header;
-	SAVERESTOREDATA	currentLevelData = {}, *pSaveData;
+	SAVERESTOREDATA	currentLevelData = {0}, *pSaveData;
 	int		i, test, flags, index, movedCount = 0;
 	qboolean		foundprevious = false;
 	vec3_t		landmarkOrigin;
