@@ -19,6 +19,23 @@ GNU General Public License for more details.
 #include "library.h"
 #include "filesystem.h"
 
+char lasterror[1024] = "";
+const char *Com_GetLibraryError()
+{
+	return lasterror;
+}
+
+void Com_ResetLibraryError()
+{
+	lasterror[0] = 0;
+}
+
+void Com_PushLibraryError( const char *error )
+{
+	Q_strncat( lasterror, error, sizeof( lasterror ) );
+	Q_strncat( lasterror, "\n", sizeof( lasterror ) );
+}
+
 #ifndef _WIN32
 
 #ifdef __ANDROID__
@@ -65,22 +82,31 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	char	path [MAX_SYSPATH];
 
 	void *pHandle;
-	qboolean dll = host.enabledll && (Q_stristr(dllname, ".dll") != 0);
+	qboolean dll = host.enabledll && ( Q_stristr( dllname, ".dll" ) != 0 );
 #ifdef DLL_LOADER
 	if(dll)
 	{
 		pHandle = Loader_LoadLibrary( dllname );
+		if(!pHandle)
+		{
+			string errorstring;
+			Q_snprintf( errorstring, MAX_STRING, "Failed to load dll with dll loader: %s", dllname );
+			Com_PushLibraryError( errorstring );
+		}
 	}
 	else
 #endif
-	pHandle = dlopen( dllname, RTLD_LAZY );
+	{
+		pHandle = dlopen( dllname, RTLD_LAZY );
+		if( !pHandle )
+			Com_PushLibraryError(dlerror());
+	}
 	if(!pHandle)
 	{
 		search = FS_FindFile( dllname, &pack_ind, true );
 
 		if( !search )
 		{
-			MsgDev( D_WARN, "loading library %s: %s\n", dllname, dlerror() );
 			return NULL;
 		}
 		sprintf( path, "%s%s", search->filename, dllname );
@@ -89,13 +115,22 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		if(dll)
 		{
 			pHandle = Loader_LoadLibrary( path );
+			if(!pHandle)
+			{
+				string errorstring;
+				Q_snprintf( errorstring, MAX_STRING, "Failed to load dll with dll loader: %s", dllname );
+				Com_PushLibraryError( errorstring );
+			}
 		}
 		else
 #endif
-		pHandle = dlopen( path, RTLD_LAZY );
+		{
+			pHandle = dlopen( path, RTLD_LAZY );
+			if( !pHandle )
+				Com_PushLibraryError(dlerror());
+		}
 		if(!pHandle)
 		{
-			MsgDev( D_WARN, "loading library %s: %s\n", dllname, dlerror() );
 			return NULL;
 		}
 	}
@@ -138,7 +173,7 @@ void *Com_FunctionFromName( void *hInstance, const char *pName )
 	if(!function)
 	{
 #ifdef __ANDROID__
-		// Shitty Android dlsym don't resolve weak symbols
+		// Shitty Android's dlsym don't resolve weak symbols
 		function = dlsym_weak( hInstance, pName );
 		if(!function)
 #endif
@@ -146,6 +181,23 @@ void *Com_FunctionFromName( void *hInstance, const char *pName )
 	}
 	return function;
 }
+
+#ifdef XASH_DYNAMIC_DLADDR
+int d_dladdr( void *sym, Dl_info *info )
+{
+	static int (*dladdr_real) ( void *sym, Dl_info *info );
+
+	if( !dladdr_real )
+		dladdr_real = dlsym( (void*)(size_t)(-1), "dladdr" );
+
+	Q_memset( info, 0, sizeof( *info ) );
+
+	if( !dladdr_real )
+		return -1;
+
+	return dladdr_real(  sym, info );
+}
+#endif
 
 const char *Com_NameForFunction( void *hInstance, void *function )
 {
@@ -623,6 +675,7 @@ library_error:
 	// cleanup
 	if( data ) Mem_Free( data );
 	MemoryFreeLibrary( result );
+	Com_PushLibraryError( errorstring );
 	MsgDev( D_ERROR, "LoadLibrary: %s\n", errorstring );
 
 	return NULL;
@@ -902,6 +955,7 @@ table_error:
 	if( f ) FS_Close( f );
 	if( p_Names ) Mem_Free( p_Names );
 	FreeNameFuncGlobals( hInst );
+	Com_PushLibraryError( errorstring );
 	MsgDev( D_ERROR, "LoadLibrary: %s\n", errorstring );
 
 	return false;
@@ -919,13 +973,21 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 	dll_user_t *hInst;
 
 	hInst = FS_FindLibrary( dllname, directpath );
-	if( !hInst ) 
+	if( !hInst )
+	{
+		char errorstring[256];
+		Q_snprintf( errorstring, 256, "LoadLibraryExt: could not find %s!", dllname );
+		Com_PushLibraryError(errorstring);
 		return NULL; // nothing to load
+	}
 		
 	if( hInst->custom_loader )
 	{
-          	if( hInst->encrypted )
+		if( hInst->encrypted )
 		{
+			char errorstring[256];
+			Q_snprintf( errorstring, 256, "couldn't load encrypted library %s", dllname );
+			Com_PushLibraryError(errorstring);
 			MsgDev( D_ERROR, "Sys_LoadLibrary: couldn't load encrypted library %s\n", dllname );
 			return NULL;
 		}
@@ -936,7 +998,9 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 
 	if( !hInst->hInstance )
 	{
-		MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed: %d\n", dllname, GetLastError() );
+		string errorstring;
+		Q_snprintf( errorstring, MAX_STRING, "LoadLibrary failed for %s:%d", dllname, GetLastError() );
+		Com_PushLibraryError( errorstring );
 		Com_FreeLibrary( hInst );
 		return NULL;
 	}
@@ -946,7 +1010,11 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 	{
 		if( !LibraryLoadSymbols( hInst ))
 		{
-			MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed\n", dllname );
+			string errorstring;
+			Q_snprintf( errorstring, MAX_STRING, "Failed to build ordinals table for %s", dllname );
+			Com_PushLibraryError( errorstring );
+			//MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed\n", dllname );
+
 			Com_FreeLibrary( hInst );
 			return NULL;
 		}

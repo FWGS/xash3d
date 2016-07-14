@@ -488,12 +488,13 @@ static void Mod_FreeUserData( model_t *mod )
 	// already freed?
 	if( !mod || !mod->name[0] )
 		return;
-
+#ifndef XASH_DEDICATED
 	if( clgame.drawFuncs.Mod_ProcessUserData != NULL )
 	{
 		// let the client.dll free custom data
 		clgame.drawFuncs.Mod_ProcessUserData( mod, false, NULL );
 	}
+#endif
 }
 
 /*
@@ -539,7 +540,7 @@ void Mod_Init( void )
 	com_studiocache = Mem_AllocPool( "Studio Cache" );
 	mod_studiocache = Cvar_Get( "r_studiocache", "1", CVAR_ARCHIVE, "enables studio cache for speedup tracing hitboxes" );
 
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 		mod_allow_materials = Cvar_Get( "host_allow_materials", "0", CVAR_LATCH|CVAR_ARCHIVE, "allow HD textures" );
 	else mod_allow_materials = NULL; // no reason to load HD-textures for dedicated server
 
@@ -677,9 +678,12 @@ static void Mod_LoadTextures( const dlump_t *l )
 	if( world.loading )
 	{
 		// release old sky layers first
+#ifndef XASH_DEDICATED
 		GL_FreeTexture( tr.solidskyTexture );
 		GL_FreeTexture( tr.alphaskyTexture );
+
 		tr.solidskyTexture = tr.alphaskyTexture = 0;
+#endif
 		world.texdatasize = l->filelen;
 		world.has_mirrors = false;
 		world.sky_sphere = false;
@@ -709,8 +713,10 @@ static void Mod_LoadTextures( const dlump_t *l )
 			loadmodel->textures[i] = tx;
 		
 			Q_strncpy( tx->name, "*default", sizeof( tx->name ));
+#ifndef XASH_DEDICATED
 			tx->gl_texturenum = tr.defaultTexture;
 			tx->width = tx->height = 16;
+#endif
 			continue; // missed
 		}
 
@@ -734,7 +740,7 @@ static void Mod_LoadTextures( const dlump_t *l )
 
 		tx->width = mt.width;
 		tx->height = mt.height;
-
+#ifndef XASH_DEDICATED
 		// check for multi-layered sky texture
 		if( world.loading && !Q_strncmp( mt.name, "sky", 3 ) && mt.width == 256 && mt.height == 128 )
 		{	
@@ -938,6 +944,7 @@ load_wad_textures:
 			GL_SetTextureType( tx->gl_texturenum, TEX_BRUSH );
 			GL_SetTextureType( tx->fb_texturenum, TEX_BRUSH );
 		}
+#endif
 	}
 
 	// sequence the animations
@@ -1112,7 +1119,7 @@ static void Mod_LoadTexInfo( const dlump_t *l )
 	int		miptex;
 	int		i, j, count;
 	float		len1, len2;
-	
+
 	in = (void *)(mod_base + l->fileofs);
 	if( l->filelen % sizeof( *in ))
 		Host_Error( "Mod_LoadTexInfo: funny lump size in %s\n", loadmodel->name );
@@ -2693,6 +2700,7 @@ void Mod_UnloadBrushModel( model_t *mod )
 
 	if( mod->name[0] != '*' )
 	{
+#ifndef XASH_DEDICATED
 		for( i = 0; i < mod->numtextures; i++ )
 		{
 			tx = mod->textures[i];
@@ -2702,7 +2710,7 @@ void Mod_UnloadBrushModel( model_t *mod )
 			GL_FreeTexture( tx->gl_texturenum );	// main texture
 			GL_FreeTexture( tx->fb_texturenum );	// luma texture
 		}
-
+#endif
 		Mem_FreePool( &mod->mempool );
 	}
 
@@ -3019,12 +3027,13 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 
 		return NULL;
 	}
+#ifndef XASH_DEDICATED
 	else if( clgame.drawFuncs.Mod_ProcessUserData != NULL )
 	{
 		// let the client.dll load custom data
 		clgame.drawFuncs.Mod_ProcessUserData( mod, true, buf );
 	}
-
+#endif
 	Mem_Free( buf );
 
 	return mod;

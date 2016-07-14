@@ -163,7 +163,17 @@ hull_t *PM_HullForStudio( physent_t *pe, playermove_t *pmove, int *numhitboxes )
 
 	return Mod_HullForStudio( pe->studiomodel, pe->frame, pe->sequence, pe->angles, pe->origin, size, pe->controller, pe->blending, numhitboxes, NULL );
 }
-
+/* "Not a number" possible here.
+ * Enable this macro to debug it */
+#ifdef DEBUGNAN
+static void _assertNAN(const char *f, int l, const char *x)
+{
+	MsgDev( D_WARN, "NAN detected at %s:%i (%s)\n", f, l, x );
+}
+#define ASSERTNAN(x) if( !finitef(x) ) _assertNAN( __FILE__, __LINE__, #x );
+#else
+#define ASSERTNAN(x)
+#endif
 /*
 ==================
 PM_RecursiveHullCheck
@@ -218,16 +228,24 @@ qboolean PM_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 		t2 = DotProduct( plane->normal, p2 ) - plane->dist;
 	}
 
+	ASSERTNAN( t1 )
+	ASSERTNAN( t2 )
+
 	if( t1 >= 0.0f && t2 >= 0.0f )
 		return PM_RecursiveHullCheck( hull, node->children[0], p1f, p2f, p1, p2, trace );
 	if( t1 < 0.0f && t2 < 0.0f )
 		return PM_RecursiveHullCheck( hull, node->children[1], p1f, p2f, p1, p2, trace );
+
+	ASSERTNAN( t1 )
+	ASSERTNAN( t2 )
 
 	// put the crosspoint DIST_EPSILON pixels on the near side
 	side = (t1 < 0.0f);
 
 	if( side ) frac = ( t1 + DIST_EPSILON ) / ( t1 - t2 );
 	else frac = ( t1 - DIST_EPSILON ) / ( t1 - t2 );
+
+	ASSERTNAN( frac )
 
 	if( frac < 0.0f ) frac = 0.0f;
 	if( frac > 1.0f ) frac = 1.0f;
@@ -264,10 +282,11 @@ qboolean PM_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 
 	while( PM_HullPointContents( hull, hull->firstclipnode, mid ) == CONTENTS_SOLID )
 	{
+		ASSERTNAN( frac )
 		// shouldn't really happen, but does occasionally
 		frac -= 0.1f;
 
-		if( frac < 0.0f )
+		if( ( frac < 0.0f )  || IS_NAN( frac ) )
 		{
 			trace->fraction = midf;
 			VectorCopy( mid, trace->endpos );
@@ -429,9 +448,11 @@ pmtrace_t PM_PlayerTraceExt( playermove_t *pmove, vec3_t start, vec3_t end, int 
 		else if( pe->solid == SOLID_CUSTOM )
 		{
 			// run custom sweep callback
-			if( pmove->server || Host_IsLocalClient( ))
+			if( pmove->server || Host_IsLocalClient( ) || Host_IsDedicated() )
 				SV_ClipPMoveToEntity( pe, start, mins, maxs, end, &trace_bbox );
+#ifndef XASH_DEDICATED
 			else CL_ClipPMoveToEntity( pe, start, mins, maxs, end, &trace_bbox );
+#endif
 		}
 		else if( hullcount == 1 )
 		{
@@ -594,10 +615,11 @@ int PM_TestPlayerPosition( playermove_t *pmove, vec3_t pos, pmtrace_t *ptrace, p
 			trace.fraction = 1.0f;
 
 			// run custom sweep callback
-			if( pmove->server || Host_IsLocalClient( ))
+			if( pmove->server || Host_IsLocalClient( ) || Host_IsDedicated() )
 				SV_ClipPMoveToEntity( pe, pos, mins, maxs, pos, &trace );
+#ifndef XASH_DEDICATED
 			else CL_ClipPMoveToEntity( pe, pos, mins, maxs, pos, &trace );
-
+#endif
 			// if we inside the custom hull
 			if( trace.allsolid )
 				return i;

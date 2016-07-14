@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "pm_local.h"
 #include "event_flags.h"
 #include "studio.h"
+#include "library.h" // Loader_GetDllHandle( )
 
 static qboolean has_update = false;
 
@@ -210,7 +211,7 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 				continue;
 		}
 
-		if( ( ( check->v.owner > 0) && check->v.owner == pl ) || check->v.solid == SOLID_TRIGGER )
+		if( ( ( check->v.owner != 0) && check->v.owner == pl ) || check->v.solid == SOLID_TRIGGER )
 			continue; // player or player's own missile
 
 		if( svgame.pmove->numvisent < MAX_PHYSENTS )
@@ -504,7 +505,7 @@ static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, f
 	ent = EDICT_NUM( clientindex + 1 );
 	if( !SV_IsValidEdict( ent )) return;
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		flags |= FEV_NOTHOST; // no local clients for dedicated server
 
 	SV_PlaybackEventFull( flags, ent, eventindex,
@@ -598,7 +599,7 @@ void SV_InitClientMove( void )
 	Q_memcpy( svgame.pmove->player_maxs, svgame.player_maxs, sizeof( svgame.player_maxs ));
 
 	// common utilities
-	svgame.pmove->PM_Info_ValueForKey = Info_ValueForKey;
+	svgame.pmove->PM_Info_ValueForKey = (void*)Info_ValueForKey;
 	svgame.pmove->PM_Particle = pfnParticle;
 	svgame.pmove->PM_TestPlayerPosition = pfnTestPlayerPosition;
 	svgame.pmove->Con_NPrintf = Con_NPrintf;
@@ -608,17 +609,17 @@ void SV_InitClientMove( void )
 	svgame.pmove->PM_StuckTouch = pfnStuckTouch;
 	svgame.pmove->PM_PointContents = pfnPointContents;
 	svgame.pmove->PM_TruePointContents = pfnTruePointContents;
-	svgame.pmove->PM_HullPointContents = pfnHullPointContents; 
+	svgame.pmove->PM_HullPointContents = pfnHullPointContents;
 	svgame.pmove->PM_PlayerTrace = pfnPlayerTrace;
 	svgame.pmove->PM_TraceLine = pfnTraceLine;
-	svgame.pmove->RandomLong = Com_RandomLong;
+	svgame.pmove->RandomLong = (void*)Com_RandomLong;
 	svgame.pmove->RandomFloat = Com_RandomFloat;
 	svgame.pmove->PM_GetModelType = pfnGetModelType;
-	svgame.pmove->PM_GetModelBounds = pfnGetModelBounds;	
-	svgame.pmove->PM_HullForBsp = pfnHullForBsp;
+	svgame.pmove->PM_GetModelBounds = pfnGetModelBounds;
+	svgame.pmove->PM_HullForBsp = (void*)pfnHullForBsp;
 	svgame.pmove->PM_TraceModel = pfnTraceModel;
-	svgame.pmove->COM_FileSize = COM_FileSize;
-	svgame.pmove->COM_LoadFile = COM_LoadFile;
+	svgame.pmove->COM_FileSize = (void*)COM_FileSize;
+	svgame.pmove->COM_LoadFile =(void*)COM_LoadFile;
 	svgame.pmove->COM_FreeFile = COM_FreeFile;
 	svgame.pmove->memfgets = COM_MemFgets;
 	svgame.pmove->PM_PlaySound = pfnPlaySound;
@@ -631,13 +632,13 @@ void SV_InitClientMove( void )
 #ifdef DLL_LOADER // w32-compatible ABI
 	if( host.enabledll && Loader_GetDllHandle( svgame.hInstance ) )
 	{
-		svgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
-		svgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
+		svgame.pmove->PM_PlayerTrace = (void*)pfnPlayerTrace_w32;
+		svgame.pmove->PM_PlayerTraceEx = (void*)pfnPlayerTraceEx_w32;
 	}
 #endif
 #if defined(__MINGW32__)
-	svgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
-	svgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
+	svgame.pmove->PM_PlayerTrace = (void*)pfnPlayerTrace_w32;
+	svgame.pmove->PM_PlayerTraceEx = (void*)pfnPlayerTraceEx_w32;
 #endif
 
 

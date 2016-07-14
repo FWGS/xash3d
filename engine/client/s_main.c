@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "client.h"
@@ -54,7 +56,6 @@ convar_t		*snd_gain_min;
 convar_t		*snd_mute_losefocus;
 convar_t		*s_refdist;
 convar_t		*s_refdb;
-convar_t		*dsp_off;		// set to 1 to disable all dsp processing
 convar_t		*s_cull;		// cull sounds by geometry
 convar_t		*s_test;		// cvar for testing new effects
 convar_t		*s_phs;
@@ -980,7 +981,7 @@ void S_StartSound( const vec3_t pos, int ent, int chan, sound_t handle, float fv
 		if( check->sfx == sfx && !check->pMixer.sample )
 		{
 			// skip up to 0.1 seconds of audio
-			int skip = Com_RandomLong( 0, (long)( 0.1f * check->sfx->cache->rate ));
+			int skip = Com_RandomLong( 0, (int)( 0.1f * check->sfx->cache->rate ));
                               
 			S_SetSampleStart( check, sfx->cache, skip );
 			break;
@@ -1451,6 +1452,7 @@ void S_StopAllSounds( void )
 	S_InitAmbientChannels ();
 
 	S_ClearBuffer ();
+	S_StopBackgroundTrack();
 
 	// clear any remaining soundfade
 	Q_memset( &soundfade, 0, sizeof( soundfade ));
@@ -1614,7 +1616,7 @@ void S_RenderFrame( ref_params_t *fd )
 		else VectorSet( info.color, 1.0f, 1.0f, 1.0f );
 		info.index = 0;
 
-		Con_NXPrintf( &info, "----(%i)---- painted: %i\n", total - 1, paintedtime );
+		Con_NXPrintf( &info, "room_type: %i ----(%i)---- painted: %i\n", idsp_room, total - 1, paintedtime );
 	}
 
 	S_StreamBackgroundTrack ();
@@ -1778,7 +1780,7 @@ qboolean S_Init( void )
 		MsgDev( D_ERROR, "Audio: SDL: %s \n", SDL_GetError() );
 		return false;
 	}
-#else
+#elif !defined(XASH_OPENSL)
 	return false;
 #endif
 
@@ -1787,7 +1789,6 @@ qboolean S_Init( void )
 	s_mixahead = Cvar_Get( "_snd_mixahead", "0.12", 0, "how much sound to mix ahead of time" );
 	s_show = Cvar_Get( "s_show", "0", CVAR_ARCHIVE, "show playing sounds" );
 	s_lerping = Cvar_Get( "s_lerping", "0", CVAR_ARCHIVE, "apply interpolation to sound output" );
-	dsp_off = Cvar_Get( "dsp_off", "0", CVAR_ARCHIVE, "set to 1 to disable all dsp processing" );
 	s_ambient_level = Cvar_Get( "ambient_level", "0.3", 0, "volume of environment noises (water and wind)" );
 	s_ambient_fade = Cvar_Get( "ambient_fade", "100", 0, "rate of volume fading when client is moving" );
 	s_combine_sounds = Cvar_Get( "s_combine_channels", "1", CVAR_ARCHIVE, "combine channels with same sounds" ); 
@@ -1863,4 +1864,6 @@ void S_Shutdown( void )
 	SNDDMA_Shutdown ();
 	MIX_FreeAllPaintbuffers ();
 	Mem_FreePool( &sndpool );
+	dsp_room = NULL;
 }
+#endif // XASH_DEDICATED

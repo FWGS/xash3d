@@ -133,7 +133,7 @@ static int read_buf_byte( struct mpstr *mp )
 
 static void read_head( struct mpstr *mp )
 {
-	unsigned long head = 0;
+	unsigned int head = 0;
 
 	while( mp->tail )
 	{
@@ -232,7 +232,7 @@ int decodeMP3( struct mpstr *mp, char *in, int isize, char *out, int osize, int 
 	return MP3_OK;
 }
 
-int set_pointer( struct StaticData *psd, struct mpstr *gmp, long backstep )
+int set_pointer( struct StaticData *psd, struct mpstr *gmp, int backstep )
 {
 	unsigned char	*bsbufold;
 
@@ -267,7 +267,7 @@ int create_decoder( mpeg_t *mpg )
 	return 1;	// done
 }
 
-int read_mpeg_header( mpeg_t *mpg, const char *data, long bufsize, long streamsize )
+int read_mpeg_header( mpeg_t *mpg, const char *data, int bufsize, int streamsize )
 {
 	struct mpstr	*mp;
 	unsigned char	vbrbuf[VBRHEADERSIZE+36];
@@ -314,13 +314,13 @@ int read_mpeg_header( mpeg_t *mpg, const char *data, long bufsize, long streamsi
 		bpf = compute_bpf( &mp->fr );
 		tpf = compute_tpf( &mp->fr );
 
-		mpg->play_time = (unsigned long)((double)(streamsize) / bpf * tpf ) * 1000;
+		mpg->play_time = (unsigned int)((double)(streamsize) / bpf * tpf ) * 1000;
 	}
 
 	return 1;
 }
 
-int read_mpeg_stream( mpeg_t *mpg, const char *data, long bufsize )
+int read_mpeg_stream( mpeg_t *mpg, const char *data, int bufsize )
 {
 	return decodeMP3( mpg->state, (char *)data, bufsize, mpg->out, 8192, &mpg->outsize );
 }
@@ -331,7 +331,7 @@ int get_current_pos( mpeg_t *mpg, int curpos )
 	return (double)curpos / (double)freqs[mp->fr.sampling_frequency] / (double)mp->fr.stereo / 2.0 * 1000.0;
 }
 
-int set_current_pos( mpeg_t *mpg, int newpos, int (*pfnSeek)( void*, long, int ), void *file )
+int set_current_pos( mpeg_t *mpg, int newpos, int (*pfnSeek)( void*, int, int ), void *file )
 {
 	struct mpstr *mp = (struct mpstr *)mpg->state;
 	VBRTAGDATA *vbrtag = (VBRTAGDATA *)mpg->vbrtag;

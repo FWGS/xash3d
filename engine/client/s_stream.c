@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "client.h"
@@ -76,7 +78,7 @@ float S_GetMusicVolume( void )
 S_StartBackgroundTrack
 =================
 */
-void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, long position )
+void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int position )
 {
 	S_StopBackgroundTrack();
 
@@ -393,3 +395,4 @@ void S_StreamRawSamples( int samples, int rate, int width, int channels, const b
 		RESAMPLE_RAW
 	}
 }
+#endif // XASH_DEDICATED

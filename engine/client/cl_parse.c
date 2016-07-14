@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "net_encode.h"
@@ -284,6 +286,9 @@ void CL_ParseSoundPacket( sizebuf_t *msg, qboolean is_ambient )
 		handle = S_RegisterSound( sentenceName );
 	}
 	else handle = cl.sound_index[sound];	// see precached sound
+
+	if( !cl.audio_prepped )
+		return; // too early
 
 	if( is_ambient )
 	{
@@ -619,6 +624,9 @@ void CL_ParseServerData( sizebuf_t *msg )
 
 	menu.globals->maxClients = cl.maxclients;
 	Q_strncpy( menu.globals->maptitle, clgame.maptitle, sizeof( menu.globals->maptitle ));
+
+	if( cl.maxclients > 1 && r_decals->value > mp_decals->value )
+		Cvar_SetFloat( "r_decals", mp_decals->value );
 
 	if( !cls.changelevel && !cls.changedemo )
 		CL_InitEdicts (); // re-arrange edicts
@@ -1415,6 +1423,16 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 	}
 }
 
+void CL_ParseStuffText( sizebuf_t *msg )
+{
+	char *s = BF_ReadString( msg );
+	if( cl_trace_stufftext->value )
+	{
+		Msg("^3STUFFTEXT:\n^2%s\n^3END^7\n", s);
+	}
+	Cbuf_AddText( s );
+}
+
 /*
 =====================================================================
 
@@ -1513,8 +1531,7 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			if( i == PRINT_CHAT ) S_StartLocalSound( "common/menu2.wav", VOL_NORM, false );
 			break;
 		case svc_stufftext:
-			s = BF_ReadString( msg );
-			Cbuf_AddText( s );
+			CL_ParseStuffText( msg );
 			break;
 		case svc_lightstyle:
 			CL_ParseLightStyle( msg );
@@ -1675,3 +1692,4 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 		}
 	}
 }
+#endif // XASH_DEDICATED

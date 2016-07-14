@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "r_efx.h"
@@ -259,7 +261,7 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 	total_segs = segments;
 
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 	pglBegin( GL_TRIANGLE_STRIP );
 
 	// specify all the segments.
@@ -426,7 +428,7 @@ static void CL_DrawDisk( int modelIndex, float frame, int rendermode, const vec3
 	w = freq * delta[2];
 
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 
 	pglBegin( GL_TRIANGLE_STRIP );
 
@@ -493,7 +495,7 @@ static void CL_DrawCylinder( int modelIndex, float frame, int rendermode, const 
 	
 	GL_Cull( GL_NONE );	// draw both sides
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 
 	pglBegin( GL_TRIANGLE_STRIP );
 
@@ -606,7 +608,7 @@ void CL_DrawRing( int modelIndex, float frame, int rendermode, const vec3_t sour
 	j = segments / 8;
 
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 
 	pglBegin( GL_TRIANGLE_STRIP );
 
@@ -776,7 +778,7 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 	nColor[2] = (byte)bound( 0, (int)(scaledColor[2] * 255.0f), 255 );
 
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 
 	pglBegin( GL_TRIANGLES );
 
@@ -2179,7 +2181,7 @@ void CL_ReadLineFile_f( void )
 
 		if( token[0] != '-' )
 		{
-			MsgDev( D_ERROR, "%s is corrupted\n" );
+			MsgDev( D_ERROR, "%s is corrupted\n", filename );
 			break;
 		}
 
@@ -2211,3 +2213,4 @@ void CL_ReadLineFile_f( void )
 	if( count ) Msg( "%i lines read\n", count );
 	else Msg( "map %s has no leaks!\n", clgame.mapname );
 }
+#endif // XASH_DEDICATED

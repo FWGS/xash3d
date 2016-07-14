@@ -140,7 +140,7 @@ JustAfew:
 	// the main loop is aligned and only has to worry about 8 byte at a time.
 	// The low-order two bits of pb and nBuffer in total control the
 	// upfront work.
-	nFront = ((uint)pb) & 3;
+	nFront = ((size_t)pb) & 3;
 	nBuffer -= nFront;
 
 	switch( nFront )
@@ -241,12 +241,14 @@ qboolean CRC32_MapFile( dword *crcvalue, const char *filename )
 
 	if( !crcvalue ) return false;
 
+#ifndef XASH_DEDICATED
 	// always calc same checksum for singleplayer
 	if( cls.state >= ca_connected && SV_Active() && CL_GetMaxClients() == 1 )
 	{
 		*crcvalue = (('H'<<24)+('S'<<16)+('A'<<8)+'X');
 		return true;
 	}
+#endif
 
 	f = FS_Open( filename, "rb", false );
 	if( !f ) return false;

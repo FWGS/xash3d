@@ -13,6 +13,6 @@ void SDLash_InputEvent(SDL_TextInputEvent input);
 // Prototype
 void SDLash_TouchEvent(SDL_TouchFingerEvent finger);
 
-void SDLash_EnableTextInput( int enable );
+void SDLash_EnableTextInput( int enable, qboolean force );
 #endif // XASH_SDL
 #endif // KEYWRAPPER_H

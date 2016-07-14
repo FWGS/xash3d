@@ -533,7 +533,7 @@ void RestoreSound( soundlist_t *entry )
 		return;
 	}
 
-	if( entry->channel < 0 || entry->channel > 7 )
+	if( entry->channel > 7 )
 	{
 		MsgDev( D_ERROR, "SV_RestoreSound: channel must be in range 0-7\n" );
 		return;
@@ -611,7 +611,7 @@ int SV_IsValidSave( void )
 		}
 	}
 
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 	{
 		// Enable save/load in xashds
 
@@ -2165,7 +2165,7 @@ qboolean SV_LoadGame( const char *pName )
 		return false;
 	}
 
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 	{
 		Cvar_FullSet( "coop", "0", CVAR_LATCH );
 		Cvar_FullSet( "teamplay", "0", CVAR_LATCH );
@@ -2267,7 +2267,7 @@ const char *SV_GetLatestSave( void )
 {
 	search_t	*f = FS_Search( "save/*.sav", true, true );	// lookup only in gamedir
 	int	i, found = 0;
-	long	newest = 0, ft;
+	int	newest = 0, ft;
 	string	savename;	
 
 	if( !f ) return NULL;

@@ -13,6 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+#ifndef XASH_NANOGL
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -353,7 +356,7 @@ void *GL_GetProcAddress( const char *name )
 #endif
 	if(!func)
 	{
-		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
+		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s\n", name);
 	}
 	return func;
 }
@@ -464,6 +467,8 @@ GL_SetupAttributes
 void GL_SetupAttributes()
 {
 #ifdef XASH_SDL
+	int samples;
+
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
@@ -472,6 +477,29 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+	switch( gl_msaa->integer )
+	{
+	case 2:
+	case 4:
+	case 8:
+	case 16:
+		samples = gl_msaa->integer;
+		break;
+	default:
+		samples = 0; // don't use, because invalid parameter is passed
+	}
+
+	if( samples )
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
+	}
+	else
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+	}
 #endif // XASH_SDL
 }
 
@@ -701,7 +729,8 @@ GL_DeleteContext
 qboolean GL_DeleteContext( void )
 {
 #ifdef XASH_SDL
-	SDL_GL_DeleteContext(glw_state.context);
+	if( glw_state.context )
+		SDL_GL_DeleteContext(glw_state.context);
 #endif
 	glw_state.context = NULL;
 
@@ -727,7 +756,7 @@ Window* NetClientList(Display* display, unsigned long *len)
 	Window* windowList;
 	Atom type;
 	int form, errno;
-	unsigned long remain;
+	unsigned int remain;
 
 	errno = XGetWindowProperty(
 		display,
@@ -756,7 +785,7 @@ char* WindowClassName(Display* display, Window window)
 {
 	char* className;
 	Atom type;
-	unsigned long len, remain;
+	unsigned int len, remain;
 	int form, errno;
 	errno = XGetWindowProperty(
 		display,
@@ -796,7 +825,7 @@ uint VID_EnumerateInstances( void )
 	Display* display = XOpenDisplay(NULL);
 	Window* winlist;
 	char* name;
-	unsigned long len;
+	unsigned int len;
 	int i;
 
 	if(!display)
@@ -950,6 +979,17 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	if( !host.hWnd )
 	{
 		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s': %s\n", wndname, SDL_GetError());
+
+		// remove MSAA, if it present, because
+		// window creating may fail on GLX visual choose
+		if( gl_msaa->integer )
+		{
+			Cvar_Set("gl_msaa", "0");
+			GL_SetupAttributes(); // re-choose attributes
+
+			// try again
+			return VID_CreateWindow( width, height, fullscreen );
+		}
 		return false;
 	}
 
@@ -978,7 +1018,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
-#if defined(_WIN32)
+#if defined(_WIN32) & !defined(__amd64__)
 	{
 		HICON ico;
 		SDL_SysWMinfo info;
@@ -1015,7 +1055,9 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	if( !glw_state.initialized )
 	{
 		if( !GL_CreateContext( ))
+		{
 			return false;
+		}
 
 		VID_StartupGamma();
 	}
@@ -1064,6 +1106,9 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 
 	glState.width = width;
 	glState.height = height;
+	if( width * 3 != height * 4 && width * 4 != height * 5 )
+		glState.wideScreen = true;
+	else glState.wideScreen = false;
 
 	SCR_VidInit();
 }
@@ -1084,6 +1129,12 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	glw_state.desktopHeight = displayMode.h;
 
 	glState.fullScreen = fullscreen;
+
+	// check for 4:3 or 5:4
+	if( width * 3 != height * 4 && width * 4 != height * 5 )
+		glState.wideScreen = true;
+	else glState.wideScreen = false;
+
 
 	if(!host.hWnd)
 	{
@@ -1237,3 +1288,5 @@ void R_Free_OpenGL( void )
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
 	glw_state.initialized = false;
 }
+#endif //XASH3D_NANOGL
+#endif // XASH_DEDICATED

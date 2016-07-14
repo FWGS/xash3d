@@ -265,9 +265,9 @@ void GL_CleanUpTextureUnits( int last );
 void GL_Bind( GLint tmu, GLenum texnum );
 void GL_MultiTexCoord2f( GLenum texture, GLfloat s, GLfloat t );
 void GL_SetTexCoordArrayMode( GLenum mode );
-void GL_LoadTexMatrix( const matrix4x4 m );
+void GL_LoadTexMatrix(vec4_t * const m );
 void GL_LoadTexMatrixExt( const float *glmatrix );
-void GL_LoadMatrix( const matrix4x4 source );
+void GL_LoadMatrix(vec4_t * const source );
 void GL_TexGen( GLenum coord, GLenum mode );
 void GL_SelectTexture( GLint texture );
 void GL_LoadIdentityTexMatrix( void );
@@ -363,14 +363,16 @@ void R_SetupFrustum( void );
 void R_FindViewLeaf( void );
 void R_DrawFog( void );
 
+#define cmatrix3x4 vec4_t *const
+#define cmatrix4x4 vec4_t *const
 //
 // gl_rmath.c
 //
 float V_CalcFov( float *fov_x, float width, float height );
 void V_AdjustFov( float *fov_x, float *fov_y, float width, float height, qboolean lock_x );
-void Matrix4x4_ToArrayFloatGL( const matrix4x4 in, float out[16] );
+void Matrix4x4_ToArrayFloatGL( cmatrix4x4 in, float out[16] );
 void Matrix4x4_FromArrayFloatGL( matrix4x4 out, const float in[16] );
-void Matrix4x4_Concat( matrix4x4 out, const matrix4x4 in1, const matrix4x4 in2 );
+void Matrix4x4_Concat(matrix4x4 out, cmatrix4x4 in1, cmatrix4x4 in2 );
 void Matrix4x4_ConcatTranslate( matrix4x4 out, float x, float y, float z );
 void Matrix4x4_ConcatRotate( matrix4x4 out, float angle, float x, float y, float z );
 void Matrix4x4_ConcatScale( matrix4x4 out, float x );
@@ -496,7 +498,7 @@ void R_NewMap( void );
 
 =======================================================================
 */
-#ifdef __ANDROID__
+#ifdef XASH_NANOGL
 #undef GL_TEXTURE_3D_EXT
 #undef GL_VERTEX_SHADER_EXT
 #endif
@@ -541,20 +543,16 @@ enum
 	GL_EXTCOUNT,		// must be last
 };
 
-#ifndef __ANDROID__
 enum
 {
 	GL_KEEP_UNIT = -1,
-	GL_TEXTURE0 = 0,
-	GL_TEXTURE1,
-	GL_TEXTURE2,
-	GL_TEXTURE3,		// g-cont. 4 units should be enough
+	XASH_TEXTURE0 = 0,
+	XASH_TEXTURE1,
+	XASH_TEXTURE2,
+	XASH_TEXTURE3,		// g-cont. 4 units should be enough
 	MAX_TEXTURE_UNITS = 32	// can't acess to all over units without GLSL or cg
 };
-#else
-#define GL_KEEP_UNIT -1
-#define MAX_TEXTURE_UNITS 32
-#endif
+
 
 typedef struct
 {
@@ -665,6 +663,7 @@ extern convar_t	*gl_finish;
 extern convar_t	*gl_nosort;
 extern convar_t	*gl_clear;
 extern convar_t	*gl_test;		// cvar to testify new effects
+extern convar_t	*gl_msaa;
 
 extern convar_t	*r_ypos;
 extern convar_t	*r_xpos;
@@ -690,6 +689,8 @@ extern convar_t	*r_lockcull;
 extern convar_t	*r_dynamic;
 extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
+
+extern convar_t *mp_decals;
 
 extern convar_t	*vid_displayfrequency;
 extern convar_t	*vid_fullscreen;

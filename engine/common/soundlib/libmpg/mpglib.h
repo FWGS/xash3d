@@ -1,8 +1,8 @@
 struct buf
 {
 	unsigned char *pnt;
-	long size;
-	long pos;
+	int size;
+	int pos;
 	struct buf *next;
 	struct buf *prev;
 };
@@ -10,7 +10,7 @@ struct buf
 struct framebuf
 {
 	struct buf *buf;
-	long pos;
+	int pos;
 	struct frame *next;
 	struct frame *prev;
 };
@@ -25,12 +25,12 @@ struct mpstr
 	unsigned char bsspace[2][MAXFRAMESIZE+512]; /* MAXFRAMESIZE */
 	float hybrid_block[2][2][SBLIMIT*SSLIMIT];
 	int hybrid_blc[2];
-	unsigned long header;
+	unsigned int header;
 	int bsnum;
 	float synth_buffs[2][2][0x110];
 	int  synth_bo;
 	struct StaticData psd;
-	long ndatabegin;
+	int ndatabegin;
 };
 
 

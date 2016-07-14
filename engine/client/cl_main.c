@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "net_encode.h"
@@ -22,6 +24,7 @@ GNU General Public License for more details.
 #include "touch.h"
 #include "kbutton.h"
 #include "vgui_draw.h"
+#include "library.h"
 
 #define MAX_TOTAL_CMDS		16
 #define MIN_CMD_RATE		10.0
@@ -50,6 +53,7 @@ convar_t	*cl_interp;
 convar_t	*cl_allow_fragment;
 convar_t	*cl_lw;
 convar_t	*cl_trace_events;
+convar_t	*cl_trace_stufftext;
 convar_t	*cl_charset;
 convar_t	*cl_sprite_nearest;
 convar_t	*hud_scale;
@@ -77,7 +81,7 @@ qboolean CL_Active( void )
 //======================================================================
 qboolean CL_IsInGame( void )
 {
-	if( host.type == HOST_DEDICATED ) return true;	// always active for dedicated servers
+	if( Host_IsDedicated() ) return true;	// always active for dedicated servers
 	if( CL_GetMaxClients() > 1 ) return true;	// always active for multiplayer
 	return ( cls.key_dest == key_game );		// active if not menu or console
 }
@@ -126,7 +130,7 @@ This is experiment. Use with precaution
 */
 qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset )
 {
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		return false;
 
 	if( Q_stricmp( host.gamefolder, gamefolder ))
@@ -156,8 +160,9 @@ qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset )
 		Q_strncpy( mapname, clgame.mapname, MAX_STRING );
 		Q_strncpy( maptitle, clgame.maptitle, MAX_STRING );
 
+		Com_ResetLibraryError();
 		if( !CL_LoadProgs( va( "%s/%s", GI->dll_path, GI->client_lib)))
-			Host_Error( "Can't initialize client library\n" );
+			Sys_Warn( "Can't initialize client library\n%s", Com_GetLibraryError() );
 
 		// restore parms
 		clgame.maxEntities = maxEntities;
@@ -890,7 +895,7 @@ void CL_Crashed( void )
 {
 	// already freed
 	if( host.state == HOST_CRASHED ) return;
-	if( host.type != HOST_NORMAL ) return;
+	if( Host_IsDedicated() ) return;
 	if( !cls.initialized ) return;
 
 	host.state = HOST_CRASHED;
@@ -1291,9 +1296,8 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 {
 	char	*args;
 	char	*c, buf[MAX_SYSPATH];
-	int	len = sizeof( buf );
-	int	dataoffset = 0;
-	netadr_t	servadr;
+	int	len = sizeof( buf ), i = 0;
+	netadr_t servadr;
 	
 	BF_Clear( msg );
 	BF_ReadLong( msg ); // skip the -1
@@ -1379,16 +1383,16 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		// dropped the connection but it is still getting packets from us
 		CL_Disconnect();
 	}
-	else if( msg->pData[0] == 0xFF && msg->pData[1] == 0xFF && msg->pData[2] == 0xFF && msg->pData[3] == 0xFF && msg->pData[4] == 0x66 && msg->pData[5] == 0x0A )
+	else if( !Q_strcmp( c, "f") )
 	{
-		dataoffset = 6;
-
-		while( 1 )
+		// serverlist got from masterserver
+		while( !msg->bOverflow )
 		{
 			servadr.type = NA_IP;
-			Q_memcpy( servadr.ip, &msg->pData[dataoffset], sizeof(servadr.ip));
-
-			servadr.port = *(unsigned short *)&msg->pData[dataoffset + 4];
+			// 4 bytes for IP
+			BF_ReadBytes( msg, servadr.ip, sizeof( servadr.ip ));
+			// 2 bytes for Port
+			servadr.port = BF_ReadShort( msg );
 
 			if( !servadr.port )
 				break;
@@ -1398,8 +1402,6 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 			NET_Config( true ); // allow remote
 
 			Netchan_OutOfBandPrint( NS_CLIENT, servadr, "info %i", PROTOCOL_VERSION );
-
-			dataoffset += 6;
 		}
 	}
 	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
@@ -1594,6 +1596,8 @@ void CL_Precache_f( void )
 	CL_PrepSound();
 	CL_PrepVideo();
 
+	Cvar_SetCheatState( false );
+
 	BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 	BF_WriteString( &cls.netchan.message, va( "begin %i\n", spawncount ));
 }
@@ -1644,7 +1648,9 @@ void CL_InitLocal( void )
 	
 	r_oldparticles = Cvar_Get("r_oldparticles", "0", CVAR_ARCHIVE, "make some particle textures a simple square, like with software rendering");
 
-	cl_trace_events = Cvar_Get("cl_trace_events", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable client event tracing (good for developers)");
+	cl_trace_events = Cvar_Get( "cl_trace_events", "0", CVAR_ARCHIVE|CVAR_CHEAT, "enable client event tracing (good for developers)" );
+
+	cl_trace_stufftext = Cvar_Get( "cl_trace_stufftext", "0", CVAR_ARCHIVE|CVAR_CHEAT, "enable stufftext commands tracing (good for developers)" );
 
 	// userinfo
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );
@@ -1836,7 +1842,7 @@ void CL_Init( void )
 
 	Q_memset( &cls, 0, sizeof( cls ) );
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		return; // nothing running on the client
 
 	Con_Init();	
@@ -1864,6 +1870,7 @@ void CL_Init( void )
 #else
 	{
 		char clientlib[256];
+		Com_ResetLibraryError();
 		if( Sys_GetParmFromCmdLine( "-clientlib", clientlib ) )
 			loaded = CL_LoadProgs( clientlib );
 		else
@@ -1884,6 +1891,8 @@ void CL_Init( void )
 		cls.olddemonum = -1;
 		cls.demonum = -1;
 	}
+	else
+		Sys_Warn("Could not load client library:\n%s", Com_GetLibraryError());
 }
 
 /*
@@ -1918,3 +1927,4 @@ void CL_Shutdown( void )
 	S_Shutdown ();
 	R_Shutdown ();
 }
+#endif // XASH_DEDICATED

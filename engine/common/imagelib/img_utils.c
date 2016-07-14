@@ -131,8 +131,8 @@ static const loadpixformat_t load_null[] =
 static const loadpixformat_t load_game[] =
 {
 { "%s%s.%s", "dds", Image_LoadDDS, IL_HINT_NO },	// dds for world and studio models
-{ "%s%s.%s", "tga", Image_LoadTGA, IL_HINT_NO },	// hl vgui menus
 { "%s%s.%s", "bmp", Image_LoadBMP, IL_HINT_NO },	// WON menu images
+{ "%s%s.%s", "tga", Image_LoadTGA, IL_HINT_NO },	// hl vgui menus
 { "%s%s.%s", "mip", Image_LoadMIP, IL_HINT_NO },	// hl textures from wad or buffer
 { "%s%s.%s", "mdl", Image_LoadMDL, IL_HINT_HL },	// hl studio model skins
 { "%s%s.%s", "spr", Image_LoadSPR, IL_HINT_HL },	// hl sprite frames
@@ -1252,7 +1252,7 @@ qboolean Image_AddIndexedImageToPack( const byte *in, int width, int height )
 
 	if( Image_CheckFlag( IL_KEEP_8BIT ))
 		expand_to_rgba = false;
-	else if( host.type == HOST_NORMAL && ( image.flags & ( IMAGE_HAS_LUMA|IMAGE_QUAKESKY )))
+	else if( !Host_IsDedicated() && ( image.flags & ( IMAGE_HAS_LUMA|IMAGE_QUAKESKY )))
 		expand_to_rgba = false;
 
 	image.size = mipsize;

@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "event_flags.h"
@@ -86,7 +88,7 @@ CL_EventIndex
 */
 const char *CL_IndexEvent( word index )
 {
-	if( index < 0 || index >= MAX_EVENTS )
+	if( index >= MAX_EVENTS )
 		return 0;
 
 	return cl.event_precache[index];
@@ -504,3 +506,4 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 
 	CL_QueueEvent( flags, eventindex, delay, &args );
 }
+#endif // XASH_DEDICATED

@@ -457,9 +457,9 @@ qboolean NET_StringToAdr( const char *string, netadr_t *adr )
 {
 	struct sockaddr s;
 
+	Q_memset( adr, 0, sizeof( netadr_t ));
 	if( !Q_stricmp( string, "localhost" ))
 	{
-		Q_memset( adr, 0, sizeof( netadr_t ));
 		adr->type = NA_LOOPBACK;
 		return true;
 	}
@@ -775,12 +775,12 @@ static void NET_OpenIP( void )
 		if( !port ) port = Cvar_Get( "port", va( "%i", PORT_SERVER ), CVAR_INIT, "network default port" )->integer;
 
 		ip_sockets[NS_SERVER] = NET_IPSocket( net_ip->string, port );
-		if( !ip_sockets[NS_SERVER] && host.type == HOST_DEDICATED )
+		if( !ip_sockets[NS_SERVER] && Host_IsDedicated() )
 			Host_Error( "Couldn't allocate dedicated server IP port.\nMaybe you're trying to run dedicated server twice?\n" );
 	}
 
 	// dedicated servers don't need client ports
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
 
 	if( !ip_sockets[NS_CLIENT] )
 	{
@@ -869,7 +869,7 @@ void NET_OpenIPX( void )
 	}
 
 	// dedicated servers don't need client ports
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
 
 	if( !ipx_sockets[NS_CLIENT] )
 	{
@@ -949,12 +949,12 @@ void NET_Config( qboolean multiplayer )
 	static qboolean old_config;
 	static qboolean bFirst = true;
 
-	if( old_config == multiplayer && host.type != HOST_DEDICATED )
+	if( old_config == multiplayer && !Host_IsDedicated() )
 		return;
 
 	old_config = multiplayer;
 
-	if( !multiplayer && host.type != HOST_DEDICATED )
+	if( !multiplayer && !Host_IsDedicated() )
 	{	
 		int	i;
 
@@ -1206,7 +1206,7 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 	{
 		// Now only first_file is changing progress
 		Cvar_SetFloat( "scr_download", -1 );
-		if(last_file == first_file)
+		if( last_file == first_file )
 		{
 			last_file = first_file = 0;
 			HTTP_ClearCustomServers();
@@ -1217,11 +1217,21 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 	}
 	else if( file->next )
 	{
-		// i'm too lazy to search whole list, just copy the node
-		// it is not used now as only first file may be freed
-		httpfile_t *tmp =file->next;
-		Q_memcpy( file, file->next, sizeof(httpfile_t) );
-		Mem_Free(tmp);
+		httpfile_t *tmp = first_file, *tmp2;
+
+		while( tmp && ( tmp->next != file ) )
+			tmp = tmp->next;
+
+		ASSERT( tmp );
+
+		tmp2 = tmp->next;
+		if( tmp2 )
+		{
+			tmp->next = tmp2->next;
+			Mem_Free( tmp2 );
+		}
+		else
+			tmp->next = 0;
 	}
 	else file->id = -1; // Tail file
 }
@@ -1460,7 +1470,10 @@ void HTTP_Run( void )
 		Cvar_SetFloat( "scr_download", (float)curfile->downloaded / curfile->size * 100 );
 
 	if( curfile->size > 0 && curfile->downloaded >= curfile->size )
+	{
 		HTTP_FreeFile( curfile, false ); // success
+		return;
+	}
 	else // if it is not blocking, inform user about problem
 #ifdef _WIN32
 	if( pWSAGetLastError() != WSAEWOULDBLOCK )
@@ -1469,7 +1482,7 @@ void HTTP_Run( void )
 #endif
 		Msg( "HTTP: Problem downloading %s:\n%s\n", curfile->path, NET_ErrorString() );
 	else
-	curfile->blocktime += host.frametime;
+		curfile->blocktime += host.frametime;
 	curfile->checktime += frametime;
 	if( curfile->blocktime > http_timeout->value )
 	{
@@ -1630,6 +1643,8 @@ Stop current download, skip to next file
 */
 void HTTP_Cancel_f( void )
 {
+	if( !first_file )
+		return;
 	// If download even not started, it will be removed completely
 	first_file->state = 0;
 	HTTP_FreeFile( first_file, true );
@@ -1644,7 +1659,8 @@ Stop current download, skip to next server
 */
 void HTTP_Skip_f( void )
 {
-	HTTP_FreeFile( first_file, true );
+	if( first_file )
+		HTTP_FreeFile( first_file, true );
 }
 
 /*
@@ -1662,7 +1678,7 @@ void HTTP_List_f( void )
 		if( file->id == -1 )
 		Msg ( "\t(empty)\n");
 		else if ( file->server )
-			Msg ( "\t%d %d http://%s:%d/%s%s\n", file->id, file->state,
+			Msg ( "\t%d %d http://%s:%d/%s%s %d\n", file->id, file->state,
 				file->server->host, file->server->port, file->server->path,
 				file->path, file->downloaded );
 		else Msg ( "\t%d %d (no server) %s\n", file->id, file->state, file->path );

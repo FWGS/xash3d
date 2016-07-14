@@ -916,8 +916,8 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 				text++;
 				while( ( *text >= '0' && *text <= '9' ) ||
 					   ( *text >= 'A' && *text <= 'Z' ) ||
-					   ( *text >= 'a' && *text <= 'z' )
-					   || (*text == '_' ) )
+					   ( *text >= 'a' && *text <= 'z' ) ||
+					   (*text == '_' ) )
 					*ptoken++ = *text++;
 				*ptoken = 0;
 
@@ -969,14 +969,15 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 
 	// check cvars
 	if( Cvar_Command( )) return;
-
+#ifndef XASH_DEDICATED
 	// forward the command line to the server, so the entity DLL can parse it
 	// UCyborg: Is src_client used anywhere?
-	if( cmd_source == src_command && host.type == HOST_NORMAL )
+	if( cmd_source == src_command && !Host_IsDedicated() )
 	{
 		if( cls.state >= ca_connected )
 			Cmd_ForwardToServer();
 	}
+#endif
 }
 
 /*
@@ -991,7 +992,8 @@ so when they are typed in at the console, they will need to be forwarded.
 void Cmd_ForwardToServer( void )
 {
 	char	str[MAX_CMD_BUFFER];
-	
+
+#ifndef XASH_DEDICATED
 	if( cls.demoplayback )
 	{
 		if( !Q_stricmp( Cmd_Argv( 0 ), "pause" ))
@@ -1019,6 +1021,7 @@ void Cmd_ForwardToServer( void )
 	else Q_strcat( str, "\n" );
 
 	BF_WriteString( &cls.netchan.message, str );
+#endif
 }
 
 /*
@@ -1101,9 +1104,20 @@ static void Cmd_Apropos_f( void )
 		if( var->name[0] == '@' )
 			continue;	// never shows system cvars
 
-		if( !matchpattern_with_separator( var->name, partial, true, "", false ))
-		if( !matchpattern_with_separator( ( var->flags & CVAR_EXTDLL ) ? "game cvar" : var->description, partial, true, "", false ))
-			continue;
+		if( !matchpattern_with_separator( var->name, partial, true, "", false ) )
+		{
+			char *desc;
+
+			if( var->flags & CVAR_EXTDLL )
+				desc = "game cvar";
+			else desc = var->description;
+
+			if( !desc )
+				desc = "user cvar";
+
+			if( !matchpattern_with_separator( desc, partial, true, "", false ))
+				continue;
+		}
 		
 		// TODO: maybe add flags output like cvarlist, also
 		// fix inconsistencies in output from different commands

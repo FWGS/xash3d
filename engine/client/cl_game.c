@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "const.h"
@@ -252,7 +254,7 @@ void CL_InitCDAudio( const char *filename )
 
 		if( ++c > MAX_CDTRACKS - 1 )
 		{
-			MsgDev( D_WARN, "CD_Init: too many tracks %i in %s\n", filename, MAX_CDTRACKS );
+			MsgDev( D_WARN, "CD_Init: too many tracks %i in %s (only %d allowed)\n", c, filename, MAX_CDTRACKS );
 			break;
 		}
 	}
@@ -1437,16 +1439,17 @@ pfnFillRGBA
 */
 static void pfnFillRGBA( int x, int y, int width, int height, int r, int g, int b, int a )
 {
+	float x1 = x, y1 = y, w1 = width, h1 = height;
 	r = bound( 0, r, 255 );
 	g = bound( 0, g, 255 );
 	b = bound( 0, b, 255 );
 	a = bound( 0, a, 255 );
 	pglColor4ub( r, g, b, a );
 
-	SPR_AdjustSize( (float *)&x, (float *)&y, (float *)&width, (float *)&height );
+	SPR_AdjustSize( &x1, &y1, &w1, &h1 );
 
 	GL_SetRenderMode( kRenderTransAdd );
-	R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, cls.fillImage );
+	R_DrawStretchPic( x1, y1, w1, h1, 0, 0, 1, 1, cls.fillImage );
 	pglColor4ub( 255, 255, 255, 255 );
 }
 
@@ -1760,8 +1763,8 @@ prints directly into console (can skip notify)
 static void pfnConsolePrint( const char *string )
 {
 	if( !string || !*string ) return;
-	if( *string != 1 ) Con_Print( (char *)string ); // show notify
-	else Con_NPrintf( 0, (char *)string + 1 ); // skip notify
+	if( *string != 1 ) Msg( "%s", string ); // show notify
+	else Con_NPrintf( 0, "%s", (char *)string + 1 ); // skip notify
 }
 
 /*
@@ -2114,7 +2117,7 @@ static void pfnHookEvent( const char *filename, pfnEventHook pfn )
 
 		if( !Q_stricmp( name, ev->name ) && ev->func != NULL )
 		{
-			MsgDev( D_WARN, "CL_HookEvent: %s already hooked!\n" );
+			MsgDev( D_WARN, "CL_HookEvent: %s already hooked!\n", name );
 			return;
 		}
 	}
@@ -2277,66 +2280,68 @@ physent_t *pfnGetPhysent( int idx )
 	return NULL;
 }
 
-struct predicted_player predicted_players[MAX_CLIENTS];
-
 /*
 =============
 pfnSetUpPlayerPrediction
 
 =============
 */
-void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient )
+void pfnSetUpPlayerPrediction( int dopred, int includeLocal )
 {
-	int j;
-	struct predicted_player *pPlayer = predicted_players;
-	entity_state_t *entState = cl.frames[cl.parsecountmod].playerstate;
+#if 0
+	int i;
+	entity_state_t     *state;
+	predicted_player_t *player;
+	cl_entity_t        *ent;
 
-	cl_entity_t *clEntity;
-
-	for( j = 0, pPlayer = predicted_players, entState = cl.frames[cl.parsecountmod].playerstate;
-		 j < MAX_CLIENTS;
-		 j++, pPlayer++, entState++)
+	for( i = 0; i < MAX_CLIENTS; i++ )
 	{
-		pPlayer->active = false;
+		state = cl.frames[cl.parsecountmod].playerstate[i];
 
-		// Does not work in xash3d
-		//if( entState->messagenum != cl.parsecount )
-			//continue; // not present this frame
+		player = cl.predicted_players[j];
+		player->active = false;
 
-		if( !entState->modelindex )
+		if( state->messagenum != cl.parsecount )
+			continue; // not present this frame
+
+		if( !state->modelindex )
 			continue;
 
-		clEntity = CL_EDICT_NUM( j + 1 );
-		//special for EF_NODRAW and local client?
-		if( ( entState->effects & EF_NODRAW ) && ( bIncludeLocalClient == false ) )
+		ent = CL_GetEntityByIndex( j + 1 );
+
+		if( !ent ) // in case
+			continue;
+
+		// special for EF_NODRAW and local client?
+		if( state->effects & EF_NODRAW && !includeLocal )
 		{
-			// don't include local player?
 			if( cl.playernum == j )
 				continue;
-			else
-			{
-				pPlayer->active = true;
-				pPlayer->movetype = entState->movetype;
-				pPlayer->solid = entState->solid;
-				pPlayer->usehull = entState->usehull;
 
-				VectorCopy( clEntity->origin, pPlayer->origin );
-				VectorCopy( clEntity->angles, pPlayer->angles );
-			}
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			VectorCopy( ent->origin, player->origin );
+			VectorCopy( ent->angles, player->angles );
 		}
 		else
 		{
+			player->active   = true;
+			player->movetype = state->movetype;
+			player->solid    = state->solid;
+			player->usehull  = state->usehull;
+
+			// don't rewrite origin and angles of local client
 			if( cl.playernum == j )
 				continue;
-			pPlayer->active = true;
-			pPlayer->movetype = entState->movetype;
-			pPlayer->solid = entState->solid;
-			pPlayer->usehull = entState->usehull;
 
-			VectorCopy(cl.frames[cl.parsecountmod].playerstate[j].origin, pPlayer->origin);
-			VectorCopy(cl.frames[cl.parsecountmod].playerstate[j].angles, pPlayer->angles);
+			VectorCopy(state->origin, player->origin);
+			VectorCopy(state->angles, player->angles);
 		}
 	}
+#endif
 }
 
 /*
@@ -2837,7 +2842,7 @@ int pfnDrawStringReverse( int x, int y, const char *str, int r, int g, int b )
 {
 	// find the end of the string
 	char *szIt;
-	for( szIt = str; *szIt != 0; szIt++ )
+	for( szIt = (char*)str; *szIt != 0; szIt++ )
 		x -= clgame.scrInfo.charWidths[ (unsigned char) *szIt ];
 	pfnDrawString( x, y, str, r, g, b );
 	return x;
@@ -2946,20 +2951,21 @@ pfnFillRGBABlend
 */
 void pfnFillRGBABlend( int x, int y, int width, int height, int r, int g, int b, int a )
 {
+	float x1 = x, y1 = y, w1 = width, h1 = height;
 	r = bound( 0, r, 255 );
 	g = bound( 0, g, 255 );
 	b = bound( 0, b, 255 );
 	a = bound( 0, a, 255 );
 	pglColor4ub( r, g, b, a );
 
-	SPR_AdjustSize( (float *)&x, (float *)&y, (float *)&width, (float *)&height );
+	SPR_AdjustSize( &x1, &y1, &w1, &h1 );
 
 	pglEnable( GL_BLEND );
 	pglDisable( GL_ALPHA_TEST );
 	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
-	R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, cls.fillImage );
+	R_DrawStretchPic( x1, y1, w1, h1, 0, 0, 1, 1, cls.fillImage );
 	pglColor4ub( 255, 255, 255, 255 );
 }
 
@@ -3210,7 +3216,7 @@ int TriSpriteTexture( model_t *pSpriteModel, int frame )
 		pglAlphaFunc( GL_GREATER, 0.0f );
 	}
 
-	GL_Bind( GL_TEXTURE0, gl_texturenum );
+	GL_Bind( XASH_TEXTURE0, gl_texturenum );
 
 	return 1;
 }
@@ -3602,6 +3608,19 @@ void NetAPI_SetValueForKey( char *s, const char *key, const char *value, int max
 }
 
 
+void VGui_ViewportPaintBackground( int extents[4] )
+{
+	// stub
+}
+
+#ifndef XASH_VGUI
+void *VGui_GetPanel()
+{
+	// stub
+	return NULL;
+}
+#endif
+
 /*
 =================
 IVoiceTweak implementation
@@ -3676,14 +3695,14 @@ triangleapi_t gTriApi =
 	TriColor4f,
 	TriColor4ub,
 	TriTexCoord2f,
-	TriVertex3fv,
+	(void*)TriVertex3fv,
 	TriVertex3f,
 	TriBrightness,
 	TriCullFace,
 	TriSpriteTexture,
-	R_WorldToScreen,	// NOTE: XPROJECT, YPROJECT should be done in client.dll
+	(void*)R_WorldToScreen,	// NOTE: XPROJECT, YPROJECT should be done in client.dll
 	TriFog,
-	R_ScreenToWorld,
+	(void*)R_ScreenToWorld,
 	TriGetMatrix,
 	TriBoxInPVS,
 	TriLightAtPoint,
@@ -3694,75 +3713,75 @@ triangleapi_t gTriApi =
 static efx_api_t gEfxApi =
 {
 	CL_AllocParticle,
-	CL_BlobExplosion,
-	CL_Blood,
-	CL_BloodSprite,
-	CL_BloodStream,
-	CL_BreakModel,
-	CL_Bubbles,
-	CL_BubbleTrail,
-	CL_BulletImpactParticles,
+	(void*)CL_BlobExplosion,
+	(void*)CL_Blood,
+	(void*)CL_BloodSprite,
+	(void*)CL_BloodStream,
+	(void*)CL_BreakModel,
+	(void*)CL_Bubbles,
+	(void*)CL_BubbleTrail,
+	(void*)CL_BulletImpactParticles,
 	CL_EntityParticles,
 	CL_Explosion,
 	CL_FizzEffect,
 	CL_FireField,
-	CL_FlickerParticles,
-	CL_FunnelSprite,
-	CL_Implosion,
-	CL_Large_Funnel,
-	CL_LavaSplash,
-	CL_MultiGunshot,
-	CL_MuzzleFlash,
-	CL_ParticleBox,
-	CL_ParticleBurst,
-	CL_ParticleExplosion,
-	CL_ParticleExplosion2,
-	CL_ParticleLine,
+	(void*)CL_FlickerParticles,
+	(void*)CL_FunnelSprite,
+	(void*)CL_Implosion,
+	(void*)CL_Large_Funnel,
+	(void*)CL_LavaSplash,
+	(void*)CL_MultiGunshot,
+	(void*)CL_MuzzleFlash,
+	(void*)CL_ParticleBox,
+	(void*)CL_ParticleBurst,
+	(void*)CL_ParticleExplosion,
+	(void*)CL_ParticleExplosion2,
+	(void*)CL_ParticleLine,
 	CL_PlayerSprites,
-	CL_Projectile,
-	CL_RicochetSound,
-	CL_RicochetSprite,
-	CL_RocketFlare,
+	(void*)CL_Projectile,
+	(void*)CL_RicochetSound,
+	(void*)CL_RicochetSprite,
+	(void*)CL_RocketFlare,
 	CL_RocketTrail,
-	CL_RunParticleEffect,
-	CL_ShowLine,
-	CL_SparkEffect,
-	CL_SparkShower,
-	CL_SparkStreaks,
-	CL_Spray,
+	(void*)CL_RunParticleEffect,
+	(void*)CL_ShowLine,
+	(void*)CL_SparkEffect,
+	(void*)CL_SparkShower,
+	(void*)CL_SparkStreaks,
+	(void*)CL_Spray,
 	CL_Sprite_Explode,
 	CL_Sprite_Smoke,
-	CL_Sprite_Spray,
-	CL_Sprite_Trail,
+	(void*)CL_Sprite_Spray,
+	(void*)CL_Sprite_Trail,
 	CL_Sprite_WallPuff,
-	CL_StreakSplash,
-	CL_TracerEffect,
+	(void*)CL_StreakSplash,
+	(void*)CL_TracerEffect,
 	CL_UserTracerParticle,
 	CL_TracerParticles,
-	CL_TeleportSplash,
-	CL_TempSphereModel,
-	CL_TempModel,
-	CL_DefaultSprite,
-	CL_TempSprite,
+	(void*)CL_TeleportSplash,
+	(void*)CL_TempSphereModel,
+	(void*)CL_TempModel,
+	(void*)CL_DefaultSprite,
+	(void*)CL_TempSprite,
 	CL_DecalIndex,
-	CL_DecalIndexFromName,
+	(void*)CL_DecalIndexFromName,
 	CL_DecalShoot,
 	CL_AttachTentToPlayer,
 	CL_KillAttachedTents,
-	CL_BeamCirclePoints,
-	CL_BeamEntPoint,
+	(void*)CL_BeamCirclePoints,
+	(void*)CL_BeamEntPoint,
 	CL_BeamEnts,
 	CL_BeamFollow,
 	CL_BeamKill,
-	CL_BeamLightning,
-	CL_BeamPoints,
-	CL_BeamRing,
+	(void*)CL_BeamLightning,
+	(void*)CL_BeamPoints,
+	(void*)CL_BeamRing,
 	CL_AllocDlight,
 	CL_AllocElight,
-	CL_TempEntAlloc,
-	CL_TempEntAllocNoModel,
-	CL_TempEntAllocHigh,
-	CL_TempEntAllocCustom,
+	(void*)CL_TempEntAlloc,
+	(void*)CL_TempEntAllocNoModel,
+	(void*)CL_TempEntAllocHigh,
+	(void*)CL_TempEntAllocCustom,
 	CL_GetPackedColor,
 	CL_LookupColor,
 	CL_DecalRemoveAll,
@@ -3849,15 +3868,15 @@ static cl_enginefunc_t gEngfuncs =
 	pfnFillRGBA,
 	pfnGetScreenInfo,
 	pfnSetCrosshair,
-	pfnCvar_RegisterVariable,
-	Cvar_VariableValue,
-	Cvar_VariableString,
-	pfnAddClientCommand,
-	pfnHookUserMsg,
-	pfnServerCmd,
-	pfnClientCmd,
+	(void*)pfnCvar_RegisterVariable,
+	(void*)Cvar_VariableValue,
+	(void*)Cvar_VariableString,
+	(void*)pfnAddClientCommand,
+	(void*)pfnHookUserMsg,
+	(void*)pfnServerCmd,
+	(void*)pfnClientCmd,
 	pfnGetPlayerInfo,
-	pfnPlaySoundByName,
+	(void*)pfnPlaySoundByName,
 	pfnPlaySoundByIndex,
 	AngleVectors,
 	CL_TextMessageGet,
@@ -3872,7 +3891,7 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetViewAngles,
 	pfnSetViewAngles,
 	CL_GetMaxClients,
-	Cvar_SetFloat,
+	(void*)Cvar_SetFloat,
 	Cmd_Argc,
 	Cmd_Argv,
 	Con_Printf,
@@ -3883,7 +3902,7 @@ static cl_enginefunc_t gEngfuncs =
 	pfnServerInfo_ValueForKey,
 	pfnGetClientMaxspeed,
 	pfnCheckParm,
-	Key_Event,
+	(void*)Key_Event,
 	CL_GetMousePosition,
 	pfnIsNoClipping,
 	CL_GetLocalPlayer,
@@ -3892,8 +3911,8 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetClientTime,
 	pfnCalcShake,
 	pfnApplyShake,
-	pfnPointContents,
-	CL_WaterEntity,
+	(void*)pfnPointContents,
+	(void*)CL_WaterEntity,
 	pfnTraceLine,
 	CL_LoadModel,
 	CL_AddEntity,
@@ -3904,17 +3923,17 @@ static cl_enginefunc_t gEngfuncs =
 	CL_WeaponAnim,
 	Com_RandomFloat,
 	Com_RandomLong,
-	pfnHookEvent,
-	Con_Visible,
+	(void*)pfnHookEvent,
+	(void*)Con_Visible,
 	pfnGetGameDirectory,
 	pfnCVarGetPointer,
 	Key_LookupBinding,
 	pfnGetLevelName,
 	pfnGetScreenFade,
 	pfnSetScreenFade,
-	NULL,	// VGui_GetPanel
-	NULL,	// VGui_ViewportPaintBackground
-	COM_LoadFile,
+	VGui_GetPanel,
+	VGui_ViewportPaintBackground,
+	(void*)COM_LoadFile,
 	COM_ParseFile,
 	COM_FreeFile,
 	&gTriApi,
@@ -3937,9 +3956,9 @@ static cl_enginefunc_t gEngfuncs =
 	pfnSetMousePos,
 	pfnSetMouseEnable,
 	Cvar_GetList,
-	Cmd_GetFirstFunctionHandle,
-	Cmd_GetNextFunctionHandle,
-	Cmd_GetName,
+	(void*)Cmd_GetFirstFunctionHandle,
+	(void*)Cmd_GetNextFunctionHandle,
+	(void*)Cmd_GetName,
 	pfnGetClientOldTime,
 	pfnGetGravity,
 	Mod_Handle,
@@ -3954,9 +3973,9 @@ static cl_enginefunc_t gEngfuncs =
 	LocalPlayerInfo_ValueForKey,
 	pfnVGUI2DrawCharacter,
 	pfnVGUI2DrawCharacterAdditive,
-	Sound_GetApproxWavePlayLen,
+	(void*)Sound_GetApproxWavePlayLen,
 	GetCareerGameInterface,
-	Cvar_Set,
+	(void*)Cvar_Set,
 	pfnIsCareerMatch,
 	pfnPlaySoundVoiceByName,
 	pfnMP3_InitStream,
@@ -4026,8 +4045,6 @@ qboolean CL_LoadProgs( const char *name )
 	// during LoadLibrary
 #ifdef XASH_VGUI
 	VGui_Startup (menu.globals->scrWidth, menu.globals->scrHeight);
-	gEngfuncs.VGui_GetPanel = VGui_GetPanel;
-	gEngfuncs.VGui_ViewportPaintBackground = VGui_ViewportPaintBackground;
 #endif
 	
 	clgame.hInstance = Com_LoadLibrary( name, false );
@@ -4132,3 +4149,4 @@ qboolean CL_LoadProgs( const char *name )
 
 	return true;
 }
+#endif // XASH_DEDICATED

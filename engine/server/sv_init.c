@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "server.h"
+#include "library.h"
 
 int SV_UPDATE_BACKUP = SINGLEPLAYER_BACKUP;
 
@@ -196,11 +197,11 @@ char *SV_EntityScript( void )
 	ft1 = FS_FileTime( sv.worldmodel->name, false );
 	ft2 = FS_FileTime( entfilename, true );
 
-	if( ft2 != -1 )
+	if( ft2 !=(unsigned long) -1 )
 	{
 		if( ft1 > ft2 )
 		{
-			MsgDev( D_INFO, "^1Entity patch is older than BSP. Ignored.\n", entfilename );			
+			MsgDev( D_INFO, "^1Entity patch %s is older than BSP. Ignored.\n", entfilename );
 		}
 		else if(( ents = (char *)FS_LoadFile( entfilename, NULL, true )) != NULL )
 		{
@@ -340,13 +341,13 @@ void SV_ActivateServer( void )
 	else
 	{
 		// clear the ugly moving delay in singleplayer
-		if( host.type != HOST_DEDICATED )
+		if( !Host_IsDedicated() )
 			Cvar_SetFloat( "clockwindow", 0.0f );
 		MsgDev( D_INFO, "Game started\n" );
 	}
 	Log_Printf( "Started map \"%s\" (CRC \"0\")\n", STRING( svgame.globals->mapname ) );
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		Mod_FreeUnused ();
 	}
@@ -361,7 +362,7 @@ void SV_ActivateServer( void )
 	if( sv_maxclients->integer > 1 )
 	{
 		// listenserver is executed on every map change in multiplayer
-		if( host.type != HOST_DEDICATED )
+		if( !Host_IsDedicated() )
 		{
 			char *plservercfgfile = Cvar_VariableString( "lservercfgfile" );
 			if( *plservercfgfile )
@@ -624,9 +625,13 @@ void SV_InitGame( void )
 		// init game after host error
 		if( !svgame.hInstance )
 		{
+			Com_ResetLibraryError();
 			if( !SV_LoadProgs( SI.gamedll ))
 			{
-				MsgDev( D_ERROR, "SV_InitGame: can't initialize \"%s\"\n", SI.gamedll );
+				if( CL_IsInMenu() )
+					Sys_Warn( "SV_InitGame: can't initialize \"%s\":\n%s", SI.gamedll, Com_GetLibraryError() );
+				else
+					Msg( "SV_InitGame: can't initialize \"%s\":\n%s", SI.gamedll, Com_GetLibraryError() );
 				return; // can't load
 			}
 			MsgDev( D_INFO, "Server loaded\n" );
@@ -648,7 +653,7 @@ void SV_InitGame( void )
 
 	// dedicated servers are can't be single player and are usually DM
 	// so unless they explicity set coop, force it to deathmatch
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		if( !Cvar_VariableValue( "coop" ) && !Cvar_VariableValue( "teamplay" ))
 			Cvar_FullSet( "deathmatch", "1",  CVAR_LATCH );
@@ -674,7 +679,7 @@ void SV_InitGame( void )
 	}
 
 	svgame.globals->maxClients = sv_maxclients->integer;
-	SV_UPDATE_BACKUP = ( svgame.globals->maxClients == 1 && host.type != HOST_DEDICATED ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
+	SV_UPDATE_BACKUP = ( svgame.globals->maxClients == 1 && !Host_IsDedicated() ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
 
 	svs.clients = Z_Malloc( sizeof( sv_client_t ) * sv_maxclients->integer );
 	svs.num_client_entities = sv_maxclients->integer * SV_UPDATE_BACKUP * 64;
@@ -728,6 +733,7 @@ void SV_InitGameProgs( void )
 
 	// just try to initialize
 	SV_LoadProgs( SI.gamedll );
+	Com_ResetLibraryError();
 }
 
 void SV_FreeGameProgs( void )

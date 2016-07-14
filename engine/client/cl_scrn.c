@@ -13,11 +13,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
 #include "vgui_draw.h"
 #include "qfont.h"
+#include "library.h"
 
 convar_t *scr_centertime;
 convar_t *scr_loading;
@@ -613,9 +616,12 @@ void SCR_VidInit( void )
 	Q_memset( &menu.ds, 0, sizeof( menu.ds )); // reset a draw state
 	Q_memset( &clgame.centerPrint, 0, sizeof( clgame.centerPrint ));
 
-	// update screen sizes for menu
-	menu.globals->scrWidth = scr_width->integer;
-	menu.globals->scrHeight = scr_height->integer;
+	if( menu.globals )
+	{
+		// update screen sizes for menu
+		menu.globals->scrWidth = scr_width->integer;
+		menu.globals->scrHeight = scr_height->integer;
+	}
 
 	SCR_RebuildGammaTable();
 #ifdef XASH_VGUI
@@ -659,9 +665,11 @@ void SCR_Init( void )
 	Cmd_AddCommand( "sizeup", SCR_SizeUp_f, "screen size up to 10 points" );
 	Cmd_AddCommand( "sizedown", SCR_SizeDown_f, "screen size down to 10 points" );
 
+	Com_ResetLibraryError();
+
 	if( host.state != HOST_RESTART && !UI_LoadProgs( ))
 	{
-		Msg( "^1Error: ^7can't initialize menu library\n" ); // this is not fatal for us
+		Sys_Warn( "can't initialize menu library:\n%s", Com_GetLibraryError() ); // this is not fatal for us
 		// console still can't be toggled in-game without extra cmd-line switch
 		if( !host.developer ) host.developer = 1; // we need console, because menu is missing
 	}
@@ -699,3 +707,4 @@ void SCR_Shutdown( void )
 	cls.creditsFont.valid = false;
 	scr_init = false;
 }
+#endif // XASH_DEDICATED

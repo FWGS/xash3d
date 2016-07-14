@@ -148,7 +148,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	if( !buffer || filesize <= 0 )
 		return false;
 
-	MsgDev( D_NOTE, "Sound_LoadWAV: ( %s, %p, %u )\n", name, buffer, filesize );
+	//MsgDev( D_NOTE, "Sound_LoadWAV: ( %s, %p, %u )\n", name, buffer, filesize );
 
 	iff_data = buffer;
 	iff_end = buffer + filesize;
@@ -290,7 +290,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	if( sound.width == 1 )
 	{
 		int	i, j;
-		char	*pData = (char *)sound.wav;
+		signed char	*pData = (signed char *)sound.wav;
 
 		for( i = 0; i < sound.samples; i++ )
 		{
@@ -406,7 +406,7 @@ Stream_ReadWAV
 assume stream is valid
 =================
 */
-long Stream_ReadWAV( stream_t *stream, long bytes, void *buffer )
+int Stream_ReadWAV( stream_t *stream, int bytes, void *buffer )
 {
 	int	samples, remaining;
 
@@ -430,7 +430,7 @@ Stream_SetPosWAV
 assume stream is valid
 =================
 */
-long Stream_SetPosWAV( stream_t *stream, long newpos )
+int Stream_SetPosWAV( stream_t *stream, int newpos )
 {
 	// NOTE: stream->pos it's real file position without header size
 	if( FS_Seek( stream->file, stream->buffsize + newpos, SEEK_SET ) != -1 )
@@ -449,7 +449,7 @@ Stream_GetPosWAV
 assume stream is valid
 =================
 */
-long Stream_GetPosWAV( stream_t *stream )
+int Stream_GetPosWAV( stream_t *stream )
 {
 	return stream->pos;
 }

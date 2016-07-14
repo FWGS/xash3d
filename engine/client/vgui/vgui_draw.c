@@ -193,11 +193,16 @@ Load vgui_support library and call VGui_Startup
 */
 void VGui_Startup( int width, int height )
 {
+	static qboolean failed = false;
+	if( failed )
+		return;
 	if(!vgui.initialized)
 	{
 		void (*F) ( vguiapi_t * );
 		char vguiloader[256];
 		char vguilib[256];
+
+		Com_ResetLibraryError();
 
 		// hack: load vgui with correct path first if specified.
 		// it will be reused while resolving vgui support and client deps
@@ -214,9 +219,9 @@ void VGui_Startup( int width, int height )
 		if( !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
 			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
 
-		lib = Com_LoadLibrary( vguiloader, false);
+		lib = Com_LoadLibrary( vguiloader, false );
 		if(!lib)
-			MsgDev( D_ERROR, "Failed to load vgui_support library!\n" );
+			MsgDev( D_ERROR, "Failed to load vgui_support library: %s", Com_GetLibraryError() );
 		else
 		{
 			F = Com_GetProcAddress( lib, "InitAPI" );
@@ -224,17 +229,41 @@ void VGui_Startup( int width, int height )
 			{
 				F( &vgui );
 				vgui.initialized = true;
+				VGUI_InitCursors();
 			}
 			else
 				MsgDev( D_ERROR, "Failed to find vgui_support library entry point!\n" );
 		}
-		VGUI_InitCursors();
+
 	}
+
+	// vgui may crash if it cannot find font
+	if( width <= 320 )
+		width = 320;
+	else if( width <= 400 )
+		width = 400;
+	else if( width <= 512 )
+		width = 512;
+	else if( width <= 640 )
+		width = 640;
+	else if( width <= 800 )
+		width = 800;
+	else if( width <= 1024 )
+		width = 1024;
+	else if( width <= 1152 )
+		width = 1152;
+	else if( width <= 1280 )
+		width = 1280;
+	else //if( width <= 1600 )
+		width = 1600;
+
+
 	if( vgui.initialized )
 	{
 		//host.mouse_visible = true;
 		vgui.Startup( width, height );
 	}
+	else failed = true;
 }
 
 
@@ -613,14 +642,14 @@ void VGUI_BindTexture( int id )
 {
 	if( id > 0 && id < VGUI_MAX_TEXTURES && g_textures[id] )
 	{
-		GL_Bind( GL_TEXTURE0, g_textures[id] );
+		GL_Bind( XASH_TEXTURE0, g_textures[id] );
 		g_iBoundTexture = id;
 	}
 	else
 	{
 		// NOTE: same as bogus index 2700 in GoldSrc
 		id = g_iBoundTexture = 1;
-		GL_Bind( GL_TEXTURE0, g_textures[id] );
+		GL_Bind( XASH_TEXTURE0, g_textures[id] );
 	}
 }
 
@@ -692,13 +721,9 @@ void VGui_Paint()
 
 void *VGui_GetPanel()
 {
-	if(vgui.initialized)
+	if( vgui.initialized )
 		return vgui.GetPanel();
-	return 0;
-}
-void VGui_ViewportPaintBackground( int extents[4])
-{
-	//stub
+	return NULL;
 }
 
 void VGui_RunFrame()

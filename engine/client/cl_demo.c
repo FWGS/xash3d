@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "net_encode.h"
@@ -458,7 +460,7 @@ void CL_DrawDemoRecording( void )
 		return;
 
 	pos = FS_Tell( cls.demofile );
-	Q_snprintf( string, sizeof( string ), "RECORDING %s: %ik", cls.demoname, pos / 1024 );
+	Q_snprintf( string, sizeof( string ), "RECORDING %s: %ik", cls.demoname, (int)(pos / 1024) );
 
 	Con_DrawStringLen( string, &len, NULL );
 	Con_DrawString(( scr_width->integer - len) >> 1, scr_height->integer >> 2, string, color );
@@ -665,7 +667,7 @@ reads demo data and write it to client
 qboolean CL_DemoReadMessage( byte *buffer, size_t *length )
 {
 	float	f = 0.0f;
-	long	curpos = 0;
+	int	curpos = 0;
 	float	fElapsedTime = 0.0f;
 	qboolean	swallowmessages = true;
 	byte	*userbuf = NULL;
@@ -1240,3 +1242,4 @@ void CL_Stop_f( void )
 		S_StopBackgroundTrack();
 	}
 }
+#endif // XASH_DEDICATED

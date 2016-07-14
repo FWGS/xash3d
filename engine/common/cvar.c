@@ -138,10 +138,17 @@ void Cvar_LookupVars( int checkbit, void *buffer, void *ptr, setpair_t callback 
 		}
 		else
 		{
-			// NOTE: dll cvars don't have description
+			char *desc;
+
 			if( cvar->flags & CVAR_EXTDLL )
-				callback( cvar->name, cvar->string, "game cvar", ptr );
-			else callback( cvar->name, cvar->string, cvar->description, ptr );
+				desc = "game cvar";
+			else
+				desc = cvar->description;
+
+			if( !desc )
+				desc = "user cvar";
+
+			callback( cvar->name, cvar->string, desc, ptr );
 		}
 	}
 }
@@ -458,7 +465,7 @@ convar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force )
 		// step through the string, only copying back in characters that are printable
 		while( *pS )
 		{
-			if( ((byte)*pS) < 32 || ((byte)*pS) > 255 )
+			if( ((byte)*pS) < 32 )
 			{
 				pS++;
 				continue;
@@ -719,9 +726,23 @@ Cvar_SetCheatState
 Any testing variables will be reset to the safe values
 ============
 */
-void Cvar_SetCheatState( void )
+void Cvar_SetCheatState( qboolean force )
 {
 	convar_t	*var;
+	qboolean disable_cheats;
+
+	var = Cvar_FindVar( "sv_cheats" );
+
+	ASSERT( var );
+
+	disable_cheats = !var->integer;
+
+	if( var->latched_string )
+		disable_cheats = !Q_atoi( var->latched_string );
+
+	// when shutting down, restore all latched cvars before saving it to config
+	if( force )
+		disable_cheats = false;
 
 	// set all default vars to the safe value
 	for( var = cvar_vars; var; var = var->next )
@@ -730,20 +751,25 @@ void Cvar_SetCheatState( void )
 		if( var->flags & CVAR_EXTDLL )
 			continue;
 
-		if( var->flags & CVAR_CHEAT )
+		if( ( var->flags & CVAR_CHEAT ) && var->reset_string )
 		{
-			// the CVAR_LATCHED|CVAR_CHEAT vars might escape the reset here 
-			// because of a different var->latched_string
-			if( var->latched_string )
+			if( disable_cheats )
 			{
+				char *value = copystring( var->string );
+				Cvar_FullSet( var->name, var->reset_string, var->flags );
+				// keep values in latched field
+				if( var->latched_string )
+					Mem_Free( value );
+				else
+					var->latched_string = value;
+			}
+			else if( var->latched_string )
+			{
+				Cvar_FullSet( var->name, var->latched_string, var->flags );
 				Mem_Free( var->latched_string );
 				var->latched_string = NULL;
 			}
 
-			if( Q_strcmp( var->reset_string, var->string ))
-			{
-				Cvar_Set( var->name, var->reset_string );
-			}
 		}
 	}
 }
@@ -1121,6 +1147,16 @@ Now all latched strings are valid
 void Cvar_Latched_f( void )
 {
 	convar_t	*var;
+	qboolean disable_cheats;
+
+	var = Cvar_FindVar( "sv_cheats" );
+
+	ASSERT( var );
+
+	disable_cheats = !var->integer;
+
+	if( var->latched_string )
+		disable_cheats = !Q_atoi( var->latched_string );
 
 	for( var = cvar_vars ; var ; var = var->next )
 	{
@@ -1132,6 +1168,26 @@ void Cvar_Latched_f( void )
 			Cvar_FullSet( var->name, var->latched_string, var->flags );
 			Mem_Free( var->latched_string );
 			var->latched_string = NULL;
+		}
+		if( ( var->flags & CVAR_CHEAT ) && var->reset_string )
+		{
+			if( disable_cheats )
+			{
+				char *value = copystring( var->string );
+				Cvar_FullSet( var->name, var->reset_string, var->flags );
+				// keep values in latched field
+				if( var->latched_string )
+					Mem_Free( value );
+				else
+					var->latched_string = value;
+			}
+			else if( var->latched_string )
+			{
+				Cvar_FullSet( var->name, var->latched_string, var->flags );
+				Mem_Free( var->latched_string );
+				var->latched_string = NULL;
+			}
+
 		}
 	}
 }

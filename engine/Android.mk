@@ -11,11 +11,9 @@ APP_PLATFORM := android-12
 
 include $(XASH3D_CONFIG)
 
-LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -DUSE_EVDEV -fsigned-char -DCRASHHANDLER
+LOCAL_CFLAGS += -D__MULTITEXTURE_SUPPORT__ -DXASH_GLES -DXASH_NANOGL -DUSE_EVDEV -DXASH_DYNAMIC_DLADDR -DCRASHHANDLER -DXASH_OPENSL -DXASH_SKIPCRTLIB -DXASH_FORCEINLINE -DXASH_FASTCRTLIB
 
-ifeq ($(XASH_SDL),1)
-LOCAL_CFLAGS += -DXASH_SDL
-endif
+
 
 LOCAL_CONLYFLAGS += -std=c99
 
@@ -43,7 +41,6 @@ LOCAL_C_INCLUDES := \
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 
 LOCAL_SRC_FILES := \
-           platform/android/android.c \
 	   platform/android/dlsym-weak.cpp \
 	   client/cl_cmds.c \
            client/cl_demo.c \
@@ -60,7 +57,7 @@ LOCAL_SRC_FILES := \
            client/cl_tent.c \
            client/cl_video.c \
            client/cl_view.c \
-           client/gl_backend.c \
+		   client/gl_backend.c \
            client/gl_beams.c \
            client/gl_cull.c \
            client/gl_decals.c \
@@ -76,10 +73,9 @@ LOCAL_SRC_FILES := \
            client/gl_rsurf.c \
            client/gl_sprite.c \
            client/gl_studio.c \
-           client/gl_vidnt_android.c \
            client/gl_vidnt_common.c \
            client/gl_warp.c \
-           client/s_backend.c \
+		   client/s_backend_opensles.c \
            client/s_dsp.c \
            client/s_load.c \
            client/s_main.c \
@@ -158,8 +154,15 @@ LOCAL_SRC_FILES := \
 	   common/soundlib/libmpg/tabinit.c \
 	   common/soundlib/libmpg/common.c
 
+
 ifeq ($(XASH_SDL),1)
+LOCAL_SRC_FILES += client/gl_vidnt_nanogl.c \
+				platform/android/android.c
 LOCAL_SHARED_LIBRARIES += SDL2
+LOCAL_CFLAGS += -DXASH_SDL
+else
+LOCAL_SRC_FILES += client/gl_vidnt_android_nosdl.c \
+		   platform/android/android_nosdl.c
 endif
 LOCAL_STATIC_LIBRARIES := NanoGL
 

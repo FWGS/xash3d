@@ -1,16 +1,17 @@
 #pragma once
 #ifndef ANDROID_MAIN_H
 #define ANDROID_MAIN_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+void Android_Vibrate( float life, char flags );
+#ifndef XASH_SDL
+// android_nosdl.c
 void Android_SwapBuffers();
 void Android_GetScreenRes( int *width, int *height );
-
-#ifdef __cplusplus
-}
+void Android_Init( void );
+void Android_EnableTextInput( qboolean enable, qboolean force );
+void Android_RunEvents( void );
+void Android_MessageBox( const char *title, const char *text );
+void Android_SwapInterval( int interval );
+qboolean Android_InitGL();
 #endif
 
 #endif // ANDROID_MAIN_H

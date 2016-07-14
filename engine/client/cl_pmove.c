@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "const.h"
@@ -20,6 +22,7 @@ GNU General Public License for more details.
 #include "pm_local.h"
 #include "particledef.h"
 #include "studio.h"
+#include "library.h" // Loader_GetDllHandle( )
 
 void pfnSetUpPlayerPrediction( int dopred, int bIncludeLocalClient );
 
@@ -213,11 +216,10 @@ pmove must be setup with world and solid entity hulls before calling
 */
 void CL_SetSolidPlayers( int playernum )
 {
-	int		j;
-	extern	vec3_t	player_mins;
-	extern	vec3_t	player_maxs;
-	cl_entity_t	*ent;
-	physent_t		*pe;
+	int		       j;
+	cl_entity_t	   *ent;
+	entity_state_t *state;
+	physent_t      *pe;
 
 	if( !cl_solid_players->integer )
 		return;
@@ -225,15 +227,28 @@ void CL_SetSolidPlayers( int playernum )
 	for( j = 0; j < cl.maxclients; j++ )
 	{
 		// the player object never gets added
-		if( j == playernum ) continue;
+		if( j == playernum )
+			continue;
 
 		ent = CL_GetEntityByIndex( j + 1 );		
 
 		if( !ent || !ent->player )
 			continue; // not present this frame
 
-		if( !predicted_players[j].active )
-			continue; // dead players are not solid
+
+#if 1 // came from SetUpPlayerPrediction
+		state = cl.frames[cl.parsecountmod].playerstate + j;
+
+		// This makes all players non solid.
+		//if( state->messagenum != cl.parsecount )
+		//	continue; // not present this frame [2]*/
+
+		if( state->effects & EF_NODRAW )
+			continue; // skip invisible
+
+		if( !state->solid )
+			continue; // not solid
+#endif
 
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
 		if( CL_CopyEntityToPhysEnt( pe, ent ))
@@ -563,10 +578,12 @@ static const char *pfnTraceTexture( int ground, float *vstart, float *vend )
 
 static void pfnPlaySound( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
 {
+	sound_t	snd;
+
 	if( !clgame.pmove->runfuncs )
 		return;
 
-	sound_t	snd = S_RegisterSound( sample );
+	snd = S_RegisterSound( sample );
 
 	S_StartSound( NULL, clgame.pmove->player_index + 1, channel, snd, volume, attenuation, pitch, fFlags );
 }
@@ -669,7 +686,7 @@ void CL_InitClientMove( void )
 	Q_memcpy( clgame.pmove->player_maxs, clgame.player_maxs, sizeof( clgame.player_maxs ));
 
 	// common utilities
-	clgame.pmove->PM_Info_ValueForKey = Info_ValueForKey;
+	clgame.pmove->PM_Info_ValueForKey = (void*)Info_ValueForKey;
 	clgame.pmove->PM_Particle = pfnParticle;
 	clgame.pmove->PM_TestPlayerPosition = pfnTestPlayerPosition;
 	clgame.pmove->Con_NPrintf = Con_NPrintf;
@@ -682,14 +699,14 @@ void CL_InitClientMove( void )
 	clgame.pmove->PM_HullPointContents = pfnHullPointContents; 
 	clgame.pmove->PM_PlayerTrace = pfnPlayerTrace;
 	clgame.pmove->PM_TraceLine = pfnTraceLine;
-	clgame.pmove->RandomLong = Com_RandomLong;
+	clgame.pmove->RandomLong = (void*)Com_RandomLong;
 	clgame.pmove->RandomFloat = Com_RandomFloat;
 	clgame.pmove->PM_GetModelType = pfnGetModelType;
 	clgame.pmove->PM_GetModelBounds = pfnGetModelBounds;	
-	clgame.pmove->PM_HullForBsp = pfnHullForBsp;
+	clgame.pmove->PM_HullForBsp = (void*)pfnHullForBsp;
 	clgame.pmove->PM_TraceModel = pfnTraceModel;
-	clgame.pmove->COM_FileSize = COM_FileSize;
-	clgame.pmove->COM_LoadFile = COM_LoadFile;
+	clgame.pmove->COM_FileSize = (void*)COM_FileSize;
+	clgame.pmove->COM_LoadFile = (void*)COM_LoadFile;
 	clgame.pmove->COM_FreeFile = COM_FreeFile;
 	clgame.pmove->memfgets = COM_MemFgets;
 	clgame.pmove->PM_PlaySound = pfnPlaySound;
@@ -702,13 +719,13 @@ void CL_InitClientMove( void )
 #ifdef DLL_LOADER // w32-compatible ABI
 	if( host.enabledll && Loader_GetDllHandle( clgame.hInstance ) )
 	{
-		clgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
-		clgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
+		clgame.pmove->PM_PlayerTrace = (void*)pfnPlayerTrace_w32;
+		clgame.pmove->PM_PlayerTraceEx = (void*)pfnPlayerTraceEx_w32;
 	}
 #endif
 #if defined(__MINGW32__)
-	clgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
-	clgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
+	clgame.pmove->PM_PlayerTrace = (void*)pfnPlayerTrace_w32;
+	clgame.pmove->PM_PlayerTraceEx = (void*)pfnPlayerTraceEx_w32;
 #endif
 
 	// initalize pmove
@@ -988,3 +1005,4 @@ void CL_PredictMovement( void )
 	VectorCopy( to->client.punchangle, cl.predicted_punchangle );
 }
 }
+#endif // XASH_DEDICATED

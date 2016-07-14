@@ -207,7 +207,7 @@ qboolean SV_RunThink( edict_t *ent )
 
 	if( ent->v.flags & FL_KILLME )
 	{
-		MsgDev( D_NOTE, "SV_RunThink: FreeEdict\n");
+		//MsgDev( D_NOTE, "SV_RunThink: FreeEdict\n");
 		SV_FreeEdict( ent );
 	}
 
@@ -1842,7 +1842,7 @@ Called from renderer for debug purposes
 */
 void SV_DrawDebugTriangles( void )
 {
-	if( host.type != HOST_NORMAL )
+	if( Host_IsDedicated() )
 		return;
 
 	if( svgame.physFuncs.DrawNormalTriangles != NULL )
@@ -1876,7 +1876,7 @@ Called from renderer for debug purposes
 */
 void SV_DrawOrthoTriangles( void )
 {
-	if( host.type != HOST_NORMAL )
+	if( Host_IsDedicated() )
 		return;
 
 	if( svgame.physFuncs.DrawOrthoTriangles != NULL )
@@ -1932,11 +1932,15 @@ static server_physics_api_t gPhysicsAPI =
 	SV_LinkEdict,
 	SV_GetServerTime,
 	SV_GetFrameTime,
-	Mod_Handle,
+	(void*)Mod_Handle,
 	SV_GetHeadNode,
 	SV_ServerState,
 	Host_Error,
+#ifndef XASH_DEDICATED
 	&gTriApi,	// ouch!
+#else
+	NULL,
+#endif
 	pfnDrawConsoleString,
 	pfnDrawSetTextColor,
 	pfnDrawConsoleStringLen,

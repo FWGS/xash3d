@@ -17,7 +17,10 @@ GNU General Public License for more details.
 #define STDLIB_H
 
 #include <stdarg.h>
-
+#ifndef XASH_SDL
+#include <string.h>
+#include <ctype.h>
+#endif
 // timestamp modes
 enum
 {
@@ -106,7 +109,7 @@ int Cvar_VariableInteger( const char *var_name );
 char *Cvar_VariableString( const char *var_name );
 void Cvar_DirectSet( cvar_t *var, const char *value );
 void Cvar_Reset( const char *var_name );
-void Cvar_SetCheatState( void );
+void Cvar_SetCheatState( qboolean force );
 qboolean Cvar_Command( void );
 void Cvar_WriteVariables( file_t *f );
 void Cvar_Init( void );
@@ -144,44 +147,156 @@ void Cmd_ForwardToServer( void );
 //
 // crtlib.c
 //
+
 #define Q_strupr( in, out ) Q_strnupr( in, out, 99999 )
 void Q_strnupr( const char *in, char *out, size_t size_out );
 #define Q_strlwr( int, out ) Q_strnlwr( in, out, 99999 )
 void Q_strnlwr( const char *in, char *out, size_t size_out );
-int Q_strlen( const char *string );
+#ifndef XASH_SKIPCRTLIB
+
 char Q_toupper( const char in );
 char Q_tolower( const char in );
+
+#else
+static inline int Q_strlen( const char *str )
+{
+	if( !str )
+		return 0;
+	return strlen(str);
+}
+#define Q_toupper toupper
+#define Q_tolower tolower
+#endif
 #define Q_strcat( dst, src ) Q_strncat( dst, src, 99999 )
-size_t Q_strncat( char *dst, const char *src, size_t siz );
 #define Q_strcpy( dst, src ) Q_strncpy( dst, src, 99999 )
+#ifndef XASH_FORCEINLINE
+size_t Q_strncat( char *dst, const char *src, size_t siz );
 size_t Q_strncpy( char *dst, const char *src, size_t siz );
+int Q_strlen( const char *string );
+#else
+#include "crtlib_inline.h"
+#endif
 #define copystring( s ) _copystring( host.mempool, s, __FILE__, __LINE__ )
 char *_copystring( byte *mempool, const char *s, const char *filename, int fileline );
 qboolean Q_isdigit( const char *str );
+#ifndef XASH_SKIPCRTLIB
 int Q_atoi( const char *str );
 float Q_atof( const char *str );
+#else
+#define Q_atoi atoi
+#define Q_atof atof
+#endif
 void Q_atov( float *vec, const char *str, size_t siz );
+#ifndef XASH_SKIPCRTLIB
+#ifndef XASH_FORCEINLINE
 char *Q_strchr( const char *s, char c );
 char *Q_strrchr( const char *s, char c );
-#define Q_stricmp( s1, s2 ) Q_strnicmp( s1, s2, 99999 )
 int Q_strnicmp( const char *s1, const char *s2, int n );
-#define Q_strcmp( s1, s2 ) Q_strncmp( s1, s2, 99999 )
 int Q_strncmp( const char *s1, const char *s2, int n );
+#endif
+#define Q_strcmp( s1, s2 ) Q_strncmp( s1, s2, 99999 )
+#define Q_stricmp( s1, s2 ) Q_strnicmp( s1, s2, 99999 )
+#else
+static inline char *Q_strchr( const char *s, char c )
+{
+	if( !s )
+		return NULL;
+	return strchr( s, c );
+}
+static inline char *Q_strrchr( const char *s, char c )
+{
+	if( !s )
+		return NULL;
+	return strrchr( s, c );
+}
+static inline int Q_stricmp( const char *s1, const char *s2 )
+{
+	if( s1 == NULL )
+	{
+		if( s2 == NULL )
+			return 0;
+		else return -1;
+	}
+	else if( s2 == NULL )
+	{
+		return 1;
+	}
+	return strcasecmp( s1, s2 );
+}
+static inline int Q_strnicmp( const char *s1, const char *s2, int n )
+{
+	if( s1 == NULL )
+	{
+		if( s2 == NULL )
+			return 0;
+		else return -1;
+	}
+	else if( s2 == NULL )
+	{
+		return 1;
+	}
+	return strncasecmp( s1, s2, n );
+}
+static inline int Q_strcmp( const char *s1, const char *s2 )
+{
+	if( s1 == NULL )
+	{
+		if( s2 == NULL )
+			return 0;
+		else return -1;
+	}
+	else if( s2 == NULL )
+	{
+		return 1;
+	}
+	return strcmp( s1, s2 );
+}
+static inline int Q_strncmp( const char *s1, const char *s2, int n )
+{
+	if( s1 == NULL )
+	{
+		if( s2 == NULL )
+			return 0;
+		else return -1;
+	}
+	else if( s2 == NULL )
+	{
+		return 1;
+	}
+	return strncmp( s1, s2, n );
+}
+#endif
 qboolean Q_stricmpext( const char *s1, const char *s2 );
 const char *Q_timestamp( int format );
+#ifndef XASH_SKIPCRTLIB
 char *Q_stristr( const char *string, const char *string2 );
 char *Q_strstr( const char *string, const char *string2 );
 #define Q_vsprintf( buffer, format, args ) Q_vsnprintf( buffer, 99999, format, args )
 int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list args );
-int Q_snprintf( char *buffer, size_t buffersize, const char *format, ... );
-int Q_sprintf( char *buffer, const char *format, ... );
+int Q_snprintf( char *buffer, size_t buffersize, const char *format, ... ) _format(3);
+int Q_sprintf( char *buffer, const char *format, ... ) _format(2);
+#else
+#define Q_stristr strcasestr
+#define Q_strstr strstr
+#define Q_vsprintf vsprintf
+#define Q_vsnprintf vsnprintf
+#define Q_snprintf snprintf
+#define Q_sprintf sprintf
+#endif
 #define Q_memprint( val ) Q_pretifymem( val, 2 )
 char *Q_pretifymem( float value, int digitsafterdecimal );
-char *va( const char *format, ... );
+char *va( const char *format, ... ) _format(1);
+#ifndef XASH_SKIPCRTLIB
 #define Q_memcpy( dest, src, size ) _Q_memcpy( dest, src, size, __FILE__, __LINE__ )
 #define Q_memset( dest, val, size ) _Q_memset( dest, val, size, __FILE__, __LINE__ )
 #define Q_memcmp( src0, src1, siz ) _Q_memcmp( src0, src1, siz, __FILE__, __LINE__ )
 #define Q_memmove( dest, src, size ) _Q_memmove( dest, src, size, __FILE__, __LINE__ )
+#else
+#define Q_memcpy memcpy
+#define Q_memset memset
+#define Q_memcmp memcmp
+#define Q_memmove memmove
+#endif
 void _Q_memset( void *dest, int set, size_t count, const char *filename, int fileline );
 void _Q_memcpy( void *dest, const void *src, size_t count, const char *filename, int fileline );
 int _Q_memcmp( const void *src0, const void *src1, size_t count, const char *filename, int fileline );

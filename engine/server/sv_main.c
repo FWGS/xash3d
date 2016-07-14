@@ -60,7 +60,6 @@ convar_t	*sv_allow_upload;
 convar_t	*sv_allow_download;
 convar_t	*sv_allow_fragment;
 convar_t	*sv_downloadurl;
-convar_t	*sv_fakegamedir;
 convar_t	*sv_clientclean;
 convar_t	*sv_allow_studio_attachment_angles;
 convar_t	*sv_allow_rotate_pushables;
@@ -338,21 +337,36 @@ SV_ReadPackets
 void SV_ReadPackets( void )
 {
 	sv_client_t	*cl;
-	int		i, qport, curSize;
+	int		i, qport;
+	size_t curSize;
 
-	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, (size_t *)&curSize ))
+	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, &curSize ))
 	{
 		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
+		if( !svs.initialized )
+		{
+			// check for rcon here
+			if( BF_GetMaxBytes( &net_message ) >= 4 && *(int *)net_message.pData == -1 )
+			{
+				char *args, *c;
+				BF_Clear( &net_message  );
+				BF_ReadLong( &net_message  );// skip the -1 marker
 
+				args = BF_ReadStringLine( &net_message  );
+				Cmd_TokenizeString( args );
+				c = Cmd_Argv( 0 );
+
+				if( !Q_strcmp( c, "rcon" ))
+					SV_RemoteCommand( net_from, &net_message );
+			}
+			continue;
+		}
 		// check for connectionless packet (0xffffffff) first
 		if( BF_GetMaxBytes( &net_message ) >= 4 && *(int *)net_message.pData == -1 )
 		{
 			SV_ConnectionlessPacket( net_from, &net_message );
 			continue;
 		}
-
-		if( !svs.initialized )
-			continue;
 
 		// read the qport out of the message so we can fix up
 		// stupid address translating routers
@@ -702,6 +716,63 @@ void Master_Shutdown( void )
 	NET_SendPacket( NS_SERVER, 2, "\x62\x0A", adr );
 }
 
+/*
+=================
+SV_AddToMaster
+
+A server info answer to master server.
+Master will validate challenge and this server to public list
+=================
+*/
+void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
+{
+	uint challenge;
+	char s[MAX_INFO_STRING] = "0\n"; // skip 2 bytes of header
+	int clients = 0, bots = 0, index;
+
+	if( svs.clients )
+	{
+		for( index = 0; index < sv_maxclients->integer; index++ )
+		{
+			if( svs.clients[index].state >= cs_connected )
+			{
+				if( svs.clients[index].fakeclient )
+					bots++;
+				else clients++;
+			}
+		}
+	}
+
+	challenge = BF_ReadUBitLong( msg, sizeof( uint ) << 3 );
+
+	Info_SetValueForKey(s, "protocol",  va( "%d", PROTOCOL_VERSION ) ); // protocol version
+	Info_SetValueForKey(s, "challenge", va( "%u", challenge ) ); // challenge number
+	Info_SetValueForKey(s, "players",   va( "%d", clients ) ); // current player number, without bots
+	Info_SetValueForKey(s, "max",       sv_maxclients->string ); // max_players
+	Info_SetValueForKey(s, "bots",      va( "%d", bots ) ); // bot count
+	Info_SetValueForKey(s, "gamedir",   GI->gamedir ); // gamedir
+	Info_SetValueForKey(s, "map",       sv.name ); // current map
+	if( Host_IsDedicated() )
+		Info_SetValueForKey(s, "type",  "d" ); // dedicated
+	else
+		Info_SetValueForKey(s, "type",  "l" ); // local
+	Info_SetValueForKey(s, "password",  "0" ); // is password set
+
+#ifdef _WIN32
+	Info_SetValueForKey(s, "os",        "w" ); // Windows
+#else
+	Info_SetValueForKey(s, "os",        "l" ); // Linux
+#endif
+
+	Info_SetValueForKey(s, "secure",    "0" ); // server anti-cheat
+	Info_SetValueForKey(s, "lan",       "0" ); // LAN servers doesn't send info to master
+	Info_SetValueForKey(s, "version",   XASH_VERSION ); // server region. 255 -- all regions
+	Info_SetValueForKey(s, "region",    "255" ); // server region. 255 -- all regions
+	Info_SetValueForKey(s, "product",   GI->gamefolder ); // product? Where is the difference with gamedir?
+
+	NET_SendPacket( NS_SERVER, Q_strlen( s ), s, from );
+}
+
 //============================================================================
 
 /*
@@ -806,7 +877,6 @@ void SV_Init( void )
 	sv_allow_download = Cvar_Get( "sv_allow_download", "0", CVAR_ARCHIVE, "allow clients to download missing resources" );
 	sv_allow_fragment = Cvar_Get( "sv_allow_fragment", "0", CVAR_ARCHIVE, "allow direct download from server" );
 	sv_downloadurl = Cvar_Get( "sv_downloadurl", "", CVAR_ARCHIVE, "custom fastdl server to pass to client" );
-	sv_fakegamedir = Cvar_Get( "sv_fakegamedir", "", 0, "fake gamedir value in server info to show server in list" );
 	sv_clientclean = Cvar_Get( "sv_clientclean", "0", CVAR_ARCHIVE, "client cleaning mode (0-3), useful for bots" );
 	sv_send_logos = Cvar_Get( "sv_send_logos", "1", 0, "send custom player decals to other clients" );
 	sv_send_resources = Cvar_Get( "sv_send_resources", "1", 0, "send generic resources that are specified in 'mapname.res'" );
@@ -885,13 +955,16 @@ before Sys_Quit or Sys_Error
 void SV_Shutdown( qboolean reconnect )
 {
 	// already freed
-	if( !SV_Active( ))
+	if( !SV_Active( )) // library may be loaded
+	{
+		SV_UnloadProgs();
 		return;
+	}
 
 	// rcon will be disconnected
 	SV_EndRedirect();
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		MsgDev( D_INFO, "SV_Shutdown: %s\n", host.finalmsg );
 
 	if( svs.clients )

@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "mobility_int.h"
@@ -23,7 +25,9 @@ GNU General Public License for more details.
 #if defined(__ANDROID__)
 
 //#include "platform/android/android-gameif.h"
+#ifdef XASH_SDL
 #include "SDL_system.h"
+#endif
 #endif
 
 // we don't have our controls at this time
@@ -66,18 +70,19 @@ static void Vibrate_f()
 
 static void pfnEnableTextInput( int enable )
 {
-#if defined(XASH_SDL)
-	SDLash_EnableTextInput(enable);
-#endif
+	Key_EnableTextInput( enable, false );
 }
 
 static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b, float scale )
 {
-	int width  = clgame.scrInfo.charWidths[number] * scale;
-	int height = clgame.scrInfo.iCharHeight        * scale;
+	int width  = clgame.scrInfo.charWidths[number] * scale * hud_scale->value;
+	int height = clgame.scrInfo.iCharHeight        * scale * hud_scale->value;
 
 	if( !cls.creditsFont.valid )
 		return 0;
+
+	x *= hud_scale->value;
+	y *= hud_scale->value;
 
 	number &= 255;
 	number = Con_UtfProcessChar( number );
@@ -91,7 +96,7 @@ static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b
 	pfnPIC_Set( cls.creditsFont.hFontTexture, r, g, b, 255 );
 	pfnPIC_DrawAdditive( x, y, width, height, &cls.creditsFont.fontRc[number] );
 
-	return clgame.scrInfo.charWidths[number];
+	return width;
 }
 
 static mobile_engfuncs_t gpMobileEngfuncs =
@@ -101,11 +106,12 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	pfnEnableTextInput,
 	IN_TouchAddClientButton,
 	IN_TouchAddDefaultButton,
-	IN_TouchHideButtons,
+	(void*)IN_TouchHideButtons,
 	IN_TouchRemoveButton,
-	IN_TouchSetClientOnly,
+	(void*)IN_TouchSetClientOnly,
 	IN_TouchResetDefaultButtons,
-	pfnDrawScaledCharacter
+	pfnDrawScaledCharacter,
+	Sys_Warn
 };
 
 void Mobile_Init( void )
@@ -133,3 +139,4 @@ void Mobile_Destroy( void )
 {
 	Cmd_RemoveCommand( "vibrate" );
 }
+#endif // XASH_DEDICATED

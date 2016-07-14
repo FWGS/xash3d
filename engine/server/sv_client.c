@@ -162,7 +162,7 @@ void SV_DirectConnect( netadr_t from )
 			return;
 		}
 
-		MsgDev( D_NOTE, "Client %i connecting with challenge %p\n", i, challenge );
+		MsgDev( D_NOTE, "Client %i connecting with challenge %x\n", i, challenge );
 		svs.challenges[i].connected = true;
 	}
 
@@ -294,6 +294,7 @@ gotnewcl:
 	newcl->lastconnect = host.realtime;
 	newcl->next_messagetime = host.realtime + newcl->cl_updaterate;
 	newcl->delta_sequence = -1;
+	newcl->resources_sent = 1;
 
 	// if this was the first client on the server, or the last client
 	// the server can hold, send a heartbeat to the master.
@@ -410,7 +411,7 @@ edict_t *SV_FakeConnect( const char *netname )
 	// parse some info from the info strings
 	SV_UserinfoChanged( newcl, userinfo );
 
-	MsgDev( D_NOTE, "Bot %i connecting with challenge %p\n", i, -1 );
+	MsgDev( D_NOTE, "Bot %i connecting with challenge %x\n", i, -1 );
 
 	ent->v.flags |= FL_FAKECLIENT;	// mark it as fakeclient
 	newcl->state = cs_spawned;
@@ -593,7 +594,7 @@ char *SV_StatusString( void )
 		cl = &svs.clients[i];
 		if( cl->state == cs_connected || cl->state == cs_spawned )
 		{
-			Q_sprintf( player, "%i %i \"%s\"\n", (int)cl->edict->v.frags, cl->ping, cl->name );
+			Q_sprintf( player, "%i %i \"%s\"\n", (int)cl->edict->v.frags, (int)cl->ping, cl->name );
 			playerLength = Q_strlen( player );
 			if( statusLength + playerLength >= sizeof( status ))
 				break; // can't hold any more
@@ -627,7 +628,7 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 	if( cl->authentication_method == 0 )
 	{
 		// probably some old compatibility code.
-		Q_snprintf( result, sizeof( result ), "%010lu", cl->WonID );
+		Q_snprintf( result, sizeof( result ), "%010lu", (unsigned long)cl->WonID );
 	}
 	else if( cl->authentication_method == 2 )
 	{
@@ -641,7 +642,7 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 		}
 		else
 		{
-			Q_snprintf( result, sizeof( result ), "VALVE_%010lu", cl->WonID );
+			Q_snprintf( result, sizeof( result ), "VALVE_%010lu", (unsigned long)cl->WonID );
 		}
 	}
 	else Q_strncpy( result, "UNKNOWN", sizeof( result ));
@@ -694,9 +695,6 @@ void SV_Info( netadr_t from )
 	version = Q_atoi( Cmd_Argv( 1 ));
 	string[0] = '\0';
 
-	if( *sv_fakegamedir->string )
-		gamedir = sv_fakegamedir->string;
-
 	if( version != PROTOCOL_VERSION )
 	{
 		Q_snprintf( string, sizeof( string ), "%s: wrong version\n", hostname->string );
@@ -709,9 +707,9 @@ void SV_Info( netadr_t from )
 
 		Info_SetValueForKey( string, "host", hostname->string );
 		Info_SetValueForKey( string, "map", sv.name );
-		Info_SetValueForKey( string, "dm", va( "%i", svgame.globals->deathmatch ));
-		Info_SetValueForKey( string, "team", va( "%i", svgame.globals->teamplay ));
-		Info_SetValueForKey( string, "coop", va( "%i", svgame.globals->coop ));
+		Info_SetValueForKey( string, "dm", va( "%i", (int)svgame.globals->deathmatch ));
+		Info_SetValueForKey( string, "team", va( "%i", (int)svgame.globals->teamplay ));
+		Info_SetValueForKey( string, "coop", va( "%i", (int)svgame.globals->coop ));
 		Info_SetValueForKey( string, "numcl", va( "%i", count ));
 		Info_SetValueForKey( string, "maxcl", va( "%i", sv_maxclients->integer ));
 		Info_SetValueForKey( string, "gamedir", gamedir );
@@ -765,7 +763,7 @@ void SV_BuildNetAnswer( netadr_t from )
 			{
 				edict_t *ed = svs.clients[i].edict;
 				float time = host.realtime - svs.clients[i].lastconnect;
-				Q_strncat( string, va( "%c\\%s\\%i\\%f\\", count, svs.clients[i].name, ed->v.frags, time ), sizeof( string )); 
+				Q_strncat( string, va( "%c\\%s\\%i\\%f\\", count, svs.clients[i].name, (int)ed->v.frags, time ), sizeof( string ));
 				count++;
 			}
 		}
@@ -1106,6 +1104,13 @@ void SV_PutClientInServer( edict_t *ent )
 			ent->v.flags |= (FL_GODMODE|FL_NOTARGET);
 
 		client->pViewEntity = NULL; // reset pViewEntity
+
+		if( svgame.globals->cdAudioTrack )
+		{
+			BF_WriteByte( &client->netchan.message, svc_stufftext );
+			BF_WriteString( &client->netchan.message, va( "cd loop %3d\n", svgame.globals->cdAudioTrack ));
+			svgame.globals->cdAudioTrack = 0;
+		}
 	}
 	else
 	{
@@ -1227,16 +1232,6 @@ void SV_New_f( sv_client_t *cl )
 	// refresh userinfo on spawn
 	SV_RefreshUserinfo();
 
-	if( svgame.globals->cdAudioTrack )
-	{
-		BF_WriteByte( &cl->netchan.message, svc_stufftext );
-		BF_WriteString( &cl->netchan.message, va( "cd loop %d\n", svgame.globals->cdAudioTrack ));
-		svgame.globals->cdAudioTrack = 0;
-	}
-
-	cl->resources_sent = 1;
-	cl->resources_count = 1;
-
 	// game server
 	if( sv.state == ss_active )
 	{
@@ -1320,6 +1315,18 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	char mapresfilename[256];
 	char token[256];
 	char *pfile;
+
+	// transfer fastdl servers list
+	if( *sv_downloadurl->string )
+	{
+		char *data = sv_downloadurl->string;
+		char token[256];
+		while( ( data = COM_ParseFile( data, token ) ) )
+		{
+			BF_WriteByte( &cl->netchan.message, svc_stufftext );
+			BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", token ));
+		}
+	}
 
 	reslist.restype[rescount] = t_world; // terminator
 	Q_strcpy( reslist.resnames[rescount], "NULL" );
@@ -2221,18 +2228,18 @@ void SV_EntList_f( sv_client_t *cl )
 }
 
 
-edict_t *SV_EntFindSingle( sv_client_t *cl )
+edict_t *SV_EntFindSingle( sv_client_t *cl, const char *pattern )
 {
 	edict_t	*ent = NULL;
 	int	i = 0;
-	if( Q_isdigit( Cmd_Argv( 1 ) ) )
+	if( Q_isdigit( pattern ) )
 	{
-		i = Q_atoi( Cmd_Argv( 1 ) );
+		i = Q_atoi( pattern );
 
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return NULL;
 	}
-	else if( !Q_stricmp( Cmd_Argv( 1 ), "!cross" ) )
+	else if( !Q_stricmp( pattern, "!cross" ) )
 	{
 		ent = SV_GetCrossEnt( cl->edict );
 		if( !SV_IsValidEdict( ent ) )
@@ -2241,21 +2248,21 @@ edict_t *SV_EntFindSingle( sv_client_t *cl )
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return NULL;
 	}
-	else if( Cmd_Argv( 1 )[0] == '!' ) // Check for correct instanse with !(num)_(serial)
+	else if( pattern[0] == '!' ) // Check for correct instanse with !(num)_(serial)
 	{
-		char *cmd = Cmd_Argv( 1 ) + 1;
-		i = Q_atoi( cmd );
+		const char *p = pattern + 1;
+		i = Q_atoi( p );
 
-		while( isdigit(*cmd) ) cmd++;
+		while( isdigit(*p) ) p++;
 
-		if( *cmd++ != '_' )
+		if( *p++ != '_' )
 			return NULL;
 
 		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return NULL;
 
 		ent = EDICT_NUM( i );
-		if( ent->serialnumber != Q_atoi( cmd ) )
+		if( ent->serialnumber != Q_atoi( p ) )
 			return NULL;
 	}
 	else
@@ -2263,11 +2270,15 @@ edict_t *SV_EntFindSingle( sv_client_t *cl )
 		for( i = svgame.globals->maxClients + 1; i < svgame.numEntities; i++ )
 		{
 			ent = EDICT_NUM( i );
-			if( Q_stricmpext( Cmd_Argv( 1 ), STRING( ent->v.targetname ) ) )
+			if( !SV_IsValidEdict( ent ) )
+				continue;
+			if( Q_stricmpext( pattern, STRING( ent->v.targetname ) ) )
 				break;
 		}
 	}
 	ent = EDICT_NUM( i );
+	if( !SV_IsValidEdict( ent ) )
+		return NULL;
 	return ent;
 }
 
@@ -2293,7 +2304,7 @@ void SV_EntInfo_f( sv_client_t *cl )
 		return;
 	}
 
-	ent = SV_EntFindSingle( cl );
+	ent = SV_EntFindSingle( cl, Cmd_Argv( 1 ) );
 
 	if( !SV_IsValidEdict( ent )) return;
 
@@ -2352,8 +2363,7 @@ void SV_EntSendVars( sv_client_t *cl, edict_t *ent )
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );
 	BF_WriteString( &cl->netchan.message, va( "set ent_last_inst !%i_%i\n", NUM_FOR_EDICT( ent ), ent->serialnumber ));
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );
-	BF_WriteString( &cl->netchan.message, va( "set ent_last_origin \"%f %f %f\"\n", NUM_FOR_EDICT( ent ),
-											  ent->v.origin[0], ent->v.origin[1], ent->v.origin[2]));
+	BF_WriteString( &cl->netchan.message, va( "set ent_last_origin \"%f %f %f\"\n", ent->v.origin[0], ent->v.origin[1], ent->v.origin[2]));
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );
 	BF_WriteString( &cl->netchan.message, va( "set ent_last_class \"%s\"\n", STRING( ent->v.classname )));
 	BF_WriteByte( &cl->netchan.message, svc_stufftext );
@@ -2370,7 +2380,7 @@ void SV_EntGetVars_f( sv_client_t *cl )
 		return;
 	}
 
-	ent = SV_EntFindSingle( cl );
+	ent = SV_EntFindSingle( cl, Cmd_Argv( 1 ) );
 	if( Cmd_Argc() )
 	if( !SV_IsValidEdict( ent )) return;
 	SV_EntSendVars( cl, ent );
@@ -2496,11 +2506,25 @@ void SV_EntFire_f( sv_client_t *cl )
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "touch" ) )
 		{
-			svgame.dllFuncs.pfnTouch( ent, cl->edict );
+			if( Cmd_Argc() == 4 )
+			{
+				edict_t *other = SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+				if( other && other->pvPrivateData )
+					svgame.dllFuncs.pfnTouch( ent, other  );
+			}
+			else
+				svgame.dllFuncs.pfnTouch( ent, cl->edict );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "use" ) )
 		{
-			svgame.dllFuncs.pfnUse( ent, cl->edict );
+			if( Cmd_Argc() == 4 )
+			{
+				edict_t *other = SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+				if( other && other->pvPrivateData )
+					svgame.dllFuncs.pfnUse( ent, other );
+			}
+			else
+				svgame.dllFuncs.pfnUse( ent, cl->edict );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "movehere" ) )
 		{
@@ -2515,21 +2539,37 @@ void SV_EntFire_f( sv_client_t *cl )
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "moveup" ) )
 		{
 			float dist = 25;
-			if( Cmd_Argc() == 4 )
+			if( Cmd_Argc() >= 4 )
 				dist = Q_atof( Cmd_Argv( 3 ) );
 			ent->v.origin[2] +=  dist;
+			if( Cmd_Argc() >= 5 )
+			{
+				dist = Q_atof( Cmd_Argv( 4 ) );
+				ent->v.origin[0] += dist * cos( DEG2RAD( cl->edict->v.angles[1] ) );
+				ent->v.origin[1] += dist * sin( DEG2RAD( cl->edict->v.angles[1] ) );
+			}
+
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeowner" ) )
 		{
-			ent->v.owner = cl->edict;
+			if( Cmd_Argc() == 4 )
+				ent->v.owner = SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+			else
+				ent->v.owner = cl->edict;
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeenemy" ) )
 		{
-			ent->v.enemy = cl->edict;
+			if( Cmd_Argc() == 4 )
+				ent->v.enemy = SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+			else
+				ent->v.enemy = cl->edict;
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "becomeaiment" ) )
 		{
-			ent->v.aiment = cl->edict;
+			if( Cmd_Argc() == 4 )
+				ent->v.aiment= SV_EntFindSingle( cl, Cmd_Argv( 3 ) );
+			else
+				ent->v.aiment = cl->edict;
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "hullmin" ) )
 		{
@@ -2818,6 +2858,92 @@ void SV_ExecuteClientCommand( sv_client_t *cl, char *s )
 	}
 }
 
+void SV_TSourceEngineQuery( netadr_t from )
+{
+	// A2S_INFO
+	char answer[1024] = "";
+	sizebuf_t buf;
+	int count = 0, bots = 0, index;
+
+	if( svs.clients )
+	{
+		for( index = 0; index < sv_maxclients->integer; index++ )
+		{
+			if( svs.clients[index].state >= cs_connected )
+			{
+				if( svs.clients[index].fakeclient )
+					bots++;
+				else count++;
+			}
+		}
+	}
+
+	BF_Init( &buf, "TSourceEngineQuery", answer, sizeof( answer ));
+
+#if 0 // Source format
+	BF_WriteByte( &buf, 'I' );
+	BF_WriteByte( &buf, PROTOCOL_VERSION );
+	BF_WriteString( &buf, hostname->string );
+	BF_WriteString( &buf, sv.name );
+	BF_WriteString( &buf, GI->gamefolder );
+	BF_WriteString( &buf, GI->title );
+	BF_WriteShort( &buf, 0 ); // steam id
+	BF_WriteByte( &buf, count );
+	BF_WriteByte( &buf, sv_maxclients->integer );
+	BF_WriteByte( &buf, bots );
+	BF_WriteByte( &buf, Host_IsDedicated() ? 'd' : 'l');
+#if defined(_WIN32)
+	BF_WriteByte( &buf, 'w' );
+#elif defined(__APPLE__)
+	BF_WriteByte( &buf, 'm' );
+#else
+	BF_WriteByte( &buf, 'l' );
+#endif
+	BF_WriteByte( &buf, 0 ); // visibility
+	BF_WriteByte( &buf, 0 ); // secure
+#else // GS format
+	BF_WriteByte( &buf, 'm' );
+	BF_WriteString( &buf, NET_AdrToString( net_local ) );
+	BF_WriteString( &buf, hostname->string );
+	BF_WriteString( &buf, sv.name );
+	BF_WriteString( &buf, GI->gamefolder );
+	BF_WriteString( &buf, GI->title );
+	BF_WriteByte( &buf, count );
+	BF_WriteByte( &buf, sv_maxclients->integer );
+	BF_WriteByte( &buf, PROTOCOL_VERSION );
+	BF_WriteByte( &buf, Host_IsDedicated() ? 'D' : 'L');
+#if defined(_WIN32)
+	BF_WriteByte( &buf, 'W' );
+#else
+	BF_WriteByte( &buf, 'L' );
+#endif
+	if( Q_stricmp(GI->gamedir, "valve") )
+	{
+		BF_WriteByte( &buf, 1 ); // mod
+		BF_WriteString( &buf, GI->game_url );
+		BF_WriteString( &buf, GI->update_url );
+		BF_WriteByte( &buf, 0 );
+		BF_WriteLong( &buf, (long)GI->version );
+		BF_WriteLong( &buf, GI->size );
+		if( GI->gamemode == 2 )
+			BF_WriteByte( &buf, 1 ); // multiplayer_only
+		else
+			BF_WriteByte( &buf, 0 );
+		if( Q_strstr(SI.gamedll, "hl." ) )
+			BF_WriteByte( &buf, 0 ); // Half-Life DLL
+		else
+			BF_WriteByte( &buf, 1 ); // Own DLL
+	}
+	else
+	{
+		BF_WriteByte( &buf, 0 ); // Half-Life
+	}
+	BF_WriteByte( &buf, 0 ); // unsecure
+	BF_WriteByte( &buf, bots );
+#endif
+	NET_SendPacket( NS_SERVER, BF_GetNumBytesWritten( &buf ), BF_GetData( &buf ), from );
+}
+
 /*
 =================
 SV_ConnectionlessPacket
@@ -2833,9 +2959,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	char	*args;
 	char	*c, buf[MAX_SYSPATH];
 	int	len = sizeof( buf );
-	uint	challenge;
-	int	index, count = 0;
-	char	query[512], ostype = 'u';
 	char *gamedir = GI->gamefolder;
 
 	BF_Clear( msg );
@@ -2843,8 +2966,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 
 	args = BF_ReadStringLine( msg );
 	Cmd_TokenizeString( args );
-	if( *sv_fakegamedir->string )
-		gamedir = sv_fakegamedir->string;
 
 	c = Cmd_Argv( 0 );
 	MsgDev( D_NOTE, "SV_ConnectionlessPacket: %s : %s\n", NET_AdrToString( from ), c );
@@ -2857,117 +2978,11 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( !Q_strcmp( c, "connect" )) SV_DirectConnect( from );
 	else if( !Q_strcmp( c, "rcon" )) SV_RemoteCommand( from, msg );
 	else if( !Q_strcmp( c, "netinfo" )) SV_BuildNetAnswer( from );
-	else if( msg->pData[4] == 0x73 && msg->pData[5] == 0x0A )
-	{
-		Q_memcpy(&challenge, &msg->pData[6], sizeof(int));
-
-		if( svs.clients )
-			for( index = 0; index < sv_maxclients->integer; index++ )
-			{
-				if( svs.clients[index].state >= cs_connected )
-					count++;
-			}
-
-		#ifdef _WIN32
-		ostype = 'w';
-		#else
-		ostype = 'l';
-		#endif
-
-		Q_snprintf( query, sizeof( query ),
-		"0\n"
-		"\\protocol\\%d"			// protocol version
-		"\\challenge\\%u"			// challenge number that got after FF FF FF FF 73 0A
-		"\\players\\%d"				// current player number
-		"\\max\\%d"					// max_players
-		"\\bots\\0"					// bot number?
-		"\\gamedir\\%s"				// gamedir. _xash appended, because Xash3D is not compatible with GS in multiplayer
-		"\\map\\%s"					// current map
-		"\\type\\d"					// server type
-		"\\password\\0"				// is password set
-		"\\os\\%c"					// server OS?
-		"\\secure\\0"				// server anti-cheat? VAC?
-		"\\lan\\0"					// is LAN server?
-		"\\version\\%s"				// server version
-		"\\region\\255"				// server region
-		"\\product\\%s\n",			// product? Where is the difference with gamedir?
-		PROTOCOL_VERSION,
-		challenge,
-		count,
-		sv_maxclients->integer,
-		gamedir,
-		sv.name,
-		ostype,
-		XASH_VERSION,
-		GI->gamefolder
-		);
-
-		NET_SendPacket( NS_SERVER, Q_strlen( query ), query, from );
-	}
-	else if( !Q_strcmp( c, "T" "Source" ) ) // "Source Engine Query"
-	{
-		 // A2S_INFO
-		char answer[2048] = "";
-		byte *s = (byte *)answer;
-#if 0 // Source format
-		*s++ = 'I';
-		*s++ = PROTOCOL_VERSION;
-		s += Q_strcpy( s, hostname->string ) + 1;
-		s += Q_strcpy( s, sv.name ) + 1;
-		s += Q_strcpy( s, gamedir ) + 1;
-		s += Q_strcpy( s, gamedir ) + 1;
-		// steam id
-		*s++ = 0;
-		*s++ = 0;
-		if( svs.clients )
-			for( index = 0; index < sv_maxclients->integer; index++ )
-			{
-				if( svs.clients[index].state >= cs_connected )
-					count++;
-			}
-		*s++ = count;
-		*s++ = sv_maxclients->integer;
-		*s++ = 0; // bots
-		*s++ = host.type == HOST_DEDICATED?'d':'l';
-		#ifdef _WIN32
-		ostype = 'w';
-		#else
-		ostype = 'l';
-		#endif
-		*s++ = ostype;
-		*s++ = 0; // visibility
-		*s++ = 0; // not secured
-#else // GS format
-		*s++ = 'm';
-		s += Q_sprintf( (char *)s, "127.0.0.1:27015" ) + 1;
-
-		s += Q_strcpy( (char *)s, hostname->string ) + 1;
-		s += Q_strcpy( (char *)s, sv.name ) + 1;
-		s += Q_strcpy( (char *)s, gamedir ) + 1;
-		s += Q_strcpy( (char *)s, gamedir ) + 1;
-		if( svs.clients )
-			for( index = 0; index < sv_maxclients->integer; index++ )
-			{
-				if( svs.clients[index].state >= cs_connected )
-					count++;
-			}
-		*s++ = count;
-		*s++ = sv_maxclients->integer;
-		*s++ = PROTOCOL_VERSION;
-		*s++ = host.type == HOST_DEDICATED?'D':'L';
-		*s++ = Q_toupper( ostype );
-		*s++ = 0; // not a mod
-		*s++ = 0;  // not VAC
-		*s++ = 0; //bots
-#endif
-		NET_SendPacket( NS_SERVER, (char*)s - answer, answer, from );
-
-	}
+	else if( !Q_strcmp( c, "s")) SV_AddToMaster( from, msg );
+	else if( !Q_strcmp( c, "T" "Source" ) ) SV_TSourceEngineQuery( from );
 	else if( !Q_strcmp( c, "i" ) )
 	{
-		 // A2A_PING
-		byte answer[8];
-
+		// A2A_PING
 		NET_SendPacket( NS_SERVER, 5, "\xFF\xFF\xFF\xFFj", from );
 
 	}

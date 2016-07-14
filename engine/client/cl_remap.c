@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -78,7 +80,9 @@ byte *CL_CreateRawTextureFromPixels( texture_t *tx, size_t *size, int topcolor, 
 	// fill header
 	if( !pin.name[0] ) Q_strncpy( pin.name, "#raw_remap_image.mdl", sizeof( pin.name ));
 	pin.flags = STUDIO_NF_COLORMAP; // just in case :-)
-	pin.index = (int)(tx + 1); // pointer to pixels
+	//pin.index = (int)(tx + 1); // pointer to pixels
+	// no more pointer-to-int-to-pointer casts
+	Image_SetMDLPointer( (byte*)((texture_t *)tx + 1) );
 	pin.width = tx->width;
 	pin.height = tx->height;
 
@@ -102,7 +106,8 @@ void CL_DuplicateTexture( mstudiotexture_t *ptexture, int topcolor, int bottomco
 	gltexture_t	*glt;
 	texture_t		*tx = NULL;
 	char		texname[128];
-	int		i, size, index;
+	int		i, index;
+	size_t size;
 	byte		paletteBackup[768];
 	byte		*raw, *pal;
 
@@ -125,7 +130,7 @@ void CL_DuplicateTexture( mstudiotexture_t *ptexture, int topcolor, int bottomco
 	pal = (byte *)(tx + 1) + (tx->width * tx->height);
 	Q_memcpy( paletteBackup, pal, 768 );
 
-	raw = CL_CreateRawTextureFromPixels( tx, (size_t *)&size, topcolor, bottomcolor );
+	raw = CL_CreateRawTextureFromPixels( tx, &size, topcolor, bottomcolor );
 	ptexture->index = GL_LoadTexture( texname, raw, size, TF_FORCE_COLOR, NULL ); // do copy
 	GL_SetTextureType( ptexture->index, TEX_REMAP );
 
@@ -146,7 +151,8 @@ void CL_UpdateTexture( mstudiotexture_t *ptexture, int topcolor, int bottomcolor
 	rgbdata_t		*pic;
 	texture_t		*tx = NULL;
 	char		texname[128], name[128], mdlname[128];
-	int		i, size, index;
+	int		i, index;
+	size_t size;
 	byte		paletteBackup[768];
 	byte		*raw, *pal;
 
@@ -176,7 +182,7 @@ void CL_UpdateTexture( mstudiotexture_t *ptexture, int topcolor, int bottomcolor
 	pal = (byte *)(tx + 1) + (tx->width * tx->height);
 	Q_memcpy( paletteBackup, pal, 768 );
 
-	raw = CL_CreateRawTextureFromPixels( tx, (size_t *)&size, topcolor, bottomcolor );
+	raw = CL_CreateRawTextureFromPixels( tx, &size, topcolor, bottomcolor );
 	pic = FS_LoadImage( glt->name, raw, size );
 	if( !pic )
 	{
@@ -352,3 +358,4 @@ void CL_ClearAllRemaps( void )
 	}
 	clgame.remap_info = NULL;
 }
+#endif // XASH_DEDICATED

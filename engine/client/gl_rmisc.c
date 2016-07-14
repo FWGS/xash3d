@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -407,7 +409,7 @@ void R_ClearStaticEntities( void )
 {
 	int	i;
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		return;
 
 	// clear out efrags in case the level hasn't been reloaded
@@ -463,3 +465,4 @@ void R_NewMap( void )
 
 	GL_BuildLightmaps ();
 }
+#endif // XASH_DEDICATED

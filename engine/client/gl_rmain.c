@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -809,12 +811,12 @@ static void R_SetupFrame( void )
 	R_RunViewmodelEvents();
 
 	// sort opaque entities by model type to avoid drawing model shadows under alpha-surfaces
-	qsort( tr.solid_entities, tr.num_solid_entities, sizeof( cl_entity_t* ), R_SolidEntityCompare );
+	qsort( tr.solid_entities, tr.num_solid_entities, sizeof( cl_entity_t* ), (void*)R_SolidEntityCompare );
 
 	if( !gl_nosort->integer )
 	{
 		// sort translucents entities by rendermode and distance
-		qsort( tr.trans_entities, tr.num_trans_entities, sizeof( cl_entity_t* ), R_TransEntityCompare );
+		qsort( tr.trans_entities, tr.num_trans_entities, sizeof( cl_entity_t* ), (void*)R_TransEntityCompare );
 	}
 
 	// current viewleaf
@@ -1660,20 +1662,20 @@ static render_api_t gRenderAPI =
 	GL_TextureName,
 	GL_TextureData,
 	GL_LoadTextureNoFilter,
-	GL_CreateTexture,
+	(void*)GL_CreateTexture,
 	GL_SetTextureType,
 	GL_TextureUpdateCache,
 	GL_FreeTexture,
 	DrawSingleDecal,
 	R_DecalSetupVerts,
 	R_EntityRemoveDecals,
-	AVI_LoadVideoNoSound,
-	AVI_GetVideoInfo,
-	AVI_GetVideoFrameNumber,
-	AVI_GetVideoFrame,
+	(void*)AVI_LoadVideoNoSound,
+	(void*)AVI_GetVideoInfo,
+	(void*)AVI_GetVideoFrameNumber,
+	(void*)AVI_GetVideoFrame,
 	R_UploadStretchRaw,
-	AVI_FreeVideo,
-	AVI_IsActive,
+	(void*)AVI_FreeVideo,
+	(void*)AVI_IsActive,
 	GL_Bind,
 	GL_SelectTexture,
 	GL_LoadTexMatrixExt,
@@ -1687,7 +1689,7 @@ static render_api_t gRenderAPI =
 	NULL,
 	NULL,
 	CL_DrawParticlesExternal,
-	R_EnvShot,
+	(void*)R_EnvShot,
 	COM_CompareFileTime,
 	Host_Error,
 	pfnSPR_LoadExt,
@@ -1695,7 +1697,7 @@ static render_api_t gRenderAPI =
 	R_StudioGetTexture,
 	GL_GetOverviewParms,
 	S_FadeMusicVolume,
-	COM_SetRandomSeed,
+	(void*)COM_SetRandomSeed,
 	R_Mem_Alloc,
 	R_Mem_Free,
 	pfnGetFilesList,
@@ -1730,3 +1732,4 @@ qboolean R_InitRenderAPI( void )
 	// render interface is missed
 	return true;
 }
+#endif // XASH_DEDICATED

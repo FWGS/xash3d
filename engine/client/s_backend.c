@@ -13,8 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "port.h"
+#ifndef XASH_DEDICATED
+#ifndef XASH_OPENSL
 
+#include "port.h"
 #include "common.h"
 #include "sound.h"
 #ifdef XASH_SDL
@@ -75,23 +77,24 @@ qboolean SNDDMA_Init( void *hInst )
 	}
 
 	Q_memset(&desired, 0, sizeof(desired));
-	switch (s_khz->integer) {
-	case 48:
-		desired.freq = 48000;
-		break;
+	switch (s_khz->integer)
+	{
 	case 44:
-		desired.freq = 44100;
+		desired.freq = SOUND_44k;
+		break;
+	case 32:
+		desired.freq = SOUND_32k;
 		break;
 	case 22:
-		desired.freq = 22050;
+		desired.freq = SOUND_22k;
 		break;
 	default:
-		desired.freq = 11025;
+		desired.freq = SOUND_11k;
 		break;
 	}
 
 	desired.format = AUDIO_S16LSB;
-	desired.samples = 512;
+	desired.samples = 1024;
 	desired.channels = 2;
 	desired.callback = SDL_SoundCallback;
 	ret = SDL_OpenAudio(&desired, &obtained);
@@ -248,3 +251,5 @@ void S_PrintDeviceName( void )
 	Msg( "Audio: SDL (driver: %s)\n", SDL_GetCurrentAudioDriver() );
 #endif
 }
+#endif
+#endif // XASH_DEDICATED

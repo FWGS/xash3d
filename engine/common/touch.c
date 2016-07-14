@@ -13,6 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
 #include "common.h"
 #include "gl_local.h"
 #include "input.h"
@@ -1269,9 +1270,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		// Hack for keyboard, hope it help
 		if( cls.key_dest == key_console || cls.key_dest == key_message ) 
 		{
-#ifdef XASH_SDL
-			SDL_StartTextInput();
-#endif
+			Key_EnableTextInput( true, true );
 			if( cls.key_dest == key_console )
 			{
 				static float y = 0;
@@ -1376,7 +1375,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				if( button->type == touch_command )
 				{
 					char command[256];
-					Q_snprintf( command, 256, "%s\n", button->command, 256 );
+					Q_snprintf( command, 256, "%s\n", button->command );
 					if( B(flags) & TOUCH_FL_PRECISION )
 						touch.precision = true;
 					Cbuf_AddText( command );
@@ -1449,7 +1448,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				if( ( button->type == touch_command ) && ( button->command[0] == '+' ) )
 				{
 					char command[256];
-					Q_snprintf( command, 256, "%s\n", button->command, 256 );
+					Q_snprintf( command, 256, "%s\n", button->command );
 					command[0] = '-';
 					Cbuf_AddText( command );
 					if( B(flags) & TOUCH_FL_PRECISION )
@@ -1544,3 +1543,4 @@ void IN_TouchShutdown( void )
 	touch.initialized = false;
 	Mem_FreePool( &touch.mempool );
 }
+#endif
