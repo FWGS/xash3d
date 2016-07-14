@@ -1,4 +1,4 @@
-CC ?= gcc
+CC ?= gcc -pipe
 CXX ?= g++
 #CFGAGS = -O0 -ggdb
 CFLAGS = -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -mssse3 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=core2

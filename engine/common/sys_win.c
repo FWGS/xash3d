@@ -143,8 +143,10 @@ void Sys_Sleep( int msec )
 	msec = bound( 1, msec, 1000 );
 #ifdef XASH_SDL
 	SDL_Delay( msec );
+#elif defined _WIN32
+	Sleep( msec );
 #else
-	usleep(msec * 1000);
+	usleep( msec * 1000 );
 #endif
 }
 
@@ -490,6 +492,10 @@ Crash handler, called from system
 #include <winnt.h>
 #include <dbghelp.h>
 #include <psapi.h>
+
+#ifndef XASH_SDL
+typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+#endif
 
 int ModuleName( HANDLE process, char *name, void *address, int len )
 {
