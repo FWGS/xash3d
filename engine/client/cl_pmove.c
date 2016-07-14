@@ -1245,10 +1245,10 @@ void CL_PredictMovement( void )
 
 		if( to->client.flags & FL_ONGROUND )
 		{
+			cl_entity_t *ent = CL_GetEntityByIndex( cl.predicted.lastground );
+			
 			cl.predicted.onground = cl.predicted.lastground;
 			cl.predicted.moving = 0;
-
-			cl_entity_t *ent = CL_GetEntityByIndex( cl.predicted.lastground );
 
 			if( ent )
 			{
