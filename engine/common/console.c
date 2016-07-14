@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_DEDICATED
 #include "common.h"
 #include "client.h"
 #include "keydefs.h"
@@ -37,7 +37,6 @@ static qboolean g_utf8 = false;
 #define COLOR_DEFAULT	'7'
 #define CON_HISTORY		64
 #define MAX_DBG_NOTIFY	128
-#define CON_MAXCMDS		4096	// auto-complete intermediate list
 #define CON_NUMFONTS	3	// maxfonts
 
 #define CON_TEXTSIZE	131072	// 128 kb buffer
@@ -54,14 +53,6 @@ rgba_t g_color_table[8] =
 {255,   0, 255, 255},	// magenta
 {240, 180,  24, 255},	// default color (can be changed by user)
 };
-
-typedef struct
-{
-	string		buffer;
-	int		cursor;
-	int		scroll;
-	int		widthInChars;
-} field_t;
 
 typedef struct
 {
@@ -111,13 +102,6 @@ typedef struct
 
 	notify_t		notify[MAX_DBG_NOTIFY]; // for Con_NXPrintf
 	qboolean		draw_notify;	// true if we have NXPrint message
-
-	// console auto-complete
-	string		shortestMatch;
-	field_t		*completionField;	// con.input or dedicated server fake field-line
-	char		*completionString;
-	char		*cmds[CON_MAXCMDS];
-	int		matchCount;
 } console_t;
 
 static console_t		con;
@@ -204,17 +188,7 @@ void Con_ClearTyping( void )
 	Con_ClearField( &con.input );
 	con.input.widthInChars = con.linewidth;
 
-	// free the old autocomplete list
-	for( i = 0; i < con.matchCount; i++ )
-	{
-		if( con.cmds[i] != NULL )
-		{
-			Mem_Free( con.cmds[i] );
-			con.cmds[i] = NULL;
-		}
-	}
-
-	con.matchCount = 0;
+	Con_ClearAutoComplete();
 }
 
 /*
@@ -848,10 +822,7 @@ void Con_Init( void )
 		con.historyLines[i].widthInChars = con.linewidth;
 	}
 
-	for( i = 0; i < con.matchCount; i++ )
-	{
-			con.cmds[i] = NULL;
-	}
+	Con_ClearAutoComplete();
 
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f, "opens or closes the console" );
 	Cmd_AddCommand( "con_color", Con_SetColor_f, "set a custom console color" );
@@ -901,7 +872,7 @@ void Con_Print( const char *txt )
 	int	y, c, l, color;
 
 	// client not running
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
           if( !con.initialized ) return;
 	
 	color = ColorIndex( COLOR_DEFAULT );
@@ -1069,219 +1040,6 @@ EDIT FIELDS
 
 =============================================================================
 */
-/*
-===============
-Cmd_CheckName
-
-compare first argument with string
-===============
-*/
-static qboolean Cmd_CheckName( const char *name )
-{
-	if( !Q_stricmp( Cmd_Argv( 0 ), name ))
-		return true;
-	if( !Q_stricmp( Cmd_Argv( 0 ), va( "\\%s", name )))
-		return true;
-	return false;
-}
-
-/*
-===============
-Con_AddCommandToList
-
-===============
-*/
-static void Con_AddCommandToList( const char *s, const char *unused1, const char *unused2, void *unused3 )
-{
-	if( *s == '@' ) return; // never show system cvars or cmds
-	if( con.matchCount >= CON_MAXCMDS ) return; // list is full
-
-	if( Q_strnicmp( s, con.completionString, Q_strlen( con.completionString )))
-		return; // no match
-
-	con.cmds[con.matchCount++] = copystring( s );
-}
-
-/*
-=================
-Con_SortCmds
-=================
-*/
-static int Con_SortCmds( const char **arg1, const char **arg2 )
-{
-	return Q_stricmp( *arg1, *arg2 );
-}
-
-/*
-===============
-pfnPrintMatches
-===============
-*/
-static void Con_PrintMatches( const char *s, const char *unused1, const char *m, void *unused2 )
-{
-	if( !Q_strnicmp( s, con.shortestMatch, Q_strlen( con.shortestMatch )))
-	{
-		if( m && *m ) Msg( "    %s ^3\"%s\"\n", s, m );
-		else Msg( "    %s\n", s ); // variable or command without description
-	}
-}
-
-static void ConcatRemaining( const char *src, const char *start )
-{
-	char	*arg;
-	int	i;
-
-	arg = Q_strstr( src, start );
-
-	if( !arg )
-	{
-		for( i = 1; i < Cmd_Argc(); i++ )
-		{
-			Q_strncat( con.completionField->buffer, " ", sizeof( con.completionField->buffer ));
-			arg = Cmd_Argv( i );
-			while( *arg )
-			{
-				if( *arg == ' ' )
-				{
-					Q_strncat( con.completionField->buffer, "\"", sizeof( con.completionField->buffer ));
-					break;
-				}
-				arg++;
-			}
-
-			Q_strncat( con.completionField->buffer, Cmd_Argv( i ), sizeof( con.completionField->buffer ));
-			if( *arg == ' ' ) Q_strncat( con.completionField->buffer, "\"", sizeof( con.completionField->buffer ));
-		}
-		return;
-	}
-
-	arg += Q_strlen( start );
-	Q_strncat( con.completionField->buffer, arg, sizeof( con.completionField->buffer ));
-}
-
-/*
-===============
-Con_CompleteCommand
-
-perform Tab expansion
-===============
-*/
-void Con_CompleteCommand( field_t *field )
-{
-	field_t		temp;
-	string		filename;
-	autocomplete_list_t	*list;
-	int		i;
-	qboolean nextcmd;
-
-	// setup the completion field
-	con.completionField = field;
-
-	// only look at the first token for completion purposes
-	Cmd_TokenizeString( con.completionField->buffer );
-	
-	nextcmd = con.completionField->buffer[ Q_strlen( con.completionField->buffer ) - 1 ] == ' ';
-
-	con.completionString = Cmd_Argv( 0 );
-
-	// skip backslash
-	while( *con.completionString && ( *con.completionString == '\\' || *con.completionString == '/' ))
-		con.completionString++;
-
-	if( !Q_strlen( con.completionString ))
-		return;
-
-	// free the old autocomplete list
-	for( i = 0; i < con.matchCount; i++ )
-	{
-		if( con.cmds[i] != NULL )
-		{
-			Mem_Free( con.cmds[i] );
-			con.cmds[i] = NULL;
-		}
-	}
-
-	con.matchCount = 0;
-	con.shortestMatch[0] = 0;
-
-	// find matching commands and variables
-	Cmd_LookupCmds( NULL, NULL, (void*)Con_AddCommandToList );
-	Cvar_LookupVars( 0, NULL, NULL, (void*)Con_AddCommandToList );
-
-	if( !con.matchCount ) return; // no matches
-
-	Q_memcpy( &temp, con.completionField, sizeof( field_t ));
-
-	if( ( Cmd_Argc() == 2 ) || ( ( Cmd_Argc() == 1 ) && nextcmd ))
-	{
-		qboolean	result = false;
-
-		// autocomplete second arg
-		for( list = cmd_list; list->name; list++ )
-		{
-			if( Cmd_CheckName( list->name ))
-			{
-				result = list->func( Cmd_Argv( 1 ), filename, MAX_STRING ); 
-				break;
-			}
-		}
-
-		if( result )
-		{         
-			Q_sprintf( con.completionField->buffer, "%s %s", Cmd_Argv( 0 ), filename ); 
-			con.completionField->cursor = Q_strlen( con.completionField->buffer );
-		}
-
-		// don't adjusting cursor pos if we nothing found
-		return;
-	}  
-	else if( Cmd_Argc() >= 3 )
-	{
-		// disable autocomplete for all next args
-		return;
-	}
-
-	if( con.matchCount == 1 )
-	{
-		Q_sprintf( con.completionField->buffer, "\\%s", con.cmds[0] );
-		if( Cmd_Argc() == 1 ) Q_strncat( con.completionField->buffer, " ", sizeof( con.completionField->buffer ));
-		else ConcatRemaining( temp.buffer, con.completionString );
-		con.completionField->cursor = Q_strlen( con.completionField->buffer );
-	}
-	else
-	{
-		char	*first, *last;
-		int	len = 0;
-
-		qsort( con.cmds, con.matchCount, sizeof( char* ), (void*)Con_SortCmds );
-
-		// find the number of matching characters between the first and
-		// the last element in the list and copy it
-		first = con.cmds[0];
-		last = con.cmds[con.matchCount-1];
-
-		while( *first && *last && Q_tolower( *first ) == Q_tolower( *last ))
-		{
-			first++;
-			last++;
-
-			con.shortestMatch[len] = con.cmds[0][len];
-			len++;
-		}
-		con.shortestMatch[len] = 0;
-
-		// multiple matches, complete to shortest
-		Q_sprintf( con.completionField->buffer, "\\%s", con.shortestMatch );
-		con.completionField->cursor = Q_strlen( con.completionField->buffer );
-		ConcatRemaining( temp.buffer, con.completionString );
-
-		Msg( "]%s\n", con.completionField->buffer );
-
-		// run through again, printing matches
-		Cmd_LookupCmds( NULL, NULL, (void*)Con_PrintMatches );
-		Cvar_LookupVars( 0, NULL, NULL, (void*)Con_PrintMatches );
-	}
-}
 
 /*
 ================
@@ -2246,32 +2004,6 @@ void Con_InvalidateFonts( void )
 	con.curFont = con.lastUsedFont = NULL;
 }
 
-/*
-=========
-Cmd_AutoComplete
-
-NOTE: input string must be equal or longer than MAX_STRING
-=========
-*/
-void Cmd_AutoComplete( char *complete_string )
-{
-	field_t	input;
-
-	if( !complete_string || !*complete_string )
-		return;
-
-	// setup input
-	Q_strncpy( input.buffer, complete_string, sizeof( input.buffer ));
-	input.cursor = input.scroll = 0;
-
-	Con_CompleteCommand( &input );
-
-	// setup output
-	if( input.buffer[0] == '\\' || input.buffer[0] == '/' )
-		Q_strncpy( complete_string, input.buffer + 1, sizeof( input.buffer ));
-	else Q_strncpy( complete_string, input.buffer, sizeof( input.buffer ));
-}
-
 void Con_Close( void )
 {
 	Con_ClearField( &con.input );
@@ -2295,3 +2027,4 @@ void Con_DefaultColor( int r, int g, int b )
 	b = bound( 0, b, 255 );
 	MakeRGBA( g_color_table[7], r, g, b, 255 );
 }
+#endif

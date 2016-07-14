@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "sound.h"
@@ -938,3 +940,4 @@ void SX_Profiling_f( void )
 		CheckNewDspPresets();
 	}
 }
+#endif // XASH_DEDICATED

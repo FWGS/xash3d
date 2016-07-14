@@ -241,12 +241,14 @@ qboolean CRC32_MapFile( dword *crcvalue, const char *filename, qboolean multipla
 
 	if( !crcvalue ) return false;
 
+#ifndef XASH_DEDICATED
 	// always calc same checksum for singleplayer
 	if( multiplayer == false )
 	{
 		*crcvalue = (('H'<<24)+('S'<<16)+('A'<<8)+'X');
 		return true;
 	}
+#endif
 
 	f = FS_Open( filename, "rb", false );
 	if( !f ) return false;

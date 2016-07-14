@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "mathlib.h"
@@ -3841,7 +3843,7 @@ studiohdr_t *R_StudioLoadHeader( model_t *mod, const void *buffer )
 		return NULL;
 	}	
 
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 	{
 		ptexture = (mstudiotexture_t *)(((byte *)phdr) + phdr->textureindex);
 		if( phdr->textureindex > 0 && phdr->numtextures <= MAXSTUDIOSKINS )
@@ -4073,3 +4075,4 @@ void CL_InitStudioAPI( void )
 	// just restore pointer to builtin function
 	pStudioDraw = &gStudioDraw;
 }
+#endif // XASH_DEDICATED

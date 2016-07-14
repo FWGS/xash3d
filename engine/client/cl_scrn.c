@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -705,3 +707,4 @@ void SCR_Shutdown( void )
 	cls.creditsFont.valid = false;
 	scr_init = false;
 }
+#endif // XASH_DEDICATED

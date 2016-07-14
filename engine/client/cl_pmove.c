@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "const.h"
@@ -1297,3 +1299,4 @@ void CL_PredictMovement( void )
 	}
 	CL_CheckPredictionError();
 }
+#endif // XASH_DEDICATED

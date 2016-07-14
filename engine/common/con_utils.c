@@ -20,7 +20,18 @@ GNU General Public License for more details.
 #include "kbutton.h"
 
 extern convar_t	*con_gamemaps;
-
+#define CON_MAXCMDS		4096	// auto-complete intermediate list
+typedef struct
+{
+// console auto-complete
+string		shortestMatch;
+field_t		*completionField;	// con.input or dedicated server fake field-line
+char		*completionString;
+char		*cmds[CON_MAXCMDS];
+int		matchCount;
+}
+autocomlete_t;
+static autocomlete_t con;
 #ifdef _DEBUG
 void DBG_AssertFunction( qboolean fExpr, const char* szExpr, const char* szFile, int szLine, const char* szMessage )
 {
@@ -31,6 +42,263 @@ void DBG_AssertFunction( qboolean fExpr, const char* szExpr, const char* szFile,
 	else MsgDev( at_error, "ASSERT FAILED:\n %s \n(%s@%d)\n", szExpr, szFile, szLine );
 }
 #endif	// DEBUG
+
+
+/*
+===============
+Cmd_CheckName
+
+compare first argument with string
+===============
+*/
+static qboolean Cmd_CheckName( const char *name )
+{
+	if( !Q_stricmp( Cmd_Argv( 0 ), name ))
+		return true;
+	if( !Q_stricmp( Cmd_Argv( 0 ), va( "\\%s", name )))
+		return true;
+	return false;
+}
+
+/*
+===============
+Con_AddCommandToList
+
+===============
+*/
+static void Con_AddCommandToList( const char *s, const char *unused1, const char *unused2, void *unused3 )
+{
+	if( *s == '@' ) return; // never show system cvars or cmds
+	if( con.matchCount >= CON_MAXCMDS ) return; // list is full
+
+	if( Q_strnicmp( s, con.completionString, Q_strlen( con.completionString )))
+		return; // no match
+
+	con.cmds[con.matchCount++] = copystring( s );
+}
+
+/*
+=================
+Con_SortCmds
+=================
+*/
+static int Con_SortCmds( const char **arg1, const char **arg2 )
+{
+	return Q_stricmp( *arg1, *arg2 );
+}
+
+/*
+===============
+pfnPrintMatches
+===============
+*/
+static void Con_PrintMatches( const char *s, const char *unused1, const char *m, void *unused2 )
+{
+	if( !Q_strnicmp( s, con.shortestMatch, Q_strlen( con.shortestMatch )))
+	{
+		if( m && *m ) Msg( "    %s ^3\"%s\"\n", s, m );
+		else Msg( "    %s\n", s ); // variable or command without description
+	}
+}
+
+static void ConcatRemaining( const char *src, const char *start )
+{
+	char	*arg;
+	int	i;
+
+	arg = Q_strstr( src, start );
+
+	if( !arg )
+	{
+		for( i = 1; i < Cmd_Argc(); i++ )
+		{
+			Q_strncat( con.completionField->buffer, " ", sizeof( con.completionField->buffer ));
+			arg = Cmd_Argv( i );
+			while( *arg )
+			{
+				if( *arg == ' ' )
+				{
+					Q_strncat( con.completionField->buffer, "\"", sizeof( con.completionField->buffer ));
+					break;
+				}
+				arg++;
+			}
+
+			Q_strncat( con.completionField->buffer, Cmd_Argv( i ), sizeof( con.completionField->buffer ));
+			if( *arg == ' ' ) Q_strncat( con.completionField->buffer, "\"", sizeof( con.completionField->buffer ));
+		}
+		return;
+	}
+
+	arg += Q_strlen( start );
+	Q_strncat( con.completionField->buffer, arg, sizeof( con.completionField->buffer ));
+}
+
+/*
+===============
+Con_CompleteCommand
+
+perform Tab expansion
+===============
+*/
+void Con_CompleteCommand( field_t *field )
+{
+	field_t		temp;
+	string		filename;
+	autocomplete_list_t	*list;
+	int		i;
+	qboolean nextcmd;
+
+	// setup the completion field
+	con.completionField = field;
+
+	// only look at the first token for completion purposes
+	Cmd_TokenizeString( con.completionField->buffer );
+
+	nextcmd = con.completionField->buffer[ Q_strlen( con.completionField->buffer ) - 1 ] == ' ';
+
+	con.completionString = Cmd_Argv( 0 );
+
+	// skip backslash
+	while( *con.completionString && ( *con.completionString == '\\' || *con.completionString == '/' ))
+		con.completionString++;
+
+	if( !Q_strlen( con.completionString ))
+		return;
+
+	// free the old autocomplete list
+	for( i = 0; i < con.matchCount; i++ )
+	{
+		if( con.cmds[i] != NULL )
+		{
+			Mem_Free( con.cmds[i] );
+			con.cmds[i] = NULL;
+		}
+	}
+
+	con.matchCount = 0;
+	con.shortestMatch[0] = 0;
+
+	// find matching commands and variables
+	Cmd_LookupCmds( NULL, NULL, (void*)Con_AddCommandToList );
+	Cvar_LookupVars( 0, NULL, NULL, (void*)Con_AddCommandToList );
+
+	if( !con.matchCount ) return; // no matches
+
+	Q_memcpy( &temp, con.completionField, sizeof( field_t ));
+
+	if( ( Cmd_Argc() == 2 ) || ( ( Cmd_Argc() == 1 ) && nextcmd ))
+	{
+		qboolean	result = false;
+
+		// autocomplete second arg
+		for( list = cmd_list; list->name; list++ )
+		{
+			if( Cmd_CheckName( list->name ))
+			{
+				result = list->func( Cmd_Argv( 1 ), filename, MAX_STRING );
+				break;
+			}
+		}
+
+		if( result )
+		{
+			Q_sprintf( con.completionField->buffer, "%s %s", Cmd_Argv( 0 ), filename );
+			con.completionField->cursor = Q_strlen( con.completionField->buffer );
+		}
+
+		// don't adjusting cursor pos if we nothing found
+		return;
+	}
+	else if( Cmd_Argc() >= 3 )
+	{
+		// disable autocomplete for all next args
+		return;
+	}
+
+	if( con.matchCount == 1 )
+	{
+		Q_sprintf( con.completionField->buffer, "\\%s", con.cmds[0] );
+		if( Cmd_Argc() == 1 ) Q_strncat( con.completionField->buffer, " ", sizeof( con.completionField->buffer ));
+		else ConcatRemaining( temp.buffer, con.completionString );
+		con.completionField->cursor = Q_strlen( con.completionField->buffer );
+	}
+	else
+	{
+		char	*first, *last;
+		int	len = 0;
+
+		qsort( con.cmds, con.matchCount, sizeof( char* ), (void*)Con_SortCmds );
+
+		// find the number of matching characters between the first and
+		// the last element in the list and copy it
+		first = con.cmds[0];
+		last = con.cmds[con.matchCount-1];
+
+		while( *first && *last && Q_tolower( *first ) == Q_tolower( *last ))
+		{
+			first++;
+			last++;
+
+			con.shortestMatch[len] = con.cmds[0][len];
+			len++;
+		}
+		con.shortestMatch[len] = 0;
+
+		// multiple matches, complete to shortest
+		Q_sprintf( con.completionField->buffer, "\\%s", con.shortestMatch );
+		con.completionField->cursor = Q_strlen( con.completionField->buffer );
+		ConcatRemaining( temp.buffer, con.completionString );
+
+		Msg( "]%s\n", con.completionField->buffer );
+
+		// run through again, printing matches
+		Cmd_LookupCmds( NULL, NULL, (void*)Con_PrintMatches );
+		Cvar_LookupVars( 0, NULL, NULL, (void*)Con_PrintMatches );
+	}
+}
+/*
+=========
+Cmd_AutoComplete
+
+NOTE: input string must be equal or longer than MAX_STRING
+=========
+*/
+void Cmd_AutoComplete( char *complete_string )
+{
+	field_t	input;
+
+	if( !complete_string || !*complete_string )
+		return;
+
+	// setup input
+	Q_strncpy( input.buffer, complete_string, sizeof( input.buffer ));
+	input.cursor = input.scroll = 0;
+
+	Con_CompleteCommand( &input );
+
+	// setup output
+	if( input.buffer[0] == '\\' || input.buffer[0] == '/' )
+		Q_strncpy( complete_string, input.buffer + 1, sizeof( input.buffer ));
+	else Q_strncpy( complete_string, input.buffer, sizeof( input.buffer ));
+}
+
+void Con_ClearAutoComplete()
+{
+	int i;
+
+	// free the old autocomplete list
+	for( i = 0; i < con.matchCount; i++ )
+	{
+		if( con.cmds[i] != NULL )
+		{
+			Mem_Free( con.cmds[i] );
+			con.cmds[i] = NULL;
+		}
+	}
+
+	con.matchCount = 0;
+}
 
 /*
 =======================================================================
@@ -485,6 +753,7 @@ qboolean Cmd_GetItemsList( const char *s, char *completedname, int length )
 	string		matchbuf;
 	int		i, numitems;
 
+#ifndef XASH_DEDICATED
 	if( !clgame.itemspath[0] ) return false; // not in game yet
 	t = FS_Search( va( "%s/%s*.txt", clgame.itemspath, s ), true, false );
 	if( !t ) return false;
@@ -515,7 +784,11 @@ qboolean Cmd_GetItemsList( const char *s, char *completedname, int length )
 				completedname[i] = 0;
 		}
 	}
+
 	return true;
+#else
+	return false;
+#endif
 }
 
 /*
@@ -967,7 +1240,7 @@ void Host_WriteConfig( void )
 {
 	kbutton_t	*mlook, *jlook;
 	file_t	*f;
-
+#ifndef XASH_DEDICATED
 	// if client not loaded, client cvars will lost
 	if( !clgame.hInstance )
 	{
@@ -1019,6 +1292,8 @@ void Host_WriteConfig( void )
 	}
 	else
 		MsgDev( D_NOTE, "Keyboard configuration not changed\n" );
+	IN_TouchWriteConfig();
+#endif
 }
 
 /*
@@ -1086,7 +1361,7 @@ void Host_WriteVideoConfig( void )
 {
 	file_t	*f;
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		return;
 
 	MsgDev( D_NOTE, "Host_WriteVideoConfig()\n" );

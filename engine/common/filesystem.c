@@ -1688,7 +1688,7 @@ void FS_Init( void )
 	Cmd_AddCommand( "fs_clearpaths", FS_ClearPaths_f, "clear filesystem search paths" );
 
 	// ignore commandlineoption "-game" for other stuff
-	if( host.type == HOST_NORMAL || host.type == HOST_DEDICATED )
+	if( host.type != HOST_UNKNOWN )
 	{
 		stringlistinit( &dirs );
 		listdirectory( &dirs, "./" );
@@ -2166,12 +2166,12 @@ file_t *FS_Open( const char *filepath, const char *mode, qboolean gamedironly )
 {
 	if( !filepath )
 		return NULL;
-	if( host.type == HOST_NORMAL || host.type == HOST_DEDICATED )
-          {
+	if( host.type != HOST_UNKNOWN )
+	{
 		// some stupid mappers used leading '/' or '\' in path to models or sounds
 		if( filepath[0] == '/' || filepath[0] == '\\' ) filepath++;
 		if( filepath[0] == '/' || filepath[0] == '\\' ) filepath++;
-          }
+	}
 
 	if( FS_CheckNastyPath( filepath, false ))
 		return NULL;

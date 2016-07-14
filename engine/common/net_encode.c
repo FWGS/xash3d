@@ -1823,7 +1823,7 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	delta_info_t	*dt = NULL;
 	delta_t		*pField;
 	int		i, fRemoveType;
-
+#ifndef XASH_DEDICATED
 	if( number < 0 || number >= clgame.maxEntities )
 	{
 		// broken packet, try to skip it
@@ -1895,7 +1895,7 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	{
 		Delta_ReadField( msg, pField, from, to, timebase );
 	}
-
+#endif
 	// message parsed
 	return true;
 }

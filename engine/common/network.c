@@ -779,12 +779,12 @@ static void NET_OpenIP( void )
 		if( !port ) port = Cvar_Get( "port", va( "%i", PORT_SERVER ), CVAR_INIT, "network default port" )->integer;
 
 		ip_sockets[NS_SERVER] = NET_IPSocket( net_ip->string, port );
-		if( !ip_sockets[NS_SERVER] && host.type == HOST_DEDICATED )
+		if( !ip_sockets[NS_SERVER] && Host_IsDedicated() )
 			Host_Error( "Couldn't allocate dedicated server IP port.\nMaybe you're trying to run dedicated server twice?\n" );
 	}
 
 	// dedicated servers don't need client ports
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
 
 	if( !ip_sockets[NS_CLIENT] )
 	{
@@ -873,7 +873,7 @@ void NET_OpenIPX( void )
 	}
 
 	// dedicated servers don't need client ports
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
 
 	if( !ipx_sockets[NS_CLIENT] )
 	{
@@ -953,12 +953,12 @@ void NET_Config( qboolean multiplayer )
 	static qboolean old_config;
 	static qboolean bFirst = true;
 
-	if( old_config == multiplayer && host.type != HOST_DEDICATED )
+	if( old_config == multiplayer && !Host_IsDedicated() )
 		return;
 
 	old_config = multiplayer;
 
-	if( !multiplayer && host.type != HOST_DEDICATED )
+	if( !multiplayer && !Host_IsDedicated() )
 	{	
 		int	i;
 

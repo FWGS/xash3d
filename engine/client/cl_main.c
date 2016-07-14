@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "net_encode.h"
@@ -84,7 +86,7 @@ qboolean CL_Active( void )
 //======================================================================
 qboolean CL_IsInGame( void )
 {
-	if( host.type == HOST_DEDICATED ) return true;	// always active for dedicated servers
+	if( Host_IsDedicated() ) return true;	// always active for dedicated servers
 	if( CL_GetMaxClients() > 1 ) return true;	// always active for multiplayer
 	return ( cls.key_dest == key_game );		// active if not menu or console
 }
@@ -133,7 +135,7 @@ This is experiment. Use with precaution
 */
 qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset )
 {
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		return false;
 
 	if( Q_stricmp( host.gamefolder, gamefolder ))
@@ -934,7 +936,7 @@ void CL_Crashed( void )
 {
 	// already freed
 	if( host.state == HOST_CRASHED ) return;
-	if( host.type != HOST_NORMAL ) return;
+	if( Host_IsDedicated() ) return;
 	if( !cls.initialized ) return;
 
 	host.state = HOST_CRASHED;
@@ -1890,7 +1892,7 @@ void CL_Init( void )
 
 	Q_memset( &cls, 0, sizeof( cls ) );
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		return; // nothing running on the client
 
 	Con_Init();	
@@ -1975,3 +1977,4 @@ void CL_Shutdown( void )
 	S_Shutdown ();
 	R_Shutdown ();
 }
+#endif // XASH_DEDICATED

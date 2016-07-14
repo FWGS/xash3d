@@ -442,7 +442,6 @@ extern	convar_t		*sv_quakehulls;
 extern	convar_t		*sv_validate_changelevel;
 extern	convar_t		*sv_downloadurl;
 extern	convar_t		*sv_clientclean;
-extern	convar_t		*sv_fakegamedir;
 extern 	convar_t		*sv_skipshield; // HACK for shield
 extern	convar_t		*sv_trace_messages;
 extern	convar_t		*mp_consistency;

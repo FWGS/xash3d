@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -223,3 +225,4 @@ qboolean R_CullSurface( msurface_t *surf, uint clipflags )
 
 	return ( clipflags && R_CullBox( info->mins, info->maxs, clipflags ));
 }
+#endif // XASH_DEDICATED

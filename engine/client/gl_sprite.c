@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -217,7 +219,7 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 	buffer += sizeof(dsprite_t);
 	Q_memcpy(&numi, buffer, sizeof(short));
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		// skip frames loading
 		if( loaded ) *loaded = true;	// done
@@ -441,7 +443,7 @@ void Mod_UnloadSpriteModel( model_t *mod )
 	// release all textures
 	for( i = 0; i < psprite->numframes; i++ )
 	{
-		if( host.type == HOST_DEDICATED )
+		if( Host_IsDedicated() )
 			break; // nothing to release
 
 		if( psprite->frames[i].type == SPR_SINGLE )
@@ -1134,3 +1136,4 @@ void R_DrawSpriteModel( cl_entity_t *e )
 	if( RI.fogCustom || ( RI.fogEnabled && !glState.drawTrans ))
 		pglEnable( GL_FOG );
 }
+#endif // XASH_DEDICATED

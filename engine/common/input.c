@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_DEDICATED
 #include "port.h"
 
 #include "common.h"
@@ -227,7 +227,7 @@ void IN_EvdevFrame ()
 
 void IN_StartupMouse( void )
 {
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
 #ifdef __ANDROID__
 #define M_IGNORE "1"
 #else
@@ -614,7 +614,7 @@ void IN_Init( void )
 	cl_backspeed	= Cvar_Get( "cl_backspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default back move speed"  );
 	cl_sidespeed	= Cvar_Get( "cl_sidespeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default side move speed"  );
 #ifdef XASH_SDL
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 		IN_SDL_JoyInit();
 #endif
 #ifdef USE_EVDEV
@@ -756,10 +756,6 @@ void Host_InputFrame( void )
 	qboolean	shutdownMouse = false;
 	float forward = 0, side = 0, pitch = 0, yaw = 0;
 
-	rand (); // keep the random time dependent
-
-	Sys_SendKeyEvents ();
-
 #ifdef USE_EVDEV
 	IN_EvdevFrame();
 #endif
@@ -807,3 +803,4 @@ void Host_InputFrame( void )
 	IN_ActivateMouse( false );
 	IN_MouseMove();
 }
+#endif

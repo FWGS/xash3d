@@ -150,7 +150,7 @@ void Host_EndGame( const char *message, ... )
 		return;
 	}
 	
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		Sys_Break( "Host_EndGame: %s\n", string ); // dedicated servers exit
 
 	SV_Shutdown( false );
@@ -314,7 +314,8 @@ void Host_Minimize_f( void )
 
 qboolean Host_IsLocalGame( void )
 {
-	if( host.type != HOST_DEDICATED )
+	if( Host_IsDedicated() )
+		return false;
 	if( CL_Active() && SV_Active() && CL_GetMaxClients() == 1 )
 		return true;
 	return false;
@@ -498,11 +499,9 @@ void Host_GetConsoleCommands( void )
 {
 	char	*cmd;
 
-	//if( host.type == HOST_DEDICATED )
-	{
-		cmd = Con_Input();
-		if( cmd ) Cbuf_AddText( cmd );
-	}
+	while( ( cmd = Con_Input() ) )
+		Cbuf_AddText( cmd );
+	Cbuf_Execute();
 }
 
 /*
@@ -566,7 +565,7 @@ void Host_Autosleep( void )
 {
 	int sleeptime = host_sleeptime->value;
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		// let the dedicated server some sleep
 		Sys_Sleep( sleeptime );
@@ -608,12 +607,16 @@ void Host_Frame( float time )
 	if( !Host_FilterTime( time ))
 		return;
 
+	rand (); // keep the random time dependent
+
+	Sys_SendKeyEvents (); // call WndProc on WIN32
+
 	Host_InputFrame ();	// input frame
 
 	Host_GetConsoleCommands ();
 
 	Host_ServerFrame (); // server frame
-	if ( host.type != HOST_DEDICATED )
+	if ( !Host_IsDedicated() )
 		Host_ClientFrame (); // client frame
 
 	HTTP_Run();
@@ -898,7 +901,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	if( progname[0] == '#' ) progname++;
 	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		Sys_MergeCommandLine( );
 
@@ -1006,7 +1009,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Cvar_Get( "violence_hblood", "1", CVAR_ARCHIVE, "draw human blood" );
 	Cvar_Get( "violence_ablood", "1", CVAR_ARCHIVE, "draw alien blood" );
 
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 	{
 		// when we're in developer-mode, automatically turn cheats on
 		if( host.developer > 1 ) Cvar_SetFloat( "sv_cheats", 1.0f );
@@ -1042,6 +1045,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ));
 		// intentional fallthrough
 	case HOST_DEDICATED:
+		Cbuf_Execute(); // force stuffcmds run if it is in cbuf
 		// if stuffcmds wasn't run, then init.rc is probably missing, use default
 		if( !host.stuffcmdsrun ) Cbuf_AddText( "stuffcmds\n" );
 
@@ -1051,7 +1055,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		break;
 	}
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		char *defaultmap;
 		Con_InitConsoleCommands ();
@@ -1094,7 +1098,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Cmd_RemoveCommand( "setgl" );
 
 	// we need to execute it again here
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 		Cmd_ExecuteString( "exec config.cfg\n", src_command );
 
 	// exec all files from userconfig.d 
@@ -1106,7 +1110,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
 #endif
-#if defined(__ANDROID__) && !defined( XASH_SDL )
+#if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined(XASH_DEDICATED)
 	Android_Init();
 #endif
 
@@ -1148,18 +1152,17 @@ void EXPORT Host_Shutdown( void )
 	case HOST_INIT:
 	case HOST_CRASHED:
 	case HOST_ERR_FATAL:
-		if( host.type == HOST_NORMAL )
+		if( !Host_IsDedicated() )
 			MsgDev( D_WARN, "Not shutting down normally (%d), skipping config save!\n", host.state );
 		if( host.state != HOST_ERR_FATAL)
 			host.state = HOST_SHUTDOWN;
 		break;
 	default:
-		if( host.type == HOST_NORMAL )
+		if( !Host_IsDedicated() )
 		{
 			// restore all latched cheat cvars
 			Cvar_SetCheatState( true );
 			Host_WriteConfig();
-			IN_TouchWriteConfig();
 		}
 		host.state = HOST_SHUTDOWN; // prepare host to normal shutdown
 	}

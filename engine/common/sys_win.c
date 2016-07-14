@@ -41,6 +41,29 @@ extern char **environ;
 
 qboolean	error_on_exit = false;	// arg for exit();
 
+#if defined _WIN32 && !defined XASH_SDL
+#include <winbase.h>
+/*
+================
+Sys_DoubleTime
+================
+*/
+double Sys_DoubleTime( void )
+{
+	static LARGE_INTEGER g_PerformanceFrequency;
+	static LARGE_INTEGER g_ClockStart;
+	LARGE_INTEGER CurrentTime;
+
+	if( !g_PerformanceFrequency.QuadPart )
+	{
+		QueryPerformanceFrequency( &g_PerformanceFrequency );
+		QueryPerformanceCounter( &g_ClockStart );
+	}
+
+	QueryPerformanceCounter( &CurrentTime );
+	return (double)( CurrentTime.QuadPart - g_ClockStart.QuadPart ) / (double)( g_PerformanceFrequency.QuadPart );
+}
+#else
 /*
 ================
 Sys_DoubleTime
@@ -59,15 +82,6 @@ double Sys_DoubleTime( void )
 	}
 	CurrentTime = SDL_GetPerformanceCounter();
 	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
-#elif _WIN32
-	if( !g_PerformanceFrequency )
-	{
-		g_PerformanceFrequency = GetPerformanceFrequency();
-		g_ClockStart = GetPerformanceCounter();
-	}
-	CurrentTime = GetPerformanceCounter();
-	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
-
 #else
 	struct timespec ts;
 	if( !g_PerformanceFrequency )
@@ -80,6 +94,7 @@ double Sys_DoubleTime( void )
 	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
 #endif
 }
+#endif
 
 /*
 ================
@@ -285,7 +300,7 @@ void Sys_MergeCommandLine( )
 	for( i = 0; i < host.argc; i++ )
 	{
 		// second call
-		if( host.type == HOST_DEDICATED && !Q_strnicmp( "+menu_", host.argv[i], 6 ))
+		if( Host_IsDedicated() && !Q_strnicmp( "+menu_", host.argv[i], 6 ))
 			host.argv[i] = (char *)blank;
 	}
 }
@@ -873,7 +888,7 @@ void Sys_Warn( const char *format, ... )
 	va_start( argptr, format );
 	Q_vsprintf( text, format, argptr );
 	va_end( argptr );
-	if( host.type != HOST_DEDICATED ) // dedicated server should not hang on messagebox
+	if( !Host_IsDedicated() ) // dedicated server should not hang on messagebox
 		MSGBOX(text);
 	Msg( "Sys_Warn: %s\n", text );
 }
@@ -907,7 +922,7 @@ void Sys_Error( const char *format, ... )
 
 	SV_SysError( text );
 
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 	{
 #ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
@@ -954,7 +969,7 @@ void Sys_Break( const char *format, ... )
 	Q_vsprintf( text, format, argptr );
 	va_end( argptr );
 
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 	{
 #ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
@@ -962,7 +977,7 @@ void Sys_Break( const char *format, ... )
 		VID_RestoreGamma();
 	}
 
-	if( host.type != HOST_NORMAL || host.developer > 0 )
+	if( Host_IsDedicated() || host.developer > 0 )
 	{
 		Con_ShowConsole( true );
 		Con_DisableInput();	// disable input line for dedicated server
@@ -999,7 +1014,7 @@ print into window console
 */
 void Sys_Print( const char *pMsg )
 {
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 		Con_Print( pMsg );
 #ifdef _WIN32
 

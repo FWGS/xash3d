@@ -10,6 +10,7 @@ DEFINES = -DDBGHELP
 XASH_VGUI ?= 1
 ifeq ($(XASH_DEDICATED),1)
 DEFINES += -DXASH_DEDICATED
+LIBS += -luser32 -lkernel32 -lgdi32 -ldbghelp -lpsapi
 else
 DEFINES += -DXASH_SDL
 LIBS += -lSDL2 -L../SDL2/lib/x86 -L../SDL2/lib/x64 -luser32 -lkernel32 -lgdi32 -ldbghelp -lpsapi
@@ -38,9 +39,11 @@ ifeq ($(NANOGL),1)
 SRCS_CPP += $(wildcard ../nanogl/*.cpp)
 endif
 OBJS_CPP = $(SRCS_CPP:.cpp=.o)
-SRCS = $(wildcard server/*.c) $(wildcard client/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
+SRCS = $(wildcard server/*.c)  $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
 OBJS = $(SRCS:.c=.o)
-
+ifneq ($(XASH_DEDICATED),1)
+SRCS += $(wildcard client/*.c)
+endif
 xash_bin.exe: $(OBJS) $(OBJS_CPP)
 	$(CC) -o xash_bin.exe $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
 

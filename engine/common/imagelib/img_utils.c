@@ -1252,7 +1252,7 @@ qboolean Image_AddIndexedImageToPack( const byte *in, int width, int height )
 
 	if( Image_CheckFlag( IL_KEEP_8BIT ))
 		expand_to_rgba = false;
-	else if( host.type == HOST_NORMAL && ( image.flags & ( IMAGE_HAS_LUMA|IMAGE_QUAKESKY )))
+	else if( !Host_IsDedicated() && ( image.flags & ( IMAGE_HAS_LUMA|IMAGE_QUAKESKY )))
 		expand_to_rgba = false;
 
 	image.size = mipsize;

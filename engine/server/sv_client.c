@@ -696,9 +696,6 @@ void SV_Info( netadr_t from )
 	version = Q_atoi( Cmd_Argv( 1 ));
 	string[0] = '\0';
 
-	if( *sv_fakegamedir->string )
-		gamedir = sv_fakegamedir->string;
-
 	if( version != PROTOCOL_VERSION )
 	{
 		Q_snprintf( string, sizeof( string ), "%s: wrong version\n", hostname->string );
@@ -2940,7 +2937,7 @@ void SV_TSourceEngineQuery( netadr_t from )
 	BF_WriteByte( &buf, count );
 	BF_WriteByte( &buf, sv_maxclients->integer );
 	BF_WriteByte( &buf, bots );
-	BF_WriteByte( &buf, host.type == HOST_DEDICATED ? 'd' : 'l');
+	BF_WriteByte( &buf, Host_IsDedicated() ? 'd' : 'l');
 #if defined(_WIN32)
 	BF_WriteByte( &buf, 'w' );
 #elif defined(__APPLE__)
@@ -2960,7 +2957,7 @@ void SV_TSourceEngineQuery( netadr_t from )
 	BF_WriteByte( &buf, count );
 	BF_WriteByte( &buf, sv_maxclients->integer );
 	BF_WriteByte( &buf, PROTOCOL_VERSION );
-	BF_WriteByte( &buf, host.type == HOST_DEDICATED ? 'D' : 'L');
+	BF_WriteByte( &buf, Host_IsDedicated() ? 'D' : 'L');
 #if defined(_WIN32)
 	BF_WriteByte( &buf, 'W' );
 #else
@@ -3015,8 +3012,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 
 	args = BF_ReadStringLine( msg );
 	Cmd_TokenizeString( args );
-	if( *sv_fakegamedir->string )
-		gamedir = sv_fakegamedir->string;
 
 	c = Cmd_Argv( 0 );
 	MsgDev( D_NOTE, "SV_ConnectionlessPacket: %s : %s\n", NET_AdrToString( from ), c );

@@ -60,7 +60,6 @@ convar_t	*sv_allow_upload;
 convar_t	*sv_allow_download;
 convar_t	*sv_allow_fragment;
 convar_t	*sv_downloadurl;
-convar_t	*sv_fakegamedir;
 convar_t	*sv_clientclean;
 convar_t	*sv_allow_studio_attachment_angles;
 convar_t	*sv_allow_rotate_pushables;
@@ -344,16 +343,30 @@ void SV_ReadPackets( void )
 	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, &curSize ))
 	{
 		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
+		if( !svs.initialized )
+		{
+			// check for rcon here
+			if( BF_GetMaxBytes( &net_message ) >= 4 && *(int *)net_message.pData == -1 )
+			{
+				char *args, *c;
+				BF_Clear( &net_message  );
+				BF_ReadLong( &net_message  );// skip the -1 marker
 
+				args = BF_ReadStringLine( &net_message  );
+				Cmd_TokenizeString( args );
+				c = Cmd_Argv( 0 );
+
+				if( !Q_strcmp( c, "rcon" ))
+					SV_RemoteCommand( net_from, &net_message );
+			}
+			continue;
+		}
 		// check for connectionless packet (0xffffffff) first
 		if( BF_GetMaxBytes( &net_message ) >= 4 && *(int *)net_message.pData == -1 )
 		{
 			SV_ConnectionlessPacket( net_from, &net_message );
 			continue;
 		}
-
-		if( !svs.initialized )
-			continue;
 
 		// read the qport out of the message so we can fix up
 		// stupid address translating routers
@@ -740,7 +753,7 @@ void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 	Info_SetValueForKey(s, "bots",      va( "%d", bots ) ); // bot count
 	Info_SetValueForKey(s, "gamedir",   GI->gamedir ); // gamedir
 	Info_SetValueForKey(s, "map",       sv.name ); // current map
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		Info_SetValueForKey(s, "type",  "d" ); // dedicated
 	else
 		Info_SetValueForKey(s, "type",  "l" ); // local
@@ -865,7 +878,6 @@ void SV_Init( void )
 	sv_allow_download = Cvar_Get( "sv_allow_download", "0", CVAR_ARCHIVE, "allow clients to download missing resources" );
 	sv_allow_fragment = Cvar_Get( "sv_allow_fragment", "0", CVAR_ARCHIVE, "allow direct download from server" );
 	sv_downloadurl = Cvar_Get( "sv_downloadurl", "", CVAR_ARCHIVE, "custom fastdl server to pass to client" );
-	sv_fakegamedir = Cvar_Get( "sv_fakegamedir", "", 0, "fake gamedir value in server info to show server in list" );
 	sv_clientclean = Cvar_Get( "sv_clientclean", "0", CVAR_ARCHIVE, "client cleaning mode (0-3), useful for bots" );
 	sv_send_logos = Cvar_Get( "sv_send_logos", "1", 0, "send custom player decals to other clients" );
 	sv_send_resources = Cvar_Get( "sv_send_resources", "1", 0, "send generic resources that are specified in 'mapname.res'" );
@@ -954,7 +966,7 @@ void SV_Shutdown( qboolean reconnect )
 	// rcon will be disconnected
 	SV_EndRedirect();
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		MsgDev( D_INFO, "SV_Shutdown: %s\n", host.finalmsg );
 
 	if( svs.clients )
