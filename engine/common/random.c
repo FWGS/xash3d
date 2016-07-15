@@ -96,8 +96,7 @@ int Com_RandomLong( int lLow, int lHigh )
 	dword	maxAcceptable;
 	dword	n, x;
 
-	x = lHigh - lLow;
-	x += 1;
+	x = (dword)( (long)lHigh - (long)lLow + 1L );
 
 	if( idum == 0 ) COM_SetRandomSeed(0);
 
