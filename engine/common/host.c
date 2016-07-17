@@ -172,12 +172,20 @@ Host_AbortCurrentFrame
 aborts the current host frame and goes on with the next one
 ================
 */
-void Host_AbortCurrentFrame( void )
+
+#ifdef __GNUC__
+void EXPORT Host_AbortCurrentFrame( void ) __attribute__ ((noreturn)) __attribute__ ((noinline)) ;
+#endif
+#ifdef _MSC_VER
+__declspec(noreturn) void EXPORT Host_AbortCurrentFrame( void );
+#endif
+void EXPORT Host_AbortCurrentFrame( void )
 {
 	if( host.framecount == 0 ) // abort frame was not set up
 		Sys_Break("Could not abort current frame");
 	else
 		longjmp( host.abortframe, 1 );
+	exit(127);
 }
 
 /*
