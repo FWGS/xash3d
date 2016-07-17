@@ -167,11 +167,11 @@ static inline int Q_strlen( const char *str )
 #define Q_toupper toupper
 #define Q_tolower tolower
 #endif
-#define Q_strcat( dst, src ) Q_strncat( dst, src, 99999 )
-#define Q_strcpy( dst, src ) Q_strncpy( dst, src, 99999 )
 #ifndef XASH_FORCEINLINE
 size_t Q_strncat( char *dst, const char *src, size_t siz );
 size_t Q_strncpy( char *dst, const char *src, size_t siz );
+size_t Q_strcat( char *dst, const char *src );
+size_t Q_strcpy( char *dst, const char *src );
 int Q_strlen( const char *string );
 #else
 #include "crtlib_inline.h"
@@ -193,9 +193,9 @@ char *Q_strchr( const char *s, char c );
 char *Q_strrchr( const char *s, char c );
 int Q_strnicmp( const char *s1, const char *s2, int n );
 int Q_strncmp( const char *s1, const char *s2, int n );
+int Q_stricmp( const char *s1, const char *s2 );
+int Q_strcmp( const char *s1, const char *s2 );
 #endif
-#define Q_strcmp( s1, s2 ) Q_strncmp( s1, s2, 99999 )
-#define Q_stricmp( s1, s2 ) Q_strnicmp( s1, s2, 99999 )
 #else
 static inline char *Q_strchr( const char *s, char c )
 {
