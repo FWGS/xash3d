@@ -15,9 +15,32 @@ GNU General Public License for more details.
 
 #include "common.h"
 
+#define HASH_SIZE 256
+
 convar_t	*cvar_vars; // head of list
 convar_t	*userinfo, *physinfo, *serverinfo, *renderinfo;
 
+#define XASH_HASHED_VARS
+
+#if defined(XASH_HASHED_VARS)
+typedef struct cvar_hashmap_elem_s
+{
+	convar_t *cvar;
+	struct cvar_hashmap_elem_s *next;
+} cvar_hashmap_elem_t;
+
+cvar_hashmap_elem_t	*hashed_vars[HASH_SIZE] = { 0 };
+#endif
+
+//#define HASHED_DEBUG
+
+#ifdef HASHED_DEBUG
+int			bucket_stat[HASH_SIZE];
+int		vlob_wins = 0, hashed_wins = 0;
+#define INC_STAT(x) (bucket_stat[x]++)
+#else
+#define INC_STAT(x)
+#endif
 /*
 ============
 Cvar_GetList
@@ -60,13 +83,54 @@ Cvar_FindVar
 */
 convar_t *Cvar_FindVar( const char *var_name )
 {
-	convar_t	*var;
+#if defined(XASH_HASHED_VARS)
+
+	cvar_hashmap_elem_t	*var;
+	convar_t *var2;
+	uint hash;
+
+#ifdef HASHED_DEBUG
+	double a,b,hashed,vlob;
+	a = Sys_DoubleTime();
+	hash = Com_HashKey( var_name, HASH_SIZE );
+	for( var = hashed_vars[hash]; var && var->cvar; var = var->next )
+	{
+		if( !Q_stricmp( var_name, var->cvar->name ) )
+			break;
+	}
+	b = Sys_DoubleTime();
+	hashed = b-a;
+
+	a = Sys_DoubleTime();
+	for( var2 = cvar_vars; var2; var2 = var2->next )
+	{
+		if( !Q_stricmp( var_name, var2->name ))
+			break;
+	}
+	b = Sys_DoubleTime();
+	vlob = b - a;
+
+	if( hashed > vlob )
+		vlob_wins++;
+	else
+		hashed_wins++;
+#endif
+	hash = Com_HashKey( var_name, HASH_SIZE );
+	for( var = hashed_vars[hash]; var && var->cvar; var = var->next )
+	{
+		if( !Q_stricmp( var_name, var->cvar->name ) )
+			return var->cvar;
+	}
+#else
+	convar_t *var;
 
 	for( var = cvar_vars; var; var = var->next )
 	{
 		if( !Q_stricmp( var_name, var->name ))
 			return var;
 	}
+#endif
+
 	return NULL;
 }
 
@@ -163,7 +227,12 @@ The flags will be or'ed in if the variable exists.
 */
 convar_t *Cvar_Get( const char *var_name, const char *var_value, int flags, const char *var_desc )
 {
-	convar_t	*current, *next, *cvar;
+	convar_t	*cvar;
+	convar_t *current, *next;
+#if defined(XASH_HASHED_VARS)
+	cvar_hashmap_elem_t *hashcurrent;
+	uint hash;
+#endif
 
 	ASSERT( var_name != NULL );
 
@@ -241,7 +310,7 @@ convar_t *Cvar_Get( const char *var_name, const char *var_value, int flags, cons
 	}
 
 	// allocate a new cvar
-	cvar = Z_Malloc( sizeof( *cvar ));
+	cvar = Z_Malloc( sizeof( convar_t ));
 	cvar->name = copystring( var_name );
 	cvar->string = copystring( var_value );
 	cvar->reset_string = copystring( var_value );
@@ -252,14 +321,26 @@ convar_t *Cvar_Get( const char *var_name, const char *var_value, int flags, cons
 	cvar->flags = flags;
 
 	// link the variable in alphanumerical order
-	for( current = NULL, next = cvar_vars ; next && Q_strcmp( next->name, cvar->name ) < 0 ; current = next, next = next->next )
-		;
-	if( current ) {
+	for( current = NULL, next = cvar_vars ; next && Q_strcmp( next->name, cvar->name ) < 0 ; current = next, next = next->next );
+
+	if( current )
 		current->next = cvar;
-	} else {
+	else
 		cvar_vars = cvar;
-	}
+
 	cvar->next = next;
+
+#if defined(XASH_HASHED_VARS)
+	// add to bucket
+	hash = Com_HashKey( cvar->name, HASH_SIZE );
+
+	hashcurrent = Z_Malloc( sizeof(cvar_hashmap_elem_t) );
+	hashcurrent->cvar = cvar;
+	hashcurrent->next = hashed_vars[hash];
+	hashed_vars[hash] = hashcurrent;
+
+	INC_STAT(hash);
+#endif
 
 	return cvar;
 }
@@ -274,6 +355,10 @@ Adds a freestanding variable to the variable list.
 void Cvar_RegisterVariable( cvar_t *var )
 {
 	convar_t	*current, *next, *cvar;
+#if defined(XASH_HASHED_VARS)
+	cvar_hashmap_elem_t *hashcurrent;
+	uint hash;
+#endif
 
 	ASSERT( var != NULL );
 
@@ -287,7 +372,7 @@ void Cvar_RegisterVariable( cvar_t *var )
 			MsgDev( D_ERROR, "Can't register variable %s, already defined\n", var->name );
 		}
 		else
-		{
+		{	
 			var->string = cvar->string;	// we already have right string
 			var->value = Q_atof( var->string );
 			var->flags |= CVAR_EXTDLL;	// all cvars passed this function are game cvars
@@ -301,11 +386,16 @@ void Cvar_RegisterVariable( cvar_t *var )
 			else
 			{
 				// otherwise find it somewhere in the list
-				for( current = cvar_vars; current->next != cvar; current = current->next )
-				;
+				for( current = cvar_vars; current->next != cvar; current = current->next );
+
 				current->next = (convar_t *)var;
 			}
 
+#if defined(XASH_HASHED_VARS)
+			hash = Com_HashKey( cvar->name, HASH_SIZE );
+			for( hashcurrent = hashed_vars[hash]; hashcurrent->cvar != cvar; hashcurrent = hashcurrent->next );
+			hashcurrent->cvar = var;
+#endif
 			// release current cvar (but keep string)
 			Z_Free( cvar->name );
 			Z_Free( cvar->latched_string );
@@ -326,14 +416,29 @@ void Cvar_RegisterVariable( cvar_t *var )
 		var->flags |= CVAR_EXTDLL;		// all cvars passed this function are game cvars
 	
 		// link the variable in alphanumerical order
-		for( current = NULL, next = cvar_vars ; next && Q_strcmp( next->name, var->name ) < 0 ; current = next, next = next->next )
-			;
-		if( current ) {
-			current->next = (convar_t *)var;
-		} else {
-			cvar_vars = (convar_t *)var;
-		}
-		var->next = (cvar_t *)next;
+		for( current = NULL, next = cvar_vars ; next && Q_strcmp( next->name, var->name ) < 0 ; current = next, next = next->next );
+
+		if( current )
+			current->next = var;
+		else
+			cvar_vars = var;
+
+		var->next = next;
+
+		// add to bucket
+		// we got a cvar_t from gamedll, where we have no left to chain in bucket
+		// so disable it
+
+#if defined(XASH_HASHED_VARS)
+		hash = Com_HashKey( var->name, HASH_SIZE );
+
+		hashcurrent = Z_Malloc( sizeof(cvar_hashmap_elem_t) );
+		hashcurrent->cvar = var;
+		hashcurrent->next = hashed_vars[hash];
+		hashed_vars[hash] = hashcurrent;
+
+		INC_STAT(hash);
+#endif
 	}
 }
 	
@@ -1122,6 +1227,17 @@ void Cvar_Restart_f( void )
 		// throw out any variables the user created
 		if( var->flags & CVAR_USER_CREATED )
 		{
+#if defined(XASH_HASHED_VARS)
+			uint hash = Com_HashKey( var->name, HASH_SIZE ); // delete from hashmap too
+			cvar_hashmap_elem_t *elem, *prevelem;
+
+			for( prevelem = NULL, elem = hashed_vars[hash]; elem && elem->cvar != var; prevelem = elem, elem = elem->next );
+			if( prevelem )
+				prevelem->next = elem->next;
+			else
+				hashed_vars[hash] = elem->next;
+#endif
+
 			*prev = var->next;
 			Z_Free( var->name );
 			Z_Free( var->string );
@@ -1228,6 +1344,10 @@ void Cvar_Unlink_f( void )
 {
 	convar_t	*var;
 	convar_t	**prev;
+#if defined(XASH_HASHED_VARS)
+	uint hash; // delete from hashmap too
+	cvar_hashmap_elem_t *elem, *prevelem;
+#endif
 
 	if( Cvar_VariableInteger( "host_gameloaded" ))
 	{
@@ -1237,6 +1357,7 @@ void Cvar_Unlink_f( void )
 
 	for( prev = &cvar_vars; ( var = *prev ); )
 	{
+
 		// ignore all non-game cvars
 		if( !( var->flags & CVAR_EXTDLL ))
 		{
@@ -1245,6 +1366,14 @@ void Cvar_Unlink_f( void )
 		}
 
 		// throw out any variables the game created
+#if defined(XASH_HASHED_VARS)
+		hash = Com_HashKey( var->name, HASH_SIZE );
+		for( prevelem = NULL, elem = hashed_vars[hash]; elem && elem->cvar != var; prevelem = elem, elem = elem->next );
+		if( prevelem )
+			prevelem->next = elem->next;
+		else
+			hashed_vars[hash] = elem->next;
+#endif
 		*prev = var->next;
 		Z_Free( var->string );
 	}
@@ -1261,6 +1390,10 @@ void Cvar_Unlink( void )
 {
 	convar_t	*var;
 	convar_t	**prev;
+#if defined(XASH_HASHED_VARS)
+	uint hash; // delete from hashmap too
+	cvar_hashmap_elem_t *elem, *prevelem;
+#endif
 
 	if( Cvar_VariableInteger( "host_clientloaded" ))
 	{
@@ -1278,6 +1411,15 @@ void Cvar_Unlink( void )
 		}
 
 		// throw out any variables the game created
+#if defined(XASH_HASHED_VARS)
+		hash = Com_HashKey( var->name, HASH_SIZE );
+		for( prevelem = NULL, elem = hashed_vars[hash]; elem && elem->cvar != var; prevelem = elem, elem = elem->next );
+		if( prevelem )
+			prevelem->next = elem->next;
+		else
+			hashed_vars[hash] = elem->next;
+#endif
+
 		*prev = var->next;
 		Z_Free( var->name );
 		Z_Free( var->string );
@@ -1287,6 +1429,27 @@ void Cvar_Unlink( void )
 		Mem_Free( var );
 	}
 }
+
+#if defined(XASH_HASHED_VARS) && defined(HASHED_DEBUG)
+void Cvar_BucketStat_f( void )
+{
+	convar_t *var;
+	cvar_hashmap_elem_t *current;
+	int i, j;
+
+	for( i = 0, j = 0; i < HASH_SIZE; i++ )
+		for( current = hashed_vars[i]; current; current = current->next, j++ );
+
+	Msg( "Total in buckets: %i\n", j );
+
+	for( var = cvar_vars, j = 0; var; var = var->next, j++ );
+
+	Msg( "Total cvars: %i\n", j );
+
+	Msg( "Total direct wins: %i\n", vlob_wins );
+	Msg( "Total hashed wins: %i\n", hashed_wins);
+}
+#endif
 
 /*
 ============
@@ -1298,12 +1461,18 @@ Reads in all archived cvars
 void Cvar_Init( void )
 {
 	cvar_vars = NULL;
-
+#if defined(XASH_HASHED_VARS)
+	Q_memset( hashed_vars, 0, sizeof(hashed_vars) );
+#endif
 	userinfo = Cvar_Get( "@userinfo", "0", CVAR_READ_ONLY, "" ); // use ->modified value only
 	physinfo = Cvar_Get( "@physinfo", "0", CVAR_READ_ONLY, "" ); // use ->modified value only
 	serverinfo = Cvar_Get( "@serverinfo", "0", CVAR_READ_ONLY, "" ); // use ->modified value only
 	renderinfo = Cvar_Get( "@renderinfo", "0", CVAR_READ_ONLY, "" ); // use ->modified value only
 
+#if defined(XASH_HASHED_VARS) && defined(HASHED_DEBUG)
+	Cmd_AddCommand ("cvar_stats", Cvar_BucketStat_f, "" );
+	Q_memset( bucket_stat, 0, sizeof( bucket_stat ) );
+#endif
 	Cmd_AddCommand ("toggle", Cvar_Toggle_f, "toggles a console variable's value (use for more info)" );
 	Cmd_AddCommand ("set", Cvar_Set_f, "create or change the value of a console variable" );
 	Cmd_AddCommand ("sets", Cvar_SetS_f, "create or change the value of a serverinfo variable" );
