@@ -21,7 +21,6 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "library.h"
 #include "input.h"
-#include "events.h"
 
 static MENUAPI	GetMenuAPI;
 static ADDTOUCHBUTTONTOLIST pfnAddTouchButtonToList;

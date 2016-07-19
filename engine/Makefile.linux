@@ -1,4 +1,4 @@
-CC ?= gcc
+CC = gcc -g
 CXX ?= g++
 CFLAGS ?= -O2 -march=i686 -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
@@ -18,6 +18,7 @@ INCLUDES += -I../nanogl -I../nanogl/GL
 endif
 INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl
 DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DXASH_FASTSTR -DGDB_BREAK
+
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
 else
@@ -73,9 +74,10 @@ ifeq ($(NANOGL),1)
 SRCS_CPP += $(wildcard ../nanogl/*.cpp)
 endif
 OBJS_CPP = $(SRCS_CPP:.cpp=.o)
-SRCS = $(wildcard server/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
+SRCS = $(wildcard server/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c)
 ifneq ($(XASH_DEDICATED),1)
 SRCS += $(wildcard client/*.c)
+SRCS += $(wildcard platform/sdl/*.c)
 endif
 OBJS = $(patsubst %.c,obj/%.o,$(SRCS))
 ifeq ($(XASH_SINGLE_BINARY),0)

@@ -32,8 +32,10 @@ GNU General Public License for more details.
 #include "touch.h"
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
-#include "sdl/events.h"
 #include "library.h"
+#ifdef XASH_SDL
+#include "platform/sdl/events.h"
+#endif
 
 typedef void (*pfnChangeGame)( const char *progname );
 
