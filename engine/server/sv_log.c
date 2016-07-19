@@ -25,8 +25,6 @@ convar_t *mp_logecho;
 convar_t *sv_log_singleplayer;
 convar_t *sv_log_onefile;
 
-extern convar_t		*cvar_vars;
-
 void Log_InitCvars ( void )
 {
 	mp_logfile = Cvar_Get( "mp_logfile", "1", CVAR_ARCHIVE, "log server information in the log file" );
@@ -80,7 +78,7 @@ void Log_PrintServerVars( void )
 
 	Log_Printf( "Server cvars start\n" );
 
-	for ( var = cvar_vars; var != NULL; var = var->next )
+	for ( var = Cvar_GetList(); var != NULL; var = var->next )
 	{
 		if ( var->flags & FCVAR_SERVER )
 			Log_Printf( "Server cvar \"%s\" = \"%s\"\n", var->name, var->string );

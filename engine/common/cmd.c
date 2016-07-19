@@ -360,6 +360,13 @@ static void Cmd_Alias_f( void )
 	}
 
 	// if the alias already exists, reuse it
+#if defined( XASH_HASHED_VARS )
+	a = BaseCmd_Find( HM_CMDALIAS, s );
+	if( a )
+	{
+		Mem_Free( a->value );
+	}
+#else
 	for( a = cmd_alias; a; a = a->next )
 	{
 		if( !Q_strcmp( s, a->name ))
@@ -368,6 +375,7 @@ static void Cmd_Alias_f( void )
 			break;
 		}
 	}
+#endif
 
 	if( !a )
 	{
@@ -384,6 +392,10 @@ static void Cmd_Alias_f( void )
 			cmd_alias = a;
 		}
 		a->next = current;
+
+#if defined( XASH_HASHED_VARS )
+		BaseCmd_Insert( HM_CMDALIAS, a, a->name );
+#endif
 	}
 
 	// copy the rest of the command line
@@ -428,11 +440,13 @@ static void Cmd_UnAlias_f ( void )
 	for( i = 1; i < Cmd_Argc(); ++i )
 	{
 		s = Cmd_Argv( i );
-		p = NULL;
-		for( a = cmd_alias; a; p = a, a = a->next )
+		for( p = NULL, a = cmd_alias; a; p = a, a = a->next )
 		{
 			if( !Q_strcmp( s, a->name ))
 			{
+#if defined( XASH_HASHED_VARS )
+				BaseCmd_Remove( HM_CMDALIAS, p, a->name );
+#endif
 				if( a == cmd_alias )
 					cmd_alias = a->next;
 				if( p )
@@ -456,11 +470,11 @@ static void Cmd_UnAlias_f ( void )
 */
 typedef struct cmd_s
 {
-	struct cmd_s	*next;
-	char		*name;
-	xcommand_t	function;
-	char		*desc;
-	int		flags;
+	char		 *name; // must be first, to match cvar_t
+	struct cmd_s *next;
+	xcommand_t	 function;
+	char		 *desc;
+	int          flags;
 } cmd_t;
 
 static int		cmd_argc;
@@ -643,6 +657,9 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *cmd_
 		cmd_functions = cmd;
 	}
 	cmd->next = current;
+#if defined(XASH_HASHED_VARS)
+	BaseCmd_Insert( HM_CMD, cmd, cmd->name );
+#endif
 }
 
 /*
@@ -691,6 +708,10 @@ void Cmd_AddGameCommand( const char *cmd_name, xcommand_t function )
 		cmd_functions = cmd;
 	}
 	cmd->next = current;
+
+#if defined(XASH_HASHED_VARS)
+	BaseCmd_Insert( HM_CMD, cmd, cmd->name );
+#endif
 }
 
 /*
@@ -739,6 +760,10 @@ void Cmd_AddClientCommand( const char *cmd_name, xcommand_t function )
 		cmd_functions = cmd;
 	}
 	cmd->next = current;
+
+#if defined(XASH_HASHED_VARS)
+	BaseCmd_Insert( HM_CMD, cmd, cmd->name );
+#endif
 }
 
 /*
@@ -754,6 +779,10 @@ void Cmd_RemoveCommand( const char *cmd_name )
 	{
 		if( !Q_strcmp( cmd_name, cmd->name ))
 		{
+#if defined(XASH_HASHED_VARS)
+			BaseCmd_Remove( HM_CMD, cmd, cmd->name );
+#endif
+
 			*prev = cmd->next;
 
 			Mem_Free( cmd->name );
@@ -798,12 +827,18 @@ qboolean Cmd_Exists( const char *cmd_name )
 {
 	cmd_t	*cmd;
 
+#if defined(XASH_HASHED_VARS)
+	if( BaseCmd_Find( HM_CMD, cmd_name ) )
+		return true;
+	return false;
+#else
 	for( cmd = cmd_functions; cmd; cmd = cmd->next )
 	{
 		if( !Q_strcmp( cmd_name, cmd->name ))
 			return true;
 	}
 	return false;
+#endif
 }
 
 /*
@@ -949,6 +984,14 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 	if( !Cmd_Argc()) return; // no tokens
 
 	// check aliases
+#if defined(XASH_HASHED_VARS)
+	a = BaseCmd_Find(HM_CMDALIAS, cmd_argv[0] );
+	if( a )
+	{
+		Cbuf_InsertText( a->value );
+		return;
+	}
+#else
 	for( a = cmd_alias; a; a = a->next )
 	{
 		if( !Q_stricmp( cmd_argv[0], a->name ))
@@ -957,8 +1000,17 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 			return;
 		}
 	}
+#endif
 
 	// check functions
+#if defined(XASH_HASHED_VARS)
+	cmd = BaseCmd_Find( HM_CMD, cmd_argv[0] );
+	if( cmd && cmd->function )
+	{
+		cmd->function();
+		return;
+	}
+#else
 	for( cmd = cmd_functions; cmd; cmd = cmd->next )
 	{
 		if( !Q_stricmp( cmd_argv[0], cmd->name ) && cmd->function )
@@ -967,6 +1019,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 			return;
 		}
 	}
+#endif
 
 	// check cvars
 	if( Cvar_Command( )) return;
@@ -1184,6 +1237,10 @@ void Cmd_Unlink( int group )
 			prev = &cmd->next;
 			continue;
 		}
+
+#if defined(XASH_HASHED_VARS)
+		BaseCmd_Remove( HM_CMD, cmd, cmd->name );
+#endif
 
 		*prev = cmd->next;
 

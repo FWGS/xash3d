@@ -52,7 +52,7 @@ void SCR_DrawFPS( void )
 	float		calc;
 	rgba_t		color;
 	static double	nexttime = 0, lasttime = 0;
-	static double	framerate = 0;
+	static double	framerate = 0, avgrate = 0;
 	static int	framecount = 0;
 	static int	minfps = 9999;
 	static int	maxfps = 0;
@@ -98,9 +98,22 @@ void SCR_DrawFPS( void )
 		if( curfps < minfps ) minfps = curfps;
 		if( curfps > maxfps ) maxfps = curfps;
 
-		if( cl_showfps->integer == 2 )
+		/*if( !avgrate ) avgrate = ( maxfps - minfps ) / 2.0f;
+		else */avgrate += ( calc - avgrate ) / host.framecount;
+
+		switch( cl_showfps->integer )
+		{
+		case 3:
+			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max | ^3%.2f avg", minfps, curfps, maxfps, avgrate );
+			break;
+		case 2:
 			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max", minfps, curfps, maxfps );
-		else Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
+			break;
+		case 1:
+		default:
+			Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
+		}
+
 		MakeRGBA( color, 255, 255, 255, 255 );
 	}
 
