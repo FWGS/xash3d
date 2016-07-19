@@ -18,7 +18,6 @@ GNU General Public License for more details.
 #include "common.h"
 #include "client.h"
 #include "mobility_int.h"
-#include "events.h"
 #include "library.h"
 #include "gl_local.h"
 #include "touch.h"
