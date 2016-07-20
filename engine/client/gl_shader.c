@@ -1,4 +1,4 @@
-
+#if defined XASH_GLES2_RENDER
 #include "common.h"
 #include "gl_local.h"
 
@@ -270,3 +270,5 @@ void R_ModelViewMtxUniform(const matrix4x4 source)
 	pglUseProgram(glslpr_Studio.id);
 	pglUniformMatrix4fv(glslpr_Studio.u_mvMtx,1,GL_FALSE,dest);
 }
+
+#endif

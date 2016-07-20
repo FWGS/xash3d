@@ -9,9 +9,7 @@ ifeq ($(LBITS),64)
     CFLAGS += -m32
 endif
 TOPDIR = $(PWD)/..
-XASHXT ?= $(TOPDIR)/../xashXT
-HLSDK ?= $(TOPDIR)/../halflife/
-INCLUDES = -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -I$(XASHXT)/common -I$(HLSDK)/public -Iserver -Iclient/vgui -Icommon/sdl
+INCLUDES = -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl
 DEFINES =
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
@@ -49,6 +47,8 @@ endif
 ifeq ($(XASH_SINGLE_BINARY),1)
     DEFINES += -DSINGLE_BINARY
 endif
+
+DEFINES += -DXASH_GLES2_RENDER
 
 ifeq ($(XASH_VGUI),1)
 #    INCLUDES += -I$(HLSDK)/utils/vgui/include/
