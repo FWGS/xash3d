@@ -35,7 +35,10 @@ extern "C" {
 #define MSGBOX( x )		Android_MessageBox("Xash Error", x )
 #define MSGBOX2( x )	Android_MessageBox("Host Error", x )
 #define MSGBOX3( x )	Android_MessageBox("Host Recursive Error", x )
-
+#elif defined _WIN32
+#define MSGBOX( x ) MessageBox( NULL, x, "Xash Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
+#define MSGBOX2( x ) MessageBox( host.hWnd, x, "Host Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
+#define MSGBOX3( x ) MessageBox( host.hWnd, x, "Host Recursive Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
 #else
 #define BORDER1 "======================================\n"
 #define MSGBOX( x )	 fprintf(stderr, BORDER1"Xash Error: %s\n"BORDER1,x)
@@ -120,14 +123,24 @@ int Sys_LogFileNo( void );
 //
 // sys_con.c
 //
-void Con_ShowConsole( qboolean show );
-void Con_WinPrint( const char *pMsg );
-void Con_InitConsoleCommands( void );
-void Con_CreateConsole( void );
-void Con_DestroyConsole( void );
-void Con_RegisterHotkeys( void );
-void Con_DisableInput( void );
-char *Con_Input( void );
+char *Sys_Input( void );
+void Sys_DestroyConsole( void );
+void Sys_CloseLog( void );
+void Sys_InitLog( void );
+void Sys_PrintLog( const char *pMsg );
+int Sys_LogFileNo( void );
+
+//
+// con_win.c
+//
+void Wcon_ShowConsole( qboolean show );
+void Wcon_Print( const char *pMsg );
+void Wcon_Init( void );
+void Wcon_CreateConsole( void );
+void Wcon_DestroyConsole( void );
+void Wcon_DisableInput( void );
+void Wcon_Clear( void );
+char *Wcon_Input( void );
 
 // text messages
 void Msg( const char *pMsg, ... ) _format(1);

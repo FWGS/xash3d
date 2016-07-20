@@ -113,9 +113,12 @@ void Field_CharEvent( field_t *edit, int ch );
 Con_Clear_f
 ================
 */
-void Con_Clear_f( void )
+void Con_Clear( void )
 {
 	int	i;
+
+	if( !con.initialized )
+		return;
 
 	for( i = 0; i < CON_TEXTSIZE; i++ )
 		con.text[i] = ( ColorIndex( COLOR_DEFAULT ) << 8 ) | ' ';
@@ -826,7 +829,6 @@ void Con_Init( void )
 
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f, "opens or closes the console" );
 	Cmd_AddCommand( "con_color", Con_SetColor_f, "set a custom console color" );
-	Cmd_AddCommand( "clear", Con_Clear_f, "clear console history" );
 	Cmd_AddCommand( "messagemode", Con_MessageMode_f, "enable message mode \"say\"" );
 	Cmd_AddCommand( "messagemode2", Con_MessageMode2_f, "enable message mode \"say_team\"" );
 

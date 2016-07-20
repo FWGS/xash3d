@@ -457,7 +457,9 @@ void Sys_WaitForQuit( void )
 #ifdef _WIN32
 	MSG	msg;
 
-	Con_RegisterHotkeys();		
+#ifdef XASH_W32CON
+	Wcon_RegisterHotkeys();
+#endif
 
 	msg.message = 0;
 
@@ -670,7 +672,7 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		}
 
 		// all other states keep unchanged to let debugger find bug
-		Con_DestroyConsole();
+		Sys_DestroyConsole();
 	}
 
 	if( oldFilter )
@@ -953,16 +955,19 @@ void Sys_Error( const char *format, ... )
 
 	if( host.developer > 0 )
 	{
-		Con_ShowConsole( true );
-		Con_DisableInput();	// disable input line for dedicated server
-
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( true );
+		Wcon_DisableInput();	// disable input line for dedicated server
+#endif
 		Sys_Print( text );	// print error message
 		MSGBOX( text );
 		Sys_WaitForQuit();
 	}
 	else
 	{
-		Con_ShowConsole( false );
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( false );
+#endif
 		MSGBOX( text );
 	}
 
@@ -1000,15 +1005,19 @@ void Sys_Break( const char *format, ... )
 
 	if( Host_IsDedicated() || host.developer > 0 )
 	{
-		Con_ShowConsole( true );
-		Con_DisableInput();	// disable input line for dedicated server
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( true );
+		Wcon_DisableInput();	// disable input line for dedicated server
+#endif
 		Sys_Print( text );
 		MSGBOX( text );
 		Sys_WaitForQuit();
 	}
 	else
 	{
-		Con_ShowConsole( false );
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( false );
+#endif
 		MSGBOX( text );
 	}
 
@@ -1037,7 +1046,7 @@ void Sys_Print( const char *pMsg )
 {
 	if( !Host_IsDedicated() )
 		Con_Print( pMsg );
-#ifdef _WIN32
+#ifdef XASH_W32CON
 
 	{
 		const char	*msg;
@@ -1094,7 +1103,7 @@ void Sys_Print( const char *pMsg )
 		*b = *c = 0; // cutoff garbage
 
 		Sys_PrintLog( logbuf );
-		Con_WinPrint( buffer );
+		Wcon_Print( buffer );
 	}
 #else
 	Sys_PrintLog( pMsg );
