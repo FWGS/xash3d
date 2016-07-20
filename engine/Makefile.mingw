@@ -21,7 +21,7 @@ DEFINES += -DXASH_GLES -DXASH_NANOGL -DUSE_CORE_PROFILE
 LIBS += -lstdc++
 endif
 
-DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FASTSTR -DXASH_FORCEINLINE -DVECTORIZE_SINCOS
+DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FASTSTR -DXASH_FORCEINLINE -DVECTORIZE_SINCOS -DXASH_W32CON
 
 ifeq ($(XASH_VGUI),1)
 DEFINES += -DXASH_VGUI
@@ -39,7 +39,7 @@ ifeq ($(NANOGL),1)
 SRCS_CPP += $(wildcard ../nanogl/*.cpp)
 endif
 OBJS_CPP = $(SRCS_CPP:.cpp=.o)
-SRCS = $(wildcard server/*.c)  $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c)
+SRCS = $(wildcard server/*.c)  $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard platform/win32/*.c)
 OBJS = $(SRCS:.c=.o)
 ifneq ($(XASH_DEDICATED),1)
 SRCS += $(wildcard client/*.c)

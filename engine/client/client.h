@@ -800,6 +800,7 @@ void Con_Close( void );
 void Con_PageUp( int lines );
 void Con_PageDown( int lines );
 void Con_Bottom( void );
+
 //
 // s_main.c
 //
