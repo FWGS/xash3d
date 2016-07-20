@@ -28,7 +28,7 @@ GLint u_fogParams = -1;
 
 int lastRendermode=kRenderNormal;
 static vec4_t g_lastColor = {0.0f,0.0f,0.0f,0.0f};
-static boolean needFog = false;
+static qboolean needFog = false;
 static vec4_t g_lastFogParams = {0.5f,0.5f,0.5f,0.002f};
 
 GLuint R_CreateShader(const char *src, GLint type)
@@ -202,7 +202,7 @@ void R_ScreenUniform(GLfloat w, GLfloat h)
 	pglUniform2f(u_screen,w,h);
 }
 
-void R_SetFogEnable(boolean state)
+void R_SetFogEnable(qboolean state)
 {
 	needFog=state;
 }

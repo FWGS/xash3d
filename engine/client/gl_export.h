@@ -834,6 +834,9 @@ typedef float GLmatrix[16];
 #define GL_LINK_STATUS                    0x8B82
 #define GL_COMPILE_STATUS                 0x8B81
 
+#define GL_FRAMEBUFFER                    0x8D40
+#define GL_COLOR_ATTACHMENT0              0x8CE0
+
 void ( APIENTRY *pglEnableVertexAttribArray) (GLuint index);
 void ( APIENTRY *pglVertexAttribPointer)(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
 void ( APIENTRY *pglDisableVertexAttribArray)(GLuint index);
@@ -855,6 +858,10 @@ void (APIENTRY *pglGetProgramiv) (GLuint program, GLenum pname, GLint *params);
 void (APIENTRY *pglGetProgramInfoLog) (GLuint program, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
 void (APIENTRY *pglGetShaderiv) (GLuint shader, GLenum pname, GLint *params);
 void (APIENTRY *pglDeleteShader) (GLuint shader);
+
+void (APIENTRY *pglGenFramebuffers) (GLsizei n, GLuint *framebuffers);
+void (APIENTRY *pglBindFramebuffer) (GLenum target, GLuint framebuffer);
+void (APIENTRY *pglFramebufferTexture2D) (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
 
 #endif
 

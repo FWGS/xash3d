@@ -38,21 +38,21 @@ void pglemuTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei 
 
 void R_InitGLEmu( void )
 {
-	pglColor4f = pglemuColor4f;
-	pglColor4ub = pglemuColor4ub;
-	pglColor4ubv = pglemuColor4ubv;
-	pglPolygonMode = pglemuPolygonMode;
-	pglAlphaFunc = pglemuAlphaFunc;
-	pglShadeModel = pglemuShadeModel;
-	pglPointSize = pglemuPointSize;
-	pglMatrixMode = pglemuMatrixMode;
-	pglLoadIdentity = pglemuLoadIdentity;
+	pglColor4f = (void*)pglemuColor4f;
+	pglColor4ub = (void*)pglemuColor4ub;
+	pglColor4ubv = (void*)pglemuColor4ubv;
+	pglPolygonMode = (void*)pglemuPolygonMode;
+	pglAlphaFunc = (void*)pglemuAlphaFunc;
+	pglShadeModel = (void*)pglemuShadeModel;
+	pglPointSize = (void*)pglemuPointSize;
+	pglMatrixMode = (void*)pglemuMatrixMode;
+	pglLoadIdentity = (void*)pglemuLoadIdentity;
 	//pglOrtho = pglemuOrtho;
-	pglTexEnvi = pglemuTexEnvi;
-	pglLoadMatrixf = pglemuLoadMatrixf;
+	pglTexEnvi = (void*)pglemuTexEnvi;
+	pglLoadMatrixf = (void*)pglemuLoadMatrixf;
 	//pglDepthRange = pglemuDepthRange;
-	prealglTexImage2D=pglTexImage2D;
-	pglTexImage2D=pglemuTexImage2D;
+	prealglTexImage2D = (void*)pglTexImage2D;
+	pglTexImage2D = (void*)pglemuTexImage2D;
 }
 /*
 void glTexEnvf (GLenum target, GLenum pname, GLfloat param){}

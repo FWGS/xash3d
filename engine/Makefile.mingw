@@ -1,7 +1,7 @@
 CC ?= gcc
 CXX ?= g++
 #CFLAGS ?= -O3 -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -mssse3 -ftree-vectorize -mstackrealign -finline-limit=512 -march=nocona
-CFLAGS ?= -ggdb -Wall -Wno-unknown-pragmas
+CFLAGS ?= -ggdb -std=gnu89 -Wall -Wno-unknown-pragmas
 LDFLAGS =
 LIBS = -lm
 TOPDIR = $(PWD)/..
