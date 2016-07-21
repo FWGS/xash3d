@@ -86,6 +86,7 @@ LOCAL_SRC_FILES := \
            client/s_vox.c \
            common/avikit.c \
            common/build.c \
+           common/base_cmd.c \
            common/cmd.c \
            common/common.c \
            common/touch.c \
