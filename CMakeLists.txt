@@ -27,21 +27,55 @@ project (XASH3D)
 # USER DEFINES \
 ################\
 
-set (XASH3D_VERSION 0.15)
-set (HL_SDK_DIR /opt/halflife CACHE PATH "Half Life 1 SDK directory")
+set (XASH3D_VERSION 0.18)
 
-option(XASH_DEDICATED "Enable dedicated build." ${XASH_DEDICATED})
-option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux." ${XASH_DLL_LOADER})
-option(XASH_IPX "Enable IPX support for networking. Windows only." ${XASH_IPX})
-option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator." ${XASH_GLES})
-option(XASH_NONSTANDARD_LOAD "Enable loading game libraries. Windows only." ${XASH_NONSTANDARD_LOAD})
-option(XASH_SDL "Enable SDL for client." ${XASH_SDL})
-option(XASH_VGUI "Enable VGUI support." ${XASH_VGUI})
-option(XASH_X11 "Enable X11 support." ${XASH_VGUI})
+set (HL_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/hlsdk/)
+
+# Servers must choose this
+option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF)
+
+# Windows only. Enable it by default for Windows.
+if(NOT WIN32)
+	option(XASH_IPX "Enable IPX support for networking. Windows only." OFF)
+	option(XASH_NONSTANDARD_LOAD "Enable loading game libraries. Windows only." OFF)
+else()
+	option(XASH_IPX "Enable IPX support for networking. Windows only." ON)
+	option(XASH_NONSTANDARD_LOAD "Enable loading game libraries. Windows only." ON)
+endif()
+
+# GLES hacks
+option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator." OFF)
+option(XASH_NANOGL "Enable NanoGL. Implicitly enables XASH_GLES." OFF)
+
+# For libdl-haters ;)
+option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executaable" OFF)
+option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
+
+# Shared library loader implementation. Must be checked one of these or both.
+option(XASH_LIBDL "Enable libdl" ON)
+option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." ON)
+
+# Desktop-version options
+option(XASH_SDL "Enable SDL." ON)
+option(XASH_VGUI "Enable VGUI support." ON)
+option(XASH_X11 "Enable X11 support." ON)
 
 #-----------------
 # MAIN BUILD CODE \
 ###################\
+
+# Dependencies
+if(XASH_STATIC)
+	set(XASH_SINGLE_BINARY "ON")
+endif()
+
+if(XASH_NANOGL)
+	set(XASH_GLES "ON")
+endif()
+
+if(NOT XASH_LIBDL OR NOT XASH_DLL_LOADER)
+	message(FATAL_ERROR "You must choose XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
@@ -67,15 +101,20 @@ endif()
 
 if(NOT XASH_DEDICATED)
 	add_subdirectory (mainui)
+	if(XASH_VGUI)
+		add_subdirectory (vgui_support)
+	endif()
 endif()
+
 if(XASH_DLL_LOADER)
 	add_subdirectory (loader)
 endif()
-if(XASH_VGUI)
-	add_subdirectory (vgui_support)
+
+if(NOT XASH_SINGLE_BINARY)
+	add_subdirectory (game_launch)
 endif()
+
 add_subdirectory (engine)
-add_subdirectory (game_launch)
 
 install(FILES "xash3d.sh"
     DESTINATION ${BIN_INSTALL_DIR}

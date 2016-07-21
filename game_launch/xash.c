@@ -120,7 +120,7 @@ void Sys_ChangeGame( const char *progname )
 }
 
 
-#if _MSC_VER == 1200 || !defined(XASH_SDL)
+#if _WIN32 && !__MINGW32__ && ( _MSC_VER == 1200 || !defined(XASH_SDL) )
 #pragma comment(lib, "shell32.lib")
 int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow)
 #else // _WIN32
@@ -128,7 +128,7 @@ int main( int argc, char **argv )
 #endif
 {
 
-#if _MSC_VER == 1200 || !defined(XASH_SDL)
+#if _WIN32 && !__MINGW32__ && ( _MSC_VER == 1200 || !defined(XASH_SDL) )
 	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
 	int size, i = 0;
 	szArgv = (char**)malloc(szArgc*sizeof(char*));
