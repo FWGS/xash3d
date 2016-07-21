@@ -509,8 +509,10 @@ void Host_GetConsoleCommands( void )
 	char	*cmd;
 
 	while( ( cmd = Con_Input() ) )
+	{
 		Cbuf_AddText( cmd );
-	Cbuf_Execute();
+		Cbuf_Execute();
+	}
 }
 
 /*
