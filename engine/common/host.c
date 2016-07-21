@@ -33,6 +33,7 @@ GNU General Public License for more details.
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
 #include "sdl/events.h"
+#include "library.h"
 
 typedef void (*pfnChangeGame)( const char *progname );
 
