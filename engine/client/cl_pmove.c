@@ -1085,10 +1085,6 @@ void CL_PostRunCmd( usercmd_t *ucmd, int random_seed )
 	to = from;
 
 	clgame.dllFuncs.pfnPostRunCmd( &from, &to, ucmd, true, cl.time, random_seed );
-
-	cl.scr_fov = to.client.fov;
-	if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
-	   cl.scr_fov = 90.0f;
 }
 
 /*
@@ -1150,9 +1146,6 @@ void CL_PredictMovement( void )
 		cl.predicted.moving = 0;
 		cl.predicted.onground = -1;
 
-		cl.scr_fov = to.client.fov;
-		if( cl.scr_fov < 1.0f || cl.scr_fov > 170.0f )
-			cl.scr_fov = 90.0f;
 		return;
 	}
 
@@ -1241,7 +1234,6 @@ void CL_PredictMovement( void )
 		cl.predicted.waterlevel = to->client.waterlevel;
 		cl.predicted.viewmodel  = to->client.viewmodel;
 		cl.predicted.usehull    = to->playerstate.usehull;
-		cl.scr_fov = to->client.fov >= 1.0f && to->client.fov <= 170.0f ? to->client.fov : 90.0f;
 
 		if( to->client.flags & FL_ONGROUND )
 		{
