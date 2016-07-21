@@ -36,6 +36,7 @@ GNU General Public License for more details.
 #ifdef XASH_SDL
 #include "platform/sdl/events.h"
 #endif
+
 typedef void (*pfnChangeGame)( const char *progname );
 
 pfnChangeGame	pChangeGame = NULL;
@@ -527,8 +528,10 @@ void Host_GetConsoleCommands( void )
 	char	*cmd;
 
 	while( ( cmd = Sys_Input() ) )
+	{
 		Cbuf_AddText( cmd );
-	Cbuf_Execute();
+		Cbuf_Execute();
+	}
 }
 
 /*
