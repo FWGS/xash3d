@@ -348,9 +348,8 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	if( host.type == HOST_NORMAL )
 			CL_Crashed();
 	host.state = HOST_CRASHED;
-	error_on_exit = true;
 	host.crashed = true;
-	Con_DestroyConsole();
+
 	Sys_Quit();
 }
 
