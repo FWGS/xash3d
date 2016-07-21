@@ -548,6 +548,7 @@ qboolean SV_IsPlayerIndex( int idx );
 void SV_InitClientMove( void );
 void SV_UpdateServerInfo( void );
 void SV_EndRedirect( void );
+void SV_RemoteCommand( netadr_t from, sizebuf_t *msg );
 //
 // sv_cmds.c
 //
