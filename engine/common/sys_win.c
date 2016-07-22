@@ -758,7 +758,7 @@ struct sigaction oldFilter;
 static void Sys_Crash( int signal, siginfo_t *si, void *context)
 {
 	void *trace[32];
-	char message[1024], stackframe[256];
+	char message[4096], stackframe[256];
 	int len, stacklen, logfd, i = 0;
 #if defined(__OpenBSD__)
 	struct sigcontext *ucontext = (struct sigcontext*)context;
@@ -790,9 +790,9 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 #endif
 	// Safe actions first, stack and memory may be corrupted
 	#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-		len = snprintf( message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
+		len = snprintf( message, 4096, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
 	#else
-		len = snprintf( message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
+		len = snprintf( message, 4096, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
 	#endif
 	write(2, message, len);
 	// Flush buffers before writing directly to descriptors
@@ -803,31 +803,42 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	write( logfd, message, len );
 	write( 2, "Stack backtrace:\n", 17 );
 	write( logfd, "Stack backtrace:\n", 17 );
-	strncpy(message + len, "Stack backtrace:\n", 1024 - len);
+	strncpy(message + len, "Stack backtrace:\n", 4096 - len);
 	len += 17;
 	size_t pagesize = sysconf(_SC_PAGESIZE);
 	do
 	{
-		int line = printframe( message + len, 1024 - len, ++i, pc);
+		int line = printframe( message + len, 4096 - len, ++i, pc);
 		write( 2, message + len, line );
 		write( logfd, message + len, line );
 		len += line;
 		//if( !dladdr(bp,0) ) break; // Only when bp is in module
-		if( mprotect((char *)(((int) bp + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) == -1) break;
-		if( mprotect((char *)(((int) bp[0] + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) == -1) break;
+		if( ( mprotect((char *)(((int) bp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE | PROT_EXEC ) == -1) &&
+			( mprotect((char *)(((int) bp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_EXEC ) == -1) &&
+			( mprotect((char *)(((int) bp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE ) == -1) &&
+			( mprotect((char *)(((int) bp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ ) == -1) )
+			break;
+		if( ( mprotect((char *)(((int) bp[0] + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE | PROT_EXEC ) == -1) &&
+			( mprotect((char *)(((int) bp[0] + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_EXEC ) == -1) &&
+			( mprotect((char *)(((int) bp[0] + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE ) == -1) &&
+			( mprotect((char *)(((int) bp[0] + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ ) == -1) )
+			break;
 		pc = bp[1];
 		bp = (void**)bp[0];
 	}
-	while (bp);
+	while( bp && i < 128 );
 	// Try to print stack
 	write( 2, "Stack dump:\n", 12 );
 	write( logfd, "Stack dump:\n", 12 );
-	strncpy(message + len, "Stack dump:\n", 1024 - len);
+	strncpy( message + len, "Stack dump:\n", 4096 - len );
 	len += 12;
-	if( mprotect((char *)(((int) sp + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) != -1)
+	if( ( mprotect((char *)(((int) sp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE | PROT_EXEC ) != -1) ||
+			( mprotect((char *)(((int) sp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_EXEC ) != -1) ||
+			( mprotect((char *)(((int) sp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE ) != -1) ||
+			( mprotect((char *)(((int) sp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ ) != -1) )
 		for( i = 0; i < 32; i++ )
 		{
-			int line = printframe( message + len, 1024 - len, i, sp[i] );
+			int line = printframe( message + len, 4096 - len, i, sp[i] );
 			write( 2, message + len, line );
 			write( logfd, message + len, line );
 			len += line;
