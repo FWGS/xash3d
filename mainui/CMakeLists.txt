@@ -34,7 +34,7 @@ set (MAINUI_LIBRARY xashmenu)
 
 file (GLOB MAINUI_SOURCES *.cpp)
 include_directories (../common ../engine ${HL_SDK_DIR}/pm_shared)
-add_library (${MAINUI_LIBRARY} SHARED ${MAINUI_SOURCES})
+add_library (${MAINUI_LIBRARY} MODULE ${MAINUI_SOURCES})
 
 set_target_properties (${MAINUI_SHARED} PROPERTIES
 	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}

@@ -73,7 +73,7 @@ if(XASH_NANOGL)
 	set(XASH_GLES "ON")
 endif()
 
-if(NOT XASH_LIBDL OR NOT XASH_DLL_LOADER)
+if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER)
 	message(FATAL_ERROR "You must choose XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
 endif()
 
