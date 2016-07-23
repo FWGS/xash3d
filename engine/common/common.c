@@ -33,10 +33,10 @@ char *COM_ParseFile( char *data, char *token )
 
 	if( !token )
 		return NULL;
-	
+
 	len = 0;
 	token[0] = 0;
-	
+
 	if( !data )
 		return NULL;
 // skip whitespace
@@ -47,7 +47,7 @@ skipwhite:
 			return NULL;	// end of file;
 		data++;
 	}
-	
+
 	// skip // comments
 	if( c=='/' && data[1] == '/' )
 	{
@@ -62,8 +62,23 @@ skipwhite:
 		data++;
 		while( 1 )
 		{
-			c = (byte)*data++;
-			if( c == '\"' || !c )
+			c = (byte)*data;
+
+			// unexpected line end
+			if( !c )
+			{
+				token[len] = 0;
+				return data;
+			}
+			data++;
+
+			if( c == '\\' && *data == '"' )
+			{
+				token[len++] = *data++;
+				continue;
+			}
+
+			if( c == '\"' )
 			{
 				token[len] = 0;
 				return data;
@@ -93,7 +108,7 @@ skipwhite:
 		if( c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == ',' )
 			break;
 	} while( c > 32 );
-	
+
 	token[len] = 0;
 
 	return data;
@@ -262,7 +277,7 @@ byte* COM_LoadFileForMe( const char *filename, int *pLength )
 {
 	string	name;
 	byte	*file, *pfile;
-	int	iLength;
+	fs_offset_t	iLength;
 
 	if( !filename || !*filename )
 	{
@@ -298,7 +313,7 @@ byte *COM_LoadFile( const char *filename, int usehunk, int *pLength )
 {
 	string	name;
 	byte	*file, *pfile;
-	int	iLength;
+	fs_offset_t	iLength;
 
 	ASSERT( usehunk == 5 );
 
@@ -429,7 +444,7 @@ void Con_Printf( char *szFmt, ... )
 		return;
 
 	va_start( args, szFmt );
-	Q_vsnprintf( buffer, 16384, szFmt, args );
+	Q_vsnprintf( buffer, sizeof( buffer ), szFmt, args );
 	va_end( args );
 
 	Sys_Print( buffer );
@@ -450,7 +465,7 @@ void Con_DPrintf( char *szFmt, ... )
 		return;
 
 	va_start( args, szFmt );
-	Q_vsnprintf( buffer, 16384, szFmt, args );
+	Q_vsnprintf( buffer, sizeof( buffer ), szFmt, args );
 	va_end( args );
 
 	Sys_Print( buffer );
@@ -470,8 +485,8 @@ int COM_CompareFileTime( const char *filename1, const char *filename2, int *iCom
 
 	if( filename1 && filename2 )
 	{
-		long ft1 = FS_FileTime( filename1, false );
-		long ft2 = FS_FileTime( filename2, false );
+		int ft1 = FS_FileTime( filename1, false );
+		int ft2 = FS_FileTime( filename2, false );
 
 		// one of files is missing
 		if( ft1 == -1 || ft2 == -1 )
@@ -492,7 +507,7 @@ pfnGetGameDir
 void pfnGetGameDir( char *szGetGameDir )
 {
 	if( !szGetGameDir ) return;
-	Q_sprintf( szGetGameDir, "%s/%s", host.rootdir, GI->gamedir );
+	Q_sprintf( szGetGameDir, "%s", GI->gamedir );
 }
 
 /*

@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "r_efx.h"
@@ -203,7 +205,7 @@ void CL_TEntPlaySound( TEMPENTITY *pTemp, float damp )
 		return;
 	}
 
-	zvel = abs( pTemp->entity.baseline.origin[2] );
+	zvel = fabs( pTemp->entity.baseline.origin[2] );
 		
 	// only play one out of every n
 	if( isshellcasing )
@@ -317,7 +319,7 @@ TEMPENTITY *CL_TempEntAlloc( const vec3_t org, model_t *pmodel )
 
 	if( !cl_free_tents )
 	{
-		MsgDev( D_INFO, "Overflow %d temporary ents!\n", GI->max_tents );
+		MsgDev( D_NOTE, "Overflow %d temporary ents!\n", GI->max_tents );
 		return NULL;
 	}
 
@@ -442,6 +444,9 @@ void CL_FizzEffect( cl_entity_t *pent, int modelIndex, int density )
 	if( !pent || Mod_GetType( modelIndex ) == mod_bad )
 		return;
 
+	if( pent->curstate.modelindex <= 0 )
+		return;
+
 	count = density + 1;
 	density = count * 3 + 6;
 
@@ -524,7 +529,7 @@ void CL_Bubbles( const vec3_t mins, const vec3_t maxs, float height, int modelIn
 
 		pTemp->x = origin[0];
 		pTemp->y = origin[1];
-		angle = Com_RandomLong( -M_PI, M_PI );
+		angle = Com_RandomFloat( -M_PI, M_PI );
 		SinCos( angle, &sine, &cosine );
 		
 		zspeed = Com_RandomLong( 80, 140 );
@@ -569,7 +574,7 @@ void CL_BubbleTrail( const vec3_t start, const vec3_t end, float flWaterZ, int m
 
 		pTemp->x = origin[0];
 		pTemp->y = origin[1];
-		angle = Com_RandomLong( -M_PI, M_PI );
+		angle = Com_RandomFloat( -M_PI, M_PI );
 
 		zspeed = Com_RandomLong( 80, 140 );
 		VectorSet( pTemp->entity.baseline.origin, speed * cos( angle ), speed * sin( angle ), zspeed );
@@ -2650,9 +2655,9 @@ int CL_DecalIndexFromName( const char *name )
 		return 0;
 
 	// look through the loaded sprite name list for SpriteName
-	for( i = 0; i < MAX_DECALS && host.draw_decals[i+1][0]; i++ )
+	for( i = 0; i < MAX_DECALS - 1 && host.draw_decals[i+1][0]; i++ )
 	{
-		if( !Q_stricmp( name, host.draw_decals[i+1] ))
+		if( !Q_stricmp( name, (char *)host.draw_decals[i+1] ))
 			return i+1;
 	}
 	return 0; // invalid decal
@@ -2703,7 +2708,7 @@ int CL_DecalIndex( int id )
 			}
 		}
 
-		if( !load_external ) cl.decal_index[id] = GL_LoadTexture( host.draw_decals[id], NULL, 0, TF_DECAL, NULL );
+		if( !load_external ) cl.decal_index[id] = GL_LoadTexture( (char *)host.draw_decals[id], NULL, 0, TF_DECAL, NULL );
 	}
 	host.decal_loading = false;
 
@@ -2764,3 +2769,4 @@ void CL_ClearEffects( void )
 	CL_ClearParticles ();
 	CL_ClearLightStyles ();
 }
+#endif // XASH_DEDICATED

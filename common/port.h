@@ -13,92 +13,106 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#pragma once
 #ifndef PORT_H
 #define PORT_H
 
 #ifdef XASH_VGUI
-	#if !(defined(__i386__) || defined(_X86_) || defined(_WIN32))
-	#error "VGUI is exists only for x86. You must disable VGUI flag or build Xash3D for x86 target."
-    #endif
+	#if !(defined(__i386__) || defined(_X86_) || defined(_M_IX86))
+		#error "VGUI is exists only for x86. You must disable VGUI flag or build Xash3D for x86 target."
+	#endif
+
+	#if !(defined(__linux__) || defined(__APPLE__) || defined(_WIN32) || defined(DLL_LOADER))
+		#error "VGUI is exists only for Windows/Linux/Mac OS X. Disable it or build Xash3D SDL for one of these targets"
+	#endif
 #endif
 
-#ifndef _WIN32
-    #include <limits.h>
-    #include <dlfcn.h>
+#ifdef __amd64__
+#define ARCH_SUFFIX "64"
+#else
+#define ARCH_SUFFIX
+#endif
 
-    #ifdef __APPLE__
+#if !defined(_WIN32)
+	#include <limits.h>
+	#include <dlfcn.h>
+	#include <stdlib.h>
+	#include <unistd.h>
+
+	#if defined(__APPLE__)
 		#include <sys/syslimits.h>
 		#define OS_LIB_EXT "dylib"
-    #else
-		#include <linux/limits.h>
+	#else
+		#if defined(__linux__)
+			#include <linux/limits.h>
+		#endif
 		#define OS_LIB_EXT "so"
-    #endif
+	#endif
 
-    #ifdef __ANDROID__
-		#define XASH_THREADS
-		#ifdef LOAD_HARDFP
-			#define MENUDLL "libmenu_hardfp.so"
-			#define CLIENTDLL "libclient_hardfp.so"
-			#define SERVERDLL "libserver_hardfp.so"
+	#if defined(__ANDROID__)
+		#if defined(LOAD_HARDFP)
+			#define POSTFIX "_hardfp"
 		#else
-			#define MENUDLL "libmenu.so"
-			#define CLIENTDLL "libclient.so"
-			#define SERVERDLL "libserver.so"
+			#define POSTFIX
 		#endif
+
+		// don't change these names
+		#define MENUDLL   "libmenu"   POSTFIX "." OS_LIB_EXT
+		#define CLIENTDLL "libclient" POSTFIX "." OS_LIB_EXT
+		#define SERVERDLL "libserver" POSTFIX "." OS_LIB_EXT
 		#define GAMEPATH "/sdcard/xash"
-    #else
-		#define MENUDLL "libxashmenu." OS_LIB_EXT
-		#define CLIENTDLL "client." OS_LIB_EXT
-		#ifdef PANDORA
-			#define SERVERDLL "hl." OS_LIB_EXT
-			#define LIBPATH "."
-			#define GAMEPATH "."
-		#endif
-    #endif
+	#else
+		#define MENUDLL "libxashmenu"ARCH_SUFFIX"." OS_LIB_EXT
+		#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
+	#endif
 
 	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT
 
-    #define TRUE	    1
-    #define FALSE	    0
+	#define TRUE	    1
+	#define FALSE	    0
 
-    // Windows-specific
-    #define _stdcall
-    #define __stdcall
-    #define __cdecl
-	#define _inline	    static inline
-    #define O_BINARY    0		//In Linux O_BINARY didn't exist
+	// Windows-specific
+	#define _stdcall
+	#define __stdcall
+	#define __cdecl
+	#define _inline	static inline
+	#define O_BINARY 0 // O_BINARY is Windows extension
+	#define O_TEXT 0 // O_TEXT is Windows extension
 
-    // Windows functions to Linux equivalent
+	// Windows functions to Linux equivalent
 	#define _mkdir( x )					mkdir( x, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH )
 	#define LoadLibrary( x )			dlopen( x, RTLD_NOW )
 	#define GetProcAddress( x, y )		dlsym( x, y )
 	#define SetCurrentDirectory( x )	(!chdir( x ))
 	#define FreeLibrary( x )			dlclose( x )
-	#define MAKEWORD(a,b)				((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
-	#define max(a, b)  (((a) > (b)) ? (a) : (b))
-	#define min(a, b)  (((a) < (b)) ? (a) : (b))
-	#define tell(a)						lseek(a, 0, SEEK_CUR)
+	#define MAKEWORD( a, b )			((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
+	#define max( a, b )                 (((a) > (b)) ? (a) : (b))
+	#define min( a, b )                 (((a) < (b)) ? (a) : (b))
+	#define tell( a )					lseek(a, 0, SEEK_CUR)
 
-    typedef unsigned char   BYTE;
-    typedef unsigned char   byte;
-    typedef short int	    WORD;
-    typedef unsigned int    DWORD;
-    typedef long int	    LONG;
-    typedef unsigned long int   ULONG;
-    typedef long	    WPARAM;
-    typedef unsigned int    LPARAM;
+	typedef unsigned char	BYTE;
+	typedef unsigned char   byte;
+	typedef short int	    WORD;
+	typedef unsigned int    DWORD;
+	typedef int	    LONG;
+	typedef unsigned int   ULONG;
+	typedef int			WPARAM;
+	typedef unsigned int    LPARAM;
 
-    typedef void* HANDLE;
-    typedef void* HMODULE;
-    typedef void* HINSTANCE;
+	typedef void* HANDLE;
+	typedef void* HMODULE;
+	typedef void* HINSTANCE;
 
-    typedef char* LPSTR;
+	typedef char* LPSTR;
 
-    typedef struct tagPOINT
-    {
-	int x, y;
-    } POINT;
+	typedef struct tagPOINT
+	{
+		int x, y;
+	} POINT;
 #else
+	#ifdef __MINGW32__
+		#define _inline static inline
+	#endif
 	#define strcasecmp _stricmp
 	#define strncasecmp _strnicmp
 	#define open _open
@@ -118,13 +132,18 @@ GNU General Public License for more details.
 	#pragma warning(disable : 4310)	// cast truncates constant value
 
 	#define HSPRITE WINAPI_HSPRITE
-	#include <windows.h>
+		#include <windows.h>
 	#undef HSPRITE
 
-    #define OS_LIB_EXT "dll"
-    #define MENUDLL "menu." OS_LIB_EXT
-    #define CLIENTDLL "client." OS_LIB_EXT
+	#define OS_LIB_EXT "dll"
+	#define MENUDLL "menu"ARCH_SUFFIX"." OS_LIB_EXT
+	#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
 #endif
 
+#ifdef __GNUC__
+#define _format(x) __attribute__((format(printf, x, x+1)))
+#else
+#define _format(x)
+#endif
 #endif

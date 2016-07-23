@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_DEDICATED
 #include "common.h"
 #include "input.h"
 #include "client.h"
@@ -274,13 +274,22 @@ void Key_SetBinding( int keynum, const char *binding )
 {
 	if( keynum == -1 ) return;
 
-	// free old bindings
+	// free old binding
 	if( keys[keynum].binding )
 	{
+		// GoldSrc doesn't touch ESC
+		if( keynum == K_ESCAPE ) return;
+
+		if( host.state != HOST_INIT && Q_stricmp( keys[keynum].binding, binding ) )
+			cls.keybind_changed = true;
+
 		Mem_Free((char *)keys[keynum].binding );
 		keys[keynum].binding = NULL;
 	}
-		
+
+	// don't bind to empty string
+	if( !binding[0] ) return;
+
 	// allocate memory for new binding
 	keys[keynum].binding = copystring( binding );
 }
@@ -337,6 +346,11 @@ void Key_Unbind_f( void )
 		Msg( "\"%s\" isn't a valid key\n", Cmd_Argv( 1 ));
 		return;
 	}
+	if( b == K_ESCAPE )
+	{
+		Msg( "Can't unbind ESCAPE key\n" );
+		return;
+	}
 	Key_SetBinding( b, "" );
 }
 
@@ -351,7 +365,7 @@ void Key_Unbindall_f( void )
 	
 	for( i = 0; i < 256; i++ )
 	{
-		if( keys[i].binding )
+		if( i != K_ESCAPE && keys[i].binding )
 			Key_SetBinding( i, "" );
 	}
 }
@@ -478,15 +492,18 @@ void Key_Init( void )
 {
 	keyname_t	*kn;
 
+	cls.key_dest = key_console;
+
 	// register our functions
 	Cmd_AddCommand( "bind", Key_Bind_f, "binds a command to the specified key in bindmap" );
 	Cmd_AddCommand( "unbind", Key_Unbind_f, "removes a command on the specified key in bindmap" );
 	Cmd_AddCommand( "unbindall", Key_Unbindall_f, "removes all commands from all keys in bindmap" );
 	Cmd_AddCommand( "resetkeys", Key_Reset_f, "reset all keys to their default values" );
 	Cmd_AddCommand( "bindlist", Key_Bindlist_f, "display current key bindings" );
-	Cmd_AddCommand( "makehelp", Key_EnumCmds_f, "write help.txt that contains all console cvars and cmds" ); 
+	Cmd_AddCommand( "makehelp", Key_EnumCmds_f, "write help.txt that contains all console cvars and cmds" );
+	Q_memset( keys, 0, sizeof( keys ) );
 
-	// setup default binding. "unbindall" from config.cfg will be reset it
+	// setup default binding. "unbindall" from config.cfg will reset it
 	for( kn = keynames; kn->name; kn++ ) Key_SetBinding( kn->keynum, kn->binding ); 
 }
 
@@ -552,7 +569,7 @@ void Key_Event( int key, qboolean down )
 	//Con_Printf( "Keycode %d\n", key );
 	if ( key > 255 || key < 0) 
 	{
-		Con_Printf ("Keynum %d out of range\n", key);
+		MsgDev (D_NOTE, "Keynum %d out of range\n", key);
 		return;
 	}
 	// update auto-repeat status and BUTTON_ANY status
@@ -579,27 +596,17 @@ void Key_Event( int key, qboolean down )
 	// console key is hardcoded, so the user can never unbind it
 	if( key == '`' || key == '~' )
 	{
-		// we are in typing mode. So don't switch to console
-#ifdef _WIN32
-		if( (word)GetKeyboardLayout( 0 ) == (word)0x419 )
-		{
-#endif
-			if( cls.key_dest != key_game )
-				return;
-#ifdef _WIN32
-		}
-#endif
+		// we are in typing mode, so don't switch to console
+		if( cls.key_dest == key_message || !down )
+			return;
 
-		if( !down ) return;
-    		Con_ToggleConsole_f();
+		Con_ToggleConsole_f();
 		return;
 	}
 
-	// escape is always handled special
+	// escape is always handled specially
 	if( key == K_ESCAPE && down )
 	{
-		kb = keys[key].binding;
-
 		switch( cls.key_dest )
 		{
 		case key_game:
@@ -629,6 +636,27 @@ void Key_Event( int key, qboolean down )
 	if( cls.key_dest == key_menu )
 	{
 		// only non printable keys passed
+		// shift + click enables text mode (old menu compatibility)
+		/*if( down && !host.textmode && Key_IsDown( K_SHIFT ) && ( key == 241 ) )
+		{
+			SDLash_EnableTextInput( true );
+			return;
+		}
+		// and click disables
+		else if( down && ( key == 241 ) )
+			SDLash_EnableTextInput( false );
+		*/
+		if( !menu.use_text_api )
+			Key_EnableTextInput( true, false );
+		//pass printable chars for old menus
+		if( !menu.use_text_api && !host.textmode && down && ( key >= 32 ) && ( key <= 'z' ) )
+		{
+			if( Key_IsDown( K_SHIFT ) )
+			{
+				key += 'A'-'a';
+			}
+			UI_CharEvent( key );
+		}
 		UI_KeyEvent( key, down );
 		return;
 	}
@@ -651,14 +679,15 @@ void Key_Event( int key, qboolean down )
 	// distribute the key down event to the apropriate handler
 	if( cls.key_dest == key_game )
 	{
-		if(host.mouse_visible)
-			return;
-		if( cls.state == ca_cinematic && ( key != K_ESCAPE || !down ))
+		if( cls.state == ca_cinematic )
 		{
 			// only escape passed when cinematic is playing
 			// HLFX 0.6 bug: crash in vgui3.dll while press +attack during movie playback
-			return;
+			if( key != K_ESCAPE || !down )
+				return;
 		}
+		else if( host.mouse_visible )
+			return;
 
 		// send the bound action
 		kb = keys[key].binding;
@@ -718,6 +747,15 @@ void Key_Event( int key, qboolean down )
 	}
 }
 
+void Key_EnableTextInput( qboolean enable, qboolean force )
+{
+#ifdef XASH_SDL
+	SDLash_EnableTextInput( enable, force );
+#elif defined(__ANDROID__)
+	Android_EnableTextInput( enable, force );
+#endif
+}
+
 /*
 =========
 Key_SetKeyDest
@@ -730,27 +768,27 @@ void Key_SetKeyDest( int key_dest )
 	switch( key_dest )
 	{
 	case key_game:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( false );
-	#endif
+		Key_EnableTextInput( false, false );
+		if( host_xashds_hacks->value )
+		{
+			Cbuf_Execute();
+			if( cl.refdef.paused )
+				Cbuf_InsertText("pause\n");
+			Cbuf_Execute();
+			cl.refdef.paused = 0;
+		}
 		cls.key_dest = key_game;
 		break;
 	case key_menu:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( false );
-	#endif
+		Key_EnableTextInput( false, false );
 		cls.key_dest = key_menu;
 		break;
 	case key_console:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( true );
-	#endif
+		Key_EnableTextInput( true, false );
 		cls.key_dest = key_console;
 		break;
 	case key_message:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( true );
-	#endif
+		Key_EnableTextInput( true, false );
 		cls.key_dest = key_message;
 		break;
 	default:
@@ -796,11 +834,13 @@ void CL_CharEvent( int key )
 #ifdef _WIN32
 	if( key == '`' || key == '~' ) return;
 
+#if 0
 	if( cls.key_dest == key_console && !Con_Visible( ))
 	{
 		if((char)key == '�' || (char)key == '�' )
 			return; // don't pass '�' when we open the console 
 	}
+#endif
 #endif
 	// distribute the key down event to the apropriate handler
 	if( cls.key_dest == key_console || cls.key_dest == key_message )
@@ -812,3 +852,4 @@ void CL_CharEvent( int key )
 		UI_CharEvent( key );
 	}
 }
+#endif

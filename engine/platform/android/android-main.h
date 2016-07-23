@@ -1,11 +1,17 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
+#ifndef ANDROID_MAIN_H
+#define ANDROID_MAIN_H
+void Android_Vibrate( float life, char flags );
+#ifndef XASH_SDL
+// android_nosdl.c
 void Android_SwapBuffers();
 void Android_GetScreenRes( int *width, int *height );
-void Android_Events();
-void Android_Move( float *forward, float *side, float *pitch, float *yaw );
-void Android_DrawControls(); // android-touchif.cpp
-#ifdef __cplusplus
-}
+void Android_Init( void );
+void Android_EnableTextInput( qboolean enable, qboolean force );
+void Android_RunEvents( void );
+void Android_MessageBox( const char *title, const char *text );
+void Android_SwapInterval( int interval );
+qboolean Android_InitGL();
 #endif
+
+#endif // ANDROID_MAIN_H

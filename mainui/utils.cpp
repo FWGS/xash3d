@@ -42,6 +42,20 @@ void DBG_AssertFunction( BOOL fExpr, const char* szExpr, const char* szFile, int
 }
 #endif	// DEBUG
 
+void AddSpaces(char *s, int size)
+{
+	int len = strlen(s);
+
+	size += len - ColorStrlen(s);
+
+	while( len < size - 1 )
+	{	
+		s[len] = ' ';
+		len++;
+	}
+	s[len] = '\0';
+}
+
 int ColorStrlen( const char *str )
 {
 	const char *p;
@@ -51,7 +65,7 @@ int ColorStrlen( const char *str )
 
 	int len = 0;
 	p = str;
-
+	UtfProcessChar( 0 );
 	while( *p )
 	{
 		if( IsColorString( p ))
@@ -61,8 +75,10 @@ int ColorStrlen( const char *str )
 		}
 
 		p++;
-		len++;
+		if( UtfProcessChar( (unsigned char) *p ) )
+			len++;
 	}
+	len++;
 
 	return len;
 }
@@ -176,46 +192,45 @@ Searches the string for the given
 key and returns the associated value, or an empty string.
 ===============
 */
-char *Info_ValueForKey( const char *s, const char *key )
+const char *Info_ValueForKey( const char *s, const char *key )
 {
-	static	char value[MAX_INFO_STRING];
 	char	pkey[MAX_INFO_STRING];
+	static	char value[2][MAX_INFO_STRING]; // use two buffers so compares work without stomping on each other
+	static	int valueindex;
+	char	*o;
+	
+	valueindex ^= 1;
+	if( *s == '\\' ) s++;
+	printf("I_VFK '%s' '%s'\n", s, key );
 
-	if ( *s == '\\' )
-		s++;
-
-	while ( 1 )
+	while( 1 )
 	{
-		char *o = pkey;
-
-		while ( *s != '\\' && *s != '\n' )
+		o = pkey;
+		while( *s != '\\' && *s != '\n' )
 		{
-			if ( !*s )
-				return "";
+			if( !*s ) return "";
 			*o++ = *s++;
 		}
 
 		*o = 0;
 		s++;
 
-		o = value;
+		o = value[valueindex];
 
-		while ( *s != '\\' && *s != '\n' && *s )
+		while( *s != '\\' && *s != '\n' && *s )
 		{
-			if ( !*s )
-				return "";
+			if( !*s ) return "";
 			*o++ = *s++;
 		}
 		*o = 0;
 
-		if ( !strcmp( key, pkey ))
-			return value;
-
-		if ( !*s )
-			return "";
+		if( !strcmp( key, pkey ))
+			return value[valueindex];
+		if( !*s ) return "";
 		s++;
 	}
 }
+
 
 /* 
 ===================
@@ -334,6 +349,7 @@ void UI_ScrollList_Init( menuScrollList_s *sl )
 //	sl->curItem = 0;
 	sl->topItem = 0;
 	sl->numItems = 0;
+	sl->highlight = -1;
 
 	// count number of items
 	while( sl->itemNames[sl->numItems] )
@@ -358,7 +374,6 @@ void UI_ScrollList_Init( menuScrollList_s *sl )
 
 	UI_ScaleCoords( &sl->generic.x, &sl->generic.y, &sl->generic.width, &sl->generic.height );
 }
-
 /*
 =================
 UI_ScrollList_Key
@@ -369,6 +384,7 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 	const char	*sound = 0;
 	int		arrowWidth, arrowHeight, upX, upY, downX, downY;
 	int		i, y;
+	bool noscroll = false;
 
 	if( !down ) 
 	{
@@ -379,6 +395,7 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 	switch( key )
 	{
 	case K_MOUSE1:
+		noscroll = true; // don't scroll to current when mouse used
 		if(!( sl->generic.flags & QMF_HASMOUSEFOCUS ))
 			break;
 
@@ -395,32 +412,41 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		downY = sl->generic.y2 + (sl->generic.height2 - arrowHeight) - UI_OUTLINE_WIDTH;
 
 		// ADAMIX
-		if( UI_CursorInRect( sl->scrollBarX, sl->scrollBarY, sl->scrollBarWidth, sl->scrollBarHeight ))
+		if( UI_CursorInRect( upX, upY + arrowHeight, arrowWidth, sl->scrollBarY - upY - arrowHeight ) ||
+			  UI_CursorInRect( upX, sl->scrollBarY + sl->scrollBarHeight , arrowWidth, downY - ( sl->scrollBarY + sl->scrollBarHeight ) ) )
 		{
 			sl->scrollBarSliding = true;
-			break;
+			//break;
 		}
 		// ADAMIX END
 
 		// Now see if either up or down has focus
 		if( UI_CursorInRect( upX, upY, arrowWidth, arrowHeight ))
 		{
-			if( sl->curItem != 0 )
+			if( sl->topItem > 5 )
 			{
-				sl->curItem--;
+				sl->topItem-=5;
 				sound = uiSoundMove;
 			}
-			else sound = uiSoundBuzz;
+			else
+			{
+				sl->topItem = 0;
+				sound = uiSoundBuzz;
+			}
 			break;
 		}
 		else if( UI_CursorInRect( downX, downY, arrowWidth, arrowHeight ))
 		{
-			if( sl->curItem != sl->numItems - 1 )
+			if( sl->topItem < sl->numItems - sl->numRows - 5 )
 			{
-				sl->curItem++;
+				sl->topItem+=5;
 				sound = uiSoundMove;
 			}
-			else sound = uiSoundBuzz;
+			else
+			{
+				sl->topItem = sl->numItems - sl->numRows;
+				sound = uiSoundBuzz;
+			}
 			break;
 		}
 
@@ -431,7 +457,7 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 			if( !sl->itemNames[i] )
 				break; // done
 
-			if( UI_CursorInRect( sl->generic.x, y, sl->generic.width, sl->generic.charHeight ))
+			if( UI_CursorInRect( sl->generic.x, y, sl->generic.width - arrowWidth, sl->generic.charHeight ))
 			{
 				sl->curItem = i;
 				sound = uiSoundNull;
@@ -499,11 +525,16 @@ const char *UI_ScrollList_Key( menuScrollList_s *sl, int key, int down )
 		else sound = uiSoundBuzz;
 		break;
 	}
-
-	sl->topItem = sl->curItem - sl->numRows + 1;
-	if( sl->topItem < 0 ) sl->topItem = 0;
-	if( sl->topItem > sl->numItems - sl->numRows )
-		sl->topItem = sl->numItems - sl->numRows;
+	if( !noscroll )
+	{
+		if( sl->curItem < sl->topItem )
+			sl->topItem = sl->curItem;
+		if( sl->curItem > sl->topItem + sl->numRows - 1 )
+			sl->topItem = sl->curItem - sl->numRows + 1;
+		if( sl->topItem < 0 ) sl->topItem = 0;
+		if( sl->topItem > sl->numItems - sl->numRows )
+			sl->topItem = sl->numItems - sl->numRows;
+	}
 
 	if( sound && ( sl->generic.flags & QMF_SILENT ))
 		sound = uiSoundNull;
@@ -523,7 +554,7 @@ UI_ScrollList_Draw
 */
 void UI_ScrollList_Draw( menuScrollList_s *sl )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	int	i, x, y, w, h;
 	int	selColor = 0xFF503818; // Red 80, Green 56, Blue 24, Alpha 255
@@ -564,11 +595,15 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		{
 			if( !sl->itemNames[i] )
 				break;		// Done
+			// hightlighted item
+			if( i == sl->highlight )
+			{
+				UI_FillRect( sl->generic.x, y, sl->generic.width - arrowWidth, sl->generic.charHeight, 0xFF383838 );
+			}
 
 			if( i == sl->curItem )
 			{
 				UI_FillRect( sl->generic.x, y, sl->generic.width - arrowWidth, sl->generic.charHeight, selColor );
-				break;
 			}
 		}
 	}
@@ -619,50 +654,96 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	downX = sl->generic.x2 + sl->generic.width2 - arrowWidth;
 	downY = sl->generic.y2 + (sl->generic.height2 - arrowHeight) - UI_OUTLINE_WIDTH;
 
+	float step = (sl->numItems <= 1 ) ? 1 : (downY - upY - arrowHeight) / (float)(sl->numItems - 1);
+
+	if( cursorDown && !sl->scrollBarSliding )
+	{
+		if( UI_CursorInRect( sl->generic.x2, sl->generic.y2, sl->generic.width2 - arrowWidth, sl->generic.height2 ))
+		{
+			static float ac_y = 0;
+			ac_y += cursorDY;
+			cursorDY = 0;
+			if( ac_y > sl->generic.charHeight / 2.0f )
+			{
+				sl->topItem -= ac_y/ sl->generic.charHeight - 0.5;
+				if( sl->topItem < 0 )
+					sl->topItem = 0;
+				ac_y = 0;
+			}
+			if( ac_y < -sl->generic.charHeight / 2.0f )
+			{
+				sl->topItem -= ac_y/ sl->generic.charHeight - 0.5 ;
+				if( sl->topItem > sl->numItems - sl->numRows )
+					sl->topItem = sl->numItems - sl->numRows;
+				ac_y = 0;
+			}
+		}
+		else if( UI_CursorInRect( sl->scrollBarX, sl->scrollBarY, sl->scrollBarWidth, sl->scrollBarHeight ))
+		{
+			static float ac_y = 0;
+			ac_y += cursorDY;
+			cursorDY = 0;
+			if( ac_y < -step )
+			{
+				sl->topItem += ac_y / step + 0.5;
+				if( sl->topItem < 0 )
+					sl->topItem = 0;
+				ac_y = 0;
+			}
+			if( ac_y > step )
+			{
+				sl->topItem += ac_y / step + 0.5;
+				if( sl->topItem > sl->numItems - sl->numRows )
+					sl->topItem = sl->numItems - sl->numRows;
+				ac_y = 0;
+			}
+		}
+
+	}
+
 	// draw the arrows base
 	UI_FillRect( upX, upY + arrowHeight, arrowWidth, downY - upY - arrowHeight, uiInputFgColor );
+
 
 	// ADAMIX
 	sl->scrollBarX = upX + sl->generic.charHeight/4;
 	sl->scrollBarWidth = arrowWidth - sl->generic.charHeight/4;
-	
-	int step = (sl->numItems <= 1 ) ? 1 : (downY - upY - arrowHeight) / (sl->numItems - 1);
 
 	if(((downY - upY - arrowHeight) - (((sl->numItems-1)*sl->generic.charHeight)/2)) < 2)
 	{
-		sl->scrollBarHeight = (downY - upY - arrowHeight) - (step * (sl->numItems-1));
-		sl->scrollBarY = upY + arrowHeight + (step*sl->curItem);
+		sl->scrollBarHeight = (downY - upY - arrowHeight) - (step * (sl->numItems - sl->numRows));
+		sl->scrollBarY = upY + arrowHeight + (step*sl->topItem);
 	}
 	else
 	{
-		sl->scrollBarHeight = downY - upY - arrowHeight - (((sl->numItems-1) * sl->generic.charHeight) / 2);
-		sl->scrollBarY = upY + arrowHeight + (((sl->curItem) * sl->generic.charHeight)/2);
+		sl->scrollBarHeight = downY - upY - arrowHeight - (((sl->numItems- sl->numRows) * sl->generic.charHeight) / 2);
+		sl->scrollBarY = upY + arrowHeight + (((sl->topItem) * sl->generic.charHeight)/2);
 	}
 
 	if( sl->scrollBarSliding )
 	{
-		int dist = uiStatic.cursorY - sl->scrollBarY - (sl->scrollBarHeight>>2);
+		int dist = uiStatic.cursorY - sl->scrollBarY - (sl->scrollBarHeight>>1);
 
-		if((((dist / 2) > (sl->generic.charHeight / 2)) || ((dist / 2) < (sl->generic.charHeight / 2))) && sl->curItem <= (sl->numItems - 1) && sl->curItem >= 0)
+		if((((dist / 2) > (sl->generic.charHeight / 2)) || ((dist / 2) < (sl->generic.charHeight / 2))) && sl->topItem <= (sl->numItems - sl->numRows ) && sl->topItem >= 0)
 		{
-			if(sl->generic.callback)
-				sl->generic.callback( sl, QM_CHANGED );
+			//if(sl->generic.callback)
+				//sl->generic.callback( sl, QM_CHANGED );
 
-			if((dist / 2) > ( sl->generic.charHeight / 2 ) && sl->curItem < ( sl->numItems - 1 ))
+			if((dist / 2) > ( sl->generic.charHeight / 2 ) && sl->topItem < ( sl->numItems - sl->numRows - 1 ))
 			{
-				sl->curItem++;
+				sl->topItem++;
 			}
 			
-			if((dist / 2) < -(sl->generic.charHeight / 2) && sl->curItem > 0 )
+			if((dist / 2) < -(sl->generic.charHeight / 2) && sl->topItem > 0 )
 			{
-				sl->curItem--;
+				sl->topItem--;
 			}
 		}
 
-		sl->topItem = sl->curItem - sl->numRows + 1;
+		//sl->topItem = sl->curItem - sl->numRows + 1;
 		if( sl->topItem < 0 ) sl->topItem = 0;
-		if( sl->topItem > ( sl->numItems - sl->numRows ))
-			sl->topItem = sl->numItems - sl->numRows;
+		if( sl->topItem > ( sl->numItems - sl->numRows - 1 ))
+			sl->topItem = sl->numItems - sl->numRows - 1;
 	}
 
 	if( sl->scrollBarSliding )
@@ -927,7 +1008,7 @@ UI_SpinControl_Draw
 */
 void UI_SpinControl_Draw( menuSpinControl_s *sc )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	int	x, y, w, h;
 	int	arrowWidth, arrowHeight, leftX, leftY, rightX, rightY;
@@ -1000,8 +1081,8 @@ void UI_SpinControl_Draw( menuSpinControl_s *sc )
 	if( sc->generic.flags & QMF_HIGHLIGHTIFFOCUS )
 	{
 		UI_DrawString( x, y, w, h, sc->generic.name, sc->generic.focusColor, false, sc->generic.charWidth, sc->generic.charHeight, justify, shadow );
-		UI_DrawPic( leftX, leftY, arrowWidth, arrowHeight, (leftFocus) ? sc->generic.color : sc->generic.color, (leftFocus) ? sc->leftArrowFocus : sc->leftArrow );
-		UI_DrawPic( rightX, rightY, arrowWidth, arrowHeight, (rightFocus) ? sc->generic.color : sc->generic.color, (rightFocus) ? sc->rightArrowFocus : sc->rightArrow );
+		UI_DrawPic( leftX, leftY, arrowWidth, arrowHeight, sc->generic.color, (leftFocus) ? sc->leftArrowFocus : sc->leftArrow );
+		UI_DrawPic( rightX, rightY, arrowWidth, arrowHeight, sc->generic.color, (rightFocus) ? sc->rightArrowFocus : sc->rightArrow );
 	}
 	else if( sc->generic.flags & QMF_PULSEIFFOCUS )
 	{
@@ -1100,28 +1181,23 @@ const char *UI_Slider_Key( menuSlider_s *sl, int key, int down )
 	switch( key )
 	{
 	case K_MOUSE1:
-		if(!( sl->generic.flags & QMF_HASMOUSEFOCUS ))
+		sl->keepSlider = false;
+		if( !UI_CursorInRect( sl->generic.x, sl->generic.y - 20, sl->generic.width, sl->generic.height + 40 ) )
 			return uiSoundNull;
 
 		// find the current slider position
 		sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue * sl->numSteps));		
-                    if( UI_CursorInRect( sliderX, sl->generic.y2, sl->generic.width2, sl->generic.height ))
-                    {
-			sl->keepSlider = true;
-		}
-		else
-		{
-			int	dist, numSteps;
-
-			// immediately move slider into specified place
-			dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
-			numSteps = dist / (int)sl->drawStep;
-			sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
-
-			// tell menu about changes
-			if( sl->generic.callback )
-				sl->generic.callback( sl, QM_CHANGED );
-		}
+		sl->keepSlider = true;
+		int	dist, numSteps;
+		
+		// immediately move slider into specified place
+		dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
+		numSteps = dist / (int)sl->drawStep;
+		sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
+		
+		// tell menu about changes
+		if( sl->generic.callback )
+			sl->generic.callback( sl, QM_CHANGED );
 		break;
 	}
 	return uiSoundNull;
@@ -1134,7 +1210,7 @@ UI_Slider_Draw
 */
 void UI_Slider_Draw( menuSlider_s *sl )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	int	textHeight, sliderX;
 
@@ -1150,14 +1226,18 @@ void UI_Slider_Draw( menuSlider_s *sl )
 	if( sl->keepSlider )
 	{
 		int	dist, numSteps;
-
-		// move slider follow the holded mouse button
-		dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
-		numSteps = dist / (int)sl->drawStep;
-		sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
-		
-		// tell menu about changes
-		if( sl->generic.callback ) sl->generic.callback( sl, QM_CHANGED );
+		if( !UI_CursorInRect( sl->generic.x, sl->generic.y - 40, sl->generic.width, sl->generic.height + 80 ) )
+			sl->keepSlider = false;
+		else
+		{
+			// move slider follow the holded mouse button
+			dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
+			numSteps = dist / (int)sl->drawStep;
+			sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
+			
+			// tell menu about changes
+			if( sl->generic.callback ) sl->generic.callback( sl, QM_CHANGED );
+		}
 	}
 
 	// keep value in range
@@ -1458,7 +1538,7 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	// previous character
 	if( key == K_LEFTARROW )
 	{
-		if( f->cursor > 0 ) f->cursor--;
+		if( f->cursor > 0 ) f->cursor = UtfMoveLeft( f->buffer, f->cursor );
 		if( f->cursor < f->scroll ) f->scroll--;
 		return uiSoundNull;
 	}
@@ -1466,7 +1546,7 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	// next character
 	if( key == K_RIGHTARROW )
 	{
-		if( f->cursor < len ) f->cursor++;
+		if( f->cursor < len ) f->cursor = UtfMoveRight( f->buffer, f->cursor, len );
 		if( f->cursor >= f->scroll + f->widthInChars && f->cursor <= len )
 			f->scroll++;
 		return uiSoundNull;
@@ -1490,8 +1570,9 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	{
 		if( f->cursor > 0 )
 		{
-			memmove( f->buffer + f->cursor - 1, f->buffer + f->cursor, len - f->cursor + 1 );
-			f->cursor--;
+			int pos = UtfMoveLeft( f->buffer, f->cursor );
+			memmove( f->buffer + pos, f->buffer + f->cursor, len - f->cursor + 1 );
+			f->cursor = pos;
 			if( f->scroll ) f->scroll--;
 		}
 	}
@@ -1499,6 +1580,23 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	{	
 		if( f->cursor < len )
 			memmove( f->buffer + f->cursor, f->buffer + f->cursor + 1, len - f->cursor );
+	}
+
+	if( key == K_MOUSE1 )
+	{
+		if( UI_CursorInRect( f->generic.x, f->generic.y, f->generic.width, f->generic.height ) )
+		{
+			int charpos = (uiStatic.cursorX - f->generic.x) / f->generic.charWidth;
+			f->cursor = f->scroll + charpos;
+			if( charpos == 0 && f->scroll )
+				f->scroll--;
+			if( charpos == f->widthInChars && f->scroll < len - 1 )
+				f->scroll++;
+			if( f->scroll > len )
+				f->scroll = len;
+			if( f->cursor > len )
+				f->cursor = len;
+		}
 	}
 
 	if( f->generic.callback )
@@ -1548,7 +1646,7 @@ void UI_Field_Char( menuField_s *f, int key )
 	}
 
 	// ignore any other non printable chars
-	if( key < 32 ) return;
+	//if( key < 32 ) return;
 
 	if( key == '^' && !( f->generic.flags & QMF_ALLOW_COLORSTRINGS ))
 	{
@@ -1596,7 +1694,7 @@ UI_Field_Draw
 */
 void UI_Field_Draw( menuField_s *f )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	char	text[UI_MAX_FIELD_LINE];
 	int	len, drawLen, prestep;
@@ -1838,7 +1936,7 @@ UI_Action_Draw
 */
 void UI_Action_Draw( menuAction_s *a )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 
 	if( a->generic.flags & QMF_LEFT_JUSTIFY )
@@ -2145,8 +2243,9 @@ void UI_PicButton_Draw( menuPicButton_s *item )
 		state = BUTTON_FOCUS;
 
 	// make sure what cursor in rect
- 	if( item->generic.bPressed )
+	if( item->generic.bPressed && cursorDown )
  		state = BUTTON_PRESSED;
+	else item->generic.bPressed = false;
 
 	if( item->generic.statusText && item->generic.flags & QMF_NOTIFY )
 	{
@@ -2196,7 +2295,7 @@ void UI_PicButton_Draw( menuPicButton_s *item )
 	}
 	else
 	{
-		int	justify;
+		int	justify = 0;
 		int	shadow;
 		
 		if( item->generic.flags & QMF_LEFT_JUSTIFY )

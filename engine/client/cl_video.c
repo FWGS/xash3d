@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -108,7 +110,7 @@ void SCR_CheckStartupVids( void )
 	if( !FS_FileExists( "media/StartupVids.txt", false ))
 		SCR_CreateStartupVids();
 
-	afile = FS_LoadFile( "media/StartupVids.txt", NULL, false );
+	afile = (char *)FS_LoadFile( "media/StartupVids.txt", NULL, false );
 	if( !afile ) return; // something bad happens
 
 	pfile = afile;
@@ -250,7 +252,7 @@ qboolean SCR_PlayCinematic( const char *arg )
 	return true;
 }
 
-long SCR_GetAudioChunk( char *rawdata, long length )
+int SCR_GetAudioChunk( char *rawdata, int length )
 {
 	int	r;
 
@@ -316,3 +318,4 @@ void SCR_FreeCinematic( void )
 
 	AVI_Shutdown();
 }
+#endif // XASH_DEDICATED

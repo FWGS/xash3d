@@ -36,7 +36,6 @@ cvar_t		*ui_showmodels;
 
 uiStatic_t	uiStatic;
 
-char		uiEmptyString[256];
 const char	*uiSoundIn	= "media/launch_upmenu1.wav";
 const char	*uiSoundOut	= "media/launch_dnmenu1.wav";
 const char	*uiSoundLaunch	= "media/launch_select2.wav";
@@ -205,7 +204,7 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 {
 	int	modulate, shadowModulate;
 	char	line[1024], *l;
-	int	xx, yy, ofsX, ofsY, len, ch;
+	int	xx = 0, yy, ofsX = 0, ofsY = 0, len, ch;
 
 	if( !string || !string[0] )
 		return;
@@ -269,12 +268,16 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 
 			ch = *l++;
 			ch &= 255;
-
+#if 0
 #ifdef _WIN32
 			// fix for letter �
 			if( ch == 0xB8 ) ch = (byte)'�';
 			if( ch == 0xA8 ) ch = (byte)'�';
 #endif
+#endif
+			ch = UtfProcessChar( (unsigned char) ch );
+			if(!ch)
+				continue;
 			if( ch != ' ' )
 			{
 				if( shadow ) TextMessageDrawChar( xx + ofsX, yy + ofsY, charW, charH, ch, shadowModulate, uiStatic.hFont );
@@ -510,7 +513,7 @@ void UI_CursorMoved( menuFramework_s *menu )
 		if( callback ) callback( (void *)curItem, QM_LOSTFOCUS );
 
 		// Disable text editing
-		if( curItem->type == QMTYPE_FIELD ) g_engfuncs.pfnEnableTextInput( false );
+		if( curItem->type == QMTYPE_FIELD ) EnableTextInput( false );
 	}
 
 	if( menu->cursor >= 0 && menu->cursor < menu->numItems )
@@ -521,7 +524,7 @@ void UI_CursorMoved( menuFramework_s *menu )
 		if( callback ) callback( (void *)curItem, QM_GOTFOCUS );
 
 		// Enable text editing. It will open keyboard on Android.
-		if( curItem->type == QMTYPE_FIELD ) g_engfuncs.pfnEnableTextInput( true );
+		if( curItem->type == QMTYPE_FIELD ) EnableTextInput( true );
 	}
 }
 
@@ -634,7 +637,7 @@ UI_DrawMenu
 */
 void UI_DrawMenu( menuFramework_s *menu )
 {
-	static long	statusFadeTime;
+	static int	statusFadeTime;
 	static menuCommon_s	*lastItem;
 	menuCommon_s	*item;
 	int		i;
@@ -690,19 +693,20 @@ void UI_DrawMenu( menuFramework_s *menu )
 		// flash on selected button (like in GoldSrc)
 		if( item ) item->lastFocusTime = uiStatic.realTime;
 		statusFadeTime = uiStatic.realTime;
+
 		lastItem = item;
 	}
 
-	if( item && ( item->flags & QMF_HASMOUSEFOCUS && !( item->flags & QMF_NOTIFY )) && ( item->statusText != NULL ))
+	if( item && (item == lastItem) && ( item->statusText != NULL ))
 	{
 		// fade it in, but wait a second
-		int alpha = bound( 0, ((( uiStatic.realTime - statusFadeTime ) - 1000 ) * 0.001f ) * 255, 255 );
+		float alpha = bound(0, ((( uiStatic.realTime - statusFadeTime ) - 100 ) * 0.01f ), 1);
 		int r, g, b, x, len;
 
 		GetConsoleStringSize( item->statusText, &len, NULL );
 
 		UnpackRGB( r, g, b, uiColorHelp );
-		TextMessageSetColor( r, g, b, alpha );
+		TextMessageSetColor( r, g, b, alpha * 255 );
 		x = ( ScreenWidth - len ) * 0.5; // centering
 
 		DrawConsoleString( x, 720 * uiStatic.scaleY, item->statusText );
@@ -1101,6 +1105,10 @@ void UI_KeyEvent( int key, int down )
 
 	if( !uiStatic.menuActive )
 		return;
+	if( key == K_MOUSE1 )
+	{
+		cursorDown = !!down;
+	}
 
 	if( uiStatic.menuActive->keyFunc )
 		sound = uiStatic.menuActive->keyFunc( key, down );
@@ -1144,9 +1152,13 @@ void UI_CharEvent( int key )
 		case QMTYPE_FIELD:
 			UI_Field_Char((menuField_s *)item, key );
 			break;
+		default:
+			break;
 		}
 	}
 }
+bool cursorDown;
+float cursorDY;
 
 /*
 =================
@@ -1164,8 +1176,22 @@ void UI_MouseMove( int x, int y )
 	if( !uiStatic.visible )
 		return;
 
+	if( cursorDown )
+	{
+		static bool prevDown = false;
+		if(!prevDown)
+			prevDown = true, cursorDY = 0;
+		else
+			if( y - uiStatic.cursorY )
+				cursorDY += y - uiStatic.cursorY;
+	}
+	else
+		cursorDY = 0;
+	//Con_Printf("%d %d %f\n",x, y, cursorDY);
 	if( !uiStatic.menuActive )
 		return;
+
+
 
 	// now menu uses absolute coordinates
 	uiStatic.cursorX = x;
@@ -1240,12 +1266,13 @@ void UI_SetActiveMenu( int fActive )
 	if( !uiStatic.initialized )
 		return;
 
-	// don't continue firing if we leave game
-	KEY_ClearStates();
 	uiStatic.framecount = 0;
 
 	if( fActive )
 	{
+		// don't continue firing if we leave game
+		KEY_ClearStates();
+
 		KEY_SetDest( KEY_MENU );
 		UI_Main_Menu();
 	}
@@ -1269,6 +1296,9 @@ void UI_AddServerToList( netadr_t adr, const char *info )
 
 	if( uiStatic.numServers == UI_MAX_SERVERS )
 		return;	// full
+
+	if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )) != 0 )
+		return;
 
 	// ignore if duplicated
 	for( i = 0; i < uiStatic.numServers; i++ )
@@ -1366,6 +1396,11 @@ void UI_Precache( void )
 	UI_VidModes_Precache();
 	UI_CustomGame_Precache();
 	UI_Credits_Precache();
+	UI_Touch_Precache();
+	UI_TouchOptions_Precache();
+	UI_TouchButtons_Precache();
+	UI_TouchEdit_Precache();
+	UI_FileDialog_Precache();
 }
 
 void UI_ParseColor( char *&pfile, int *outColor )
@@ -1562,10 +1597,14 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_vidoptions", UI_VidOptions_Menu );
 	Cmd_AddCommand( "menu_vidmodes", UI_VidModes_Menu );
 	Cmd_AddCommand( "menu_customgame", UI_CustomGame_Menu );
+	Cmd_AddCommand( "menu_touch", UI_Touch_Menu );
+	Cmd_AddCommand( "menu_touchoptions", UI_TouchOptions_Menu );
+	Cmd_AddCommand( "menu_touchbuttons", UI_TouchButtons_Menu );
+	Cmd_AddCommand( "menu_touchedit", UI_TouchEdit_Menu );
+	Cmd_AddCommand( "menu_filedialog", UI_FileDialog_Menu );
 
 	CHECK_MAP_LIST( TRUE );
 
-	memset( uiEmptyString, ' ', sizeof( uiEmptyString ));	// HACKHACK
 	uiStatic.initialized = true;
 
 	// setup game info

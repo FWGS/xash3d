@@ -181,4 +181,33 @@ inline void TextMessageSetColor( int r, int g, int b, int alpha = 255 )
 
 #define COMPARE_FILE_TIME	(*g_engfuncs.pfnCompareFileTime)
 
+//#define UtfProcessChar		(*g_textfuncs.pfnUtfProcessChar)
+//#define UtfMoveLeft		(*g_textfuncs.pfnUtfMoveLeft)
+//#define UtfMoveRight		(*g_textfuncs.pfnUtfMoveRight)
+//#define EnableTextInput		(*g_textfuncs.pfnEnableTextInput)
+inline void EnableTextInput( int enable )
+{
+	if( g_textfuncs.pfnEnableTextInput )
+		g_textfuncs.pfnEnableTextInput( enable );
+}
+inline int UtfMoveRight( char *str, int pos, int length )
+{
+	if( g_textfuncs.pfnUtfMoveRight )
+		return g_textfuncs.pfnUtfMoveRight( str, pos, length );
+	return pos + 1;
+}
+
+inline int UtfMoveLeft( char *str, int pos )
+{
+	if( g_textfuncs.pfnUtfMoveLeft )
+		return g_textfuncs.pfnUtfMoveLeft( str, pos );
+	return pos - 1;
+}
+inline int UtfProcessChar( int in )
+{
+	if( g_textfuncs.pfnUtfProcessChar )
+		return g_textfuncs.pfnUtfProcessChar( in );
+	return in;
+}
+
 #endif//ENGINECALLBACKS_H

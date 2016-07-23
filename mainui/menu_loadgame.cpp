@@ -142,13 +142,13 @@ static void UI_LoadGame_GetGameList( void )
 		
 		if( !GET_SAVE_COMMENT( filenames[i], comment ))
 		{
-			if( strlen( comment ))
+			if( comment[0] )
 			{
 				// get name string even if not found - SV_GetComment can be mark saves
 				// as <CORRUPTED> <OLD VERSION> etc
-				StringConcat( uiLoadGame.saveDescription[i], uiEmptyString, TIME_LENGTH );
+				AddSpaces( uiLoadGame.saveDescription[i], TIME_LENGTH );
 				StringConcat( uiLoadGame.saveDescription[i], comment, NAME_LENGTH );
-				StringConcat( uiLoadGame.saveDescription[i], uiEmptyString, NAME_LENGTH );
+				AddSpaces( uiLoadGame.saveDescription[i], NAME_LENGTH );
 				uiLoadGame.saveDescriptionPtr[i] = uiLoadGame.saveDescription[i];
 				COM_FileBase( filenames[i], uiLoadGame.delName[i] );
 			}
@@ -164,11 +164,11 @@ static void UI_LoadGame_GetGameList( void )
 		StringConcat( uiLoadGame.saveDescription[i], comment + CS_SIZE, TIME_LENGTH );
 		StringConcat( uiLoadGame.saveDescription[i], " ", TIME_LENGTH );
 		StringConcat( uiLoadGame.saveDescription[i], comment + CS_SIZE + CS_TIME, TIME_LENGTH );
-		StringConcat( uiLoadGame.saveDescription[i], uiEmptyString, TIME_LENGTH ); // fill remaining entries
+		AddSpaces( uiLoadGame.saveDescription[i], TIME_LENGTH );// fill remaining entries
 		StringConcat( uiLoadGame.saveDescription[i], comment, NAME_LENGTH );
-		StringConcat( uiLoadGame.saveDescription[i], uiEmptyString, NAME_LENGTH );
+		AddSpaces( uiLoadGame.saveDescription[i], NAME_LENGTH );
 		StringConcat( uiLoadGame.saveDescription[i], comment + CS_SIZE + (CS_TIME * 2), GAMETIME_LENGTH );
-		StringConcat( uiLoadGame.saveDescription[i], uiEmptyString, GAMETIME_LENGTH );
+		AddSpaces( uiLoadGame.saveDescription[i], GAMETIME_LENGTH );
 		uiLoadGame.saveDescriptionPtr[i] = uiLoadGame.saveDescription[i];
 	}
 
@@ -177,11 +177,11 @@ static void UI_LoadGame_GetGameList( void )
 
 	uiLoadGame.savesList.itemNames = (const char **)uiLoadGame.saveDescriptionPtr;
 
-	if ( strlen( uiLoadGame.saveName[0] ) == 0 )
+	if ( uiLoadGame.saveName[0][0] == '\0' )
 		uiLoadGame.load.generic.flags |= QMF_GRAYED;
 	else uiLoadGame.load.generic.flags &= ~QMF_GRAYED;
 
-	if ( strlen( uiLoadGame.delName[0] ) == 0 )
+	if ( uiLoadGame.delName[0][0] == '\0' )
 		uiLoadGame.remove.generic.flags |= QMF_GRAYED;
 	else uiLoadGame.remove.generic.flags &= ~QMF_GRAYED;
 }
@@ -197,11 +197,11 @@ static void UI_LoadGame_Callback( void *self, int event )
 
 	if( event == QM_CHANGED )
 	{
-		if( strlen( uiLoadGame.saveName[uiLoadGame.savesList.curItem] ) == 0 )
+		if( uiLoadGame.saveName[uiLoadGame.savesList.curItem][0] == '\0' )
 			uiLoadGame.load.generic.flags |= QMF_GRAYED;
 		else uiLoadGame.load.generic.flags &= ~QMF_GRAYED;
 
-		if( strlen( uiLoadGame.delName[uiLoadGame.savesList.curItem] ) == 0 )
+		if( uiLoadGame.delName[uiLoadGame.savesList.curItem][0] == '\0' )
 			uiLoadGame.remove.generic.flags |= QMF_GRAYED;
 		else uiLoadGame.remove.generic.flags &= ~QMF_GRAYED;
 		return;
@@ -216,7 +216,7 @@ static void UI_LoadGame_Callback( void *self, int event )
 		UI_PopMenu();
 		break;
 	case ID_LOAD:
-		if( strlen( uiLoadGame.saveName[uiLoadGame.savesList.curItem] ))
+		if( uiLoadGame.saveName[uiLoadGame.savesList.curItem][0] )
 		{
 			char	cmd[128];
 			sprintf( cmd, "load \"%s\"\n", uiLoadGame.saveName[uiLoadGame.savesList.curItem] );
@@ -231,7 +231,7 @@ static void UI_LoadGame_Callback( void *self, int event )
 		UI_DeleteDialog();
 		break;
 	case ID_YES:
-		if( strlen( uiLoadGame.delName[uiLoadGame.savesList.curItem] ))
+		if( uiLoadGame.delName[uiLoadGame.savesList.curItem][0] )
 		{
 			char	cmd[128];
 			sprintf( cmd, "killsave \"%s\"\n", uiLoadGame.delName[uiLoadGame.savesList.curItem] );
@@ -272,7 +272,7 @@ static void UI_LoadGame_Ownerdraw( void *self )
 		
 		UI_ScaleCoords( &x, &y, &w, &h );
 
-		if( strlen( uiLoadGame.saveName[uiLoadGame.savesList.curItem] ))
+		if( uiLoadGame.saveName[uiLoadGame.savesList.curItem][0] )
 		{
 			char	saveshot[128];
 
@@ -301,11 +301,11 @@ static void UI_LoadGame_Init( void )
 	uiLoadGame.menu.keyFunc = UI_LoadGame_KeyFunc;
 
 	StringConcat( uiLoadGame.hintText, "Time", TIME_LENGTH );
-	StringConcat( uiLoadGame.hintText, uiEmptyString, TIME_LENGTH );
+	AddSpaces( uiLoadGame.hintText, TIME_LENGTH );
 	StringConcat( uiLoadGame.hintText, "Game", NAME_LENGTH );
-	StringConcat( uiLoadGame.hintText, uiEmptyString, NAME_LENGTH );
+	AddSpaces( uiLoadGame.hintText, NAME_LENGTH );
 	StringConcat( uiLoadGame.hintText, "Elapsed time", GAMETIME_LENGTH );
-	StringConcat( uiLoadGame.hintText, uiEmptyString, GAMETIME_LENGTH );
+	AddSpaces( uiLoadGame.hintText, GAMETIME_LENGTH );
 
 	uiLoadGame.background.generic.id = ID_BACKGROUND;
 	uiLoadGame.background.generic.type = QMTYPE_BITMAP;

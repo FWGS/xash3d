@@ -48,6 +48,7 @@ GNU General Public License for more details.
 #else
 #define strnicmp _strnicmp
 #define stricmp _stricmp
+#define snprintf _snprintf
 #endif
 
 typedef int (*cmpfunc)( const void *a, const void *b );

@@ -73,7 +73,7 @@ GNU General Public License for more details.
 #define UI_MAX_FIELD_LINE		256
 #define UI_OUTLINE_WIDTH		uiStatic.outlineWidth	// outline thickness
 
-#define UI_MAXGAMES			100	// slots for savegame/demos
+#define UI_MAXGAMES			900	// slots for savegame/demos
 #define UI_MAX_SERVERS		32
 #define UI_MAX_BGMAPS		32
 
@@ -107,29 +107,29 @@ typedef enum
 } menuType_t;
 
 // Generic flags
-#define QMF_LEFT_JUSTIFY		(1<<0)
-#define QMF_CENTER_JUSTIFY		(1<<1)
-#define QMF_RIGHT_JUSTIFY		(1<<2)
-#define QMF_GRAYED			(1<<3)	// Grays and disables
-#define QMF_INACTIVE		(1<<4)	// Disables any input
-#define QMF_HIDDEN			(1<<5)	// Doesn't draw
-#define QMF_NUMBERSONLY		(1<<6)	// Edit field is only numbers
-#define QMF_LOWERCASE		(1<<7)	// Edit field is all lower case
-#define QMF_UPPERCASE		(1<<8)	// Edit field is all upper case
-#define QMF_DRAW_ADDITIVE		(1<<9)	// enable additive for this bitmap
-#define QMF_PULSEIFFOCUS		(1<<10)
-#define QMF_HIGHLIGHTIFFOCUS		(1<<11)
-#define QMF_SMALLFONT		(1<<12)
-#define QMF_BIGFONT			(1<<13)
-#define QMF_DROPSHADOW		(1<<14)
-#define QMF_SILENT			(1<<15)	// Don't play sounds
-#define QMF_HASMOUSEFOCUS		(1<<16)
-#define QMF_MOUSEONLY		(1<<17)	// Only mouse input allowed
-#define QMF_FOCUSBEHIND		(1<<18)	// Focus draws behind normal item
-#define QMF_NOTIFY			(1<<19)	// draw notify at right screen side
-#define QMF_ACT_ONRELEASE		(1<<20)	// call Key_Event when button is released
-#define QMF_ALLOW_COLORSTRINGS	(1<<21)	// allow colorstring in MENU_FIELD
-#define QMF_HIDEINPUT		(1<<22)	// used for "password" field
+#define QMF_LEFT_JUSTIFY		(1U << 0)
+#define QMF_CENTER_JUSTIFY		(1U << 1)
+#define QMF_RIGHT_JUSTIFY		(1U << 2)
+#define QMF_GRAYED			(1U << 3)	// Grays and disables
+#define QMF_INACTIVE		(1U << 4)	// Disables any input
+#define QMF_HIDDEN			(1U << 5)	// Doesn't draw
+#define QMF_NUMBERSONLY		(1U << 6)	// Edit field is only numbers
+#define QMF_LOWERCASE		(1U << 7)	// Edit field is all lower case
+#define QMF_UPPERCASE		(1U << 8)	// Edit field is all upper case
+#define QMF_DRAW_ADDITIVE		(1U << 9)	// enable additive for this bitmap
+#define QMF_PULSEIFFOCUS		(1U << 10)
+#define QMF_HIGHLIGHTIFFOCUS		(1U << 11)
+#define QMF_SMALLFONT		(1U << 12)
+#define QMF_BIGFONT			(1U << 13)
+#define QMF_DROPSHADOW		(1U << 14)
+#define QMF_SILENT			(1U << 15)	// Don't play sounds
+#define QMF_HASMOUSEFOCUS		(1U << 16)
+#define QMF_MOUSEONLY		(1U << 17)	// Only mouse input allowed
+#define QMF_FOCUSBEHIND		(1U << 18)	// Focus draws behind normal item
+#define QMF_NOTIFY			(1U << 19)	// draw notify at right screen side
+#define QMF_ACT_ONRELEASE		(1U << 20)	// call Key_Event when button is released
+#define QMF_ALLOW_COLORSTRINGS	(1U << 21)	// allow colorstring in MENU_FIELD
+#define QMF_HIDEINPUT		(1U << 22)	// used for "password" field
 
 // Callback notifications
 #define QM_GOTFOCUS			1
@@ -207,6 +207,8 @@ typedef struct
 	int		scrollBarWidth;
 	int		scrollBarHeight;
 	int		scrollBarSliding;
+// highlight // mittorn
+	int		highlight;
 } menuScrollList_s;
 
 typedef struct
@@ -377,11 +379,12 @@ typedef struct
 	int		width;
 } uiStatic_t;
 
+extern float	cursorDY;			// use for touch scroll
+extern bool cursorDown;
 extern uiStatic_t		uiStatic;
 
 #define DLG_X ((uiStatic.width - 640) / 2 - 192) // Dialogs are 640px in width
 
-extern char		uiEmptyString[256];	// HACKHACK
 extern const char		*uiSoundIn;
 extern const char		*uiSoundOut;
 extern const char		*uiSoundKey;
@@ -457,6 +460,11 @@ void UI_VidModes_Precache( void );
 void UI_CustomGame_Precache( void );
 void UI_Credits_Precache( void );
 void UI_GoToSite_Precache( void );
+void UI_Touch_Precache( void );
+void UI_TouchOptions_Precache( void );
+void UI_TouchButtons_Precache( void );
+void UI_TouchEdit_Precache( void );
+void UI_FileDialog_Precache( void );
 
 // Menus
 void UI_Main_Menu( void );
@@ -479,7 +487,13 @@ void UI_VidOptions_Menu( void );
 void UI_VidModes_Menu( void );
 void UI_CustomGame_Menu( void );
 void UI_Credits_Menu( void );
-
+void UI_Touch_Menu( void );
+void UI_TouchOptions_Menu( void );
+void UI_TouchButtons_Menu( void );
+void UI_TouchEdit_Menu( void );
+void UI_FileDialog_Menu( void );
+void UI_TouchButtons_AddButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
+void UI_TouchButtons_GetButtonList();
 //
 //-----------------------------------------------------
 //
@@ -489,6 +503,18 @@ public:
 	// Game information
 	GAMEINFO		m_gameinfo;
 };
+
+typedef struct
+{
+	char patterns[32][256];
+	int npatterns;
+	char result[256];
+	bool valid;
+	void ( * callback )( bool success );
+	bool preview;
+} uiFileDialogGlobal_t;
+
+extern uiFileDialogGlobal_t uiFileDialogGlobal;
 
 extern CMenu gMenu;
 

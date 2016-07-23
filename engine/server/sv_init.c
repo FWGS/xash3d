@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include "server.h"
+#include "library.h"
 
 int SV_UPDATE_BACKUP = SINGLEPLAYER_BACKUP;
 
@@ -196,13 +197,13 @@ char *SV_EntityScript( void )
 	ft1 = FS_FileTime( sv.worldmodel->name, false );
 	ft2 = FS_FileTime( entfilename, true );
 
-	if( ft2 != -1 )
+	if( ft2 !=(unsigned long) -1 )
 	{
 		if( ft1 > ft2 )
 		{
-			MsgDev( D_INFO, "^1Entity patch is older than bsp. Ignored.\n", entfilename );			
+			MsgDev( D_INFO, "^1Entity patch %s is older than BSP. Ignored.\n", entfilename );
 		}
-		else if(( ents = FS_LoadFile( entfilename, NULL, true )) != NULL )
+		else if(( ents = (char *)FS_LoadFile( entfilename, NULL, true )) != NULL )
 		{
 			MsgDev( D_INFO, "^2Read entity patch:^7 %s\n", entfilename );
 			return ents;
@@ -340,11 +341,13 @@ void SV_ActivateServer( void )
 	else
 	{
 		// clear the ugly moving delay in singleplayer
-		Cvar_SetFloat( "clockwindow", 0.0f );
+		if( !Host_IsDedicated() )
+			Cvar_SetFloat( "clockwindow", 0.0f );
 		MsgDev( D_INFO, "Game started\n" );
 	}
+	Log_Printf( "Started map \"%s\" (CRC \"0\")\n", STRING( svgame.globals->mapname ) );
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		Mod_FreeUnused ();
 	}
@@ -356,10 +359,28 @@ void SV_ActivateServer( void )
 
 	Host_SetServerState( sv.state );
 
-	if( sv_maxclients->integer > 1 && public_server->integer )
+	if( sv_maxclients->integer > 1 )
 	{
-		MsgDev( D_INFO, "Add your server, to master server list\n" );
-		Master_Add( );
+		// listenserver is executed on every map change in multiplayer
+		if( !Host_IsDedicated() )
+		{
+			char *plservercfgfile = Cvar_VariableString( "lservercfgfile" );
+			if( *plservercfgfile )
+				Cbuf_AddText( va( "exec %s\n", plservercfgfile ) );
+		}
+
+		if( public_server->integer )
+		{
+			MsgDev( D_INFO, "Adding your server to master server list\n" );
+			Master_Add( );
+		}
+	}
+
+	// mapchangecfgfile
+	{
+		char *mapchangecfgfile = Cvar_VariableString( "mapchangecfgfile" );
+		if( *mapchangecfgfile )
+			Cbuf_AddText( va( "exec %s\n", mapchangecfgfile ) );
 	}
 }
 
@@ -386,6 +407,9 @@ void SV_DeactivateServer( void )
 	Mem_EmptyPool( svgame.stringspool );
 
 	svgame.dllFuncs.pfnServerDeactivate();
+
+	if( sv_maxclients->integer > 32 )
+		Cvar_SetFloat( "maxplayers", 32.0f );
 
 	for( i = 0; i < sv_maxclients->integer; i++ )
 	{
@@ -497,6 +521,10 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 		MsgDev( D_INFO, "Spawn Server: %s\n", mapname );
 	}
 
+	Log_Open();
+	Log_Printf( "Loading map \"%s\"\n", mapname );
+	Log_PrintServerVars();
+
 	sv.state = ss_dead;
 	Host_SetServerState( sv.state );
 	Q_memset( &sv, 0, sizeof( sv ));	// wipe the entire per-level structure
@@ -551,7 +579,7 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 	else sv.startspot[0] = '\0';
 
 	Q_snprintf( sv.model_precache[1], sizeof( sv.model_precache[0] ), "maps/%s.bsp", sv.name );
-	Mod_LoadWorld( sv.model_precache[1], &sv.checksum, false );
+	Mod_LoadWorld( sv.model_precache[1], &sv.checksum, sv_maxclients->integer > 1 );
 	sv.worldmodel = Mod_Handle( 1 ); // get world pointer
 
 	for( i = 1; i < sv.worldmodel->numsubmodels; i++ )
@@ -597,12 +625,16 @@ void SV_InitGame( void )
 		// init game after host error
 		if( !svgame.hInstance )
 		{
-			if( !SV_LoadProgs( GI->game_dll ))
+			Com_ResetLibraryError();
+			if( !SV_LoadProgs( SI.gamedll ))
 			{
-				MsgDev( D_ERROR, "SV_InitGame: can't initialize %s\n", GI->game_dll );
-				return; // can't loading
+				if( CL_IsInMenu() )
+					Sys_Warn( "SV_InitGame: can't initialize \"%s\":\n%s", SI.gamedll, Com_GetLibraryError() );
+				else
+					Msg( "SV_InitGame: can't initialize \"%s\":\n%s", SI.gamedll, Com_GetLibraryError() );
+				return; // can't load
 			}
-			MsgDev( D_INFO, "Server loaded\n", GI->game_dll );
+			MsgDev( D_INFO, "Server loaded\n" );
 		}
 
 		// make sure the client is down
@@ -621,7 +653,7 @@ void SV_InitGame( void )
 
 	// dedicated servers are can't be single player and are usually DM
 	// so unless they explicity set coop, force it to deathmatch
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		if( !Cvar_VariableValue( "coop" ) && !Cvar_VariableValue( "teamplay" ))
 			Cvar_FullSet( "deathmatch", "1",  CVAR_LATCH );
@@ -637,7 +669,7 @@ void SV_InitGame( void )
 	}
 	else if( Cvar_VariableValue( "coop" ))
 	{
-		if( sv_maxclients->integer <= 1 || sv_maxclients->integer > 4 )
+		if( sv_maxclients->integer < 1 )
 			Cvar_FullSet( "maxplayers", "4", CVAR_LATCH );
 	}
 	else	
@@ -647,7 +679,7 @@ void SV_InitGame( void )
 	}
 
 	svgame.globals->maxClients = sv_maxclients->integer;
-	SV_UPDATE_BACKUP = ( svgame.globals->maxClients == 1 ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
+	SV_UPDATE_BACKUP = ( svgame.globals->maxClients == 1 && !Host_IsDedicated() ) ? SINGLEPLAYER_BACKUP : MULTIPLAYER_BACKUP;
 
 	svs.clients = Z_Malloc( sizeof( sv_client_t ) * sv_maxclients->integer );
 	svs.num_client_entities = sv_maxclients->integer * SV_UPDATE_BACKUP * 64;
@@ -662,7 +694,7 @@ void SV_InitGame( void )
 	// copy gamemode into svgame.globals
 	svgame.globals->deathmatch = Cvar_VariableInteger( "deathmatch" );
 	svgame.globals->teamplay = Cvar_VariableInteger( "teamplay" );
-	svgame.globals->coop = Cvar_VariableInteger( "coop" );
+	svgame.globals->coop = ( sv_maxclients->integer > 1 ) ? Cvar_VariableInteger( "coop" ):0;
 
 	// heartbeats will always be sent to the id master
 	svs.last_heartbeat = MAX_HEARTBEAT; // send immediately
@@ -700,7 +732,8 @@ void SV_InitGameProgs( void )
 	if( svgame.hInstance ) return; // already loaded
 
 	// just try to initialize
-	SV_LoadProgs( GI->game_dll );
+	SV_LoadProgs( SI.gamedll );
+	Com_ResetLibraryError();
 }
 
 void SV_FreeGameProgs( void )
@@ -726,6 +759,14 @@ qboolean SV_NewGame( const char *mapName, qboolean loadGame )
 		S_StopAllSounds ();
 		SV_DeactivateServer ();
 	}
+
+	if( host_xashds_hacks->value )
+	{
+		Cbuf_InsertText(va("wait;rcon map %s\n", mapName));
+		Cbuf_AddText("wait;connect 127.0.0.1\n");
+		return true;
+	}
+
 
 	sv.loadgame = loadGame;
 	sv.background = false;

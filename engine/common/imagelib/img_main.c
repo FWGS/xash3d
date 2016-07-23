@@ -107,6 +107,7 @@ void Image_Reset( void )
 	image.fogParams[1] = 0;
 	image.fogParams[2] = 0;
 	image.fogParams[3] = 0;
+	image.encode = 0;
 
 	// pointers will be saved with prevoius picture struct
 	// don't care about it
@@ -146,6 +147,7 @@ rgbdata_t *ImagePack( void )
 		pack->buffer = image.rgba;
 		pack->width = image.width;
 		pack->height = image.height;
+		pack->depth = image.depth;
 		pack->type = image.type;
 		pack->size = image.size;
 	}
@@ -159,7 +161,7 @@ rgbdata_t *ImagePack( void )
 	pack->flags = image.flags;
 	pack->numMips = image.num_mips;
 	pack->palette = image.palette;
-	pack->depth = image.depth;
+	pack->encode = image.encode;
 	
 	return pack;
 }
@@ -222,7 +224,9 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
           const char	*ext = FS_FileExtension( filename );
 	string		path, loadname, sidename;
 	qboolean		anyformat = true;
-	int		i, filesize = 0;
+	qboolean		gamedironly = true;
+	int		i;
+	fs_offset_t	filesize = 0;
 	const loadpixformat_t *format;
 	const cubepack_t	*cmap;
 	byte		*f;
@@ -248,6 +252,8 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 	// HACKHACK: skip any checks, load file from buffer
 	if( filename[0] == '#' && buffer && size ) goto load_internal;
 
+search_fs:
+
 	// now try all the formats in the selected list
 	for( format = image.loadformats; format && format->formatstring; format++)
 	{
@@ -255,10 +261,10 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 		{
 			Q_sprintf( path, format->formatstring, loadname, "", format->ext );
 			image.hint = format->hint;
-			f = FS_LoadFile( path, &filesize, false );
+			f = FS_LoadFile( path, &filesize, gamedironly );
 			if( f && filesize > 0 )
 			{
-				if( format->loadfunc( path, f, filesize ))
+				if( format->loadfunc( path, f, (size_t)filesize ))
 				{
 					Mem_Free( f ); // release buffer
 					return ImagePack(); // loaded
@@ -266,6 +272,12 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 				else Mem_Free(f); // release buffer 
 			}
 		}
+	}
+
+	if( gamedironly )
+	{
+		gamedironly = false;
+		goto search_fs;
 	}
 
 	// check all cubemap sides with package suffix
@@ -286,7 +298,7 @@ rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 					if( f && filesize > 0 )
 					{
 						// this name will be used only for tell user about problems 
-						if( format->loadfunc( path, f, filesize ))
+						if( format->loadfunc( path, f, (size_t)filesize ))
 						{         
 							Q_snprintf( sidename, sizeof( sidename ), "%s%s.%s", loadname, cmap->type[i].suf, format->ext );
 							if( FS_AddSideToPack( sidename, cmap->type[i].flags )) // process flags to flip some sides

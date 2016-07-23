@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -246,7 +248,7 @@ particle_t *CL_AllocParticle( void (*callback)( particle_t*, float ))
 
 	if( !cl_free_particles )
 	{
-		MsgDev( D_INFO, "Overflow %d particles\n", GI->max_particles );
+		MsgDev( D_NOTE, "Overflow %d particles\n", GI->max_particles );
 		return NULL;
 	}
 
@@ -362,7 +364,7 @@ static void CL_BulletTracerDraw( particle_t *p, float frametime )
 
 	GL_SetRenderMode( kRenderTransTexture );
 
-	GL_Bind( GL_TEXTURE0, cls.particleImage );
+	GL_Bind( XASH_TEXTURE0, cls.particleImage );
 	pglBegin( GL_QUADS );
 
 	pglColor4ub( clgame.palette[p->color][0], clgame.palette[p->color][1], clgame.palette[p->color][2], alpha );
@@ -503,7 +505,10 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	GL_SetRenderMode( kRenderTransTexture );
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
-	GL_Bind( GL_TEXTURE0, cls.particleImage );
+	if( r_oldparticles->integer == 1 )
+		GL_Bind( XASH_TEXTURE0, cls.oldParticleImage );
+	else
+		GL_Bind( XASH_TEXTURE0, cls.particleImage );
 
 	// add the 4 corner vertices.
 	pglBegin( GL_QUADS );
@@ -535,7 +540,7 @@ void CL_DrawParticles( void )
 	if( !cl_draw_particles->integer )
 		return;
 
-	// don't evaluate particles when executes many times
+	// don't evaluate particles when executed many times
 	// at same frame e.g. mirror rendering
 	if( framecount != tr.realframecount )
 	{
@@ -1217,19 +1222,43 @@ void CL_BulletImpactParticles( const vec3_t org )
 		CL_SparkleTracer( pos, dir, vel );
 	}
 
-	for( i = 0; i < 12; i++ )
-	{
-		p = CL_AllocParticle( NULL );
-		if( !p ) return;
-            
-		p->die += 1.0f;
-		p->color = 0; // black
-
-		p->type = pt_grav;
-		for( j = 0; j < 3; j++ )
+	if (r_oldparticles->integer == 1)
+	{ 
+		for (i = 0; i < 12; i++)
 		{
-			p->org[j] = org[j] + Com_RandomFloat( -2.0f, 3.0f );
-			p->vel[j] = Com_RandomFloat( -70.0f, 70.0f );
+			int greyColors;
+			p = CL_AllocParticle(NULL);
+			if (!p) return;
+
+			p->die += 1.0f;
+			// Randomly make each particle one of three colors: dark grey, medium grey or light grey.
+			greyColors = (rand() % 3 + 1) * 32;
+			p->color = CL_LookupColor(greyColors, greyColors, greyColors);
+
+			p->type = pt_grav;
+			for (j = 0; j < 3; j++)
+			{
+				p->org[j] = org[j] + Com_RandomFloat(-2.0f, 3.0f);
+				p->vel[j] = Com_RandomFloat(-70.0f, 70.0f);
+			}
+		}
+	}
+	else
+	{
+		for (i = 0; i < 12; i++)
+		{
+			p = CL_AllocParticle(NULL);
+			if (!p) return;
+
+			p->die += 1.0f;
+			p->color = 0; // black
+
+			p->type = pt_grav;
+			for (j = 0; j < 3; j++)
+			{
+				p->org[j] = org[j] + Com_RandomFloat(-2.0f, 3.0f);
+				p->vel[j] = Com_RandomFloat(-70.0f, 70.0f);
+			}
 		}
 	}
 }
@@ -1387,7 +1416,7 @@ void CL_DrawTracer( vec3_t start, vec3_t delta, float width, rgb_t color, int al
 
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
-	GL_Bind( GL_TEXTURE0, cls.particleImage );
+	GL_Bind( XASH_TEXTURE0, cls.particleImage );
 	pglBegin( GL_QUADS );
 
 	pglTexCoord2f( 0.0f, endV );
@@ -1651,7 +1680,7 @@ void CL_ReadPointFile_f( void )
 	string		token;
 	
 	Q_snprintf( filename, sizeof( filename ), "maps/%s.pts", clgame.mapname );
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 
 	if( !afile )
 	{
@@ -1705,3 +1734,4 @@ void CL_ReadPointFile_f( void )
 	if( count ) Msg( "%i points read\n", count );
 	else Msg( "map %s has no leaks!\n", clgame.mapname );
 }
+#endif // XASH_DEDICATED

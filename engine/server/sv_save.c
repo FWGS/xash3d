@@ -443,8 +443,11 @@ void ReapplyDecal( SAVERESTOREDATA *pSaveData, decallist_t *entry, qboolean adja
 
 	// restore entity and model index
 	pEdict = pSaveData->pTable[entry->entityIndex].pent;
-	if( SV_IsValidEdict( pEdict )) modelIndex = pEdict->v.modelindex;
-	if( SV_IsValidEdict( pEdict )) entityIndex = NUM_FOR_EDICT( pEdict );
+	if( SV_IsValidEdict( pEdict ) )
+	{
+		modelIndex = pEdict->v.modelindex;
+		entityIndex = NUM_FOR_EDICT( pEdict );
+	}
 
 	if( SV_RestoreCustomDecal( entry, pEdict, adjacent ))
 		return; // decal was sucessfully restored at the game-side
@@ -533,7 +536,7 @@ void RestoreSound( soundlist_t *entry )
 		return;
 	}
 
-	if( entry->channel < 0 || entry->channel > 7 )
+	if( entry->channel > 7 )
 	{
 		MsgDev( D_ERROR, "SV_RestoreSound: channel must be in range 0-7\n" );
 		return;
@@ -611,22 +614,28 @@ int SV_IsValidSave( void )
 		}
 	}
 
-	if( !CL_Active( ))
+	if( !Host_IsDedicated() )
 	{
-		Msg( "Can't save if not active.\n" );
-		return 0;
-	}
+		// Enable save/load in xashds
 
-	if( CL_IsIntermission( ))
-	{
-		Msg( "Can't save during intermission.\n" );
-		return 0;
-	}
+		if( !CL_Active( ))
+		{
+			Msg( "Can't save if not active.\n" );
+			return 0;
+		}
 
-	if( sv_maxclients->integer != 1 )
-	{
-		Msg( "Can't save multiplayer games.\n" );
-		return 0;
+		if( CL_IsIntermission( ))
+		{
+			Msg( "Can't save during intermission.\n" );
+			return 0;
+		}
+
+		if( sv_maxclients->integer != 1 )
+		{
+			Msg( "Can't save multiplayer games.\n" );
+			return 0;
+		}
+
 	}
 
 	if( svs.clients && svs.clients[0].state == cs_spawned )
@@ -641,7 +650,7 @@ int SV_IsValidSave( void )
 			
 		if( pl->v.deadflag != false || pl->v.health <= 0.0f )
 		{
-			Msg( "Can't savegame with a dead player\n" );
+			Msg( "Can't savegame with a dead player.\n" );
 			return 0;
 		}
 
@@ -707,6 +716,7 @@ void SV_DirectoryCopy( const char *pPath, file_t *pFile )
 
 	for( i = 0; i < t->numfilenames; i++ )
 	{
+		Q_memset( szName, 0, SAVENAME_LENGTH );
 		fileSize = FS_FileSize( t->filenames[i], true );
 		pCopy = FS_Open( t->filenames[i], "rb", true );
 
@@ -787,6 +797,9 @@ void SV_SaveGameStateGlobals( SAVERESTOREDATA *pSaveData )
 	SAVE_LIGHTSTYLE	light;
 	int		i;
 	
+	Q_memset( &header, 0, sizeof( SAVE_HEADER ) );
+	Q_memset( &light, 0, sizeof( SAVE_LIGHTSTYLE ) );
+
 	// write global data
 	header.skillLevel = Cvar_VariableValue( "skill" ); // This is created from an int even though it's a float
 	header.connectionCount = pSaveData->connectionCount;
@@ -1866,7 +1879,7 @@ void SV_LoadAdjacentEnts( const char *pOldLevel, const char *pLandmarkName )
 			{
 				index = EntryInTable( pSaveData, sv.name, index );
 				if( index < 0 ) break;
-				flags |= (1<<index);
+				flags |= (1U << index);
 			}
 
 			if( flags ) movedCount = SV_CreateEntityTransitionList( pSaveData, flags );
@@ -1971,6 +1984,8 @@ int SV_SaveGameSlot( const char *pSaveName, const char *pSaveComment )
 
 	pSaveData = SV_SaveGameState();
 	if( !pSaveData ) return 0;
+
+	Q_memset( &gameHeader, 0, sizeof( GAME_HEADER ) );
 
 	SV_SaveFinish( pSaveData );
 
@@ -2112,9 +2127,6 @@ qboolean SV_LoadGame( const char *pName )
 	GAME_HEADER	gameHeader;
 	string		name;
 
-	if( host.type == HOST_DEDICATED )
-		return false;
-
 	if( !pName || !pName[0] )
 		return false;
 
@@ -2160,10 +2172,13 @@ qboolean SV_LoadGame( const char *pName )
 		return false;
 	}
 
-	Cvar_FullSet( "coop", "0", CVAR_LATCH );
-	Cvar_FullSet( "teamplay", "0", CVAR_LATCH );
-	Cvar_FullSet( "deathmatch", "0", CVAR_LATCH );
-	Cvar_FullSet( "maxplayers", "1", CVAR_LATCH );
+	if( !Host_IsDedicated() )
+	{
+		Cvar_FullSet( "coop", "0", CVAR_LATCH );
+		Cvar_FullSet( "teamplay", "0", CVAR_LATCH );
+		Cvar_FullSet( "deathmatch", "0", CVAR_LATCH );
+		Cvar_FullSet( "maxplayers", "1", CVAR_LATCH );
+	}
 
 	return Host_NewGame( gameHeader.mapName, true );
 }
@@ -2259,7 +2274,7 @@ const char *SV_GetLatestSave( void )
 {
 	search_t	*f = FS_Search( "save/*.sav", true, true );	// lookup only in gamedir
 	int	i, found = 0;
-	long	newest = 0, ft;
+	int	newest = 0, ft;
 	string	savename;	
 
 	if( !f ) return NULL;
@@ -2294,6 +2309,7 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	char	*pData, *pSaveData, *pFieldName, **pTokenList;
 	string	name, description;
 	file_t	*f;
+	short shortpool;
 
 	f = FS_Open( savename, "rb", true );
 	if( !f )
@@ -2345,14 +2361,14 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	size += tokenSize;
 
 	// sanity check.
-	if( tokenCount < 0 || tokenCount > ( 1024 * 1024 * 32 ))
+	if( tokenCount <= 0 || tokenCount > ( 1024 * 1024 * 32 ))
 	{
 		Q_strncpy( comment, "<corrupted>", MAX_STRING );
 		FS_Close( f );
 		return 0;
 	}
 
-	if( tokenSize < 0 || tokenSize > ( 1024 * 1024 * 32 ))
+	if( tokenSize <= 0 || tokenSize > ( 1024 * 1024 * 32 ))
 	{
 		Q_strncpy( comment, "<corrupted>", MAX_STRING );
 		FS_Close( f );
@@ -2364,30 +2380,38 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	pData = pSaveData;
 
 	// allocate a table for the strings, and parse the table
-	if( tokenSize > 0 )
-	{
-		pTokenList = Mem_Alloc( host.mempool, tokenCount * sizeof( char* ));
+	pTokenList = Mem_Alloc( host.mempool, tokenCount * sizeof( char* ));
 
-		// make sure the token strings pointed to by the pToken hashtable.
-		for( i = 0; i < tokenCount; i++ )
-		{
-			pTokenList[i] = *pData ? pData : NULL;	// point to each string in the pToken table
-			while( *pData++ );			// find next token (after next null)
-		}
+	if( !pTokenList || !pSaveData )
+	{
+		Q_strncpy( comment, "<corrupted>", MAX_STRING );
+
+		FS_Close( f );
+		Z_Free( pTokenList );
+		Z_Free( pSaveData );
+		return 0;
 	}
-	else pTokenList = NULL;
+
+	// make sure the token strings pointed to by the pToken hashtable.
+	for( i = 0; i < tokenCount; i++ )
+	{
+		pTokenList[i] = *pData ? pData : NULL;	// point to each string in the pToken table
+		while( *pData++ );			// find next token (after next null)
+	}
 
 	// short, short (size, index of field name)
-	nFieldSize = *(short *)pData;
+	Q_memcpy(&shortpool, pData, sizeof(short));
+	nFieldSize = shortpool;
 	pData += sizeof( short );
 
-	pFieldName = pTokenList[*(short *)pData];
+	Q_memcpy(&shortpool, pData, sizeof(short));
+	pFieldName = pTokenList[shortpool];
 
 	if( Q_stricmp( pFieldName, "GameHeader" ))
 	{
 		Q_strncpy( comment, "<missing GameHeader>", MAX_STRING );
-		if( pTokenList ) Mem_Free( pTokenList );
-		if( pSaveData ) Mem_Free( pSaveData );
+		Mem_Free( pTokenList );
+		Mem_Free( pSaveData );
 		FS_Close( f );
 		return 0;
 	}
@@ -2404,10 +2428,12 @@ qboolean SV_GetComment( const char *savename, char *comment )
 		// Size
 		// szName
 		// Actual Data
-		nFieldSize = *(short *)pData;
+		Q_memcpy(&shortpool, pData, sizeof(short));
+		nFieldSize = shortpool;
 		pData += sizeof( short );
 
-		pFieldName = pTokenList[*(short *)pData];
+		Q_memcpy(&shortpool, pData, sizeof(short));
+		pFieldName = pTokenList[shortpool];
 		pData += sizeof( short );
 
 		if( !Q_stricmp( pFieldName, "comment" ))
@@ -2424,8 +2450,8 @@ qboolean SV_GetComment( const char *savename, char *comment )
 	}
 
 	// delete the string table we allocated
-	if( pTokenList ) Mem_Free( pTokenList );
-	if( pSaveData ) Mem_Free( pSaveData );
+	Mem_Free( pTokenList );
+	Mem_Free( pSaveData );
 	FS_Close( f );	
 
 	if( Q_strlen( name ) > 0 && Q_strlen( description ) > 0 )

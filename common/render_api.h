@@ -47,6 +47,7 @@ GNU General Public License for more details.
 #define PARM_TEX_TYPE	11
 #define PARM_TEX_CACHEFRAME	12	// compare with worldmodel->needload
 #define PARM_TEX_GLFORMAT	13	// get a texture GL-format
+#define PARM_TEX_ENCODE	14	// custom encoding for DXT image
 // reserved
 #define PARM_WORLD_VERSION	16	// return the version of bsp
 #define PARM_SKY_SPHERE	17	// sky is quake sphere ?
@@ -63,6 +64,7 @@ GNU General Public License for more details.
 #define PARM_CACHEFRAME	28
 #define PARM_MAX_IMAGE_UNITS	29
 #define PARM_CLIENT_ACTIVE	30
+#define PARM_REBUILD_GAMMA	31	// if true lightmaps rebuilding for gamma change
 
 enum
 {
@@ -120,7 +122,7 @@ typedef enum
 	TF_STATIC		= (1<<21),	// a marker for purge mechanism (not used by engine)
 	TF_TEXTURE_RECTANGLE= (1<<22),	// this is GL_TEXTURE_RECTANGLE
 	TF_ALPHA_BORDER	= (1<<23),	// clamp to (0,0,0,255) (probably no difference)
-	TF_IMAGE_PROGRAM	= (1<<24),	// enable image program support like in Doom3
+
 	TF_ALPHACONTRAST	= (1<<25),	// special texture flags for internal usage
 	TF_FLOAT		= (1<<26),	// float textures
 	TF_NOCOMPARE	= (1<<27),	// disable comparing for depth textures
@@ -194,7 +196,7 @@ typedef struct render_api_s
 	// AVIkit support
 	void		*(*AVI_LoadVideo)( const char *filename, int ignore_hwgamma );
 	int		(*AVI_GetVideoInfo)( void *Avi, long *xres, long *yres, float *duration );
-	long		(*AVI_GetVideoFrameNumber)( void *Avi, float time );
+	int		(*AVI_GetVideoFrameNumber)( void *Avi, float time );
 	byte		*(*AVI_GetVideoFrame)( void *Avi, long frame );
 	void		(*AVI_UploadRawFrame)( int texture, int cols, int rows, int width, int height, const byte *data );
 	void		(*AVI_FreeVideo)( void *Avi );

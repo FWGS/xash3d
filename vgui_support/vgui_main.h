@@ -11,6 +11,16 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
+
+In addition, as a special exception, the author gives permission
+to link the code of this program with VGUI library developed by
+Valve, L.L.C ("Valve"). You must obey the GNU General Public License
+in all respects for all of the code used other than VGUI library.
+If you modify this file, you may extend this exception to your
+version of the file, but you are not obligated to do so. If
+you do not wish to do so, delete this exception statement
+from your version.
+
 */
 #ifndef VGUI_MAIN_H
 #define VGUI_MAIN_H
@@ -55,7 +65,7 @@ private:
 		FONT_PAGE_SIZE_32,
 		FONT_PAGE_SIZE_64,
 		FONT_PAGE_SIZE_128,
-		FONT_PAGE_SIZE_COUNT,
+		FONT_PAGE_SIZE_COUNT
 	};
 
 	// a single character in the cache
@@ -200,7 +210,6 @@ void VGUI_ActivateCurrentCursor( void );
 void *VGui_GetPanel( void );
 void VGui_RunFrame( void );
 void VGui_Paint( void );
-void VGui_ViewportPaintBackground( int extents[4] );
 void VGUI_Mouse(VGUI_MouseAction action, int code);
 void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code);
 void VGUI_MouseMove(int x, int y);

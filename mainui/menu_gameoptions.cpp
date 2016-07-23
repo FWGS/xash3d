@@ -275,13 +275,14 @@ static void UI_GameOptions_Init( void )
 
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.background );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.banner );
-	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.done );
-	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.cancel );
+
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxFPS );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxFPSmessage );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.hand );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.alwaysRun );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.allowDownload );
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.done );
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.cancel );
 }
 
 /*

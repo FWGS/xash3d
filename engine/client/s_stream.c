@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "client.h"
@@ -76,7 +78,7 @@ float S_GetMusicVolume( void )
 S_StartBackgroundTrack
 =================
 */
-void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, long position )
+void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int position )
 {
 	S_StopBackgroundTrack();
 
@@ -139,7 +141,7 @@ S_StreamGetCurrentState
 save\restore code
 =================
 */
-qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position )
+qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, fs_offset_t *position )
 {
 	if( !s_bgTrack.stream )
 		return false; // not active
@@ -317,7 +319,7 @@ void S_StreamSoundTrack( void )
 		}
 
 		// read audio stream
-		r = SCR_GetAudioChunk( raw, fileBytes );
+		r = SCR_GetAudioChunk( (char *)raw, fileBytes );
 
 		if( r < fileBytes )
 		{
@@ -393,3 +395,4 @@ void S_StreamRawSamples( int samples, int rate, int width, int channels, const b
 		RESAMPLE_RAW
 	}
 }
+#endif // XASH_DEDICATED

@@ -21,8 +21,8 @@ extern byte *sndpool;
 #include "mathlib.h"
 
 // local flags (never sending acorss the net)
-#define SND_LOCALSOUND	(1<<9)	// not paused, not looped, for internal use
-#define SND_STOP_LOOPING	(1<<10)	// stop all looping sounds on the entity.
+#define SND_LOCALSOUND	(1U << 9)	// not paused, not looped, for internal use
+#define SND_STOP_LOOPING	(1U << 10)	// stop all looping sounds on the entity.
 
 // sound engine rate defines
 #define SOUND_DMA_SPEED	44100	// hardware playback rate
@@ -51,10 +51,10 @@ extern byte *sndpool;
 
 // fixed point stuff for real-time resampling
 #define FIX_BITS		28
-#define FIX_SCALE		(1 << FIX_BITS)
-#define FIX_MASK		((1 << FIX_BITS)-1)
+#define FIX_SCALE		(1U << FIX_BITS)
+#define FIX_MASK		((1U << FIX_BITS)-1)
 #define FIX_FLOAT(a)	((int)((a) * FIX_SCALE))
-#define FIX(a)		(((int)(a)) << FIX_BITS)
+#define FIX(a)		(((uint)(a)) << FIX_BITS)
 #define FIX_INTPART(a)	(((int)(a)) >> FIX_BITS)
 #define FIX_FRACTION(a,b)	(FIX(a)/(b))
 #define FIX_FRACPART(a)	((a) & FIX_MASK)
@@ -149,13 +149,12 @@ typedef struct
 typedef struct
 {
 	double		sample;
-
-	wavdata_t		*pData;
 	double 		forcedEndSample;
+	wavdata_t		*pData;
 	qboolean		finished;
 } mixer_t;
 
-typedef struct channel_s
+struct channel_s
 {
 	char		name[16];		// keept sentence name
 	sfx_t		*sfx;		// sfx number
@@ -188,7 +187,7 @@ typedef struct channel_s
 	int		wordIndex;
 	mixer_t		*currentWord;	// NULL if sentence is finished
 	voxword_t		words[CVOXWORDMAX];
-} channel_t;
+};
 
 typedef struct
 {
@@ -257,6 +256,7 @@ extern convar_t	*dsp_off;
 extern convar_t	*s_test;
 extern convar_t	*s_phs;
 extern convar_t *s_khz;
+extern convar_t	*dsp_room;
 
 extern portable_samplepair_t		s_rawsamples[MAX_RAW_SAMPLES];
 
@@ -297,7 +297,6 @@ void DSP_ClearState( void );
 
 qboolean S_Init( void );
 void S_Shutdown( void );
-void S_Activate( qboolean active, void *hInst );
 void S_SoundList_f( void );
 void S_SoundInfo_f( void );
 
@@ -323,7 +322,8 @@ void SND_CloseMouth( channel_t *ch );
 //
 void S_StreamSoundTrack( void );
 void S_StreamBackgroundTrack( void );
-qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position );
+qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, fs_offset_t *position );
+void S_StopBackgroundTrack( void );
 void S_PrintBackgroundTrackState( void );
 void S_FadeMusicVolume( float fadePercent );
 

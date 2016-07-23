@@ -31,14 +31,19 @@ extern "C" {
 #define MSGBOX( x )		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Xash Error", x, NULL )
 #define MSGBOX2( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Error", x, NULL )
 #define MSGBOX3( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Recursive Error", x, NULL )
+#elif defined(__ANDROID__)
+#define MSGBOX( x )		Android_MessageBox("Xash Error", x )
+#define MSGBOX2( x )	Android_MessageBox("Host Error", x )
+#define MSGBOX3( x )	Android_MessageBox("Host Recursive Error", x )
+
 #else
-#define MSGBOX( x )	 fprintf(stderr, "Xash Error: %s\n",x)
-#define MSGBOX2( x )	 fprintf(stderr, "Host Error: %s\n",x)
-#define MSGBOX3( x )	 fprintf(stderr, "Host Recursive Error: %s\n",x)
+#define BORDER1 "======================================\n"
+#define MSGBOX( x )	 fprintf(stderr, BORDER1"Xash Error: %s\n"BORDER1,x)
+#define MSGBOX2( x )	 fprintf(stderr, BORDER1"Host Error: %s\n"BORDER1,x)
+#define MSGBOX3( x )	 fprintf(stderr, BORDER1"Host Recursive Error: %s\n"BORDER1,x)
 #endif
 // basic typedefs
 
-typedef unsigned char byte;
 typedef int		sound_t;
 typedef float		vec_t;
 typedef vec_t		vec2_t[2];
@@ -49,10 +54,10 @@ typedef byte		rgba_t[4];	// unsigned byte colorpack
 typedef byte		rgb_t[3];		// unsigned byte colorpack
 typedef vec_t		matrix3x4[3][4];
 typedef vec_t		matrix4x4[4][4];
-#ifdef XASH_SDL
+#if _MSC_VER == 1200
+typedef __int64 longtime_t; //msvc6
+#elif defined (XASH_SDL)
 typedef Uint64 longtime_t;
-#elif _MSC_VER == 1200 // Shitty msvc6 does not know about ULL
-typedef __int64 longtime_t;
 #else
 typedef unsigned long long longtime_t;
 #endif
@@ -88,19 +93,16 @@ double Sys_DoubleTime( void );
 char *Sys_GetClipboardData( void );
 char *Sys_GetCurrentUser( void );
 int Sys_CheckParm( const char *parm );
-void Sys_Error( const char *error, ... );
-void Sys_Break( const char *error, ... );
+void Sys_Error( const char *format, ... ) _format(1);
+void Sys_Break( const char *format, ... ) _format(1);
+void Sys_Warn( const char *format, ... ) _format(1);
 qboolean Sys_LoadLibrary( dll_info_t *dll );
 void* Sys_GetProcAddress( dll_info_t *dll, const char* name );
 qboolean Sys_FreeLibrary( dll_info_t *dll );
 void Sys_ParseCommandLine( int argc , const char **argv);
 void Sys_MergeCommandLine();
-#ifdef _WIN32
-long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo );
-#else
-#include <signal.h>
-void Sys_Crash( int signal, siginfo_t *si, void * );
-#endif
+void Sys_SetupCrashHandler( void );
+void Sys_RestoreCrashHandler( void );
 void Sys_SetClipboardData( const byte *buffer, size_t size );
 #define Sys_GetParmFromCmdLine( parm, out ) _Sys_GetParmFromCmdLine( parm, out, sizeof( out ))
 qboolean _Sys_GetParmFromCmdLine( char *parm, char *out, size_t size );
@@ -128,8 +130,8 @@ void Con_DisableInput( void );
 char *Con_Input( void );
 
 // text messages
-void Msg( const char *pMsg, ... );
-void MsgDev( int level, const char *pMsg, ... );
+void Msg( const char *pMsg, ... ) _format(1);
+void MsgDev( int level, const char *pMsg, ... ) _format(2);
 
 #ifdef __cplusplus
 }

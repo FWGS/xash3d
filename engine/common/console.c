@@ -12,26 +12,31 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_DEDICATED
 #include "common.h"
 #include "client.h"
 #include "keydefs.h"
 #include "protocol.h"		// get the protocol version
-#include "con_nprint.h"
 #include "gl_local.h"
 #include "qfont.h"
+#include "server.h" // Log_Printf( , ... )
 
 convar_t	*con_notifytime;
 convar_t	*scr_conspeed;
 convar_t	*con_fontsize;
 convar_t	*con_maxfrac;
 convar_t	*con_halffrac;
+convar_t	*con_charset;
+convar_t	*con_alpha;
+convar_t	*con_black;
+
+static int g_codepage = 0;
+static qboolean g_utf8 = false;
 
 #define CON_TIMES		5	// need for 4 lines
 #define COLOR_DEFAULT	'7'
 #define CON_HISTORY		64
 #define MAX_DBG_NOTIFY	128
-#define CON_MAXCMDS		4096	// auto-complete intermediate list
 #define CON_NUMFONTS	3	// maxfonts
 
 #define CON_TEXTSIZE	131072	// 128 kb buffer
@@ -48,14 +53,6 @@ rgba_t g_color_table[8] =
 {255,   0, 255, 255},	// magenta
 {240, 180,  24, 255},	// default color (can be changed by user)
 };
-
-typedef struct
-{
-	string		buffer;
-	int		cursor;
-	int		scroll;
-	int		widthInChars;
-} field_t;
 
 typedef struct
 {
@@ -105,13 +102,6 @@ typedef struct
 
 	notify_t		notify[MAX_DBG_NOTIFY]; // for Con_NXPrintf
 	qboolean		draw_notify;	// true if we have NXPrint message
-
-	// console auto-complete
-	string		shortestMatch;
-	field_t		*completionField;	// con.input or dedicated server fake field-line
-	char		*completionString;
-	char		*cmds[CON_MAXCMDS];
-	int		matchCount;
 } console_t;
 
 static console_t		con;
@@ -198,17 +188,7 @@ void Con_ClearTyping( void )
 	Con_ClearField( &con.input );
 	con.input.widthInChars = con.linewidth;
 
-	// free the old autocomplete list
-	for( i = 0; i < con.matchCount; i++ )
-	{
-		if( con.cmds[i] != NULL )
-		{
-			Mem_Free( con.cmds[i] );
-			con.cmds[i] = NULL;
-		}
-	}
-
-	con.matchCount = 0;
+	Con_ClearAutoComplete();
 }
 
 /*
@@ -316,10 +296,6 @@ void Con_CheckResize( void )
 		charWidth = con.curFont->charWidths['M'] - 1;
 
 	width = ( scr_width->integer / charWidth );
-
-	// NOTE: Con_CheckResize is totally wrong :-(
-	// g-cont. i've just used fixed width on all resolutions
-	// width = 90; // mittorn: seems work fine, Con_Print was broken
 
 	if( width == con.linewidth )
 		return;
@@ -449,18 +425,20 @@ static void Con_LoadConsoleFont( int fontNumber, cl_font_t *font )
 	// loading conchars
 	font->hFontTexture = GL_LoadTexture( va( "fonts.wad/font%i", fontNumber ), NULL, 0, TF_FONT|TF_NEAREST, NULL );
 	R_GetTextureParms( &fontWidth, NULL, font->hFontTexture );
-		
+	
+	if( fontWidth == 0 ) return;
+
 	// setup creditsfont
-	if( FS_FileExists( va( "fonts.wad/font%i.fnt", fontNumber ), false ) && fontWidth != 0 )
+	if( FS_FileExists( va( "fonts.wad/font%i.fnt", fontNumber ), false ) )
 	{
 		byte	*buffer;
-		size_t	length;
+		fs_offset_t	length;
 		qfont_t	*src;
 	
 		// half-life font with variable chars witdh
 		buffer = FS_LoadFile( va( "fonts.wad/font%i", fontNumber ), &length, false );
 
-		if( buffer && length >= sizeof( qfont_t ))
+		if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
 		{
 			int	i;
 	
@@ -507,7 +485,144 @@ static void Con_LoadConchars( void )
 	
 }
 
-static int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
+// CP1251 table
+
+int table_cp1251[64] = {
+	0x0402, 0x0403, 0x201A, 0x0453, 0x201E, 0x2026, 0x2020, 0x2021,
+	0x20AC, 0x2030, 0x0409, 0x2039, 0x040A, 0x040C, 0x040B, 0x040F,
+	0x0452, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
+	0x007F, 0x2122, 0x0459, 0x203A, 0x045A, 0x045C, 0x045B, 0x045F,
+	0x00A0, 0x040E, 0x045E, 0x0408, 0x00A4, 0x0490, 0x00A6, 0x00A7,
+	0x0401, 0x00A9, 0x0404, 0x00AB, 0x00AC, 0x00AD, 0x00AE, 0x0407,
+	0x00B0, 0x00B1, 0x0406, 0x0456, 0x0491, 0x00B5, 0x00B6, 0x00B7,
+	0x0451, 0x2116, 0x0454, 0x00BB, 0x0458, 0x0405, 0x0455, 0x0457
+};
+
+/*
+============================
+Con_UtfProcessChar
+
+Convert utf char to current font's single-byte encoding
+============================
+*/
+int Con_UtfProcessCharForce( int in )
+{
+	static int m = -1, k = 0; //multibyte state
+	static int uc = 0; //unicode char
+	
+	if( !in )
+	{
+		m = -1;
+		k = 0;
+		uc = 0;
+		return 0;
+	}
+
+	// Get character length
+	if(m == -1)
+	{
+		uc = 0;
+		if( in >= 0xF8 )
+			return 0;
+		else if( in >= 0xF0 )
+			uc = in & 0x07, m = 3;
+		else if( in >= 0xE0 )
+			uc = in & 0x0F, m = 2;
+		else if( in >= 0xC0 )
+			uc = in & 0x1F, m = 1;
+		else if( in <= 0x7F)
+			return in; //ascii
+		// return 0 if we need more chars to decode one
+		k=0;
+		return 0;
+	}
+	// get more chars
+	else if( k <= m )
+	{
+		uc <<= 6;
+		uc += in & 0x3F;
+		k++;
+	}
+	if( in > 0xBF || m < 0 )
+	{
+		m = -1;
+		return 0;
+	}
+	if( k == m )
+	{
+		k = m = -1;
+		if( g_codepage == 1251 )
+		{
+			// cp1251 now
+			if( uc >= 0x0410 && uc <= 0x042F )
+				return uc - 0x410 + 0xC0;
+			if( uc >= 0x0430 && uc <= 0x044F )
+				return uc - 0x430 + 0xE0;
+			else
+			{
+				int i;
+				for( i = 0; i < 64; i++ )
+					if( table_cp1251[i] == uc )
+						return i + 0x80;
+			}
+		}
+		// not implemented yet
+		return '?';
+	}
+	return 0;
+}
+
+int Con_UtfProcessChar( int in )
+{
+	if( !g_utf8 )
+		return in;
+	else
+		return Con_UtfProcessCharForce( in );
+}
+/*
+=================
+Con_UtfMoveLeft
+
+get position of previous printful char
+=================
+*/
+int Con_UtfMoveLeft( char *str, int pos )
+{
+	int i, j, k = 0;
+	if( !g_utf8 )
+		return pos - 1;
+	Con_UtfProcessChar( 0 );
+	if(pos == 1) return 0;
+	for( i = 0; i < pos-1; i++ )
+		if( Con_UtfProcessChar( (unsigned char)str[i] ) )
+			k = i+1;
+	Con_UtfProcessChar( 0 );
+	return k;
+}
+
+/*
+=================
+Con_UtfMoveRight
+
+get next of previous printful char
+=================
+*/
+int Con_UtfMoveRight( char *str, int pos, int length )
+{
+	int i;
+	if( !g_utf8 )
+		return pos + 1;
+	Con_UtfProcessChar( 0 );
+	for( i = pos; i <= length; i++ )
+	{
+		if( Con_UtfProcessChar( (unsigned char)str[i] ) )
+			return i+1;
+	}
+	Con_UtfProcessChar( 0 );
+	return pos+1;
+}
+
+int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 {
 	int	width, height;
 	float	s1, t1, s2, t2;
@@ -518,7 +633,9 @@ static int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 	if( !con.curFont || !con.curFont->valid )
 		return 0;
 
-	if( number < 32 ) return 0;
+	number = Con_UtfProcessChar(number);
+	if( number < 32 )
+		return 0;
 	if( y < -con.curFont->charHeight )
 		return 0;
 
@@ -580,7 +697,7 @@ void Con_DrawStringLen( const char *pText, int *length, int *height )
 	{
 		byte	c = *pText;
 
-		if( *pText == '\n' )
+		if( *pText == '\n' ) //-V595
 		{
 			pText++;
 			curLength = 0;
@@ -593,7 +710,12 @@ void Con_DrawStringLen( const char *pText, int *length, int *height )
 			continue;
 		}
 
-		curLength += con.curFont->charWidths[c];
+		// Convert to unicode
+		c = Con_UtfProcessChar( c );
+
+		if( c )
+			curLength += con.curFont->charWidths[ c ];
+
 		pText++;
 
 		if( curLength > *length )
@@ -617,6 +739,8 @@ int Con_DrawGenericString( int x, int y, const char *string, rgba_t setColor, qb
 	const char	*s;
 
 	if( !con.curFont ) return 0; // no font set
+
+	Con_UtfProcessChar( 0 );
 
 	// draw the colored text
 	s = string;
@@ -673,13 +797,16 @@ void Con_Init( void )
 	int	i;
 
 	// must be init before startup video subsystem
-	scr_width = Cvar_Get( "width", "640", 0, "screen width" );
-	scr_height = Cvar_Get( "height", "480", 0, "screen height" );
+	scr_width = Cvar_Get( "width", "640", CVAR_RENDERINFO, "screen width" );
+	scr_height = Cvar_Get( "height", "480", CVAR_RENDERINFO, "screen height" );
 	scr_conspeed = Cvar_Get( "scr_conspeed", "600", 0, "console moving speed" );
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0, "notify time to live" );
 	con_fontsize = Cvar_Get( "con_fontsize", "1", CVAR_ARCHIVE, "console font number (0, 1 or 2)" );
 	con_maxfrac = Cvar_Get( "con_maxfrac", "1.0", CVAR_ARCHIVE, "console max height" );
 	con_halffrac = Cvar_Get( "con_halffrac", "0.5", CVAR_ARCHIVE, "console half height" );
+	con_charset = Cvar_Get( "con_charset", "cp1251", CVAR_ARCHIVE, "console font charset (only cp1251 supported now)" );
+	con_alpha = Cvar_Get( "con_alpha", "1.0", CVAR_ARCHIVE, "console alpha value" );
+	con_black = Cvar_Get( "con_black", "0", CVAR_ARCHIVE, "make console black like a nigga" );
 
 	Con_CheckResize();
 
@@ -694,6 +821,8 @@ void Con_Init( void )
 		Con_ClearField( &con.historyLines[i] );
 		con.historyLines[i].widthInChars = con.linewidth;
 	}
+
+	Con_ClearAutoComplete();
 
 	Cmd_AddCommand( "toggleconsole", Con_ToggleConsole_f, "opens or closes the console" );
 	Cmd_AddCommand( "con_color", Con_SetColor_f, "set a custom console color" );
@@ -743,7 +872,7 @@ void Con_Print( const char *txt )
 	int	y, c, l, color;
 
 	// client not running
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
           if( !con.initialized ) return;
 	
 	color = ColorIndex( COLOR_DEFAULT );
@@ -765,7 +894,7 @@ void Con_Print( const char *txt )
 		}
 
 		// word wrap
-		// mittorn: why it is here? Line already wrapped!
+		// mittorn: Line already wrapped
 		//if( l != con.linewidth && ( con.x + l >= con.linewidth ))
 		//	Con_Linefeed();
 		txt++;
@@ -911,220 +1040,6 @@ EDIT FIELDS
 
 =============================================================================
 */
-/*
-===============
-Cmd_CheckName
-
-compare first argument with string
-===============
-*/
-static qboolean Cmd_CheckName( const char *name )
-{
-	if( !Q_stricmp( Cmd_Argv( 0 ), name ))
-		return true;
-	if( !Q_stricmp( Cmd_Argv( 0 ), va( "\\%s", name )))
-		return true;
-	return false;
-}
-
-/*
-===============
-Con_AddCommandToList
-
-===============
-*/
-static void Con_AddCommandToList( const char *s, const char *unused1, const char *unused2, void *unused3 )
-{
-	if( *s == '@' ) return; // never show system cvars or cmds
-	if( con.matchCount >= CON_MAXCMDS ) return; // list is full
-
-	if( Q_strnicmp( s, con.completionString, Q_strlen( con.completionString )))
-		return; // no match
-
-	con.cmds[con.matchCount++] = copystring( s );
-}
-
-/*
-=================
-Con_SortCmds
-=================
-*/
-static int Con_SortCmds( const char **arg1, const char **arg2 )
-{
-	return Q_stricmp( *arg1, *arg2 );
-}
-
-/*
-===============
-pfnPrintMatches
-===============
-*/
-static void Con_PrintMatches( const char *s, const char *unused1, const char *m, void *unused2 )
-{
-	if( !Q_strnicmp( s, con.shortestMatch, Q_strlen( con.shortestMatch )))
-	{
-		if( m && *m ) Msg( "    %s ^3\"%s\"\n", s, m );
-		else Msg( "    %s\n", s ); // variable or command without description
-	}
-}
-
-static void ConcatRemaining( const char *src, const char *start )
-{
-	char	*arg;
-	int	i;
-
-	arg = Q_strstr( src, start );
-
-	if( !arg )
-	{
-		for( i = 1; i < Cmd_Argc(); i++ )
-		{
-			Q_strncat( con.completionField->buffer, " ", sizeof( con.completionField->buffer ));
-			arg = Cmd_Argv( i );
-			while( *arg )
-			{
-				if( *arg == ' ' )
-				{
-					Q_strncat( con.completionField->buffer, "\"", sizeof( con.completionField->buffer ));
-					break;
-				}
-				arg++;
-			}
-
-			Q_strncat( con.completionField->buffer, Cmd_Argv( i ), sizeof( con.completionField->buffer ));
-			if( *arg == ' ' ) Q_strncat( con.completionField->buffer, "\"", sizeof( con.completionField->buffer ));
-		}
-		return;
-	}
-
-	arg += Q_strlen( start );
-	Q_strncat( con.completionField->buffer, arg, sizeof( con.completionField->buffer ));
-}
-
-/*
-===============
-Con_CompleteCommand
-
-perform Tab expansion
-===============
-*/
-void Con_CompleteCommand( field_t *field )
-{
-	field_t		temp;
-	string		filename;
-	autocomplete_list_t	*list;
-	char buffer[1024];
-	int		i;
-	qboolean nextcmd;
-
-	// setup the completion field
-	con.completionField = field;
-
-	// only look at the first token for completion purposes
-	Cmd_TokenizeString( con.completionField->buffer );
-	
-	nextcmd = con.completionField->buffer[ Q_strlen( con.completionField->buffer ) - 1 ] == ' ';
-
-	con.completionString = Cmd_Argv( 0 );
-
-	// skip backslash
-	while( *con.completionString && ( *con.completionString == '\\' || *con.completionString == '/' ))
-		con.completionString++;
-
-	if( !Q_strlen( con.completionString ))
-		return;
-
-	// free the old autocomplete list
-	for( i = 0; i < con.matchCount; i++ )
-	{
-		if( con.cmds[i] != NULL )
-		{
-			Mem_Free( con.cmds[i] );
-			con.cmds[i] = NULL;
-		}
-	}
-
-	con.matchCount = 0;
-	con.shortestMatch[0] = 0;
-
-	// find matching commands and variables
-	Cmd_LookupCmds( NULL, NULL, Con_AddCommandToList );
-	Cvar_LookupVars( 0, NULL, NULL, Con_AddCommandToList );
-
-	if( !con.matchCount ) return; // no matches
-
-	Q_memcpy( &temp, con.completionField, sizeof( field_t ));
-
-	if( ( Cmd_Argc() == 2 ) || ( ( Cmd_Argc() == 1 ) && nextcmd ))
-	{
-		qboolean	result = false;
-
-		// autocomplete second arg
-		for( list = cmd_list; list->name; list++ )
-		{
-			if( Cmd_CheckName( list->name ))
-			{
-				result = list->func( Cmd_Argv( 1 ), filename, MAX_STRING ); 
-				break;
-			}
-		}
-
-		if( result )
-		{         
-			Q_sprintf( con.completionField->buffer, "%s %s", Cmd_Argv( 0 ), filename ); 
-			con.completionField->cursor = Q_strlen( con.completionField->buffer );
-		}
-
-		// don't adjusting cursor pos if we nothing found
-		return;
-	}  
-	else if( Cmd_Argc() >= 3 )
-	{
-		// disable autocomplete for all next args
-		return;
-	}
-
-	if( con.matchCount == 1 )
-	{
-		Q_sprintf( con.completionField->buffer, "\\%s", con.cmds[0] );
-		if( Cmd_Argc() == 1 ) Q_strncat( con.completionField->buffer, " ", sizeof( con.completionField->buffer ));
-		else ConcatRemaining( temp.buffer, con.completionString );
-		con.completionField->cursor = Q_strlen( con.completionField->buffer );
-	}
-	else
-	{
-		char	*first, *last;
-		int	len = 0;
-
-		qsort( con.cmds, con.matchCount, sizeof( char* ), Con_SortCmds );
-
-		// find the number of matching characters between the first and
-		// the last element in the list and copy it
-		first = con.cmds[0];
-		last = con.cmds[con.matchCount-1];
-
-		while( *first && *last && Q_tolower( *first ) == Q_tolower( *last ))
-		{
-			first++;
-			last++;
-
-			con.shortestMatch[len] = con.cmds[0][len];
-			len++;
-		}
-		con.shortestMatch[len] = 0;
-
-		// multiple matches, complete to shortest
-		Q_sprintf( con.completionField->buffer, "\\%s", con.shortestMatch );
-		con.completionField->cursor = Q_strlen( con.completionField->buffer );
-		ConcatRemaining( temp.buffer, con.completionString );
-
-		Msg( "]%s\n", con.completionField->buffer );
-
-		// run through again, printing matches
-		Cmd_LookupCmds( NULL, NULL, Con_PrintMatches );
-		Cvar_LookupVars( 0, NULL, NULL, Con_PrintMatches );
-	}
-}
 
 /*
 ================
@@ -1133,6 +1048,8 @@ Field_Paste
 */
 void Field_Paste( field_t *edit )
 {
+// I guess we don't have the ability to paste without SDL.
+#ifdef XASH_SDL
 	char	*cbd;
 	int	i, pasteLen;
 
@@ -1143,7 +1060,8 @@ void Field_Paste( field_t *edit )
 	pasteLen = Q_strlen( cbd );
 	for( i = 0; i < pasteLen; i++ )
 		Field_CharEvent( edit, cbd[i] );
-	Mem_Free( cbd );
+	SDL_free( cbd );
+#endif
 }
 
 /*
@@ -1180,8 +1098,9 @@ void Field_KeyDownEvent( field_t *edit, int key )
 	{
 		if( edit->cursor > 0 )
 		{
-			Q_memmove( edit->buffer + edit->cursor - 1, edit->buffer + edit->cursor, len - edit->cursor + 1 );
-			edit->cursor--;
+			int newcursor = Con_UtfMoveLeft( edit->buffer, edit->cursor );
+			Q_memmove( edit->buffer + newcursor, edit->buffer + edit->cursor, len - edit->cursor + 1 );
+			edit->cursor = newcursor;
 			if( edit->scroll ) edit->scroll--;
 		}
 		return;
@@ -1189,7 +1108,7 @@ void Field_KeyDownEvent( field_t *edit, int key )
 
 	if( key == K_RIGHTARROW ) 
 	{
-		if( edit->cursor < len ) edit->cursor++;
+		if( edit->cursor < len ) edit->cursor = Con_UtfMoveRight( edit->buffer, edit->cursor, edit->widthInChars );
 		if( edit->cursor >= edit->scroll + edit->widthInChars && edit->cursor <= len )
 			edit->scroll++;
 		return;
@@ -1197,7 +1116,7 @@ void Field_KeyDownEvent( field_t *edit, int key )
 
 	if( key == K_LEFTARROW ) 
 	{
-		if( edit->cursor > 0 ) edit->cursor--;
+		if( edit->cursor > 0 ) edit->cursor= Con_UtfMoveLeft( edit->buffer, edit->cursor );
 		if( edit->cursor < edit->scroll ) edit->scroll--;
 		return;
 	}
@@ -1263,7 +1182,7 @@ void Field_CharEvent( field_t *edit, int ch )
 	}
 
 	// ignore any other non printable chars
-	if( ch < 32 ) return;
+	//if( ch < 32 ) return;
 
 	if( host.key_overstrike )
 	{	
@@ -1293,7 +1212,7 @@ void Field_DrawInputLine( int x, int y, field_t *edit )
 {
 	int	len, cursorChar;
 	int	drawLen, hideChar = -1;
-	int	prestep, curPos;
+	int	prestep, curPos = 0;
 	char	str[MAX_SYSPATH];
 	byte	*colorDefault;
 
@@ -1341,6 +1260,7 @@ void Field_DrawInputLine( int x, int y, field_t *edit )
 	// calc cursor position
 	str[edit->cursor - prestep] = 0;
 	Con_DrawStringLen( str, &curPos, NULL );
+	Con_UtfProcessChar( 0 );
 
 	if( host.key_overstrike && cursorChar )
 	{
@@ -1351,7 +1271,11 @@ void Field_DrawInputLine( int x, int y, field_t *edit )
 		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 		Con_DrawGenericChar( x + curPos, y, cursorChar, colorDefault );
 	}
-	else Con_DrawCharacter( x + curPos, y, '_', colorDefault );
+	else
+	{
+		Con_UtfProcessChar( 0 );
+		Con_DrawCharacter( x + curPos, y, '_', colorDefault );
+	}
 }
 
 /*
@@ -1380,6 +1304,9 @@ void Key_Console( int key )
 	// enter finishes the line
 	if ( key == K_ENTER || key == K_KP_ENTER )
 	{
+		// scroll down
+		Con_Bottom();
+
 		// if not in the game explicitly prepent a slash if needed
 		if( cls.state != ca_active && con.input.buffer[0] != '\\' && con.input.buffer[0] != '/' )
 		{
@@ -1512,6 +1439,8 @@ void Key_Message( int key )
 		{
 			Q_snprintf( buffer, sizeof( buffer ), "%s \"%s\"\n", con.chat_cmd, con.chat.buffer );
 			Cbuf_AddText( buffer );
+
+			Log_Printf( "Server say \"%s\"\n", con.chat.buffer );
 		}
 
 		Key_SetKeyDest( key_game );
@@ -1737,8 +1666,35 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		y *= frac;
 	if( y >= 1 )
 	{
-		GL_SetRenderMode( kRenderNormal );
-		R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+		if( fill )
+		{
+			GL_SetRenderMode( kRenderNormal );
+			if( con_black->value )
+			{
+				pglColor4ub( 0, 0, 0, 255 );
+				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+			}
+			else
+			{
+				pglColor4ub( 255, 255, 255, 255 );
+				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+			}
+		}
+		else
+		{
+			GL_SetRenderMode( kRenderTransTexture );
+			if( con_black->value )
+			{
+				pglColor4ub( 0, 0, 0, 255 * con_alpha->value );
+				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+			}
+			else
+			{
+				pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
+				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+			}
+		}
+		pglColor4ub( 255, 255, 255, 255 );
 	}
 	else y = 0;
 
@@ -1752,7 +1708,7 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		byte	*color = g_color_table[7];
 		int	stringLen, width = 0, charH;
 
-		Q_snprintf( curbuild, MAX_STRING, "Xash3D SDL %i/%g (based on %g build%i)", PROTOCOL_VERSION, XASH_VERSION, BASED_VERSION, Q_buildnum( ));
+		Q_snprintf( curbuild, MAX_STRING, "Xash3D SDL %i/%s (based on %g build%i)", PROTOCOL_VERSION, XASH_VERSION, BASED_VERSION, Q_buildnum( ));
 		Con_DrawStringLen( curbuild, &stringLen, &charH );
 		start = scr_width->integer - stringLen;
 		stringLen = Con_StringLength( curbuild );
@@ -1906,6 +1862,8 @@ void Con_DrawVersion( void )
 	case scrshot_snapshot:
 		draw_version = true;
 		break;
+	default:
+		break;
 	}
 
 	if( !host.force_draw_version )
@@ -1915,8 +1873,8 @@ void Con_DrawVersion( void )
 	}
 
 	if( host.force_draw_version || draw_version )
-		Q_snprintf( curbuild, MAX_STRING, "Xash3D SDL %i/%g (based on %g build%i)", PROTOCOL_VERSION, XASH_VERSION, BASED_VERSION, Q_buildnum( ));
-	else Q_snprintf( curbuild, MAX_STRING, "v%i/%g (based on %g build%i)", PROTOCOL_VERSION, XASH_VERSION, BASED_VERSION, Q_buildnum( ));
+		Q_snprintf( curbuild, MAX_STRING, "Xash3D SDL %i/%s (based on %g build%i)", PROTOCOL_VERSION, XASH_VERSION, BASED_VERSION, Q_buildnum( ));
+	else Q_snprintf( curbuild, MAX_STRING, "v%i/%s (based on %g build%i)", PROTOCOL_VERSION, XASH_VERSION, BASED_VERSION, Q_buildnum( ));
 	Con_DrawStringLen( curbuild, &stringLen, &charH );
 	start = scr_width->integer - stringLen * 1.05f;
 	stringLen = Con_StringLength( curbuild );
@@ -1961,6 +1919,12 @@ void Con_RunConsole( void )
 		if( con.finalFrac < con.displayFrac )
 			con.displayFrac = con.finalFrac;
 	}
+
+	// update codepage parameters
+	g_codepage = 0;
+	if( !Q_stricmp( con_charset->string, "cp1251" ) )
+		g_codepage = 1251;
+	g_utf8 = !Q_stricmp( cl_charset->string, "utf-8" );
 }
 
 /*
@@ -1993,6 +1957,7 @@ void Con_CharEvent( int key )
 void Con_VidInit( void )
 {
 	Con_CheckResize();
+	Con_InvalidateFonts();
 
 	// loading console image
 	if( host.developer )
@@ -2039,36 +2004,11 @@ void Con_InvalidateFonts( void )
 	con.curFont = con.lastUsedFont = NULL;
 }
 
-/*
-=========
-Cmd_AutoComplete
-
-NOTE: input string must be equal or longer than MAX_STRING
-=========
-*/
-void Cmd_AutoComplete( char *complete_string )
-{
-	field_t	input;
-
-	if( !complete_string || !*complete_string )
-		return;
-
-	// setup input
-	Q_strncpy( input.buffer, complete_string, sizeof( input.buffer ));
-	input.cursor = input.scroll = 0;
-
-	Con_CompleteCommand( &input );
-
-	// setup output
-	if( input.buffer[0] == '\\' || input.buffer[0] == '/' )
-		Q_strncpy( complete_string, input.buffer + 1, sizeof( input.buffer ));
-	else Q_strncpy( complete_string, input.buffer, sizeof( input.buffer ));
-}
-
 void Con_Close( void )
 {
 	Con_ClearField( &con.input );
 	Con_ClearNotify();
+	Con_ClearTyping();
 	con.finalFrac = 0.0f; // none visible
 	con.displayFrac = 0.0f;
 }
@@ -2087,3 +2027,4 @@ void Con_DefaultColor( int r, int g, int b )
 	b = bound( 0, b, 255 );
 	MakeRGBA( g_color_table[7], r, g, b, 255 );
 }
+#endif

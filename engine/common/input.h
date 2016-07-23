@@ -31,14 +31,6 @@ typedef SDL_Cursor Xash_Cursor;
 #else
 typedef void Xash_Cursor;
 #endif
-#define WM_MOUSEWHEEL	( WM_MOUSELAST + 1 ) // message that will be supported by the OS
-#define MK_XBUTTON1		0x0020
-#define MK_XBUTTON2		0x0040
-#define MK_XBUTTON3		0x0080
-#define MK_XBUTTON4		0x0100
-#define MK_XBUTTON5		0x0200
-#define WM_XBUTTONUP	0x020C
-#define WM_XBUTTONDOWN	0x020B
 
 //
 // input.c
@@ -52,4 +44,6 @@ void IN_DeactivateMouse( void );
 void IN_ToggleClientMouse( int newstate, int oldstate );
 long IN_WndProc( void *hWnd, uint uMsg, uint wParam, long lParam );
 void IN_SetCursor( Xash_Cursor *hCursor );
+extern qboolean	in_mouseinitialized;
+
 #endif//INPUT_H

@@ -33,8 +33,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_MUSICVOLUME		5
 #define ID_INTERP			6
 #define ID_NODSP			7
-#define ID_MSGHINT			8
-
+#define ID_MUTEFOCUSLOST	8
+#define ID_MSGHINT			9
+#define ID_VIBRATION		10
+#define ID_VIBRATION_ENABLE	11
 typedef struct
 {
 	float		soundVolume;
@@ -56,8 +58,11 @@ typedef struct
 	menuSlider_s	soundVolume;
 	menuSlider_s	musicVolume;
 	menuSlider_s	suitVolume;
+	menuSlider_s	vibration;
 	menuCheckBox_s	lerping;
 	menuCheckBox_s	noDSP;
+	menuCheckBox_s	muteFocusLost;
+	menuCheckBox_s	vibrationEnable;
 } uiAudio_t;
 
 static uiAudio_t		uiAudio;
@@ -72,12 +77,19 @@ static void UI_Audio_GetConfig( void )
 	uiAudio.soundVolume.curValue = CVAR_GET_FLOAT( "volume" );
 	uiAudio.musicVolume.curValue = CVAR_GET_FLOAT( "musicvolume" );
 	uiAudio.suitVolume.curValue = CVAR_GET_FLOAT( "suitvolume" );
+	uiAudio.vibration.curValue = ( CVAR_GET_FLOAT( "vibration_length" ) - 0.1 ) / 4.9;
 
 	if( CVAR_GET_FLOAT( "s_lerping" ))
 		uiAudio.lerping.enabled = 1;
 
 	if( CVAR_GET_FLOAT( "dsp_off" ))
 		uiAudio.noDSP.enabled = 1;
+
+	if( CVAR_GET_FLOAT("snd_mute_losefocus" ))
+		uiAudio.muteFocusLost.enabled = 1;
+
+	if( CVAR_GET_FLOAT("vibration_enable" ))
+		uiAudio.vibrationEnable.enabled = 1;
 
 	// save initial values
 	uiAudioInitial.soundVolume = uiAudio.soundVolume.curValue;
@@ -95,8 +107,11 @@ static void UI_Audio_SetConfig( void )
 	CVAR_SET_FLOAT( "volume", uiAudio.soundVolume.curValue );
 	CVAR_SET_FLOAT( "musicvolume", uiAudio.musicVolume.curValue );
 	CVAR_SET_FLOAT( "suitvolume", uiAudio.suitVolume.curValue );
+	CVAR_SET_FLOAT( "vibration_length",  0.1 + uiAudio.vibration.curValue * 4.9 );
 	CVAR_SET_FLOAT( "s_lerping", uiAudio.lerping.enabled );
 	CVAR_SET_FLOAT( "dsp_off", uiAudio.noDSP.enabled );
+	CVAR_SET_FLOAT( "snd_mute_losefocus", uiAudio.muteFocusLost.enabled );
+	CVAR_SET_FLOAT( "vibration_enable", uiAudio.vibrationEnable.enabled );
 }
 
 /*
@@ -106,11 +121,7 @@ UI_Audio_UpdateConfig
 */
 static void UI_Audio_UpdateConfig( void )
 {
-	CVAR_SET_FLOAT( "volume", uiAudio.soundVolume.curValue );
-	CVAR_SET_FLOAT( "musicvolume", uiAudio.musicVolume.curValue );
-	CVAR_SET_FLOAT( "suitvolume", uiAudio.suitVolume.curValue );
-	CVAR_SET_FLOAT( "s_lerping", uiAudio.lerping.enabled );
-	CVAR_SET_FLOAT( "dsp_off", uiAudio.noDSP.enabled );
+	UI_Audio_SetConfig();
 }
 
 /*
@@ -126,15 +137,27 @@ static void UI_Audio_Callback( void *self, int event )
 	{
 	case ID_INTERP:
 	case ID_NODSP:
+	case ID_MUTEFOCUSLOST:
+	case ID_VIBRATION_ENABLE:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
 		break;
+	case ID_VIBRATION:
+		if( event == QM_CHANGED )
+		{
+			static float oldvalue = 0;
+			if( uiAudio.vibration.curValue != oldvalue )
+			{
+				CLIENT_COMMAND( 1, "vibrate 10\n" );
+				oldvalue = uiAudio.vibration.curValue;
+			}
+		}
 	}
 
 	if( event == QM_CHANGED )
 	{
-		UI_Audio_UpdateConfig();
+		UI_Audio_UpdateConfig();		
 		return;
 	}
 
@@ -243,6 +266,36 @@ static void UI_Audio_Init( void )
 	uiAudio.noDSP.generic.callback = UI_Audio_Callback;
 	uiAudio.noDSP.generic.statusText = "this disables sound processing (like echo, flanger etc)";
 
+	uiAudio.muteFocusLost.generic.id = ID_MUTEFOCUSLOST;
+	uiAudio.muteFocusLost.generic.type = QMTYPE_CHECKBOX;
+	uiAudio.muteFocusLost.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_ACT_ONRELEASE | QMF_MOUSEONLY | QMF_DROPSHADOW;
+	uiAudio.muteFocusLost.generic.name = "Mute when inactive";
+	uiAudio.muteFocusLost.generic.x = 320;
+	uiAudio.muteFocusLost.generic.y = 570;
+	uiAudio.muteFocusLost.generic.callback = UI_Audio_Callback;
+	uiAudio.muteFocusLost.generic.statusText = "silence the audio when game window loses focus";
+
+	uiAudio.vibrationEnable.generic.id = ID_VIBRATION_ENABLE;
+	uiAudio.vibrationEnable.generic.type = QMTYPE_CHECKBOX;
+	uiAudio.vibrationEnable.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_ACT_ONRELEASE | QMF_MOUSEONLY | QMF_DROPSHADOW;
+	uiAudio.vibrationEnable.generic.name = "Enable vibration";
+	uiAudio.vibrationEnable.generic.x = 320;
+	uiAudio.vibrationEnable.generic.y = 620;
+	uiAudio.vibrationEnable.generic.callback = UI_Audio_Callback;
+	uiAudio.vibrationEnable.generic.statusText = "enable vibration";
+
+	uiAudio.vibration.generic.id = ID_VIBRATION;
+	uiAudio.vibration.generic.type = QMTYPE_SLIDER;
+	uiAudio.vibration.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiAudio.vibration.generic.name = "Vibration";
+	uiAudio.vibration.generic.x = 320;
+	uiAudio.vibration.generic.y = 720;
+	uiAudio.vibration.generic.callback = UI_Audio_Callback;
+	uiAudio.vibration.generic.statusText = "Vibration length";
+	uiAudio.vibration.minValue = 0.0;
+	uiAudio.vibration.maxValue = 1.0;
+	uiAudio.vibration.range = 0.05f;
+
 	UI_Audio_GetConfig();
 
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.background );
@@ -253,6 +306,9 @@ static void UI_Audio_Init( void )
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.suitVolume );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.lerping );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.noDSP );
+	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.muteFocusLost );
+	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.vibration );
+	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.vibrationEnable );
 }
 
 /*

@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "gl_local.h"
 #include "mathlib.h"
@@ -76,7 +78,7 @@ void V_AdjustFov( float *fov_x, float *fov_y, float width, float height, qboolea
 
 ========================================================================
 */
-void Matrix4x4_Concat( matrix4x4 out, const matrix4x4 in1, const matrix4x4 in2 )
+void Matrix4x4_Concat(matrix4x4 out, cmatrix4x4 in1, cmatrix4x4 in2 )
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0] + in1[0][3] * in2[3][0];
 	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] + in1[0][2] * in2[2][1] + in1[0][3] * in2[3][1];
@@ -152,7 +154,7 @@ void Matrix4x4_CreateModelview( matrix4x4 out )
 	out[1][2] = 1.0f;
 }
 
-void Matrix4x4_ToArrayFloatGL( const matrix4x4 in, float out[16] )
+void Matrix4x4_ToArrayFloatGL(cmatrix4x4 in, float out[16] )
 {
 	out[ 0] = in[0][0];
 	out[ 1] = in[1][0];
@@ -229,14 +231,17 @@ void Matrix4x4_CreateRotate( matrix4x4 out, float angle, float x, float y, float
 	out[0][1]=x * y * (1 - c) + z * s;
 	out[0][2]=z * x * (1 - c) - y * s;
 	out[0][3]=0.0f;
+
 	out[1][0]=x * y * (1 - c) - z * s;
 	out[1][1]=y * y + c * (1 - y * y);
 	out[1][2]=y * z * (1 - c) + x * s;
 	out[1][3]=0.0f;
+	
 	out[2][0]=z * x * (1 - c) + y * s;
 	out[2][1]=y * z * (1 - c) - x * s;
 	out[2][2]=z * z + c * (1 - z * z);
 	out[2][3]=0.0f;
+	
 	out[3][0]=0.0f;
 	out[3][1]=0.0f;
 	out[3][2]=0.0f;
@@ -318,3 +323,4 @@ void Matrix4x4_ConcatScale3( matrix4x4 out, float x, float y, float z )
 	Matrix4x4_CreateScale3( temp, x, y, z );
 	Matrix4x4_Concat( out, base, temp );
 }
+#endif // XASH_DEDICATED

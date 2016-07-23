@@ -17,6 +17,7 @@ GNU General Public License for more details.
 // Winsock
 #include <winsock.h>
 #include <wsipx.h>
+#define socklen_t int //#include <ws2tcpip.h>
 #else
 // BSD sockets
 #include <sys/types.h>
@@ -96,9 +97,7 @@ qboolean NET_OpenWinSock( void )
 {
 	// initialize the Winsock function vectors (we do this instead of statically linking
 	// so we can run on Win 3.1, where there isn't necessarily Winsock)
-	if( Sys_LoadLibrary( &winsock_dll ))
-		return true;
-	return false;
+	return Sys_LoadLibrary( &winsock_dll );
 }
 
 void NET_FreeWinSock( void )
@@ -142,19 +141,23 @@ typedef struct
 
 static loopback_t	loopbacks[2];
 static int	ip_sockets[2];
+#ifdef XASH_IPX
 static int	ipx_sockets[2];
+#endif
 
 #ifdef _WIN32
 static WSADATA winsockdata;
 #endif
 static qboolean winsockInitialized = false;
-static const char *net_src[2] = { "client", "server" };
+//static const char *net_src[2] = { "client", "server" };
 static qboolean noip = false;
+#ifdef XASH_IPX
 static qboolean noipx = false;
+#endif
 static convar_t *net_ip;
-static convar_t *net_hostport;
-static convar_t *net_clientport;
-static convar_t *net_showpackets;
+//static convar_t *net_hostport;
+//static convar_t *net_clientport;
+extern convar_t *net_showpackets;
 void NET_Restart_f( void );
 
 #ifdef _WIN32
@@ -294,13 +297,13 @@ static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
 	struct hostent	*h;
 	char		*colon;
 	char		copy[MAX_SYSPATH];
-	int		val;
 	
 	Q_memset( sadr, 0, sizeof( *sadr ));
 
 #ifdef XASH_IPX
 	if((Q_strlen( s ) >= 23 ) && ( s[8] == ':' ) && ( s[21] == ':' )) // check for an IPX address
 	{
+		int val;
 		((struct sockaddr_ipx *)sadr)->sa_family = AF_IPX;
 		copy[2] = 0;
 		DO( 0, sa_netnum[0] );
@@ -333,7 +336,7 @@ static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
 				((struct sockaddr_in *)sadr)->sin_port = pHtons((short)Q_atoi( colon + 1 ));	
 			}
 		}
-		
+
 		if( copy[0] >= '0' && copy[0] <= '9' )
 		{
 			*(int *)&((struct sockaddr_in *)sadr)->sin_addr = pInet_Addr( copy );
@@ -454,9 +457,9 @@ qboolean NET_StringToAdr( const char *string, netadr_t *adr )
 {
 	struct sockaddr s;
 
+	Q_memset( adr, 0, sizeof( netadr_t ));
 	if( !Q_stricmp( string, "localhost" ))
 	{
-		Q_memset( adr, 0, sizeof( netadr_t ));
 		adr->type = NA_LOOPBACK;
 		return true;
 	}
@@ -533,9 +536,11 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 {
 	int 		ret;
 	struct sockaddr	addr;
-	int		err, addr_len;
-	int		net_socket;
+	socklen_t	addr_len;
+	int		net_socket = 0;
 	int		protocol;
+
+	Q_memset( &addr, 0, sizeof( struct sockaddr ) );
 
 	if( !data || !length )
 		return false;
@@ -560,7 +565,7 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 #ifdef _WIN32
 		if( ret == SOCKET_ERROR )
 		{
-			err = pWSAGetLastError();
+			int err = pWSAGetLastError();
 
 			// WSAEWOULDBLOCK and WSAECONNRESET are silent
 			if( err == WSAEWOULDBLOCK || err == WSAECONNRESET )
@@ -597,7 +602,7 @@ NET_SendPacket
 */
 void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to )
 {
-	int		ret, err;
+	int		ret;
 	struct sockaddr	addr;
 	SOCKET		net_socket;
 
@@ -634,9 +639,9 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 #endif
 	else 
 	{
-		char buf[32];
-		Q_strncpy( buf, data,  min( 32,length ));
-		MsgDev( D_ERROR, "NET_SendPacket ( %d, %d, \"%s\", %i ): bad address type %i\n", sock, length, data, to.type, to.type );
+		char buf[256];
+		Q_strncpy( buf, data,  min( 256, length ));
+		MsgDev( D_ERROR, "NET_SendPacket ( %d, %d, \"%s\", %i ): bad address type %i\n", sock, length, buf, to.type, to.type );
 		return;
 	}
 
@@ -647,7 +652,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 #ifdef _WIN32
 	if (ret == SOCKET_ERROR)
 	{
-		err = pWSAGetLastError();
+		int err = pWSAGetLastError();
 
 		// WSAEWOULDBLOCK is silent
 		if (err == WSAEWOULDBLOCK)
@@ -680,16 +685,18 @@ NET_IPSocket
 */
 static int NET_IPSocket( const char *netInterface, int port )
 {
-	int		err, net_socket;
+	int		net_socket;
 	struct sockaddr_in	addr;
 	dword		_true = 1;
 
+	Q_memset( &addr, 0, sizeof( struct sockaddr_in ) );
+
 	MsgDev( D_NOTE, "NET_UDPSocket( %s, %i )\n", netInterface, port );
-	
+
 #ifdef _WIN32
 	if(( net_socket = pSocket( PF_INET, SOCK_DGRAM, IPPROTO_UDP )) == SOCKET_ERROR )
 	{
-		err = pWSAGetLastError();
+		int err = pWSAGetLastError();
 		if( err != WSAEAFNOSUPPORT )
 			MsgDev( D_WARN, "NET_UDPSocket: socket = %s\n", NET_ErrorString( ));
 		return 0;
@@ -772,12 +779,12 @@ static void NET_OpenIP( void )
 		if( !port ) port = Cvar_Get( "port", va( "%i", PORT_SERVER ), CVAR_INIT, "network default port" )->integer;
 
 		ip_sockets[NS_SERVER] = NET_IPSocket( net_ip->string, port );
-		if( !ip_sockets[NS_SERVER] && host.type == HOST_DEDICATED )
-			Host_Error( "couldn't allocate dedicated server IP port. \nMaybe you're trying to run dedicated server twice?\n" );
+		if( !ip_sockets[NS_SERVER] && Host_IsDedicated() )
+			Host_Error( "Couldn't allocate dedicated server IP port.\nMaybe you're trying to run dedicated server twice?\n" );
 	}
 
 	// dedicated servers don't need client ports
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
 
 	if( !ip_sockets[NS_CLIENT] )
 	{
@@ -866,7 +873,7 @@ void NET_OpenIPX( void )
 	}
 
 	// dedicated servers don't need client ports
-	if( host.type == HOST_DEDICATED ) return;
+	if( Host_IsDedicated() ) return;
 
 	if( !ipx_sockets[NS_CLIENT] )
 	{
@@ -895,7 +902,7 @@ void NET_GetLocalAddress( void )
 {
 	char		buff[512];
 	struct sockaddr_in	address;
-	int		namelen;
+	socklen_t		namelen;
 
 	Q_memset( &net_local, 0, sizeof( netadr_t ));
 
@@ -923,13 +930,13 @@ void NET_GetLocalAddress( void )
 
 		if( pGetSockName( ip_sockets[NS_SERVER], (struct sockaddr *)&address, &namelen ) != 0 )
 		{
-			MsgDev( D_ERROR, "Could not get TCP/IP address, TCP/IP disabled\nReason:  %s\n", NET_ErrorString( ));
+			MsgDev( D_ERROR, "Could not get TCP/IP address, TCP/IP disabled\nReason: %s\n", NET_ErrorString( ));
 			noip = true;
 		}
 		else
 		{
 			net_local.port = address.sin_port;
-			Msg( "Server IP address %s\n", NET_AdrToString( net_local ));
+			Msg( "Server IP address: %s\n", NET_AdrToString( net_local ));
 		}
 	}
 }
@@ -946,12 +953,12 @@ void NET_Config( qboolean multiplayer )
 	static qboolean old_config;
 	static qboolean bFirst = true;
 
-	if( old_config == multiplayer )
+	if( old_config == multiplayer && !Host_IsDedicated() )
 		return;
 
 	old_config = multiplayer;
 
-	if( !multiplayer )
+	if( !multiplayer && !Host_IsDedicated() )
 	{	
 		int	i;
 
@@ -991,36 +998,6 @@ void NET_Config( qboolean multiplayer )
 	NET_ClearLoopback ();
 }
 
-// sleeps msec or until net socket is ready
-void NET_Sleep( int msec )
-{
-	struct timeval	timeout;
-	fd_set		fdset;
-	int		i = 0;
-
-	if( host.type == HOST_NORMAL )
-		return; // we're not a dedicated server, just run full speed
-
-	FD_ZERO( &fdset );
-
-	if( ip_sockets[NS_SERVER] )
-	{
-		FD_SET( ip_sockets[NS_SERVER], &fdset ); // network socket
-		i = ip_sockets[NS_SERVER];
-	}
-#ifdef XASH_IPX
-	if( ipx_sockets[NS_SERVER] )
-	{
-		FD_SET( ipx_sockets[NS_SERVER], &fdset ); // network socket
-		if( ipx_sockets[NS_SERVER] > i )
-			i = ipx_sockets[NS_SERVER];
-	}
-#endif
-	timeout.tv_sec = msec / 1000;
-	timeout.tv_usec = (msec % 1000) * 1000;
-	pSelect( i+1, &fdset, NULL, NULL, &timeout );
-}
-
 /*
 =================
 NET_ShowIP_f
@@ -1057,12 +1034,12 @@ NET_Init
 */
 void NET_Init( void )
 {
+#ifdef _WIN32
 	int	r;
 
-#ifdef _WIN32
 	if( !NET_OpenWinSock())	// loading wsock32.dll
 	{
-		MsgDev( D_WARN, "NET_Init: wsock32.dll can't loaded\n" );
+		MsgDev( D_WARN, "NET_Init: failed to load wsock32.dll\n" );
 		return;
 	}
 
@@ -1075,7 +1052,7 @@ void NET_Init( void )
 #endif
 
 	net_showpackets = Cvar_Get( "net_showpackets", "0", 0, "show network packets" );
-	Cmd_AddCommand( "net_showip", NET_ShowIP_f,  "show hostname and ip's" );
+	Cmd_AddCommand( "net_showip", NET_ShowIP_f,  "show hostname and IPs" );
 	Cmd_AddCommand( "net_restart", NET_Restart_f, "restart the network subsystem" );
 
 	if( Sys_CheckParm( "-noip" )) noip = true;
@@ -1144,6 +1121,9 @@ typedef struct httpfile_s
 	int socket;
 	int size;
 	int downloaded;
+	int lastchecksize;
+	float checktime;
+	float blocktime;
 	int id;
 	int state;
 	qboolean process;
@@ -1155,9 +1135,27 @@ httpfile_t *first_file, *last_file;
 httpserver_t *first_server, *last_server;
 
 convar_t *http_useragent;
+convar_t *http_autoremove;
+convar_t *http_timeout;
 
 char header[BUFSIZ]; // query or response
 int headersize, querylength, sent;
+
+/*
+========================
+HTTP_ClearCustomServers
+========================
+*/
+void HTTP_ClearCustomServers( void )
+{
+	if( first_file ) return; // may be referenced
+	while( first_server && first_server->needfree )
+	{
+		httpserver_t *tmp = first_server;
+		first_server = first_server->next;
+		Mem_Free( tmp );
+	}
+}
 
 /*
 ==============
@@ -1178,31 +1176,24 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		pCloseSocket( file->socket );
 	file->socket = -1;
 
-	
 	Q_snprintf( incname, 256, "downloaded/%s.incomplete", file->path );
 	if( error )
 	{
 		// Switch to next fastdl server if present
-		if( file->server )
+		if( file->server && ( file->state > 0 ) )
 		{
-			if( file->server->needfree )
-			{
-				// First node may be allocated by HTTP_AddDownload
-				httpserver_t *tmp = file->server;
-				file->server = file->server->next;
-				file->state = 0;
-				Mem_Free( tmp );
-			}
-			else 
-			{
-				file->server = file->server->next;
-				file->state = 0; // Reset download state, HTTP_Run will open file again
-			}
+			file->server = file->server->next;
+			file->state = 0; // Reset download state, HTTP_Run() will open file again
 			return;
 		}
 		// Called because there was no servers to download, free file now
-		MsgDev( D_WARN, "Cannot download %s from any server\n"
-			"You may remove %s now\n", file->path, incname ); // Warn about trash file
+		if( http_autoremove->value == 1 )
+			// remove broken file
+			FS_Delete( incname );
+		else
+			// autoremove disabled, keep file
+			Msg( "HTTP: Cannot download %s from any server. "
+				"You may remove %s now\n", file->path, incname ); // Warn about trash file
 		if( file->process )CL_ProcessFile( false, file->path ); // Process file, increase counter
 	}
 	else
@@ -1212,26 +1203,39 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		Q_snprintf( name, 256, "downloaded/%s", file->path );
 		FS_Rename( incname, name );
 		if( file->process )CL_ProcessFile( true, name );
-		else Msg ( "Successfully downloaded %s, prosessing disabled!\n", name );
+		else Msg ( "HTTP: Successfully downloaded %s, prosessing disabled!\n", name );
 	}
 	// Now free list node
 	if( first_file == file )
 	{
 		// Now only first_file is changing progress
 		Cvar_SetFloat( "scr_download", -1 );
-		if(last_file == first_file)
+		if( last_file == first_file )
+		{
 			last_file = first_file = 0;
+			HTTP_ClearCustomServers();
+		}
 		else
 			first_file = file->next;
 		Mem_Free( file );
 	}
 	else if( file->next )
 	{
-		// i'm too lazy to search whole list, just copy the node
-		// it is not used now as only first file may be freed
-		httpfile_t *tmp =file->next;
-		Q_memcpy( file, file->next, sizeof(httpfile_t) );
-		Mem_Free(tmp);
+		httpfile_t *tmp = first_file, *tmp2;
+
+		while( tmp && ( tmp->next != file ) )
+			tmp = tmp->next;
+
+		ASSERT( tmp );
+
+		tmp2 = tmp->next;
+		if( tmp2 )
+		{
+			tmp->next = tmp2->next;
+			Mem_Free( tmp2 );
+		}
+		else
+			tmp->next = 0;
 	}
 	else file->id = -1; // Tail file
 }
@@ -1251,6 +1255,7 @@ void HTTP_Run( void )
 	char *begin = 0;
 	httpfile_t *curfile = first_file; // download is single-threaded now, but can be rewrited
 	httpserver_t *server;
+	float frametime;
 
 	if( !curfile )
 		return;
@@ -1261,36 +1266,41 @@ void HTTP_Run( void )
 	server = curfile->server;
 	if( !server )
 	{
-		MsgDev( D_ERROR, "No servers to download %s!\n", curfile->path );
+		Msg( "HTTP: No servers to download %s!\n", curfile->path );
 		HTTP_FreeFile( curfile, true );
 		return;
 	}
 
 	if( !curfile->file ) // state == 0
 	{
-		MsgDev( D_INFO, "Starting download %s\n", curfile->path );
 		char name[PATH_MAX];
+		Msg( "HTTP: Starting download %s from %s\n", curfile->path, server->host );
 		Q_snprintf( name, PATH_MAX, "downloaded/%s.incomplete", curfile->path );
 		curfile->file = FS_Open( name, "wb", true );
 		if( !curfile->file )
 		{
-			MsgDev( D_ERROR, "Cannot open %s!\n", name );
+			Msg( "HTTP: Cannot open %s!\n", name );
 			HTTP_FreeFile( curfile, true );
 			return;
 		}
 		curfile->state = 1;
+		curfile->blocktime = 0;
+		curfile->downloaded = 0;
+		curfile->lastchecksize = 0;
+		curfile->checktime = 0;
 	}
 
 	if( curfile->state < 2 ) // Socket is not created
 	{
+		dword mode;
 		curfile->socket = pSocket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 		// Now set non-blocking mode
 		// You may skip this if not supported by system,
 		// but download will lock engine, maybe you will need to add manual returns
 #ifdef _WIN32
-		int mode = 1;
-		pIoctlSocket( curfile->socket, FIONBIO, mode );
-#else
+		mode = 1;
+		pIoctlSocket( curfile->socket, FIONBIO, &mode );
+#elif !defined(__FreeBSD__)
 		// SOCK_NONBLOCK is not portable, so use fcntl
 		fcntl( curfile->socket, F_SETFL, fcntl( curfile->socket, F_GETFL, 0 ) | O_NONBLOCK );
 #endif
@@ -1305,14 +1315,14 @@ void HTTP_Run( void )
 		if( res )
 		{
 #ifdef _WIN32
-			if( pWSAGetLastError() == WSAEINPROGRESS )
+			if( pWSAGetLastError() == WSAEINPROGRESS || pWSAGetLastError() == WSAEWOULDBLOCK )
 #else
 			if( errno == EINPROGRESS ) // Should give EWOOLDBLOCK if try recv too soon
 #endif
 				curfile->state = 3;
 			else
 			{
-				MsgDev( D_ERROR, "Cannot connect to %s\n","" );
+				Msg( "HTTP: Cannot connect to server: %s\n", NET_ErrorString( ) );
 				HTTP_FreeFile( curfile, true ); // Cannot connect
 				return;
 			}
@@ -1320,7 +1330,7 @@ void HTTP_Run( void )
 		}
 		curfile->state = 3;
 	}
-	
+
 	if( curfile->state < 4 ) // Request not formatted
 	{
 		querylength = Q_snprintf( header, BUFSIZ,
@@ -1337,56 +1347,73 @@ void HTTP_Run( void )
 	{
 		while( sent < querylength )
 		{
-			int res = pSend( curfile->socket, header + sent, querylength - sent, 0 );
+			res = pSend( curfile->socket, header + sent, querylength - sent, 0 );
 			if( res < 0 )
 			{
 #ifdef _WIN32
-				if( pWSAGetLastError() != WSAEWOULDBLOCK )
-#else
+				if( pWSAGetLastError() != WSAEWOULDBLOCK && pWSAGetLastError() != WSAENOTCONN )
+#elif !defined(__FreeBSD__)
 				if( errno != EWOULDBLOCK )
 #endif
 				{
-					MsgDev(D_ERROR, "Failed to send request:\n%s\n", header);
+					Msg( "HTTP: Failed to send request: %s\n", NET_ErrorString() );
+					HTTP_FreeFile( curfile, true );
+					return;
+				}
+#ifndef __FreeBSD__
+				// increase counter when blocking
+				curfile->blocktime += host.frametime;
+
+				if( curfile->blocktime > http_timeout->value )
+				{
+					Msg( "HTTP: Timeout on request send:\n%s\n", header );
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
 				return;
+#endif
 			}
 			else
 			{
 				sent += res;
+				curfile->blocktime = 0;
 			}
 		}
-		MsgDev( D_INFO, "Request sent!\n");
+		Msg( "HTTP: Request sent!\n");
 		Q_memset( header, 0, BUFSIZ );
 		curfile->state = 5;
 	}
+
+	frametime = host.frametime; // save frametime to reset it after first iteration
+
 	while( ( res = pRecv( curfile->socket, buf, BUFSIZ, 0 ) ) > 0) // if we got there, we are receiving data
 	{
 		//MsgDev(D_INFO,"res: %d\n", res);
+		curfile->blocktime = 0;
 		if( curfile->state < 6 ) // Response still not received
 		{
 			buf[res] = 0; // string break to search \r\n\r\n
 			Q_memcpy( header + headersize, buf, res );
-			//MsgDev( D_INFO, "%s", buf );
+			//MsgDev( D_INFO, "%s\n", buf );
 			begin = Q_strstr( header, "\r\n\r\n" );
 			if( begin ) // Got full header
 			{
 				int cutheadersize = begin - header + 4; // after that begin of data
-				MsgDev(D_INFO, "Got response!\n");
+				char *length;
+				Msg( "HTTP: Got response!\n" );
 				if( !Q_strstr(header, "200 OK") )
 				{
 					*begin = 0; // cut string to print out response
-					MsgDev( D_ERROR, "Bad response:\n%s\n", header );
+					Msg( "HTTP: Bad response:\n%s\n", header );
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
 				// print size
-				char *length = Q_strstr(header, "Content-Length: ");
+				length = Q_strstr(header, "Content-Length: ");
 				if( length )
 				{
 					int size = Q_atoi( length += 16 );
-					MsgDev( D_INFO, "File size is %d\n", size );
+					Msg( "HTTP: File size is %d\n", size );
 					if( ( curfile->size != -1 ) && ( curfile->size != size ) ) // check size if specified, not used
 						MsgDev( D_WARN, "Server reports wrong file size!\n" );
 					curfile->size = size;
@@ -1394,7 +1421,7 @@ void HTTP_Run( void )
 				if(curfile->size == -1)
 				{
 					// Usually fastdl's reports file size if link is correct
-					MsgDev( D_ERROR, "File size is unknown!\n" );
+					Msg( "HTTP: File size is unknown!\n" );
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
@@ -1407,7 +1434,7 @@ void HTTP_Run( void )
 					if( ret != res - cutheadersize - headersize ) // could not write file
 					{
 						// close it and go to next
-						MsgDev( D_ERROR, "Write failed for %s!\n", curfile->path );
+						Msg( "HTTP: Write failed for %s!\n", curfile->path );
 						curfile->state = 0;
 						HTTP_FreeFile( curfile, true );
 						return;
@@ -1424,27 +1451,49 @@ void HTTP_Run( void )
 			if ( ret != res )
 			{
 				// close it and go to next
-				MsgDev( D_ERROR, "Write failed for %s!\n", curfile->path );
+				Msg( "HTTP: Write failed for %s!\n", curfile->path );
 				curfile->state = 0;
 				HTTP_FreeFile( curfile, true );
 				return;
 			}
+
 			curfile->downloaded += ret;
+			curfile->lastchecksize += ret;
+			curfile->checktime += frametime;
+			frametime = 0; // only first iteration increases time, 
+			// as after it will run in same frame
+			if( curfile->checktime > 5 )
+			{
+				curfile->checktime = 0;
+				Msg( "HTTP: %f kbps\n", curfile->lastchecksize / ( 5.0 * 1024 ) );
+				curfile->lastchecksize = 0;
+			}
 		}
 	}
-
 	if( curfile->size > 0 )
 		Cvar_SetFloat( "scr_download", (float)curfile->downloaded / curfile->size * 100 );
 
 	if( curfile->size > 0 && curfile->downloaded >= curfile->size )
+	{
 		HTTP_FreeFile( curfile, false ); // success
+		return;
+	}
 	else // if it is not blocking, inform user about problem
 #ifdef _WIN32
 	if( pWSAGetLastError() != WSAEWOULDBLOCK )
 #else
 	if( errno != EWOULDBLOCK )
 #endif
-		MsgDev( D_WARN, "Problem downloading %s:\n%s\n", curfile->path, NET_ErrorString() );
+		Msg( "HTTP: Problem downloading %s:\n%s\n", curfile->path, NET_ErrorString() );
+	else
+		curfile->blocktime += host.frametime;
+	curfile->checktime += frametime;
+	if( curfile->blocktime > http_timeout->value )
+	{
+		Msg( "HTTP: Timeout on receiving data!\n");
+		HTTP_FreeFile( curfile, true );
+		return;
+	}
 }
 
 /*
@@ -1500,6 +1549,76 @@ static void HTTP_Download_f( void )
 }
 
 /*
+==============
+HTTP_ParseURL
+==============
+*/
+httpserver_t *HTTP_ParseURL( const char *url )
+{
+	httpserver_t *server;
+	int i;
+	url = Q_strstr( url, "http://" );
+	if( !url ) return NULL;
+	url += 7;
+	server = Mem_Alloc( net_mempool, sizeof( httpserver_t ) );
+	i = 0;
+	while( *url && ( *url != ':' ) && ( *url != '/' ) && ( *url != '\r' ) && ( *url != '\n' ) )
+	{
+		if( i > sizeof( server->host ) ) return NULL;
+		server->host[i++] = *url++;
+	}
+	server->host[i] = 0;
+	if( *url == ':' )
+	{
+		server->port = Q_atoi( ++url );
+		while( *url && ( *url != '/' ) && ( *url != '\r' ) && ( *url != '\n' ) ) url++;
+	}
+	else
+		server->port = 80;
+	i = 0;
+	while( *url && ( *url != '\r' ) && ( *url != '\n' ) )
+	{
+		if( i > sizeof( server->path) ) return NULL;
+		server->path[i++] = *url++;
+	}
+	server->path[i] = 0;
+	server->next = NULL;
+	server->needfree = false;
+	return server;
+}
+
+/*
+=======================
+HTTP_AddCustomServer
+=======================
+*/
+void HTTP_AddCustomServer( const char *url )
+{
+	httpserver_t *server = HTTP_ParseURL( url );
+	if( !server )
+	{
+		MsgDev ( D_ERROR, "\"%s\" is not valid url!\n", url );
+		return;
+	}
+	server->needfree = true;
+	server->next = first_server;
+	first_server = server;
+}
+
+/*
+=======================
+HTTP_AddCustomServer_f
+=======================
+*/
+void HTTP_AddCustomServer_f( void )
+{
+	if( Cmd_Argc() == 2 )
+	{
+		HTTP_AddCustomServer( Cmd_Argv( 1 ) );
+	}
+}
+
+/*
 ============
 HTTP_Clear_f
 
@@ -1515,13 +1634,6 @@ void HTTP_Clear_f( void )
 		first_file = first_file->next;
 		if( file->file ) FS_Close( file->file );
 		if( file->socket != -1 )pCloseSocket ( file->socket );
-		// There may be unreferenced servers at the beggining of list
-		while( file->server && file->server->needfree )
-		{
-			httpserver_t *tmp = file->server;
-			file->server = file->server->next;
-			Mem_Free( tmp );
-		}
 		Mem_Free( file );
 	}
 }
@@ -1535,6 +1647,8 @@ Stop current download, skip to next file
 */
 void HTTP_Cancel_f( void )
 {
+	if( !first_file )
+		return;
 	// If download even not started, it will be removed completely
 	first_file->state = 0;
 	HTTP_FreeFile( first_file, true );
@@ -1549,7 +1663,8 @@ Stop current download, skip to next server
 */
 void HTTP_Skip_f( void )
 {
-	HTTP_FreeFile( first_file, true );
+	if( first_file )
+		HTTP_FreeFile( first_file, true );
 }
 
 /*
@@ -1567,7 +1682,7 @@ void HTTP_List_f( void )
 		if( file->id == -1 )
 		Msg ( "\t(empty)\n");
 		else if ( file->server )
-			Msg ( "\t%d %d http://%s:%d/%s%s\n", file->id, file->state,
+			Msg ( "\t%d %d http://%s:%d/%s%s %d\n", file->id, file->state,
 				file->server->host, file->server->port, file->server->path,
 				file->path, file->downloaded );
 		else Msg ( "\t%d %d (no server) %s\n", file->id, file->state, file->path );
@@ -1592,7 +1707,6 @@ void HTTP_ResetProcessState( void )
 	}
 }
 
-
 /*
 =============
 HTTP_Init
@@ -1600,7 +1714,7 @@ HTTP_Init
 */
 void HTTP_Init( void )
 {
-	char *serverfile, *token;
+	char *serverfile, *line, token[1024];
 	last_server = NULL;
 
 	first_file = last_file = NULL;
@@ -1612,12 +1726,14 @@ void HTTP_Init( void )
 	Cmd_AddCommand("http_cancel", &HTTP_Cancel_f, "Cancel current download");
 	Cmd_AddCommand("http_clear", &HTTP_Clear_f, "Cancel all downloads");
 	Cmd_AddCommand("http_list", &HTTP_List_f, "List all queued downloads");
+	Cmd_AddCommand("http_addcustomserver", &HTTP_AddCustomServer_f, "Add custom fastdl server");
 	http_useragent = Cvar_Get( "http_useragent", "xash3d", CVAR_ARCHIVE, "User-Agent string" );
+	http_autoremove = Cvar_Get( "http_autoremove", "1", CVAR_ARCHIVE, "Remove broken files" );
+	http_timeout = Cvar_Get( "http_timeout", "45", CVAR_ARCHIVE, "Timeout for http downloader" );
 
 	// Read servers from fastdl.txt
-	token = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
-	if( !token ) return;
-	while( ( token = Q_strstr( token, "http://" ) ) )
+	//token = serverfile = FS_LoadFile( "fastdl.txt", 0, true );
+	/*while( ( token = Q_strstr( token, "http://" ) ) )
 	{
 		httpserver_t *server;
 		// split buffer by lines
@@ -1651,7 +1767,7 @@ void HTTP_Init( void )
 		Q_strncpy( server->host, token, sizeof( server->host ) );
 		server->needfree = false; // never free
 		server->next = NULL;
-	
+
 		if( !last_server )
 			// It will be the only server
 			first_server = last_server = server;
@@ -1662,6 +1778,39 @@ void HTTP_Init( void )
 			last_server = server;
 		}
 		token = lineend;
+	}*/
+	line = serverfile = (char *)FS_LoadFile( "fastdl.txt", 0, true );
+	if( serverfile )
+	{
+		while( ( line = COM_ParseFile( line, token ) ) )
+		{
+			httpserver_t *server = HTTP_ParseURL( token );
+			if( !server ) continue;
+			if( !last_server )
+				last_server = first_server = server;
+			else
+			{
+				last_server->next = server;
+				last_server = server;
+			}
+		}
+		Mem_Free( serverfile );
 	}
-	Mem_Free( serverfile );
+}
+
+/*
+====================
+HTTP_Shutdown
+====================
+*/
+void HTTP_Shutdown( void )
+{
+	HTTP_Clear_f();
+	while( first_server )
+	{
+		httpserver_t *tmp = first_server;
+		first_server = first_server->next;
+		Mem_Free( tmp );
+	}
+	last_server = 0;
 }

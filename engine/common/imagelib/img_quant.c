@@ -30,9 +30,9 @@ GNU General Public License for more details.
 
 // defs for freq and bias
 #define intbiasshift	16			// bias for fractions
-#define intbias		(1<<intbiasshift)
+#define intbias		(1U << intbiasshift)
 #define gammashift  	10			// gamma = 1024
-#define gamma		(1<<gammashift)
+#define gamma		(1U << gammashift)
 #define betashift		10
 #define beta		(intbias>>betashift)	// beta = 1 / 1024
 #define betagamma		(intbias<<(gammashift - betashift))
@@ -40,20 +40,20 @@ GNU General Public License for more details.
 // defs for decreasing radius factor
 #define initrad		(netsize>>3)		// for 256 cols, radius starts
 #define radiusbiasshift	6			// at 32.0 biased by 6 bits
-#define radiusbias		(1<<radiusbiasshift)
+#define radiusbias		(1U << radiusbiasshift)
 #define initradius		(initrad * radiusbias)	// and decreases by a
 #define radiusdec		30			// factor of 1/30 each cycle 
 
 // defs for decreasing alpha factor
 #define alphabiasshift	10			// alpha starts at 1.0
-#define initalpha		(1<<alphabiasshift)
+#define initalpha		(1U << alphabiasshift)
 int			alphadec;			// biased by 10 bits
 
 // radbias and alpharadbias used for radpower calculation
 #define radbiasshift	8
-#define radbias		(1<<radbiasshift)
+#define radbias		(1U << radbiasshift)
 #define alpharadbshift	(alphabiasshift+radbiasshift)
-#define alpharadbias	(1<<alpharadbshift)
+#define alpharadbias	(1U << alpharadbshift)
 
 // types and global variables
 static byte		*thepicture;		// the input image itself
@@ -93,7 +93,7 @@ void unbiasnet( void )
 		{
 			// OLD CODE: network[i][j] >>= netbiasshift;
 			// Fix based on bug report by Juergen Weigert jw@suse.de
-			temp = (network[i][j] + (1 << (netbiasshift - 1))) >> netbiasshift;
+			temp = (network[i][j] + (1U << (netbiasshift - 1))) >> netbiasshift;
 			if( temp > 255 ) temp = 255;
 			network[i][j] = temp;
 		}
@@ -254,7 +254,7 @@ int contest( int r, int g, int b )
 	register int	i, dist, a, biasdist, betafreq;
 	int		bestpos, bestbiaspos, bestd, bestbiasd;
 
-	bestd = ~(1<<31);
+	bestd = ~(1U << 31);
 	bestbiasd = bestd;
 	bestpos = -1;
 	bestbiaspos = bestpos;

@@ -124,27 +124,21 @@ static void UI_InternetGames_GetGamesList( void )
 	{
 		if( i >= UI_MAX_SERVERS ) break;
 		info = uiStatic.serverNames[i];
-#if 1
-		// NOTE: Xash3D is support hot switching between games in multiplayer
-		// but this feature not detail tested and may be bugly
-		if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )))
-			continue;	// filter by game
-#endif 
 		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "host" ), GAME_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, GAME_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], GAME_LENGTH );
 		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "map" ), MAPNAME_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, MAPNAME_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], MAPNAME_LENGTH );
 		if( !strcmp( Info_ValueForKey( info, "dm" ), "1" ))
 			StringConcat( uiInternetGames.gameDescription[i], "deathmatch", TYPE_LENGTH );
 		else if( !strcmp( Info_ValueForKey( info, "coop" ), "1" ))
 			StringConcat( uiInternetGames.gameDescription[i], "coop", TYPE_LENGTH );
 		else if( !strcmp( Info_ValueForKey( info, "team" ), "1" ))
 			StringConcat( uiInternetGames.gameDescription[i], "teamplay", TYPE_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, TYPE_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], TYPE_LENGTH );
 		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "numcl" ), MAXCL_LENGTH );
 		StringConcat( uiInternetGames.gameDescription[i], "\\", MAXCL_LENGTH );
 		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "maxcl" ), MAXCL_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, MAXCL_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], MAXCL_LENGTH );
 		uiInternetGames.gameDescriptionPtr[i] = uiInternetGames.gameDescription[i];
 	}
 
@@ -189,8 +183,6 @@ UI_Background_Ownerdraw
 */
 static void UI_Background_Ownerdraw( void *self )
 {
-	menuCommon_s	*item = (menuCommon_s *)self;
-
 	if( !CVAR_GET_FLOAT( "cl_background" ))
 		UI_DrawBackground_Callback( self );
 
@@ -274,13 +266,13 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.menu.keyFunc = UI_InternetGames_KeyFunc;
 
 	StringConcat( uiInternetGames.hintText, "Game", GAME_LENGTH );
-	StringConcat( uiInternetGames.hintText, uiEmptyString, GAME_LENGTH );
+	AddSpaces( uiInternetGames.hintText, GAME_LENGTH );
 	StringConcat( uiInternetGames.hintText, "Map", MAPNAME_LENGTH );
-	StringConcat( uiInternetGames.hintText, uiEmptyString, MAPNAME_LENGTH );
+	AddSpaces( uiInternetGames.hintText, MAPNAME_LENGTH );
 	StringConcat( uiInternetGames.hintText, "Type", TYPE_LENGTH );
-	StringConcat( uiInternetGames.hintText, uiEmptyString, TYPE_LENGTH );
+	AddSpaces( uiInternetGames.hintText, TYPE_LENGTH );
 	StringConcat( uiInternetGames.hintText, "Num/Max Clients", MAXCL_LENGTH );
-	StringConcat( uiInternetGames.hintText, uiEmptyString, MAXCL_LENGTH );
+	AddSpaces( uiInternetGames.hintText, MAXCL_LENGTH );
 
 	uiInternetGames.background.generic.id = ID_BACKGROUND;
 	uiInternetGames.background.generic.type = QMTYPE_BITMAP;
@@ -460,7 +452,7 @@ void UI_InternetGames_Menu( void )
 	if ( gMenu.m_gameinfo.gamemode == GAME_SINGLEPLAYER_ONLY )
 		return;
 
-	// stop demos to allow open network sockets
+	// stop demos to allow network sockets to open
 	if ( gpGlobals->demoplayback && CVAR_GET_FLOAT( "cl_background" ))
 	{
 		uiStatic.m_iOldMenuDepth = uiStatic.menuDepth;

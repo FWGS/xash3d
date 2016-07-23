@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 
@@ -60,7 +62,7 @@ int S_ZeroCrossingBefore( wavdata_t *pWaveData, int sample )
 			
 		if( pWaveData->width == 1 )
 		{
-			char	*pData = pWaveData->buffer + sample * sampleSize;
+			char	*pData = (char *)pWaveData->buffer + sample * sampleSize;
 			qboolean	zero = false;
 
 			if( pWaveData->channels == 1 )
@@ -157,7 +159,7 @@ int S_ZeroCrossingAfter( wavdata_t *pWaveData, int sample )
 
 		if( pWaveData->width == 1 )	// 8-bit
 		{
-			char	*pData = pWaveData->buffer + sample * sampleSize;
+			char	*pData = (char *)pWaveData->buffer + sample * sampleSize;
 			qboolean	zero = false;
 
 			if( pWaveData->channels == 1 )
@@ -322,3 +324,4 @@ void S_SetSampleEnd( channel_t *pChan, wavdata_t *pSource, int newEndPosition )
 
 	pChan->pMixer.forcedEndSample = newEndPosition;
 }
+#endif // XASH_DEDICATED

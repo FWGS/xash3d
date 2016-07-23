@@ -21,6 +21,14 @@ GNU General Public License for more details.
 #include <android/log.h>
 #endif
 
+#ifdef USE_SELECT
+// non-blocking console input
+#ifdef _WIN32
+#include "winsock2.h"
+#else
+#include <sys/select.h>
+#endif
+#endif
 /*
 ===============================================================================
 
@@ -28,6 +36,10 @@ WIN32 CONSOLE
 
 ===============================================================================
 */
+
+#if defined(_WIN32) && !defined(__amd64__)
+#define WINCON
+#endif
 
 // console defines
 #define SUBMIT_ID		1	// "submit" button
@@ -38,11 +50,12 @@ WIN32 CONSOLE
 
 #define SYSCONSOLE		"XashConsole"
 #define COMMAND_HISTORY	64	// system console keep more commands than game console
-
+#ifdef WINCON
 typedef struct
 {
+
 	char		title[64];
-#ifdef _WIN32
+
 	HWND		hWnd;
 	HWND		hwndBuffer;
 	HWND		hwndButtonSubmit;
@@ -50,7 +63,7 @@ typedef struct
 	HFONT		hfBufferFont;
 	HWND		hwndInputLine;
 	WNDPROC		SysInputLineWndProc;
-#endif
+
 	string		consoleText;
 	string		returnedText;
 	string		historyLines[COMMAND_HISTORY];
@@ -60,17 +73,25 @@ typedef struct
 	int		windowWidth, windowHeight;
 	size_t		outLen;
 	// log stuff
+
+
+} WinConData;
+
+static WinConData	s_wcd;
+#endif
+typedef struct {
+	char		title[64];
 	qboolean		log_active;
 	char		log_path[MAX_SYSPATH];
 	FILE		*logfile;
 	int 		logfileno;
-} WinConData;
+} LogData;
 
-static WinConData	s_wcd;
+static LogData s_ld;
 
 void Con_ShowConsole( qboolean show )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	if( !s_wcd.hWnd || show == s_wcd.status )
 		return;
 
@@ -86,13 +107,13 @@ void Con_ShowConsole( qboolean show )
 
 void Con_DisableInput( void )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	if( host.type != HOST_DEDICATED ) return;
 	SendMessage( s_wcd.hwndButtonSubmit, WM_ENABLE, 0, 0 );
 	SendMessage( s_wcd.hwndInputLine, WM_ENABLE, 0, 0 );
 #endif
 }
-#ifdef _WIN32
+#ifdef WINCON
 void Con_SetInputText( const char *inputText )
 {
 	if( host.type != HOST_DEDICATED ) return;
@@ -245,7 +266,7 @@ print into window console
 */
 void Con_WinPrint( const char *pMsg )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	size_t	len = Q_strlen( pMsg );
 
 	// replace selection instead of appending if we're overflowing
@@ -274,7 +295,7 @@ create win32 console
 */
 void Con_CreateConsole( void )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	HDC	hDC;
 	WNDCLASS	wc;
 	RECT	rect;
@@ -291,12 +312,12 @@ void Con_CreateConsole( void )
 	wc.hInstance     = host.hInst;
 	wc.hIcon         = LoadIcon( host.hInst, MAKEINTRESOURCE( IDI_ICON1 ));
 	wc.hCursor       = LoadCursor( NULL, IDC_ARROW );
-	wc.hbrBackground = (void *)COLOR_3DSHADOW;
+	wc.hbrBackground = (HBRUSH)COLOR_3DSHADOW;
 	wc.lpszClassName = SYSCONSOLE;
 	wc.lpszMenuName  = 0;
 
 	if( Sys_CheckParm( "-log" ) && host.developer != 0 )
-		s_wcd.log_active = true;
+		s_ld.log_active = true;
 
 	if( host.type == HOST_NORMAL )
 	{
@@ -305,8 +326,8 @@ void Con_CreateConsole( void )
 		rect.top = 0;
 		rect.bottom = 364;
 		Q_strncpy( FontName, "Fixedsys", sizeof( FontName ));
-		Q_strncpy( s_wcd.title, va( "Xash3D %g", XASH_VERSION ), sizeof( s_wcd.title ));
-		Q_strncpy( s_wcd.log_path, "engine.log", sizeof( s_wcd.log_path ));
+		Q_strncpy( s_wcd.title, va( "Xash3D %s", XASH_VERSION ), sizeof( s_wcd.title ));
+		Q_strncpy( s_ld.log_path, "engine.log", sizeof( s_ld.log_path ));
 		fontsize = 8;
 	}
 	else // dedicated console
@@ -317,8 +338,8 @@ void Con_CreateConsole( void )
 		rect.bottom = 392;
 		Q_strncpy( FontName, "System", sizeof( FontName ));
 		Q_strncpy( s_wcd.title, "Xash Dedicated Server", sizeof( s_wcd.title ));
-		Q_strncpy( s_wcd.log_path, "dedicated.log", sizeof( s_wcd.log_path ));
-		s_wcd.log_active = true; // always make log
+		Q_strncpy( s_ld.log_path, "dedicated.log", sizeof( s_ld.log_path ));
+		s_ld.log_active = true; // always make log
 		fontsize = 14;
 	}
 
@@ -353,7 +374,7 @@ void Con_CreateConsole( void )
 	s_wcd.hfBufferFont = CreateFont( nHeight, 0, 0, 0, FW_LIGHT, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_MODERN|FIXED_PITCH, FontName );
 	ReleaseDC( s_wcd.hWnd, hDC );
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		// create the input line
 		s_wcd.hwndInputLine = CreateWindowEx( WS_EX_CLIENTEDGE, "edit", NULL, WS_CHILD|WS_VISIBLE|WS_BORDER|ES_LEFT|ES_AUTOHSCROLL, 0, 366, 550, 25, s_wcd.hWnd, (HMENU)INPUT_ID, host.hInst, NULL );
@@ -368,11 +389,11 @@ void Con_CreateConsole( void )
 	s_wcd.hwndBuffer = CreateWindowEx( WS_EX_DLGMODALFRAME|WS_EX_CLIENTEDGE, "edit", NULL, CONSTYLE, 0, 0, rect.right - rect.left, min(365, rect.bottom), s_wcd.hWnd, (HMENU)EDIT_ID, host.hInst, NULL );
 	SendMessage( s_wcd.hwndBuffer, WM_SETFONT, (WPARAM)s_wcd.hfBufferFont, 0 );
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
-		s_wcd.SysInputLineWndProc = (WNDPROC)SetWindowLong( s_wcd.hwndInputLine, GWL_WNDPROC, (long)Con_InputLineProc );
+		s_wcd.SysInputLineWndProc = (WNDPROC)SetWindowLong( s_wcd.hwndInputLine, GWL_WNDPROC, (LONG)Con_InputLineProc );
 		SendMessage( s_wcd.hwndInputLine, WM_SETFONT, ( WPARAM )s_wcd.hfBufferFont, 0 );
-          }
+	}
 
 	// show console if needed
 	if( host.con_showalways )
@@ -392,8 +413,8 @@ void Con_CreateConsole( void )
 
 	if( Sys_CheckParm( "-log" ) && host.developer != 0 )
 	{
-		s_wcd.log_active = true;
-		Q_strncpy( s_wcd.log_path, "engine.log", sizeof( s_wcd.log_path ));
+		s_ld.log_active = true;
+		Q_strncpy( s_ld.log_path, "engine.log", sizeof( s_ld.log_path ));
 	}
 
 	Sys_InitLog();
@@ -408,7 +429,7 @@ register console commands (dedicated only)
 */
 void Con_InitConsoleCommands( void )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	if( host.type != HOST_DEDICATED ) return;
 	Cmd_AddCommand( "clear", Con_Clear_f, "clear console history" );
 #endif
@@ -424,16 +445,16 @@ destroy win32 console
 void Con_DestroyConsole( void )
 {
 	// last text message into console or log 
-	MsgDev( D_NOTE, "Sys_FreeLibrary: Unloading xash.dll\n" );
+	MsgDev( D_NOTE, "Con_DestroyConsole: Exiting!\n" );
 
 	Sys_CloseLog();
-#ifdef _WIN32
+#ifdef WINCON
 	if( s_wcd.hWnd )
 	{
 		DeleteObject( s_wcd.hbrEditBackground );
                     DeleteObject( s_wcd.hfBufferFont );
 
-		if( host.type == HOST_DEDICATED )
+		if( Host_IsDedicated() )
 		{
 			ShowWindow( s_wcd.hwndButtonSubmit, SW_HIDE );
 			DestroyWindow( s_wcd.hwndButtonSubmit );
@@ -470,6 +491,33 @@ returned input text
 */
 char *Con_Input( void )
 {
+#ifdef USE_SELECT
+	{
+		fd_set rfds;
+		static char line[1024];
+		static int len;
+		struct timeval tv;
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+		FD_ZERO(&rfds);
+		FD_SET(0, &rfds); // stdin
+		while( select(1, &rfds, NULL, NULL, &tv ) > 0 )
+		{
+			if( read( 0, &line[len], 1 ) != 1 )
+				break;
+			if( line[len] == '\n' || len > 1022 )
+			{
+				line[ ++len ] = 0;
+				len = 0;
+				return line;
+			}
+			len++;
+			tv.tv_sec = 0;
+			tv.tv_usec = 0;
+		}
+	}
+#endif
+#ifdef WINCON
 	if( s_wcd.consoleText[0] == 0 )
 		return NULL;
 		
@@ -477,6 +525,8 @@ char *Con_Input( void )
 	s_wcd.consoleText[0] = 0;
 	
 	return s_wcd.returnedText;
+#endif
+	return NULL;
 }
 
 /*
@@ -488,7 +538,7 @@ change focus to console hwnd
 */
 void Con_RegisterHotkeys( void )
 {
-#ifdef _WIN32
+#ifdef WINCON
 	SetFocus( s_wcd.hWnd );
 
 	// user can hit escape for quit
@@ -510,23 +560,24 @@ void Sys_InitLog( void )
 	if( host.change_game )
 		mode = "a";
 	else mode = "w";
+	Q_strncpy( s_ld.title, "Xash", sizeof ( s_ld.title ) );
 
 	// print log to stdout
-	printf( "=================================================================================\n" );
-	printf( "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
-	printf( "=================================================================================\n" );
+	printf( "================================================================================\n" );
+	printf( "\t%s (build %i) started at %s\n", s_ld.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
+	printf( "================================================================================\n" );
 
-	s_wcd.logfileno = -1;
+	s_ld.logfileno = -1;
 	// create log if needed
-	if( s_wcd.log_active )
+	if( s_ld.log_active )
 	{
-		s_wcd.logfile = fopen( s_wcd.log_path, mode );
-		if( !s_wcd.logfile ) MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_wcd.log_path );
-		else s_wcd.logfileno = fileno( s_wcd.logfile );
+		s_ld.logfile = fopen( s_ld.log_path, mode );
+		if( !s_ld.logfile ) MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_ld.log_path );
+		else s_ld.logfileno = fileno( s_ld.logfile );
 
-		fprintf( s_wcd.logfile, "=================================================================================\n" );
-		fprintf( s_wcd.logfile, "\t%s (build %i) started at %s\n", s_wcd.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
-		fprintf( s_wcd.logfile, "=================================================================================\n" );
+		fprintf( s_ld.logfile, "================================================================================\n" );
+		fprintf( s_ld.logfile, "\t%s (build %i) started at %s\n", s_ld.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
+		fprintf( s_ld.logfile, "================================================================================\n" );
 	}
 }
 
@@ -549,22 +600,18 @@ void Sys_CloseLog( void )
 		break;
 	}
 
-	printf( "\n");
-	printf( "=================================================================================");
-	printf( "\n\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
-	printf( "=================================================================================");
+	printf( "\n================================================================================\n");
+	printf( "\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+	printf( "================================================================================\n");
 
-
-	if( s_wcd.logfile )
+	if( s_ld.logfile )
 	{
-		fprintf( s_wcd.logfile, "\n");
-		fprintf( s_wcd.logfile, "=================================================================================");
-		fprintf( s_wcd.logfile, "\n\t%s (build %i) %s at %s\n", s_wcd.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
-		fprintf( s_wcd.logfile, "=================================================================================");
-		if( host.change_game ) fprintf( s_wcd.logfile, "\n" ); // just for tabulate
+		fprintf( s_ld.logfile, "\n================================================================================\n");
+		fprintf( s_ld.logfile, "\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+		fprintf( s_ld.logfile, "================================================================================\n");
 
-		fclose( s_wcd.logfile );
-		s_wcd.logfile = NULL;
+		fclose( s_ld.logfile );
+		s_ld.logfile = NULL;
 	}
 }
 
@@ -572,30 +619,80 @@ void Sys_PrintLog( const char *pMsg )
 {
 	time_t		crt_time;
 	const struct tm	*crt_tm;
-	char logtime[32];
-
-#ifdef __ANDROID__
-	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
-#endif
+	char logtime[32] = "";
+	static char lastchar;
 
 	time( &crt_time );
 	crt_tm = localtime( &crt_time );
-	strftime( logtime, sizeof( logtime ), "[%H:%M:%S]", crt_tm ); //short time
+#ifdef __ANDROID__
+	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
+#else
 
+
+
+	if( !lastchar || lastchar == '\n')
+	strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
+
+#ifdef COLORIZE_CONSOLE
+	{
+		char colored[4096];
+		const char *msg = pMsg;
+		int len = 0;
+		while( *msg && ( len < 4090 ) )
+		{
+			static char q3ToAnsi[ 8 ] =
+			{
+				'0', // COLOR_BLACK
+				'1', // COLOR_RED
+				'2', // COLOR_GREEN
+				'3', // COLOR_YELLOW
+				'4', // COLOR_BLUE
+				'6', // COLOR_CYAN
+				'5', // COLOR_MAGENTA
+				0 // COLOR_WHITE
+			};
+
+			if( *msg == '^' )
+			{
+				int color;
+
+				msg++;
+				color = q3ToAnsi[ *msg++ % 8 ];
+				colored[len++] = '\033';
+				colored[len++] = '[';
+				if( color )
+				{
+					colored[len++] = '3';
+					colored[len++] = color;
+				}
+				else
+					colored[len++] = '0';
+				colored[len++] = 'm';
+			}
+			else
+				colored[len++] = *msg++;
+		}
+		colored[len] = 0;
+		printf( "\033[34m%s\033[0m%s\033[0m", logtime, colored );
+	}
+#else
 	printf( "%s %s", logtime, pMsg );
+#endif // !ANDROID
 	fflush( stdout );
+#endif
+	lastchar = pMsg[strlen(pMsg)-1];
+	if( !s_ld.logfile ) return;
 
-	if( !s_wcd.logfile ) return;
-
+	if( !lastchar || lastchar == '\n')
 	strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
 
-	fprintf( s_wcd.logfile, "%s %s", logtime, pMsg );
-	fflush( s_wcd.logfile );
+	fprintf( s_ld.logfile, "%s %s", logtime, pMsg );
+	fflush( s_ld.logfile );
 }
 
 
 int Sys_LogFileNo( void )
 {
-	if( s_wcd.logfileno ) fflush( s_wcd.logfile );
-	return s_wcd.logfileno;
+	if( s_ld.logfileno ) fflush( s_ld.logfile );
+	return s_ld.logfileno;
 }

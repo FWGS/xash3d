@@ -176,9 +176,9 @@ static void UI_Controls_ParseKeysList( void )
 			pfile = COM_ParseFile( pfile, token );
 			if( !pfile ) break;	// technically an error
 
-			sprintf( str, "^6%s^7", token );	// enable uiPromptTextColor
+			snprintf( str, sizeof(str), "^6%s^7", token );	// enable uiPromptTextColor
 			StringConcat( uiControls.keysDescription[i], str, strlen( str ) + 1 );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, 256 );	// empty
+			AddSpaces( uiControls.keysDescription[i], 256 );	// empty
 			uiControls.keysDescriptionPtr[i] = uiControls.keysDescription[i];
 			strcpy( uiControls.keysBind[i], "" );
 			strcpy( uiControls.firstKey[i], "" );
@@ -196,7 +196,7 @@ static void UI_Controls_ParseKeysList( void )
 			pfile = COM_ParseFile( pfile, token );
 			if( !pfile ) break; // technically an error
 
-			sprintf( str, "^6%s^7", token );	// enable uiPromptTextColor
+			snprintf( str, sizeof( str ), "^6%s^7", token );	// enable uiPromptTextColor
 
 			if( keys[0] == -1 ) strcpy( uiControls.firstKey[i], "" );
 			else strncpy( uiControls.firstKey[i], KEY_KeynumToString( keys[0] ), sizeof( uiControls.firstKey[i] ));
@@ -205,22 +205,22 @@ static void UI_Controls_ParseKeysList( void )
 			else strncpy( uiControls.secondKey[i], KEY_KeynumToString( keys[1] ), sizeof( uiControls.secondKey[i] ));
 
 			StringConcat( uiControls.keysDescription[i], str, CMD_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, CMD_LENGTH );
+			AddSpaces( uiControls.keysDescription[i], CMD_LENGTH );
 
 			// HACKHACK this color should be get from kb_keys.lst
 			if( !strnicmp( uiControls.firstKey[i], "MOUSE", 5 ))
-				sprintf( str, "^5%s^7", uiControls.firstKey[i] );	// cyan
-			else sprintf( str, "^3%s^7", uiControls.firstKey[i] );	// yellow
+				snprintf( str, sizeof( str ), "^5%s^7", uiControls.firstKey[i] );	// cyan
+			else snprintf( str, sizeof( str ), "^3%s^7", uiControls.firstKey[i] );	// yellow
 			StringConcat( uiControls.keysDescription[i], str, KEY1_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, KEY1_LENGTH );
+			AddSpaces( uiControls.keysDescription[i], KEY1_LENGTH );
 
 			// HACKHACK this color should be get from kb_keys.lst
 			if( !strnicmp( uiControls.secondKey[i], "MOUSE", 5 ))
-				sprintf( str, "^5%s^7", uiControls.secondKey[i] );// cyan
-			else sprintf( str, "^3%s^7", uiControls.secondKey[i] );	// yellow
+				snprintf( str, sizeof( str ), "^5%s^7", uiControls.secondKey[i] );// cyan
+			else snprintf( str, sizeof( str ), "^3%s^7", uiControls.secondKey[i] );	// yellow
 
 			StringConcat( uiControls.keysDescription[i], str, KEY2_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, KEY2_LENGTH );
+			AddSpaces( uiControls.keysDescription[i],KEY2_LENGTH );
 			uiControls.keysDescriptionPtr[i] = uiControls.keysDescription[i];
 			i++;
 		}
@@ -271,7 +271,6 @@ static void UI_Controls_ResetKeysList( void )
 	char *afile = (char *)LOAD_FILE( "gfx/shell/kb_def.lst", NULL );
 	char *pfile = afile;
 	char token[1024];
-	int i = 0;
 
 	if( !afile )
 	{
@@ -298,7 +297,7 @@ static void UI_Controls_ResetKeysList( void )
 
 		UI_UnbindCommand( token );
 
-		sprintf( cmd, "bind \"%s\" \"%s\"\n", key, token );
+		snprintf( cmd, sizeof( cmd ), "bind \"%s\" \"%s\"\n", key, token );
 		CLIENT_COMMAND( TRUE, cmd );
 	}
 
@@ -443,11 +442,11 @@ static void UI_Controls_Init( void )
 	uiControls.menu.keyFunc = UI_Controls_KeyFunc;
 
 	StringConcat( uiControls.hintText, "Action", CMD_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, CMD_LENGTH-4 );
+	AddSpaces( uiControls.hintText, CMD_LENGTH-4 );
 	StringConcat( uiControls.hintText, "Key/Button", KEY1_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, KEY1_LENGTH-8 );
+	AddSpaces( uiControls.hintText, KEY1_LENGTH-8 );
 	StringConcat( uiControls.hintText, "Alternate", KEY2_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, KEY2_LENGTH );
+	AddSpaces( uiControls.hintText, KEY2_LENGTH );
 
 	uiControls.background.generic.id = ID_BACKGROUND;
 	uiControls.background.generic.type = QMTYPE_BITMAP;

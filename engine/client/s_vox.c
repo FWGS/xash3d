@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "const.h"
@@ -606,7 +608,7 @@ void VOX_ReadSentenceFile( const char *psentenceFileName )
 {
 	char	c, *pch, *pFileData;
 	char	*pchlast, *pSentenceData;
-	int	fileSize;
+	fs_offset_t	fileSize;
 
 	// load file
 	pFileData = (char *)FS_LoadFile( psentenceFileName, &fileSize, false );
@@ -684,3 +686,4 @@ void VOX_Shutdown( void )
 {
 	g_numSentences = 0;
 }
+#endif // XASH_DEDICATED

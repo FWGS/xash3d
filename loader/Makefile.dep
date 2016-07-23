@@ -1,290 +1,34 @@
 # DO NOT DELETE
 
-pe_resource.o: config.h /usr/include/stdlib.h /usr/include/features.h
-pe_resource.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-pe_resource.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-pe_resource.o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
-pe_resource.o: /usr/include/endian.h /usr/include/bits/endian.h
-pe_resource.o: /usr/include/bits/byteswap.h /usr/include/bits/types.h
-pe_resource.o: /usr/include/bits/typesizes.h /usr/include/bits/byteswap-16.h
-pe_resource.o: /usr/include/sys/types.h /usr/include/time.h
-pe_resource.o: /usr/include/sys/select.h /usr/include/bits/select.h
-pe_resource.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-pe_resource.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-pe_resource.o: /usr/include/alloca.h /usr/include/bits/stdlib-float.h
-pe_resource.o: wine/winestring.h /usr/include/strings.h
-pe_resource.o: /usr/include/xlocale.h wine/windef.h wine/windef.h
-pe_resource.o: wine/pe_image.h wine/winnt.h /usr/include/string.h
 pe_resource.o: wine/pshpack1.h wine/poppack.h wine/pshpack2.h wine/winbase.h
 pe_resource.o: wine/basetsd.h wine/winestring.h wine/module.h wine/pe_image.h
 pe_resource.o: wine/heap.h wine/debugtools.h ext.h
-resource.o: config.h debug.h /usr/include/assert.h /usr/include/features.h
-resource.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-resource.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-resource.o: /usr/include/stdio.h /usr/include/bits/types.h
-resource.o: /usr/include/bits/typesizes.h /usr/include/libio.h
-resource.o: /usr/include/_G_config.h /usr/include/wchar.h
-resource.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-resource.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
-resource.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
-resource.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-resource.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
-resource.o: /usr/include/time.h /usr/include/sys/select.h
-resource.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-resource.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-resource.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-resource.o: /usr/include/bits/stdlib-float.h /usr/include/string.h
-resource.o: /usr/include/xlocale.h /usr/include/sys/stat.h
-resource.o: /usr/include/bits/stat.h /usr/include/fcntl.h
-resource.o: /usr/include/bits/fcntl.h /usr/include/bits/fcntl-linux.h
-resource.o: /usr/include/unistd.h /usr/include/bits/posix_opt.h
-resource.o: /usr/include/bits/environments.h /usr/include/bits/confname.h
-resource.o: /usr/include/getopt.h wine/winbase.h wine/basetsd.h wine/winnt.h
 resource.o: wine/windef.h wine/pshpack1.h wine/poppack.h wine/pshpack2.h
 resource.o: wine/winestring.h wine/windef.h wine/winuser.h wine/heap.h
 resource.o: wine/winbase.h wine/module.h wine/pe_image.h wine/debugtools.h
 resource.o: wine/winerror.h loader.h wine/driver.h wine/mmreg.h wine/vfw.h
 resource.o: wine/msacm.h wine/driver.h wine/mmreg.h
-registry.o: config.h debug.h /usr/include/stdio.h /usr/include/features.h
-registry.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-registry.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-registry.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-registry.o: /usr/include/libio.h /usr/include/_G_config.h
-registry.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
-registry.o: /usr/include/bits/sys_errlist.h /usr/include/stdlib.h
-registry.o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
-registry.o: /usr/include/endian.h /usr/include/bits/endian.h
-registry.o: /usr/include/bits/byteswap.h /usr/include/bits/byteswap-16.h
-registry.o: /usr/include/sys/types.h /usr/include/time.h
-registry.o: /usr/include/sys/select.h /usr/include/bits/select.h
-registry.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-registry.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-registry.o: /usr/include/alloca.h /usr/include/bits/stdlib-float.h
-registry.o: /usr/include/fcntl.h /usr/include/bits/fcntl.h
-registry.o: /usr/include/bits/fcntl-linux.h /usr/include/bits/stat.h
-registry.o: /usr/include/unistd.h /usr/include/bits/posix_opt.h
-registry.o: /usr/include/bits/environments.h /usr/include/bits/confname.h
-registry.o: /usr/include/getopt.h /usr/include/pwd.h wine/winbase.h
-registry.o: wine/basetsd.h wine/winnt.h wine/windef.h /usr/include/string.h
-registry.o: /usr/include/xlocale.h wine/pshpack1.h wine/poppack.h
 registry.o: wine/pshpack2.h wine/winestring.h wine/winreg.h wine/winbase.h
 registry.o: wine/winnt.h wine/winerror.h ext.h wine/windef.h registry.h
-loader.o: /usr/include/stdio.h /usr/include/features.h
-loader.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-loader.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-loader.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-loader.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-loader.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-loader.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
-loader.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
-loader.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-loader.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
-loader.o: /usr/include/time.h /usr/include/sys/select.h
-loader.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-loader.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-loader.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-loader.o: /usr/include/bits/stdlib-float.h /usr/include/string.h
-loader.o: /usr/include/xlocale.h ldt_keeper.h wine/winbase.h wine/basetsd.h
 loader.o: config.h wine/winnt.h wine/windef.h wine/pshpack1.h wine/poppack.h
 loader.o: wine/pshpack2.h wine/winestring.h
-ext.o: config.h /usr/include/stdio.h /usr/include/features.h
-ext.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-ext.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-ext.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-ext.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-ext.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-ext.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
-ext.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
-ext.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-ext.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
-ext.o: /usr/include/time.h /usr/include/sys/select.h
-ext.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-ext.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-ext.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-ext.o: /usr/include/bits/stdlib-float.h /usr/include/unistd.h
-ext.o: /usr/include/bits/posix_opt.h /usr/include/bits/environments.h
-ext.o: /usr/include/bits/confname.h /usr/include/getopt.h
-ext.o: /usr/include/sys/mman.h /usr/include/bits/mman.h /usr/include/errno.h
-ext.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-ext.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
-ext.o: /usr/include/asm-generic/errno-base.h /usr/include/fcntl.h
-ext.o: /usr/include/bits/fcntl.h /usr/include/bits/fcntl-linux.h
-ext.o: /usr/include/bits/stat.h /usr/include/string.h /usr/include/xlocale.h
-ext.o: /usr/include/strings.h /usr/include/ctype.h mmap_anon.h wine/windef.h
 ext.o: wine/winbase.h wine/basetsd.h wine/winnt.h wine/windef.h
 ext.o: wine/pshpack1.h wine/poppack.h wine/pshpack2.h wine/winestring.h
 ext.o: wine/debugtools.h wine/heap.h wine/winbase.h ext.h
-ldt_keeper.o: config.h ldt_keeper.h /usr/include/string.h
-ldt_keeper.o: /usr/include/features.h /usr/include/stdc-predef.h
-ldt_keeper.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-ldt_keeper.o: /usr/include/gnu/stubs.h /usr/include/xlocale.h
-ldt_keeper.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
-ldt_keeper.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
-ldt_keeper.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-ldt_keeper.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-ldt_keeper.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
-ldt_keeper.o: /usr/include/time.h /usr/include/sys/select.h
-ldt_keeper.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-ldt_keeper.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-ldt_keeper.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-ldt_keeper.o: /usr/include/bits/stdlib-float.h /usr/include/errno.h
-ldt_keeper.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-ldt_keeper.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
-ldt_keeper.o: /usr/include/asm-generic/errno-base.h /usr/include/fcntl.h
-ldt_keeper.o: /usr/include/bits/fcntl.h /usr/include/bits/fcntl-linux.h
-ldt_keeper.o: /usr/include/bits/stat.h /usr/include/sys/mman.h
-ldt_keeper.o: /usr/include/bits/mman.h /usr/include/stdio.h
-ldt_keeper.o: /usr/include/libio.h /usr/include/_G_config.h
-ldt_keeper.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
-ldt_keeper.o: /usr/include/bits/sys_errlist.h /usr/include/unistd.h
-ldt_keeper.o: /usr/include/bits/posix_opt.h /usr/include/bits/environments.h
-ldt_keeper.o: /usr/include/bits/confname.h /usr/include/getopt.h mmap_anon.h
-module.o: config.h debug.h /usr/include/assert.h /usr/include/features.h
-module.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-module.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-module.o: /usr/include/errno.h /usr/include/bits/errno.h
-module.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-module.o: /usr/include/asm-generic/errno.h
-module.o: /usr/include/asm-generic/errno-base.h /usr/include/fcntl.h
-module.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-module.o: /usr/include/bits/fcntl.h /usr/include/bits/fcntl-linux.h
-module.o: /usr/include/time.h /usr/include/bits/stat.h /usr/include/stdio.h
-module.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-module.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-module.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
-module.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
-module.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-module.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
-module.o: /usr/include/sys/select.h /usr/include/bits/select.h
-module.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-module.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-module.o: /usr/include/alloca.h /usr/include/bits/stdlib-float.h
-module.o: /usr/include/string.h /usr/include/xlocale.h /usr/include/unistd.h
-module.o: /usr/include/bits/posix_opt.h /usr/include/bits/environments.h
-module.o: /usr/include/bits/confname.h /usr/include/getopt.h
-module.o: /usr/include/inttypes.h /usr/include/stdint.h
-module.o: /usr/include/bits/wchar.h wine/windef.h wine/winerror.h wine/heap.h
 module.o: wine/winbase.h wine/basetsd.h wine/winnt.h wine/windef.h
 module.o: wine/pshpack1.h wine/poppack.h wine/pshpack2.h wine/winestring.h
 module.o: wine/module.h wine/pe_image.h wine/pe_image.h wine/debugtools.h
 module.o: win32.h wine/winbase.h com.h
-mmap_anon.o: config.h /usr/include/stdio.h /usr/include/features.h
-mmap_anon.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-mmap_anon.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-mmap_anon.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-mmap_anon.o: /usr/include/libio.h /usr/include/_G_config.h
-mmap_anon.o: /usr/include/wchar.h /usr/include/bits/stdio_lim.h
-mmap_anon.o: /usr/include/bits/sys_errlist.h /usr/include/unistd.h
-mmap_anon.o: /usr/include/bits/posix_opt.h /usr/include/bits/environments.h
-mmap_anon.o: /usr/include/bits/confname.h /usr/include/getopt.h
-mmap_anon.o: /usr/include/fcntl.h /usr/include/bits/fcntl.h
-mmap_anon.o: /usr/include/bits/fcntl-linux.h /usr/include/time.h
-mmap_anon.o: /usr/include/bits/stat.h /usr/include/sys/mman.h
-mmap_anon.o: /usr/include/bits/mman.h mmap_anon.h /usr/include/sys/types.h
-mmap_anon.o: /usr/include/endian.h /usr/include/bits/endian.h
-mmap_anon.o: /usr/include/bits/byteswap.h /usr/include/bits/byteswap-16.h
-mmap_anon.o: /usr/include/sys/select.h /usr/include/bits/select.h
-mmap_anon.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-mmap_anon.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
 elfdll.o: config.h
 win32.o: config.h mangle.h wine/winbase.h wine/basetsd.h wine/winnt.h
-win32.o: wine/windef.h /usr/include/string.h /usr/include/features.h
-win32.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-win32.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-win32.o: /usr/include/xlocale.h wine/pshpack1.h wine/poppack.h
 win32.o: wine/pshpack2.h wine/winestring.h wine/winreg.h wine/winbase.h
 win32.o: wine/winnt.h wine/winerror.h wine/debugtools.h wine/module.h
-win32.o: wine/pe_image.h wine/winuser.h wine/objbase.h /usr/include/stdio.h
-win32.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-win32.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-win32.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-win32.o: win32.h /usr/include/time.h wine/windef.h com.h
-win32.o: /usr/include/stdint.h /usr/include/bits/wchar.h registry.h loader.h
 win32.o: wine/driver.h wine/mmreg.h wine/vfw.h wine/msacm.h wine/driver.h
-win32.o: wine/mmreg.h ext.h ldt_keeper.h /usr/include/stdlib.h
-win32.o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
-win32.o: /usr/include/endian.h /usr/include/bits/endian.h
-win32.o: /usr/include/bits/byteswap.h /usr/include/bits/byteswap-16.h
-win32.o: /usr/include/sys/types.h /usr/include/sys/select.h
-win32.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-win32.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-win32.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-win32.o: /usr/include/bits/stdlib-float.h /usr/include/strings.h
-win32.o: /usr/include/assert.h /usr/include/ctype.h /usr/include/pthread.h
-win32.o: /usr/include/sched.h /usr/include/bits/sched.h
-win32.o: /usr/include/bits/setjmp.h /usr/include/errno.h
-win32.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-win32.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
-win32.o: /usr/include/asm-generic/errno-base.h /usr/include/math.h
-win32.o: /usr/include/bits/huge_val.h /usr/include/bits/huge_valf.h
-win32.o: /usr/include/bits/huge_vall.h /usr/include/bits/inf.h
-win32.o: /usr/include/bits/nan.h /usr/include/bits/mathdef.h
-win32.o: /usr/include/bits/mathcalls.h /usr/include/unistd.h
-win32.o: /usr/include/bits/posix_opt.h /usr/include/bits/environments.h
-win32.o: /usr/include/bits/confname.h /usr/include/getopt.h
-win32.o: /usr/include/fcntl.h /usr/include/bits/fcntl.h
-win32.o: /usr/include/bits/fcntl-linux.h /usr/include/bits/stat.h
-win32.o: /usr/include/dirent.h /usr/include/bits/dirent.h
-win32.o: /usr/include/bits/posix1_lim.h /usr/include/bits/local_lim.h
-win32.o: /usr/include/linux/limits.h /usr/include/sys/time.h
-win32.o: /usr/include/sys/stat.h /usr/include/malloc.h
-win32.o: /usr/include/sys/mman.h /usr/include/bits/mman.h mmap_anon.h
-win32.o: /usr/include/netinet/in.h /usr/include/sys/socket.h
-win32.o: /usr/include/sys/uio.h /usr/include/bits/uio.h
-win32.o: /usr/include/bits/socket.h /usr/include/bits/socket_type.h
-win32.o: /usr/include/bits/sockaddr.h /usr/include/asm/socket.h
-win32.o: /usr/include/asm-generic/socket.h /usr/include/asm/sockios.h
-win32.o: /usr/include/asm-generic/sockios.h /usr/include/bits/in.h
-pe_image.o: config.h debug.h /usr/include/errno.h /usr/include/features.h
-pe_image.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-pe_image.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-pe_image.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-pe_image.o: /usr/include/asm/errno.h /usr/include/asm-generic/errno.h
-pe_image.o: /usr/include/asm-generic/errno-base.h /usr/include/assert.h
-pe_image.o: /usr/include/stdio.h /usr/include/bits/types.h
-pe_image.o: /usr/include/bits/typesizes.h /usr/include/libio.h
-pe_image.o: /usr/include/_G_config.h /usr/include/wchar.h
-pe_image.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-pe_image.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
-pe_image.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
-pe_image.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-pe_image.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
-pe_image.o: /usr/include/time.h /usr/include/sys/select.h
-pe_image.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-pe_image.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-pe_image.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-pe_image.o: /usr/include/bits/stdlib-float.h /usr/include/string.h
-pe_image.o: /usr/include/xlocale.h /usr/include/unistd.h
-pe_image.o: /usr/include/bits/posix_opt.h /usr/include/bits/environments.h
-pe_image.o: /usr/include/bits/confname.h /usr/include/getopt.h
-pe_image.o: /usr/include/sys/stat.h /usr/include/bits/stat.h
-pe_image.o: /usr/include/fcntl.h /usr/include/bits/fcntl.h
-pe_image.o: /usr/include/bits/fcntl-linux.h /usr/include/sys/mman.h
-pe_image.o: /usr/include/bits/mman.h wine/windef.h wine/winbase.h
 pe_image.o: wine/basetsd.h wine/winnt.h wine/windef.h wine/pshpack1.h
 pe_image.o: wine/poppack.h wine/pshpack2.h wine/winestring.h wine/winerror.h
 pe_image.o: wine/heap.h wine/winbase.h wine/pe_image.h wine/module.h
 pe_image.o: wine/pe_image.h wine/debugtools.h ext.h win32.h com.h
-pe_image.o: /usr/include/stdint.h /usr/include/bits/wchar.h
-vfl.o: config.h /usr/include/stdio.h /usr/include/features.h
-vfl.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
-vfl.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-vfl.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-vfl.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-vfl.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-vfl.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
-vfl.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
-vfl.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-vfl.o: /usr/include/bits/byteswap-16.h /usr/include/sys/types.h
-vfl.o: /usr/include/time.h /usr/include/sys/select.h
-vfl.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-vfl.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
-vfl.o: /usr/include/bits/pthreadtypes.h /usr/include/alloca.h
-vfl.o: /usr/include/bits/stdlib-float.h /usr/include/string.h
-vfl.o: /usr/include/xlocale.h win32.h wine/windef.h wine/winbase.h
 vfl.o: wine/basetsd.h wine/winnt.h wine/windef.h wine/pshpack1.h
 vfl.o: wine/poppack.h wine/pshpack2.h wine/winestring.h com.h
-vfl.o: /usr/include/stdint.h /usr/include/bits/wchar.h loader.h wine/driver.h
 vfl.o: wine/mmreg.h wine/vfw.h wine/msacm.h wine/driver.h wine/mmreg.h
 vfl.o: wine/module.h wine/pe_image.h wine/winuser.h wine/winestring.h
-vfl.o: /usr/include/strings.h wine/avifmt.h

@@ -13,8 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "port.h"
+#ifndef XASH_DEDICATED
+#ifndef XASH_OPENSL
 
+#include "port.h"
 #include "common.h"
 #include "sound.h"
 #ifdef XASH_SDL
@@ -32,10 +34,9 @@ so it can unlock and free the data block after it has been played.
 convar_t		*s_primary;
 convar_t		*s_khz;
 dma_t			dma;
-int				shutdown_temp = 0;
 
-static qboolean	snd_firsttime = true;
-static qboolean	primary_format_set;
+//static qboolean	snd_firsttime = true;
+//static qboolean	primary_format_set;
 
 #ifdef XASH_SDL
 void SDL_SoundCallback( void* userdata, Uint8* stream, int len)
@@ -75,24 +76,25 @@ qboolean SNDDMA_Init( void *hInst )
 		return false;
 	}
 
-	memset(&desired, 0, sizeof(desired));
-	switch (s_khz->integer) {
-	case 48:
-		desired.freq = 48000;
-		break;
+	Q_memset(&desired, 0, sizeof(desired));
+	switch (s_khz->integer)
+	{
 	case 44:
-		desired.freq = 44100;
+		desired.freq = SOUND_44k;
+		break;
+	case 32:
+		desired.freq = SOUND_32k;
 		break;
 	case 22:
-		desired.freq = 22050;
+		desired.freq = SOUND_22k;
 		break;
 	default:
-		desired.freq = 11025;
+		desired.freq = SOUND_11k;
 		break;
 	}
 
 	desired.format = AUDIO_S16LSB;
-	desired.samples = 512;
+	desired.samples = 1024;
 	desired.channels = 2;
 	desired.callback = SDL_SoundCallback;
 	ret = SDL_OpenAudio(&desired, &obtained);
@@ -232,8 +234,9 @@ void SNDDMA_Shutdown( void )
 	if (SDL_WasInit(SDL_INIT_AUDIO != 0))
 		 SDL_QuitSubSystem(SDL_INIT_AUDIO);
 #endif
-	if (dma.buffer) {
-		 Z_Free(dma.buffer);
+	if (dma.buffer) 
+	{
+		 Mem_Free(dma.buffer);
 		 dma.buffer = NULL;
 	}
 }
@@ -249,17 +252,5 @@ void S_PrintDeviceName( void )
 	Msg( "Audio: SDL (driver: %s)\n", SDL_GetCurrentAudioDriver() );
 #endif
 }
-
-/*
-===========
-S_Activate
-
-Called when the main window gains or loses focus.
-The window have been destroyed and recreated
-between a deactivate and an activate.
-===========
-*/
-void S_Activate( qboolean active, void *hInst )
-{
-	shutdown_temp = active;
-}
+#endif
+#endif // XASH_DEDICATED

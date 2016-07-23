@@ -68,6 +68,7 @@ typedef struct imglib_s
 	word			height;
 	word			depth;
 	byte			num_mips; // mipmap count
+	word			encode;		// custom encode type
 	uint			type;		// main type switcher
 	uint			flags;		// additional image flags
 	size_t			size;		// image rgba size (for bounds checking)
@@ -103,26 +104,24 @@ typedef struct imglib_s
 
 ========================================================================
 */
-#pragma pack( 1 )
 typedef struct
 {
-	char	id[2];		// bmfh.bfType
-	dword	fileSize;		// bmfh.bfSize
-	dword	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
-	dword	bitmapDataOffset;	// bmfh.bfOffBits
-	dword	bitmapHeaderSize;	// bmih.biSize
-	int	width;		// bmih.biWidth
+	//char	id[2];		// bmfh.bfType
+	uint	fileSize;		// bmfh.bfSize
+	uint	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
+	uint	bitmapDataOffset;	// bmfh.bfOffBits
+	uint	bitmapHeaderSize;	// bmih.biSize
+	uint	width;		// bmih.biWidth
 	int	height;		// bmih.biHeight
 	word	planes;		// bmih.biPlanes
 	word	bitsPerPixel;	// bmih.biBitCount
-	dword	compression;	// bmih.biCompression
-	dword	bitmapDataSize;	// bmih.biSizeImage
-	dword	hRes;		// bmih.biXPelsPerMeter
-	dword	vRes;		// bmih.biYPelsPerMeter
-	dword	colors;		// bmih.biClrUsed
-	dword	importantColors;	// bmih.biClrImportant
+	uint	compression;	// bmih.biCompression
+	uint	bitmapDataSize;	// bmih.biSizeImage
+	uint	hRes;		// bmih.biXPelsPerMeter
+	uint	vRes;		// bmih.biYPelsPerMeter
+	uint	colors;		// bmih.biClrUsed
+	uint	importantColors;	// bmih.biClrImportant
 } bmp_t;
-#pragma pack( )
 
 /*
 ========================================================================
@@ -131,15 +130,14 @@ typedef struct
 
 ========================================================================
 */
-#pragma pack( 1 )
 typedef struct tga_s
 {
 	byte	id_length;
 	byte	colormap_type;
 	byte	image_type;
+	byte	colormap_size;
 	word	colormap_index;
 	word	colormap_length;
-	byte	colormap_size;
 	word	x_origin;
 	word	y_origin;
 	word	width;
@@ -147,8 +145,6 @@ typedef struct tga_s
 	byte	pixel_size;
 	byte	attributes;
 } tga_t;
-#pragma pack( )
-
 
 /*
 ========================================================================
@@ -234,7 +230,7 @@ typedef struct dds_caps_s
 
 typedef struct dds_s
 {
-	uint		dwIdent;		// must matched with DDSHEADER
+	uint		dwIdent;		// must match DDSHEADER
 	uint		dwSize;
 	uint		dwFlags;		// determines what fields are valid
 	uint		dwHeight;

@@ -9,14 +9,14 @@
 typedef struct
 {
 	int	riff_id;		// 'RIFF' 
-	long	rLen;
+	int	rLen;
 	int	wave_id;		// 'WAVE' 
 	int	fmt_id;		// 'fmt ' 
-	long	pcm_header_len;	// varies... 
+	int	pcm_header_len;	// varies...
 	short	wFormatTag;
 	short	nChannels;	// 1,2 for stereo data is (l,r) pairs 
-	long	nSamplesPerSec;
-	long	nAvgBytesPerSec;
+	int	nSamplesPerSec;
+	int	nAvgBytesPerSec;
 	short	nBlockAlign;      
 	short	nBitsPerSample;
 } wavehdr_t;
@@ -24,7 +24,7 @@ typedef struct
 typedef struct
 {
 	int	data_id;		// 'data' or 'fact' 
-	long	dLen;
+	int	dLen;
 } chunkhdr_t;
 
 #endif//WAVEHDR_H

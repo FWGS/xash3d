@@ -73,6 +73,14 @@ typedef enum
 	cs_spawned	// client is fully in game
 } cl_state_t;
 
+typedef struct server_log_s
+{
+	qboolean active;
+	qboolean network_logging;
+	netadr_t net_address;
+	file_t *file;
+} server_log_t;
+
 // instanced baselines container
 typedef struct
 {
@@ -171,12 +179,11 @@ typedef struct server_s
 typedef struct
 {
 	double		senttime;
-	float		raw_ping;
+	float		ping_time;
 	float		latency;
 
 	clientdata_t	clientdata;
-	weapon_data_t	weapondata[MAX_WEAPONS];
-	weapon_data_t	oldweapondata[MAX_WEAPONS];	// g-cont. The fucking Cry Of Fear a does corrupting memory after the weapondata!!!
+	weapon_data_t	weapondata[64];
 
 	int  		num_entities;
 	int  		first_entity;		// into the circular sv_packet_entities[]
@@ -250,6 +257,10 @@ typedef struct sv_client_s
 	int		userid;			// identifying number on server
 	int		authentication_method;
 	uint		WonID;			// WonID
+
+	int		maxpacket;
+	int		resources_sent;
+	int resources_count;
 } sv_client_t;
 
 /*
@@ -359,6 +370,8 @@ typedef struct
 	int		groupmask;
 	int		groupop;
 
+	server_log_t	log;
+
 	double		changelevel_next_time;	// don't execute multiple changelevels at once time
 	int		spawncount;		// incremented each server start
 						// used to check late spawns
@@ -413,6 +426,12 @@ extern	convar_t		*sv_allow_download;
 extern	convar_t		*sv_allow_fragment;
 extern	convar_t		*sv_allow_studio_attachment_angles;
 extern	convar_t		*sv_allow_rotate_pushables;
+extern	convar_t		*sv_allow_godmode;
+extern	convar_t		*sv_allow_noclip;
+extern	convar_t		*sv_enttools_enable;
+extern	convar_t		*sv_enttools_players;
+extern	convar_t		*sv_enttools_maxfire;
+extern	convar_t		*sv_enttools_godplayer;
 extern	convar_t		*sv_clienttrace;
 extern	convar_t		*sv_send_resources;
 extern	convar_t		*sv_send_logos;
@@ -421,6 +440,10 @@ extern	convar_t		*sv_skyspeed;
 extern	convar_t		*sv_skyangle;
 extern	convar_t		*sv_quakehulls;
 extern	convar_t		*sv_validate_changelevel;
+extern	convar_t		*sv_downloadurl;
+extern	convar_t		*sv_clientclean;
+extern 	convar_t		*sv_skipshield; // HACK for shield
+extern	convar_t		*sv_trace_messages;
 extern	convar_t		*mp_consistency;
 extern	convar_t		*public_server;
 extern	convar_t		*physinfo;
@@ -428,6 +451,11 @@ extern	convar_t		*deathmatch;
 extern	convar_t		*teamplay;
 extern	convar_t		*skill;
 extern	convar_t		*coop;
+extern	convar_t		*sv_corpse_solid;
+extern	convar_t		*sv_log_singleplayer;
+extern	convar_t		*sv_log_onefile;
+extern	convar_t		*mp_logecho;
+extern	convar_t		*mp_logfile;
 
 //===========================================================
 //
@@ -447,10 +475,11 @@ void SV_KillOperatorCommands( void );
 void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo );
 void SV_PrepWorldFrame( void );
 void SV_ProcessFile( sv_client_t *cl, char *filename );
-void SV_SendResourceList( sv_client_t *cl );
+void SV_SendResourceList_f( sv_client_t *cl );
 void Master_Add( void );
 void Master_Heartbeat( void );
 void Master_Packet( void );
+void SV_AddToMaster( netadr_t from, sizebuf_t *msg );
 
 //
 // sv_init.c
@@ -518,16 +547,19 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed );
 qboolean SV_IsPlayerIndex( int idx );
 void SV_InitClientMove( void );
 void SV_UpdateServerInfo( void );
-
+void SV_EndRedirect( void );
+void SV_RemoteCommand( netadr_t from, sizebuf_t *msg );
 //
 // sv_cmds.c
 //
 void SV_Status_f( void );
 void SV_Newgame_f( void );
+qboolean SV_SetPlayer( void );
 
 //
 // sv_custom.c
 //
+void SV_ClearCustomizationList( customization_t *pHead );
 void SV_SendResources( sizebuf_t *msg );
 int SV_TransferConsistencyInfo( void );
 
@@ -578,6 +610,7 @@ byte *pfnSetFatPVS( const float *org );
 byte *pfnSetFatPAS( const float *org );
 int pfnPrecacheModel( const char *s );
 int pfnNumberOfEntities( void );
+int pfnDropToFloor( edict_t* e );
 void SV_RestartStaticEnts( void );
 
 _inline edict_t *SV_EDICT_NUM( int n, const char * file, const int line )
@@ -629,5 +662,16 @@ void SV_SetLightStyle( int style, const char* s, float f );
 const char *SV_GetLightStyle( int style );
 int SV_LightForEntity( edict_t *pEdict );
 void SV_ClearPhysEnts( void );
+
+//
+// sv_log.c
+//
+void Log_Printf( const char *fmt, ... );
+void Log_PrintServerVars( void );
+void Log_Close( void );
+void Log_Open( void );
+void Log_InitCvars( void );
+void SV_SetLogAddress_f( void );
+void SV_ServerLog_f( void );
 
 #endif//SERVER_H

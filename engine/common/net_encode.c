@@ -20,9 +20,6 @@ GNU General Public License for more details.
 #include "event_api.h"
 #include "usercmd.h"
 #include "pm_movevars.h"
-#include "entity_state.h"
-#include "weaponinfo.h"
-#include "event_args.h"
 #include "protocol.h"
 #include "client.h"
 
@@ -516,10 +513,11 @@ void Delta_ParseTableField( sizebuf_t *msg )
 	tableIndex = BF_ReadUBitLong( msg, 4 );
 	dt = Delta_FindStructByIndex( tableIndex );
 
-	ASSERT( dt != NULL );
-
+	if( !dt )
+		Host_Error( "Delta_ParseTableField: not initialized" );
 	nameIndex = BF_ReadUBitLong( msg, 8 );	// read field name index		
-	ASSERT( nameIndex >= 0 && nameIndex < dt->maxFields );
+	if( !( nameIndex >= 0 && nameIndex < dt->maxFields ) )
+		Host_Error( "Delta_ParseTableField: wrong nameIndex" );
 	pName = dt->pInfo[nameIndex].name;
 	flags = BF_ReadUBitLong( msg, 10 );
 	bits = BF_ReadUBitLong( msg, 5 ) + 1;
@@ -739,7 +737,7 @@ void Delta_InitFields( void )
 	string		encodeDll, encodeFunc, token;	
 	delta_info_t	*dt;
 
-	afile = FS_LoadFile( DELTA_PATH, NULL, false );
+	afile = (char *)FS_LoadFile( DELTA_PATH, NULL, false );
 	if( !afile ) Sys_Error( "DELTA_Load: couldn't load file %s\n", DELTA_PATH );
 
 	pfile = afile;
@@ -860,7 +858,7 @@ void Delta_Shutdown( void )
 
 		if( dt_info[i].pFields )
 		{
-			Z_Free( dt_info[i].pFields );
+			Mem_Free( dt_info[i].pFields );
 			dt_info[i].pFields = NULL;
 		}
 
@@ -886,63 +884,63 @@ int Delta_ClampIntegerField( int iValue, qboolean bSigned, int bits )
 		break;
 	case 2:
 		if( bSigned ) iValue = bound( -2, (short)iValue, 1 );
-		else iValue = bound( 0, (word)iValue, 3 );
+		else iValue = boundmax( (word)iValue, 3 );
 		break;
 	case 3:
 		if( bSigned ) iValue = bound( -4, (short)iValue, 3 );
-		else iValue = bound( 0, (word)iValue, 7 );
+		else iValue = boundmax( (word)iValue, 7 );
 		break;
 	case 4:
 		if( bSigned ) iValue = bound( -8, (short)iValue, 7 );
-		else iValue = bound( 0, (word)iValue, 15 );
+		else iValue = boundmax( (word)iValue, 15 );
 		break;
 	case 5:
 		if( bSigned ) iValue = bound( -16, (short)iValue, 15 );
-		else iValue = bound( 0, (word)iValue, 31 );
+		else iValue = boundmax( (word)iValue, 31 );
 		break;
 	case 6:
 		if( bSigned ) iValue = bound( -32, (short)iValue, 31 );
-		else iValue = bound( 0, (word)iValue, 63 );
+		else iValue = boundmax( (word)iValue, 63 );
 		break;
 	case 7:
 		if( bSigned ) iValue = bound( -64, (short)iValue, 63 );
-		else iValue = bound( 0, (word)iValue, 127 );
+		else iValue = boundmax( (word)iValue, 127 );
 		break;
 	case 8:
 		if( bSigned ) iValue = bound( -128, (short)iValue, 127 );
-		else iValue = bound( 0, (word)iValue, 255 );
+		else iValue = boundmax( (word)iValue, 255 );
 		break;
 	case 9:
 		if( bSigned ) iValue = bound( -256, (short)iValue, 255 );
-		else iValue = bound( 0, (word)iValue, 511 );
+		else iValue = boundmax( (word)iValue, 511 );
 		break;
 	case 10:
 		if( bSigned ) iValue = bound( -512, (short)iValue, 511 );
-		else iValue = bound( 0, (word)iValue, 1023 );
+		else iValue = boundmax( (word)iValue, 1023 );
 		break;
 	case 11:
 		if( bSigned ) iValue = bound( -1024, (short)iValue, 1023 );
-		else iValue = bound( 0, (word)iValue, 2047 );
+		else iValue = boundmax( (word)iValue, 2047 );
 		break;
 	case 12:
 		if( bSigned ) iValue = bound( -2048, (short)iValue, 2047 );
-		else iValue = bound( 0, (word)iValue, 4095 );
+		else iValue = boundmax( (word)iValue, 4095 );
 		break;
 	case 13:
 		if( bSigned ) iValue = bound( -4096, (short)iValue, 4095 );
-		else iValue = bound( 0, (word)iValue, 8191 );
+		else iValue = boundmax( (word)iValue, 8191 );
 		break;
 	case 14:
 		if( bSigned ) iValue = bound( -8192, (short)iValue, 8191 );
-		else iValue = bound( 0, (word)iValue, 16383 );
+		else iValue = boundmax( (word)iValue, 16383 );
 		break;
 	case 15:
 		if( bSigned ) iValue = bound( -16384, (short)iValue, 16383 );
-		else iValue = bound( 0, (word)iValue, 32767 );
+		else iValue = boundmax( (word)iValue, 32767 );
 		break;
 	case 16:
 		if( bSigned ) iValue = bound( -32768, (short)iValue, 32767 );
-		else iValue = bound( 0, (word)iValue, 65535 );
+		else iValue = boundmax( (word)iValue, 65535 );
 		break;
 	}
 
@@ -988,8 +986,11 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 
 		fromF = Delta_ClampIntegerField( fromF, bSigned, pField->bits );
 		toF = Delta_ClampIntegerField( toF, bSigned, pField->bits );
-		if ( pField->multiplier != 1.0f ) fromF *= pField->multiplier;
-		if ( pField->multiplier != 1.0f ) toF *= pField->multiplier;
+		if( pField->multiplier != 1.0f )
+		{
+			fromF *= pField->multiplier;
+			toF *= pField->multiplier;
+		}
 	}
 	else if( pField->flags & DT_SHORT )
 	{
@@ -1006,8 +1007,11 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 
 		fromF = Delta_ClampIntegerField( fromF, bSigned, pField->bits );
 		toF = Delta_ClampIntegerField( toF, bSigned, pField->bits );
-		if ( pField->multiplier != 1.0f ) fromF *= pField->multiplier;
-		if ( pField->multiplier != 1.0f ) toF *= pField->multiplier;
+		if( pField->multiplier != 1.0f )
+		{
+			fromF *= pField->multiplier;
+			toF *= pField->multiplier;
+		}
 	}
 	else if( pField->flags & DT_INTEGER )
 	{
@@ -1024,8 +1028,11 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 
 		fromF = Delta_ClampIntegerField( fromF, bSigned, pField->bits );
 		toF = Delta_ClampIntegerField( toF, bSigned, pField->bits );
-		if ( pField->multiplier != 1.0f ) fromF *= pField->multiplier;
-		if ( pField->multiplier != 1.0f ) toF *= pField->multiplier;
+		if( pField->multiplier != 1.0f )
+		{
+			fromF *= pField->multiplier;
+			toF *= pField->multiplier;
+		}
 	}
 	else if( pField->flags & ( DT_FLOAT|DT_ANGLE ))
 	{
@@ -1035,10 +1042,10 @@ qboolean Delta_CompareField( delta_t *pField, void *from, void *to, float timeba
 	}
 	else if( pField->flags & DT_TIMEWINDOW_8 )
 	{
-		val_a = (*(float *)((byte *)from + pField->offset )) * 100.0f;
-		val_b = (*(float *)((byte *)to + pField->offset )) * 100.0f;
-		val_a -= (timebase * 100.0f);
-		val_b -= (timebase * 100.0f);
+		val_a = Q_rint((*(float *)((byte *)from + pField->offset )) * 100.0f );
+		val_b = Q_rint((*(float *)((byte *)to + pField->offset )) * 100.0f );
+		val_a -= Q_rint(timebase * 100.0f);
+		val_b -= Q_rint(timebase * 100.0f);
 		fromF = *((int *)&val_a);
 		toF = *((int *)&val_b);
 	}
@@ -1147,11 +1154,11 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 		#else
 		flValue = *(float *)((byte *)to + pField->offset );
 		#endif
-		flTime = (timebase * 100.0f) - (flValue * 100.0f);
+		flTime = Q_rint( timebase * 100.0f ) - Q_rint(flValue * 100.0f);
 		#if 1
-		iValue = (uint)abs(flTime );
+		iValue = (uint)fabs( flTime );
 		#else
-		iValue = (uint)abs( flTime );
+		iValue = (uint)fabs( flTime );
 		if (flTime<0.0f) {
 			iValue |= 0x80000000;
 		}
@@ -1168,9 +1175,9 @@ qboolean Delta_WriteField( sizebuf_t *msg, delta_t *pField, void *from, void *to
 		#endif
 		flTime = (timebase * pField->multiplier) - (flValue * pField->multiplier);
 		#if 1
-		iValue = (uint)abs(flTime );
+		iValue = (uint)fabs( flTime );
 		#else
-		iValue = (uint)abs( flTime );
+		iValue = (uint)fabs( flTime );
 		if (flTime<0.0f) {
 			iValue |= 0x80000000;
 		}
@@ -1368,7 +1375,10 @@ void MSG_WriteDeltaUsercmd( sizebuf_t *msg, usercmd_t *from, usercmd_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "usercmd_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteDeltaUsercmd: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1395,7 +1405,10 @@ void MSG_ReadDeltaUsercmd( sizebuf_t *msg, usercmd_t *from, usercmd_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "usercmd_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadDeltaUsercmd: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1428,7 +1441,10 @@ void MSG_WriteDeltaEvent( sizebuf_t *msg, event_args_t *from, event_args_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "event_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteDeltaEvent: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1455,7 +1471,10 @@ void MSG_ReadDeltaEvent( sizebuf_t *msg, event_args_t *from, event_args_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "event_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadDeltaEvent: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1484,7 +1503,10 @@ qboolean MSG_WriteDeltaMovevars( sizebuf_t *msg, movevars_t *from, movevars_t *t
 	int		numChanges = 0;
 
 	dt = Delta_FindStruct( "movevars_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteDeltaMovevars: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1519,7 +1541,10 @@ void MSG_ReadDeltaMovevars( sizebuf_t *msg, movevars_t *from, movevars_t *to )
 	int		i;
 
 	dt = Delta_FindStruct( "movevars_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadDeltaMovevars: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1555,7 +1580,10 @@ void MSG_WriteClientData( sizebuf_t *msg, clientdata_t *from, clientdata_t *to, 
 	int		i;
 
 	dt = Delta_FindStruct( "clientdata_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteClientData: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1583,7 +1611,10 @@ void MSG_ReadClientData( sizebuf_t *msg, clientdata_t *from, clientdata_t *to, f
 	int		i;
 
 	dt = Delta_FindStruct( "clientdata_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadClientData: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1620,7 +1651,10 @@ void MSG_WriteWeaponData( sizebuf_t *msg, weapon_data_t *from, weapon_data_t *to
 	int		numChanges = 0;
 
 	dt = Delta_FindStruct( "weapon_data_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_WriteWeaponData: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1658,7 +1692,10 @@ void MSG_ReadWeaponData( sizebuf_t *msg, weapon_data_t *from, weapon_data_t *to,
 	int		i;
 
 	dt = Delta_FindStruct( "weapon_data_t" );
-	ASSERT( dt && dt->bInitialized );
+	if( !dt || !dt->bInitialized )
+	{
+		Host_Error( "MSG_ReadWeaponData: delta not initialized!\n" );
+	}
 
 	pField = dt->pFields;
 	ASSERT( pField );
@@ -1720,7 +1757,10 @@ void MSG_WriteDeltaEntity( entity_state_t *from, entity_state_t *to, sizebuf_t *
 	startBit = msg->iCurBit;
 
 	if( to->number < 0 || to->number >= GI->max_edicts )
-		Host_Error( "MSG_WriteDeltaEntity: Bad entity number: %i\n", to->number );
+	{
+		MsgDev( D_ERROR, "MSG_WriteDeltaEntity: Bad entity number: %i\n", to->number );
+		return;
+	}
 
 	BF_WriteWord( msg, to->number );
 	BF_WriteUBitLong( msg, 0, 2 ); // alive
@@ -1783,9 +1823,13 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	delta_info_t	*dt = NULL;
 	delta_t		*pField;
 	int		i, fRemoveType;
-
+#ifndef XASH_DEDICATED
 	if( number < 0 || number >= clgame.maxEntities )
-		Host_Error( "MSG_ReadDeltaEntity: bad delta entity number: %i\n", number );
+	{
+		// broken packet, try to skip it
+		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: bad delta entity number: %i\n", number );
+		return false;
+	}
 
 	*to = *from;
 	to->number = number;
@@ -1809,14 +1853,25 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 			return false;
 		}
 
-		Host_Error( "MSG_ReadDeltaEntity: unknown update type %i\n", fRemoveType );
+		MsgDev( D_ERROR, "MSG_ReadDeltaEntity: unknown update type %i\n", fRemoveType );
+		return false;
 	}
 
 	if( BF_ReadOneBit( msg ))
 		to->entityType = BF_ReadUBitLong( msg, 2 );
 
-	if( to->entityType == ENTITY_NORMAL )
+
+	if( to->entityType == ENTITY_BEAM )
 	{
+		dt = Delta_FindStruct( "custom_entity_state_t" );
+	}
+	else //  ENTITY_NORMAL or other (try predict type)
+	{
+		/* Omit connection drop on wromg data from server.
+		 * I know that it is very dirty,
+		 * but i don't know how to do it better.*/
+		if( to->entityType != ENTITY_NORMAL )
+			MsgDev( D_NOTE, "MSG_ReadDeltaEntity: broken delta: entityType = %d\n", to->entityType );
 		if( player )
 		{
 			dt = Delta_FindStruct( "entity_state_player_t" );
@@ -1825,10 +1880,6 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 		{
 			dt = Delta_FindStruct( "entity_state_t" );
 		}
-	}
-	else if( to->entityType == ENTITY_BEAM )
-	{
-		dt = Delta_FindStruct( "custom_entity_state_t" );
 	}
 
 	if( !(dt && dt->bInitialized) ) // Broken  delta?
@@ -1844,7 +1895,7 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	{
 		Delta_ReadField( msg, pField, from, to, timebase );
 	}
-
+#endif
 	// message parsed
 	return true;
 }

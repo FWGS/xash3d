@@ -121,7 +121,7 @@ static void UI_Video_Init( void )
 	uiVideo.vidModes.generic.y = 280;
 	uiVideo.vidModes.generic.callback = UI_Video_Callback;
 
-	UI_UtilSetupPicButton( &uiVideo.vidModes, PC_VID_MODES );
+	UI_UtilSetupPicButton( &uiVideo.vidModes, PC_VID_MODES);
 
 	uiVideo.done.generic.id = ID_DONE;
 	uiVideo.done.generic.type = QMTYPE_BM_BUTTON;

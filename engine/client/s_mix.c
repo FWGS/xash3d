@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "client.h"
@@ -29,7 +31,7 @@ GNU General Public License for more details.
 
 #define SND_SCALE_BITS	7
 #define SND_SCALE_SHIFT	(8 - SND_SCALE_BITS)
-#define SND_SCALE_LEVELS	(1 << SND_SCALE_BITS)
+#define SND_SCALE_LEVELS	(1U << SND_SCALE_BITS)
 
 
 portable_samplepair_t	*g_curpaintbuffer;
@@ -49,7 +51,7 @@ void S_InitScaletable( void )
 	for( i = 0; i < SND_SCALE_LEVELS; i++ )
 	{
 		for( j = 0; j < 256; j++ )
-			snd_scaletable[i][j] = ((signed char)j) * i * (1<<SND_SCALE_SHIFT);
+			snd_scaletable[i][j] = ((signed char)j) * i * (1U << SND_SCALE_SHIFT);
 	}
 }
 
@@ -244,7 +246,7 @@ void S_PaintStereoFrom8( portable_samplepair_t *pbuf, int *volume, byte *pData, 
 
 	for( i = 0; i < outCount; i++, data++ )
 	{
-		left = (byte)((*data & 0x00FF));
+		left = (byte)(*data & 0x00FF);
 		right = (byte)((*data & 0xFF00) >> 8);
 		pbuf[i].left += lscale[left];
 		pbuf[i].right += rscale[right];
@@ -276,9 +278,9 @@ void S_PaintStereoFrom16( portable_samplepair_t *pbuf, int *volume, short *pData
 		
 	for( i = 0; i < outCount; i++, data++ )
 	{
-		left = (signed short)((*data & 0x0000FFFF));
+		left = (signed short)(*data & 0x0000FFFF);
 		right = (signed short)((*data & 0xFFFF0000) >> 16);
-
+		
 		left =  (left * volume[0]) >> 8;
 		right = (right * volume[1]) >> 8;
 
@@ -399,13 +401,13 @@ void S_MixChannel( channel_t *pChannel, void *pData, int outputOffset, int input
 	if( pSource->channels == 1 )
 	{
 		if( pSource->width == 1 )
-			S_Mix8Mono( pbuf, pvol, (char *)pData, inputOffset, fracRate, outCount );
+			S_Mix8Mono( pbuf, pvol, (byte *)pData, inputOffset, fracRate, outCount );
 		else S_Mix16Mono( pbuf, pvol, (short *)pData, inputOffset, fracRate, outCount );
 	}
 	else
 	{
 		if( pSource->width == 1 )
-			S_Mix8Stereo( pbuf, pvol, (char *)pData, inputOffset, fracRate, outCount );
+			S_Mix8Stereo( pbuf, pvol, (byte *)pData, inputOffset, fracRate, outCount );
 		else S_Mix16Stereo( pbuf, pvol, (short *)pData, inputOffset, fracRate, outCount );
 	}
 }
@@ -449,7 +451,7 @@ int S_MixDataToDevice( channel_t *pChannel, int sampleCount, int outputRate, int
 		double	end = pChannel->pMixer.sample + rate * sampleCount;
 		int	inputSampleCount = (int)(ceil( end ) - floor( pChannel->pMixer.sample ));
 
-		availableSamples = S_GetOutputData( pSource, &pData, pChannel->pMixer.sample, inputSampleCount, use_loop );
+		availableSamples = S_GetOutputData( pSource, (void **)&pData, pChannel->pMixer.sample, inputSampleCount, use_loop );
 
 		// none available, bail out
 		if( !availableSamples ) break;
@@ -1059,3 +1061,4 @@ void MIX_PaintChannels( int endtime )
 		paintedtime = end;
 	}
 }
+#endif // XASH_DEDICATED

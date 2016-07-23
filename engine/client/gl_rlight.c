@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "mathlib.h"
@@ -173,7 +175,7 @@ void R_PushDlights( void )
 		if( R_CullSphere( l->origin, l->radius, 15 ))
 			continue;
 
-		R_MarkLights( l, 1<<i, RI.currentmodel->nodes );
+		R_MarkLights( l, 1U << i, RI.currentmodel->nodes );
 	}
 }
 
@@ -542,3 +544,5 @@ void R_LightDir( const vec3_t origin, vec3_t lightDir, float radius )
 		}
 	}
 }
+
+#endif // XASH_DEDICATED

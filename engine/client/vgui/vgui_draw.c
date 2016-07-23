@@ -22,7 +22,7 @@ GNU General Public License for more details.
 #include "vgui_api.h"
 #include "library.h"
 #include <string.h>
-
+#include "../keydefs.h"
 
 int	g_textures[VGUI_MAX_TEXTURES];
 int	g_textureId = 0;
@@ -93,7 +93,7 @@ void VGUI_InitCursors( void )
 	s_pDefaultCursor[dc_no] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NO);
 	s_pDefaultCursor[dc_hand] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
 	//host.mouse_visible = true;
-	SDL_SetCursor(s_pDefaultCursor[dc_arrow]);
+	SDL_SetCursor( s_pDefaultCursor[dc_arrow] );
 #endif
 }
 
@@ -113,9 +113,8 @@ void VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 		default:
 		host.mouse_visible = true;
 		SDL_SetRelativeMouseMode( SDL_FALSE );
-		SDL_SetCursor(s_pDefaultCursor[cursor]);
-			//SDL_SetCursor(s_pDefaultCursor[dc_arrow]);
-			break;
+		SDL_SetCursor( s_pDefaultCursor[cursor] );
+		break;
 	}
 	if( host.mouse_visible )
 	{
@@ -171,6 +170,7 @@ vguiapi_t vgui =
 	VGUI_IsInGame,
 	VGUI_SetVisible,
 	VGUI_GetMousePos,
+	Con_UtfProcessChar,
 	NULL,
 	NULL,
 	NULL,
@@ -193,30 +193,77 @@ Load vgui_support library and call VGui_Startup
 */
 void VGui_Startup( int width, int height )
 {
+	static qboolean failed = false;
+	if( failed )
+		return;
 	if(!vgui.initialized)
 	{
-		void (*F) (vguiapi_t *);
-		lib = Com_LoadLibrary(host.vguiloader, false);
+		void (*F) ( vguiapi_t * );
+		char vguiloader[256];
+		char vguilib[256];
+
+		Com_ResetLibraryError();
+
+		// hack: load vgui with correct path first if specified.
+		// it will be reused while resolving vgui support and client deps
+		if( Sys_GetParmFromCmdLine( "-vguilib", vguilib ) )
+		{
+			if( Q_strstr( vguilib, ".dll") )
+				Q_strncpy( vguiloader, "vgui_support.dll", 256 );
+			else
+				Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
+			if( !Com_LoadLibrary( vguilib, false ) )
+				MsgDev( D_WARN, "VGUI preloading failed. Default library will be used!\n");
+		}
+
+		if( !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
+			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
+
+		lib = Com_LoadLibrary( vguiloader, false );
 		if(!lib)
-			MsgDev(D_ERROR, "Failed to load vgui_support library!\n");
+			MsgDev( D_ERROR, "Failed to load vgui_support library: %s", Com_GetLibraryError() );
 		else
 		{
-			F = Com_GetProcAddress(lib, "InitAPI");
-			if(F)
+			F = Com_GetProcAddress( lib, "InitAPI" );
+			if( F )
 			{
-				F(&vgui);
+				F( &vgui );
 				vgui.initialized = true;
+				VGUI_InitCursors();
 			}
 			else
-				MsgDev(D_ERROR, "Failed to find vgui_support library entry point!\n");
+				MsgDev( D_ERROR, "Failed to find vgui_support library entry point!\n" );
 		}
-		VGUI_InitCursors();
+
 	}
-	if (vgui.initialized)
+
+	// vgui may crash if it cannot find font
+	if( width <= 320 )
+		width = 320;
+	else if( width <= 400 )
+		width = 400;
+	else if( width <= 512 )
+		width = 512;
+	else if( width <= 640 )
+		width = 640;
+	else if( width <= 800 )
+		width = 800;
+	else if( width <= 1024 )
+		width = 1024;
+	else if( width <= 1152 )
+		width = 1152;
+	else if( width <= 1280 )
+		width = 1280;
+	else //if( width <= 1600 )
+		width = 1600;
+
+
+	if( vgui.initialized )
 	{
 		//host.mouse_visible = true;
-		vgui.Startup(width, height);
+		vgui.Startup( width, height );
 	}
+	else failed = true;
 }
 
 
@@ -230,10 +277,11 @@ Unload vgui_support library and call VGui_Shutdown
 */
 void VGui_Shutdown( void )
 {
-	if( vgui.Shutdown) 
+	if( vgui.Shutdown )
 		vgui.Shutdown();
-	if(lib)
-		Com_FreeLibrary(lib);
+	if( lib )
+		Com_FreeLibrary( lib );
+	lib = NULL;
 	vgui.initialized = false;
 }
 
@@ -246,7 +294,7 @@ void VGUI_InitKeyTranslationTable( void )
 	bInitted = true;
 
 	// set virtual key translation table
-	memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ));	
+	Q_memset( s_pVirtualKeyTrans, -1, sizeof( s_pVirtualKeyTrans ) );
 
 	s_pVirtualKeyTrans['0'] = KEY_0;
 	s_pVirtualKeyTrans['1'] = KEY_1;
@@ -285,73 +333,75 @@ void VGUI_InitKeyTranslationTable( void )
 	s_pVirtualKeyTrans['Y'] = s_pVirtualKeyTrans['y'] = KEY_Y;
 	s_pVirtualKeyTrans['Z'] = s_pVirtualKeyTrans['z'] = KEY_Z;
 #ifdef XASH_SDL
-	s_pVirtualKeyTrans[SDLK_KP_0] = KEY_PAD_0;
-	s_pVirtualKeyTrans[SDLK_KP_1] = KEY_PAD_1;
-	s_pVirtualKeyTrans[SDLK_KP_2] = KEY_PAD_2;
-	s_pVirtualKeyTrans[SDLK_KP_3] = KEY_PAD_3;
-	s_pVirtualKeyTrans[SDLK_KP_4] = KEY_PAD_4;
-	s_pVirtualKeyTrans[SDLK_KP_5] = KEY_PAD_5;
-	s_pVirtualKeyTrans[SDLK_KP_6] = KEY_PAD_6;
-	s_pVirtualKeyTrans[SDLK_KP_7] = KEY_PAD_7;
-	s_pVirtualKeyTrans[SDLK_KP_8] = KEY_PAD_8;
-	s_pVirtualKeyTrans[SDLK_KP_9] = KEY_PAD_9;
-	s_pVirtualKeyTrans[SDLK_KP_DIVIDE]	= KEY_PAD_DIVIDE;
-	s_pVirtualKeyTrans[SDLK_KP_MULTIPLY] = KEY_PAD_MULTIPLY;
-	s_pVirtualKeyTrans[SDLK_KP_MINUS] = KEY_PAD_MINUS;
-	s_pVirtualKeyTrans[SDLK_KP_PLUS] = KEY_PAD_PLUS;
-	s_pVirtualKeyTrans[SDLK_KP_ENTER]	= KEY_PAD_ENTER;
-	s_pVirtualKeyTrans[SDLK_KP_DECIMAL] = KEY_PAD_DECIMAL;
-	s_pVirtualKeyTrans[SDLK_LEFTBRACKET] = KEY_LBRACKET;
-	s_pVirtualKeyTrans[SDLK_RIGHTBRACKET] = KEY_RBRACKET;
-	s_pVirtualKeyTrans[SDLK_SEMICOLON] = KEY_SEMICOLON;
-	s_pVirtualKeyTrans[SDLK_QUOTE] = KEY_APOSTROPHE;
-	s_pVirtualKeyTrans[SDLK_BACKQUOTE] = KEY_BACKQUOTE;
-	s_pVirtualKeyTrans[SDLK_COMMA] = KEY_COMMA;
-	s_pVirtualKeyTrans[SDLK_PERIOD] = KEY_PERIOD;
-	s_pVirtualKeyTrans[SDLK_SLASH] = KEY_SLASH;
-	s_pVirtualKeyTrans[SDLK_BACKSLASH] = KEY_BACKSLASH;
-	s_pVirtualKeyTrans[SDLK_MINUS] = KEY_MINUS;
-	s_pVirtualKeyTrans[SDLK_EQUALS] = KEY_EQUAL;
-	s_pVirtualKeyTrans[SDLK_RETURN]	= KEY_ENTER;
-	s_pVirtualKeyTrans[SDLK_SPACE] = KEY_SPACE;
-	s_pVirtualKeyTrans[SDLK_BACKSPACE] = KEY_BACKSPACE;
-	s_pVirtualKeyTrans[SDLK_TAB] = KEY_TAB;
-	s_pVirtualKeyTrans[SDLK_CAPSLOCK] = KEY_CAPSLOCK;
-	s_pVirtualKeyTrans[SDLK_NUMLOCKCLEAR] = KEY_NUMLOCK;
-	s_pVirtualKeyTrans[SDLK_ESCAPE]	= KEY_ESCAPE;
-	s_pVirtualKeyTrans[SDLK_SCROLLLOCK]	= KEY_SCROLLLOCK;
-	s_pVirtualKeyTrans[SDLK_INSERT]	= KEY_INSERT;
-	s_pVirtualKeyTrans[SDLK_DELETE]	= KEY_DELETE;
-	s_pVirtualKeyTrans[SDLK_HOME] = KEY_HOME;
-	s_pVirtualKeyTrans[SDLK_END] = KEY_END;
-	s_pVirtualKeyTrans[SDLK_PRIOR] = KEY_PAGEUP;
-	s_pVirtualKeyTrans[SDLK_PAGEDOWN] = KEY_PAGEDOWN;
-	s_pVirtualKeyTrans[SDLK_PAUSE] = KEY_BREAK;
-	s_pVirtualKeyTrans[SDLK_RSHIFT] = KEY_RSHIFT;
-	s_pVirtualKeyTrans[SDLK_LSHIFT] = KEY_LSHIFT;	// SHIFT -> left SHIFT
-	s_pVirtualKeyTrans[SDLK_RALT] = KEY_RALT;
-	s_pVirtualKeyTrans[SDLK_LALT] = KEY_LALT;		// ALT -> left ALT
-	s_pVirtualKeyTrans[SDLK_RCTRL] = KEY_RCONTROL;
-	s_pVirtualKeyTrans[SDLK_LCTRL] = KEY_LCONTROL;	// CTRL -> left CTRL
-	s_pVirtualKeyTrans[SDLK_APPLICATION] = KEY_LWIN;
-	s_pVirtualKeyTrans[SDLK_APPLICATION] = KEY_RWIN;
-	s_pVirtualKeyTrans[SDLK_APPLICATION] = KEY_APP;
-	s_pVirtualKeyTrans[SDLK_UP] = KEY_UP;
-	s_pVirtualKeyTrans[SDLK_LEFT] = KEY_LEFT;
-	s_pVirtualKeyTrans[SDLK_DOWN] = KEY_DOWN;
-	s_pVirtualKeyTrans[SDLK_RIGHT] = KEY_RIGHT;
-	s_pVirtualKeyTrans[SDLK_F1] = KEY_F1;
-	s_pVirtualKeyTrans[SDLK_F2] = KEY_F2;
-	s_pVirtualKeyTrans[SDLK_F3] = KEY_F3;
-	s_pVirtualKeyTrans[SDLK_F4] = KEY_F4;
-	s_pVirtualKeyTrans[SDLK_F5] = KEY_F5;
-	s_pVirtualKeyTrans[SDLK_F6] = KEY_F6;
-	s_pVirtualKeyTrans[SDLK_F7] = KEY_F7;
-	s_pVirtualKeyTrans[SDLK_F8] = KEY_F8;
-	s_pVirtualKeyTrans[SDLK_F9] = KEY_F9;
-	s_pVirtualKeyTrans[SDLK_F10] = KEY_F10;
-	s_pVirtualKeyTrans[SDLK_F11] = KEY_F11;
-	s_pVirtualKeyTrans[SDLK_F12] = KEY_F12;
+
+
+	s_pVirtualKeyTrans[K_KP_5 - 5] = KEY_PAD_0;
+	s_pVirtualKeyTrans[K_KP_5 - 4] = KEY_PAD_1;
+	s_pVirtualKeyTrans[K_KP_5 - 3] = KEY_PAD_2;
+	s_pVirtualKeyTrans[K_KP_5 - 2] = KEY_PAD_3;
+	s_pVirtualKeyTrans[K_KP_5 - 1] = KEY_PAD_4;
+	s_pVirtualKeyTrans[K_KP_5 - 0] = KEY_PAD_5;
+	s_pVirtualKeyTrans[K_KP_5 + 1] = KEY_PAD_6;
+	s_pVirtualKeyTrans[K_KP_5 + 2] = KEY_PAD_7;
+	s_pVirtualKeyTrans[K_KP_5 + 3] = KEY_PAD_8;
+	s_pVirtualKeyTrans[K_KP_5 + 4] = KEY_PAD_9;
+	s_pVirtualKeyTrans[K_KP_SLASH]	= KEY_PAD_DIVIDE;
+	s_pVirtualKeyTrans['*'] = KEY_PAD_MULTIPLY;
+	s_pVirtualKeyTrans[K_KP_MINUS] = KEY_PAD_MINUS;
+	s_pVirtualKeyTrans[K_KP_PLUS] = KEY_PAD_PLUS;
+	s_pVirtualKeyTrans[K_KP_ENTER]	= KEY_PAD_ENTER;
+	//s_pVirtualKeyTrans[K_KP_DECIMAL] = KEY_PAD_DECIMAL;
+	s_pVirtualKeyTrans['['] = KEY_LBRACKET;
+	s_pVirtualKeyTrans[']'] = KEY_RBRACKET;
+	s_pVirtualKeyTrans[';'] = KEY_SEMICOLON;
+	s_pVirtualKeyTrans['\''] = KEY_APOSTROPHE;
+	s_pVirtualKeyTrans['`'] = KEY_BACKQUOTE;
+	s_pVirtualKeyTrans[','] = KEY_COMMA;
+	s_pVirtualKeyTrans['.'] = KEY_PERIOD;
+	s_pVirtualKeyTrans[K_KP_SLASH] = KEY_SLASH;
+	s_pVirtualKeyTrans['\\'] = KEY_BACKSLASH;
+	s_pVirtualKeyTrans['-'] = KEY_MINUS;
+	s_pVirtualKeyTrans['='] = KEY_EQUAL;
+	s_pVirtualKeyTrans[K_ENTER]	= KEY_ENTER;
+	s_pVirtualKeyTrans[K_SPACE] = KEY_SPACE;
+	s_pVirtualKeyTrans[K_BACKSPACE] = KEY_BACKSPACE;
+	s_pVirtualKeyTrans[K_TAB] = KEY_TAB;
+	s_pVirtualKeyTrans[K_CAPSLOCK] = KEY_CAPSLOCK;
+	s_pVirtualKeyTrans[K_KP_NUMLOCK] = KEY_NUMLOCK;
+	s_pVirtualKeyTrans[K_ESCAPE]	= KEY_ESCAPE;
+	//s_pVirtualKeyTrans[K_KP_SCROLLLOCK]	= KEY_SCROLLLOCK;
+	s_pVirtualKeyTrans[K_INS]	= KEY_INSERT;
+	s_pVirtualKeyTrans[K_DEL]	= KEY_DELETE;
+	s_pVirtualKeyTrans[K_HOME] = KEY_HOME;
+	s_pVirtualKeyTrans[K_END] = KEY_END;
+	s_pVirtualKeyTrans[K_PGUP] = KEY_PAGEUP;
+	s_pVirtualKeyTrans[K_PGDN] = KEY_PAGEDOWN;
+	s_pVirtualKeyTrans[K_PAUSE] = KEY_BREAK;
+	//s_pVirtualKeyTrans[K_SHIFT] = KEY_RSHIFT;
+	s_pVirtualKeyTrans[K_SHIFT] = KEY_LSHIFT;	// SHIFT -> left SHIFT
+	//s_pVirtualKeyTrans[SDLK_RALT] = KEY_RALT;
+	s_pVirtualKeyTrans[K_ALT] = KEY_LALT;		// ALT -> left ALT
+	//s_pVirtualKeyTrans[SDLK_RCTRL] = KEY_RCONTROL;
+	s_pVirtualKeyTrans[K_CTRL] = KEY_LCONTROL;	// CTRL -> left CTRL
+	s_pVirtualKeyTrans[K_WIN] = KEY_LWIN;
+	//s_pVirtualKeyTrans[SDLK_APPLICATION] = KEY_RWIN;
+	//s_pVirtualKeyTrans[K_WIN] = KEY_APP;
+	s_pVirtualKeyTrans[K_UPARROW] = KEY_UP;
+	s_pVirtualKeyTrans[K_LEFTARROW] = KEY_LEFT;
+	s_pVirtualKeyTrans[K_DOWNARROW] = KEY_DOWN;
+	s_pVirtualKeyTrans[K_RIGHTARROW] = KEY_RIGHT;
+	s_pVirtualKeyTrans[K_F1] = KEY_F1;
+	s_pVirtualKeyTrans[K_F2] = KEY_F2;
+	s_pVirtualKeyTrans[K_F3] = KEY_F3;
+	s_pVirtualKeyTrans[K_F4] = KEY_F4;
+	s_pVirtualKeyTrans[K_F5] = KEY_F5;
+	s_pVirtualKeyTrans[K_F6] = KEY_F6;
+	s_pVirtualKeyTrans[K_F7] = KEY_F7;
+	s_pVirtualKeyTrans[K_F8] = KEY_F8;
+	s_pVirtualKeyTrans[K_F9] = KEY_F9;
+	s_pVirtualKeyTrans[K_F10] = KEY_F10;
+	s_pVirtualKeyTrans[K_F11] = KEY_F11;
+	s_pVirtualKeyTrans[K_F12] = KEY_F12;
 #endif
 }
 
@@ -391,13 +441,14 @@ enum VGUI_MouseCode VGUI_MapMouseButton( byte button)
 
 
 
-qboolean VGUI_SurfaceWndProc( Xash_Event *event )
+void VGUI_SurfaceWndProc( Xash_Event *event )
 {
-/* When false returned, event passed to engine, else only to vgui*/
-/* NOTE: this disabled because VGUI shows it's cursor on engine start*/
-	if( !vgui.initialized )
-		return;
 #ifdef XASH_SDL
+/* When false returned, event passed to engine, else only to vgui*/
+/* NOTE: this disabled because VGUI shows its cursor on engine start*/
+	if( !vgui.initialized )
+		return /*false*/;
+
 	switch( event->type )
 	{
 	/*case :
@@ -405,31 +456,37 @@ qboolean VGUI_SurfaceWndProc( Xash_Event *event )
 		break;*/
 	case SDL_MOUSEMOTION:
 		vgui.MouseMove(event->motion.x, event->motion.y);
-		return false;
+		//return false;
+		break;
 	case SDL_MOUSEBUTTONDOWN:
 		//if(event->button.clicks == 1)
 		vgui.Mouse(MA_PRESSED, VGUI_MapMouseButton(event->button.button));
 	//	else
 	//	vgui.Mouse(MA_DOUBLE, VGUI_MapMouseButton(event->button.button));
-		return true;
+		//return true;
+		break;
 	case SDL_MOUSEBUTTONUP:
 		vgui.Mouse(MA_RELEASED, VGUI_MapMouseButton(event->button.button));
-		return true;
+		//return true;
+		break;
 	case SDL_MOUSEWHEEL:
 		vgui.Mouse(MA_WHEEL, event->wheel.y);
-		return true;
+		//return true;
+		break;
 	case SDL_KEYDOWN:
 		if(!( event->key.keysym.sym & ( 1 << 30 )))
 			vgui.Key( KA_PRESSED, VGUI_MapKey( event->key.keysym.sym ));
 		vgui.Key( KA_TYPED, VGUI_MapKey( event->key.keysym.sym ));
-		return false;
+		//return false;
+		break;
 	case SDL_KEYUP:
 		vgui.Key( KA_RELEASED, VGUI_MapKey( event->key.keysym.sym ) );
-		return false;
+		//return false;
+		break;
 	}
 	
 #endif
-	return false;
+	//return false;
 }
 
 
@@ -587,14 +644,14 @@ void VGUI_BindTexture( int id )
 {
 	if( id > 0 && id < VGUI_MAX_TEXTURES && g_textures[id] )
 	{
-		GL_Bind( GL_TEXTURE0, g_textures[id] );
+		GL_Bind( XASH_TEXTURE0, g_textures[id] );
 		g_iBoundTexture = id;
 	}
 	else
 	{
 		// NOTE: same as bogus index 2700 in GoldSrc
 		id = g_iBoundTexture = 1;
-		GL_Bind( GL_TEXTURE0, g_textures[id] );
+		GL_Bind( XASH_TEXTURE0, g_textures[id] );
 	}
 }
 
@@ -666,13 +723,9 @@ void VGui_Paint()
 
 void *VGui_GetPanel()
 {
-	if(vgui.initialized)
+	if( vgui.initialized )
 		return vgui.GetPanel();
-	return 0;
-}
-void VGui_ViewportPaintBackground( int extents[4])
-{
-	//stub
+	return NULL;
 }
 
 void VGui_RunFrame()

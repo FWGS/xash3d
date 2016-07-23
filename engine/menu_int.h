@@ -23,10 +23,10 @@ GNU General Public License for more details.
 typedef int		HIMAGE;		// handle to a graphic
 
 // flags for PIC_Load
-#define PIC_NEAREST		(1<<0)		// disable texfilter
-#define PIC_KEEP_RGBDATA	(1<<1)		// some images keep source
-#define PIC_NOFLIP_TGA	(1<<2)		// Steam background completely ignore tga attribute 0x20
-#define PIC_KEEP_8BIT	(1<<3)		// keep original 8-bit image (if present)
+#define PIC_NEAREST		(1U << 0)		// disable texfilter
+#define PIC_KEEP_RGBDATA	(1U << 1)		// some images keep source
+#define PIC_NOFLIP_TGA	(1U << 2)		// Steam background completely ignore tga attribute 0x20
+#define PIC_KEEP_8BIT	(1U << 3)		// keep original 8-bit image (if present)
 
 typedef struct ui_globalvars_s
 {	
@@ -78,10 +78,10 @@ typedef struct ui_enginefuncs_s
 	char*	(*pfnCmd_Args)( void );
 
 	// debug messages (in-menu shows only notify)	
-	void	(*Con_Printf)( char *fmt, ... );
-	void	(*Con_DPrintf)( char *fmt, ... );
-	void	(*Con_NPrintf)( int pos, char *fmt, ... );
-	void	(*Con_NXPrintf)( struct con_nprint_s *info, char *fmt, ... );
+	void	(*Con_Printf)( const char *fmt, ... );
+	void	(*Con_DPrintf)( const char *fmt, ... );
+	void	(*Con_NPrintf)( int pos, const char *fmt, ... );
+	void	(*Con_NXPrintf)( struct con_nprint_s *info, const char *fmt, ... );
 
 	// sound handlers
 	void	(*pfnPlayLocalSound)( const char *szSound );
@@ -161,9 +161,14 @@ typedef struct ui_enginefuncs_s
 	int	(*pfnIsMapValid)( char *filename );
 	void	(*pfnProcessImage)( int texnum, float gamma, int topColor, int bottomColor );
 	int	(*pfnCompareFileTime)( char *filename1, char *filename2, int *iCompare );
-
-	void (*pfnEnableTextInput)( int enable );
 } ui_enginefuncs_t;
+
+typedef struct ui_textfuncs_s {
+	void (*pfnEnableTextInput)( int enable );
+	int (*pfnUtfProcessChar) ( int ch );
+	int (*pfnUtfMoveLeft) ( char *str, int pos );
+	int (*pfnUtfMoveRight) ( char *str, int pos, int length );
+} ui_textfuncs_t;
 
 typedef struct
 {
@@ -186,5 +191,9 @@ typedef struct
 } UI_FUNCTIONS;
 
 typedef int (*MENUAPI)( UI_FUNCTIONS *pFunctionTable, ui_enginefuncs_t* engfuncs, ui_globalvars_t *pGlobals );
+
+typedef int (*UITEXTAPI)( ui_textfuncs_t* engfuncs );
+
+typedef void (*ADDTOUCHBUTTONTOLIST)( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
 
 #endif//MENU_INT_H

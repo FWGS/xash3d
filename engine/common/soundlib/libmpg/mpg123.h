@@ -127,7 +127,7 @@ struct StaticData
 
 #define FRAMES_AND_BYTES	(FRAMES_FLAG|BYTES_FLAG)
 
-const static char	VBRTag[] = { "Xing" };
+static const char	VBRTag[] = { "Xing" };
 
 /*structure to receive extracted header */
 /* toc may be NULL*/
@@ -188,14 +188,14 @@ struct frame
 /* extern unsigned int   get1bit(void);*/
 extern unsigned int   getbits(struct StaticData * psd, int);
 extern unsigned int   getbits_fast(struct StaticData * psd, int);
-extern int set_pointer(struct StaticData * psd, struct mpstr * gmp, long backstep);
+extern int set_pointer(struct StaticData * psd, struct mpstr * gmp, int backstep);
 
 extern int do_layer3(struct StaticData * psd, struct mpstr * gmp, struct frame *fr, unsigned char *pcm_sample, int *pcm_point);
 extern int do_layer2(struct StaticData * psd, struct mpstr * gmp, struct frame *fr,unsigned char *,int *);
 
-extern int head_check(unsigned long head);
+extern int head_check(unsigned int head);
 extern int ExtractI4(unsigned char *buf);
-extern int decode_header(struct mpstr *mp, struct frame *fr,unsigned long newhead);
+extern int decode_header(struct mpstr *mp, struct frame *fr,unsigned int newhead);
 
 struct gr_info_s {
       int scfsi;
@@ -233,10 +233,10 @@ extern int synth_1to1_mono( struct StaticData *psd, struct mpstr *gmp, float*, u
 
 extern void init_layer3( struct StaticData *psd, int );
 extern void init_layer2( struct StaticData *psd );
-extern void make_decode_tables( struct StaticData *psd, long scaleval );
+extern void make_decode_tables( struct StaticData *psd, int scaleval );
 extern void dct64( struct StaticData *psd, float*, float*, float* );
 
-const extern long freqs[9];
+extern const int freqs[9];
 
 #ifdef __cplusplus
 }

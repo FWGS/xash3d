@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #ifndef GL_EXPORT_H
 #define GL_EXPORT_H
 
-#ifdef __ANDROID__
+#ifdef XASH_NANOGL
 
 #include "platform/android/gl_mangle.h"
 #undef pglMultiTexCoord2f
@@ -530,6 +530,18 @@ typedef float GLmatrix[16];
 #define GL_TEXTURE_WRAP_R			0x8072
 #define GL_MAX_3D_TEXTURE_SIZE		0x8073
 #define GL_TEXTURE_BINDING_3D			0x806A
+
+/* multisample */
+#define GL_MULTISAMPLE				0x809D
+#define GL_SAMPLE_ALPHA_TO_COVERAGE		0x809E
+#define GL_SAMPLE_ALPHA_TO_ONE			0x809F
+#define GL_SAMPLE_COVERAGE			0x80A0
+#define GL_SAMPLE_BUFFERS			0x80A8
+#define GL_SAMPLES				0x80A9
+#define GL_SAMPLE_COVERAGE_VALUE		0x80AA
+#define GL_SAMPLE_COVERAGE_INVERT		0x80AB
+#define GL_MULTISAMPLE_BIT			0x20000000
+
 
 #define GL_STENCIL_TEST_TWO_SIDE_EXT		0x8910
 #define GL_ACTIVE_STENCIL_FACE_EXT		0x8911
@@ -1173,12 +1185,6 @@ void ( APIENTRY *pglClientActiveTextureARB)( GLenum );
 void ( APIENTRY *pglGetCompressedTexImage)( GLenum target, GLint lod, const GLvoid* data );
 void ( APIENTRY *pglDrawRangeElements)( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices );
 void ( APIENTRY *pglDrawRangeElementsEXT)( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices );
-void ( APIENTRY *pglDrawElements)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
-void ( APIENTRY *pglVertexPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr);
-void ( APIENTRY *pglNormalPointer)(GLenum type, GLsizei stride, const GLvoid *ptr);
-void ( APIENTRY *pglColorPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr);
-void ( APIENTRY *pglTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *ptr);
-void ( APIENTRY *pglArrayElement)(GLint i);
 void ( APIENTRY *pglMultiTexCoord1f) (GLenum, GLfloat);
 void ( APIENTRY *pglMultiTexCoord2f) (GLenum, GLfloat, GLfloat);
 void ( APIENTRY *pglMultiTexCoord3f) (GLenum, GLfloat, GLfloat, GLfloat);
@@ -1236,7 +1242,6 @@ void ( APIENTRY *pglGetActiveUniformARB)(GLhandleARB programObj, GLuint index, G
 void ( APIENTRY *pglGetUniformfvARB)(GLhandleARB programObj, GLint location, GLfloat *params);
 void ( APIENTRY *pglGetUniformivARB)(GLhandleARB programObj, GLint location, GLint *params);
 void ( APIENTRY *pglGetShaderSourceARB)(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *source);
-void ( APIENTRY *pglPolygonStipple)(const GLubyte *mask);
 void ( APIENTRY *pglTexImage3D)( GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels );
 void ( APIENTRY *pglTexSubImage3D)( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels );
 void ( APIENTRY *pglCopyTexSubImage3D)( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height );

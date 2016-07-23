@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -164,7 +166,7 @@ int R_AllocateMirrorTexture( void )
 		texture = tr.mirrorTextures[i];
 	}
 
-	GL_Bind( GL_TEXTURE0, texture );
+	GL_Bind( XASH_TEXTURE0, texture );
 	pglCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, RI.viewport[0], RI.viewport[1], RI.viewport[2], RI.viewport[3], 0 );
 
 	return texture;
@@ -538,6 +540,8 @@ void R_CheckEntitiesOnList( void )
 		case mod_brush:
 			R_FindBmodelMirrors( RI.currententity, true );
 			break;
+		default:
+			break;
 		}
 	}
 
@@ -562,6 +566,8 @@ void R_CheckEntitiesOnList( void )
 		case mod_brush:
 			R_FindBmodelMirrors( RI.currententity, false );
 			break;
+		default:
+			break;
 		}
 	}
 
@@ -578,6 +584,8 @@ void R_CheckEntitiesOnList( void )
 		{
 		case mod_brush:
 			R_FindBmodelMirrors( RI.currententity, false );
+			break;
+		default:
 			break;
 		}
 	}
@@ -645,3 +653,5 @@ void R_FindMirrors( const ref_params_t *fd )
 
 	R_CheckEntitiesOnList();
 }
+
+#endif // XASH_DEDICATED

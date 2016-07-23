@@ -190,7 +190,7 @@ qboolean SV_RunThink( edict_t *ent )
 {
 	float	thinktime;
 
-	if(!( ent->v.flags & FL_SPECTATOR ))
+	if(!( ent->v.flags & FL_KILLME ))
 	{
 		thinktime = ent->v.nextthink;
 		if( thinktime <= 0.0f || thinktime > sv.time + host.frametime )
@@ -205,8 +205,11 @@ qboolean SV_RunThink( edict_t *ent )
 		svgame.dllFuncs.pfnThink( ent );
 	}
 
-	if( ent->v.flags & FL_SPECTATOR )
+	if( ent->v.flags & FL_KILLME )
+	{
+		//MsgDev( D_NOTE, "SV_RunThink: FreeEdict\n");
 		SV_FreeEdict( ent );
+	}
 
 	return !ent->free;
 }
@@ -256,7 +259,7 @@ void SV_Impact( edict_t *e1, edict_t *e2, trace_t *trace )
 {
 	svgame.globals->time = sv.time;
 
-	if(( e1->v.flags|e2->v.flags ) & FL_SPECTATOR )
+	if(( e1->v.flags|e2->v.flags ) & FL_KILLME )
 		return;
 
 	if( e1->v.groupinfo && e2->v.groupinfo )
@@ -469,7 +472,7 @@ qboolean SV_CheckWater( edict_t *ent )
 		}
 	}
 
-	return (ent->v.waterlevel > 1);
+	return (ent->v.waterlevel > 1); //-V602
 }
 
 /*
@@ -1719,13 +1722,14 @@ static void SV_Physics_Entity( edict_t *ent )
 		SV_Physics_Pusher( ent );
 		break;
 	case MOVETYPE_WALK:
-		Host_Error( "SV_Physics: bad movetype %i\n", ent->v.movetype );
+		Host_MapDesignError( "SV_Physics: bad movetype %i for %s, reset to MOVETYPE_NONE\n", ent->v.movetype, STRING( ent->v.classname ) );
+		ent->v.movetype = MOVETYPE_NONE;
 		break;
 	}
 
 	// g-cont. don't alow free entities during loading because
 	// this produce a corrupted baselines
-	if( sv.state == ss_active && ent->v.flags & FL_KILLME )
+	if( sv.state == ss_active && ( ent->v.flags & FL_KILLME ) )
 		SV_FreeEdict( ent );
 }
 
@@ -1838,7 +1842,7 @@ Called from renderer for debug purposes
 */
 void SV_DrawDebugTriangles( void )
 {
-	if( host.type != HOST_NORMAL )
+	if( Host_IsDedicated() )
 		return;
 
 	if( svgame.physFuncs.DrawNormalTriangles != NULL )
@@ -1872,7 +1876,7 @@ Called from renderer for debug purposes
 */
 void SV_DrawOrthoTriangles( void )
 {
-	if( host.type != HOST_NORMAL )
+	if( Host_IsDedicated() )
 		return;
 
 	if( svgame.physFuncs.DrawOrthoTriangles != NULL )
@@ -1928,11 +1932,15 @@ static server_physics_api_t gPhysicsAPI =
 	SV_LinkEdict,
 	SV_GetServerTime,
 	SV_GetFrameTime,
-	Mod_Handle,
+	(void*)Mod_Handle,
 	SV_GetHeadNode,
 	SV_ServerState,
 	Host_Error,
+#ifndef XASH_DEDICATED
 	&gTriApi,	// ouch!
+#else
+	NULL,
+#endif
 	pfnDrawConsoleString,
 	pfnDrawSetTextColor,
 	pfnDrawConsoleStringLen,

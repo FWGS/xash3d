@@ -30,14 +30,14 @@ const matrix3x4 matrix3x4_identity =
 
 ========================================================================
 */
-void Matrix3x4_VectorTransform( const matrix3x4 in, const float v[3], float out[3] )
+void Matrix3x4_VectorTransform( cmatrix3x4 in, const float v[3], float out[3] )
 {
 	out[0] = v[0] * in[0][0] + v[1] * in[0][1] + v[2] * in[0][2] + in[0][3];
 	out[1] = v[0] * in[1][0] + v[1] * in[1][1] + v[2] * in[1][2] + in[1][3];
 	out[2] = v[0] * in[2][0] + v[1] * in[2][1] + v[2] * in[2][2] + in[2][3];
 }
 
-void Matrix3x4_VectorITransform( const matrix3x4 in, const float v[3], float out[3] )
+void Matrix3x4_VectorITransform( cmatrix3x4 in, const float v[3], float out[3] )
 {
 	vec3_t	dir;
 
@@ -50,21 +50,21 @@ void Matrix3x4_VectorITransform( const matrix3x4 in, const float v[3], float out
 	out[2] = dir[0] * in[0][2] + dir[1] * in[1][2] + dir[2] * in[2][2];
 }
 
-void Matrix3x4_VectorRotate( const matrix3x4 in, const float v[3], float out[3] )
+void Matrix3x4_VectorRotate( cmatrix3x4 in, const float v[3], float out[3] )
 {
 	out[0] = v[0] * in[0][0] + v[1] * in[0][1] + v[2] * in[0][2];
 	out[1] = v[0] * in[1][0] + v[1] * in[1][1] + v[2] * in[1][2];
 	out[2] = v[0] * in[2][0] + v[1] * in[2][1] + v[2] * in[2][2];
 }
 
-void Matrix3x4_VectorIRotate( const matrix3x4 in, const float v[3], float out[3] )
+void Matrix3x4_VectorIRotate( cmatrix3x4 in, const float v[3], float out[3] )
 {
 	out[0] = v[0] * in[0][0] + v[1] * in[1][0] + v[2] * in[2][0];
 	out[1] = v[0] * in[0][1] + v[1] * in[1][1] + v[2] * in[2][1];
 	out[2] = v[0] * in[0][2] + v[1] * in[1][2] + v[2] * in[2][2];
 }
 
-void Matrix3x4_ConcatTransforms( matrix3x4 out, const matrix3x4 in1, const matrix3x4 in2 )
+void Matrix3x4_ConcatTransforms( matrix3x4 out, cmatrix3x4 in1, cmatrix3x4 in2 )
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0];
 	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] + in1[0][2] * in2[2][1];
@@ -87,7 +87,7 @@ void Matrix3x4_SetOrigin( matrix3x4 out, float x, float y, float z )
 	out[2][3] = z;
 }
 
-void Matrix3x4_OriginFromMatrix( const matrix3x4 in, float *out )
+void Matrix3x4_OriginFromMatrix( cmatrix3x4 in, float *out )
 {
 	out[0] = in[0][3];
 	out[1] = in[1][3];
@@ -206,7 +206,7 @@ void Matrix3x4_CreateFromEntity( matrix3x4 out, const vec3_t angles, const vec3_
 	}
 }
 
-void Matrix3x4_TransformPositivePlane( const matrix3x4 in, const vec3_t normal, float d, vec3_t out, float *dist )
+void Matrix3x4_TransformPositivePlane( cmatrix3x4 in, const vec3_t normal, float d, vec3_t out, float *dist )
 {
 	float	scale = sqrt( in[0][0] * in[0][0] + in[0][1] * in[0][1] + in[0][2] * in[0][2] );
 	float	iscale = 1.0f / scale;
@@ -217,7 +217,7 @@ void Matrix3x4_TransformPositivePlane( const matrix3x4 in, const vec3_t normal, 
 	*dist = d * scale + ( out[0] * in[0][3] + out[1] * in[1][3] + out[2] * in[2][3] );
 }
 
-void Matrix3x4_Invert_Simple( matrix3x4 out, const matrix3x4 in1 )
+void Matrix3x4_Invert_Simple( matrix3x4 out, cmatrix3x4 in1 )
 {
 	// we only support uniform scaling, so assume the first row is enough
 	// (note the lack of sqrt here, because we're trying to undo the scaling,
@@ -258,14 +258,14 @@ const matrix4x4 matrix4x4_identity =
 
 ========================================================================
 */
-void Matrix4x4_VectorTransform( const matrix4x4 in, const float v[3], float out[3] )
+void Matrix4x4_VectorTransform( cmatrix4x4 in, const float v[3], float out[3] )
 {
 	out[0] = v[0] * in[0][0] + v[1] * in[0][1] + v[2] * in[0][2] + in[0][3];
 	out[1] = v[0] * in[1][0] + v[1] * in[1][1] + v[2] * in[1][2] + in[1][3];
 	out[2] = v[0] * in[2][0] + v[1] * in[2][1] + v[2] * in[2][2] + in[2][3];
 }
 
-void Matrix4x4_VectorITransform( const matrix4x4 in, const float v[3], float out[3] )
+void Matrix4x4_VectorITransform( cmatrix4x4 in, const float v[3], float out[3] )
 {
 	vec3_t	dir;
 
@@ -278,21 +278,21 @@ void Matrix4x4_VectorITransform( const matrix4x4 in, const float v[3], float out
 	out[2] = dir[0] * in[0][2] + dir[1] * in[1][2] + dir[2] * in[2][2];
 }
 
-void Matrix4x4_VectorRotate( const matrix4x4 in, const float v[3], float out[3] )
+void Matrix4x4_VectorRotate( cmatrix4x4 in, const float v[3], float out[3] )
 {
 	out[0] = v[0] * in[0][0] + v[1] * in[0][1] + v[2] * in[0][2];
 	out[1] = v[0] * in[1][0] + v[1] * in[1][1] + v[2] * in[1][2];
 	out[2] = v[0] * in[2][0] + v[1] * in[2][1] + v[2] * in[2][2];
 }
 
-void Matrix4x4_VectorIRotate( const matrix4x4 in, const float v[3], float out[3] )
+void Matrix4x4_VectorIRotate( cmatrix4x4 in, const float v[3], float out[3] )
 {
 	out[0] = v[0] * in[0][0] + v[1] * in[1][0] + v[2] * in[2][0];
 	out[1] = v[0] * in[0][1] + v[1] * in[1][1] + v[2] * in[2][1];
 	out[2] = v[0] * in[0][2] + v[1] * in[1][2] + v[2] * in[2][2];
 }
 
-void Matrix4x4_ConcatTransforms( matrix4x4 out, const matrix4x4 in1, const matrix4x4 in2 )
+void Matrix4x4_ConcatTransforms( matrix4x4 out, cmatrix4x4 in1, cmatrix4x4 in2 )
 {
 	out[0][0] = in1[0][0] * in2[0][0] + in1[0][1] * in2[1][0] + in1[0][2] * in2[2][0];
 	out[0][1] = in1[0][0] * in2[0][1] + in1[0][1] * in2[1][1] + in1[0][2] * in2[2][1];
@@ -315,7 +315,7 @@ void Matrix4x4_SetOrigin( matrix4x4 out, float x, float y, float z )
 	out[2][3] = z;
 }
 
-void Matrix4x4_OriginFromMatrix( const matrix4x4 in, float *out )
+void Matrix4x4_OriginFromMatrix( cmatrix4x4 in, float *out )
 {
 	out[0] = in[0][3];
 	out[1] = in[1][3];
@@ -451,7 +451,7 @@ void Matrix4x4_CreateFromEntity( matrix4x4 out, const vec3_t angles, const vec3_
 	}
 }
 
-void Matrix4x4_ConvertToEntity( const matrix4x4 in, vec3_t angles, vec3_t origin )
+void Matrix4x4_ConvertToEntity( cmatrix4x4 in, vec3_t angles, vec3_t origin )
 {
 	float xyDist = sqrt( in[0][0] * in[0][0] + in[1][0] * in[1][0] );
 
@@ -474,7 +474,7 @@ void Matrix4x4_ConvertToEntity( const matrix4x4 in, vec3_t angles, vec3_t origin
 	origin[2] = in[2][3];
 }
 
-void Matrix4x4_TransformPositivePlane( const matrix4x4 in, const vec3_t normal, float d, vec3_t out, float *dist )
+void Matrix4x4_TransformPositivePlane( cmatrix4x4 in, const vec3_t normal, float d, vec3_t out, float *dist )
 {
 	float	scale = sqrt( in[0][0] * in[0][0] + in[0][1] * in[0][1] + in[0][2] * in[0][2] );
 	float	iscale = 1.0f / scale;
@@ -485,7 +485,7 @@ void Matrix4x4_TransformPositivePlane( const matrix4x4 in, const vec3_t normal, 
 	*dist = d * scale + ( out[0] * in[0][3] + out[1] * in[1][3] + out[2] * in[2][3] );
 }
 
-void Matrix4x4_TransformStandardPlane( const matrix4x4 in, const vec3_t normal, float d, vec3_t out, float *dist )
+void Matrix4x4_TransformStandardPlane( cmatrix4x4 in, const vec3_t normal, float d, vec3_t out, float *dist )
 {
 	float scale = sqrt( in[0][0] * in[0][0] + in[0][1] * in[0][1] + in[0][2] * in[0][2] );
 	float iscale = 1.0f / scale;
@@ -496,7 +496,7 @@ void Matrix4x4_TransformStandardPlane( const matrix4x4 in, const vec3_t normal, 
 	*dist = d * scale - ( out[0] * in[0][3] + out[1] * in[1][3] + out[2] * in[2][3] );
 }
 
-void Matrix4x4_Invert_Simple( matrix4x4 out, const matrix4x4 in1 )
+void Matrix4x4_Invert_Simple( matrix4x4 out, cmatrix4x4 in1 )
 {
 	// we only support uniform scaling, so assume the first row is enough
 	// (note the lack of sqrt here, because we're trying to undo the scaling,
@@ -528,7 +528,7 @@ void Matrix4x4_Invert_Simple( matrix4x4 out, const matrix4x4 in1 )
 	out[3][3] = 1.0f;
 }
 
-void Matrix4x4_Transpose( matrix4x4 out, const matrix4x4 in1 )
+void Matrix4x4_Transpose( matrix4x4 out, cmatrix4x4 in1 )
 {
 	out[0][0] = in1[0][0];
 	out[0][1] = in1[1][0];
@@ -548,7 +548,7 @@ void Matrix4x4_Transpose( matrix4x4 out, const matrix4x4 in1 )
 	out[3][3] = in1[3][3];
 }
 
-qboolean Matrix4x4_Invert_Full( matrix4x4 out, const matrix4x4 in1 )
+qboolean Matrix4x4_Invert_Full( matrix4x4 out, cmatrix4x4 in1 )
 {
 	float	*temp;
 	float	*r[4];
