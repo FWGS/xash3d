@@ -1,4 +1,4 @@
-CC = gcc -g
+CC ?= gcc
 CXX ?= g++
 CFLAGS ?=  -O1 -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
@@ -127,11 +127,9 @@ list:
 #touch Makefile.dep
 #	makedepend -fMakefile.dep -- $(DEFINES) -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -- $^
 
-depend: Makefile.dep
-
-Makefile.dep: $(SRCS)
+depend:
 	rm -f ./Makefile.dep
-	$(CC) $(CFLAGS) $(filter-out -I/usr/include/SDL2,$(INCLUDES)) $(filter-out -DXASH_SDL,$(DEFINES)) -MM $^>>./Makefile.dep
+	$(CC) $(CFLAGS) $(filter-out -I/usr/include/SDL2,$(INCLUDES)) $(filter-out -DXASH_SDL,$(DEFINES)) -DXASH_VIDEO=-1 -MM $(SRCS)>>./Makefile.dep
 
 include Makefile.dep
 
