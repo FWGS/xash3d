@@ -18,8 +18,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#include "port.h"
-
 #include "extdll.h"
 #include "basemenu.h"
 #include "utils.h"
