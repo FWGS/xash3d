@@ -1,5 +1,6 @@
-#ifdef XASH_SDL
+
 #include "events.h"
+#if XASH_INPUT == INPUT_SDL
 #include "keydefs.h"
 #include "input.h"
 #include "client.h"

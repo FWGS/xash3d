@@ -1769,20 +1769,12 @@ S_Init
 */
 qboolean S_Init( void )
 {
+#if XASH_SOUND != SOUND_NULL
 	if( Sys_CheckParm( "-nosound" ))
 	{
 		MsgDev( D_INFO, "Audio: Disabled\n" );
 		return false;
 	}
-#ifdef XASH_SDL
-	if( SDL_Init( SDL_INIT_AUDIO ) )
-	{
-		MsgDev( D_ERROR, "Audio: SDL: %s \n", SDL_GetError() );
-		return false;
-	}
-#elif !defined(XASH_OPENSL)
-	return false;
-#endif
 
 	s_volume = Cvar_Get( "volume", "0.7", CVAR_ARCHIVE, "sound volume" );
 	s_musicvolume = Cvar_Get( "musicvolume", "1.0", CVAR_ARCHIVE, "background music volume" );
@@ -1836,6 +1828,9 @@ qboolean S_Init( void )
 	AllocDsps ();
 
 	return true;
+#else
+	return false;
+#endif
 }
 
 // =======================================================================

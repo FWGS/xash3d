@@ -25,8 +25,8 @@ Crash handler, called from system
 #define DEBUG_BREAK
 /// TODO: implement on windows too
 
-#ifdef _WIN32
-#ifdef DBGHELP
+#if XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP || XASH_CRASHHANDLER == CRASHHANDLER_WIN32
+#if XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP
 #pragma comment( lib, "dbghelp" )
 #pragma comment( lib, "psapi" )
 #include <winnt.h>
@@ -191,7 +191,7 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		// check to avoid recursive call
 		host.crashed = true;
 
-#ifdef DBGHELP
+#if XASH_CRASHHANDLER == CRASHHANDLER_DBGHELP
 		stack_trace( pInfo );
 #else
 		Sys_Warn( "Sys_Crash: call %p at address %p", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
@@ -230,7 +230,7 @@ void Sys_RestoreCrashHandler( void )
 	if( oldFilter ) SetUnhandledExceptionFilter( oldFilter );
 }
 
-#elif defined (CRASHHANDLER)
+#elif XASH_CRASHHANDLER == CRASHHANDLER_UCONTEXT
 // Posix signal handler
 #include "library.h"
 #if defined(__FreeBSD__) || defined(__NetBSD__)
@@ -369,7 +369,7 @@ void Sys_RestoreCrashHandler( void )
 	// stub
 }
 
-#else
+#elif XASH_CRASHHANDLER == CRASHHANDLER_NULL
 void Sys_SetupCrashHandler( void )
 {
 	// stub

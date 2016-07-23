@@ -40,14 +40,15 @@ extern char **environ;
 #include "mathlib.h"
 
 qboolean	error_on_exit = false;	// arg for exit();
-#define DEBUG_BREAK
-#if defined _WIN32 && !defined XASH_SDL
-#include <winbase.h>
+
 /*
 ================
 Sys_DoubleTime
 ================
 */
+#if XASH_TIMER == TIMER_WIN32
+#include <winbase.h>
+
 double Sys_DoubleTime( void )
 {
 	static LARGE_INTEGER g_PerformanceFrequency;
@@ -63,18 +64,15 @@ double Sys_DoubleTime( void )
 	QueryPerformanceCounter( &CurrentTime );
 	return (double)( CurrentTime.QuadPart - g_ClockStart.QuadPart ) / (double)( g_PerformanceFrequency.QuadPart );
 }
-#else
-/*
-================
-Sys_DoubleTime
-================
-*/
+
+#elif XASH_TIMER == TIMER_SDL
+
 double Sys_DoubleTime( void )
 {
 	static longtime_t g_PerformanceFrequency;
 	static longtime_t g_ClockStart;
 	longtime_t CurrentTime;
-#ifdef XASH_SDL
+
 	if( !g_PerformanceFrequency )
 	{
 		g_PerformanceFrequency = SDL_GetPerformanceFrequency();
@@ -82,8 +80,16 @@ double Sys_DoubleTime( void )
 	}
 	CurrentTime = SDL_GetPerformanceCounter();
 	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
-#else
+}
+#elif XASH_TIMER == TIMER_LINUX
+
+double Sys_DoubleTime( void )
+{
+	static longtime_t g_PerformanceFrequency;
+	static longtime_t g_ClockStart;
+	longtime_t CurrentTime;
 	struct timespec ts;
+
 	if( !g_PerformanceFrequency )
 	{
 		struct timespec res;
@@ -92,9 +98,10 @@ double Sys_DoubleTime( void )
 	}
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
-#endif
 }
 #endif
+
+#define DEBUG_BREAK
 
 #ifdef GDB_BREAK
 #include <fcntl.h>
@@ -189,11 +196,11 @@ freeze application for some time
 void Sys_Sleep( int msec )
 {
 	msec = bound( 1, msec, 1000 );
-#ifdef XASH_SDL
+#if XASH_TIMER == TIMER_SDL
 	SDL_Delay( msec );
-#elif defined _WIN32
+#elif XASH_TIMER == TIMER_WIN32
 	Sleep( msec );
-#else
+#elif XASH_TIMER == TIMER_LINUX
 	usleep( msec * 1000 );
 #endif
 }

@@ -13,15 +13,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef XASH_DEDICATED
-#ifndef XASH_NANOGL
-
 #include "common.h"
+#if XASH_VIDEO == VIDEO_SDL
 #include "client.h"
 #include "gl_local.h"
 #include "mod_local.h"
 #include "input.h"
 #include "gl_vidnt.h"
+
+
 
 #if (defined(_WIN32) && defined(XASH_SDL))
 #include <SDL_syswm.h>
@@ -1288,5 +1288,4 @@ void R_Free_OpenGL( void )
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
 	glw_state.initialized = false;
 }
-#endif //XASH3D_NANOGL
-#endif // XASH_DEDICATED
+#endif //XASH_VIDEO

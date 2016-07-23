@@ -13,10 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef XASH_DEDICATED
-#if defined(__ANDROID__) && defined(XASH_NANOGL) && !defined(XASH_SDL)
 
 #include "common.h"
+#if XASH_VIDEO == VIDEO_ANDROID
 #include "client.h"
 #include "gl_local.h"
 #include "mod_local.h"
@@ -674,5 +673,4 @@ void R_Free_OpenGL( void )
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
 	glw_state.initialized = false;
 }
-#endif
-#endif // XASH_DEDICATED
+#endif // XASH_VIDEO

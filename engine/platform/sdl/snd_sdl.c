@@ -13,15 +13,15 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef XASH_DEDICATED
-#ifndef XASH_OPENSL
+
 
 #include "port.h"
+#if XASH_SOUND == SOUND_SDL
 #include "common.h"
 #include "sound.h"
-#ifdef XASH_SDL
+
 #include <SDL.h>
-#endif
+
 #define SAMPLE_16BIT_SHIFT		1
 #define SECONDARY_BUFFER_SIZE		0x10000
 
@@ -38,7 +38,6 @@ dma_t			dma;
 //static qboolean	snd_firsttime = true;
 //static qboolean	primary_format_set;
 
-#ifdef XASH_SDL
 void SDL_SoundCallback( void* userdata, Uint8* stream, int len)
 {
 	int size = dma.samples << 1;
@@ -69,10 +68,9 @@ qboolean SNDDMA_Init( void *hInst )
 	SDL_AudioSpec desired, obtained;
 	int ret = 0;
 
-	if (SDL_WasInit(SDL_INIT_AUDIO) == 0)
-		ret = SDL_InitSubSystem(SDL_INIT_AUDIO);
-	if (ret == -1) {
-		Con_Printf("Couldn't initialize SDL audio: %s\n", SDL_GetError());
+	if( SDL_Init( SDL_INIT_AUDIO ) )
+	{
+		MsgDev( D_ERROR, "Audio: SDL: %s \n", SDL_GetError() );
 		return false;
 	}
 
@@ -132,12 +130,7 @@ fail:
 	SNDDMA_Shutdown();
 	return false;
 }
-#else
-qboolean SNDDMA_Init( void *hInst )
-{
-	return false;
-}
-#endif
+
 /*
 ==============
 SNDDMA_GetDMAPos
@@ -198,9 +191,7 @@ Makes sure dma.buffer is valid
 */
 void SNDDMA_BeginPainting( void )
 {
-#ifdef XASH_SDL
 	SDL_LockAudio();
-#endif
 }
 
 /*
@@ -213,9 +204,7 @@ Also unlocks the dsound buffer
 */
 void SNDDMA_Submit( void )
 {
-#ifdef XASH_SDL
 	SDL_UnlockAudio();
-#endif
 }
 
 /*
@@ -229,11 +218,11 @@ void SNDDMA_Shutdown( void )
 {
 	Con_Printf("Shutting down audio.\n");
 	dma.initialized = false;
-#ifdef XASH_SDL
+
 	SDL_CloseAudio();
 	if (SDL_WasInit(SDL_INIT_AUDIO != 0))
 		 SDL_QuitSubSystem(SDL_INIT_AUDIO);
-#endif
+
 	if (dma.buffer) {
 		 Z_Free(dma.buffer);
 		 dma.buffer = NULL;
@@ -247,9 +236,6 @@ S_PrintDeviceName
 */
 void S_PrintDeviceName( void )
 {
-#ifdef XASH_SDL
 	Msg( "Audio: SDL (driver: %s)\n", SDL_GetCurrentAudioDriver() );
-#endif
 }
 #endif
-#endif // XASH_DEDICATED

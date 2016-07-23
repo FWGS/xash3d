@@ -494,7 +494,7 @@ void IN_MouseEvent( int mstate )
 	in_mouse_oldbuttonstate = mstate;
 }
 
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 /*
 ==========================
 SDL Joystick Code
@@ -613,7 +613,7 @@ void IN_Init( void )
 	cl_forwardspeed	= Cvar_Get( "cl_forwardspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default forward move speed" );
 	cl_backspeed	= Cvar_Get( "cl_backspeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default back move speed"  );
 	cl_sidespeed	= Cvar_Get( "cl_sidespeed", "400", CVAR_ARCHIVE | CVAR_CLIENTDLL, "Default side move speed"  );
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 	if( !Host_IsDedicated() )
 		IN_SDL_JoyInit();
 #endif
@@ -724,7 +724,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 	if(active)
 	{
 		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 		IN_SDL_JoyMove( frametime, &forward, &side, &dpitch, &dyaw );
 		if( m_enginemouse->integer )
 		{
@@ -763,7 +763,7 @@ void Host_InputFrame( void )
 	{
 		int dx, dy;
 
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 		IN_SDL_JoyMove( host.frametime, &forward, &side, &pitch, &yaw );
 #ifndef __ANDROID__
 		if( in_mouseinitialized )
