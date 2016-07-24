@@ -854,20 +854,63 @@ void CL_BloodStream( const vec3_t org, const vec3_t dir, int pcolor, int speed )
 {
 	particle_t	*p;
 	int		i, j;
+	float arc;
 
-	for( i = 0; i < speed * 20; i++ )
+	for( arc = 0.05, i = 0; i < 100; i++, arc -= 0.005 )
 	{
+		p = CL_AllocParticle( NULL );
+
+		if( !p ) return;
+
+		p->die += 2.0f;
+		p->type = pt_vox_grav;
+		p->color = pcolor + Com_RandomLong( 0, 9 );
+
+		VectorCopy( org, p->org );
+		VectorCopy( dir, p->vel );
+
+		p->vel[2] -= arc;
+		arc -= 0.005;
+
+		VectorScale( p->vel, speed, p->vel );
+	}
+
+	for( arc = 0.075, i = 0; i < speed / 2; i++, arc -= 0.005 )
+	{
+		float num;
+
 		p = CL_AllocParticle( NULL );
 		if( !p ) return;
 
-		p->die += Com_RandomFloat( 0.2f, 0.8f );
-		p->type = pt_vox_grav;
-		p->color = pcolor;
+		p->die += 3.0f;
+		p->color = pcolor + Com_RandomLong( 0, 9 );
+		p->type = pt_vox_slowgrav;
 
-		for( j = 0; j < 3; j++ )
+		VectorCopy( org, p->org );
+
+		VectorCopy( dir, p->vel );
+		p->vel[2] -= arc;
+		num = Com_RandomFloat( 0, 1 );
+		num = 1.7 * num * (int)(num * speed);
+		VectorScale( p->vel, num, p->vel );
+
+		for( j = 0; j < 2; j++ )
 		{
-			p->org[j] = org[j];
-			p->vel[j] = dir[j] * speed;
+			p = CL_AllocParticle( NULL );
+			if( !p ) return;
+
+			p->die += 3.0f;
+			p->color = pcolor + Com_RandomLong( 0, 9 );
+			p->type = pt_vox_slowgrav;
+
+			p->org[0] = org[0] + Com_RandomFloat( -1, 1 );
+			p->org[1] = org[1] + Com_RandomFloat( -1, 1 );
+			p->org[2] = org[2] + Com_RandomFloat( -1, 1 );
+
+			VectorCopy( dir, p->vel );
+			p->vel[2] -= arc;
+
+			VectorScale( p->vel, num, p->vel );
 		}
 	}
 }
