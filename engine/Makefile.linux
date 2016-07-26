@@ -62,11 +62,6 @@ ifeq ($(XASH_VGUI),1)
     DEFINES += -DXASH_VGUI
 endif
 
-%.o : %.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"  -Wno-unused-result -fvisibility=hidden
-
-%.o : %.cpp
-	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"
 
 SRCS_CPP =
 
@@ -82,7 +77,7 @@ SRCS = $(wildcard server/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c)
 ifneq ($(XASH_DEDICATED),1)
 SRCS += $(wildcard client/*.c)
 endif
-OBJS = $(SRCS:.c=.o)
+OBJS = $(patsubst %.c,obj/%.o,$(SRCS))
 ifeq ($(XASH_SINGLE_BINARY),0)
 BINARIES = libxash.so
 libxash.so : $(OBJS) $(OBJS_CPP)
@@ -102,6 +97,23 @@ xash: $(OBJS) $(OBJS_CPP)
     endif
 
 endif
+
+$(OBJS): | obj
+
+obj:
+	mkdir -p obj
+	mkdir -p obj/server
+	mkdir -p obj/client/vgui
+	mkdir -p obj/common/sdl
+	mkdir -p obj/common/imagelib
+	mkdir -p obj/common/soundlib/libmpg
+
+obj/%.o : %.c
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"  -Wno-unused-result -fvisibility=hidden
+
+obj/%.o : %.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"
+
 
 default: $(BINARIES)
 
