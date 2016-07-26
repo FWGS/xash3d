@@ -12,12 +12,16 @@ before_script:
     - mv SDL2-2.0.4 SDL2
     - curl http://libsdl.org/release/SDL2-2.0.4.tar.gz > SDL2-2.0.4.tar.gz
     - tar xf SDL2-2.0.4.tar.gz
+    - git clone https://github.com/FWGS/vgui-dev
+    - git clone https://github.com/FWGS/vgui_support_bin
 script:
     - cd engine
     - make -f Makefile.mingw CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ -j2
-    - 7z a -t7z xash3d-mingw.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash_bin.exe
+    - cp ../vgui_support_bin/vgui_support.dll .
+    - cp ../SDL2/lib/x86/SDL2.dll .
+    - 7z a -t7z xash3d-mingw.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash_bin.exe SDL2.dll vgui_support.dll
     - cd ../SDL2-2.0.4
-    - CC="gcc -m32 -ggdb -O2" ./configure --disable-dependency-tracking --enable-audio --enable-video --enable-events --disable-render --enable-joystick --disable-haptic --disable-power --disable-threads --enable-timers --enable-loadso --enable-video-opengl --enable-x11-shared --enable-video-x11 --enable-video-x11-xrandr --enable-video-x11-scrnsaver --disable-libudev --disable-dbus --disable-ibus --enable-sdl-dlopen --disable-video-opengles --disable-cpuinfo --disable-assembly --disable-atomic
+    - CC="gcc -msse2 -march=i686 -m32 -ggdb -O2" ./configure --disable-dependency-tracking --enable-audio --enable-video --enable-events --disable-render --enable-joystick --disable-haptic --disable-power --enable-threads --enable-timers --enable-loadso --enable-video-opengl --enable-x11-shared --enable-video-x11 --enable-video-x11-xrandr --enable-video-x11-scrnsaver --enable-video-x11-xinput --disable-video-x11-xshape --disable-video-x11-xdbe --disable-libudev --disable-dbus --disable-ibus --enable-sdl-dlopen --disable-video-opengles --disable-cpuinfo --disable-assembly --disable-atomic
     - make -j2
     - cp build/.libs/libSDL2.so ../engine/
     - cd ../loader
@@ -25,8 +29,11 @@ script:
     - cp libloader.a ../engine
     - cd ../engine
     - make -f Makefile.linux -j2 XASH_VGUI=0 XASH_SINGLE_BINARY=1 XASH_DLL_LOADER=1 clean
-    - make -f Makefile.linux -j2 CC="gcc -m32" LDFLAGS="-L. libSDL2.so" CFLAGS="-O3 -ggdb -I../SDL2-2.0.4/include/ -mssse3 -march=nocona -w" XASH_VGUI=1 XASH_SINGLE_BINARY=1 xash
-    - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2.so
+    - make -f Makefile.linux -j2 CC="gcc -m32" LDFLAGS="-L. libSDL2.so -static-libgcc" CFLAGS="-O2 -ggdb -I../SDL2-2.0.4/include/ -msse2 -march=i686 -w" XASH_VGUI=1 XASH_SINGLE_BINARY=1 xash
+    - cp ../vgui-dev/lib/vgui.so .
+    - cp ../vgui_support_bin/libvgui_support.so .
+    - mv libSDL2.so libSDL2-2.0.so.0
+    - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2-2.0.so.0 libvgui_support.so vgui.so
 after_script:
     - curl --upload-file xash3d-mingw.7z https://transfer.sh/xash3d-mingw-`date -u +%y-%m-%d_%H-%M`.7z
     - curl --upload-file xash3d-linux.7z https://transfer.sh/xash3d-linux-`date -u +%y-%m-%d_%H-%M`.7z
