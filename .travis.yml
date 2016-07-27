@@ -7,7 +7,7 @@ before_script:
     - sudo apt-get install -qq --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
     - sudo apt-get install -qq --force-yes gcc-multilib
     - sudo apt-get install -qq --force-yes libX11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev
-    - sudo apt-get install -qq --forcs-yes libasound-dev
+    - sudo apt-get install -qq --force-yes libasound-dev
     - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
     - tar xf SDL2-devel-2.0.4-mingw.tar.gz
     - mv SDL2-2.0.4 SDL2
