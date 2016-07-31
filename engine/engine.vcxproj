@@ -209,7 +209,6 @@
     <ClInclude Include="common\filesystem.h" />
     <ClInclude Include="common\imagelib\imagelib.h" />
     <ClInclude Include="common\input.h" />
-    <ClCompile Include="common\joyinput.h" />
     <ClInclude Include="common\library.h" />
     <ClInclude Include="common\mathlib.h" />
     <ClInclude Include="common\mod_local.h" />
