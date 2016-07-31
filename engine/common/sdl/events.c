@@ -20,80 +20,77 @@ static SDL_Joystick *joy;
 
 void R_ChangeDisplaySettingsFast( int w, int h );
 
+#define DECLARE_KEY_RANGE( min, max, repl ) if( keynum >= (min) && keynum <= (max) ) { keynum = keynum - (min) + (repl); }
+
 void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 {
-	int keynum = key.keysym.sym;
-	switch( key.keysym.sym )
+	int keynum = key.keysym.scancode;
+
+	DECLARE_KEY_RANGE( SDL_SCANCODE_A, SDL_SCANCODE_Z, 'a' )
+	else DECLARE_KEY_RANGE( SDL_SCANCODE_1, SDL_SCANCODE_9, '1' )
+	else DECLARE_KEY_RANGE( SDL_SCANCODE_F1, SDL_SCANCODE_F12, K_F1 )
+	else
 	{
-	case SDLK_BACKSPACE:
-		keynum = K_BACKSPACE; break;
-	case SDLK_UP:
-		keynum = K_UPARROW; break;
-	case SDLK_DOWN:
-		keynum = K_DOWNARROW; break;
-	case SDLK_LEFT:
-		keynum = K_LEFTARROW; break;
-	case SDLK_RIGHT:
-		keynum = K_RIGHTARROW; break;
-	case SDLK_LALT:
-	case SDLK_RALT:
-		keynum = K_ALT;	break;
-	case SDLK_RSHIFT:
-	case SDLK_LSHIFT:
-		keynum = K_SHIFT; break;
-	case SDLK_RCTRL:
-	case SDLK_LCTRL:
-		keynum = K_CTRL; break;
-	case SDLK_INSERT:
-		keynum = K_INS;	break;
-	case SDLK_DELETE:
-		keynum = K_DEL; break;
-	case SDLK_PAGEUP:
-		keynum = K_PGUP; break;
-	case SDLK_PAGEDOWN:
-		keynum = K_PGDN; break;
-	case SDLK_HOME:
-		keynum = K_HOME; break;
-	case SDLK_END:
-		keynum = K_END;	break;
-	case ANDROID_K_BACK:
-		keynum = K_ESCAPE; break;
-	case SDLK_SELECT:
-		keynum = K_ENTER; break;
-	case SDLK_CAPSLOCK:
-		keynum = K_CAPSLOCK; break;
-	case SDLK_KP_PLUS:
-		keynum = K_KP_PLUS;	break;
-	case SDLK_KP_MINUS:
-		keynum = K_KP_MINUS; break;
-	case SDLK_KP_ENTER:
-		keynum = K_KP_ENTER; break;
-	case SDLK_KP_DIVIDE:
-		keynum = K_KP_SLASH; break;
-	case SDLK_NUMLOCKCLEAR:
-		keynum = K_KP_NUMLOCK; break;
-	case SDLK_VOLUMEDOWN:
-		keynum = K_AUX31; break;
-	case SDLK_VOLUMEUP:
-		keynum = K_AUX32; break;
-	case SDLK_PAUSE:
-		keynum = K_PAUSE; break;
-#ifdef __ANDROID__
-	case SDLK_MENU:
-		keynum = K_AUX30;
-#endif
+		switch( keynum )
+		{
+		case SDL_SCANCODE_GRAVE: keynum = '`'; break;
+		case SDL_SCANCODE_0: keynum = '0'; break;
+		case SDL_SCANCODE_BACKSLASH: keynum = '\\'; break;
+		case SDL_SCANCODE_LEFTBRACKET: keynum = '['; break;
+		case SDL_SCANCODE_RIGHTBRACKET: keynum = ']'; break;
+		case SDL_SCANCODE_TAB: keynum = K_TAB; break;
+		case SDL_SCANCODE_RETURN: keynum = K_ENTER; break;
+		case SDL_SCANCODE_ESCAPE: keynum = K_ESCAPE; break;
+		case SDL_SCANCODE_SPACE: keynum = K_SPACE; break;
+		case SDL_SCANCODE_BACKSPACE: keynum = K_BACKSPACE; break;
+		case SDL_SCANCODE_UP: keynum = K_UPARROW; break;
+		case SDL_SCANCODE_LEFT: keynum = K_LEFTARROW; break;
+		case SDL_SCANCODE_DOWN: keynum = K_DOWNARROW; break;
+		case SDL_SCANCODE_RIGHT: keynum = K_RIGHTARROW; break;
+		case SDL_SCANCODE_LALT:
+		case SDL_SCANCODE_RALT: keynum = K_ALT; break;
+		case SDL_SCANCODE_LCTRL:
+		case SDL_SCANCODE_RCTRL: keynum = K_CTRL; break;
+		case SDL_SCANCODE_LSHIFT:
+		case SDL_SCANCODE_RSHIFT: keynum = K_SHIFT; break;
+		case SDL_SCANCODE_LGUI:
+		case SDL_SCANCODE_RGUI: keynum = K_WIN; break;
+		case SDL_SCANCODE_INSERT: keynum = K_INS; break;
+		case SDL_SCANCODE_DELETE: keynum = K_DEL; break;
+		case SDL_SCANCODE_PAGEDOWN: keynum = K_PGDN; break;
+		case SDL_SCANCODE_PAGEUP: keynum = K_PGUP; break;
+		case SDL_SCANCODE_HOME: keynum = K_HOME; break;
+		case SDL_SCANCODE_END: keynum = K_END; break;
+		case SDL_SCANCODE_KP_7: keynum = K_KP_HOME; break;
+		case SDL_SCANCODE_KP_8: keynum = K_KP_UPARROW; break;
+		case SDL_SCANCODE_KP_9: keynum = K_KP_PGUP; break;
+		case SDL_SCANCODE_KP_4: keynum = K_KP_LEFTARROW; break;
+		case SDL_SCANCODE_KP_5: keynum = K_KP_5; break;
+		case SDL_SCANCODE_KP_6: keynum = K_KP_RIGHTARROW; break;
+		case SDL_SCANCODE_KP_1: keynum = K_KP_END; break;
+		case SDL_SCANCODE_KP_2: keynum = K_KP_DOWNARROW; break;
+		case SDL_SCANCODE_KP_3: keynum = K_KP_PGDN; break;
+		case SDL_SCANCODE_KP_0: keynum = K_KP_INS; break;
+		case SDL_SCANCODE_KP_PERIOD: keynum = K_KP_DEL; break;
+		case SDL_SCANCODE_KP_ENTER: keynum = K_KP_ENTER; break;
+		case SDL_SCANCODE_KP_PLUS: keynum = K_KP_PLUS; break;
+		case SDL_SCANCODE_KP_MINUS: keynum = K_KP_MINUS; break;
+		case SDL_SCANCODE_KP_DIVIDE: keynum = K_KP_SLASH; break;
+		case SDL_SCANCODE_KP_MULTIPLY: keynum = '*'; break;
+		case SDL_SCANCODE_NUMLOCKCLEAR: keynum = K_KP_NUMLOCK; break;
+		case SDL_SCANCODE_CAPSLOCK: keynum = K_CAPSLOCK; break;
+		case SDL_SCANCODE_APPLICATION: keynum = K_WIN; break; // (compose key) ???
+		case SDL_SCANCODE_UNKNOWN:
+		{
+			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n");
+			return;
+		}
+		default:
+			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown key: %s = %i\n", SDL_GetScancodeName(keynum), keynum );
+			return;
+		}
 	}
 
-	if( (key.keysym.sym >= SDLK_F1) &&
-		(key.keysym.sym <= SDLK_F12) )
-	{
-		keynum = key.keysym.scancode + 77;
-	}
-	if( (key.keysym.sym >= SDLK_KP_1) &&
-		(key.keysym.sym <= SDLK_KP_0) )
-	{
-		keynum = key.keysym.scancode - 40;
-	}
 	Key_Event(keynum, down);
 }
 
