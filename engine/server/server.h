@@ -443,7 +443,6 @@ extern	convar_t		*sv_quakehulls;
 extern	convar_t		*sv_validate_changelevel;
 extern	convar_t		*sv_downloadurl;
 extern	convar_t		*sv_clientclean;
-extern	convar_t		*sv_fakegamedir;
 extern 	convar_t		*sv_skipshield; // HACK for shield
 extern	convar_t		*sv_trace_messages;
 extern	convar_t		*mp_consistency;
@@ -481,6 +480,7 @@ void SV_SendResourceList_f( sv_client_t *cl );
 void Master_Add( void );
 void Master_Heartbeat( void );
 void Master_Packet( void );
+void SV_AddToMaster( netadr_t from, sizebuf_t *msg );
 
 //
 // sv_init.c
@@ -549,6 +549,7 @@ qboolean SV_IsPlayerIndex( int idx );
 void SV_InitClientMove( void );
 void SV_UpdateServerInfo( void );
 void SV_EndRedirect( void );
+void SV_RemoteCommand( netadr_t from, sizebuf_t *msg );
 //
 // sv_cmds.c
 //

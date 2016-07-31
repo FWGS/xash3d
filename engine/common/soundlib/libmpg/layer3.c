@@ -286,7 +286,7 @@ void init_layer3(struct StaticData * psd, int down_sample_sblimit)
  */
 #ifdef MPEG1
 static int III_get_side_info_1(struct StaticData * psd, struct III_sideinfo *si,int stereo,
- int ms_stereo,long sfreq,int single)
+ int ms_stereo,int sfreq,int single)
 {
    int ch, gr;
 
@@ -374,7 +374,7 @@ static int III_get_side_info_1(struct StaticData * psd, struct III_sideinfo *si,
  * Side Info for MPEG 2.0 / LSF
  */
 static int III_get_side_info_2(struct StaticData * psd, struct III_sideinfo *si,int stereo,
- int ms_stereo,long sfreq,int single)
+ int ms_stereo,int sfreq,int single)
 {
    int ch;
 
@@ -1509,7 +1509,7 @@ int do_layer3(struct StaticData * psd, struct mpstr * gmp, struct frame *fr, uns
   {
     {
       struct gr_info_s *gr_info = &(sideinfo.ch[0].gr[gr]);
-      long part2bits;
+	  int part2bits;
       if(fr->lsf)
         part2bits = III_get_scale_factors_2(psd, scalefacs[0],gr_info,0);
       else {
@@ -1522,7 +1522,7 @@ int do_layer3(struct StaticData * psd, struct mpstr * gmp, struct frame *fr, uns
     }
     if(stereo == 2) {
       struct gr_info_s *gr_info = &(sideinfo.ch[1].gr[gr]);
-      long part2bits;
+	  int part2bits;
       if(fr->lsf)
         part2bits = III_get_scale_factors_2(psd, scalefacs[1],gr_info,i_stereo);
       else {

@@ -13,12 +13,16 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "const.h"
 #include "entity_types.h"
 #include "gl_local.h"
 #include "vgui_draw.h"
+#include "touch.h" // IN_TouchDraw( )
+#include "joyinput.h" // Joy_DrawOnScreenKeyboard( )
 
 /*
 ===============
@@ -420,6 +424,9 @@ void V_PostRender( void )
 		Con_DrawConsole();
 		UI_UpdateMenu( host.realtime );
 		Con_DrawVersion();
+#if 0
+		Joy_DrawOnScreenKeyboard();
+#endif
 		Con_DrawDebug(); // must be last
 		S_ExtraUpdate();
 	}
@@ -427,3 +434,4 @@ void V_PostRender( void )
 	SCR_MakeScreenShot();
 	R_EndFrame();
 }
+#endif // XASH_DEDICATED

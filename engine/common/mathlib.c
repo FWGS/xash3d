@@ -13,6 +13,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#if defined (__linux__) && !defined (__ANDROID__)
+//sincosf
+#define _GNU_SOURCE
+#include <math.h>
+#endif
 #include "common.h"
 #include "mathlib.h"
 

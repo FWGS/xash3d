@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "const.h"
@@ -362,7 +364,7 @@ pfnPIC_Load
 
 =========
 */
-static HIMAGE pfnPIC_Load( const char *szPicName, const byte *image_buf, long image_size, long flags )
+static HIMAGE pfnPIC_Load( const char *szPicName, const byte *image_buf, int image_size, int flags )
 {
 	HIMAGE	tx;
 
@@ -840,20 +842,22 @@ pfnCheckGameDll
 */
 int pfnCheckGameDll( void )
 {
-	//void	*hInst;
+	void	*hInst;
 
-	//if( SV_Active( )) return true;
+	if( SV_Active( ) )
+		return true;
 
-	// UCyborg: Does this have issues? I see it's used
-	// to grey out menu options to start new game if
-	// server library can't be loaded. Commented out the
-	// rest with double slashes so compiler doesn't complain.
-	/*if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
+	if( Cvar_VariableInteger("xashds_hacks") )
+		return true;
+	Com_ResetLibraryError();
+	if(( hInst = Com_LoadLibrary( SI.gamedll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
 		return true;
-	}*/ return true;
-	//return false;
+	}
+	MsgDev( D_WARN, "Could not load server library:\n%s", Com_GetLibraryError() );
+	Com_ResetLibraryError();
+	return false;
 }
 
 /*
@@ -907,15 +911,13 @@ static void pfnStartBackgroundTrack( const char *introTrack, const char *mainTra
 
 static void pfnEnableTextInput( int enable )
 {
-#ifdef XASH_SDL
-	SDLash_EnableTextInput( enable );
-#endif
+	Key_EnableTextInput( enable, false );
 }
 
 // engine callbacks
 static ui_enginefuncs_t gEngfuncs = 
 {
-	pfnPIC_Load,
+	(void*)pfnPIC_Load,
 	GL_FreeImage,
 	pfnPIC_Width,
 	pfnPIC_Height,
@@ -938,10 +940,10 @@ static ui_enginefuncs_t gEngfuncs =
 	Cmd_Argc,
 	Cmd_Argv,
 	Cmd_Args,
-	Con_Printf,
-	Con_DPrintf,
-	UI_NPrintf,
-	UI_NXPrintf,
+	(void*)Con_Printf,
+	(void*)Con_DPrintf,
+	(void*)UI_NPrintf,
+	(void*)UI_NXPrintf,
 	pfnPlaySound,
 	UI_DrawLogo,
 	UI_GetLogoWidth,
@@ -958,10 +960,10 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnRenderScene,
 	CL_AddEntity,
 	Host_Error,
-	FS_FileExists,
+	(void*)FS_FileExists,
 	pfnGetGameDir,
-	Cmd_CheckMapsList,
-	CL_Active,
+	(void*)Cmd_CheckMapsList,
+	(void*)CL_Active,
 	pfnClientJoin,
 	COM_LoadFileForMe,
 	COM_ParseFile,
@@ -971,7 +973,7 @@ static ui_enginefuncs_t gEngfuncs =
 	Key_KeynumToString,
 	Key_GetBinding,
 	Key_SetBinding,
-	Key_IsDown,
+	(void*)Key_IsDown,
 	pfnKeyGetOverstrikeMode,
 	pfnKeySetOverstrikeMode,
 	pfnKeyGetState,
@@ -980,21 +982,21 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnGetGameInfo,
 	pfnGetGamesList,
 	pfnGetFilesList,
-	SV_GetComment,
-	CL_GetComment,
+	(void*)SV_GetComment,
+	(void*)CL_GetComment,
 	pfnCheckGameDll,
 	pfnGetClipboardData,
-	Sys_ShellExecute,
+	(void*)Sys_ShellExecute,
 	Host_WriteServerConfig,
 	pfnChangeInstance,
 	pfnStartBackgroundTrack,
 	pfnHostEndGame,
 	Com_RandomFloat,
-	Com_RandomLong,
-	IN_SetCursor,
+	(void*)Com_RandomLong,
+	(void*)IN_SetCursor,
 	pfnIsMapValid,
 	GL_ProcessTexture,
-	COM_CompareFileTime,
+	(void*)COM_CompareFileTime,
 };
 
 static ui_textfuncs_t gTextfuncs =
@@ -1103,3 +1105,4 @@ qboolean UI_LoadProgs( void )
 
 	return true;
 }
+#endif // XASH_DEDICATED

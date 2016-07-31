@@ -1329,6 +1329,7 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 		}
 	}
 
+	Q_memset( send_buf, 0, NET_MAX_MESSAGE );
 	BF_Init( &send, "NetSend", send_buf, sizeof( send_buf ));
 
 	// prepare the packet header

@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -81,9 +83,6 @@ GL_Bind
 */
 void GL_Bind( GLint tmu, GLenum texnum )
 {
-#ifdef __ANDROID__
-	tmu = tmu - GL_TEXTURE0;
-#endif
 	gltexture_t	*texture;
 
 	// missed texture ?
@@ -94,12 +93,17 @@ void GL_Bind( GLint tmu, GLenum texnum )
 		GL_SelectTexture( tmu );
 	else tmu = glState.activeTMU;
 
+	// wrong texture unit
+	//if( tmu < 0 || tmu >= MAX_TEXTURE_UNITS )
+		//return;
+
 	texture = &r_textures[texnum];
 
 	if( glState.currentTextureTargets[tmu] != texture->target )
 	{
 		if( glState.currentTextureTargets[tmu] != GL_NONE )
 			pglDisable( glState.currentTextureTargets[tmu] );
+
 		glState.currentTextureTargets[tmu] = texture->target;
 		pglEnable( glState.currentTextureTargets[tmu] );
 	}
@@ -355,7 +359,7 @@ void R_SetTextureParameters( void )
 	for( i = 0, texture = r_textures; i < r_numTextures; i++, texture++ )
 	{
 		if( !texture->texnum ) continue;	// free slot
-		GL_Bind( GL_TEXTURE0, i );
+		GL_Bind( XASH_TEXTURE0, i );
 		GL_TexFilter( texture, true );
 	}
 }
@@ -1068,7 +1072,7 @@ static void GL_TextureImage( GLenum inFormat, GLenum outFormat, GLenum glTarget,
 
 static void GL_TextureImageDXT( GLenum format, GLenum glTarget, GLint side, GLint level, GLint width, GLint height, GLint depth, qboolean subImage, size_t size, const void *data )
 {
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 	if( glTarget == GL_TEXTURE_1D )
 	{
 		if( subImage ) pglCompressedTexSubImage1DARB( glTarget, level, 0, width, format, size, data );
@@ -1504,7 +1508,7 @@ int GL_LoadTexture( const char *name, const byte *buf, size_t size, int flags, i
 			return 0;
 
 		// parse image program
-		pic = R_LoadImage( &script, token, buf, size, &samples, &flags );
+		pic = R_LoadImage( &script, token, buf, size, &samples, (texFlags_t*)&flags );
 		if( !pic ) return 0; // couldn't loading image
 
 		// recalc image samples here
@@ -1799,7 +1803,7 @@ void GL_FreeImage( const char *name )
 
 	if( Q_strlen( name ) >= sizeof( r_textures->name ))
 	{
-		MsgDev( D_ERROR, "GL_FreeImage: too long name %s\n", name, sizeof( r_textures->name ));
+		MsgDev( D_ERROR, "GL_FreeImage: too long name %s\n", name );
 		return;
 	}
 
@@ -3191,7 +3195,9 @@ static rgbdata_t *R_ParseStudioSkin( char **script, const byte *buf, size_t size
 		tex = ptexture + i;
 
 		// NOTE: replace index with pointer to start of imagebuffer, ImageLib expected it
-		tex->index = (int)pin + tex->index;
+		//tex->index = (int)pin + tex->index;
+		// no more pointer-to-int-to-pointer casts
+		Image_SetMDLPointer((byte*)pin + tex->index);
 		tex_size = sizeof( mstudiotexture_t ) + tex->width * tex->height + 768;
 
 		// load studio texture and bind it
@@ -4612,3 +4618,4 @@ void R_ShutdownImages( void )
 	Q_memset( r_textures, 0, sizeof( r_textures ));
 	r_numTextures = 0;
 }
+#endif // XASH_DEDICATED

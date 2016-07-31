@@ -31,10 +31,16 @@ extern "C" {
 #define MSGBOX( x )		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Xash Error", x, NULL )
 #define MSGBOX2( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Error", x, NULL )
 #define MSGBOX3( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Recursive Error", x, NULL )
+#elif defined(__ANDROID__)
+#define MSGBOX( x )		Android_MessageBox("Xash Error", x )
+#define MSGBOX2( x )	Android_MessageBox("Host Error", x )
+#define MSGBOX3( x )	Android_MessageBox("Host Recursive Error", x )
+
 #else
-#define MSGBOX( x )	 fprintf(stderr, "Xash Error: %s\n",x)
-#define MSGBOX2( x )	 fprintf(stderr, "Host Error: %s\n",x)
-#define MSGBOX3( x )	 fprintf(stderr, "Host Recursive Error: %s\n",x)
+#define BORDER1 "======================================\n"
+#define MSGBOX( x )	 fprintf(stderr, BORDER1"Xash Error: %s\n"BORDER1,x)
+#define MSGBOX2( x )	 fprintf(stderr, BORDER1"Host Error: %s\n"BORDER1,x)
+#define MSGBOX3( x )	 fprintf(stderr, BORDER1"Host Recursive Error: %s\n"BORDER1,x)
 #endif
 // basic typedefs
 
@@ -87,8 +93,9 @@ double Sys_DoubleTime( void );
 char *Sys_GetClipboardData( void );
 char *Sys_GetCurrentUser( void );
 int Sys_CheckParm( const char *parm );
-void Sys_Error( const char *error, ... );
-void Sys_Break( const char *error, ... );
+void Sys_Error( const char *format, ... ) _format(1);
+void Sys_Break( const char *format, ... ) _format(1);
+void Sys_Warn( const char *format, ... ) _format(1);
 qboolean Sys_LoadLibrary( dll_info_t *dll );
 void* Sys_GetProcAddress( dll_info_t *dll, const char* name );
 qboolean Sys_FreeLibrary( dll_info_t *dll );
@@ -123,8 +130,8 @@ void Con_DisableInput( void );
 char *Con_Input( void );
 
 // text messages
-void Msg( const char *pMsg, ... );
-void MsgDev( int level, const char *pMsg, ... );
+void Msg( const char *pMsg, ... ) _format(1);
+void MsgDev( int level, const char *pMsg, ... ) _format(2);
 
 #ifdef __cplusplus
 }

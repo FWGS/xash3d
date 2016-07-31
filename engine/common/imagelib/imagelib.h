@@ -106,20 +106,20 @@ typedef struct imglib_s
 typedef struct
 {
 	//char	id[2];		// bmfh.bfType
-	dword	fileSize;		// bmfh.bfSize
-	dword	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
-	dword	bitmapDataOffset;	// bmfh.bfOffBits
-	dword	bitmapHeaderSize;	// bmih.biSize
-	int	width;		// bmih.biWidth
+	uint	fileSize;		// bmfh.bfSize
+	uint	reserved0;	// bmfh.bfReserved1 + bmfh.bfReserved2
+	uint	bitmapDataOffset;	// bmfh.bfOffBits
+	uint	bitmapHeaderSize;	// bmih.biSize
+	uint	width;		// bmih.biWidth
 	int	height;		// bmih.biHeight
 	word	planes;		// bmih.biPlanes
 	word	bitsPerPixel;	// bmih.biBitCount
-	dword	compression;	// bmih.biCompression
-	dword	bitmapDataSize;	// bmih.biSizeImage
-	dword	hRes;		// bmih.biXPelsPerMeter
-	dword	vRes;		// bmih.biYPelsPerMeter
-	dword	colors;		// bmih.biClrUsed
-	dword	importantColors;	// bmih.biClrImportant
+	uint	compression;	// bmih.biCompression
+	uint	bitmapDataSize;	// bmih.biSizeImage
+	uint	hRes;		// bmih.biXPelsPerMeter
+	uint	vRes;		// bmih.biYPelsPerMeter
+	uint	colors;		// bmih.biClrUsed
+	uint	importantColors;	// bmih.biClrImportant
 } bmp_t;
 
 /*

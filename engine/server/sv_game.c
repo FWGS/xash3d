@@ -715,7 +715,7 @@ char *SV_ReadEntityScript( const char *filename, int *flags )
 	ft1 = FS_FileTime( bspfilename, false );
 	ft2 = FS_FileTime( entfilename, true );
 
-	if( ft2 != -1 && ft1 < ft2 )
+	if( ft2 != (unsigned long)-1 && ft1 < ft2 )
 	{
 		// grab .ent files only from gamedir
 		ents = (char *)FS_LoadFile( entfilename, NULL, true ); 
@@ -2100,7 +2100,7 @@ SV_StartMusic
 void SV_StartMusic( const char *curtrack, const char *looptrack, fs_offset_t position )
 {
 	BF_WriteByte( &sv.multicast, svc_stufftext );
-	BF_WriteString( &sv.multicast, va( "music \"%s\" \"%s\" %i\n", curtrack, looptrack, position ));
+	BF_WriteString( &sv.multicast, va( "music \"%s\" \"%s\" %i\n", curtrack, looptrack, (int)position ));
 	SV_Send( MSG_ALL, NULL, NULL );
 }
 
@@ -2659,7 +2659,7 @@ pfnWriteChar
 */
 void pfnWriteChar( int iValue )
 {
-	BF_WriteChar( &sv.multicast, (char)iValue );
+	BF_WriteChar( &sv.multicast, (signed char)iValue );
 	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteChar( %i )\n", iValue );
 	svgame.msg_realsize++;
 }
@@ -2787,7 +2787,7 @@ void pfnWriteEntity( int iValue )
 	if( iValue < 0 || iValue >= svgame.numEntities )
 		Host_Error( "BF_WriteEntity: invalid entnumber %i\n", iValue );
 	BF_WriteShort( &sv.multicast, (short)iValue );
-	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteEntity( %s )\n", iValue );
+	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteEntity( %i )\n", iValue );
 	svgame.msg_realsize += 2;
 }
 
@@ -2837,6 +2837,8 @@ static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	case at_error:
 		if( host.developer < D_ERROR )
 			return;
+		break;
+	default:
 		break;
 	}
 
@@ -2941,6 +2943,11 @@ void pfnFreeEntPrivateData( edict_t *pEdict )
 	SV_FreePrivateData( pEdict );
 }
 
+#ifdef __amd64__
+char g_stringbase[65536];
+char *pLastsStr = g_stringbase;
+#endif
+
 /*
 =============
 SV_AllocString
@@ -2954,10 +2961,16 @@ string_t SV_AllocString( const char *szValue )
 
 	if( svgame.physFuncs.pfnAllocString != NULL )
 		return svgame.physFuncs.pfnAllocString( szValue );
+#ifdef __amd64__
+	newString = pLastsStr;
+	pLastsStr += Q_strcpy(pLastsStr,szValue) + 1;
 
+	return newString - g_stringbase;
+#else
 	newString = _copystring( svgame.stringspool, szValue, __FILE__, __LINE__ );
 	return newString - svgame.globals->pStringBase;
-}		
+#endif
+}
 
 /*
 =============
@@ -2970,8 +2983,12 @@ string_t SV_MakeString( const char *szValue )
 {
 	if( svgame.physFuncs.pfnMakeString != NULL )
 		return svgame.physFuncs.pfnMakeString( szValue );
+#ifndef __amd64__
 	return szValue - svgame.globals->pStringBase;
-}		
+#else
+	return SV_AllocString(szValue);
+#endif
+}
 
 
 /*
@@ -3203,7 +3220,7 @@ pfnFunctionFromName
 
 =============
 */
-dword pfnFunctionFromName( const char *pName )
+void *pfnFunctionFromName( const char *pName )
 {
 	return Com_FunctionFromName( svgame.hInstance, pName );
 }
@@ -3214,7 +3231,7 @@ pfnNameForFunction
 
 =============
 */
-const char *pfnNameForFunction( dword function )
+const char *pfnNameForFunction( void *function )
 {
 	return Com_NameForFunction( svgame.hInstance, (void *)function );
 }
@@ -3232,7 +3249,7 @@ void pfnClientPrintf( edict_t* pEdict, PRINT_TYPE ptype, const char *szMsg )
 	if( sv.state != ss_active )
 	{
 		// send message into console during loading
-		MsgDev( D_INFO, szMsg );
+		MsgDev( D_INFO, "%s\n", szMsg );
 		return;
 	}
 
@@ -3245,7 +3262,7 @@ void pfnClientPrintf( edict_t* pEdict, PRINT_TYPE ptype, const char *szMsg )
 	switch( ptype )
 	{
 	case print_console:
-		if( client->fakeclient ) MsgDev( D_INFO, szMsg );
+		if( client->fakeclient ) MsgDev( D_INFO, "%s", szMsg );
 		else SV_ClientPrintf( client, PRINT_HIGH, "%s", szMsg );
 		break;
 	case print_chat:
@@ -3269,7 +3286,7 @@ pfnServerPrint
 void pfnServerPrint( const char *szMsg )
 {
 	// while loading in-progress we can sending message only for local client
-	if( sv.state != ss_active ) MsgDev( D_INFO, szMsg );	
+	if( sv.state != ss_active ) MsgDev( D_INFO, "%s", szMsg );
 	else SV_BroadcastPrintf( PRINT_HIGH, "%s", szMsg );
 }
 
@@ -3406,7 +3423,7 @@ pfnIsDedicatedServer
 */
 int pfnIsDedicatedServer( void )
 {
-	return (host.type == HOST_DEDICATED);
+	return (Host_IsDedicated());
 }
 
 /*
@@ -4414,7 +4431,7 @@ static int pfnCheckParm( char *parm, char **ppnext )
 	if( ppnext != NULL )
 	{
 		if( i > 0 && i < host.argc - 1 )
-			*ppnext = host.argv[i + 1];
+			*ppnext = (char*)host.argv[i + 1];
 		else
 			*ppnext = NULL;
 	}
@@ -4424,13 +4441,13 @@ static int pfnCheckParm( char *parm, char **ppnext )
 // engine callbacks
 static enginefuncs_t gEngfuncs = 
 {
-	pfnPrecacheModel,
-	SV_SoundIndex,	
+	(void*)pfnPrecacheModel,
+	(void*)SV_SoundIndex,
 	pfnSetModel,
 	pfnModelIndex,
 	pfnModelFrames,
 	pfnSetSize,	
-	pfnChangeLevel,
+	(void*)pfnChangeLevel,
 	pfnGetSpawnParms,
 	pfnSaveSpawnParms,
 	pfnVecToYaw,
@@ -4463,11 +4480,11 @@ static enginefuncs_t gEngfuncs =
 	pfnTraceTexture,
 	pfnTraceSphere,
 	pfnGetAimVector,
-	pfnServerCommand,
+	(void*)pfnServerCommand,
 	Cbuf_Execute,
 	pfnClientCommand,
 	pfnParticleEffect,
-	pfnLightStyle,
+	(void*)pfnLightStyle,
 	pfnDecalIndex,
 	pfnPointContents,
 	pfnMessageBegin,
@@ -4482,7 +4499,7 @@ static enginefuncs_t gEngfuncs =
 	pfnWriteEntity,
 	Cvar_RegisterVariable,
 	Cvar_VariableValue,
-	Cvar_VariableString,
+	(void*)Cvar_VariableString,
 	Cvar_SetFloat,
 	Cvar_Set,
 	pfnAlertMessage,
@@ -4502,27 +4519,27 @@ static enginefuncs_t gEngfuncs =
 	pfnRegUserMsg,
 	pfnAnimationAutomove,
 	pfnGetBonePosition,
-	pfnFunctionFromName,
-	pfnNameForFunction,	
+	(void*)pfnFunctionFromName,
+	(void*)pfnNameForFunction,
 	pfnClientPrintf,
 	pfnServerPrint,	
-	Cmd_Args,
-	Cmd_Argv,
+	(void*)Cmd_Args,
+	(void*)Cmd_Argv,
 	Cmd_Argc,
 	pfnGetAttachment,
-	CRC32_Init,
-	CRC32_ProcessBuffer,
-	CRC32_ProcessByte,
-	pfnCRC32_Final,
-	Com_RandomLong,
+	(void*)CRC32_Init,
+	(void*)CRC32_ProcessBuffer,
+	(void*)CRC32_ProcessByte,
+	(void*)pfnCRC32_Final,
+	(void*)Com_RandomLong,
 	Com_RandomFloat,
 	pfnSetView,
 	pfnTime,
 	pfnCrosshairAngle,
-	COM_LoadFileForMe,
+	(void*)COM_LoadFileForMe,
 	COM_FreeFile,
 	pfnEndSection,
-	COM_CompareFileTime,
+	(void*)COM_CompareFileTime,
 	pfnGetGameDir,
 	Cvar_RegisterVariable,
 	pfnFadeClientVolume,
@@ -4531,25 +4548,25 @@ static enginefuncs_t gEngfuncs =
 	pfnRunPlayerMove,
 	pfnNumberOfEntities,
 	pfnGetInfoKeyBuffer,
-	Info_ValueForKey,
-	Info_SetValueForKey,
+	(void*)Info_ValueForKey,
+	(void*)Info_SetValueForKey,
 	pfnSetClientKeyValue,
 	pfnIsMapValid,
 	pfnStaticDecal,
-	SV_GenericIndex,
+	(void*)SV_GenericIndex,
 	pfnGetPlayerUserId,
 	pfnBuildSoundMsg,
 	pfnIsDedicatedServer,
 	pfnCVarGetPointer,
 	pfnGetPlayerWONId,
-	Info_RemoveKey,
+	(void*)Info_RemoveKey,
 	pfnGetPhysicsKeyValue,
 	pfnSetPhysicsKeyValue,
 	pfnGetPhysicsInfoString,
 	pfnPrecacheEvent,
 	SV_PlaybackEventFull,
-	pfnSetFatPVS,
-	pfnSetFatPAS,
+	(void*)pfnSetFatPVS,
+	(void*)pfnSetFatPAS,
 	pfnCheckVisibility,
 	Delta_SetField,
 	Delta_UnsetField,
@@ -4561,10 +4578,10 @@ static enginefuncs_t gEngfuncs =
 	Delta_UnsetFieldByIndex,
 	pfnSetGroupMask,	
 	pfnCreateInstancedBaseline,
-	Cvar_DirectSet,
+	(void*)Cvar_DirectSet,
 	pfnForceUnmodified,
 	pfnGetPlayerStats,
-	Cmd_AddGameCommand,
+	(void*)Cmd_AddGameCommand,
 	pfnVoice_GetClientListening,
 	pfnVoice_SetClientListening,
 	pfnGetPlayerAuthId,
@@ -4896,7 +4913,7 @@ qboolean SV_LoadProgs( const char *name )
 #ifdef DLL_LOADER
 	if(dll)
 	{
-		GiveFnptrsToDll_w32 = (GIVEFNPTRSTODLL)Com_GetProcAddress( svgame.hInstance, "GiveFnptrsToDll" );
+		GiveFnptrsToDll_w32 = (void *)Com_GetProcAddress( svgame.hInstance, "GiveFnptrsToDll" );
 		if( !GiveFnptrsToDll_w32 )
 		{
 			Com_FreeLibrary(svgame.hInstance);
@@ -4968,9 +4985,11 @@ qboolean SV_LoadProgs( const char *name )
 
 	// grab function SV_SaveGameComment
 	SV_InitSaveRestore ();
-
-	svgame.globals->pStringBase = ""; // setup string base
-
+#ifdef __amd64__
+	svgame.globals->pStringBase = g_stringbase; // setup string base
+#else
+	svgame.globals->pStringBase = "";
+#endif
 	svgame.globals->maxEntities = GI->max_edicts;
 	svgame.globals->maxClients = sv_maxclients->integer;
 	svgame.edicts = Mem_Alloc( svgame.mempool, sizeof( edict_t ) * svgame.globals->maxEntities );

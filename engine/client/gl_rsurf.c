@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -620,8 +622,8 @@ static void LM_UploadBlock( qboolean dynamic )
 		}
 
 		if( host.features & ENGINE_LARGE_LIGHTMAPS )
-			GL_Bind( GL_TEXTURE0, tr.dlightTexture2 );
-		else GL_Bind( GL_TEXTURE0, tr.dlightTexture );
+			GL_Bind( XASH_TEXTURE0, tr.dlightTexture2 );
+		else GL_Bind( XASH_TEXTURE0, tr.dlightTexture );
 
 		pglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, BLOCK_SIZE, height, GL_RGBA, GL_UNSIGNED_BYTE, gl_lms.lightmap_buffer );
 	}
@@ -865,7 +867,7 @@ void R_BlendLightmaps( void )
 	{
 		if( gl_lms.lightmap_surfaces[i] )
 		{
-			GL_Bind( GL_TEXTURE0, tr.lightmapTextures[i] );
+			GL_Bind( XASH_TEXTURE0, tr.lightmapTextures[i] );
 
 			for( surf = gl_lms.lightmap_surfaces[i]; surf != NULL; surf = surf->lightmapchain )
 			{
@@ -880,8 +882,8 @@ void R_BlendLightmaps( void )
 		LM_InitBlock();
 
 		if( host.features & ENGINE_LARGE_LIGHTMAPS )
-			GL_Bind( GL_TEXTURE0, tr.dlightTexture2 );
-		else GL_Bind( GL_TEXTURE0, tr.dlightTexture );
+			GL_Bind( XASH_TEXTURE0, tr.dlightTexture2 );
+		else GL_Bind( XASH_TEXTURE0, tr.dlightTexture );
 
 		newsurf = gl_lms.dynamic_surfaces;
 
@@ -1000,7 +1002,7 @@ void R_RenderFullbrights( void )
 	{
 		if( !fullbright_polys[i] )
 			continue;
-		GL_Bind( GL_TEXTURE0, i );
+		GL_Bind( XASH_TEXTURE0, i );
 
 		for( p = fullbright_polys[i]; p; p = p->next )
 		{
@@ -1053,7 +1055,7 @@ void R_RenderDetails( void )
 		es = detail_surfaces[i];
 		if( !es ) continue;
 
-		GL_Bind( GL_TEXTURE0, i );
+		GL_Bind( XASH_TEXTURE0, i );
 
 		for( p = es; p; p = p->detailchain )
 		{
@@ -1110,23 +1112,23 @@ void R_RenderBrushPoly( msurface_t *fa )
 	{
 		if( SURF_INFO( fa, RI.currentmodel )->mirrortexturenum )
 		{
-			GL_Bind( GL_TEXTURE0, SURF_INFO( fa, RI.currentmodel )->mirrortexturenum );
+			GL_Bind( XASH_TEXTURE0, SURF_INFO( fa, RI.currentmodel )->mirrortexturenum );
 			is_mirror = true;
 
 			// BEGIN WATER STUFF
 			if( fa->flags & SURF_DRAWTURB )
 			{
 				R_BeginDrawMirror( fa );
-				GL_Bind( GL_TEXTURE1, t->gl_texturenum );
+				GL_Bind( XASH_TEXTURE1, t->gl_texturenum );
 				pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 			}
 		}
-		else GL_Bind( GL_TEXTURE0, t->gl_texturenum ); // dummy
+		else GL_Bind( XASH_TEXTURE0, t->gl_texturenum ); // dummy
 
 		// DEBUG: reset the mirror texture after drawing
 		SURF_INFO( fa, RI.currentmodel )->mirrortexturenum = 0;
 	}
-	else GL_Bind( GL_TEXTURE0, t->gl_texturenum );
+	else GL_Bind( XASH_TEXTURE0, t->gl_texturenum );
 
 	if( fa->flags & SURF_DRAWTURB )
 	{	
@@ -1195,6 +1197,9 @@ void R_RenderBrushPoly( msurface_t *fa )
 			goto dynamic;
 	}
 
+	if( maps == MAXLIGHTMAPS )
+		maps--;
+
 	// dynamic this frame or dynamic previously
 	if( fa->dlightframe == tr.framecount )
 	{
@@ -1216,7 +1221,7 @@ dynamic:
 			R_BuildLightMap( fa, temp, smax * 4, true );
 			R_SetCacheState( fa );
                               
-			GL_Bind( GL_TEXTURE0, tr.lightmapTextures[fa->lightmaptexturenum] );
+			GL_Bind( XASH_TEXTURE0, tr.lightmapTextures[fa->lightmaptexturenum] );
 
 			pglTexSubImage2D( GL_TEXTURE_2D, 0, fa->light_s, fa->light_t, smax, tmax,
 			GL_RGBA, GL_UNSIGNED_BYTE, temp );
@@ -1329,7 +1334,7 @@ void R_DrawWaterSurfaces( void )
 			continue;
 
 		// set modulate mode explicitly
-		GL_Bind( GL_TEXTURE0, t->gl_texturenum );
+		GL_Bind( XASH_TEXTURE0, t->gl_texturenum );
 
 		for( ; s; s = s->texturechain )
 			EmitWaterPolys( s->polys, ( s->flags & SURF_NOCULL ));
@@ -1504,7 +1509,7 @@ void R_DrawBrushModel( cl_entity_t *e )
 	}
 
 	if( need_sort && !gl_nosort->integer )
-		qsort( world.draw_surfaces, num_sorted, sizeof( msurface_t* ), R_SurfaceCompare );
+		qsort( world.draw_surfaces, num_sorted, sizeof( msurface_t* ), (void*)R_SurfaceCompare );
 
 	// draw sorted translucent surfaces
 	for( i = 0; i < num_sorted; i++ )
@@ -2199,3 +2204,4 @@ void GL_BuildLightmaps( void )
 	if( !gl_keeptjunctions->integer )
 		MsgDev( D_INFO, "Eliminated %i vertices\n", nColinElim );
 }
+#endif // XASH_DEDICATED

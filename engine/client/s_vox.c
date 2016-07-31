@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "const.h"
@@ -684,3 +686,4 @@ void VOX_Shutdown( void )
 {
 	g_numSentences = 0;
 }
+#endif // XASH_DEDICATED

@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -222,3 +224,4 @@ void R_StoreEfrags( efrag_t **ppefrag, int framecount )
 		}
 	}
 }
+#endif // XASH_DEDICATED

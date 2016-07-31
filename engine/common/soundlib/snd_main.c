@@ -229,7 +229,7 @@ FS_ReadStream
 extract stream as wav-data and put into buffer, move file pointer
 ================
 */
-long FS_ReadStream( stream_t *stream, int bytes, void *buffer )
+int FS_ReadStream( stream_t *stream, int bytes, void *buffer )
 {
 	if( !stream || !stream->format || !stream->format->readfunc )
 		return 0;
@@ -247,7 +247,7 @@ FS_GetStreamPos
 get stream position (in bytes)
 ================
 */
-long FS_GetStreamPos( stream_t *stream )
+int FS_GetStreamPos( stream_t *stream )
 {
 	if( !stream || !stream->format || !stream->format->getposfunc )
 		return -1;
@@ -262,7 +262,7 @@ FS_SetStreamPos
 set stream position (in bytes)
 ================
 */
-long FS_SetStreamPos( stream_t *stream, long newpos )
+int FS_SetStreamPos( stream_t *stream, int newpos )
 {
 	if( !stream || !stream->format || !stream->format->setposfunc )
 		return -1;

@@ -471,7 +471,7 @@ static void do_relocations( unsigned int load_addr, IMAGE_BASE_RELOCATION *r )
 	{
 		char *page = (char*) RVA(r->VirtualAddress);
 		int count = (r->SizeOfBlock - 8)/2;
-		int i;
+		int i, page_i;
 		TRACE_(fixup)("%x relocations for page %lx\n",
 			count, r->VirtualAddress);
 
@@ -490,8 +490,9 @@ static void do_relocations( unsigned int load_addr, IMAGE_BASE_RELOCATION *r )
 				*(short*)(page+offset) += ldelta;
 				break;
 			case IMAGE_REL_BASED_HIGHLOW:
-				*(int*)(page+offset) += delta;
-
+				memcpy( &page_i, page + offset, sizeof(int) );
+				page_i += delta;
+				memcpy( page + offset, &page_i, sizeof(int) );
 				break;
 			case IMAGE_REL_BASED_HIGHADJ:
 				FIXME("Don't know what to do with IMAGE_REL_BASED_HIGHADJ\n");

@@ -32,6 +32,15 @@ typedef SDL_Cursor Xash_Cursor;
 typedef void Xash_Cursor;
 #endif
 
+typedef struct keyname_s
+{
+	char       *name;    // key name
+	int        keynum;   // key number
+	const char *binding; // default bind
+} keyname_t;
+
+extern keyname_t keynames[];
+
 //
 // input.c
 //

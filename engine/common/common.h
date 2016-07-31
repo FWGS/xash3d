@@ -38,7 +38,8 @@ extern "C" {
 #include <stdlib.h> // rand, adbs
 #include <stdarg.h> // va
 #define EXPORT		__declspec( dllexport )
-#define PATH_MAX MAX_PATH // Now there is must be MATH_PAX
+#undef PATH_MAX
+#define PATH_MAX 4096 // Try workaround some strange bugs
 #endif
 
 #define MAX_STRING		256	// generic string
@@ -57,7 +58,13 @@ extern "C" {
 
 #define Mod_AllowMaterials()	( mod_allow_materials != NULL && mod_allow_materials->integer && !( host.features & ENGINE_DISABLE_HDTEXTURES ))
 
-typedef unsigned long	dword;
+#ifdef XASH_FORCEINLINE
+#define xash_force_inline _inline
+#else
+#define xash_force_inline
+#endif
+
+typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
 typedef struct searchpath_s searchpath_t;
@@ -88,6 +95,12 @@ typedef enum
 	HOST_NORMAL,	// listen server, singleplayer
 	HOST_DEDICATED,
 } instance_t;
+
+#ifdef XASH_DEDICATED
+#define Host_IsDedicated() ( true )
+#else
+#define Host_IsDedicated() ( host.type == HOST_DEDICATED )
+#endif
 
 #include "system.h"
 #include "ref_params.h"
@@ -406,7 +419,7 @@ fs_offset_t FS_Write( file_t *file, const void *data, size_t datasize );
 fs_offset_t FS_Read( file_t *file, void *buffer, size_t buffersize );
 int FS_VPrintf( file_t *file, const char *format, va_list ap );
 int FS_Seek( file_t *file, fs_offset_t offset, int whence );
-int FS_Printf( file_t *file, const char *format, ... );
+int FS_Printf( file_t *file, const char *format, ... ) _format(2);
 fs_offset_t FS_FileSize( const char *filename, qboolean gamedironly );
 fs_offset_t FS_FileTime( const char *filename, qboolean gamedironly );
 int FS_Print( file_t *file, const char *msg );
@@ -568,6 +581,7 @@ qboolean Image_Process( rgbdata_t **pix, int width, int height, float gamma, uin
 void Image_PaletteHueReplace( byte *palSrc, int newHue, int start, int end );
 void Image_SetForceFlags( uint flags );	// set image force flags on loading
 size_t Image_DXTGetLinearSize( int type, int width, int height, int depth );
+void Image_SetMDLPointer(byte *p);
 
 /*
 ========================================================================
@@ -627,9 +641,9 @@ wavdata_t *FS_LoadSound( const char *filename, const byte *buffer, size_t size )
 void FS_FreeSound( wavdata_t *pack );
 stream_t *FS_OpenStream( const char *filename );
 wavdata_t *FS_StreamInfo( stream_t *stream );
-long FS_ReadStream( stream_t *stream, int bytes, void *buffer );
-long FS_SetStreamPos( stream_t *stream, long newpos );
-long FS_GetStreamPos( stream_t *stream );
+int FS_ReadStream( stream_t *stream, int bytes, void *buffer );
+int FS_SetStreamPos( stream_t *stream, int newpos );
+int FS_GetStreamPos( stream_t *stream );
 void FS_FreeStream( stream_t *stream );
 qboolean Sound_Process( wavdata_t **wav, int rate, int width, uint flags );
 uint Sound_GetApproxWavePlayLen( const char *filepath );
@@ -645,7 +659,7 @@ int Q_buildnum( void );
 void EXPORT Host_Shutdown( void );
 void Host_SetServerState( int state );
 int Host_ServerState( void );
-int Host_CompareFileTime( long ft1, long ft2 );
+int Host_CompareFileTime( int ft1, int ft2 );
 void Host_NewInstance( const char *name, const char *finalmsg );
 qboolean Host_NewGame( const char *mapName, qboolean loadGame );
 void Host_EndGame( const char *message, ... );
@@ -661,8 +675,8 @@ qboolean Host_IsLocalGame( void );
 qboolean Host_IsLocalClient( void );
 void Host_ShutdownServer( void );
 void Host_Print( const char *txt );
-void Host_Error( const char *error, ... );
-void Host_MapDesignError( const char *error, ... );
+void Host_Error( const char *error, ... ) _format(1);
+void Host_MapDesignError( const char *error, ... ) _format(1);
 void Host_PrintEngineFeatures( void );
 void Host_InitDecals( void );
 void Host_Credits( void );
@@ -706,8 +720,8 @@ void pfnGetGameDir( char *szGetGameDir );
 int pfnDecalIndex( const char *m );
 int pfnGetModelType( model_t *mod );
 int pfnIsMapValid( char *filename );
-void Con_DPrintf( char *fmt, ... );
-void Con_Printf( char *szFmt, ... );
+void Con_DPrintf( char *fmt, ... ) _format(1);
+void Con_Printf( char *szFmt, ... ) _format(1);
 int pfnIsInGame( void );
 
 // CS:CS engfuncs (stubs)
@@ -776,6 +790,7 @@ int Key_StringToKeynum( const char *str );
 int Key_GetKey( const char *binding );
 void Key_EnumCmds_f( void );
 void Key_SetKeyDest( int key_dest );
+void Key_EnableTextInput( qboolean enable, qboolean force );
 
 //
 // avikit.c
@@ -836,8 +851,7 @@ struct pmtrace_s *PM_TraceLine( float *start, float *end, int flags, int usehull
 void SV_StartSound( edict_t *ent, int chan, const char *sample, float vol, float attn, int flags, int pitch );
 void SV_StartMusic( const char *curtrack, const char *looptrack, fs_offset_t position );
 void SV_CreateDecal( struct sizebuf_s *msg, const float *origin, int decalIndex, int entityIndex, int modelIndex, int flags, float scale );
-void SV_CreateStudioDecal( struct sizebuf_s *msg, const float *origin, const float *start, int decalIndex, int entityIndex, int modelIndex,
-int flags, struct modelstate_s *state );
+void SV_CreateStudioDecal( struct sizebuf_s *msg, const float *origin, const float *start, int decalIndex, int entityIndex, int modelIndex, int flags, struct modelstate_s *state );
 struct sizebuf_s *SV_GetReliableDatagram( void );
 qboolean SV_RestoreCustomDecal( struct decallist_s *entry, edict_t *pEdict, qboolean adjacent );
 int R_CreateDecalList( struct decallist_s *pList, qboolean changelevel );
@@ -875,14 +889,14 @@ void SCR_Init( void );
 void SCR_UpdateScreen( void );
 void SCR_BeginLoadingPlaque( qboolean is_background );
 void SCR_CheckStartupVids( void );
-long SCR_GetAudioChunk( char *rawdata, long length );
+int SCR_GetAudioChunk( char *rawdata, int length );
 wavdata_t *SCR_GetMovieInfo( void );
 void SCR_Shutdown( void );
 void Con_Print( const char *txt );
-void Con_NPrintf( int idx, char *fmt, ... );
-void Con_NXPrintf( struct con_nprint_s *info, char *fmt, ... );
-void UI_NPrintf( int idx, char *fmt, ... );
-void UI_NXPrintf( struct con_nprint_s *info, char *fmt, ... );
+void Con_NPrintf( int idx, char *fmt, ... ) _format(2);
+void Con_NXPrintf( struct con_nprint_s *info, char *fmt, ... ) _format(2);
+void UI_NPrintf( int idx, char *fmt, ... ) _format(2);
+void UI_NXPrintf( struct con_nprint_s *info, char *fmt, ... ) _format(2);
 char *Info_ValueForKey( const char *s, const char *key );
 void Info_RemovePrefixedKeys( char *start, char prefix );
 qboolean Info_RemoveKey( char *s, const char *key );
@@ -895,8 +909,8 @@ char *Cvar_Serverinfo( void );
 void Cmd_WriteVariables( file_t *f );
 qboolean Cmd_CheckMapsList( qboolean fRefresh );
 void Cmd_AutoComplete( char *complete_string );
-void COM_SetRandomSeed( long lSeed );
-long Com_RandomLong( long lMin, long lMax );
+void COM_SetRandomSeed( int lSeed );
+int Com_RandomLong( int lMin, int lMax );
 float Com_RandomFloat( float fMin, float fMax );
 void TrimSpace( const char *source, char *dest );\
 const byte *GL_TextureData( unsigned int texnum );
@@ -924,6 +938,18 @@ typedef struct autocomplete_list_s
 } autocomplete_list_t;
 
 extern autocomplete_list_t cmd_list[];
+
+typedef struct
+{
+	string		buffer;
+	int		cursor;
+	int		scroll;
+	int		widthInChars;
+} field_t;
+
+void Con_CompleteCommand( field_t *field );
+void Con_ClearAutoComplete();
+
 extern const char *svc_strings[256];
 
 // soundlib shared exports

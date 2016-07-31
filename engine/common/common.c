@@ -485,8 +485,8 @@ int COM_CompareFileTime( const char *filename1, const char *filename2, int *iCom
 
 	if( filename1 && filename2 )
 	{
-		long ft1 = FS_FileTime( filename1, false );
-		long ft2 = FS_FileTime( filename2, false );
+		int ft1 = FS_FileTime( filename1, false );
+		int ft2 = FS_FileTime( filename2, false );
 
 		// one of files is missing
 		if( ft1 == -1 || ft2 == -1 )

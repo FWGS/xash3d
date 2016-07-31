@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -362,7 +364,7 @@ static void CL_BulletTracerDraw( particle_t *p, float frametime )
 
 	GL_SetRenderMode( kRenderTransTexture );
 
-	GL_Bind( GL_TEXTURE0, cls.particleImage );
+	GL_Bind( XASH_TEXTURE0, cls.particleImage );
 	pglBegin( GL_QUADS );
 
 	pglColor4ub( clgame.palette[p->color][0], clgame.palette[p->color][1], clgame.palette[p->color][2], alpha );
@@ -503,10 +505,10 @@ void CL_UpdateParticle( particle_t *p, float ft )
 	GL_SetRenderMode( kRenderTransTexture );
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
-	if (r_oldparticles->integer == 1)
-		GL_Bind(GL_TEXTURE0, cls.oldParticleImage);
+	if( r_oldparticles->integer == 1 )
+		GL_Bind( XASH_TEXTURE0, cls.oldParticleImage );
 	else
-		GL_Bind(GL_TEXTURE0, cls.particleImage);
+		GL_Bind( XASH_TEXTURE0, cls.particleImage );
 
 	// add the 4 corner vertices.
 	pglBegin( GL_QUADS );
@@ -1414,7 +1416,7 @@ void CL_DrawTracer( vec3_t start, vec3_t delta, float width, rgb_t color, int al
 
 	pglColor4ub( color[0], color[1], color[2], alpha );
 
-	GL_Bind( GL_TEXTURE0, cls.particleImage );
+	GL_Bind( XASH_TEXTURE0, cls.particleImage );
 	pglBegin( GL_QUADS );
 
 	pglTexCoord2f( 0.0f, endV );
@@ -1732,3 +1734,4 @@ void CL_ReadPointFile_f( void )
 	if( count ) Msg( "%i points read\n", count );
 	else Msg( "map %s has no leaks!\n", clgame.mapname );
 }
+#endif // XASH_DEDICATED

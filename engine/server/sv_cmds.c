@@ -61,7 +61,7 @@ void SV_BroadcastPrintf( int level, char *fmt, ... )
 	va_end( argptr );
 	
 	// echo to console
-	if( host.type == HOST_DEDICATED ) Msg( "%s", string );
+	if( Host_IsDedicated() ) Msg( "%s", string );
 
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
@@ -205,19 +205,28 @@ void SV_Map_f( void )
 
 	if( flags & MAP_INVALID_VERSION )
 	{
-		Msg( "SV_NewMap: map %s is invalid or not supported\n", mapname );
+		if( CL_IsInMenu() )
+			Sys_Warn( "SV_NewMap: map %s is invalid or not supported\n", mapname );
+		else
+			Msg( "SV_NewMap: map %s is invalid or not supported\n", mapname );
 		return;
 	}
 	
 	if(!( flags & MAP_IS_EXIST ))
 	{
-		Msg( "SV_NewMap: map %s doesn't exist\n", mapname );
+		if( CL_IsInMenu() )
+			Sys_Warn( "SV_NewMap: map %s doesn't exist\n", mapname );
+		else
+			Msg( "SV_NewMap: map %s doesn't exist\n", mapname );
 		return;
 	}
 
 	if(!( flags & MAP_HAS_SPAWNPOINT ))
 	{
-		Msg( "SV_NewMap: map %s doesn't have a valid spawnpoint\n", mapname );
+		if( CL_IsInMenu() )
+			Sys_Warn( "SV_NewMap: map %s doesn't have a valid spawnpoint\n", mapname );
+		else
+			Msg( "SV_NewMap: map %s doesn't have a valid spawnpoint\n", mapname );
 		return;
 	}
 
@@ -236,7 +245,11 @@ void SV_Map_f( void )
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 
 	SV_DeactivateServer();
-	SV_SpawnServer( mapname, NULL );
+	if( !SV_SpawnServer( mapname, NULL ) )
+	{
+		Msg("Could not spawn server!\n");
+		return;
+	}
 	SV_LevelInit( mapname, NULL, NULL, false );
 	SV_ActivateServer ();
 }
@@ -377,7 +390,7 @@ void SV_Load_f( void )
 		return;
 	}
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		SV_InactivateClients ();
 		SV_DeactivateServer ();
@@ -385,7 +398,7 @@ void SV_Load_f( void )
 
 	SV_LoadGame( Cmd_Argv( 1 ));
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		SV_ActivateServer();
 }
 
@@ -550,7 +563,7 @@ void SV_ChangeLevel_f( void )
 	// bad changelevel position invoke enables in one-way transtion
 	if( sv.net_framenum < 30 )
 	{
-		if( sv_validate_changelevel->integer && host.type != HOST_DEDICATED )
+		if( sv_validate_changelevel->integer && !Host_IsDedicated() )
 		{
 			MsgDev( D_INFO, "SV_ChangeLevel: An infinite changelevel detected.\n" );
 			MsgDev( D_INFO, "Changelevel will be disabled until the next save\\restore.\n" );
@@ -1026,7 +1039,7 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "loadquick", SV_QuickLoad_f, "load a quick-saved game file" );
 	Cmd_AddCommand( "killsave", SV_DeleteSave_f, "delete a saved game file and saveshot" );
 	Cmd_AddCommand( "autosave", SV_AutoSave_f, "save the game to 'autosave' file" );
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		Cmd_AddCommand( "say", SV_ConSay_f, "send a chat message to everyone on the server" );
 		Cmd_AddCommand( "killserver", SV_KillServer_f, "shutdown current server" );
@@ -1065,7 +1078,7 @@ void SV_KillOperatorCommands( void )
 	Cmd_RemoveCommand( "edicts_info" );
 	Cmd_RemoveCommand( "entity_info" );
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		Cmd_RemoveCommand( "say" );
 		Cmd_RemoveCommand( "killserver" );

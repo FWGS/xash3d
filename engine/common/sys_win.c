@@ -41,6 +41,29 @@ extern char **environ;
 
 qboolean	error_on_exit = false;	// arg for exit();
 
+#if defined _WIN32 && !defined XASH_SDL
+#include <winbase.h>
+/*
+================
+Sys_DoubleTime
+================
+*/
+double Sys_DoubleTime( void )
+{
+	static LARGE_INTEGER g_PerformanceFrequency;
+	static LARGE_INTEGER g_ClockStart;
+	LARGE_INTEGER CurrentTime;
+
+	if( !g_PerformanceFrequency.QuadPart )
+	{
+		QueryPerformanceFrequency( &g_PerformanceFrequency );
+		QueryPerformanceCounter( &g_ClockStart );
+	}
+
+	QueryPerformanceCounter( &CurrentTime );
+	return (double)( CurrentTime.QuadPart - g_ClockStart.QuadPart ) / (double)( g_PerformanceFrequency.QuadPart );
+}
+#else
 /*
 ================
 Sys_DoubleTime
@@ -59,15 +82,6 @@ double Sys_DoubleTime( void )
 	}
 	CurrentTime = SDL_GetPerformanceCounter();
 	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
-#elif _WIN32
-	if( !g_PerformanceFrequency )
-	{
-		g_PerformanceFrequency = GetPerformanceFrequency();
-		g_ClockStart = GetPerformanceCounter();
-	}
-	CurrentTime = GetPerformanceCounter();
-	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
-
 #else
 	struct timespec ts;
 	if( !g_PerformanceFrequency )
@@ -80,6 +94,7 @@ double Sys_DoubleTime( void )
 	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
 #endif
 }
+#endif
 
 /*
 ================
@@ -128,8 +143,10 @@ void Sys_Sleep( int msec )
 	msec = bound( 1, msec, 1000 );
 #ifdef XASH_SDL
 	SDL_Delay( msec );
+#elif defined _WIN32
+	Sleep( msec );
 #else
-	usleep(msec * 1000);
+	usleep( msec * 1000 );
 #endif
 }
 
@@ -144,7 +161,7 @@ char *Sys_GetCurrentUser( void )
 {
 #if defined(_WIN32)
 	static string	s_userName;
-	dword			size = sizeof( s_userName );
+	unsigned long size = sizeof( s_userName );
 
 	if( GetUserName( s_userName, &size ))
 		return s_userName;
@@ -227,7 +244,7 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 		pid_t id = fork( );
 		if( id == 0 )
 		{
-			execve( xdgOpen, argv, environ );
+			execve( xdgOpen, (char **)argv, environ );
 			fprintf( stderr, "error opening %s %s", xdgOpen, path );
 			_exit( 1 );
 		}
@@ -285,7 +302,7 @@ void Sys_MergeCommandLine( )
 	for( i = 0; i < host.argc; i++ )
 	{
 		// second call
-		if( host.type == HOST_DEDICATED && !Q_strnicmp( "+menu_", host.argv[i], 6 ))
+		if( Host_IsDedicated() && !Q_strnicmp( "+menu_", host.argv[i], 6 ))
 			host.argv[i] = (char *)blank;
 	}
 }
@@ -394,8 +411,8 @@ qboolean Sys_LoadLibrary( dll_info_t *dll )
 error:
 	MsgDev( D_NOTE, " - failed\n" );
 	Sys_FreeLibrary( dll ); // trying to free 
-	if( dll->crash ) Sys_Error( errorstring );
-	else MsgDev( D_ERROR, errorstring );			
+	if( dll->crash ) Sys_Error( "%s", errorstring );
+	else MsgDev( D_ERROR, "%s", errorstring );
 
 	return false;
 }
@@ -467,7 +484,164 @@ Crash handler, called from system
 */
 #define DEBUG_BREAK
 /// TODO: implement on windows too
+
 #ifdef _WIN32
+#ifdef DBGHELP
+#pragma comment( lib, "dbghelp" )
+#pragma comment( lib, "psapi" )
+#include <winnt.h>
+#include <dbghelp.h>
+#include <psapi.h>
+
+#ifndef XASH_SDL
+typedef ULONG_PTR DWORD_PTR, *PDWORD_PTR;
+#endif
+
+int ModuleName( HANDLE process, char *name, void *address, int len )
+{
+	DWORD_PTR   baseAddress = 0;
+	static HMODULE     *moduleArray;
+	static unsigned int moduleCount;
+	LPBYTE      moduleArrayBytes;
+	DWORD       bytesRequired;
+	int i;
+
+	if(len < 3)
+		return 0;
+
+	if ( !moduleArray && EnumProcessModules( process, NULL, 0, &bytesRequired ) )
+	{
+		if ( bytesRequired )
+		{
+			moduleArrayBytes = (LPBYTE)LocalAlloc( LPTR, bytesRequired );
+
+			if ( moduleArrayBytes )
+			{
+				if( EnumProcessModules( process, (HMODULE *)moduleArrayBytes, bytesRequired, &bytesRequired ) )
+				{
+					moduleCount = bytesRequired / sizeof( HMODULE );
+					moduleArray = (HMODULE *)moduleArrayBytes;
+				}
+			}
+		}
+	}
+
+	for( i = 0; i<moduleCount; i++ )
+	{
+		MODULEINFO info;
+		GetModuleInformation( process, moduleArray[i], &info, sizeof(MODULEINFO) );
+
+		if( ( address > info.lpBaseOfDll ) &&
+				( (DWORD64)address < (DWORD64)info.lpBaseOfDll + (DWORD64)info.SizeOfImage ) )
+			return GetModuleBaseName( process, moduleArray[i], name, len );
+	}
+	return snprintf(name, len, "???");
+}
+static void stack_trace( PEXCEPTION_POINTERS pInfo )
+{
+	char message[1024];
+	int len = 0;
+	size_t i;
+	HANDLE process = GetCurrentProcess();
+	HANDLE thread = GetCurrentThread();
+	IMAGEHLP_LINE64 line;
+	DWORD dline = 0;
+	DWORD options;
+	CONTEXT context;
+	STACKFRAME64 stackframe;
+	DWORD image;
+
+	memcpy( &context, pInfo->ContextRecord, sizeof(CONTEXT) );
+	options = SymGetOptions(); 
+	options |= SYMOPT_DEBUG;
+	options |= SYMOPT_LOAD_LINES;
+	SymSetOptions( options ); 
+
+	SymInitialize( process, NULL, TRUE );
+
+	
+
+	ZeroMemory( &stackframe, sizeof(STACKFRAME64) );
+
+#ifdef _M_IX86
+	image = IMAGE_FILE_MACHINE_I386;
+	stackframe.AddrPC.Offset = context.Eip;
+	stackframe.AddrPC.Mode = AddrModeFlat;
+	stackframe.AddrFrame.Offset = context.Ebp;
+	stackframe.AddrFrame.Mode = AddrModeFlat;
+	stackframe.AddrStack.Offset = context.Esp;
+	stackframe.AddrStack.Mode = AddrModeFlat;
+#elif _M_X64
+	image = IMAGE_FILE_MACHINE_AMD64;
+	stackframe.AddrPC.Offset = context.Rip;
+	stackframe.AddrPC.Mode = AddrModeFlat;
+	stackframe.AddrFrame.Offset = context.Rsp;
+	stackframe.AddrFrame.Mode = AddrModeFlat;
+	stackframe.AddrStack.Offset = context.Rsp;
+	stackframe.AddrStack.Mode = AddrModeFlat;
+#elif _M_IA64
+	image = IMAGE_FILE_MACHINE_IA64;
+	stackframe.AddrPC.Offset = context.StIIP;
+	stackframe.AddrPC.Mode = AddrModeFlat;
+	stackframe.AddrFrame.Offset = context.IntSp;
+	stackframe.AddrFrame.Mode = AddrModeFlat;
+	stackframe.AddrBStore.Offset = context.RsBSP;
+	stackframe.AddrBStore.Mode = AddrModeFlat;
+	stackframe.AddrStack.Offset = context.IntSp;
+	stackframe.AddrStack.Mode = AddrModeFlat;
+#endif
+	len += snprintf( message + len, 1024 - len, "Sys_Crash: address %p, code %p\n", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
+	if( SymGetLineFromAddr64( process, (DWORD64)pInfo->ExceptionRecord->ExceptionAddress, &dline, &line ) )
+	{
+		len += snprintf(message + len, 1024 - len,"Exception: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+	}
+	if( SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line ) )
+	{
+		len += snprintf(message + len, 1024 - len,"PC: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+	}
+	if( SymGetLineFromAddr64( process, stackframe.AddrFrame.Offset, &dline, &line ) )
+	{
+		len += snprintf(message + len, 1024 - len,"Frame: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+	}
+	for( i = 0; i < 25; i++ )
+	{
+		char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+		PSYMBOL_INFO symbol = (PSYMBOL_INFO)buffer;
+		BOOL result = StackWalk64(
+			image, process, thread,
+			&stackframe, &context, NULL,
+			SymFunctionTableAccess64, SymGetModuleBase64, NULL);
+
+		DWORD64 displacement = 0;
+		if( !result )
+			break;
+
+		
+		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+		symbol->MaxNameLen = MAX_SYM_NAME;
+
+		len += snprintf( message + len, 1024 - len, "% 2d %p", i, (void*)stackframe.AddrPC.Offset );
+		if( SymFromAddr( process, stackframe.AddrPC.Offset, &displacement, symbol ) )
+		{
+			len += snprintf( message + len, 1024 - len, " %s ", symbol->Name );
+		}
+		if( SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line ) )
+		{
+			len += snprintf(message + len, 1024 - len,"(%s:%d:%d) ", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+		}
+		len += snprintf( message + len, 1024 - len, "(");
+		len += ModuleName( process, message + len, (void*)stackframe.AddrPC.Offset, 1024 - len );
+		len += snprintf( message + len, 1024 - len, ")\n");
+	}
+#ifdef XASH_SDL
+	if( host.type != HOST_DEDICATED ) // let system to restart server automaticly
+		SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR,"Sys_Crash", message, host.hWnd );
+#endif
+	Sys_PrintLog(message);
+
+	SymCleanup(process);
+}
+#endif //DBGHELP
 LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
 long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 {
@@ -478,11 +652,15 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		error_on_exit = true;
 		host.crashed = true;
 
+#ifdef DBGHELP
+		stack_trace( pInfo );
+#else
+		Sys_Warn( "Sys_Crash: call %p at address %p", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
+#endif
+
 		if( host.type == HOST_NORMAL )
 			CL_Crashed(); // tell client about crash
 		else host.state = HOST_CRASHED;
-
-		Msg( "Sys_Crash: call %p at address %p\n", pInfo->ExceptionRecord->ExceptionAddress, pInfo->ExceptionRecord->ExceptionCode );
 
 		if( host.developer <= 0 )
 		{
@@ -515,7 +693,7 @@ void Sys_RestoreCrashHandler( void )
 
 #elif defined (CRASHHANDLER)
 // Posix signal handler
-
+#include "library.h"
 #if defined(__FreeBSD__) || defined(__NetBSD__)
 #define HAVE_UCONTEXT_H 1
 #endif
@@ -580,27 +758,41 @@ struct sigaction oldFilter;
 static void Sys_Crash( int signal, siginfo_t *si, void *context)
 {
 	void *trace[32];
-	char message[1024], stackframe[256];
+	char message[4096], stackframe[256];
 	int len, stacklen, logfd, i = 0;
+#if defined(__OpenBSD__)
+	struct sigcontext *ucontext = (struct sigcontext*)context;
+#else
 	ucontext_t *ucontext = (ucontext_t*)context;
-#if __i386__
-	#ifdef __FreeBSD__
+#endif
+#if defined(__amd64__)
+	#if defined(__FreeBSD__)
+		void *pc = (void*)ucontext->uc_mcontext.mc_rip, **bp = (void**)ucontext->uc_mcontext.mc_rbp, **sp = (void**)ucontext->uc_mcontext.mc_rsp;
+	#elif defined(__NetBSD__)
+		void *pc = (void*)ucontext->uc_mcontext.__gregs[REG_RIP], **bp = (void**)ucontext->uc_mcontext.__gregs[REG_RBP], **sp = (void**)ucontext->uc_mcontext.__gregs[REG_RSP];
+	#elif defined(__OpenBSD__)
+		void *pc = (void*)ucontext->sc_rip, **bp = (void**)ucontext->sc_rbp, **sp = (void**)ucontext->sc_rsp;
+	#else
+		void *pc = (void*)ucontext->uc_mcontext.gregs[REG_RIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_RBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_RSP];
+	#endif
+#elif defined(__i386__)
+	#if defined(__FreeBSD__)
 		void *pc = (void*)ucontext->uc_mcontext.mc_eip, **bp = (void**)ucontext->uc_mcontext.mc_ebp, **sp = (void**)ucontext->uc_mcontext.mc_esp;
-	#elif __NetBSD__
+	#elif defined(__NetBSD__)
 		void *pc = (void*)ucontext->uc_mcontext.__gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.__gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.__gregs[REG_ESP];
-	#elif __OpenBSD__
-		void *pc = (void*)sc_eip, **bp = (void**)sc_ebp, **sp = (void**)sc_esp;
+	#elif defined(__OpenBSD__)
+		void *pc = (void*)ucontext->sc_eip, **bp = (void**)ucontext->sc_ebp, **sp = (void**)ucontext->sc_esp;
 	#else
 		void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
 	#endif
-#elif defined (__arm__) // arm not tested
+#elif defined(__arm__) // arm not tested
 	void *pc = (void*)ucontext->uc_mcontext.arm_pc, **bp = (void*)ucontext->uc_mcontext.arm_r10, **sp = (void*)ucontext->uc_mcontext.arm_sp;
 #endif
 	// Safe actions first, stack and memory may be corrupted
 	#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-		len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr);
+		len = snprintf( message, 4096, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
 	#else
-		len = snprintf(message, 1024, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr);
+		len = snprintf( message, 4096, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
 	#endif
 	write(2, message, len);
 	// Flush buffers before writing directly to descriptors
@@ -611,42 +803,53 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	write( logfd, message, len );
 	write( 2, "Stack backtrace:\n", 17 );
 	write( logfd, "Stack backtrace:\n", 17 );
-	strncpy(message + len, "Stack backtrace:\n", 1024 - len);
+	strncpy(message + len, "Stack backtrace:\n", 4096 - len);
 	len += 17;
-	long pagesize = sysconf(_SC_PAGESIZE);
+	size_t pagesize = sysconf(_SC_PAGESIZE);
 	do
 	{
-		int line = printframe( message + len, 1024 - len, ++i, pc);
+		int line = printframe( message + len, 4096 - len, ++i, pc);
 		write( 2, message + len, line );
 		write( logfd, message + len, line );
 		len += line;
 		//if( !dladdr(bp,0) ) break; // Only when bp is in module
-		if( mprotect((char *)(((int) bp + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) == -1) break;
-		if( mprotect((char *)(((int) bp[0] + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) == -1) break;
+		if( ( mprotect((char *)(((int) bp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE | PROT_EXEC ) == -1) &&
+			( mprotect((char *)(((int) bp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_EXEC ) == -1) &&
+			( mprotect((char *)(((int) bp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE ) == -1) &&
+			( mprotect((char *)(((int) bp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ ) == -1) )
+			break;
+		if( ( mprotect((char *)(((int) bp[0] + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE | PROT_EXEC ) == -1) &&
+			( mprotect((char *)(((int) bp[0] + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_EXEC ) == -1) &&
+			( mprotect((char *)(((int) bp[0] + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE ) == -1) &&
+			( mprotect((char *)(((int) bp[0] + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ ) == -1) )
+			break;
 		pc = bp[1];
 		bp = (void**)bp[0];
 	}
-	while (bp);
+	while( bp && i < 128 );
 	// Try to print stack
 	write( 2, "Stack dump:\n", 12 );
 	write( logfd, "Stack dump:\n", 12 );
-	strncpy(message + len, "Stack dump:\n", 1024 - len);
+	strncpy( message + len, "Stack dump:\n", 4096 - len );
 	len += 12;
-	if( mprotect((char *)(((int) sp + pagesize-1) & ~(pagesize-1)), pagesize, PROT_READ) != -1)
+	if( ( mprotect((char *)(((int) sp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE | PROT_EXEC ) != -1) ||
+			( mprotect((char *)(((int) sp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_EXEC ) != -1) ||
+			( mprotect((char *)(((int) sp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ | PROT_WRITE ) != -1) ||
+			( mprotect((char *)(((int) sp + (pagesize-1)) & ~(pagesize-1)), pagesize, PROT_READ ) != -1) )
 		for( i = 0; i < 32; i++ )
 		{
-			int line = printframe( message + len, 1024 - len, i, sp[i] );
+			int line = printframe( message + len, 4096 - len, i, sp[i] );
 			write( 2, message + len, line );
 			write( logfd, message + len, line );
 			len += line;
 		}
 	// Put MessageBox as Sys_Error
-	Msg( message );
+	Msg( "%s\n", message );
 #ifdef XASH_SDL
 	SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
-	//SDL_MouseQuit();
-	MSGBOX( message );
 #endif
+	MSGBOX( message );
+
 	// Log saved, now we can try to save configs and close log correctly, it may crash
 	if( host.type == HOST_NORMAL )
 			CL_Crashed();
@@ -687,17 +890,41 @@ void Sys_RestoreCrashHandler( void )
 
 /*
 ================
+Sys_Warn
+
+Just messagebox
+================
+*/
+void Sys_Warn( const char *format, ... )
+{
+	va_list	argptr;
+	char	text[MAX_SYSPATH];
+
+	DEBUG_BREAK;
+
+	va_start( argptr, format );
+	Q_vsprintf( text, format, argptr );
+	va_end( argptr );
+	if( !Host_IsDedicated() ) // dedicated server should not hang on messagebox
+		MSGBOX(text);
+	Msg( "Sys_Warn: %s\n", text );
+}
+
+/*
+================
 Sys_Error
 
 NOTE: we must prepare engine to shutdown
 before call this
 ================
 */
-void Sys_Error( const char *error, ... )
+void Sys_Error( const char *format, ... )
 {
 	va_list	argptr;
 	char	text[MAX_SYSPATH];
+
 	DEBUG_BREAK;
+
 	if( host.state == HOST_ERR_FATAL )
 		return; // don't execute more than once
 
@@ -706,13 +933,13 @@ void Sys_Error( const char *error, ... )
 
 	error_on_exit = true;
 	host.state = HOST_ERR_FATAL;	
-	va_start( argptr, error );
-	Q_vsprintf( text, error, argptr );
+	va_start( argptr, format );
+	Q_vsprintf( text, format, argptr );
 	va_end( argptr );
 
 	SV_SysError( text );
 
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 	{
 #ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
@@ -745,7 +972,7 @@ Sys_Break
 same as Error
 ================
 */
-void Sys_Break( const char *error, ... )
+void Sys_Break( const char *format, ... )
 {
 	va_list	argptr;
 	char	text[MAX_SYSPATH];
@@ -755,11 +982,11 @@ void Sys_Break( const char *error, ... )
 
 	error_on_exit = true;	
 	host.state = HOST_ERR_FATAL;         
-	va_start( argptr, error );
-	Q_vsprintf( text, error, argptr );
+	va_start( argptr, format );
+	Q_vsprintf( text, format, argptr );
 	va_end( argptr );
 
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 	{
 #ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
@@ -767,7 +994,7 @@ void Sys_Break( const char *error, ... )
 		VID_RestoreGamma();
 	}
 
-	if( host.type != HOST_NORMAL || host.developer > 0 )
+	if( Host_IsDedicated() || host.developer > 0 )
 	{
 		Con_ShowConsole( true );
 		Con_DisableInput();	// disable input line for dedicated server
@@ -804,7 +1031,7 @@ print into window console
 */
 void Sys_Print( const char *pMsg )
 {
-	if( host.type == HOST_NORMAL )
+	if( !Host_IsDedicated() )
 		Con_Print( pMsg );
 #ifdef _WIN32
 

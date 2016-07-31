@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "r_efx.h"
@@ -1921,9 +1923,7 @@ void CL_ParseTempEntity( sizebuf_t *msg )
 		pos[2] = BF_ReadCoord( &buf );
 		decalIndex = BF_ReadShort( &buf );
 		entityIndex = BF_ReadShort( &buf );
-		if( entityIndex ) 
-			modelIndex = BF_ReadShort( &buf );
-		else modelIndex = 0;
+		if( entityIndex ) modelIndex = BF_ReadShort( &buf );
 		CL_DecalShoot( CL_DecalIndex( decalIndex ), entityIndex, modelIndex, pos, FDECAL_PERMANENT );
 		break;
 	case TE_IMPLOSION:
@@ -2769,3 +2769,4 @@ void CL_ClearEffects( void )
 	CL_ClearParticles ();
 	CL_ClearLightStyles ();
 }
+#endif // XASH_DEDICATED

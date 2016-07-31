@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "net_encode.h"
@@ -285,6 +287,9 @@ void CL_ParseSoundPacket( sizebuf_t *msg, qboolean is_ambient )
 	}
 	else handle = cl.sound_index[sound];	// see precached sound
 
+	if( !cl.audio_prepped )
+		return; // too early
+
 	if( is_ambient )
 	{
 		S_AmbientSound( pos, entnum, handle, volume, attn, pitch, flags );
@@ -495,6 +500,7 @@ void CL_ParseStaticDecal( sizebuf_t *msg )
 {
 	vec3_t		origin;
 	int		decalIndex, entityIndex, modelIndex;
+	cl_entity_t	*ent = NULL;
 	float		scale;
 	int		flags;
 
@@ -1419,6 +1425,16 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 	}
 }
 
+void CL_ParseStuffText( sizebuf_t *msg )
+{
+	char *s = BF_ReadString( msg );
+	if( cl_trace_stufftext->value )
+	{
+		Msg("^3STUFFTEXT:\n^2%s\n^3END^7\n", s);
+	}
+	Cbuf_AddText( s );
+}
+
 /*
 =====================================================================
 
@@ -1517,8 +1533,7 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			if( i == PRINT_CHAT ) S_StartLocalSound( "common/menu2.wav", VOL_NORM, false );
 			break;
 		case svc_stufftext:
-			s = BF_ReadString( msg );
-			Cbuf_AddText( s );
+			CL_ParseStuffText( msg );
 			break;
 		case svc_lightstyle:
 			CL_ParseLightStyle( msg );
@@ -1679,3 +1694,4 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 		}
 	}
 }
+#endif // XASH_DEDICATED

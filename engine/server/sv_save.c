@@ -533,7 +533,7 @@ void RestoreSound( soundlist_t *entry )
 		return;
 	}
 
-	if( entry->channel < 0 || entry->channel > 7 )
+	if( entry->channel > 7 )
 	{
 		MsgDev( D_ERROR, "SV_RestoreSound: channel must be in range 0-7\n" );
 		return;
@@ -611,7 +611,7 @@ int SV_IsValidSave( void )
 		}
 	}
 
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 	{
 		// Enable save/load in xashds
 
@@ -713,6 +713,7 @@ void SV_DirectoryCopy( const char *pPath, file_t *pFile )
 
 	for( i = 0; i < t->numfilenames; i++ )
 	{
+		Q_memset( szName, 0, SAVENAME_LENGTH );
 		fileSize = FS_FileSize( t->filenames[i], true );
 		pCopy = FS_Open( t->filenames[i], "rb", true );
 
@@ -793,6 +794,9 @@ void SV_SaveGameStateGlobals( SAVERESTOREDATA *pSaveData )
 	SAVE_LIGHTSTYLE	light;
 	int		i;
 	
+	Q_memset( &header, 0, sizeof( SAVE_HEADER ) );
+	Q_memset( &light, 0, sizeof( SAVE_LIGHTSTYLE ) );
+
 	// write global data
 	header.skillLevel = Cvar_VariableValue( "skill" ); // This is created from an int even though it's a float
 	header.connectionCount = pSaveData->connectionCount;
@@ -1978,6 +1982,8 @@ int SV_SaveGameSlot( const char *pSaveName, const char *pSaveComment )
 	pSaveData = SV_SaveGameState();
 	if( !pSaveData ) return 0;
 
+	Q_memset( &gameHeader, 0, sizeof( GAME_HEADER ) );
+
 	SV_SaveFinish( pSaveData );
 
 	pSaveData = SV_SaveInit( 0 );
@@ -2163,7 +2169,7 @@ qboolean SV_LoadGame( const char *pName )
 		return false;
 	}
 
-	if( host.type != HOST_DEDICATED )
+	if( !Host_IsDedicated() )
 	{
 		Cvar_FullSet( "coop", "0", CVAR_LATCH );
 		Cvar_FullSet( "teamplay", "0", CVAR_LATCH );
@@ -2265,7 +2271,7 @@ const char *SV_GetLatestSave( void )
 {
 	search_t	*f = FS_Search( "save/*.sav", true, true );	// lookup only in gamedir
 	int	i, found = 0;
-	long	newest = 0, ft;
+	int	newest = 0, ft;
 	string	savename;	
 
 	if( !f ) return NULL;

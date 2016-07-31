@@ -1,4 +1,21 @@
-#ifdef __ANDROID__
+/*
+gl_vid_android.c - Android video backend
+Copyright (C) 2016 mittorn
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
+#ifndef XASH_DEDICATED
+#if defined(__ANDROID__) && defined(XASH_NANOGL) && !defined(XASH_SDL)
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -324,13 +341,7 @@ GL_GetProcAddress
 */
 void *GL_GetProcAddress( const char *name )
 {
-#ifdef XASH_SDL
-	void *func = SDL_GL_GetProcAddress(name);
-#elif defined (XASH_GLES)
 	void *func = nanoGL_GetProcAddress(name);
-#else //No opengl implementation
-	void *func = NULL;
-#endif
 	if(!func)
 	{
 		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
@@ -342,7 +353,7 @@ void *GL_GetProcAddress( const char *name )
 void GL_InitExtensions( void )
 {
 	// initialize gl extensions
-	GL_CheckExtension( "OpenGL 1.1.0", opengl_110funcs, NULL, GL_OPENGL_110 );
+	GL_CheckExtension( "OpenGL 1.1.0", (void*)opengl_110funcs, NULL, GL_OPENGL_110 );
 
 	// get our various GL strings
 	glConfig.vendor_string = pglGetString( GL_VENDOR );
@@ -353,135 +364,47 @@ void GL_InitExtensions( void )
 
 	// initalize until base opengl functions loaded
 
-	GL_CheckExtension( "glDrawRangeElements", drawrangeelementsfuncs, "gl_drawrangeelments", GL_DRAW_RANGEELEMENTS_EXT );
-
-	if( !GL_Support( GL_DRAW_RANGEELEMENTS_EXT ))
-		GL_CheckExtension( "GL_EXT_draw_range_elements", drawrangeelementsextfuncs, "gl_drawrangeelments", GL_DRAW_RANGEELEMENTS_EXT );
-
-	// multitexture
-	glConfig.max_texture_units = glConfig.max_texture_coords = glConfig.max_teximage_units = 1;
-	GL_CheckExtension( "GL_ARB_multitexture", multitexturefuncs, "gl_arb_multitexture", GL_ARB_MULTITEXTURE );
-
-	if( GL_Support( GL_ARB_MULTITEXTURE ))
-	{
-		pglGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &glConfig.max_texture_units );
-		GL_CheckExtension( "GL_ARB_texture_env_combine", NULL, "gl_texture_env_combine", GL_ENV_COMBINE_EXT );
-
-		if( !GL_Support( GL_ENV_COMBINE_EXT ))
-			GL_CheckExtension( "GL_EXT_texture_env_combine", NULL, "gl_texture_env_combine", GL_ENV_COMBINE_EXT );
-
-		if( GL_Support( GL_ENV_COMBINE_EXT ))
-			GL_CheckExtension( "GL_ARB_texture_env_dot3", NULL, "gl_texture_env_dot3", GL_DOT3_ARB_EXT );
-	}
-	else
-	{
-		GL_CheckExtension( "GL_SGIS_multitexture", sgis_multitexturefuncs, "gl_sgis_multitexture", GL_ARB_MULTITEXTURE );
-		if( GL_Support( GL_ARB_MULTITEXTURE )) glConfig.max_texture_units = 2;
-	}
-
-	if( glConfig.max_texture_units == 1 )
-		GL_SetExtension( GL_ARB_MULTITEXTURE, false );
-
-	// 3d texture support
-	GL_CheckExtension( "GL_EXT_texture3D", texture3dextfuncs, "gl_texture_3d", GL_TEXTURE_3D_EXT );
-
-	if( GL_Support( GL_TEXTURE_3D_EXT ))
-	{
-		pglGetIntegerv( GL_MAX_3D_TEXTURE_SIZE, &glConfig.max_3d_texture_size );
-
-		if( glConfig.max_3d_texture_size < 32 )
-		{
-			GL_SetExtension( GL_TEXTURE_3D_EXT, false );
-			MsgDev( D_ERROR, "GL_EXT_texture3D reported bogus GL_MAX_3D_TEXTURE_SIZE, disabled\n" );
-		}
-	}
-
-	GL_CheckExtension( "GL_SGIS_generate_mipmap", NULL, "gl_sgis_generate_mipmaps", GL_SGIS_MIPMAPS_EXT );
+	GL_SetExtension( GL_DRAW_RANGEELEMENTS_EXT, false );
+	GL_SetExtension( GL_ARB_MULTITEXTURE, false );
+	GL_SetExtension( GL_ENV_COMBINE_EXT, false );
+	GL_SetExtension( GL_DOT3_ARB_EXT, false );
+	GL_SetExtension( GL_TEXTURE_3D_EXT, false );
+	GL_SetExtension( GL_SGIS_MIPMAPS_EXT, true ); // gles specs
 
 	// hardware cubemaps
-	GL_CheckExtension( "GL_ARB_texture_cube_map", NULL, "gl_texture_cubemap", GL_TEXTURECUBEMAP_EXT );
+	GL_CheckExtension( "GL_OES_texture_cube_map", NULL, "gl_texture_cubemap", GL_TEXTURECUBEMAP_EXT );
 
 	if( GL_Support( GL_TEXTURECUBEMAP_EXT ))
 	{
 		pglGetIntegerv( GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, &glConfig.max_cubemap_size );
-
-		// check for seamless cubemaps too
-		GL_CheckExtension( "GL_ARB_seamless_cube_map", NULL, "gl_seamless_cubemap", GL_ARB_SEAMLESS_CUBEMAP );
 	}
+	GL_SetExtension( GL_ARB_SEAMLESS_CUBEMAP, false );
 
-	// point particles extension
-	GL_CheckExtension( "GL_EXT_point_parameters", pointparametersfunc, NULL, GL_EXT_POINTPARAMETERS );
+	GL_SetExtension( GL_EXT_POINTPARAMETERS, false );
+	GL_CheckExtension( "GL_OES_texture_npot", NULL, "gl_texture_npot", GL_ARB_TEXTURE_NPOT_EXT );
 
-	GL_CheckExtension( "GL_ARB_texture_non_power_of_two", NULL, "gl_texture_npot", GL_ARB_TEXTURE_NPOT_EXT );
-	GL_CheckExtension( "GL_ARB_texture_compression", texturecompressionfuncs, "gl_dds_hardware_support", GL_TEXTURE_COMPRESSION_EXT );
-	GL_CheckExtension( "GL_EXT_compiled_vertex_array", compiledvertexarrayfuncs, "gl_cva_support", GL_CUSTOM_VERTEX_ARRAY_EXT );
+	GL_SetExtension( GL_TEXTURE_COMPRESSION_EXT, false );
+	GL_SetExtension( GL_CUSTOM_VERTEX_ARRAY_EXT, false );
+	GL_SetExtension( GL_CLAMPTOEDGE_EXT, true ); // by gles1 specs
+	GL_SetExtension( GL_ANISOTROPY_EXT, false );
+	GL_SetExtension( GL_TEXTURE_LODBIAS, false );
+	GL_SetExtension( GL_CLAMP_TEXBORDER_EXT, false );
+	GL_SetExtension( GL_BLEND_MINMAX_EXT, false );
+	GL_SetExtension( GL_BLEND_SUBTRACT_EXT, false );
+	GL_SetExtension( GL_SEPARATESTENCIL_EXT, false );
+	GL_SetExtension( GL_STENCILTWOSIDE_EXT, false );
+	GL_SetExtension( GL_ARB_VERTEX_BUFFER_OBJECT_EXT, false );
+	GL_SetExtension( GL_TEXTURE_ENV_ADD_EXT,false  );
+	GL_SetExtension( GL_SHADER_OBJECTS_EXT, false );
+	GL_SetExtension( GL_SHADER_GLSL100_EXT, false );
+	GL_SetExtension( GL_VERTEX_SHADER_EXT,false );
+	GL_SetExtension( GL_FRAGMENT_SHADER_EXT, false );
+	GL_SetExtension( GL_SHADOW_EXT, false );
+	GL_SetExtension( GL_ARB_DEPTH_FLOAT_EXT, false );
+	GL_SetExtension( GL_OCCLUSION_QUERIES_EXT,false );
+	GL_CheckExtension( "GL_OES_depth_texture", NULL, "gl_depthtexture", GL_DEPTH_TEXTURE );
 
-	if( !GL_Support( GL_CUSTOM_VERTEX_ARRAY_EXT ))
-		GL_CheckExtension( "GL_SGI_compiled_vertex_array", compiledvertexarrayfuncs, "gl_cva_support", GL_CUSTOM_VERTEX_ARRAY_EXT );
-
-	GL_CheckExtension( "GL_EXT_texture_edge_clamp", NULL, "gl_clamp_to_edge", GL_CLAMPTOEDGE_EXT );
-
-	if( !GL_Support( GL_CLAMPTOEDGE_EXT ))
-		GL_CheckExtension("GL_SGIS_texture_edge_clamp", NULL, "gl_clamp_to_edge", GL_CLAMPTOEDGE_EXT );
-
-	glConfig.max_texture_anisotropy = 0.0f;
-	GL_CheckExtension( "GL_EXT_texture_filter_anisotropic", NULL, "gl_ext_anisotropic_filter", GL_ANISOTROPY_EXT );
-
-	if( GL_Support( GL_ANISOTROPY_EXT ))
-		pglGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.max_texture_anisotropy );
-
-	GL_CheckExtension( "GL_EXT_texture_lod_bias", NULL, "gl_ext_texture_lodbias", GL_TEXTURE_LODBIAS );
-	if( GL_Support( GL_TEXTURE_LODBIAS ))
-		pglGetFloatv( GL_MAX_TEXTURE_LOD_BIAS_EXT, &glConfig.max_texture_lodbias );
-
-	GL_CheckExtension( "GL_ARB_texture_border_clamp", NULL, "gl_ext_texborder_clamp", GL_CLAMP_TEXBORDER_EXT );
-
-	GL_CheckExtension( "GL_EXT_blend_minmax", blendequationfuncs, "gl_ext_customblend", GL_BLEND_MINMAX_EXT );
-	GL_CheckExtension( "GL_EXT_blend_subtract", blendequationfuncs, "gl_ext_customblend", GL_BLEND_SUBTRACT_EXT );
-
-	GL_CheckExtension( "glStencilOpSeparate", gl2separatestencilfuncs, "gl_separate_stencil", GL_SEPARATESTENCIL_EXT );
-
-	if( !GL_Support( GL_SEPARATESTENCIL_EXT ))
-		GL_CheckExtension("GL_ATI_separate_stencil", atiseparatestencilfuncs, "gl_separate_stencil", GL_SEPARATESTENCIL_EXT );
-
-	GL_CheckExtension( "GL_EXT_stencil_two_side", stenciltwosidefuncs, "gl_stenciltwoside", GL_STENCILTWOSIDE_EXT );
-	GL_CheckExtension( "GL_ARB_vertex_buffer_object", vbofuncs, "gl_vertex_buffer_object", GL_ARB_VERTEX_BUFFER_OBJECT_EXT );
-
-	GL_CheckExtension( "GL_ARB_texture_env_add", NULL, "gl_texture_env_add", GL_TEXTURE_ENV_ADD_EXT );
-
-	// vp and fp shaders
-	GL_CheckExtension( "GL_ARB_shader_objects", shaderobjectsfuncs, "gl_shaderobjects", GL_SHADER_OBJECTS_EXT );
-	GL_CheckExtension( "GL_ARB_shading_language_100", NULL, "gl_glslprogram", GL_SHADER_GLSL100_EXT );
-	GL_CheckExtension( "GL_ARB_vertex_shader", vertexshaderfuncs, "gl_vertexshader", GL_VERTEX_SHADER_EXT );
-	GL_CheckExtension( "GL_ARB_fragment_shader", NULL, "gl_pixelshader", GL_FRAGMENT_SHADER_EXT );
-
-	GL_CheckExtension( "GL_ARB_depth_texture", NULL, "gl_depthtexture", GL_DEPTH_TEXTURE );
-	GL_CheckExtension( "GL_ARB_shadow", NULL, "gl_arb_shadow", GL_SHADOW_EXT );
-
-	GL_CheckExtension( "GL_ARB_texture_float", NULL, "gl_arb_texture_float", GL_ARB_TEXTURE_FLOAT_EXT );
-	GL_CheckExtension( "GL_ARB_depth_buffer_float", NULL, "gl_arb_depth_float", GL_ARB_DEPTH_FLOAT_EXT );
-
-	// occlusion queries
-	GL_CheckExtension( "GL_ARB_occlusion_query", occlusionfunc, "gl_occlusion_queries", GL_OCCLUSION_QUERIES_EXT );
-
-	if( GL_Support( GL_SHADER_GLSL100_EXT ))
-	{
-		pglGetIntegerv( GL_MAX_TEXTURE_COORDS_ARB, &glConfig.max_texture_coords );
-		pglGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB, &glConfig.max_teximage_units );
-	}
-	else
-	{
-		// just get from multitexturing
-		glConfig.max_texture_coords = glConfig.max_teximage_units = glConfig.max_texture_units;
-	}
-
-	// rectangle textures support
-	if( Q_strstr( glConfig.extensions_string, "GL_NV_texture_rectangle" ))
-	{
-		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_NV;
-		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_NV, &glConfig.max_2d_rectangle_size );
-	}
-	else glConfig.texRectangle = glConfig.max_2d_rectangle_size = 0; // no rectangle
+	glConfig.texRectangle = glConfig.max_2d_rectangle_size = 0; // no rectangle
 
 	glConfig.max_2d_texture_size = 0;
 	pglGetIntegerv( GL_MAX_TEXTURE_SIZE, &glConfig.max_2d_texture_size );
@@ -571,10 +494,7 @@ void GL_UpdateSwapInterval( void )
 	if( gl_swapInterval->modified )
 	{
 		gl_swapInterval->modified = false;
-#ifdef XASH_SDL
-		if( SDL_GL_SetSwapInterval(gl_swapInterval->integer) )
-			MsgDev(D_ERROR, "SDL_GL_SetSwapInterval: %s\n", SDL_GetError());
-#endif
+		Android_SwapInterval( gl_swapInterval->integer );
 	}
 }
 
@@ -585,9 +505,7 @@ GL_ContextError
 */
 static void GL_ContextError( void )
 {
-#ifdef XASH_SDL
-	MsgDev( D_ERROR, "GL_ContextError: %s\n", SDL_GetError() );
-#endif
+
 }
 
 /*
@@ -597,22 +515,7 @@ GL_SetupAttributes
 */
 void GL_SetupAttributes()
 {
-#ifdef XASH_SDL
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-
-#endif // XASH_SDL
 }
 
 /*
@@ -623,15 +526,6 @@ GL_CreateContext
 qboolean GL_CreateContext( void )
 {
 	nanoGL_Init();
-	/*if( !Sys_CheckParm( "-gldebug" ) || host.developer < 1 ) // debug bit the kills perfomance
-		return true;*/
-#ifdef XASH_SDL
-	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
-	{
-		MsgDev(D_ERROR, "GL_CreateContext: %s\n", SDL_GetError());
-		return GL_DeleteContext();
-	}
-#endif
 	return true;
 }
 
@@ -642,13 +536,6 @@ GL_UpdateContext
 */
 qboolean GL_UpdateContext( void )
 {
-#ifdef XASH_SDL
-	if(!( SDL_GL_MakeCurrent( host.hWnd, glw_state.context ) ) )
-	{
-		MsgDev(D_ERROR, "GL_UpdateContext: %s", SDL_GetError());
-		return GL_DeleteContext();
-	}
-#endif
 	return true;
 }
 
@@ -659,11 +546,6 @@ GL_DeleteContext
 */
 qboolean GL_DeleteContext( void )
 {
-#ifdef XASH_SDL
-	SDL_GL_DeleteContext(glw_state.context);
-#endif
-	glw_state.context = NULL;
-
 	return false;
 }
 
@@ -692,86 +574,15 @@ void VID_StartupGamma( void )
 
 void VID_RestoreGamma( void )
 {
-	// no hardware gamma
 }
 
 qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
-#ifdef XASH_SDL
-	static string	wndname;
-	Uint32 wndFlags = SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-
-	Q_strncpy( wndname, GI->title, sizeof( wndname ));
-
-	host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
-		r_ypos->integer, width, height, wndFlags);
-
-	if( !host.hWnd )
-	{
-		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s': %s\n", wndname, SDL_GetError());
-		return false;
-	}
-
-	if( fullscreen )
-	{
-		SDL_DisplayMode want, got;
-
-		want.w = width;
-		want.h = height;
-		want.driverdata = NULL;
-		want.format = want.refresh_rate = 0; // don't care
-
-		if( !SDL_GetClosestDisplayMode(0, &want, &got) )
-			return false;
-
-		MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
-
-		if( SDL_SetWindowDisplayMode(host.hWnd, &got) == -1 )
-			return false;
-
-		if( SDL_SetWindowFullscreen(host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
-			return false;
-
-	}
-
-	host.window_center_x = width / 2;
-	host.window_center_y = height / 2;
-	SDL_ShowWindow( host.hWnd );
-#else
-	host.hWnd = 1; //fake window
-	host.window_center_x = width / 2;
-	host.window_center_y = height / 2;
-#endif
-	if( !glw_state.initialized )
-	{
-		if( !GL_CreateContext( ))
-			return false;
-
-		VID_StartupGamma();
-	}
-	else
-	{
-		if( !GL_UpdateContext( ))
-			return false;
-	}
 	return true;
 }
 
 void VID_DestroyWindow( void )
 {
-#ifdef XASH_SDL
-	if( glw_state.context )
-	{
-		SDL_GL_DeleteContext( glw_state.context );
-		glw_state.context = NULL;
-	}
-
-	if( host.hWnd )
-	{
-		SDL_DestroyWindow ( host.hWnd );
-		host.hWnd = NULL;
-	}
-#endif
 	if( glState.fullScreen )
 	{
 		glState.fullScreen = false;
@@ -790,9 +601,12 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 	//Cvar_SetFloat("vid_mode", VID_NOMODE);
 	Cvar_SetFloat("width", width);
 	Cvar_SetFloat("height", height);
+	MsgDev( D_NOTE, "R_ChangeDisplaySettingsFast(%d, %d)\n", width, height);
 
 	glState.width = width;
 	glState.height = height;
+	host.window_center_x = width / 2;
+	host.window_center_y = height / 2;
 
 	glState.wideScreen = true; // V_AdjustFov will check for widescreen
 
@@ -802,31 +616,12 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 
 rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 {
-#ifdef XASH_SDL
-	SDL_DisplayMode displayMode;
-
-	SDL_GetCurrentDisplayMode(0, &displayMode);
-
-	width = displayMode.w;
-	height = displayMode.h;
-	fullscreen = false;
-
+	Android_GetScreenRes(&width, &height);
 	R_SaveVideoMode( width, height );
 
-	// check our desktop attributes
-	glw_state.desktopBitsPixel = SDL_BITSPERPIXEL(displayMode.format);
-	glw_state.desktopWidth = displayMode.w;
-	glw_state.desktopHeight = displayMode.h;
+	host.window_center_x = width / 2;
+	host.window_center_y = height / 2;
 
-	glState.fullScreen = fullscreen;
-	glState.wideScreen = true; // V_AdjustFov will check for widescreen
-
-	if(!host.hWnd)
-	{
-		if( !VID_CreateWindow( width, height, fullscreen ) )
-			return rserr_invalid_mode;
-	}
-#endif // XASH_SDL
 	return rserr_ok;
 }
 
@@ -841,68 +636,12 @@ Set the described video mode
 */
 qboolean VID_SetMode( void )
 {
-#ifdef XASH_SDL
-	qboolean	fullscreen = false;
-	int iScreenWidth, iScreenHeight;
-	rserr_t	err;
-
-	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
-	{
-		SDL_DisplayMode mode;
-
-		SDL_GetDesktopDisplayMode(0, &mode);
-
-		iScreenWidth = mode.w;
-		iScreenHeight = mode.h;
-
-		Cvar_SetFloat( "fullscreen", 1 );
-	}
-	else if( vid_mode->modified && vid_mode->integer >= 0 && vid_mode->integer <= num_vidmodes )
-	{
-		iScreenWidth = vidmode[vid_mode->integer].width;
-		iScreenHeight = vidmode[vid_mode->integer].height;
-	}
-	else
-	{
-		iScreenHeight = scr_height->integer;
-		iScreenWidth = scr_width->integer;
-	}
-
-	gl_swapInterval->modified = true;
-	fullscreen = Cvar_VariableInteger("fullscreen") != 0;
-
-	if(( err = R_ChangeDisplaySettings( iScreenWidth, iScreenHeight, fullscreen )) == rserr_ok )
-	{
-		glConfig.prev_width = iScreenWidth;
-		glConfig.prev_height = iScreenHeight;
-	}
-	else
-	{
-		if( err == rserr_invalid_fullscreen )
-		{
-			Cvar_SetFloat( "fullscreen", 0 );
-			MsgDev( D_ERROR, "VID_SetMode: fullscreen unavailable in this mode\n" );
-			if(( err = R_ChangeDisplaySettings( iScreenWidth, iScreenHeight, false )) == rserr_ok )
-				return true;
-		}
-		else if( err == rserr_invalid_mode )
-		{
-			Cvar_SetFloat( "vid_mode", glConfig.prev_mode );
-			MsgDev( D_ERROR, "VID_SetMode: invalid mode\n" );
-		}
-
-		// try setting it back to something safe
-		if(( err = R_ChangeDisplaySettings( glConfig.prev_width, glConfig.prev_height, false )) != rserr_ok )
-		{
-			MsgDev( D_ERROR, "VID_SetMode: could not revert to safe mode\n" );
-			return false;
-		}
-	}
-#endif
+	int width, height;
+	Android_GetScreenRes( &width, &height );
+	MsgDev( D_NOTE, "VID_SetMode(%d, %d)\n", width, height);
+	R_ChangeDisplaySettings( width, height, false );
 	return true;
 }
-
-
 
 /*
 ==================
@@ -911,14 +650,9 @@ R_Init_OpenGL
 */
 qboolean R_Init_OpenGL( void )
 {
-	GL_SetupAttributes();
-#ifdef XASH_SDL
-	if( SDL_GL_LoadLibrary( NULL ) )
-	{
-		MsgDev( D_ERROR, "Couldn't initialize OpenGL: %s\n", SDL_GetError());
-		return false;
-	}
-#endif
+	VID_StartupGamma();
+	MsgDev( D_NOTE, "R_Init_OpenGL()\n");
+	Android_InitGL();
 	return VID_SetMode();
 }
 
@@ -935,11 +669,10 @@ void R_Free_OpenGL( void )
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();
-#ifdef XASH_SDL
-	SDL_GL_UnloadLibrary ();
-#endif
+
 	// now all extensions are disabled
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
 	glw_state.initialized = false;
 }
 #endif
+#endif // XASH_DEDICATED

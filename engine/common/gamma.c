@@ -12,7 +12,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
+#ifndef XASH_DEDICATED
 #include "common.h"
 #include <mathlib.h>
 #include "gl_local.h"
@@ -66,3 +66,4 @@ byte TextureToGamma( byte b )
 	b = bound( 0, b, 255 );
 	return gammatable[b];
 }
+#endif

@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "client.h"
@@ -57,7 +59,7 @@ void SND_CloseMouth( channel_t *ch )
 void SND_MoveMouth8( channel_t *ch, wavdata_t *pSource, int count )
 {
 	cl_entity_t	*clientEntity;
-	char		*pdata = NULL;
+	signed char		*pdata = NULL;
 	mouth_t		*pMouth = NULL;
 	int		savg, data;
 	int		scount, pos = 0;
@@ -150,3 +152,4 @@ void SND_MoveMouth16( channel_t *ch, wavdata_t *pSource, int count )
 		pMouth->sndcount = 0;
 	}
 }
+#endif // XASH_DEDICATED

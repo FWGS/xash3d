@@ -71,6 +71,19 @@ extern int CL_UPDATE_BACKUP;
 
 #define INVALID_HANDLE	0xFFFF		// for XashXT cache system
 
+// used by SetUpPlayerPrediction
+#if 0
+typedef struct
+{
+	int movetype;
+	int solid;
+	int usehull;
+	qboolean active;
+	vec3_t origin;
+	vec3_t angles;
+} predicted_player_t;
+#endif
+
 // the client_t structure is wiped completely at every
 // server map change
 typedef struct
@@ -148,6 +161,9 @@ typedef struct
 	int predicted_viewmodel;
 	float weaponstarttime;
 	int weaponseq;
+#if 0 // used by SetUpPlayerPrediction
+	predicted_player_t predicted_players[MAX_CLIENTS];
+#endif
 } client_t;
 
 /*
@@ -372,8 +388,8 @@ typedef struct
 	ui_globalvars_t	*globals;
 
 	qboolean		drawLogo;			// set to TRUE if logo.avi missed or corrupted
-	long		logo_xres;
-	long		logo_yres;
+	int		logo_xres;
+	int		logo_yres;
 	float		logo_length;
 	qboolean	use_text_api;
 } menu_static_t;
@@ -477,16 +493,6 @@ extern client_static_t	cls;
 extern clgame_static_t	clgame;
 extern menu_static_t	menu;
 
-extern struct predicted_player {
-	int flags;
-	int movetype;
-	int solid;
-	int usehull;
-	qboolean active;
-	vec3_t origin; // predicted origin
-	vec3_t angles;
-} predicted_players[MAX_CLIENTS];
-
 #ifdef __cplusplus
 }
 #endif
@@ -516,6 +522,7 @@ extern convar_t	*cl_levelshot_name;
 extern convar_t	*cl_draw_beams;
 extern convar_t	*cl_lw;
 extern convar_t *cl_trace_events;
+extern convar_t *cl_trace_stufftext;
 extern convar_t	*cl_sprite_nearest;
 extern convar_t *hud_scale;
 extern convar_t	*scr_centertime;
@@ -628,11 +635,14 @@ int pfnIndexFromTrace( struct pmtrace_s *pTrace );
 int CL_FindModelIndex( const char *m );
 HSPRITE pfnSPR_Load( const char *szPicName );
 HSPRITE pfnSPR_LoadExt( const char *szPicName, uint texFlags );
+void SPR_AdjustSize( float *x, float *y, float *w, float *h );
 void TextAdjustSize( int *x, int *y, int *w, int *h );
 void PicAdjustSize( float *x, float *y, float *w, float *h );
 void CL_PlayerTrace( float *start, float *end, int traceFlags, int ignore_pe, pmtrace_t *tr );
 void CL_PlayerTraceExt( float *start, float *end, int traceFlags, int (*pfnIgnore)( physent_t *pe ), pmtrace_t *tr );
 void CL_SetTraceHull( int hull );
+void CL_FillRGBA( int x, int y, int width, int height, int r, int g, int b, int a );
+void CL_FillRGBABlend( int x, int y, int width, int height, int r, int g, int b, int a );
 
 _inline cl_entity_t *CL_EDICT_NUM( int n )
 {
@@ -797,7 +807,7 @@ void Con_Bottom( void );
 // s_main.c
 //
 void S_StreamRawSamples( int samples, int rate, int width, int channels, const byte *data );
-void S_StartBackgroundTrack( const char *intro, const char *loop, long position );
+void S_StartBackgroundTrack( const char *intro, const char *loop, int position );
 void S_StopBackgroundTrack( void );
 void S_StreamSetPause( int pause );
 void S_StartStreaming( void );

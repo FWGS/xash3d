@@ -12,27 +12,24 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
+#ifndef XASH_DEDICATED
 
 #include "common.h"
 #include "input.h"
 #include "client.h"
+#include "joyinput.h"
+
 #ifdef XASH_SDL
 #include <SDL_keyboard.h>
 #include <events.h>
 #endif
+
 typedef struct key_s
 {
 	qboolean		down;
 	int		repeats;	// if > 1, it is autorepeating
 	const char	*binding;
 } engine_key_t;
-
-typedef struct keyname_s
-{
-	char		*name;	// key name
-	int		keynum;	// key number
-	const char	*binding;	// default bind
-} keyname_t;
 
 engine_key_t	keys[256];
 
@@ -96,22 +93,22 @@ keyname_t keynames[] =
 {"KP_MINUS",	K_KP_MINUS,	""		},
 {"KP_PLUS",	K_KP_PLUS,	""		},
 {"PAUSE",		K_PAUSE,		"pause"		},
-{"AUX1", K_AUX1, ""},
-{"AUX2", K_AUX2, ""},
-{"AUX3", K_AUX3, ""},
-{"AUX4", K_AUX4, ""},
-{"AUX5", K_AUX5, ""},
-{"AUX6", K_AUX6, ""},
-{"AUX7", K_AUX7, ""},
-{"AUX8", K_AUX8, ""},
-{"AUX9", K_AUX9, ""},
-{"AUX10", K_AUX10, ""},
-{"AUX11", K_AUX11, ""},
-{"AUX12", K_AUX12, ""},
-{"AUX13", K_AUX13, ""},
-{"AUX14", K_AUX14, ""},
-{"AUX15", K_AUX15, ""},
-{"AUX16", K_AUX16, ""},
+{"A_BUTTON", K_AUX1, ""}, // they match xbox controller
+{"B_BUTTON", K_AUX2, ""},
+{"X_BUTTON", K_AUX3, ""},
+{"Y_BUTTON", K_AUX4, ""},
+{"L1_BUTTON",  K_AUX5, ""},
+{"R1_BUTTON",  K_AUX6, ""},
+{"BACK",   K_AUX7, ""},
+{"MODE",   K_AUX8, ""},
+{"START",  K_AUX9, ""},
+{"STICK1", K_AUX10, ""},
+{"STICK2", K_AUX11, ""},
+{"L2_BUTTON", K_AUX12, ""}, // in case...
+{"R2_BUTTON", K_AUX13, ""},
+{"C_BUTTON", K_AUX14, ""},
+{"Z_BUTTON", K_AUX15, ""},
+{"AUX16", K_AUX16, ""}, // generic
 {"AUX17", K_AUX17, ""},
 {"AUX18", K_AUX18, ""},
 {"AUX19", K_AUX19, ""},
@@ -128,7 +125,7 @@ keyname_t keynames[] =
 {"AUX30", K_AUX30, ""},
 {"AUX31", K_AUX31, ""},
 {"AUX32", K_AUX32, ""},
-{"JOY1" , K_JOY1 , ""},
+{"JOY1" , K_JOY1 , ""}, // bind to dpad?
 {"JOY2" , K_JOY2 , ""},
 {"JOY3" , K_JOY3 , ""},
 {"JOY4" , K_JOY4 , ""},
@@ -569,7 +566,7 @@ void Key_Event( int key, qboolean down )
 	//Con_Printf( "Keycode %d\n", key );
 	if ( key > 255 || key < 0) 
 	{
-		Con_Printf ("Keynum %d out of range\n", key);
+		MsgDev (D_NOTE, "Keynum %d out of range\n", key);
 		return;
 	}
 	// update auto-repeat status and BUTTON_ANY status
@@ -636,7 +633,6 @@ void Key_Event( int key, qboolean down )
 	if( cls.key_dest == key_menu )
 	{
 		// only non printable keys passed
-#ifdef XASH_SDL
 		// shift + click enables text mode (old menu compatibility)
 		/*if( down && !host.textmode && Key_IsDown( K_SHIFT ) && ( key == 241 ) )
 		{
@@ -648,8 +644,7 @@ void Key_Event( int key, qboolean down )
 			SDLash_EnableTextInput( false );
 		*/
 		if( !menu.use_text_api )
-			SDLash_EnableTextInput( true );
-#endif
+			Key_EnableTextInput( true, false );
 		//pass printable chars for old menus
 		if( !menu.use_text_api && !host.textmode && down && ( key >= 32 ) && ( key <= 'z' ) )
 		{
@@ -749,6 +744,18 @@ void Key_Event( int key, qboolean down )
 	}
 }
 
+void Key_EnableTextInput( qboolean enable, qboolean force )
+{
+#ifdef XASH_SDL
+	SDLash_EnableTextInput( enable, force );
+#elif defined(__ANDROID__)
+	Android_EnableTextInput( enable, force );
+#endif
+#if 0
+	Joy_EnableTextInput( enable, force );
+#endif
+}
+
 /*
 =========
 Key_SetKeyDest
@@ -761,9 +768,7 @@ void Key_SetKeyDest( int key_dest )
 	switch( key_dest )
 	{
 	case key_game:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( false );
-	#endif
+		Key_EnableTextInput( false, false );
 		if( host_xashds_hacks->value )
 		{
 			Cbuf_Execute();
@@ -775,21 +780,15 @@ void Key_SetKeyDest( int key_dest )
 		cls.key_dest = key_game;
 		break;
 	case key_menu:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( false );
-	#endif
+		Key_EnableTextInput( false, false );
 		cls.key_dest = key_menu;
 		break;
 	case key_console:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( true );
-	#endif
+		Key_EnableTextInput( true, false );
 		cls.key_dest = key_console;
 		break;
 	case key_message:
-	#ifdef XASH_SDL
-		SDLash_EnableTextInput( true );
-	#endif
+		Key_EnableTextInput( true, false );
 		cls.key_dest = key_message;
 		break;
 	default:
@@ -851,3 +850,4 @@ void CL_CharEvent( int key )
 		UI_CharEvent( key );
 	}
 }
+#endif

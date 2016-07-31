@@ -192,7 +192,7 @@ Searches the string for the given
 key and returns the associated value, or an empty string.
 ===============
 */
-char *Info_ValueForKey( const char *s, const char *key )
+const char *Info_ValueForKey( const char *s, const char *key )
 {
 	char	pkey[MAX_INFO_STRING];
 	static	char value[2][MAX_INFO_STRING]; // use two buffers so compares work without stomping on each other
@@ -1210,7 +1210,7 @@ UI_Slider_Draw
 */
 void UI_Slider_Draw( menuSlider_s *sl )
 {
-	int	justify;
+	int	justify = 0;
 	int	shadow;
 	int	textHeight, sliderX;
 

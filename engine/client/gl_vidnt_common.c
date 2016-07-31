@@ -1,3 +1,21 @@
+/*
+gl_vid_common.c - Common video initialization functions
+Copyright (C) 2010 Uncle Mike
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
+
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -35,6 +53,7 @@ convar_t	*gl_finish;
 convar_t	*gl_nosort;
 convar_t	*gl_clear;
 convar_t	*gl_test;
+convar_t	*gl_msaa;
 
 convar_t	*r_xpos;
 convar_t	*r_ypos;
@@ -209,7 +228,7 @@ void R_SaveVideoMode( int w, int h )
 	if( vid_mode->integer >= 0 && vid_mode->integer <= num_vidmodes )
 		glState.wideScreen = vidmode[vid_mode->integer].wideScreen;
 
-	MsgDev( D_INFO, "Set: [%dx%d]\n", w, h );
+	MsgDev( D_NOTE, "Set: [%dx%d]\n", w, h );
 }
 
 
@@ -242,6 +261,10 @@ check vid modes and fullscreen
 */
 void VID_CheckChanges( void )
 {
+	// check if screen cvars registered
+
+	SCR_Init();
+
 	if( cl_allow_levelshots->modified )
 	{
 		GL_FreeTexture( cls.loadingBar );
@@ -278,6 +301,11 @@ static void GL_SetDefaults( void )
 	pglFinish();
 
 	pglClearColor( 0.5f, 0.5f, 0.5f, 1.0f );
+
+#ifdef GL_MULTISAMPLE
+	if( gl_msaa->integer )
+		pglEnable( GL_MULTISAMPLE );
+#endif
 
 	pglDisable( GL_DEPTH_TEST );
 	pglDisable( GL_CULL_FACE );
@@ -368,7 +396,7 @@ void R_RenderInfo_f( void )
 	}
 
 	Msg( "\n" );
-	Msg( "MODE: %i x %i %s\n", scr_width->integer, scr_height->integer );
+	Msg( "MODE: %i x %i\n", scr_width->integer, scr_height->integer );
 	Msg( "GAMMA: %s\n", (glConfig.deviceSupportsGamma) ? "hardware" : "software" );
 	Msg( "\n" );
 	Msg( "PICMIP: %i\n", gl_picmip->integer );
@@ -429,6 +457,7 @@ void GL_InitCommands( void )
 	gl_texture_lodbias =  Cvar_Get( "gl_texture_lodbias", "0.0", CVAR_ARCHIVE, "LOD bias for mipmapped textures" );
 	gl_compress_textures = Cvar_Get( "gl_compress_textures", "0", CVAR_GLCONFIG, "compress textures to safe video memory" );
 	gl_luminance_textures = Cvar_Get( "gl_luminance_textures", "0", CVAR_GLCONFIG, "force all textures to luminance" );
+	gl_msaa = Cvar_Get( "gl_msaa", "0", CVAR_GLCONFIG, "MSAA samples. Use with caution, engine may fail with some values" );
 	gl_compensate_gamma_screenshots = Cvar_Get( "gl_compensate_gamma_screenshots", "0", CVAR_ARCHIVE, "allow to apply gamma value for screenshots and snapshots" );
 	gl_keeptjunctions = Cvar_Get( "gl_keeptjunctions", "1", CVAR_ARCHIVE, "disable to reduce vertexes count but removing tjuncs causes blinking pixels" );
 	gl_allow_static = Cvar_Get( "gl_allow_static", "0", CVAR_ARCHIVE, "force to drawing non-moveable brushes as part of world (save FPS)" );
@@ -440,7 +469,6 @@ void GL_InitCommands( void )
 	gl_test = Cvar_Get( "gl_test", "0", 0, "engine developer cvar for quick testing new features" );
 	gl_wireframe = Cvar_Get( "gl_wireframe", "0", 0, "show wireframe overlay" );
 	gl_overview = Cvar_Get( "dev_overview", "0", 0, "show level overview" );
-
 	// these cvar not used by engine but some mods requires this
 	Cvar_Get( "gl_polyoffset", "-0.1", 0, "polygon offset for decals" );
 
@@ -579,3 +607,4 @@ void GL_CheckForErrors_( const char *filename, const int fileline )
 
 	Host_Error( "GL_CheckForErrors: %s (called at %s:%i)\n", str, filename, fileline );
 }
+#endif // XASH_DEDICATED

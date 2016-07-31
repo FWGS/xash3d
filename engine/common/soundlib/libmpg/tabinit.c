@@ -2,7 +2,7 @@
 
 #include "mpg123.h"
 
-const long intwinbase[] = {
+const int intwinbase[] = {
      0,    -1,    -1,    -1,    -1,    -1,    -1,    -2,    -2,    -2,
     -2,    -3,    -3,    -4,    -4,    -5,    -5,    -6,    -7,    -7,
     -8,    -9,   -10,   -11,   -13,   -14,   -16,   -17,   -19,   -21,
@@ -30,7 +30,7 @@ const long intwinbase[] = {
  64019, 65290, 66494, 67629, 68692, 69679, 70590, 71420, 72169, 72835,
  73415, 73908, 74313, 74630, 74856, 74992, 75038 };
 
-void make_decode_tables(struct StaticData * psd, long scaleval)
+void make_decode_tables(struct StaticData * psd, int scaleval)
 {
   int i,j,k,kr,divv;
 
