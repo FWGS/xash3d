@@ -1830,7 +1830,8 @@ void SV_Baselines_f( sv_client_t *cl )
 	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < svgame.numEntities )
 	{
 		base = &svs.baselines[start];
-		if( base->number && ( base->modelindex || base->effects != EF_NODRAW ))
+		// if baseline created in SV_CreateBaselines
+		if( base->number || !start )
 		{
 			BF_WriteByte( &cl->netchan.message, svc_spawnbaseline );
 			MSG_WriteDeltaEntity( &nullstate, base, &cl->netchan.message, true, SV_IsPlayerIndex( base->number ), sv.time );
