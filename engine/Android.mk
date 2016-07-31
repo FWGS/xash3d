@@ -57,7 +57,7 @@ LOCAL_SRC_FILES := \
            client/cl_tent.c \
            client/cl_video.c \
            client/cl_view.c \
-		   client/gl_backend.c \
+           client/gl_backend.c \
            client/gl_beams.c \
            client/gl_cull.c \
            client/gl_decals.c \
@@ -75,7 +75,7 @@ LOCAL_SRC_FILES := \
            client/gl_studio.c \
            client/gl_vidnt_common.c \
            client/gl_warp.c \
-		   client/s_backend_opensles.c \
+           client/s_backend_opensles.c \
            client/s_dsp.c \
            client/s_load.c \
            client/s_main.c \
@@ -101,6 +101,7 @@ LOCAL_SRC_FILES := \
            common/infostring.c \
            common/input.c \
            common/input_evdevkey.c \
+           common/joyinput.c \
            common/keys.c \
            common/library.c \
            common/mathlib.c \
