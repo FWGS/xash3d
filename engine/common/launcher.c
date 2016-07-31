@@ -31,7 +31,25 @@ void Launcher_ChangeGame( const char *progname )
 	Host_Shutdown( );
 	exit( Host_Main( szArgc, szArgv, szGameDir, 1, &Launcher_ChangeGame ) );
 }
-
+#ifdef XASH_NOCONHOST
+#include <windows.h>
+int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow)
+{
+	int szArgc;
+	char **szArgv;
+	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
+	int size, i = 0;
+	szArgv = (char**)malloc(szArgc*sizeof(char*));
+	for (; i < szArgc; ++i)
+	{
+		size = wcslen(lpArgv[i]) + 1;
+		szArgv[i] = (char*)malloc(size);
+		wcstombs(szArgv[i], lpArgv[i], size);
+	}
+	LocalFree(lpArgv);
+	main( szArgc, szArgv );
+}
+#endif
 int main( int argc, char** argv )
 {
 	const char *gamedir = getenv("XASH3D_GAMEDIR");

@@ -2433,6 +2433,9 @@ static void R_StudioDrawPoints( void )
 	if( m_skinnum != 0 && m_skinnum < m_pTextureHeader->numskinfamilies )
 		pskinref += (m_skinnum * m_pTextureHeader->numskinref);
 
+	if( m_pSubModel->numverts > MAXSTUDIOVERTS )
+		m_pSubModel->numverts = MAXSTUDIOVERTS;
+
 	for( i = 0; i < m_pSubModel->numverts; i++ )
 		Matrix3x4_VectorTransform( g_bonestransform[pvertbone[i]], pstudioverts[i], g_xformverts[i] );
 

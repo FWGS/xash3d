@@ -13,17 +13,24 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#if defined(__ANDROID__) && !defined( XASH_SDL )
+ #if defined(__ANDROID__) && !defined( XASH_SDL )
 
 #include "nanogl.h" //use NanoGL
 #include <pthread.h>
 #include "common.h"
 #include "input.h"
+#include "joyinput.h"
+#include "touch.h"
 #include "client.h"
 #include <android/log.h>
 #include <jni.h>
 #include <EGL/egl.h> // nanogl
 convar_t *android_sleep;
+
+#ifndef JAVA_EXPORT
+#define JAVA_EXPORT // a1ba: workaround for my IDE, where Java files are not included
+#endif
+
 
 static const int s_android_scantokey[] =
 {
@@ -73,16 +80,67 @@ typedef enum event_type
 	event_touch_move,
 	event_key_down,
 	event_key_up,
-	event_motion,
 	event_set_pause,
-	event_resize
+	event_resize,
+	event_joyhat,
+	event_joyball,
+	event_joybutton,
+	event_joyaxis,
+	event_joyadd,
+	event_joyremove
 } eventtype_t;
+
+typedef struct touchevent_s
+{
+	float x;
+	float y;
+	float dx;
+	float dy;
+} touchevent_t;
+
+typedef struct joyball_s
+{
+	short xrel;
+	short yrel;
+	byte ball;
+} joyball_t;
+
+typedef struct joyhat_s
+{
+	byte hat;
+	byte key;
+} joyhat_t;
+
+typedef struct joyaxis_s
+{
+	short val;
+	byte axis;
+} joyaxis_t;
+
+typedef struct joybutton_s
+{
+	int down;
+	byte button;
+} joybutton_t;
+
+typedef struct keyevent_s
+{
+	int code;
+} keyevent_t;
 
 typedef struct event_s
 {
 	eventtype_t type;
-	int arg; // finger or key id
-	float x, y, dx, dy;
+	int arg;
+	union
+	{
+		touchevent_t touch;
+		joyhat_t hat;
+		joyball_t ball;
+		joyaxis_t axis;
+		joybutton_t button;
+		keyevent_t key;
+	};
 } event_t;
 
 typedef struct finger_s
@@ -125,7 +183,6 @@ static struct nativeegl_s
 #define Android_PushEvent() Android_Unlock()
 
 void Android_UpdateSurface( void );
-int IN_TouchEvent( int type, int fingerID, float x, float y, float dx, float dy );
 int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, void *func );
 void VID_SetMode( void );
 void S_Activate( qboolean active );
@@ -171,7 +228,9 @@ void Android_RunEvents()
 		case event_touch_down:
 		case event_touch_up:
 		case event_touch_move:
-			IN_TouchEvent( events.queue[i].type, events.queue[i].arg, events.queue[i].x, events.queue[i].y, events.queue[i].dx, events.queue[i].dy );
+			IN_TouchEvent( events.queue[i].type, events.queue[i].arg,
+						   events.queue[i].touch.x, events.queue[i].touch.y,
+						   events.queue[i].touch.dx, events.queue[i].touch.dy );
 			break;
 
 		case event_key_down:
@@ -210,6 +269,25 @@ void Android_RunEvents()
 				Android_SwapInterval( Cvar_VariableInteger( "gl_swapinterval" ) );
 				VID_SetMode();
 			}
+			break;
+		case event_joyadd:
+			Joy_AddEvent( events.queue[i].arg );
+			break;
+		case event_joyremove:
+			Joy_RemoveEvent( events.queue[i].arg );
+			break;
+		case event_joyball:
+			Joy_BallMotionEvent( events.queue[i].arg, events.queue[i].ball.ball,
+								 events.queue[i].ball.xrel, events.queue[i].ball.yrel );
+			break;
+		case event_joyhat:
+			Joy_HatMotionEvent( events.queue[i].arg, events.queue[i].hat.hat, events.queue[i].hat.key );
+			break;
+		case event_joyaxis:
+			Joy_AxisMotionEvent( events.queue[i].arg, events.queue[i].axis.axis, events.queue[i].axis.val );
+			break;
+		case event_joybutton:
+			Joy_ButtonEvent( events.queue[i].arg, events.queue[i].button.button, (byte)events.queue[i].button.down );
 			break;
 		}
 	}
@@ -257,7 +335,7 @@ nativeString
 nativeSetPause
 =====================================================
 */
-int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
+JAVA_EXPORT int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
 {
 	int i;
 	int argc;
@@ -305,14 +383,13 @@ int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobje
 
 	/* Release the arguments. */
 
-	for (i = 0; i < argc; ++i) {
+	for (i = 0; i < argc; ++i)
 		free(argv[i]);
-	}
 
 	return status;
 }
 
-void Java_in_celest_xash3d_XashActivity_onNativeResize( JNIEnv* env, jclass cls, jint width, jint height )
+JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_onNativeResize( JNIEnv* env, jclass cls, jint width, jint height )
 {
 	event_t *event;
 
@@ -327,10 +404,10 @@ void Java_in_celest_xash3d_XashActivity_onNativeResize( JNIEnv* env, jclass cls,
 	Android_PushEvent();
 }
 
-void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
+JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
 {
 }
-void Java_in_celest_xash3d_XashActivity_nativeSetPause(JNIEnv* env, jclass cls, jint pause )
+JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_nativeSetPause(JNIEnv* env, jclass cls, jint pause )
 {
 	event_t *event = Android_AllocEvent();
 	event->type = event_set_pause;
@@ -348,7 +425,7 @@ void Java_in_celest_xash3d_XashActivity_nativeSetPause(JNIEnv* env, jclass cls, 
 	}
 }
 
-void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclass cls, jint down, jint code)
+JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclass cls, jint down, jint code)
 {
 	event_t *event;
 
@@ -425,14 +502,14 @@ void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jin
 	event = Android_AllocEvent();
 	event->arg = finger;
 	event->type = action;
-	event->x = x;
-	event->y = y;
-	event->dx = dx;
-	event->dy = dy;
+	event->touch.x = x;
+	event->touch.y = y;
+	event->touch.dx = dx;
+	event->touch.dy = dy;
 	Android_PushEvent();
 }
 
-int Java_in_celest_xash3d_XashActivity_setenv( JNIEnv* env, jclass clazz, jstring key, jstring value, jboolean overwrite )
+JAVA_EXPORT int Java_in_celest_xash3d_XashActivity_setenv( JNIEnv* env, jclass clazz, jstring key, jstring value, jboolean overwrite )
 {
 	char* k = (char *) (*env)->GetStringUTFChars(env, key, NULL);
 	char* v = (char *) (*env)->GetStringUTFChars(env, value, NULL);
@@ -442,6 +519,78 @@ int Java_in_celest_xash3d_XashActivity_setenv( JNIEnv* env, jclass clazz, jstrin
 	return err;
 }
 
+#define DECLARE_JNI_INTERFACE( ret, name, ... ) \
+	JAVA_EXPORT ret Java_in_celest_xash3d_XashActivity_##name( JNIEnv *env, jclass clazz, __VA_ARGS__ )
+
+DECLARE_JNI_INTERFACE( void, nativeBall, jint id, jbyte ball, jshort xrel, jshort yrel )
+{
+	event_t *event = Android_AllocEvent();
+
+	event->type = event_joyball;
+	event->arg = id;
+	event->ball.ball = ball;
+	event->ball.xrel = xrel;
+	event->ball.yrel = yrel;
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE( void, nativeHat, jint id, jbyte hat, jbyte key, jboolean down )
+{
+	static byte engineKeys;
+
+	if( !key )
+		engineKeys = 0; // centered;
+
+	if( down )
+		engineKeys |= key;
+	else
+		engineKeys &= ~key;
+
+	event_t *event = Android_AllocEvent();
+	event->type = event_joyhat;
+	event->arg = id;
+	event->hat.hat = hat;
+	event->hat.key = engineKeys;
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE( void, nativeAxis, jint id, jbyte axis, jshort val )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_joyaxis;
+	event->arg = id;
+	event->axis.axis = axis;
+	event->axis.val = val;
+
+	__android_log_print(ANDROID_LOG_VERBOSE, "Xash", "%i %i", axis, val );
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE( void, nativeJoyButton, jint id, jbyte button, jboolean down )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_joybutton;
+	event->arg = id;
+	event->button.button = button;
+	event->button.down = down;
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE( void, nativeJoyAdd, jint id )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_joyadd;
+	event->arg = id;
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE( void, nativeJoyDel, jint id )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_joyremove;
+	event->arg = id;
+	Android_PushEvent();
+}
 
 /*
 ========================

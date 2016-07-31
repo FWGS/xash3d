@@ -398,7 +398,7 @@ SPR_AdjustSize
 draw hudsprite routine
 ====================
 */
-static void SPR_AdjustSize( float *x, float *y, float *w, float *h )
+void SPR_AdjustSize( float *x, float *y, float *w, float *h )
 {
 	float	xscale, yscale;
 
@@ -1437,7 +1437,7 @@ pfnFillRGBA
 
 =============
 */
-static void pfnFillRGBA( int x, int y, int width, int height, int r, int g, int b, int a )
+void CL_FillRGBA( int x, int y, int width, int height, int r, int g, int b, int a )
 {
 	float x1 = x, y1 = y, w1 = width, h1 = height;
 	r = bound( 0, r, 255 );
@@ -2949,7 +2949,7 @@ pfnFillRGBABlend
 
 =============
 */
-void pfnFillRGBABlend( int x, int y, int width, int height, int r, int g, int b, int a )
+void CL_FillRGBABlend( int x, int y, int width, int height, int r, int g, int b, int a )
 {
 	float x1 = x, y1 = y, w1 = width, h1 = height;
 	r = bound( 0, r, 255 );
@@ -2960,11 +2960,7 @@ void pfnFillRGBABlend( int x, int y, int width, int height, int r, int g, int b,
 
 	SPR_AdjustSize( &x1, &y1, &w1, &h1 );
 
-	pglEnable( GL_BLEND );
-	pglDisable( GL_ALPHA_TEST );
-	pglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-
+	GL_SetRenderMode( kRenderTransTexture );
 	R_DrawStretchPic( x1, y1, w1, h1, 0, 0, 1, 1, cls.fillImage );
 	pglColor4ub( 255, 255, 255, 255 );
 }
@@ -3865,7 +3861,7 @@ static cl_enginefunc_t gEngfuncs =
 	SPR_EnableScissor,
 	SPR_DisableScissor,
 	pfnSPR_GetList,
-	pfnFillRGBA,
+	CL_FillRGBA,
 	pfnGetScreenInfo,
 	pfnSetCrosshair,
 	(void*)pfnCvar_RegisterVariable,
@@ -3984,7 +3980,7 @@ static cl_enginefunc_t gEngfuncs =
 	pfnConstructTutorMessageDecayBuffer,
 	pfnResetTutorMessageDecayData,
 	pfnPlaySoundByNameAtPitch,
-	pfnFillRGBABlend,
+	CL_FillRGBABlend,
 	pfnGetAppID,
 	Cmd_AliasGetList,
 	pfnVguiWrap2_GetMouseDelta,

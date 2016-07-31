@@ -27,19 +27,12 @@ GNU General Public License for more details.
 
 typedef enum
 {
-	touch_command,		// Just tap a button
-	touch_move,		// Like a joystick stick.
-	touch_joy,		// Like a joystick stick, centered.
-	touch_dpad,		// Only two directions.
-	touch_look		// Like a touchpad.
+	touch_command, // Just tap a button
+	touch_move,    // Like a joystick stick.
+	touch_joy,     // Like a joystick stick, centered.
+	touch_dpad,    // Only two directions.
+	touch_look     // Like a touchpad.
 } touchButtonType;
-
-typedef enum
-{
-	event_down = 0,
-	event_up,
-	event_motion
-} touchEventType;
 
 typedef enum
 {
@@ -54,6 +47,8 @@ typedef enum
 	round_grid,
 	round_aspect
 } touchRound;
+
+
 
 typedef struct touchbutton2_s
 {
@@ -78,6 +73,18 @@ typedef struct touchbutton2_s
 	struct touchbutton2_s *prev;
 
 } touchbutton2_t;
+
+typedef struct touchdefaultbutton_s
+{
+	char name[32];
+	char texturefile[256];
+	char command[256];
+	float x1, y1, x2, y2;
+	rgba_t color;
+	touchRound round;
+	float aspect;
+	int flags;
+} touchdefaultbutton_t;
 
 struct touch_s
 {
@@ -111,18 +118,6 @@ struct touch_s
 	int closetexture;
 	int joytexture; // touch indicator
 } touch;
-
-typedef struct touchdefaultbutton_s
-{
-	char name[32];
-	char texturefile[256];
-	char command[256];
-	float x1, y1, x2, y2;
-	rgba_t color;
-	touchRound round;
-	float aspect;
-	int flags;
-} touchdefaultbutton_t;
 
 touchdefaultbutton_t g_DefaultButtons[256];
 int g_LastDefaultButton;
@@ -949,6 +944,7 @@ float IN_TouchDrawCharacter( float x, float y, int number, float size )
 	number &= 255;
 	number = Con_UtfProcessChar( number );
 
+
 	R_GetTextureParms( &w, &h, cls.creditsFont.hFontTexture );
 	prc = &cls.creditsFont.fontRc[number];
 
@@ -981,7 +977,7 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 	GL_SetRenderMode( kRenderTransAdd );
 
 	// text is additive and alpha does not work
-	pglColor4ub( color[0] * ( (float)color[3] /255.0f ), color[1] * ( (float)color[3] /255.0f ),
+	pglColor4f( color[0] * ( (float)color[3] /255.0f ), color[1] * ( (float)color[3] /255.0f ),
 			color[2] * ( (float)color[3] /255.0f ), 255 );
 
 	while( *s )
@@ -993,7 +989,7 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 		if( y1 >= maxy )
 			break;
 
-		if( *s=='\n' || *s == ';' )
+		if( *s == '\n' || *s == ';' )
 			s++;
 		x1 = x;
 	}
@@ -1064,7 +1060,6 @@ void IN_TouchDraw( void )
 			color[3] *= B( fade );
 			if( button->texturefile[0] == '#' )
 				IN_TouchDrawText( touch.swidth/SCR_W + B(x1), touch.swidth/SCR_H + B(y1), B(x2), B(y2), button->texturefile + 1, color, B( aspect )?B(aspect):1 );
-
 			else if( button->texturefile[0] )
 			{
 				if( button->texture == -1 )
@@ -1505,7 +1500,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	return 1;
 }
 
-void IN_TouchMove( float * forward, float *side, float *yaw, float *pitch )
+void IN_TouchMove( float *forward, float *side, float *yaw, float *pitch )
 {
 	*forward += touch.forward;
 	*side += touch.side;

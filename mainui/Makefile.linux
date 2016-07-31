@@ -1,0 +1,37 @@
+
+CC ?= gcc -m32
+CXX ?= g++ -m32
+CFLAGS ?= -O2 -fPIC -ggdb
+TOPDIR = $(PWD)/..
+INCLUDES = -I../common -I../engine -I../engine/common -I../engine/client -I../pm_shared
+INCLUDES += -I$(VGUI_DIR)/include/
+DEFINES =
+
+SRCS = $(wildcard *.cpp)
+OBJS = $(patsubst %.cpp,obj/%.o,$(SRCS))
+
+
+libxashmenu.so : $(OBJS)
+	$(CXX) $(LDFLAGS) -o libxashmenu.so -shared $(OBJS)
+
+$(OBJS): | obj
+
+
+obj:
+	mkdir -p $@
+
+obj/%.o : %.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
+
+.PHONY: depend clean
+
+clean : 
+	$(RM) $(OBJS) libxashmenu.so
+
+depend: Makefile.dep
+
+Makefile.dep: $(SRCS)
+	rm -f ./Makefile.dep
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -MM $^>>./Makefile.dep
+
+include Makefile.dep

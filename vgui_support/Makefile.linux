@@ -1,14 +1,13 @@
-CC = gcc -m32 -ggdb -Og
-CXX = g++ -m32 -ggdb -Og
-CFLAGS ?= -O1
+CC ?= gcc -m32
+CXX ?= g++ -m32
+CFLAGS ?= -O2 -ggdb -fPIC
 TOPDIR = $(PWD)/..
-XASHXT ?= $(TOPDIR)/../xashXT
-HLSDK ?= $(TOPDIR)/../halflife
-INCLUDES = -I/usr/include/SDL2 -I../common -I../engine -I../engine/common -I../engine/client -I../engine/client/vgui -I../pm_shared -I$(XASHXT)/common
-INCLUDES += -I$(HLSDK)/utils/vgui/include/
+VGUI_DIR ?= ./vgui-dev
+INCLUDES = -I../common -I../engine -I../engine/common -I../engine/client -I../engine/client/vgui -I../pm_shared
+INCLUDES += -I$(VGUI_DIR)/include/
 DEFINES = -DXASH_VGUI
 %.o : %.cpp
-	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -fPIC -c $< -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
 
 SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
@@ -21,8 +20,10 @@ libvgui_support.so : $(OBJS)
 clean : 
 	$(RM) $(OBJS) libvgui_support.so
 
-depend: $(SRCS)
-	touch Makefile.dep
-	makedepend -fMakefile.dep -- $(DEFINES) $(INCLUDES) -- $^
+depend: Makefile.dep
+
+Makefile.dep: $(SRCS)
+	rm -f ./Makefile.dep
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -MM $^>>./Makefile.dep
 
 include Makefile.dep

@@ -33,6 +33,7 @@ GNU General Public License for more details.
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
 #include "sdl/events.h"
+#include "library.h"
 
 typedef void (*pfnChangeGame)( const char *progname );
 
@@ -172,12 +173,14 @@ Host_AbortCurrentFrame
 aborts the current host frame and goes on with the next one
 ================
 */
-void Host_AbortCurrentFrame( void )
+
+void EXPORT Host_AbortCurrentFrame( void )
 {
 	if( host.framecount == 0 ) // abort frame was not set up
 		Sys_Break("Could not abort current frame");
 	else
 		longjmp( host.abortframe, 1 );
+	exit(127);
 }
 
 /*
@@ -500,8 +503,10 @@ void Host_GetConsoleCommands( void )
 	char	*cmd;
 
 	while( ( cmd = Con_Input() ) )
+	{
 		Cbuf_AddText( cmd );
-	Cbuf_Execute();
+		Cbuf_Execute();
+	}
 }
 
 /*
