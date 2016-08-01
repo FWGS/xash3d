@@ -3272,7 +3272,7 @@ static int R_StudioDrawPlayer( int flags, entity_state_t *pplayer )
 {
 	int	m_nPlayerIndex;
 	float	gaitframe = 0.0f, gaityaw = 0.0f;
-	vec3_t	dir, prevgaitorigin;
+	vec3_t	dir, prevgaitorigin = { 0.0f };
 	alight_t	lighting;
 
 	m_nPlayerIndex = pplayer->number - 1;
