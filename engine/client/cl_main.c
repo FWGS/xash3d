@@ -308,7 +308,7 @@ CL_CreateCmd
 */
 void CL_CreateCmd( void )
 {
-	usercmd_t		cmd;
+	usercmd_t		cmd = { 0 };
 	runcmd_t		*pcmd;
 	color24		color;
 	vec3_t		angles;
@@ -318,8 +318,6 @@ void CL_CreateCmd( void )
 	ms = host.frametime * 1000;
 	if( ms > 250 ) ms = 100;	// time was unreasonable
 	else if( ms <= 0 ) ms = 1; // keep time an actual
-
-	Q_memset( &cmd, 0, sizeof( cmd ));
 
 	// build list of all solid entities per next frame (exclude clients)
 	CL_SetSolidEntities ();
@@ -941,9 +939,6 @@ void CL_Crashed( void )
 
 	// send a disconnect message to the server
 	CL_SendDisconnectMessage();
-
-	Host_WriteOpenGLConfig();
-	Host_WriteConfig();	// write config
 
 	// never write video.cfg here because reason to crash may be provoked
 	// with some renderer variables
@@ -1949,10 +1944,10 @@ CL_Shutdown
 */
 void CL_Shutdown( void )
 {
-	if( cls.initialized ) 
-	{
-		MsgDev( D_INFO, "CL_Shutdown()\n" );
+	MsgDev( D_INFO, "CL_Shutdown()\n" );
 
+	if( cls.initialized && !host.crashed )
+	{
 		Host_WriteOpenGLConfig ();
 		Host_WriteVideoConfig ();
 	}

@@ -1,228 +1,96 @@
 #ifdef XASH_SDL
-#include "events.h"
+#include <SDL.h>
+
+#include "common.h"
 #include "keydefs.h"
 #include "input.h"
 #include "client.h"
 #include "vgui_draw.h"
+#include "events.h"
+#include "touch.h"
+#include "joyinput.h"
 
 extern convar_t *vid_fullscreen;
 extern convar_t *snd_mute_losefocus;
 static qboolean lostFocusOnce;
 static float oldVolume;
 static float oldMusicVolume;
+static int wheelbutton;
+static SDL_Joystick *joy;
 
-int IN_TouchEvent( qboolean down, int fingerID, float x, float y, float dx, float dy );
 void R_ChangeDisplaySettingsFast( int w, int h );
 
-void SDLash_EventFilter( SDL_Event* event)
+#define DECLARE_KEY_RANGE( min, max, repl ) if( keynum >= (min) && keynum <= (max) ) { keynum = keynum - (min) + (repl); }
+
+void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 {
-	static int mdown;
-	#ifdef XASH_VGUI
-	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
-	// switch ....
-	// CEnginePanel is visible by default, why?
- 	VGUI_SurfaceWndProc(event);
-	#endif
+	int keynum = key.keysym.scancode;
 
-	switch ( event->type )
+	DECLARE_KEY_RANGE( SDL_SCANCODE_A, SDL_SCANCODE_Z, 'a' )
+	else DECLARE_KEY_RANGE( SDL_SCANCODE_1, SDL_SCANCODE_9, '1' )
+	else DECLARE_KEY_RANGE( SDL_SCANCODE_F1, SDL_SCANCODE_F12, K_F1 )
+	else
 	{
-		case SDL_MOUSEMOTION:
-		if(!host.mouse_visible)
-			if( event->motion.which != SDL_TOUCH_MOUSEID )
-				IN_MouseEvent(0);
-#ifdef TOUCHEMU
-			if(mdown)
-				IN_TouchEvent(2, 0, (float)event->motion.x/scr_width->value, (float)event->motion.y/scr_height->value, (float)event->motion.xrel/scr_width->value, (float)event->motion.yrel/scr_height->value);
-			SDL_ShowCursor( true );
-#endif
-			break;
-		case SDL_QUIT:
-			Sys_Quit();
-			break;
-
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			SDLash_KeyEvent(event->key);
-			break;
-
-		case SDL_MOUSEWHEEL:
-			SDLash_WheelEvent(event->wheel);
-			break;
-
-		case SDL_FINGERMOTION:
-		IN_TouchEvent( 2, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
-			break;
-		case SDL_FINGERUP:
-		IN_TouchEvent( 1, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
-			break;
-		case SDL_FINGERDOWN:
-			// Pass all touch events to client library
-			//if(clgame.dllFuncs.pfnTouchEvent)
-				//clgame.dllFuncs.pfnTouchEvent(event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
-			IN_TouchEvent( 0, event->tfinger.fingerId, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
-			break;
-
-		case SDL_MOUSEBUTTONUP:
-
-#ifdef TOUCHEMU
-			mdown = 0;
-			IN_TouchEvent(1, 0, (float)event->button.x/scr_width->value, (float)event->button.y/scr_height->value, 0, 0);
-#else
-			SDLash_MouseEvent(event->button);
-#endif
-			break;
-		case SDL_MOUSEBUTTONDOWN:
-		//if(!host.mouse_visible)
-#ifdef TOUCHEMU
-			mdown = 1;
-			IN_TouchEvent(0, 0, (float)event->button.x/scr_width->value, (float)event->button.y/scr_height->value, 0, 0);
-#else
-			SDLash_MouseEvent(event->button);
-#endif
-			break;
-
-		case SDL_TEXTEDITING:
-			//MsgDev(D_INFO, "Caught a text edit: %s %n %n\n", event->edit.text, event->edit.start, event->edit.length);
-			break;
-
-		case SDL_TEXTINPUT:
-			SDLash_InputEvent(event->text);
-			break;
-
-		case SDL_WINDOWEVENT:
-			if( ( host.state == HOST_SHUTDOWN ) || Host_IsDedicated() )
-				break; // no need to activate
-			if( host.state != HOST_RESTART )
-			{
-				switch( event->window.event )
-				{
-				case SDL_WINDOWEVENT_MOVED:
-					if(!vid_fullscreen->integer)
-					{
-						Cvar_SetFloat("r_xpos", (float)event->window.data1);
-						Cvar_SetFloat("r_ypos", (float)event->window.data2);
-					}
-					break;
-				case SDL_WINDOWEVENT_RESTORED:
-					host.state = HOST_FRAME;
-					break;
-				case SDL_WINDOWEVENT_FOCUS_GAINED:
-					host.state = HOST_FRAME;
-					IN_ActivateMouse(true);
-					if(lostFocusOnce && snd_mute_losefocus->integer)
-					{
-						Cvar_SetFloat("volume", oldVolume);
-						Cvar_SetFloat("musicvolume", oldMusicVolume);
-					}
-					break;
-				case SDL_WINDOWEVENT_MINIMIZED:
-					host.state = HOST_SLEEP;
-					break;
-				case SDL_WINDOWEVENT_FOCUS_LOST:
-					host.state = HOST_NOFOCUS;
-					IN_DeactivateMouse();
-					if( snd_mute_losefocus->integer )
-					{
-						lostFocusOnce = true;
-						oldVolume = Cvar_VariableValue("volume");
-						oldMusicVolume = Cvar_VariableValue("musicvolume");
-						Cvar_SetFloat("volume", 0);
-						Cvar_SetFloat("musicvolume", 0);
-					}
-					break;
-				case SDL_WINDOWEVENT_CLOSE:
-					Sys_Quit();
-					break;
-				case SDL_WINDOWEVENT_RESIZED:
-					if( vid_fullscreen->integer != 0 ) break;
-					Cvar_SetFloat("vid_mode", -2.0f); // no mode
-					R_ChangeDisplaySettingsFast( event->window.data1, event->window.data2 );
-					break;
-				default:
-					break;
-				}
-			}
-	}
-}
-
-void SDLash_KeyEvent(SDL_KeyboardEvent key)
-{
-	// TODO: improve that.
-	int keynum = key.keysym.sym;
-	int down = key.type == SDL_KEYDOWN ? 1 : 0;
-	switch(key.keysym.sym)
-	{
-	case SDLK_BACKSPACE:
-		keynum = K_BACKSPACE; break;
-	case SDLK_UP:
-		keynum = K_UPARROW; break;
-	case SDLK_DOWN:
-		keynum = K_DOWNARROW; break;
-	case SDLK_LEFT:
-		keynum = K_LEFTARROW; break;
-	case SDLK_RIGHT:
-		keynum = K_RIGHTARROW; break;
-	case SDLK_LALT:
-	case SDLK_RALT:
-		keynum = K_ALT;	break;
-	case SDLK_RSHIFT:
-	case SDLK_LSHIFT:
-		keynum = K_SHIFT; break;
-	case SDLK_RCTRL:
-	case SDLK_LCTRL:
-		keynum = K_CTRL; break;
-	case SDLK_INSERT:
-		keynum = K_INS;	break;
-	case SDLK_DELETE:
-		keynum = K_DEL; break;
-	case SDLK_PAGEUP:
-		keynum = K_PGUP; break;
-	case SDLK_PAGEDOWN:
-		keynum = K_PGDN; break;
-	case SDLK_HOME:
-		keynum = K_HOME; break;
-	case SDLK_END:
-		keynum = K_END;	break;
-	case ANDROID_K_BACK:
-		keynum = K_ESCAPE; break;
-	case SDLK_SELECT:
-		keynum = K_ENTER; break;
-	case SDLK_CAPSLOCK:
-		keynum = K_CAPSLOCK; break;
-	case SDLK_KP_PLUS:
-		keynum = K_KP_PLUS;	break;
-	case SDLK_KP_MINUS:
-		keynum = K_KP_MINUS; break;
-	case SDLK_KP_ENTER:
-		keynum = K_KP_ENTER; break;
-	case SDLK_KP_DIVIDE:
-		keynum = K_KP_SLASH; break;
-	case SDLK_NUMLOCKCLEAR:
-		keynum = K_KP_NUMLOCK; break;
-	case SDLK_VOLUMEDOWN:
-		keynum = K_AUX31; break;
-	case SDLK_VOLUMEUP:
-		keynum = K_AUX32; break;
-	case SDLK_PAUSE:
-		keynum = K_PAUSE; break;
-#ifdef __ANDROID__
-	case SDLK_MENU:
-		keynum = K_AUX30;
-#endif
+		switch( keynum )
+		{
+		case SDL_SCANCODE_GRAVE: keynum = '`'; break;
+		case SDL_SCANCODE_0: keynum = '0'; break;
+		case SDL_SCANCODE_BACKSLASH: keynum = '\\'; break;
+		case SDL_SCANCODE_LEFTBRACKET: keynum = '['; break;
+		case SDL_SCANCODE_RIGHTBRACKET: keynum = ']'; break;
+		case SDL_SCANCODE_TAB: keynum = K_TAB; break;
+		case SDL_SCANCODE_RETURN: keynum = K_ENTER; break;
+		case SDL_SCANCODE_ESCAPE: keynum = K_ESCAPE; break;
+		case SDL_SCANCODE_SPACE: keynum = K_SPACE; break;
+		case SDL_SCANCODE_BACKSPACE: keynum = K_BACKSPACE; break;
+		case SDL_SCANCODE_UP: keynum = K_UPARROW; break;
+		case SDL_SCANCODE_LEFT: keynum = K_LEFTARROW; break;
+		case SDL_SCANCODE_DOWN: keynum = K_DOWNARROW; break;
+		case SDL_SCANCODE_RIGHT: keynum = K_RIGHTARROW; break;
+		case SDL_SCANCODE_LALT:
+		case SDL_SCANCODE_RALT: keynum = K_ALT; break;
+		case SDL_SCANCODE_LCTRL:
+		case SDL_SCANCODE_RCTRL: keynum = K_CTRL; break;
+		case SDL_SCANCODE_LSHIFT:
+		case SDL_SCANCODE_RSHIFT: keynum = K_SHIFT; break;
+		case SDL_SCANCODE_LGUI:
+		case SDL_SCANCODE_RGUI: keynum = K_WIN; break;
+		case SDL_SCANCODE_INSERT: keynum = K_INS; break;
+		case SDL_SCANCODE_DELETE: keynum = K_DEL; break;
+		case SDL_SCANCODE_PAGEDOWN: keynum = K_PGDN; break;
+		case SDL_SCANCODE_PAGEUP: keynum = K_PGUP; break;
+		case SDL_SCANCODE_HOME: keynum = K_HOME; break;
+		case SDL_SCANCODE_END: keynum = K_END; break;
+		case SDL_SCANCODE_KP_7: keynum = K_KP_HOME; break;
+		case SDL_SCANCODE_KP_8: keynum = K_KP_UPARROW; break;
+		case SDL_SCANCODE_KP_9: keynum = K_KP_PGUP; break;
+		case SDL_SCANCODE_KP_4: keynum = K_KP_LEFTARROW; break;
+		case SDL_SCANCODE_KP_5: keynum = K_KP_5; break;
+		case SDL_SCANCODE_KP_6: keynum = K_KP_RIGHTARROW; break;
+		case SDL_SCANCODE_KP_1: keynum = K_KP_END; break;
+		case SDL_SCANCODE_KP_2: keynum = K_KP_DOWNARROW; break;
+		case SDL_SCANCODE_KP_3: keynum = K_KP_PGDN; break;
+		case SDL_SCANCODE_KP_0: keynum = K_KP_INS; break;
+		case SDL_SCANCODE_KP_PERIOD: keynum = K_KP_DEL; break;
+		case SDL_SCANCODE_KP_ENTER: keynum = K_KP_ENTER; break;
+		case SDL_SCANCODE_KP_PLUS: keynum = K_KP_PLUS; break;
+		case SDL_SCANCODE_KP_MINUS: keynum = K_KP_MINUS; break;
+		case SDL_SCANCODE_KP_DIVIDE: keynum = K_KP_SLASH; break;
+		case SDL_SCANCODE_KP_MULTIPLY: keynum = '*'; break;
+		case SDL_SCANCODE_NUMLOCKCLEAR: keynum = K_KP_NUMLOCK; break;
+		case SDL_SCANCODE_CAPSLOCK: keynum = K_CAPSLOCK; break;
+		case SDL_SCANCODE_APPLICATION: keynum = K_WIN; break; // (compose key) ???
+		case SDL_SCANCODE_UNKNOWN:
+		{
+			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n");
+			return;
+		}
+		default:
+			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown key: %s = %i\n", SDL_GetScancodeName(keynum), keynum );
+			return;
+		}
 	}
 
-	if((key.keysym.sym >= SDLK_F1) && (key.keysym.sym <= SDLK_F12))
-	{
-		keynum = key.keysym.scancode + 77;
-	}
-	if((key.keysym.sym >= SDLK_KP_1) && (key.keysym.sym <= SDLK_KP_0))
-	{
-		keynum = key.keysym.scancode - 40;
-	}
-	if(key.keysym.scancode > 284) // Joystick keys are AUX, if present.
-	{
-		keynum = key.keysym.scancode - 285 + K_AUX1;
-	}
 	Key_Event(keynum, down);
 }
 
@@ -235,33 +103,14 @@ void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 
 void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
 {
-	int updown = wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
-	Key_Event(updown, true);
-	Key_Event(updown, false);
+	wheelbutton = wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
+	Key_Event( wheelbutton, true );
 }
 
 void SDLash_InputEvent(SDL_TextInputEvent input)
 {
 	int i;
-#if 0
-	int f, t;
-	// Try convert to selected charset
-	unsigned char buf[32];
 
-	const char *in = input.text;
-	char *out = buf;
-	SDL_iconv_t cd;
-	Q_memset( &buf, 0, sizeof( buf ) );
-	cd = SDL_iconv_open( cl_charset->string, "utf-8" );
-	if( cd != (SDL_iconv_t)-1 )
-	{
-		f = strlen( input.text );
-		t = 32;
-		t = SDL_iconv( cd, &in, &f, &out, &t );
-	}
-	if( ( t < 0 ) || ( cd == (SDL_iconv_t)-1 ) )
-	Q_strncpy( buf, input.text, 32 );
-#endif
 	// Pass characters one by one to Con_CharEvent
 	for(i = 0; input.text[i]; ++i)
 	{
@@ -274,7 +123,7 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 
 		if( !ch )
 			continue;
-		
+
 		Con_CharEvent( ch );
 		if( cls.key_dest == key_menu )
 			UI_CharEvent ( ch );
@@ -304,4 +153,239 @@ void SDLash_EnableTextInput( int enable, qboolean force )
 		host.textmode = false;
 	}
 }
+
+void SDLash_EventFilter( void *ev )
+{
+	SDL_Event *event = (SDL_Event*)ev;
+	static int mdown;
+#ifdef XASH_VGUI
+	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
+	// switch ....
+	// CEnginePanel is visible by default, why?
+	VGUI_SurfaceWndProc( event );
+#endif
+
+	if( wheelbutton )
+	{
+		Key_Event( wheelbutton, false );
+		wheelbutton = 0;
+	}
+
+	switch ( event->type )
+	{
+	/* Mouse events */
+	case SDL_MOUSEMOTION:
+		if( !host.mouse_visible && event->motion.which != SDL_TOUCH_MOUSEID )
+			IN_MouseEvent(0);
+#ifdef TOUCHEMU
+		if( mdown )
+			IN_TouchEvent( event_motion, 0,
+						   event->motion.x/scr_width->value,
+						   event->motion.y/scr_height->value,
+						   event->motion.xrel/scr_width->value,
+						   event->motion.yrel/scr_height->value );
+		SDL_ShowCursor( true );
+#endif
+		break;
+
+	case SDL_MOUSEBUTTONUP:
+#ifdef TOUCHEMU
+		mdown = 0;
+		IN_TouchEvent( event_up, 0,
+					   event->button.x/scr_width->value,
+					   event->button.y/scr_height->value, 0, 0);
+#else
+		SDLash_MouseEvent( event->button );
+#endif
+		break;
+	case SDL_MOUSEBUTTONDOWN:
+#ifdef TOUCHEMU
+		mdown = 1;
+		IN_TouchEvent( event_down, 0,
+					   event->button.x/scr_width->value,
+					   event->button.y/scr_height->value, 0, 0);
+#else
+		SDLash_MouseEvent( event->button );
+#endif
+		break;
+
+	case SDL_MOUSEWHEEL:
+		SDLash_WheelEvent( event->wheel );
+		break;
+
+	/* Keyboard events */
+	case SDL_KEYDOWN:
+		SDLash_KeyEvent( event->key, 1 );
+		break;
+
+	case SDL_KEYUP:
+		SDLash_KeyEvent( event->key, 0 );
+		break;
+
+
+	/* Touch events */
+	case SDL_FINGERDOWN:
+		IN_TouchEvent( event_down, event->tfinger.fingerId,
+					   event->tfinger.x, event->tfinger.y,
+					   event->tfinger.dx, event->tfinger.dy );
+		break;
+
+	case SDL_FINGERUP:
+		IN_TouchEvent( event_up, event->tfinger.fingerId,
+					   event->tfinger.x, event->tfinger.y,
+					   event->tfinger.dx, event->tfinger.dy );
+		break;
+
+	case SDL_FINGERMOTION:
+		IN_TouchEvent( event_motion, event->tfinger.fingerId,
+					   event->tfinger.x, event->tfinger.y,
+					   event->tfinger.dx, event->tfinger.dy );
+		break;
+
+
+	/* IME */
+	case SDL_TEXTINPUT:
+		SDLash_InputEvent( event->text );
+		break;
+
+	/* Joystick events */
+	case SDL_JOYAXISMOTION:
+		Joy_AxisMotionEvent( event->jaxis.which, event->jaxis.axis, event->jaxis.value );
+		break;
+
+	case SDL_JOYBALLMOTION:
+		Joy_BallMotionEvent( event->jball.which, event->jball.ball, event->jball.xrel, event->jball.yrel );
+		break;
+
+	case SDL_JOYHATMOTION:
+		Joy_HatMotionEvent( event->jhat.which, event->jhat.hat, event->jhat.value );
+		break;
+
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP:
+		Joy_ButtonEvent( event->jbutton.which, event->jbutton.button, event->jbutton.state );
+		break;
+
+	case SDL_JOYDEVICEADDED:
+		Joy_AddEvent( event->jdevice.which );
+		break;
+	case SDL_JOYDEVICEREMOVED:
+		Joy_RemoveEvent( event->jdevice.which );
+		break;
+
+	case SDL_QUIT:
+		Sys_Quit();
+		break;
+
+	case SDL_WINDOWEVENT:
+		if( ( host.state == HOST_SHUTDOWN ) ||
+			( host.state == HOST_RESTART )  ||
+			( host.type  == HOST_DEDICATED ) )
+			break; // no need to activate
+		switch( event->window.event )
+		{
+		case SDL_WINDOWEVENT_MOVED:
+			if( !vid_fullscreen->integer )
+			{
+				Cvar_SetFloat("r_xpos", (float)event->window.data1);
+				Cvar_SetFloat("r_ypos", (float)event->window.data2);
+			}
+			break;
+		case SDL_WINDOWEVENT_RESTORED:
+			host.state = HOST_FRAME;
+			break;
+		case SDL_WINDOWEVENT_FOCUS_GAINED:
+			host.state = HOST_FRAME;
+			IN_ActivateMouse(true);
+			if( lostFocusOnce && snd_mute_losefocus->integer )
+			{
+				Cvar_SetFloat("volume", oldVolume);
+				Cvar_SetFloat("musicvolume", oldMusicVolume);
+			}
+			break;
+		case SDL_WINDOWEVENT_MINIMIZED:
+			host.state = HOST_SLEEP;
+			break;
+		case SDL_WINDOWEVENT_FOCUS_LOST:
+			host.state = HOST_NOFOCUS;
+			IN_DeactivateMouse();
+			if( snd_mute_losefocus->integer )
+			{
+				lostFocusOnce  = true;
+				oldVolume      = Cvar_VariableValue("volume");
+				oldMusicVolume = Cvar_VariableValue("musicvolume");
+				Cvar_SetFloat("volume", 0);
+				Cvar_SetFloat("musicvolume", 0);
+			}
+			break;
+		case SDL_WINDOWEVENT_CLOSE:
+			Sys_Quit();
+			break;
+		case SDL_WINDOWEVENT_RESIZED:
+			if( vid_fullscreen->integer != 0 ) break;
+			Cvar_SetFloat( "vid_mode", -2.0f ); // no mode
+			R_ChangeDisplaySettingsFast( event->window.data1,
+										 event->window.data2 );
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+int SDLash_JoyInit( int numjoy )
+{
+	int num;
+	int i;
+
+	MsgDev( D_INFO, "Joystick: SDL\n" );
+
+	if( SDL_WasInit( SDL_INIT_JOYSTICK ) != SDL_INIT_JOYSTICK &&
+		SDL_InitSubSystem( SDL_INIT_JOYSTICK ) )
+	{
+		MsgDev( D_INFO, "Failed to initialize SDL Joysitck: %s\n", SDL_GetError() );
+		return 0;
+	}
+
+	if( joy )
+	{
+		SDL_JoystickClose( joy );
+	}
+
+	num = SDL_NumJoysticks();
+
+	if( num > 0 )
+		MsgDev( D_INFO, "%i joysticks found:\n", num );
+	else
+	{
+		MsgDev( D_INFO, "No joystick found.\n" );
+		return 0;
+	}
+
+	for( i = 0; i < num; i++ )
+		MsgDev( D_INFO, "%i\t: %s\n", i, SDL_JoystickNameForIndex( i ) );
+
+	MsgDev( D_INFO, "Pass +set joy_index N to command line, where N is number, to select active joystick\n" );
+
+	joy = SDL_JoystickOpen( numjoy );
+
+	if( !joy )
+	{
+		MsgDev( D_INFO, "Failed to select joystick: %s\n", SDL_GetError( ) );
+		return 0;
+	}
+
+	MsgDev( D_INFO, "Selected joystick: %s\n"
+		"\tAxes: %i\n"
+		"\tHats: %i\n"
+		"\tButtons: %i\n"
+		"\tBalls: %i\n",
+		SDL_JoystickName( joy ), SDL_JoystickNumAxes( joy ), SDL_JoystickNumHats( joy ),
+		SDL_JoystickNumButtons( joy ), SDL_JoystickNumBalls( joy ) );
+
+	SDL_JoystickEventState( SDL_ENABLE );
+
+	return num;
+}
+
 #endif // XASH_SDL

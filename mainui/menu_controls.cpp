@@ -345,7 +345,7 @@ static const char *UI_Controls_KeyFunc( int key, int down )
 			return uiSoundLaunch;
 		}
 
-		if( down && ( key == K_ENTER || key == K_AUX31 || key == K_AUX32 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN ) // ENTER, A or SELECT
+		if( down && ( key == K_ENTER || key == K_AUX1 || key == K_AUX31 || key == K_AUX32 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN ) // ENTER, A or SELECT
 		{
 			if( !strlen( uiControls.keysBind[uiControls.keysList.curItem] ))
 			{

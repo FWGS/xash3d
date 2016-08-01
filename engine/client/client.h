@@ -672,11 +672,14 @@ int pfnIndexFromTrace( struct pmtrace_s *pTrace );
 int CL_FindModelIndex( const char *m );
 HSPRITE pfnSPR_Load( const char *szPicName );
 HSPRITE pfnSPR_LoadExt( const char *szPicName, uint texFlags );
+void SPR_AdjustSize( float *x, float *y, float *w, float *h );
 void TextAdjustSize( int *x, int *y, int *w, int *h );
 void PicAdjustSize( float *x, float *y, float *w, float *h );
 void CL_PlayerTrace( float *start, float *end, int traceFlags, int ignore_pe, pmtrace_t *tr );
 void CL_PlayerTraceExt( float *start, float *end, int traceFlags, int (*pfnIgnore)( physent_t *pe ), pmtrace_t *tr );
 void CL_SetTraceHull( int hull );
+void CL_FillRGBA( int x, int y, int width, int height, int r, int g, int b, int a );
+void CL_FillRGBABlend( int x, int y, int width, int height, int r, int g, int b, int a );
 
 
 _inline cl_entity_t *CL_EDICT_NUM( int n )
