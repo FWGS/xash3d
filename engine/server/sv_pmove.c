@@ -210,10 +210,10 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 		next = l->next;
 		check = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
-		if( check->v.groupinfo )
+		if( check->v.groupinfo != 0 )
 		{
-			if(( !svs.groupop && ( check->v.groupinfo & pl->v.groupinfo ) == 0 ) ||
-			   ( svs.groupop && ( check->v.groupinfo & pl->v.groupinfo ) != 0 ))
+			if(( !svs.groupop && (check->v.groupinfo & pl->v.groupinfo ) == 0) ||
+			( svs.groupop == 1 && ( check->v.groupinfo & pl->v.groupinfo ) != 0 ))
 				continue;
 		}
 
@@ -238,12 +238,9 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 
 		if( !sv_corpse_solid->value )
 		{
-			if((( check->v.flags & FL_CLIENT ) && check->v.health <= 0 ) )
+			if((( check->v.flags & FL_CLIENT ) && check->v.health <= 0 ) || check->v.deadflag == DEAD_DEAD )
 				continue;	// dead body
 		}
-
-		if( check->v.mins[2] == 0.0f && check->v.maxs[2] == 1.0f )
-			continue;
 
 		if( VectorIsNull( check->v.size ))
 			continue;
@@ -261,25 +258,12 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 		if( !BoundsIntersect( pmove_mins, pmove_maxs, mins, maxs ))
 			continue;
 
-		if( check->v.solid != SOLID_NOT || check->v.skin != CONTENTS_LADDER )
+		if( svgame.pmove->numphysent < MAX_PHYSENTS )
 		{
-			if( svgame.pmove->numphysent < MAX_PHYSENTS )
-			{
-				pe = &svgame.pmove->physents[svgame.pmove->numphysent];
+			pe = &svgame.pmove->physents[svgame.pmove->numphysent];
 
-				if( SV_CopyEdictToPhysEnt( pe, check ))
-					svgame.pmove->numphysent++;
-			}
-		}
-		else
-		{
-			if( svgame.pmove->nummoveent < MAX_MOVEENTS )
-			{
-				pe = &svgame.pmove->moveents[svgame.pmove->nummoveent];
-
-				if( SV_CopyEdictToPhysEnt( pe, check ))
-					svgame.pmove->nummoveent++;
-			}
+			if( SV_CopyEdictToPhysEnt( pe, check ))
+				svgame.pmove->numphysent++;
 		}
 	}
 	
@@ -290,6 +274,50 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 		SV_AddLinksToPmove( node->children[0], pmove_mins, pmove_maxs );
 	if( pmove_mins[node->axis] < node->dist )
 		SV_AddLinksToPmove( node->children[1], pmove_mins, pmove_maxs );
+}
+
+/*
+====================
+SV_AddLaddersToPmove
+====================
+*/
+void SV_AddLaddersToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t pmove_maxs )
+{
+	link_t	*l, *next;
+	edict_t	*check;
+	physent_t	*pe;
+	
+	// get water edicts
+	for( l = node->water_edicts.next; l != &node->water_edicts; l = next )
+	{
+		next = l->next;
+		check = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
+
+		if( check->v.solid != SOLID_NOT ) // disabled ?
+			continue;
+
+		// only brushes can have special contents
+		if( Mod_GetType( check->v.modelindex ) != mod_brush )
+			continue;
+
+		if( !BoundsIntersect( pmove_mins, pmove_maxs, check->v.absmin, check->v.absmax ))
+			continue;
+
+		if( svgame.pmove->nummoveent == MAX_MOVEENTS )
+			return;
+
+		pe = &svgame.pmove->moveents[svgame.pmove->nummoveent];
+		if( SV_CopyEdictToPhysEnt( pe, check ))
+			svgame.pmove->nummoveent++;
+	}
+	
+	// recurse down both sides
+	if( node->axis == -1 ) return;
+	
+	if( pmove_maxs[node->axis] > node->dist )
+		SV_AddLaddersToPmove( node->children[0], pmove_mins, pmove_maxs );
+	if( pmove_mins[node->axis] < node->dist )
+		SV_AddLaddersToPmove( node->children[1], pmove_mins, pmove_maxs );
 }
 
 static void pfnParticle( float *origin, int color, float life, int zpos, int zvel )
@@ -722,6 +750,7 @@ static void SV_SetupPMove( playermove_t *pmove, sv_client_t *cl, usercmd_t *ucmd
 	svgame.pmove->numvisent = 1;
 
 	SV_AddLinksToPmove( sv_areanodes, absmin, absmax );
+	SV_AddLaddersToPmove( sv_areanodes, absmin, absmax );
 }
 
 static void SV_FinishPMove( playermove_t *pmove, sv_client_t *cl )
