@@ -127,6 +127,7 @@
     <ClCompile Include="client\s_vox.c" />
     <ClCompile Include="client\vgui\vgui_draw.c" />
     <ClCompile Include="common\avikit.c" />
+    <ClCompile Include="common\base_cmd.c" />
     <ClCompile Include="common\build.c" />
     <ClCompile Include="common\cmd.c" />
     <ClCompile Include="common\common.c" />
