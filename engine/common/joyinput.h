@@ -37,4 +37,6 @@ void Joy_EnableTextInput(qboolean enable, qboolean force);
 
 void Joy_DrawOnScreenKeyboard( void );
 
+extern convar_t *joy_found;
+
 #endif // JOYINPUT_H

@@ -277,16 +277,24 @@ void Android_RunEvents()
 			Joy_RemoveEvent( events.queue[i].arg );
 			break;
 		case event_joyball:
+			if( !joy_found->integer )
+				Joy_AddEvent( 0 );
 			Joy_BallMotionEvent( events.queue[i].arg, events.queue[i].ball.ball,
 								 events.queue[i].ball.xrel, events.queue[i].ball.yrel );
 			break;
 		case event_joyhat:
+			if( !joy_found->integer )
+				Joy_AddEvent( 0 );
 			Joy_HatMotionEvent( events.queue[i].arg, events.queue[i].hat.hat, events.queue[i].hat.key );
 			break;
 		case event_joyaxis:
+			if( !joy_found->integer )
+				Joy_AddEvent( 0 );
 			Joy_AxisMotionEvent( events.queue[i].arg, events.queue[i].axis.axis, events.queue[i].axis.val );
 			break;
 		case event_joybutton:
+			if( !joy_found->integer )
+				Joy_AddEvent( 0 );
 			Joy_ButtonEvent( events.queue[i].arg, events.queue[i].button.button, (byte)events.queue[i].button.down );
 			break;
 		}
@@ -562,7 +570,7 @@ DECLARE_JNI_INTERFACE( void, nativeAxis, jint id, jbyte axis, jshort val )
 	event->axis.axis = axis;
 	event->axis.val = val;
 
-	__android_log_print(ANDROID_LOG_VERBOSE, "Xash", "%i %i", axis, val );
+	__android_log_print(ANDROID_LOG_VERBOSE, "Xash", "axis %i %i", axis, val );
 	Android_PushEvent();
 }
 
@@ -573,6 +581,7 @@ DECLARE_JNI_INTERFACE( void, nativeJoyButton, jint id, jbyte button, jboolean do
 	event->arg = id;
 	event->button.button = button;
 	event->button.down = down;
+	__android_log_print(ANDROID_LOG_VERBOSE, "Xash", "button %i", button );
 	Android_PushEvent();
 }
 
