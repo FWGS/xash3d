@@ -779,12 +779,12 @@ static void UI_TouchButtons_Init( void )
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.select );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.editor );
 
-	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.name );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.banner );
-	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.command );
-	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.texture );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.color );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.preview );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.command );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.texture );
+	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.name );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.msgBox );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.promptMessage );
 	UI_AddItem( &uiTouchButtons.menu, (void *)&uiTouchButtons.no );

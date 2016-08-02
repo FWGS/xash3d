@@ -1590,8 +1590,10 @@ const char *UI_Field_Key( menuField_s *f, int key, int down )
 	if( key == K_MOUSE1 )
 	{
 		float y = f->generic.y;
-		if( y > ScreenHeight - f->generic.height - 30 )
-			y = ScreenHeight - f->generic.height - 30;
+
+		if( y > ScreenHeight - f->generic.height - 40 )
+			y = ScreenHeight - f->generic.height - 15;
+
 		if( UI_CursorInRect( f->generic.x, y, f->generic.width, f->generic.height ) )
 		{
 			int charpos = (uiStatic.cursorX - f->generic.x) / f->generic.charWidth;
@@ -1709,9 +1711,14 @@ void UI_Field_Draw( menuField_s *f )
 	int	cursor, x, textHeight;
 	char	cursor_char[3];
 	float y = f->generic.y;
-	if((menuCommon_s *)f == (menuCommon_s *)UI_ItemAtCursor( f->generic.parent ))
-		if( y > ScreenHeight - f->generic.height - 30 )
-			y = ScreenHeight - f->generic.height - 30;
+
+	if( y > ScreenHeight - f->generic.height - 40 )
+	{
+		if((menuCommon_s *)f == (menuCommon_s *)UI_ItemAtCursor( f->generic.parent ))
+			y = ScreenHeight - f->generic.height - 15;
+		else
+			return;
+	}
 
 	if( f->generic.flags & QMF_LEFT_JUSTIFY )
 		justify = 0;
