@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_BOTTOMCOLOR	8
 #define ID_HIMODELS		9
 #define ID_SHOWMODELS	10
+#define ID_PREDICT	11
+#define ID_LW		12
 
 #define MAX_PLAYERMODELS	100
 
@@ -65,6 +67,8 @@ typedef struct
 
 	menuCheckBox_s	showModels;
 	menuCheckBox_s	hiModels;
+	menuCheckBox_s	clPredict;
+	menuCheckBox_s	clLW;
 	menuSlider_s	topColor;
 	menuSlider_s	bottomColor;
 
@@ -161,6 +165,12 @@ static void UI_PlayerSetup_GetConfig( void )
 
 	if( CVAR_GET_FLOAT( "ui_showmodels" ))
 		uiPlayerSetup.showModels.enabled = 1;
+
+	if( CVAR_GET_FLOAT( "cl_predict" ))
+		uiPlayerSetup.clPredict.enabled = 1;
+
+	if( CVAR_GET_FLOAT( "cl_lw" ))
+		uiPlayerSetup.clLW.enabled = 1;
 }
 
 /*
@@ -176,6 +186,8 @@ static void UI_PlayerSetup_SetConfig( void )
 	CVAR_SET_FLOAT( "bottomcolor", (int)(uiPlayerSetup.bottomColor.curValue * 255 ));
 	CVAR_SET_FLOAT( "cl_himodels", uiPlayerSetup.hiModels.enabled );
 	CVAR_SET_FLOAT( "ui_showmodels", uiPlayerSetup.showModels.enabled );
+	CVAR_SET_FLOAT( "cl_predict", uiPlayerSetup.clPredict.enabled );
+	CVAR_SET_FLOAT( "cl_lw", uiPlayerSetup.clLW.enabled );
 }
 
 /*
@@ -217,6 +229,8 @@ static void UI_PlayerSetup_UpdateConfig( void )
 	CVAR_SET_FLOAT( "ui_showmodels", uiPlayerSetup.showModels.enabled );
 	CVAR_SET_FLOAT( "topcolor", topColor );
 	CVAR_SET_FLOAT( "bottomcolor", bottomColor );
+	CVAR_SET_FLOAT( "cl_predict", uiPlayerSetup.clPredict.enabled );
+	CVAR_SET_FLOAT( "cl_lw", uiPlayerSetup.clLW.enabled );
 
 	// IMPORTANT: always set default model becuase we need to have something valid here
 	// if you wish draw your playermodel as normal studiomodel please change "models/player.mdl" to path
@@ -267,6 +281,8 @@ static void UI_PlayerSetup_Callback( void *self, int event )
 	{
 	case ID_HIMODELS:
 	case ID_SHOWMODELS:
+	case ID_PREDICT:
+	case ID_LW:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -450,11 +466,29 @@ static void UI_PlayerSetup_Init( void )
 	uiPlayerSetup.bottomColor.maxValue = 1.0;
 	uiPlayerSetup.bottomColor.range = 0.05f;
 
+	uiPlayerSetup.clPredict.generic.id = ID_PREDICT;
+	uiPlayerSetup.clPredict.generic.type = QMTYPE_CHECKBOX;
+	uiPlayerSetup.clPredict.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW|addFlags;
+	uiPlayerSetup.clPredict.generic.name = "Predict movement";
+	uiPlayerSetup.clPredict.generic.x = 72;
+	uiPlayerSetup.clPredict.generic.y = 380;
+	uiPlayerSetup.clPredict.generic.callback = UI_PlayerSetup_Callback;
+	uiPlayerSetup.clPredict.generic.statusText = "Enable player movement prediction";
+
+	uiPlayerSetup.clLW.generic.id = ID_LW;
+	uiPlayerSetup.clLW.generic.type = QMTYPE_CHECKBOX;
+	uiPlayerSetup.clLW.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW|addFlags;
+	uiPlayerSetup.clLW.generic.name = "Local weapons";
+	uiPlayerSetup.clLW.generic.x = 72;
+	uiPlayerSetup.clLW.generic.y = 430;
+	uiPlayerSetup.clLW.generic.callback = UI_PlayerSetup_Callback;
+	uiPlayerSetup.clLW.generic.statusText = "Enable local weapons";
+
 	uiPlayerSetup.showModels.generic.id = ID_SHOWMODELS;
 	uiPlayerSetup.showModels.generic.type = QMTYPE_CHECKBOX;
 	uiPlayerSetup.showModels.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW|addFlags;
 	uiPlayerSetup.showModels.generic.name = "Show 3D Preview";
-	uiPlayerSetup.showModels.generic.x = 72;
+	uiPlayerSetup.showModels.generic.x = 340;
 	uiPlayerSetup.showModels.generic.y = 380;
 	uiPlayerSetup.showModels.generic.callback = UI_PlayerSetup_Callback;
 	uiPlayerSetup.showModels.generic.statusText = "show 3D player models instead of preview thumbnails";
@@ -463,7 +497,7 @@ static void UI_PlayerSetup_Init( void )
 	uiPlayerSetup.hiModels.generic.type = QMTYPE_CHECKBOX;
 	uiPlayerSetup.hiModels.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW|addFlags;
 	uiPlayerSetup.hiModels.generic.name = "High quality models";
-	uiPlayerSetup.hiModels.generic.x = 72;
+	uiPlayerSetup.hiModels.generic.x = 340;
 	uiPlayerSetup.hiModels.generic.y = 430;
 	uiPlayerSetup.hiModels.generic.callback = UI_PlayerSetup_Callback;
 	uiPlayerSetup.hiModels.generic.statusText = "show hi-res models in multiplayer";
@@ -474,6 +508,8 @@ static void UI_PlayerSetup_Init( void )
 	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.banner );
 	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.done );
 	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.AdvOptions );
+	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.clPredict);
+	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.clLW);
 	// disable playermodel preview for HLRally to prevent crash
 	if( game_hlRally == FALSE )
 		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.view );
