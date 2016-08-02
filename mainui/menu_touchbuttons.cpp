@@ -454,7 +454,7 @@ static void UI_TouchButtons_Init( void )
 
 	//uiTouchOptions.hTestImage = PIC_Load( ART_GAMMA, PIC_KEEP_RGBDATA );
 
-	uiTouchButtons.menu.vidInitFunc = UI_TouchButtons_Init;
+	//uiTouchButtons.menu.vidInitFunc = UI_TouchButtons_Init;
 	uiTouchButtons.initialized = true;
 
 	uiTouchButtons.background.generic.id = ID_BACKGROUND;

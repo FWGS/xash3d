@@ -365,7 +365,7 @@ static void UI_PlayerSetup_Init( void )
 	if( gMenu.m_gameinfo.flags & GFL_NOMODELS )
 		addFlags |= QMF_INACTIVE;
 
-	uiPlayerSetup.menu.vidInitFunc = UI_PlayerSetup_Init;
+	//uiPlayerSetup.menu.vidInitFunc = UI_PlayerSetup_Init;
 
 	uiPlayerSetup.background.generic.id = ID_BACKGROUND;
 	uiPlayerSetup.background.generic.type = QMTYPE_BITMAP;

@@ -272,7 +272,7 @@ static void UI_CreateGame_Init( void )
 {
 	memset( &uiCreateGame, 0, sizeof( uiCreateGame_t ));
 
-	uiCreateGame.menu.vidInitFunc = UI_CreateGame_Init;
+	//uiCreateGame.menu.vidInitFunc = UI_CreateGame_Init;
 	uiCreateGame.menu.keyFunc = UI_CreateGame_KeyFunc;
 
 	StringConcat( uiCreateGame.hintText, "Map", MAPNAME_LENGTH );
