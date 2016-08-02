@@ -1578,6 +1578,9 @@ void UI_Init( void )
 	ui_precache = CVAR_REGISTER( "ui_precache", "0", FCVAR_ARCHIVE );
 	ui_showmodels = CVAR_REGISTER( "ui_showmodels", "0", FCVAR_ARCHIVE );
 
+	// show cl_predict dialog
+	CVAR_REGISTER( "menu_mp_firsttime", "1", FCVAR_ARCHIVE );
+
 	Cmd_AddCommand( "menu_main", UI_Main_Menu );
 	Cmd_AddCommand( "menu_newgame", UI_NewGame_Menu );
 	Cmd_AddCommand( "menu_loadgame", UI_LoadGame_Menu );
