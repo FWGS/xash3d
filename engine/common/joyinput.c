@@ -14,6 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
 #include "port.h"
 #include "common.h"
 #include "input.h"
@@ -612,3 +613,4 @@ void Joy_DrawOnScreenKeyboard( void )
 	Joy_DrawSpecialButton( "Enter", X_START + X_STEP * 12, Y_START + Y_STEP * 3, X_STEP, Y_STEP );
 }
 
+#endif
