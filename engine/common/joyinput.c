@@ -25,6 +25,10 @@ GNU General Public License for more details.
 #include "gl_local.h"
 //#include "SDL.h"
 
+#ifndef SHRT_MAX
+#define SHRT_MAX 0x7FFF
+#endif
+
 typedef enum engineAxis_e
 {
 	JOY_AXIS_SIDE = 0,
