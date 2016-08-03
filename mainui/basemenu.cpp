@@ -1196,17 +1196,19 @@ void UI_MouseMove( int x, int y )
 	uiStatic.cursorY = y;
 
 	// hack: prevent changing focus when field active
-	if( !uiStatic.menuActive->vidInitFunc &&
-			((menuCommon_s *)UI_ItemAtCursor(uiStatic.menuActive))->type == QMTYPE_FIELD )
+	if( !uiStatic.menuActive->vidInitFunc )
 	{
-		menuField_s *f = (menuField_s *)UI_ItemAtCursor(uiStatic.menuActive);
-		float y = f->generic.y;
+		menuField_s *f = (menuField_s *)UI_ItemAtCursor( uiStatic.menuActive );
+		if( f && ((menuCommon_s *)f)->type == QMTYPE_FIELD )
+		{
+			float y = f->generic.y;
 
-		if( y > ScreenHeight - f->generic.height - 40 )
-			y = ScreenHeight - f->generic.height - 15;
+			if( y > ScreenHeight - f->generic.height - 40 )
+				y = ScreenHeight - f->generic.height - 15;
 
-		if( UI_CursorInRect( f->generic.x - 30, y - 30, f->generic.width + 60, f->generic.height + 60 ) )
-				return;
+			if( UI_CursorInRect( f->generic.x - 30, y - 30, f->generic.width + 60, f->generic.height + 60 ) )
+					return;
+		}
 	}
 
 	if( UI_CursorInRect( 1, 1, ScreenWidth - 1, ScreenHeight - 1 ))
