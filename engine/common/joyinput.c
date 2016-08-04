@@ -33,8 +33,8 @@ typedef enum engineAxis_e
 {
 	JOY_AXIS_SIDE = 0,
 	JOY_AXIS_FWD,
-	JOY_AXIS_YAW,
 	JOY_AXIS_PITCH,
+	JOY_AXIS_YAW,
 	JOY_AXIS_RT,
 	JOY_AXIS_LT,
 	JOY_AXIS_NULL
@@ -48,8 +48,8 @@ static engineAxis_t joyaxesmap[MAX_AXES] =
 {
 	JOY_AXIS_SIDE,  // left stick, x
 	JOY_AXIS_FWD,   // left stick, y
-	JOY_AXIS_YAW,   // right stick, x
 	JOY_AXIS_PITCH, // right stick, y
+	JOY_AXIS_YAW,   // right stick, x
 	JOY_AXIS_RT,    // right trigger
 	JOY_AXIS_LT     // left trigger
 };
@@ -482,8 +482,7 @@ void Joy_Init( void )
 	Cvar_SetFloat( "joy_found", SDLash_JoyInit( joy_index->integer ) );
 
 #elif defined(ANDROID)
-
-
+	// Initalized after first Joy_AddEvent
 #else
 #warning "Any platform must implement platform-dependent JoyInit, start event system. Otherwise no joystick support"
 #endif

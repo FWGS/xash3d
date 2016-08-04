@@ -38,6 +38,8 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 		case SDL_SCANCODE_BACKSLASH: keynum = '\\'; break;
 		case SDL_SCANCODE_LEFTBRACKET: keynum = '['; break;
 		case SDL_SCANCODE_RIGHTBRACKET: keynum = ']'; break;
+		case SDL_SCANCODE_EQUALS: keynum = '='; break;
+		case SDL_SCANCODE_MINUS: keynum = '-'; break;
 		case SDL_SCANCODE_TAB: keynum = K_TAB; break;
 		case SDL_SCANCODE_RETURN: keynum = K_ENTER; break;
 		case SDL_SCANCODE_ESCAPE: keynum = K_ESCAPE; break;
