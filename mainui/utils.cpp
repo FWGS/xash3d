@@ -1197,7 +1197,7 @@ const char *UI_Slider_Key( menuSlider_s *sl, int key, int down )
 		
 		// immediately move slider into specified place
 		dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
-		numSteps = dist / (int)sl->drawStep;
+		numSteps = round(dist / sl->drawStep);
 		sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
 		
 		// tell menu about changes
@@ -1230,14 +1230,15 @@ void UI_Slider_Draw( menuSlider_s *sl )
 
 	if( sl->keepSlider )
 	{
-		int	dist, numSteps;
 		if( !UI_CursorInRect( sl->generic.x, sl->generic.y - 40, sl->generic.width, sl->generic.height + 80 ) )
 			sl->keepSlider = false;
 		else
 		{
+			int	dist, numSteps;
+
 			// move slider follow the holded mouse button
 			dist = uiStatic.cursorX - sl->generic.x2 - (sl->generic.width2>>2);
-			numSteps = dist / (int)sl->drawStep;
+			numSteps = round(dist / sl->drawStep);
 			sl->curValue = bound( sl->minValue, numSteps * sl->range, sl->maxValue );
 			
 			// tell menu about changes
