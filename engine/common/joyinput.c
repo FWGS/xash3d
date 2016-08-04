@@ -51,7 +51,7 @@ static engineAxis_t joyaxesmap[MAX_AXES] =
 	JOY_AXIS_YAW,   // right stick, x
 	JOY_AXIS_PITCH, // right stick, y
 	JOY_AXIS_RT,    // right trigger
-	JOY_AXIS_LT,    // left trigger
+	JOY_AXIS_LT     // left trigger
 };
 
 static struct joy_axis_s
@@ -299,7 +299,7 @@ void Joy_ButtonEvent( int id, byte button, byte down )
 	if( !initialized )
 		return;
 
-	if( osk_enable )
+	if( osk_enable ) // On-Screen Keyboard code.
 	{
 		switch( osk_curbutton.val )
 		{
@@ -354,7 +354,7 @@ void Joy_ButtonEvent( int id, byte button, byte down )
 		return;
 	}
 
-
+	// generic game button code.
 	if( button > 32 )
 	{
 		int origbutton = button;
@@ -413,11 +413,11 @@ void Joy_FinalizeMove( float *fw, float *side, float *dpitch, float *dyaw )
 
 	if( joy_axis_binding->modified )
 	{
-		char bind[6] = { 0 }; // fill it with zeros
+		char bind[7] = { 0 }; // fill it with zeros
 		int i;
-		Q_strncpy( bind, joy_axis_binding->string, 6 );
+		Q_strncpy( bind, joy_axis_binding->string, sizeof(bind) );
 
-		for( i = 0; i < 6; i++ )
+		for( i = 0; i < sizeof(bind); i++ )
 		{
 			switch( bind[i] )
 			{
@@ -435,8 +435,14 @@ void Joy_FinalizeMove( float *fw, float *side, float *dpitch, float *dyaw )
 
 	*fw     -= (float)joyaxis[JOY_AXIS_FWD ].val/(float)SHRT_MAX;  // must be form -1.0 to 1.0
 	*side   += (float)joyaxis[JOY_AXIS_SIDE].val/(float)SHRT_MAX;
+#if !defined(XASH_SDL)
 	*dpitch += joy_pitch->value * (float)joyaxis[JOY_AXIS_PITCH].val/(float)SHRT_MAX * host.realframetime;  // abs axis rotate is frametime related
-	*dyaw   -= joy_yaw->value * (float)joyaxis[JOY_AXIS_YAW].val/(float)SHRT_MAX * host.realframetime;
+	*dyaw   -= joy_yaw->value   * (float)joyaxis[JOY_AXIS_YAW  ].val/(float)SHRT_MAX * host.realframetime;
+#else
+	// HACKHACK: SDL have inverted look axis.
+	*dpitch -= joy_pitch->value * (float)joyaxis[JOY_AXIS_PITCH].val/(float)SHRT_MAX * host.realframetime;
+	*dyaw   += joy_yaw->value   * (float)joyaxis[JOY_AXIS_YAW  ].val/(float)SHRT_MAX * host.realframetime;
+#endif
 }
 
 /*
