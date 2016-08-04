@@ -1191,7 +1191,7 @@ const char *UI_Slider_Key( menuSlider_s *sl, int key, int down )
 			return uiSoundNull;
 
 		// find the current slider position
-		sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue * sl->numSteps));		
+		sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue / sl->range));
 		sl->keepSlider = true;
 		int	dist, numSteps;
 		
@@ -1203,9 +1203,42 @@ const char *UI_Slider_Key( menuSlider_s *sl, int key, int down )
 		// tell menu about changes
 		if( sl->generic.callback )
 			sl->generic.callback( sl, QM_CHANGED );
+
+		return uiSoundNull;
+		break;
+	case K_LEFTARROW:
+		sl->curValue -= sl->range;
+
+		if( sl->curValue < sl->minValue )
+		{
+			sl->curValue = sl->minValue;
+			return uiSoundBuzz;
+		}
+
+		// tell menu about changes
+		if( sl->generic.callback )
+			sl->generic.callback( sl, QM_CHANGED );
+
+		return uiSoundKey;
+		break;
+	case K_RIGHTARROW:
+		sl->curValue += sl->range;
+
+		if( sl->curValue > sl->maxValue )
+		{
+			sl->curValue = sl->maxValue;
+			return uiSoundBuzz;
+		}
+
+		// tell menu about changes
+		if( sl->generic.callback )
+			sl->generic.callback( sl, QM_CHANGED );
+
+		return uiSoundKey;
 		break;
 	}
-	return uiSoundNull;
+
+	return 0;
 }
 
 /*
@@ -1250,11 +1283,15 @@ void UI_Slider_Draw( menuSlider_s *sl )
 	sl->curValue = bound( sl->minValue, sl->curValue, sl->maxValue );
 
 	// calc slider position
-	sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue / sl->range));
+	sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue / sl->range)); // TODO: fix behaviour when values goes negative
 	//sliderX = bound( sl->generic.x2, sliderX, sl->generic.x2 + sl->generic.width - uiStatic.sliderWidth);
 
 	UI_DrawRectangleExt( sl->generic.x, sl->generic.y + uiStatic.sliderWidth, sl->generic.width, sl->generic.height2, uiInputBgColor, uiStatic.sliderWidth );
-	UI_DrawPic( sliderX, sl->generic.y2, sl->generic.width2, sl->generic.height, uiColorWhite, UI_SLIDER_MAIN );
+	if( sl->generic.flags & QMF_HIGHLIGHTIFFOCUS && sl == UI_ItemAtCursor( sl->generic.parent ))
+		UI_DrawPic( sliderX, sl->generic.y2, sl->generic.width2, sl->generic.height, uiColorHelp, UI_SLIDER_MAIN );
+	else
+		UI_DrawPic( sliderX, sl->generic.y2, sl->generic.width2, sl->generic.height, uiColorWhite, UI_SLIDER_MAIN );
+
 
 	textHeight = sl->generic.y - (sl->generic.charHeight * 1.5f);
 	UI_DrawString( sl->generic.x, textHeight, sl->generic.width, sl->generic.charHeight, sl->generic.name, uiColorHelp, true, sl->generic.charWidth, sl->generic.charHeight, justify, shadow );
