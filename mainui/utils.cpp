@@ -1148,7 +1148,7 @@ void UI_Slider_Init( menuSlider_s *sl )
 	// scale the center box
 	sl->generic.x2 = sl->generic.x;
 	sl->generic.y2 = sl->generic.y;
-	sl->generic.width2 = sl->generic.width / 5;
+	sl->generic.width2 = sl->generic.width / 5.0f;
 	sl->generic.height2 = 4;
 
 	UI_ScaleCoords( &sl->generic.x2, &sl->generic.y2, &sl->generic.width2, &sl->generic.height2 );
@@ -1158,8 +1158,8 @@ void UI_Slider_Init( menuSlider_s *sl )
 	sl->generic.height += uiStatic.sliderWidth * 2;
 	sl->generic.y2 -= uiStatic.sliderWidth;
 
-	sl->drawStep = (sl->generic.width - sl->generic.width2) / ((sl->maxValue - sl->minValue) / sl->range);
-	sl->numSteps = ((sl->maxValue - sl->minValue) / sl->range) + 1;
+	sl->numSteps = (sl->maxValue - sl->minValue) / sl->range + 1;
+	sl->drawStep = (float)(sl->generic.width - sl->generic.width2) / (float)sl->numSteps;
 }
 
 /*
@@ -1249,7 +1249,8 @@ void UI_Slider_Draw( menuSlider_s *sl )
 	sl->curValue = bound( sl->minValue, sl->curValue, sl->maxValue );
 
 	// calc slider position
-	sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue * sl->numSteps));
+	sliderX = sl->generic.x2 + (sl->drawStep * (sl->curValue / sl->range));
+	//sliderX = bound( sl->generic.x2, sliderX, sl->generic.x2 + sl->generic.width - uiStatic.sliderWidth);
 
 	UI_DrawRectangleExt( sl->generic.x, sl->generic.y + uiStatic.sliderWidth, sl->generic.width, sl->generic.height2, uiInputBgColor, uiStatic.sliderWidth );
 	UI_DrawPic( sliderX, sl->generic.y2, sl->generic.width2, sl->generic.height, uiColorWhite, UI_SLIDER_MAIN );
