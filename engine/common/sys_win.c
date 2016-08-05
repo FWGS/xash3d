@@ -38,7 +38,6 @@ extern char **environ;
 
 #include "common.h"
 #include "mathlib.h"
-#include <android/log.h>
 
 qboolean	error_on_exit = false;	// arg for exit();
 
