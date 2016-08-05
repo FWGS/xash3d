@@ -876,7 +876,7 @@ void Sys_RestoreCrashHandler( void )
 {
 	sigaction(SIGSEGV, &oldFilter, NULL);
 	sigaction(SIGABRT, &oldFilter, NULL);
-	sigaction(SIGBUS, &oldFIlter, NULL);
+	sigaction(SIGBUS, &oldFilter, NULL);
 	sigaction(SIGILL, &oldFilter, NULL);
 	// stub
 }
