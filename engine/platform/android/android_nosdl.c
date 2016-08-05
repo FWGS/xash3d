@@ -168,6 +168,7 @@ static struct jnimethods_s
 	jmethodID vibrate;
 	jmethodID messageBox;
 	jmethodID createGLContext;
+	jmethodID deleteGLContext;
 	int width, height;
 } jni;
 
@@ -383,6 +384,7 @@ JAVA_EXPORT int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclas
 	jni.vibrate = (*env)->GetStaticMethodID(env, jni.actcls, "vibrate", "(I)V" );
 	jni.messageBox = (*env)->GetStaticMethodID(env, jni.actcls, "messageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
 	jni.createGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "createGLContext", "()Z");
+	jni.deleteGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "deleteGLContext", "()Z");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -693,6 +695,15 @@ qboolean Android_InitGL()
 	return result;
 }
 
+/*
+========================
+Android_InitGL
+========================
+*/
+void Android_ShutdownGL()
+{
+	(*jni.env)->CallStaticBooleanMethod( jni.env, jni.actcls, jni.deleteGLContext );
+}
 
 /*
 ========================

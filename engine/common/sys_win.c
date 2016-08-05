@@ -38,6 +38,7 @@ extern char **environ;
 
 #include "common.h"
 #include "mathlib.h"
+#include <android/log.h>
 
 qboolean	error_on_exit = false;	// arg for exit();
 
@@ -860,7 +861,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	Sys_Quit();
 }
 
-void Sys_SetupCrashHandler()
+void Sys_SetupCrashHandler( void )
 {
 	struct sigaction act;
 	act.sa_sigaction = Sys_Crash;
@@ -873,6 +874,10 @@ void Sys_SetupCrashHandler()
 
 void Sys_RestoreCrashHandler( void )
 {
+	sigaction(SIGSEGV, &oldFilter, NULL);
+	sigaction(SIGABRT, &oldFilter, NULL);
+	sigaction(SIGBUS, &oldFIlter, NULL);
+	sigaction(SIGILL, &oldFilter, NULL);
 	// stub
 }
 
