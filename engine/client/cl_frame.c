@@ -552,11 +552,6 @@ void CL_WeaponAnim( int iAnim, int body )
 	cl.weaponstarttime = 0;
 	cl.weaponseq = iAnim;
 
-	if( Host_IsLocalClient() || CL_IsPredicted() || !cl_lw->value )
-		view->curstate.modelindex = cl.frame.client.viewmodel;
-	else
-		view->curstate.modelindex = cl.predicted.viewmodel;
-
 	// anim is changed. update latchedvars
 	if( iAnim != view->curstate.sequence )
 	{
