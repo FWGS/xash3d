@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "keydefs.h"
 #include "ref_params.h"
 #include "cl_entity.h"
+#include "com_model.h"
 #include "entity_types.h"
 #include "menu_btnsbmp_table.h"
 
@@ -74,6 +75,9 @@ typedef struct
 
 	menuField_s	name;
 	menuSpinControl_s	model;
+
+	bool mouseYawControl;
+	int prevCursorX;
 } uiPlayerSetup_t;
 
 static uiPlayerSetup_t	uiPlayerSetup;
@@ -324,7 +328,10 @@ static void UI_PlayerSetup_Ownerdraw( void *self )
 	UI_FillRect( item->x, item->y, item->width, item->height, uiPromptBgColor );
 
 	// draw the rectangle
-	UI_DrawRectangle( item->x, item->y, item->width, item->height, uiInputFgColor );
+	if( item->flags & QMF_HIGHLIGHTIFFOCUS && UI_IsCurrentSelected( self ) )
+		UI_DrawRectangle( item->x, item->y, item->width, item->height, uiInputTextColor );
+	else
+		UI_DrawRectangle( item->x, item->y, item->width, item->height, uiInputFgColor );
 
 	if( !ui_showmodels->value && playerImage != 0 )
 	{
@@ -340,10 +347,106 @@ static void UI_PlayerSetup_Ownerdraw( void *self )
 		uiPlayerSetup.refdef.frametime = gpGlobals->frametime;
 		uiPlayerSetup.ent->curstate.body = 0; // clearing body each frame
 
+		if( uiPlayerSetup.mouseYawControl )
+		{
+			int diffX = uiStatic.cursorX - uiPlayerSetup.prevCursorX;
+
+			if( diffX )
+			{
+				float yaw = uiPlayerSetup.ent->angles[1];
+
+				yaw += (float)diffX / uiStatic.scaleX;
+
+				if( yaw > 180.0f )       yaw -= 360.0f;
+				else if( yaw < -180.0f ) yaw += 360.0f;
+
+				uiPlayerSetup.ent->angles[1] = uiPlayerSetup.ent->curstate.angles[1] = yaw;
+			}
+
+			/*if( diffY )
+			{
+				float pitch = uiPlayerSetup.ent->angles[0];
+
+				pitch += diffY;
+
+				if( pitch > 180.0f ) pitch -= 360.0f;
+				else if( pitch < -180.0f ) pitch += 360.0f;
+
+				uiPlayerSetup.ent->angles[0] = uiPlayerSetup.ent->curstate.angles[0] = pitch;
+			}*/
+			uiPlayerSetup.prevCursorX = uiStatic.cursorX;
+		}
+
 		// draw the player model
 		R_AddEntity( ET_NORMAL, uiPlayerSetup.ent );
 		R_RenderFrame( &uiPlayerSetup.refdef );
 	}
+}
+
+/*
+=================
+UI_PlayerSetup_Key
+=================
+*/
+static const char *UI_PlayerSetup_Key( int key, int down )
+{
+	if( key == K_MOUSE1
+		&& UI_CursorInRect( uiPlayerSetup.view.generic.x, uiPlayerSetup.view.generic.y,
+			uiPlayerSetup.view.generic.width, uiPlayerSetup.view.generic.height )
+		&& down
+		&& !uiPlayerSetup.mouseYawControl )
+	{
+		uiPlayerSetup.mouseYawControl = true;
+		uiPlayerSetup.prevCursorX = uiStatic.cursorX;
+	}
+	else if( key == K_MOUSE1 && !down && uiPlayerSetup.mouseYawControl )
+	{
+		uiPlayerSetup.mouseYawControl = false;
+	}
+
+
+	if( UI_IsCurrentSelected( &uiPlayerSetup.view ) )
+	{
+		float yaw = uiPlayerSetup.ent->angles[1];
+
+		switch( key )
+		{
+		case K_LEFTARROW:
+		case K_KP_RIGHTARROW:
+			if( down )
+			{
+				yaw -= 10.0f;
+
+				if( yaw > 180.0f ) yaw -= 360.0f;
+				else if( yaw < -180.0f ) yaw += 360.0f;
+
+				uiPlayerSetup.ent->angles[1] = uiPlayerSetup.ent->curstate.angles[1] = yaw;
+			}
+			break;
+		case K_RIGHTARROW:
+		case K_KP_LEFTARROW:
+			if( down )
+			{
+				yaw -= 10.0f;
+
+				if( yaw > 180.0f ) yaw -= 360.0f;
+				else if( yaw < -180.0f ) yaw += 360.0f;
+
+				uiPlayerSetup.ent->angles[1] = uiPlayerSetup.ent->curstate.angles[1] = yaw;
+			}
+			break;
+		case K_ENTER:
+		case K_AUX1:
+			if( down ) uiPlayerSetup.ent->curstate.sequence++;
+			break;
+		default: return UI_DefaultKey( &uiPlayerSetup.menu, key, down );
+		}
+
+
+		return uiSoundLaunch;
+	}
+	else
+		return UI_DefaultKey( &uiPlayerSetup.menu, key, down );
 }
 
 /*
@@ -357,6 +460,8 @@ static void UI_PlayerSetup_Init( void )
 	int addFlags = 0;
 
 	memset( &uiPlayerSetup, 0, sizeof( uiPlayerSetup_t ));
+
+	uiPlayerSetup.menu.keyFunc = UI_PlayerSetup_Key;
 
 	// disable playermodel preview for HLRally to prevent crash
 	if( !stricmp( gMenu.m_gameinfo.gamefolder, "hlrally" ))
@@ -409,7 +514,7 @@ static void UI_PlayerSetup_Init( void )
 
 	uiPlayerSetup.view.generic.id = ID_VIEW;
 	uiPlayerSetup.view.generic.type = QMTYPE_BITMAP;
-	uiPlayerSetup.view.generic.flags = QMF_INACTIVE;
+	uiPlayerSetup.view.generic.flags = QMF_HIGHLIGHTIFFOCUS;
 	uiPlayerSetup.view.generic.x = 660;
 	uiPlayerSetup.view.generic.y = 260;
 	uiPlayerSetup.view.generic.width = 260;
