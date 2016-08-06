@@ -1191,11 +1191,25 @@ void UI_MouseMove( int x, int y )
 	if( !uiStatic.menuActive )
 		return;
 
-
-
 	// now menu uses absolute coordinates
 	uiStatic.cursorX = x;
 	uiStatic.cursorY = y;
+
+	// hack: prevent changing focus when field active
+	if( !uiStatic.menuActive->vidInitFunc )
+	{
+		menuField_s *f = (menuField_s *)UI_ItemAtCursor( uiStatic.menuActive );
+		if( f && ((menuCommon_s *)f)->type == QMTYPE_FIELD )
+		{
+			float y = f->generic.y;
+
+			if( y > ScreenHeight - f->generic.height - 40 )
+				y = ScreenHeight - f->generic.height - 15;
+
+			if( UI_CursorInRect( f->generic.x - 30, y - 30, f->generic.width + 60, f->generic.height + 60 ) )
+					return;
+		}
+	}
 
 	if( UI_CursorInRect( 1, 1, ScreenWidth - 1, ScreenHeight - 1 ))
 		uiStatic.mouseInRect = true;
@@ -1577,6 +1591,9 @@ void UI_Init( void )
 	// register our cvars and commands
 	ui_precache = CVAR_REGISTER( "ui_precache", "0", FCVAR_ARCHIVE );
 	ui_showmodels = CVAR_REGISTER( "ui_showmodels", "0", FCVAR_ARCHIVE );
+
+	// show cl_predict dialog
+	CVAR_REGISTER( "menu_mp_firsttime", "1", FCVAR_ARCHIVE );
 
 	Cmd_AddCommand( "menu_main", UI_Main_Menu );
 	Cmd_AddCommand( "menu_newgame", UI_NewGame_Menu );

@@ -426,7 +426,7 @@ static void UI_TouchOptions_Init( void )
 
 	//uiTouchOptions.hTestImage = PIC_Load( ART_GAMMA, PIC_KEEP_RGBDATA );
 
-	uiTouchOptions.menu.vidInitFunc = UI_TouchOptions_Init;
+	//uiTouchOptions.menu.vidInitFunc = UI_TouchOptions_Init;
 
 	uiTouchOptions.background.generic.id = ID_BACKGROUND;
 	uiTouchOptions.background.generic.type = QMTYPE_BITMAP;

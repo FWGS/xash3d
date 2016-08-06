@@ -36,6 +36,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_HAND			6
 #define ID_ALLOWDOWNLOAD		7
 #define ID_ALWAYSRUN		8
+#define ID_MAXPACKET		9
+#define ID_MAXPACKETMESSAGE		10
 
 typedef struct
 {
@@ -43,6 +45,7 @@ typedef struct
 	int		hand;
 	int		allowDownload;
 	int		alwaysRun;
+	float maxPacket;
 } uiGameValues_t;
 
 typedef struct
@@ -60,6 +63,10 @@ typedef struct
 	menuCheckBox_s	hand;
 	menuCheckBox_s	allowDownload;
 	menuCheckBox_s	alwaysRun;
+
+	menuSpinControl_s	maxPacket;
+	menuAction_s	maxPacketmessage1;
+	menuAction_s	maxPacketmessage2;
 } uiGameOptions_t;
 
 static uiGameOptions_t	uiGameOptions;
@@ -73,9 +80,25 @@ UI_GameOptions_UpdateConfig
 static void UI_GameOptions_UpdateConfig( void )
 {
 	static char	fpsText[8];
+	static char	maxpacketText[8];
 
 	sprintf( fpsText, "%.f", uiGameOptions.maxFPS.curValue );
 	uiGameOptions.maxFPS.generic.name = fpsText;
+
+	if( uiGameOptions.maxPacket.curValue >= 1500 )
+	{
+		sprintf( maxpacketText, "default" );
+
+		// even do not send it to server
+		CVAR_SET_FLOAT( "cl_maxpacket", 40000 );
+	}
+	else
+	{
+		sprintf( maxpacketText, "%.f", uiGameOptions.maxPacket.curValue );
+		CVAR_SET_FLOAT( "cl_maxpacket", uiGameOptions.maxPacket.curValue );
+	}
+
+	uiGameOptions.maxPacket.generic.name = maxpacketText;
 
 	CVAR_SET_FLOAT( "hand", uiGameOptions.hand.enabled );
 	CVAR_SET_FLOAT( "sv_allow_download", uiGameOptions.allowDownload.enabled );
@@ -94,6 +117,7 @@ static void UI_GameOptions_DiscardChanges( void )
 	CVAR_SET_FLOAT( "sv_allow_download", uiGameInitial.allowDownload );
 	CVAR_SET_FLOAT( "fps_max", uiGameInitial.maxFPS );
 	CVAR_SET_FLOAT( "cl_run", uiGameInitial.alwaysRun );
+	CVAR_SET_FLOAT( "cl_maxpacket", uiGameInitial.maxPacket );
 }
 
 /*
@@ -116,6 +140,10 @@ UI_GameOptions_GetConfig
 static void UI_GameOptions_GetConfig( void )
 {
 	uiGameInitial.maxFPS = uiGameOptions.maxFPS.curValue = CVAR_GET_FLOAT( "fps_max" );
+	uiGameInitial.maxPacket = uiGameOptions.maxPacket.curValue = CVAR_GET_FLOAT( "cl_maxpacket" );
+
+	if( uiGameOptions.maxPacket.curValue > 1500 )
+		uiGameOptions.maxPacket.curValue = 1500;
 
 	if( CVAR_GET_FLOAT( "hand" ))
 		uiGameInitial.hand = uiGameOptions.hand.enabled = 1;
@@ -271,6 +299,35 @@ static void UI_GameOptions_Init( void )
 	uiGameOptions.alwaysRun.generic.callback = UI_GameOptions_Callback;
 	uiGameOptions.alwaysRun.generic.statusText = "Switch between run/step models when pressed 'run' button";
 
+	uiGameOptions.maxPacket.generic.id = ID_MAXPACKET;
+	uiGameOptions.maxPacket.generic.type = QMTYPE_SPINCONTROL;
+	uiGameOptions.maxPacket.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiGameOptions.maxPacket.generic.x = 315;
+	uiGameOptions.maxPacket.generic.y = 560;
+	uiGameOptions.maxPacket.generic.width = 168;
+	uiGameOptions.maxPacket.generic.height = 26;
+	uiGameOptions.maxPacket.generic.callback = UI_GameOptions_Callback;
+	uiGameOptions.maxPacket.generic.statusText = "Limit packet size durning connection";
+	uiGameOptions.maxPacket.minValue = 200;
+	uiGameOptions.maxPacket.maxValue = 1500;
+	uiGameOptions.maxPacket.range = 50;
+
+	uiGameOptions.maxPacketmessage1.generic.id = ID_MAXPACKETMESSAGE;
+	uiGameOptions.maxPacketmessage1.generic.type = QMTYPE_ACTION;
+	uiGameOptions.maxPacketmessage1.generic.flags = QMF_SMALLFONT|QMF_INACTIVE|QMF_DROPSHADOW;
+	uiGameOptions.maxPacketmessage1.generic.x = 280;
+	uiGameOptions.maxPacketmessage1.generic.y = 520;
+	uiGameOptions.maxPacketmessage1.generic.name = "Limit network packet size";
+	uiGameOptions.maxPacketmessage1.generic.color = uiColorHelp;
+
+	uiGameOptions.maxPacketmessage2.generic.id = ID_MAXPACKETMESSAGE;
+	uiGameOptions.maxPacketmessage2.generic.type = QMTYPE_ACTION;
+	uiGameOptions.maxPacketmessage2.generic.flags = QMF_SMALLFONT|QMF_INACTIVE|QMF_DROPSHADOW;
+	uiGameOptions.maxPacketmessage2.generic.x = 280;
+	uiGameOptions.maxPacketmessage2.generic.y = 600;
+	uiGameOptions.maxPacketmessage2.generic.name = "^3Use 700 or less if connection hangs\nafter \"^6Spooling demo header^3\" message";
+	uiGameOptions.maxPacketmessage2.generic.color = uiColorWhite;
+
 	UI_GameOptions_GetConfig();
 
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.background );
@@ -278,6 +335,9 @@ static void UI_GameOptions_Init( void )
 
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxFPS );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxFPSmessage );
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacket );
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacketmessage1 );
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacketmessage2 );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.hand );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.alwaysRun );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.allowDownload );

@@ -214,6 +214,66 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 		return info.dli_sname;
 	}
 }
+#elif defined __amd64__
+#include <dbghelp.h>
+void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
+{
+	return LoadLibraryA( dllname );
+}
+void Com_FreeLibrary( void *hInstance )
+{
+	FreeLibrary( hInstance );
+}
+
+
+void *Com_GetProcAddress( void *hInstance, const char *name )
+{
+	return GetProcAddress( hInstance, name );
+}
+
+void *Com_FunctionFromName( void *hInstance, const char *name )
+{
+	return GetProcAddress( hInstance, name );
+}
+
+const char *Com_NameForFunction( void *hInstance, void *function )
+{
+	static qboolean initialized = false;
+	if( initialized )
+	{
+		char message[1024];
+		int len = 0;
+		size_t i;
+		HANDLE process = GetCurrentProcess();
+		HANDLE thread = GetCurrentThread();
+		IMAGEHLP_LINE64 line;
+		DWORD dline = 0;
+		DWORD options;
+		CONTEXT context;
+		STACKFRAME64 stackframe;
+		DWORD image;
+		char buffer[sizeof( IMAGEHLP_SYMBOL64) + MAX_SYM_NAME * sizeof(TCHAR)];
+		PIMAGEHLP_SYMBOL64 symbol = ( PIMAGEHLP_SYMBOL64)buffer;
+		memset( symbol, 0, sizeof(IMAGEHLP_SYMBOL64) + MAX_SYM_NAME );
+		symbol->SizeOfStruct = sizeof( IMAGEHLP_SYMBOL64);
+		symbol->MaxNameLength = MAX_SYM_NAME;
+		DWORD displacement = 0;
+
+		options = SymGetOptions();
+		SymSetOptions( options );
+
+		SymInitialize( process, NULL, TRUE );
+
+		if( SymGetSymFromAddr64( process, function, &displacement, symbol ) )
+		{
+			Msg( "%s\n", symbol->Name );
+			return copystring( symbol->Name );
+		}
+
+	}
+	return NULL;
+}
+
 #else
 /*
 ---------------------------------------------------------------

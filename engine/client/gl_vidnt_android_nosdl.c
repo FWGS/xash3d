@@ -546,6 +546,14 @@ GL_DeleteContext
 */
 qboolean GL_DeleteContext( void )
 {
+#if 0 // unsure, need testing
+	MsgDev( D_NOTE, "nanoGL_Destroy( );");
+	nanoGL_Destroy();
+
+	MsgDev( D_NOTE, "Android_ShutdownGL( );");
+	Android_ShutdownGL();
+#endif
+
 	return false;
 }
 
