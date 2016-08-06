@@ -625,6 +625,8 @@ Checks given menu is current selected
 */
 bool UI_IsCurrentSelected( void *menu )
 {
+	assert( menu );
+
 	return (menuCommon_s *)menu == UI_ItemAtCursor( ((menuAction_s *)menu)->generic.parent );
 }
 
@@ -1252,6 +1254,7 @@ void UI_MouseMove( int x, int y )
 	uiStatic.cursorY = y;
 
 	// hack: prevent changing focus when field active
+#if defined(__ANDROID__) || defined(MENU_FIELD_RESIZE_HACK)
 	if( !uiStatic.menuActive->vidInitFunc )
 	{
 		menuField_s *f = (menuField_s *)UI_ItemAtCursor( uiStatic.menuActive );
@@ -1266,6 +1269,7 @@ void UI_MouseMove( int x, int y )
 					return;
 		}
 	}
+#endif
 
 	if( UI_CursorInRect( 1, 1, ScreenWidth - 1, ScreenHeight - 1 ))
 		uiStatic.mouseInRect = true;
