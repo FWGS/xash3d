@@ -579,6 +579,18 @@ void *UI_ItemAtCursor( menuFramework_s *menu )
 }
 
 /*
+================
+UI_IsCurrentElement
+
+Checks given menu is current selected
+================
+*/
+bool UI_IsCurrentSelected( void *menu )
+{
+	return (menuCommon_s *)menu == UI_ItemAtCursor( ((menuAction_s *)menu)->generic.parent );
+}
+
+/*
 =================
 UI_AdjustCursor
 

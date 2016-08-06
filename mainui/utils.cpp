@@ -2283,7 +2283,7 @@ const char *UI_PicButton_Key( menuPicButton_s *b, int key, int down )
 	{
 		if( sound && b->generic.callback )
 			b->generic.callback( b, QM_ACTIVATED );
-          }
+	}
 
 	return sound;
 }

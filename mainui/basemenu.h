@@ -425,6 +425,7 @@ void UI_CursorMoved( menuFramework_s *menu );
 void UI_SetCursor( menuFramework_s *menu, int cursor );
 void UI_SetCursorToItem( menuFramework_s *menu, void *item );
 void *UI_ItemAtCursor( menuFramework_s *menu );
+bool UI_IsCurrentSelected( void *menu );
 void UI_AdjustCursor( menuFramework_s *menu, int dir );
 void UI_DrawMenu( menuFramework_s *menu );
 const char *UI_DefaultKey( menuFramework_s *menu, int key, int down );
