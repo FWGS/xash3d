@@ -142,6 +142,44 @@ void UI_DrawPicAdditive( int x, int y, int width, int height, const int color, c
 
 /*
 =================
+UI_DrawPicAdditive
+=================
+*/
+void UI_DrawPicTrans( int x, int y, int width, int height, const int color, const char *pic )
+{
+	HIMAGE hPic = PIC_Load( pic );
+	if (!hPic)
+		return;
+
+	int r, g, b, a;
+	UnpackRGBA( r, g, b, a, color );
+
+	PIC_Set( hPic, r, g, b, a );
+	PIC_DrawTrans( x, y, width, height );
+}
+
+
+/*
+=================
+UI_DrawPicAdditive
+=================
+*/
+void UI_DrawPicHoles( int x, int y, int width, int height, const int color, const char *pic )
+{
+	HIMAGE hPic = PIC_Load( pic );
+	if (!hPic)
+		return;
+
+	int r, g, b, a;
+	UnpackRGBA( r, g, b, a, color );
+
+	PIC_Set( hPic, r, g, b, a );
+	PIC_DrawHoles( x, y, width, height );
+}
+
+
+/*
+=================
 UI_FillRect
 =================
 */

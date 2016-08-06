@@ -413,6 +413,8 @@ int UI_CursorInRect( int x, int y, int w, int h );
 void UI_UtilSetupPicButton( menuPicButton_s *pic, int ID );
 void UI_DrawPic( int x, int y, int w, int h, const int color, const char *pic );
 void UI_DrawPicAdditive( int x, int y, int w, int h, const int color, const char *pic );
+void UI_DrawPicTrans( int x, int y, int width, int height, const int color, const char *pic );
+void UI_DrawPicHoles( int x, int y, int width, int height, const int color, const char *pic );
 void UI_FillRect( int x, int y, int w, int h, const int color );
 #define UI_DrawRectangle( x, y, w, h, color ) UI_DrawRectangleExt( x, y, w, h, color, uiStatic.outlineWidth )
 void UI_DrawRectangleExt( int in_x, int in_y, int in_w, int in_h, const int color, int outlineWidth );

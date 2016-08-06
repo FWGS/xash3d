@@ -1366,7 +1366,8 @@ const char *UI_CheckBox_Key( menuCheckBox_s *cb, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
-		if( !down ) return sound;
+	case K_AUX1:
+		//if( !down ) return sound;
 		if( cb->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundGlow;
@@ -1397,8 +1398,8 @@ const char *UI_CheckBox_Key( menuCheckBox_s *cb, int key, int down )
 		{
 			cb->enabled = !cb->enabled;
 			cb->generic.callback( cb, QM_CHANGED );
-          	}
-          }
+		}
+	}
 	return sound;
 }
 
@@ -1454,15 +1455,8 @@ void UI_CheckBox_Draw( menuCheckBox_s *cb )
 		return; // grayed
 	}
 
-	if(( cb->generic.flags & QMF_MOUSEONLY ) && !( cb->generic.flags & QMF_HASMOUSEFOCUS ))
-	{
-		if( !cb->enabled )
-			UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->emptyPic );
-		else UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->checkPic );
-		return; // no focus
-	}
-
-	if((menuCommon_s *)cb != (menuCommon_s *)UI_ItemAtCursor( cb->generic.parent ))
+	if(( cb->generic.flags & QMF_MOUSEONLY ) && !( cb->generic.flags & QMF_HASMOUSEFOCUS )
+	   || ( (menuCommon_s *)cb != (menuCommon_s *)UI_ItemAtCursor( cb->generic.parent ) ) )
 	{
 		if( !cb->enabled )
 			UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->emptyPic );
@@ -1474,11 +1468,19 @@ void UI_CheckBox_Draw( menuCheckBox_s *cb )
 	{
 		UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.focusColor, cb->focusPic );
 	}
+	else if( !cb->enabled )
+	{
+		UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->emptyPic );
+	}
+	else if( cb->generic.flags & QMF_HIGHLIGHTIFFOCUS )
+	{
+		// use two textures for it. Second is just focus texture, slightly orange. Looks pretty.
+		UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, UI_CHECKBOX_PRESSED );
+		UI_DrawPicAdditive( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, uiInputTextColor, cb->focusPic );
+	}
 	else
 	{
-		if( !cb->enabled )
-			UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->emptyPic );
-		else UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->checkPic );
+		UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->checkPic );
 	}
 }
 
@@ -1961,7 +1963,8 @@ const char *UI_Action_Key( menuAction_s *a, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
-		if( !down ) return sound;
+	case K_AUX1:
+		//if( !down ) return sound;
 		if( a->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundLaunch;
@@ -2101,7 +2104,8 @@ const char *UI_Bitmap_Key( menuBitmap_s *b, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
-		if( !down ) return sound;
+	case K_AUX1:
+		//if( !down ) return sound;
 		if( b->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundLaunch;
@@ -2261,6 +2265,7 @@ const char *UI_PicButton_Key( menuPicButton_s *b, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
+	case K_AUX1:
 		if( b->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundLaunch;
