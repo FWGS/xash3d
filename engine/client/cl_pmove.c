@@ -1215,8 +1215,8 @@ void CL_PredictMovement( void )
 
 		from = &cl.predict[cl.parsecountmod];
 		from->playerstate = cl.frame.playerstate[cl.playernum];
-		from->client = cl.frame.local.client;
-		Q_memcpy( from->weapondata, cl.frame.local.weapondata, sizeof( from->weapondata ));
+		from->client = cl.frame.client;
+		Q_memcpy( from->weapondata, cl.frame.weapondata, sizeof( from->weapondata ));
 
 		time = cl.frame.time;
 
@@ -1236,23 +1236,18 @@ void CL_PredictMovement( void )
 
 			to = &cl.predict[( cl.parsecountmod + frame ) & CL_UPDATE_MASK];
 
-			CL_FakeUsercmd( from, to, &cl.cmds[current_command_mod],
-				cl.runfuncs[current_command_mod],
+			CL_FakeUsercmd( from, to, &cl.commands[current_command_mod].cmd,
+				!cl.commands[current_command_mod].processedfuncs,
 				&time, cls.netchan.incoming_acknowledged + frame );
 
-			cl.runfuncs[current_command_mod] = false;
+			cl.commands[current_command_mod].processedfuncs = true;
 
 			from = to;
 			frame++;
 		}
 
 		if( to )
-		{
-			cl.predicted_viewmodel = to->client.viewmodel;
-			cl.scr_fov = to->client.fov;
-			if( cl.scr_fov < 1.0f || cl.scr_fov> 170.0f )
-				cl.scr_fov = 90.0f;
-		}
+			cl.predicted.viewmodel = to->client.viewmodel;
 		return;
 	}
 
