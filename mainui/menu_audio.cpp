@@ -214,7 +214,7 @@ static void UI_Audio_Init( void )
 
 	uiAudio.soundVolume.generic.id = ID_SOUNDVOLUME;
 	uiAudio.soundVolume.generic.type = QMTYPE_SLIDER;
-	uiAudio.soundVolume.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiAudio.soundVolume.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiAudio.soundVolume.generic.name = "Game sound volume";
 	uiAudio.soundVolume.generic.x = 320;
 	uiAudio.soundVolume.generic.y = 280;
@@ -226,7 +226,7 @@ static void UI_Audio_Init( void )
 
 	uiAudio.musicVolume.generic.id = ID_MUSICVOLUME;
 	uiAudio.musicVolume.generic.type = QMTYPE_SLIDER;
-	uiAudio.musicVolume.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiAudio.musicVolume.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiAudio.musicVolume.generic.name = "Game music volume";
 	uiAudio.musicVolume.generic.x = 320;
 	uiAudio.musicVolume.generic.y = 340;
@@ -238,7 +238,7 @@ static void UI_Audio_Init( void )
 
 	uiAudio.suitVolume.generic.id = ID_SUITVOLUME;
 	uiAudio.suitVolume.generic.type = QMTYPE_SLIDER;
-	uiAudio.suitVolume.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiAudio.suitVolume.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiAudio.suitVolume.generic.name = "Suit volume";
 	uiAudio.suitVolume.generic.x = 320;
 	uiAudio.suitVolume.generic.y = 400;
@@ -250,7 +250,7 @@ static void UI_Audio_Init( void )
 
 	uiAudio.lerping.generic.id = ID_INTERP;
 	uiAudio.lerping.generic.type = QMTYPE_CHECKBOX;
-	uiAudio.lerping.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAudio.lerping.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAudio.lerping.generic.name = "Enable sound interpolation";
 	uiAudio.lerping.generic.x = 320;
 	uiAudio.lerping.generic.y = 470;
@@ -259,7 +259,7 @@ static void UI_Audio_Init( void )
 
 	uiAudio.noDSP.generic.id = ID_NODSP;
 	uiAudio.noDSP.generic.type = QMTYPE_CHECKBOX;
-	uiAudio.noDSP.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAudio.noDSP.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAudio.noDSP.generic.name = "Disable DSP effects";
 	uiAudio.noDSP.generic.x = 320;
 	uiAudio.noDSP.generic.y = 520;
@@ -268,7 +268,7 @@ static void UI_Audio_Init( void )
 
 	uiAudio.muteFocusLost.generic.id = ID_MUTEFOCUSLOST;
 	uiAudio.muteFocusLost.generic.type = QMTYPE_CHECKBOX;
-	uiAudio.muteFocusLost.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_ACT_ONRELEASE | QMF_MOUSEONLY | QMF_DROPSHADOW;
+	uiAudio.muteFocusLost.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAudio.muteFocusLost.generic.name = "Mute when inactive";
 	uiAudio.muteFocusLost.generic.x = 320;
 	uiAudio.muteFocusLost.generic.y = 570;
@@ -277,7 +277,7 @@ static void UI_Audio_Init( void )
 
 	uiAudio.vibrationEnable.generic.id = ID_VIBRATION_ENABLE;
 	uiAudio.vibrationEnable.generic.type = QMTYPE_CHECKBOX;
-	uiAudio.vibrationEnable.generic.flags = QMF_HIGHLIGHTIFFOCUS | QMF_ACT_ONRELEASE | QMF_MOUSEONLY | QMF_DROPSHADOW;
+	uiAudio.vibrationEnable.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAudio.vibrationEnable.generic.name = "Enable vibration";
 	uiAudio.vibrationEnable.generic.x = 320;
 	uiAudio.vibrationEnable.generic.y = 620;
@@ -286,7 +286,7 @@ static void UI_Audio_Init( void )
 
 	uiAudio.vibration.generic.id = ID_VIBRATION;
 	uiAudio.vibration.generic.type = QMTYPE_SLIDER;
-	uiAudio.vibration.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiAudio.vibration.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiAudio.vibration.generic.name = "Vibration";
 	uiAudio.vibration.generic.x = 320;
 	uiAudio.vibration.generic.y = 720;
@@ -307,8 +307,8 @@ static void UI_Audio_Init( void )
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.lerping );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.noDSP );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.muteFocusLost );
-	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.vibration );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.vibrationEnable );
+	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.vibration );
 }
 
 /*

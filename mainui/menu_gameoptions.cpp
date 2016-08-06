@@ -274,7 +274,7 @@ static void UI_GameOptions_Init( void )
 
 	uiGameOptions.hand.generic.id = ID_HAND;
 	uiGameOptions.hand.generic.type = QMTYPE_CHECKBOX;
-	uiGameOptions.hand.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiGameOptions.hand.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiGameOptions.hand.generic.x = 280;
 	uiGameOptions.hand.generic.y = 330;
 	uiGameOptions.hand.generic.name = "Use left hand";
@@ -283,7 +283,7 @@ static void UI_GameOptions_Init( void )
 
 	uiGameOptions.allowDownload.generic.id = ID_ALLOWDOWNLOAD;
 	uiGameOptions.allowDownload.generic.type = QMTYPE_CHECKBOX;
-	uiGameOptions.allowDownload.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiGameOptions.allowDownload.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiGameOptions.allowDownload.generic.x = 280;
 	uiGameOptions.allowDownload.generic.y = 390;
 	uiGameOptions.allowDownload.generic.name = "Allow download";
@@ -292,7 +292,7 @@ static void UI_GameOptions_Init( void )
 
 	uiGameOptions.alwaysRun.generic.id = ID_ALWAYSRUN;
 	uiGameOptions.alwaysRun.generic.type = QMTYPE_CHECKBOX;
-	uiGameOptions.alwaysRun.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiGameOptions.alwaysRun.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiGameOptions.alwaysRun.generic.x = 280;
 	uiGameOptions.alwaysRun.generic.y = 450;
 	uiGameOptions.alwaysRun.generic.name = "Always run";
@@ -332,15 +332,14 @@ static void UI_GameOptions_Init( void )
 
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.background );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.banner );
-
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxFPS );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxFPSmessage );
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.hand );
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.allowDownload );
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.alwaysRun );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacket );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacketmessage1 );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacketmessage2 );
-	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.hand );
-	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.alwaysRun );
-	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.allowDownload );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.done );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.cancel );
 }

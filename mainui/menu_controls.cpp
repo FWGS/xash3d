@@ -90,8 +90,6 @@ static void UI_ResetToDefaultsDialog( void )
 	uiControls.done.generic.flags ^= QMF_INACTIVE;
 	uiControls.cancel.generic.flags ^= QMF_INACTIVE;
 
-	uiControls.keysList.generic.flags ^= QMF_INACTIVE;
-
 	uiControls.msgBox2.generic.flags ^= QMF_HIDDEN;
 	uiControls.promptMessage.generic.flags ^= QMF_HIDDEN;
 	uiControls.yes.generic.flags ^= QMF_HIDDEN;
@@ -251,6 +249,8 @@ static void UI_Controls_RestartMenu( void )
 {
 	int lastSelectedKey = uiControls.keysList.curItem;
 	int lastTopItem = uiControls.keysList.topItem;
+	int cursor = uiControls.menu.cursor;
+	int cursorPrev = uiControls.menu.cursorPrev;
 
 	// HACK to prevent mismatch anim stack
 	hold_button_stack = true;
@@ -262,6 +262,8 @@ static void UI_Controls_RestartMenu( void )
 	hold_button_stack = false;
 
 	// restore last key and top item
+	uiControls.menu.cursor = cursor;
+	uiControls.menu.cursorPrev = cursorPrev;
 	uiControls.keysList.curItem = lastSelectedKey;
 	uiControls.keysList.topItem = lastTopItem;
 }
@@ -345,7 +347,10 @@ static const char *UI_Controls_KeyFunc( int key, int down )
 			return uiSoundLaunch;
 		}
 
-		if( down && ( key == K_ENTER || key == K_AUX1 || key == K_AUX31 || key == K_AUX32 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN ) // ENTER, A or SELECT
+		if( down
+			&& ( key == K_ENTER || key == K_AUX1 || key == K_AUX31 || key == K_AUX32 )
+			&& uiControls.dlgMessage.generic.flags & QMF_HIDDEN
+			&& UI_IsCurrentSelected( &uiControls.keysList ) ) // ENTER, A or SELECT
 		{
 			if( !strlen( uiControls.keysBind[uiControls.keysList.curItem] ))
 			{
@@ -365,7 +370,9 @@ static const char *UI_Controls_KeyFunc( int key, int down )
 			return uiSoundKey;
 		}
 
-		if(( key == K_BACKSPACE || key == K_DEL || key == K_AUX30 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN )
+		if(( key == K_BACKSPACE || key == K_DEL || key == K_AUX30 )
+		   && uiControls.dlgMessage.generic.flags & QMF_HIDDEN
+		   && UI_IsCurrentSelected( &uiControls.keysList ) )
 		{
 			// delete bindings
 

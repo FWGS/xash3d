@@ -130,6 +130,7 @@ typedef enum
 #define QMF_ACT_ONRELEASE		(1U << 20)	// call Key_Event when button is released
 #define QMF_ALLOW_COLORSTRINGS	(1U << 21)	// allow colorstring in MENU_FIELD
 #define QMF_HIDEINPUT		(1U << 22)	// used for "password" field
+#define QMF_HASKEYBOARDFOCUS (1U << 23)
 
 // Callback notifications
 #define QM_GOTFOCUS			1
@@ -412,6 +413,8 @@ int UI_CursorInRect( int x, int y, int w, int h );
 void UI_UtilSetupPicButton( menuPicButton_s *pic, int ID );
 void UI_DrawPic( int x, int y, int w, int h, const int color, const char *pic );
 void UI_DrawPicAdditive( int x, int y, int w, int h, const int color, const char *pic );
+void UI_DrawPicTrans( int x, int y, int width, int height, const int color, const char *pic );
+void UI_DrawPicHoles( int x, int y, int width, int height, const int color, const char *pic );
 void UI_FillRect( int x, int y, int w, int h, const int color );
 #define UI_DrawRectangle( x, y, w, h, color ) UI_DrawRectangleExt( x, y, w, h, color, uiStatic.outlineWidth )
 void UI_DrawRectangleExt( int in_x, int in_y, int in_w, int in_h, const int color, int outlineWidth );
@@ -425,6 +428,7 @@ void UI_CursorMoved( menuFramework_s *menu );
 void UI_SetCursor( menuFramework_s *menu, int cursor );
 void UI_SetCursorToItem( menuFramework_s *menu, void *item );
 void *UI_ItemAtCursor( menuFramework_s *menu );
+bool UI_IsCurrentSelected( void *menu );
 void UI_AdjustCursor( menuFramework_s *menu, int dir );
 void UI_DrawMenu( menuFramework_s *menu );
 const char *UI_DefaultKey( menuFramework_s *menu, int key, int down );

@@ -142,6 +142,44 @@ void UI_DrawPicAdditive( int x, int y, int width, int height, const int color, c
 
 /*
 =================
+UI_DrawPicAdditive
+=================
+*/
+void UI_DrawPicTrans( int x, int y, int width, int height, const int color, const char *pic )
+{
+	HIMAGE hPic = PIC_Load( pic );
+	if (!hPic)
+		return;
+
+	int r, g, b, a;
+	UnpackRGBA( r, g, b, a, color );
+
+	PIC_Set( hPic, r, g, b, a );
+	PIC_DrawTrans( x, y, width, height );
+}
+
+
+/*
+=================
+UI_DrawPicAdditive
+=================
+*/
+void UI_DrawPicHoles( int x, int y, int width, int height, const int color, const char *pic )
+{
+	HIMAGE hPic = PIC_Load( pic );
+	if (!hPic)
+		return;
+
+	int r, g, b, a;
+	UnpackRGBA( r, g, b, a, color );
+
+	PIC_Set( hPic, r, g, b, a );
+	PIC_DrawHoles( x, y, width, height );
+}
+
+
+/*
+=================
 UI_FillRect
 =================
 */
@@ -579,6 +617,20 @@ void *UI_ItemAtCursor( menuFramework_s *menu )
 }
 
 /*
+================
+UI_IsCurrentElement
+
+Checks given menu is current selected
+================
+*/
+bool UI_IsCurrentSelected( void *menu )
+{
+	assert( menu );
+
+	return (menuCommon_s *)menu == UI_ItemAtCursor( ((menuAction_s *)menu)->generic.parent );
+}
+
+/*
 =================
 UI_AdjustCursor
 
@@ -788,6 +840,9 @@ const char *UI_DefaultKey( menuFramework_s *menu, int key, int down )
 			UI_CursorMoved( menu );
 			if( !(((menuCommon_s *)menu->items[menu->cursor])->flags & QMF_SILENT ))
 				sound = uiSoundMove;
+
+			((menuCommon_s*)menu->items[menu->cursorPrev])->flags &= ~QMF_HASKEYBOARDFOCUS;
+			((menuCommon_s*)menu->items[menu->cursor])->flags |= QMF_HASKEYBOARDFOCUS;
 		}
 		break;
 	case K_DOWNARROW:
@@ -805,6 +860,9 @@ const char *UI_DefaultKey( menuFramework_s *menu, int key, int down )
 			UI_CursorMoved(menu);
 			if( !(((menuCommon_s *)menu->items[menu->cursor])->flags & QMF_SILENT ))
 				sound = uiSoundMove;
+
+			((menuCommon_s*)menu->items[menu->cursorPrev])->flags &= ~QMF_HASKEYBOARDFOCUS;
+			((menuCommon_s*)menu->items[menu->cursor])->flags |= QMF_HASKEYBOARDFOCUS;
 		}
 		break;
 	case K_MOUSE1:
@@ -1196,6 +1254,7 @@ void UI_MouseMove( int x, int y )
 	uiStatic.cursorY = y;
 
 	// hack: prevent changing focus when field active
+#if defined(__ANDROID__) || defined(MENU_FIELD_RESIZE_HACK)
 	if( !uiStatic.menuActive->vidInitFunc )
 	{
 		menuField_s *f = (menuField_s *)UI_ItemAtCursor( uiStatic.menuActive );
@@ -1210,6 +1269,7 @@ void UI_MouseMove( int x, int y )
 					return;
 		}
 	}
+#endif
 
 	if( UI_CursorInRect( 1, 1, ScreenWidth - 1, ScreenHeight - 1 ))
 		uiStatic.mouseInRect = true;
@@ -1223,12 +1283,14 @@ void UI_MouseMove( int x, int y )
 	{
 		item = (menuCommon_s *)uiStatic.menuActive->items[i];
 
-		if( item->flags & (QMF_GRAYED|QMF_INACTIVE|QMF_HIDDEN))
+		if( item->flags & (QMF_GRAYED|QMF_INACTIVE|QMF_HIDDEN) )
 		{
-			if( item->flags & QMF_HASMOUSEFOCUS )
+			if( item->flags & (QMF_HASMOUSEFOCUS) )
 			{
 				if( !UI_CursorInRect( item->x, item->y, item->width, item->height ))
+				{
 					item->flags &= ~QMF_HASMOUSEFOCUS;
+				}
 				else item->lastFocusTime = uiStatic.realTime;
 			}
 			continue;
@@ -1245,6 +1307,8 @@ void UI_MouseMove( int x, int y )
 		{
 			UI_SetCursor( uiStatic.menuActive, i );
 			((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursorPrev]))->flags &= ~QMF_HASMOUSEFOCUS;
+			// reset a keyboard focus also, because we are changed cursor
+			((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursorPrev]))->flags &= ~QMF_HASKEYBOARDFOCUS;
 
 			if (!(((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursor]))->flags & QMF_SILENT ))
 				UI_StartSound( uiSoundMove );
@@ -1528,6 +1592,8 @@ UI_VidInit
 */
 int UI_VidInit( void )
 {
+	static bool calledOnce = true;
+
 	UI_Precache ();
 	// Sizes are based on screen height
 	uiStatic.scaleX = uiStatic.scaleY = ScreenHeight / 768.0f;
@@ -1573,10 +1639,36 @@ int UI_VidInit( void )
 	{
 		menuFramework_s *item = uiStatic.menuStack[i];
 
-		// do vid restart for all pushed elements
 		if( item && item->vidInitFunc )
+		{
+			int cursor, cursorPrev;
+			bool valid = false;
+
+			// HACKHACK: Save cursor values when VidInit is called once
+			// this don't let menu "forget" actual cursor values after, for example, window resizing
+			if( calledOnce
+				&& item->cursor > 0 // ignore 0, because useless
+				&& item->cursor < item->numItems
+				&& item->cursorPrev > 0
+				&& item->cursorPrev < item->numItems )
+			{
+				valid = true;
+				cursor = item->cursor;
+				cursorPrev = item->cursorPrev;
+			}
+
+			// do vid restart for all pushed elements
 			item->vidInitFunc();
+
+			if( valid )
+			{
+				item->cursor = cursor;
+				item->cursorPrev = cursorPrev;
+			}
+		}
 	}
+
+	if( !calledOnce ) calledOnce = true;
 
 	return 1;
 }

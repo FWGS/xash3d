@@ -346,7 +346,7 @@ static void UI_CreateGame_Init( void )
 
 	uiCreateGame.dedicatedServer.generic.id = ID_DEDICATED;
 	uiCreateGame.dedicatedServer.generic.type = QMTYPE_CHECKBOX;
-	uiCreateGame.dedicatedServer.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiCreateGame.dedicatedServer.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiCreateGame.dedicatedServer.generic.name = "Dedicated server";
 	uiCreateGame.dedicatedServer.generic.x = 72;
 	uiCreateGame.dedicatedServer.generic.y = 685;
@@ -355,7 +355,7 @@ static void UI_CreateGame_Init( void )
 
 	uiCreateGame.hltv.generic.id = ID_HLTV;
 	uiCreateGame.hltv.generic.type = QMTYPE_CHECKBOX;
-	uiCreateGame.hltv.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiCreateGame.hltv.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiCreateGame.hltv.generic.name = "HLTV";
 	uiCreateGame.hltv.generic.x = 72;
 	uiCreateGame.hltv.generic.y = 635;

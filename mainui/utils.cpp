@@ -620,13 +620,21 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	}
 	else
 	{
+
+		int color;
+
+		if( sl->generic.flags & QMF_HIGHLIGHTIFFOCUS && sl->generic.flags & QMF_HASKEYBOARDFOCUS )
+			color = uiInputTextColor;
+		else
+			color = uiInputFgColor;
+
 		x = sl->generic.x2 - UI_OUTLINE_WIDTH;
 		y = sl->generic.y2;
 		w = UI_OUTLINE_WIDTH;
 		h = sl->generic.height2;
 
 		// draw left
-		UI_FillRect( x, y, w, h, uiInputFgColor );
+		UI_FillRect( x, y, w, h, color );
 
 		x = sl->generic.x2 + sl->generic.width2;
 		y = sl->generic.y2;
@@ -634,7 +642,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		h = sl->generic.height2;
 
 		// draw right
-		UI_FillRect( x, y, w, h, uiInputFgColor );
+		UI_FillRect( x, y, w, h, color );
 
 		x = sl->generic.x2;
 		y = sl->generic.y2;
@@ -642,7 +650,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		h = UI_OUTLINE_WIDTH;
 
 		// draw top
-		UI_FillRect( x, y, w, h, uiInputFgColor );
+		UI_FillRect( x, y, w, h, color );
 
 		// draw bottom
 		x = sl->generic.x2;
@@ -650,7 +658,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		w = sl->generic.width2 + UI_OUTLINE_WIDTH;
 		h = UI_OUTLINE_WIDTH;
 
-		UI_FillRect( x, y, w, h, uiInputFgColor );
+		UI_FillRect( x, y, w, h, color );
 	}
 
 	// glue with right top and right bottom corners
@@ -765,7 +773,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		UI_DrawPic( downX, downY, arrowWidth, arrowHeight, uiColorDkGrey, sl->downArrow );
 	}
 	else
-	{
+	{	
 		scrollbarFocus = UI_CursorInRect( sl->scrollBarX, sl->scrollBarY, sl->scrollBarWidth, sl->scrollBarHeight );
 
 		// special case if we sliding but lost focus
@@ -1358,7 +1366,8 @@ const char *UI_CheckBox_Key( menuCheckBox_s *cb, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
-		if( !down ) return sound;
+	case K_AUX1:
+		//if( !down ) return sound;
 		if( cb->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundGlow;
@@ -1389,8 +1398,8 @@ const char *UI_CheckBox_Key( menuCheckBox_s *cb, int key, int down )
 		{
 			cb->enabled = !cb->enabled;
 			cb->generic.callback( cb, QM_CHANGED );
-          	}
-          }
+		}
+	}
 	return sound;
 }
 
@@ -1446,15 +1455,8 @@ void UI_CheckBox_Draw( menuCheckBox_s *cb )
 		return; // grayed
 	}
 
-	if(( cb->generic.flags & QMF_MOUSEONLY ) && !( cb->generic.flags & QMF_HASMOUSEFOCUS ))
-	{
-		if( !cb->enabled )
-			UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->emptyPic );
-		else UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->checkPic );
-		return; // no focus
-	}
-
-	if((menuCommon_s *)cb != (menuCommon_s *)UI_ItemAtCursor( cb->generic.parent ))
+	if(( cb->generic.flags & QMF_MOUSEONLY ) && !( cb->generic.flags & QMF_HASMOUSEFOCUS )
+	   || ( (menuCommon_s *)cb != (menuCommon_s *)UI_ItemAtCursor( cb->generic.parent ) ) )
 	{
 		if( !cb->enabled )
 			UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->emptyPic );
@@ -1466,11 +1468,19 @@ void UI_CheckBox_Draw( menuCheckBox_s *cb )
 	{
 		UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.focusColor, cb->focusPic );
 	}
+	else if( !cb->enabled )
+	{
+		UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->emptyPic );
+	}
+	else if( cb->generic.flags & QMF_HIGHLIGHTIFFOCUS )
+	{
+		// use two textures for it. Second is just focus texture, slightly orange. Looks pretty.
+		UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, UI_CHECKBOX_PRESSED );
+		UI_DrawPicAdditive( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, uiInputTextColor, cb->focusPic );
+	}
 	else
 	{
-		if( !cb->enabled )
-			UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->emptyPic );
-		else UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->checkPic );
+		UI_DrawPic( cb->generic.x, cb->generic.y, cb->generic.width, cb->generic.height, cb->generic.color, cb->checkPic );
 	}
 }
 
@@ -1953,7 +1963,8 @@ const char *UI_Action_Key( menuAction_s *a, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
-		if( !down ) return sound;
+	case K_AUX1:
+		//if( !down ) return sound;
 		if( a->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundLaunch;
@@ -1982,7 +1993,7 @@ const char *UI_Action_Key( menuAction_s *a, int key, int down )
 	{
 		if( sound && a->generic.callback )
 			a->generic.callback( a, QM_ACTIVATED );
-          }
+	}
 
 	return sound;
 }
@@ -2093,7 +2104,8 @@ const char *UI_Bitmap_Key( menuBitmap_s *b, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
-		if( !down ) return sound;
+	case K_AUX1:
+		//if( !down ) return sound;
 		if( b->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundLaunch;
@@ -2253,10 +2265,10 @@ const char *UI_PicButton_Key( menuPicButton_s *b, int key, int down )
 		break;
 	case K_ENTER:
 	case K_KP_ENTER:
+	case K_AUX1:
 		if( b->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundLaunch;
-		break;
 	}
 	if( sound && ( b->generic.flags & QMF_SILENT ))
 		sound = uiSoundNull;
@@ -2283,7 +2295,7 @@ const char *UI_PicButton_Key( menuPicButton_s *b, int key, int down )
 	{
 		if( sound && b->generic.callback )
 			b->generic.callback( b, QM_ACTIVATED );
-          }
+	}
 
 	return sound;
 }
@@ -2297,7 +2309,7 @@ void UI_PicButton_Draw( menuPicButton_s *item )
 {
 	int state = BUTTON_NOFOCUS;
 
-	if( item->generic.flags & QMF_HASMOUSEFOCUS )
+	if( item->generic.flags & (QMF_HASMOUSEFOCUS|QMF_HASKEYBOARDFOCUS))
 		state = BUTTON_FOCUS;
 
 	// make sure what cursor in rect
@@ -2346,7 +2358,7 @@ void UI_PicButton_Draw( menuPicButton_s *item )
 		a = (512 - (uiStatic.realTime - item->generic.lastFocusTime)) >> 1;
 
 		if( state == BUTTON_NOFOCUS && a > 0 )
-		{	
+		{
 			PIC_Set( item->pic, r, g, b, a );
 			PIC_DrawAdditive( item->generic.x, item->generic.y, uiStatic.buttons_draw_width, uiStatic.buttons_draw_height, &rects[BUTTON_FOCUS] );
 		}

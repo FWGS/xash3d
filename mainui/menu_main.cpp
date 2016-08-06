@@ -595,8 +595,8 @@ static void UI_Main_Init( void )
 	if ( gpGlobals->developer )
 		UI_AddItem( &uiMain.menu, (void *)&uiMain.console );
 
-	UI_AddItem( &uiMain.menu, (void *)&uiMain.resumeGame );
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.disconnect );
+	UI_AddItem( &uiMain.menu, (void *)&uiMain.resumeGame );
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.newGame );
 
 	if ( bTrainMap )
