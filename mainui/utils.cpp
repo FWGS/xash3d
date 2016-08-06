@@ -620,13 +620,21 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 	}
 	else
 	{
+
+		int color;
+
+		if( sl->generic.flags & QMF_HIGHLIGHTIFFOCUS && sl->generic.flags & QMF_HASKEYBOARDFOCUS )
+			color = uiInputTextColor;
+		else
+			color = uiInputFgColor;
+
 		x = sl->generic.x2 - UI_OUTLINE_WIDTH;
 		y = sl->generic.y2;
 		w = UI_OUTLINE_WIDTH;
 		h = sl->generic.height2;
 
 		// draw left
-		UI_FillRect( x, y, w, h, uiInputFgColor );
+		UI_FillRect( x, y, w, h, color );
 
 		x = sl->generic.x2 + sl->generic.width2;
 		y = sl->generic.y2;
@@ -634,7 +642,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		h = sl->generic.height2;
 
 		// draw right
-		UI_FillRect( x, y, w, h, uiInputFgColor );
+		UI_FillRect( x, y, w, h, color );
 
 		x = sl->generic.x2;
 		y = sl->generic.y2;
@@ -642,7 +650,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		h = UI_OUTLINE_WIDTH;
 
 		// draw top
-		UI_FillRect( x, y, w, h, uiInputFgColor );
+		UI_FillRect( x, y, w, h, color );
 
 		// draw bottom
 		x = sl->generic.x2;
@@ -650,7 +658,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		w = sl->generic.width2 + UI_OUTLINE_WIDTH;
 		h = UI_OUTLINE_WIDTH;
 
-		UI_FillRect( x, y, w, h, uiInputFgColor );
+		UI_FillRect( x, y, w, h, color );
 	}
 
 	// glue with right top and right bottom corners
@@ -765,7 +773,7 @@ void UI_ScrollList_Draw( menuScrollList_s *sl )
 		UI_DrawPic( downX, downY, arrowWidth, arrowHeight, uiColorDkGrey, sl->downArrow );
 	}
 	else
-	{
+	{	
 		scrollbarFocus = UI_CursorInRect( sl->scrollBarX, sl->scrollBarY, sl->scrollBarWidth, sl->scrollBarHeight );
 
 		// special case if we sliding but lost focus
@@ -1982,7 +1990,7 @@ const char *UI_Action_Key( menuAction_s *a, int key, int down )
 	{
 		if( sound && a->generic.callback )
 			a->generic.callback( a, QM_ACTIVATED );
-          }
+	}
 
 	return sound;
 }
@@ -2256,7 +2264,6 @@ const char *UI_PicButton_Key( menuPicButton_s *b, int key, int down )
 		if( b->generic.flags & QMF_MOUSEONLY )
 			break;
 		sound = uiSoundLaunch;
-		break;
 	}
 	if( sound && ( b->generic.flags & QMF_SILENT ))
 		sound = uiSoundNull;
@@ -2297,7 +2304,7 @@ void UI_PicButton_Draw( menuPicButton_s *item )
 {
 	int state = BUTTON_NOFOCUS;
 
-	if( item->generic.flags & QMF_HASMOUSEFOCUS )
+	if( item->generic.flags & (QMF_HASMOUSEFOCUS|QMF_HASKEYBOARDFOCUS))
 		state = BUTTON_FOCUS;
 
 	// make sure what cursor in rect
@@ -2346,7 +2353,7 @@ void UI_PicButton_Draw( menuPicButton_s *item )
 		a = (512 - (uiStatic.realTime - item->generic.lastFocusTime)) >> 1;
 
 		if( state == BUTTON_NOFOCUS && a > 0 )
-		{	
+		{
 			PIC_Set( item->pic, r, g, b, a );
 			PIC_DrawAdditive( item->generic.x, item->generic.y, uiStatic.buttons_draw_width, uiStatic.buttons_draw_height, &rects[BUTTON_FOCUS] );
 		}

@@ -800,6 +800,9 @@ const char *UI_DefaultKey( menuFramework_s *menu, int key, int down )
 			UI_CursorMoved( menu );
 			if( !(((menuCommon_s *)menu->items[menu->cursor])->flags & QMF_SILENT ))
 				sound = uiSoundMove;
+
+			((menuCommon_s*)menu->items[menu->cursorPrev])->flags &= ~QMF_HASKEYBOARDFOCUS;
+			((menuCommon_s*)menu->items[menu->cursor])->flags |= QMF_HASKEYBOARDFOCUS;
 		}
 		break;
 	case K_DOWNARROW:
@@ -817,6 +820,9 @@ const char *UI_DefaultKey( menuFramework_s *menu, int key, int down )
 			UI_CursorMoved(menu);
 			if( !(((menuCommon_s *)menu->items[menu->cursor])->flags & QMF_SILENT ))
 				sound = uiSoundMove;
+
+			((menuCommon_s*)menu->items[menu->cursorPrev])->flags &= ~QMF_HASKEYBOARDFOCUS;
+			((menuCommon_s*)menu->items[menu->cursor])->flags |= QMF_HASKEYBOARDFOCUS;
 		}
 		break;
 	case K_MOUSE1:
@@ -1235,12 +1241,14 @@ void UI_MouseMove( int x, int y )
 	{
 		item = (menuCommon_s *)uiStatic.menuActive->items[i];
 
-		if( item->flags & (QMF_GRAYED|QMF_INACTIVE|QMF_HIDDEN))
+		if( item->flags & (QMF_GRAYED|QMF_INACTIVE|QMF_HIDDEN) )
 		{
-			if( item->flags & QMF_HASMOUSEFOCUS )
+			if( item->flags & (QMF_HASMOUSEFOCUS) )
 			{
 				if( !UI_CursorInRect( item->x, item->y, item->width, item->height ))
+				{
 					item->flags &= ~QMF_HASMOUSEFOCUS;
+				}
 				else item->lastFocusTime = uiStatic.realTime;
 			}
 			continue;
@@ -1257,6 +1265,8 @@ void UI_MouseMove( int x, int y )
 		{
 			UI_SetCursor( uiStatic.menuActive, i );
 			((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursorPrev]))->flags &= ~QMF_HASMOUSEFOCUS;
+			// reset a keyboard focus also, because we are changed cursor
+			((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursorPrev]))->flags &= ~QMF_HASKEYBOARDFOCUS;
 
 			if (!(((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursor]))->flags & QMF_SILENT ))
 				UI_StartSound( uiSoundMove );
@@ -1540,6 +1550,8 @@ UI_VidInit
 */
 int UI_VidInit( void )
 {
+	static bool calledOnce = true;
+
 	UI_Precache ();
 	// Sizes are based on screen height
 	uiStatic.scaleX = uiStatic.scaleY = ScreenHeight / 768.0f;
@@ -1592,8 +1604,11 @@ int UI_VidInit( void )
 
 			// HACKHACK: Save cursor values when VidInit is called once
 			// this don't let menu "forget" actual cursor values after, for example, window resizing
-			if( item->cursor > 0 && item->cursor < item->numItems
-				&& item->cursorPrev > 0 && item->cursorPrev < item->numItems ) // ignore 0, because useless
+			if( calledOnce
+				&& item->cursor > 0 // ignore 0, because useless
+				&& item->cursor < item->numItems
+				&& item->cursorPrev > 0
+				&& item->cursorPrev < item->numItems )
 			{
 				valid = true;
 				cursor = item->cursor;
@@ -1605,11 +1620,13 @@ int UI_VidInit( void )
 
 			if( valid )
 			{
-				i->cursor = cursor;
-				i->cursorPrev = cursorPrev;
+				item->cursor = cursor;
+				item->cursorPrev = cursorPrev;
 			}
 		}
 	}
+
+	if( !calledOnce ) calledOnce = true;
 
 	return 1;
 }

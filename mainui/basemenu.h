@@ -130,6 +130,7 @@ typedef enum
 #define QMF_ACT_ONRELEASE		(1U << 20)	// call Key_Event when button is released
 #define QMF_ALLOW_COLORSTRINGS	(1U << 21)	// allow colorstring in MENU_FIELD
 #define QMF_HIDEINPUT		(1U << 22)	// used for "password" field
+#define QMF_HASKEYBOARDFOCUS (1U << 23)
 
 // Callback notifications
 #define QM_GOTFOCUS			1
