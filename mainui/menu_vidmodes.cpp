@@ -239,7 +239,7 @@ static void UI_VidModes_Init( void )
 
 	uiVidModes.windowed.generic.id = ID_FULLSCREEN;
 	uiVidModes.windowed.generic.type = QMTYPE_CHECKBOX;
-	uiVidModes.windowed.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiVidModes.windowed.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiVidModes.windowed.generic.name = "Run in a window";
 	uiVidModes.windowed.generic.x = 400;
 	uiVidModes.windowed.generic.y = 620;
@@ -248,7 +248,7 @@ static void UI_VidModes_Init( void )
 
 	uiVidModes.vsync.generic.id = ID_VERTICALSYNC;
 	uiVidModes.vsync.generic.type = QMTYPE_CHECKBOX;
-	uiVidModes.vsync.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiVidModes.vsync.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiVidModes.vsync.generic.name = "Vertical sync";
 	uiVidModes.vsync.generic.x = 400;
 	uiVidModes.vsync.generic.y = 670;
