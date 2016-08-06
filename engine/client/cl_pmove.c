@@ -1208,7 +1208,10 @@ void CL_PredictMovement( void )
 		// we need to perform cl_lw prediction while cl_predict is disabled
 		// because cl_lw is enabled by default in Half-Life
 		if( !cl_lw->integer )
+		{
+			cl.predicted.viewmodel = cl.frame.client.viewmodel;
 			return;
+		}
 
 		ack = cls.netchan.incoming_acknowledged;
 		outgoing_command = cls.netchan.outgoing_sequence;
