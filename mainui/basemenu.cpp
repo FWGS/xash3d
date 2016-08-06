@@ -1585,9 +1585,30 @@ int UI_VidInit( void )
 	{
 		menuFramework_s *item = uiStatic.menuStack[i];
 
-		// do vid restart for all pushed elements
 		if( item && item->vidInitFunc )
+		{
+			int cursor, cursorPrev;
+			bool valid = false;
+
+			// HACKHACK: Save cursor values when VidInit is called once
+			// this don't let menu "forget" actual cursor values after, for example, window resizing
+			if( item->cursor > 0 && item->cursor < item->numItems
+				&& item->cursorPrev > 0 && item->cursorPrev < item->numItems ) // ignore 0, because useless
+			{
+				valid = true;
+				cursor = item->cursor;
+				cursorPrev = item->cursorPrev;
+			}
+
+			// do vid restart for all pushed elements
 			item->vidInitFunc();
+
+			if( valid )
+			{
+				i->cursor = cursor;
+				i->cursorPrev = cursorPrev;
+			}
+		}
 	}
 
 	return 1;
