@@ -1486,6 +1486,7 @@ void UI_Precache( void )
 	UI_TouchButtons_Precache();
 	UI_TouchEdit_Precache();
 	UI_FileDialog_Precache();
+	UI_GamePad_Precache();
 }
 
 void UI_ParseColor( char *&pfile, int *outColor )
@@ -1718,6 +1719,7 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_touchbuttons", UI_TouchButtons_Menu );
 	Cmd_AddCommand( "menu_touchedit", UI_TouchEdit_Menu );
 	Cmd_AddCommand( "menu_filedialog", UI_FileDialog_Menu );
+	Cmd_AddCommand( "menu_gamepad", UI_GamePad_Menu );
 
 	CHECK_MAP_LIST( TRUE );
 
@@ -1750,8 +1752,8 @@ void UI_Shutdown( void )
 	Cmd_RemoveCommand( "menu_saveload" );
 	Cmd_RemoveCommand( "menu_multiplayer" );
 	Cmd_RemoveCommand( "menu_options" );
-	Cmd_RemoveCommand( "menu_intenetgames" );
 	Cmd_RemoveCommand( "menu_langame" );
+	Cmd_RemoveCommand( "menu_intenetgames" );
 	Cmd_RemoveCommand( "menu_playersetup" );
 	Cmd_RemoveCommand( "menu_controls" );
 	Cmd_RemoveCommand( "menu_advcontrols" );
@@ -1761,13 +1763,13 @@ void UI_Shutdown( void )
 	Cmd_RemoveCommand( "menu_video" );
 	Cmd_RemoveCommand( "menu_vidoptions" );
 	Cmd_RemoveCommand( "menu_vidmodes" );
-	Cmd_RemoveCommand( "menu_advanced" );
-	Cmd_RemoveCommand( "menu_performance" );
-	Cmd_RemoveCommand( "menu_network" );
-	Cmd_RemoveCommand( "menu_defaults" );
-	Cmd_RemoveCommand( "menu_cinematics" );
 	Cmd_RemoveCommand( "menu_customgame" );
-	Cmd_RemoveCommand( "menu_quit" );
+	Cmd_RemoveCommand( "menu_touch" );
+	Cmd_RemoveCommand( "menu_touchoptions" );
+	Cmd_RemoveCommand( "menu_touchbuttons" );
+	Cmd_RemoveCommand( "menu_touchedit" );
+	Cmd_RemoveCommand( "menu_filedialog" );
+	Cmd_RemoveCommand( "menu_gamepad" );
 
 	memset( &uiStatic, 0, sizeof( uiStatic_t ));
 }

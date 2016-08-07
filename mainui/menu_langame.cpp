@@ -462,6 +462,7 @@ void UI_LanGame_Menu( void )
 	UI_LanGame_Precache();
 	UI_LanGame_Init();
 
+	uiLanGame.refreshTime = uiStatic.realTime + 10000; // refresh every 10 secs
 	UI_RefreshServerList();
 
 	UI_PushMenu( &uiLanGame.menu );

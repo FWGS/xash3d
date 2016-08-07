@@ -93,9 +93,16 @@ void StringConcat( char *dst, const char *src, size_t size )
 	if( !dst || !src || !size )
 		return;
 
+#if 0
 	// find the end of dst and adjust bytes left but don't go past end
 	while(n-- != 0 && *d != '\0') d++;
 	dlen = d - dst;
+#else
+	// VERY UNSAFE. SURE THAT DST IS BIG
+	dlen = ColorStrlen( dst );
+	d += strlen( dst );
+#endif
+
 	n = size - dlen;
 
 	if ( n == 0 ) return;

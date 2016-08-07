@@ -464,6 +464,7 @@ void UI_InternetGames_Menu( void )
 	UI_InternetGames_Precache();
 	UI_InternetGames_Init();
 
+	uiInternetGames.refreshTime = uiStatic.realTime + 10000; // refresh every 10 secs
 	UI_RefreshInternetServerList();
 
 	UI_PushMenu( &uiInternetGames.menu );
