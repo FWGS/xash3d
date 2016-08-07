@@ -41,11 +41,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_YES	 	130
 #define ID_NO	 	131
 
-#define GAME_LENGTH		18
-#define MAPNAME_LENGTH	20+GAME_LENGTH
-#define TYPE_LENGTH		16+MAPNAME_LENGTH
-#define MAXCL_LENGTH	15+TYPE_LENGTH
-
 typedef struct
 {
 	char		gameDescription[UI_MAX_SERVERS][256];
@@ -122,23 +117,28 @@ static void UI_InternetGames_GetGamesList( void )
 
 	for( i = 0; i < uiStatic.numServers; i++ )
 	{
-		if( i >= UI_MAX_SERVERS ) break;
+		if( i >= UI_MAX_SERVERS )
+			break;
 		info = uiStatic.serverNames[i];
-		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "host" ), GAME_LENGTH );
-		AddSpaces( uiInternetGames.gameDescription[i], GAME_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "map" ), MAPNAME_LENGTH );
-		AddSpaces( uiInternetGames.gameDescription[i], MAPNAME_LENGTH );
-		if( !strcmp( Info_ValueForKey( info, "dm" ), "1" ))
-			StringConcat( uiInternetGames.gameDescription[i], "deathmatch", TYPE_LENGTH );
-		else if( !strcmp( Info_ValueForKey( info, "coop" ), "1" ))
-			StringConcat( uiInternetGames.gameDescription[i], "coop", TYPE_LENGTH );
-		else if( !strcmp( Info_ValueForKey( info, "team" ), "1" ))
-			StringConcat( uiInternetGames.gameDescription[i], "teamplay", TYPE_LENGTH );
-		AddSpaces( uiInternetGames.gameDescription[i], TYPE_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "numcl" ), MAXCL_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], "\\", MAXCL_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "maxcl" ), MAXCL_LENGTH );
-		AddSpaces( uiInternetGames.gameDescription[i], MAXCL_LENGTH );
+
+		uiInternetGames.gameDescription[i][0] = 0; // mark this string as empty
+
+		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "host" ), QMSB_GAME_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], QMSB_GAME_LENGTH );
+
+		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "map" ), QMSB_MAPNAME_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], QMSB_MAPNAME_LENGTH );
+
+		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "numcl" ), QMSB_MAXCL_LENGTH );
+		StringConcat( uiInternetGames.gameDescription[i], "\\", QMSB_MAXCL_LENGTH );
+		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "maxcl" ), QMSB_MAXCL_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], QMSB_MAXCL_LENGTH );
+
+		char ping[10];
+		snprintf( ping, 10, "%.f ms", uiStatic.serverPings[i] * 1000 );
+		StringConcat( uiInternetGames.gameDescription[i], ping, QMSB_PING_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], QMSB_PING_LENGTH );
+
 		uiInternetGames.gameDescriptionPtr[i] = uiInternetGames.gameDescription[i];
 	}
 
@@ -147,6 +147,7 @@ static void UI_InternetGames_GetGamesList( void )
 
 	uiInternetGames.gameList.itemNames = (const char **)uiInternetGames.gameDescriptionPtr;
 	uiInternetGames.gameList.numItems = 0; // reset it
+	uiInternetGames.gameList.curItem = 0; // reset it
 
 	if( !uiInternetGames.gameList.generic.charHeight )
 		return; // to avoid divide integer by zero
@@ -265,14 +266,14 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.menu.vidInitFunc = UI_InternetGames_Init;
 	uiInternetGames.menu.keyFunc = UI_InternetGames_KeyFunc;
 
-	StringConcat( uiInternetGames.hintText, "Game", GAME_LENGTH );
-	AddSpaces( uiInternetGames.hintText, GAME_LENGTH );
-	StringConcat( uiInternetGames.hintText, "Map", MAPNAME_LENGTH );
-	AddSpaces( uiInternetGames.hintText, MAPNAME_LENGTH );
-	StringConcat( uiInternetGames.hintText, "Type", TYPE_LENGTH );
-	AddSpaces( uiInternetGames.hintText, TYPE_LENGTH );
-	StringConcat( uiInternetGames.hintText, "Num/Max Clients", MAXCL_LENGTH );
-	AddSpaces( uiInternetGames.hintText, MAXCL_LENGTH );
+	StringConcat( uiInternetGames.hintText, "Name", QMSB_GAME_LENGTH );
+	AddSpaces( uiInternetGames.hintText, QMSB_GAME_LENGTH );
+	StringConcat( uiInternetGames.hintText, "Map", QMSB_MAPNAME_LENGTH );
+	AddSpaces( uiInternetGames.hintText, QMSB_MAPNAME_LENGTH );
+	StringConcat( uiInternetGames.hintText, "Players", QMSB_MAXCL_LENGTH );
+	AddSpaces( uiInternetGames.hintText, QMSB_MAXCL_LENGTH );
+	StringConcat( uiInternetGames.hintText, "Ping", QMSB_PING_LENGTH );
+	AddSpaces( uiInternetGames.hintText, QMSB_PING_LENGTH );
 
 	uiInternetGames.background.generic.id = ID_BACKGROUND;
 	uiInternetGames.background.generic.type = QMTYPE_BITMAP;
@@ -396,15 +397,15 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.hintMessage.generic.flags = QMF_INACTIVE|QMF_SMALLFONT;
 	uiInternetGames.hintMessage.generic.color = uiColorHelp;
 	uiInternetGames.hintMessage.generic.name = uiInternetGames.hintText;
-	uiInternetGames.hintMessage.generic.x = 360;
+	uiInternetGames.hintMessage.generic.x = 340;
 	uiInternetGames.hintMessage.generic.y = 225;
 
 	uiInternetGames.gameList.generic.id = ID_SERVERSLIST;
 	uiInternetGames.gameList.generic.type = QMTYPE_SCROLLLIST;
 	uiInternetGames.gameList.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_SMALLFONT;
-	uiInternetGames.gameList.generic.x = 360;
+	uiInternetGames.gameList.generic.x = 340;
 	uiInternetGames.gameList.generic.y = 255;
-	uiInternetGames.gameList.generic.width = 640;
+	uiInternetGames.gameList.generic.width = 660;
 	uiInternetGames.gameList.generic.height = 440;
 	uiInternetGames.gameList.generic.callback = UI_InternetGames_Callback;
 	uiInternetGames.gameList.itemNames = (const char **)uiInternetGames.gameDescriptionPtr;
@@ -462,6 +463,8 @@ void UI_InternetGames_Menu( void )
 
 	UI_InternetGames_Precache();
 	UI_InternetGames_Init();
+
+	UI_RefreshInternetServerList();
 
 	UI_PushMenu( &uiInternetGames.menu );
 }

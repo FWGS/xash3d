@@ -74,7 +74,7 @@ GNU General Public License for more details.
 #define UI_OUTLINE_WIDTH		uiStatic.outlineWidth	// outline thickness
 
 #define UI_MAXGAMES			900	// slots for savegame/demos
-#define UI_MAX_SERVERS		32
+#define UI_MAX_SERVERS		256
 #define UI_MAX_BGMAPS		32
 
 #define MAX_HINT_TEXT		512
@@ -138,6 +138,12 @@ typedef enum
 #define QM_ACTIVATED		3
 #define QM_CHANGED			4
 #define QM_PRESSED			5
+
+// Server browser
+#define QMSB_GAME_LENGTH	25
+#define QMSB_MAPNAME_LENGTH	20+QMSB_GAME_LENGTH
+#define QMSB_MAXCL_LENGTH	10+QMSB_MAPNAME_LENGTH
+#define QMSB_PING_LENGTH    10+QMSB_MAXCL_LENGTH
 
 typedef struct
 {
@@ -336,6 +342,8 @@ typedef struct
 
 	netadr_t		serverAddresses[UI_MAX_SERVERS];
 	char		serverNames[UI_MAX_SERVERS][256];
+	float		serverPings[UI_MAX_SERVERS];
+	int		serversRefreshTime;
 	int		numServers;
 	int		updateServers;	// true is receive new info about servers
 

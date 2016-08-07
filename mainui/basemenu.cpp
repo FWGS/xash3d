@@ -912,8 +912,11 @@ UI_RefreshServerList
 void UI_RefreshServerList( void )
 {
 	uiStatic.numServers = 0;
+	uiStatic.serversRefreshTime = gpGlobals->time;
+
 	memset( uiStatic.serverAddresses, 0, sizeof( uiStatic.serverAddresses ));
 	memset( uiStatic.serverNames, 0, sizeof( uiStatic.serverNames ));
+	memset( uiStatic.serverPings, 0, sizeof( uiStatic.serverPings ));
 
 	CLIENT_COMMAND( FALSE, "localservers\n" );
 }
@@ -926,8 +929,11 @@ UI_RefreshInternetServerList
 void UI_RefreshInternetServerList( void )
 {
 	uiStatic.numServers = 0;
+	uiStatic.serversRefreshTime = gpGlobals->time;
+
 	memset( uiStatic.serverAddresses, 0, sizeof( uiStatic.serverAddresses ));
 	memset( uiStatic.serverNames, 0, sizeof( uiStatic.serverNames ));
+	memset( uiStatic.serverPings, 0, sizeof( uiStatic.serverPings ));
 
 	CLIENT_COMMAND( FALSE, "internetservers\n" );
 }
@@ -1388,7 +1394,8 @@ void UI_AddServerToList( netadr_t adr, const char *info )
 	// add it to the list
 	uiStatic.updateServers = true; // info has been updated
 	uiStatic.serverAddresses[uiStatic.numServers] = adr;
-	strncpy( uiStatic.serverNames[uiStatic.numServers], info, sizeof( uiStatic.serverNames[uiStatic.numServers] ));
+	strncpy( uiStatic.serverNames[uiStatic.numServers], info, 256 );
+	uiStatic.serverPings[uiStatic.numServers] = gpGlobals->time - uiStatic.serversRefreshTime;
 	uiStatic.numServers++;
 }
 
