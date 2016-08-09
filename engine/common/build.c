@@ -126,7 +126,7 @@ Q_buildcommit will identify this build as release or "notset"
 const char *Q_buildcommit( void )
 {
 #ifdef XASH_BUILD_COMMIT
-	return XASH_BUILD_COMMIT
+	return XASH_BUILD_COMMIT;
 #elif defined(XASH_RELEASE) // don't check it elsewhere to avoid random bugs
 	return "release";
 #else
