@@ -1005,9 +1005,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	con_gamemaps = Cvar_Get( "con_mapfilter", "1", CVAR_ARCHIVE, "when enabled, show only maps in game folder (no maps from base folder when running mod)" );
 	download_types = Cvar_Get( "download_types", "msec", CVAR_ARCHIVE, "list of types to download: Model, Sounds, Events, Custom" );
 	build = Cvar_Get( "build", va( "%i", Q_buildnum_compat()), CVAR_INIT, "returns an original xash3d build number. left for compability" );
-	ver = Cvar_Get( "ver", va( "%i/%s.%i", PROTOCOL_VERSION, BASED_VERSION, Q_buildnum_compat( ) ), CVAR_INIT, "shows an engine version. left for compabiltiy" );
+	ver = Cvar_Get( "ver", va( "%i/%g.%i", PROTOCOL_VERSION, BASED_VERSION, Q_buildnum_compat( ) ), CVAR_INIT, "shows an engine version. left for compabiltiy" );
 	host_build = Cvar_Get( "host_build", va("%i", Q_buildnum() ), CVAR_INIT, "returns current build number" );
-	host_ver = Cvar_Get( "host_version", va("%i %s %s %s %s", Q_buildnum(), XASH_VERSION, Q_buildos(), Q_buildarch(), Q_buildcommit() ), CVAR_INIT, "detailed info about this build" );
+	host_ver = Cvar_Get( "host_ver", va("%i %s %s %s %s", Q_buildnum(), XASH_VERSION, Q_buildos(), Q_buildarch(), Q_buildcommit() ), CVAR_INIT, "detailed info about this build" );
 	host_mapdesign_fatal = Cvar_Get( "host_mapdesign_fatal", "1", CVAR_ARCHIVE, "make map design errors fatal" );
 	host_xashds_hacks = Cvar_Get( "xashds_hacks", "0", 0, "hacks for xashds in singleplayer" );
 
