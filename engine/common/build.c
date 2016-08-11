@@ -88,6 +88,8 @@ const char *Q_buildos( void )
 #else
 #error "Place your operating system name here! If this is a mistake, try to fix conditions above and report a bug"
 #endif
+	
+	return osname;
 }
 
 /*
@@ -110,6 +112,8 @@ const char *Q_buildarch( void )
 #else
 #error "Place your architecture name here! If this is a mistake, try to fix conditions above and report a bug"
 #endif
+	
+	return archname;
 }
 
 /*
