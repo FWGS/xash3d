@@ -109,6 +109,8 @@ obj:
 	mkdir -p obj/common/sdl
 	mkdir -p obj/common/imagelib
 	mkdir -p obj/common/soundlib/libmpg
+	mkdir -p obj/platform/sdl
+
 
 obj/%.o : %.c
 	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"  -Wno-unused-result -fvisibility=hidden
