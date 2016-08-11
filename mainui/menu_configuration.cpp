@@ -237,7 +237,7 @@ static void UI_Options_Init( void )
 	uiOptions.gamepad.generic.name = "Gamepad";
 	uiOptions.gamepad.generic.statusText = "Change gamepad axis and button settings";
 	uiOptions.gamepad.generic.callback = UI_Options_Callback;
-	uiOptions.gamepad.pic = PIC_Load("gfx/shell/btn_gamepad");
+	//uiOptions.gamepad.pic = PIC_Load("gfx/shell/btn_gamepad");
 
 	//UI_UtilSetupPicButton( &uiOptions.video, PC_TOUCH );
 
