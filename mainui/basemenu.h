@@ -91,6 +91,9 @@ GNU General Public License for more details.
 #define UI_BUTTON_CHARWIDTH		14	// empirically determined value
 
 #define ID_BACKGROUND		0	// catch warning on change this
+#define ID_BANNER			1	// catch warning on change this
+#define ID_YES				130	// catch warning on change this
+#define ID_NO				131	// catch warning on change this
 
 // Generic types
 typedef enum

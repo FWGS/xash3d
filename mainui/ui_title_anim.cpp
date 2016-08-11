@@ -112,7 +112,7 @@ void UI_SetTitleAnim( int anim_state, menuPicButton_s *button )
 	}	
 
 	// don't reset anim if dialog buttons pressed
-	if( button->generic.id == 130 || button->generic.id == 131 )
+	if( button->generic.id == ID_YES || button->generic.id == ID_NO )
 		return;
 
 	if( anim_state == AS_TO_TITLE )

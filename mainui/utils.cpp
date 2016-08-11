@@ -2163,7 +2163,7 @@ void UI_Bitmap_Draw( menuBitmap_s *b )
 	}
 
 	//CR
-	if( b->generic.id == 1 )
+	if( b->generic.id == ID_BANNER )
 	{
 		// don't draw banners until transition is done
 #ifdef TA_ALT_MODE
@@ -2280,28 +2280,27 @@ const char *UI_PicButton_Key( menuPicButton_s *b, int key, int down )
 	if( sound && ( b->generic.flags & QMF_SILENT ))
 		sound = uiSoundNull;
 
-	if( b->generic.flags & QMF_ACT_ONRELEASE )
+	if( sound && b->generic.callback )
 	{
-		if( sound && b->generic.callback )
+		if( b->generic.flags & QMF_ACT_ONRELEASE )
 		{
-			int	event;
-			
-			if( down ) 
+			int event;
+			if( down )
 			{
 				event = QM_PRESSED;
 				b->generic.bPressed = true;
 			}
-			else event = QM_ACTIVATED;
-			//CR
+			else
+				event = QM_ACTIVATED;
+
 			UI_TACheckMenuDepth();
 			b->generic.callback( b, event );
 			UI_SetTitleAnim( AS_TO_TITLE, b );
 		}
-	}
-	else if( down )
-	{
-		if( sound && b->generic.callback )
+		else if( down )
+		{
 			b->generic.callback( b, QM_ACTIVATED );
+		}
 	}
 
 	return sound;
