@@ -977,7 +977,7 @@ float IN_TouchDrawText( float x1, float y1, float x2, float y2, const char *s, b
 	GL_SetRenderMode( kRenderTransAdd );
 
 	// text is additive and alpha does not work
-	pglColor4f( color[0] * ( (float)color[3] /255.0f ), color[1] * ( (float)color[3] /255.0f ),
+	pglColor4ub( color[0] * ( (float)color[3] /255.0f ), color[1] * ( (float)color[3] /255.0f ),
 			color[2] * ( (float)color[3] /255.0f ), 255 );
 
 	while( *s )

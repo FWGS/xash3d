@@ -37,7 +37,7 @@ qboolean CL_IsPlayerIndex( int idx )
 
 qboolean CL_IsPredicted( void )
 {
-	if( !cl_predict->integer || !cl.frame.valid || cl.background )
+	if( !cl_predict->integer || !cl.frame.valid || cl.background || Host_IsLocalClient() )
 		return false;
 
 	if(( cls.netchan.outgoing_sequence - cls.netchan.incoming_acknowledged ) >= ( CL_UPDATE_BACKUP - 1 ))
@@ -497,7 +497,7 @@ void CL_WeaponAnim( int iAnim, int body )
 	cl_entity_t	*view = &clgame.viewent;
 	cl.weaponstarttime = 0;
 	cl.weaponseq = iAnim;
-	if( cl_predict->value || !cl_lw->value )
+	if( Host_IsLocalClient() || cl_predict->value || !cl_lw->value )
 		view->curstate.modelindex = cl.frame.local.client.viewmodel;
 	else
 		view->curstate.modelindex = cl.predicted_viewmodel;

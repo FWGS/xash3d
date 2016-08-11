@@ -107,7 +107,7 @@ typedef enum
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	"0.17.1"		// engine current version
+#define XASH_VERSION	"0.18"		// engine current version
 // since this fork have own version, this is just left for compability
 #define BASED_VERSION	0.97f
 
@@ -652,6 +652,10 @@ uint Sound_GetApproxWavePlayLen( const char *filepath );
 // build.c
 //
 int Q_buildnum( void );
+const char *Q_buildos( void );
+const char *Q_buildarch( void );
+const char *Q_buildcommit( void );
+int Q_buildnum_compat( void );
 
 //
 // host.c
@@ -663,7 +667,12 @@ int Host_CompareFileTime( int ft1, int ft2 );
 void Host_NewInstance( const char *name, const char *finalmsg );
 qboolean Host_NewGame( const char *mapName, qboolean loadGame );
 void Host_EndGame( const char *message, ... );
-void Host_AbortCurrentFrame( void );
+#ifdef __GNUC__
+void EXPORT Host_AbortCurrentFrame( void ) __attribute__ ((noreturn)) __attribute__ ((noinline)) ;
+#endif
+#ifdef _MSC_VER
+__declspec(noreturn) void EXPORT Host_AbortCurrentFrame( void );
+#endif
 void Host_RestartAmbientSounds( void );
 void Host_RestartDecals( void );
 qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset );
@@ -949,6 +958,11 @@ typedef struct
 
 void Con_CompleteCommand( field_t *field );
 void Con_ClearAutoComplete();
+
+//
+// console.c
+//
+void Con_Clear( void );
 
 extern const char *svc_strings[256];
 

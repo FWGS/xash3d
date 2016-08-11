@@ -110,6 +110,22 @@ if(XASH_DEDICATED)
     endif()
 endif()
 
+if(NOT XASH_RELEASE)
+	execute_process(COMMAND "git" "rev-parse" "--short" "HEAD"
+		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+		OUTPUT_VARIABLE SHORT_HASH
+		OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+	if(SHORT_HASH)
+		message(STATUS "git hash: ${SHORT_HASH}")
+		add_definitions(-DXASH_BUILD_COMMIT="${SHORT_HASH}")
+	else()
+		message(STATUS "git hash: not set")
+	endif()
+else()
+	add_definitions(-DXASH_RELEASE)
+endif()
+
 target_link_libraries(${XASH_ENGINE_LIBRARY} -lm
     ${CMAKE_DL_LIBS})
 

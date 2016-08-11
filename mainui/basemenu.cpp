@@ -142,6 +142,44 @@ void UI_DrawPicAdditive( int x, int y, int width, int height, const int color, c
 
 /*
 =================
+UI_DrawPicAdditive
+=================
+*/
+void UI_DrawPicTrans( int x, int y, int width, int height, const int color, const char *pic )
+{
+	HIMAGE hPic = PIC_Load( pic );
+	if (!hPic)
+		return;
+
+	int r, g, b, a;
+	UnpackRGBA( r, g, b, a, color );
+
+	PIC_Set( hPic, r, g, b, a );
+	PIC_DrawTrans( x, y, width, height );
+}
+
+
+/*
+=================
+UI_DrawPicAdditive
+=================
+*/
+void UI_DrawPicHoles( int x, int y, int width, int height, const int color, const char *pic )
+{
+	HIMAGE hPic = PIC_Load( pic );
+	if (!hPic)
+		return;
+
+	int r, g, b, a;
+	UnpackRGBA( r, g, b, a, color );
+
+	PIC_Set( hPic, r, g, b, a );
+	PIC_DrawHoles( x, y, width, height );
+}
+
+
+/*
+=================
 UI_FillRect
 =================
 */
@@ -579,6 +617,20 @@ void *UI_ItemAtCursor( menuFramework_s *menu )
 }
 
 /*
+================
+UI_IsCurrentElement
+
+Checks given menu is current selected
+================
+*/
+bool UI_IsCurrentSelected( void *menu )
+{
+	assert( menu );
+
+	return (menuCommon_s *)menu == UI_ItemAtCursor( ((menuAction_s *)menu)->generic.parent );
+}
+
+/*
 =================
 UI_AdjustCursor
 
@@ -788,6 +840,9 @@ const char *UI_DefaultKey( menuFramework_s *menu, int key, int down )
 			UI_CursorMoved( menu );
 			if( !(((menuCommon_s *)menu->items[menu->cursor])->flags & QMF_SILENT ))
 				sound = uiSoundMove;
+
+			((menuCommon_s*)menu->items[menu->cursorPrev])->flags &= ~QMF_HASKEYBOARDFOCUS;
+			((menuCommon_s*)menu->items[menu->cursor])->flags |= QMF_HASKEYBOARDFOCUS;
 		}
 		break;
 	case K_DOWNARROW:
@@ -805,6 +860,9 @@ const char *UI_DefaultKey( menuFramework_s *menu, int key, int down )
 			UI_CursorMoved(menu);
 			if( !(((menuCommon_s *)menu->items[menu->cursor])->flags & QMF_SILENT ))
 				sound = uiSoundMove;
+
+			((menuCommon_s*)menu->items[menu->cursorPrev])->flags &= ~QMF_HASKEYBOARDFOCUS;
+			((menuCommon_s*)menu->items[menu->cursor])->flags |= QMF_HASKEYBOARDFOCUS;
 		}
 		break;
 	case K_MOUSE1:
@@ -854,8 +912,11 @@ UI_RefreshServerList
 void UI_RefreshServerList( void )
 {
 	uiStatic.numServers = 0;
+	uiStatic.serversRefreshTime = gpGlobals->time;
+
 	memset( uiStatic.serverAddresses, 0, sizeof( uiStatic.serverAddresses ));
 	memset( uiStatic.serverNames, 0, sizeof( uiStatic.serverNames ));
+	memset( uiStatic.serverPings, 0, sizeof( uiStatic.serverPings ));
 
 	CLIENT_COMMAND( FALSE, "localservers\n" );
 }
@@ -868,8 +929,11 @@ UI_RefreshInternetServerList
 void UI_RefreshInternetServerList( void )
 {
 	uiStatic.numServers = 0;
+	uiStatic.serversRefreshTime = gpGlobals->time;
+
 	memset( uiStatic.serverAddresses, 0, sizeof( uiStatic.serverAddresses ));
 	memset( uiStatic.serverNames, 0, sizeof( uiStatic.serverNames ));
+	memset( uiStatic.serverPings, 0, sizeof( uiStatic.serverPings ));
 
 	CLIENT_COMMAND( FALSE, "internetservers\n" );
 }
@@ -1191,11 +1255,27 @@ void UI_MouseMove( int x, int y )
 	if( !uiStatic.menuActive )
 		return;
 
-
-
 	// now menu uses absolute coordinates
 	uiStatic.cursorX = x;
 	uiStatic.cursorY = y;
+
+	// hack: prevent changing focus when field active
+#if defined(__ANDROID__) || defined(MENU_FIELD_RESIZE_HACK)
+	if( !uiStatic.menuActive->vidInitFunc )
+	{
+		menuField_s *f = (menuField_s *)UI_ItemAtCursor( uiStatic.menuActive );
+		if( f && ((menuCommon_s *)f)->type == QMTYPE_FIELD )
+		{
+			float y = f->generic.y;
+
+			if( y > ScreenHeight - f->generic.height - 40 )
+				y = ScreenHeight - f->generic.height - 15;
+
+			if( UI_CursorInRect( f->generic.x - 30, y - 30, f->generic.width + 60, f->generic.height + 60 ) )
+					return;
+		}
+	}
+#endif
 
 	if( UI_CursorInRect( 1, 1, ScreenWidth - 1, ScreenHeight - 1 ))
 		uiStatic.mouseInRect = true;
@@ -1209,12 +1289,14 @@ void UI_MouseMove( int x, int y )
 	{
 		item = (menuCommon_s *)uiStatic.menuActive->items[i];
 
-		if( item->flags & (QMF_GRAYED|QMF_INACTIVE|QMF_HIDDEN))
+		if( item->flags & (QMF_GRAYED|QMF_INACTIVE|QMF_HIDDEN) )
 		{
-			if( item->flags & QMF_HASMOUSEFOCUS )
+			if( item->flags & (QMF_HASMOUSEFOCUS) )
 			{
 				if( !UI_CursorInRect( item->x, item->y, item->width, item->height ))
+				{
 					item->flags &= ~QMF_HASMOUSEFOCUS;
+				}
 				else item->lastFocusTime = uiStatic.realTime;
 			}
 			continue;
@@ -1231,6 +1313,8 @@ void UI_MouseMove( int x, int y )
 		{
 			UI_SetCursor( uiStatic.menuActive, i );
 			((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursorPrev]))->flags &= ~QMF_HASMOUSEFOCUS;
+			// reset a keyboard focus also, because we are changed cursor
+			((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursorPrev]))->flags &= ~QMF_HASKEYBOARDFOCUS;
 
 			if (!(((menuCommon_s *)(uiStatic.menuActive->items[uiStatic.menuActive->cursor]))->flags & QMF_SILENT ))
 				UI_StartSound( uiSoundMove );
@@ -1310,7 +1394,8 @@ void UI_AddServerToList( netadr_t adr, const char *info )
 	// add it to the list
 	uiStatic.updateServers = true; // info has been updated
 	uiStatic.serverAddresses[uiStatic.numServers] = adr;
-	strncpy( uiStatic.serverNames[uiStatic.numServers], info, sizeof( uiStatic.serverNames[uiStatic.numServers] ));
+	strncpy( uiStatic.serverNames[uiStatic.numServers], info, 256 );
+	uiStatic.serverPings[uiStatic.numServers] = gpGlobals->time - uiStatic.serversRefreshTime;
 	uiStatic.numServers++;
 }
 
@@ -1401,6 +1486,7 @@ void UI_Precache( void )
 	UI_TouchButtons_Precache();
 	UI_TouchEdit_Precache();
 	UI_FileDialog_Precache();
+	UI_GamePad_Precache();
 }
 
 void UI_ParseColor( char *&pfile, int *outColor )
@@ -1514,6 +1600,8 @@ UI_VidInit
 */
 int UI_VidInit( void )
 {
+	static bool calledOnce = true;
+
 	UI_Precache ();
 	// Sizes are based on screen height
 	uiStatic.scaleX = uiStatic.scaleY = ScreenHeight / 768.0f;
@@ -1559,10 +1647,36 @@ int UI_VidInit( void )
 	{
 		menuFramework_s *item = uiStatic.menuStack[i];
 
-		// do vid restart for all pushed elements
 		if( item && item->vidInitFunc )
+		{
+			int cursor, cursorPrev;
+			bool valid = false;
+
+			// HACKHACK: Save cursor values when VidInit is called once
+			// this don't let menu "forget" actual cursor values after, for example, window resizing
+			if( calledOnce
+				&& item->cursor > 0 // ignore 0, because useless
+				&& item->cursor < item->numItems
+				&& item->cursorPrev > 0
+				&& item->cursorPrev < item->numItems )
+			{
+				valid = true;
+				cursor = item->cursor;
+				cursorPrev = item->cursorPrev;
+			}
+
+			// do vid restart for all pushed elements
 			item->vidInitFunc();
+
+			if( valid )
+			{
+				item->cursor = cursor;
+				item->cursorPrev = cursorPrev;
+			}
+		}
 	}
+
+	if( !calledOnce ) calledOnce = true;
 
 	return 1;
 }
@@ -1577,6 +1691,9 @@ void UI_Init( void )
 	// register our cvars and commands
 	ui_precache = CVAR_REGISTER( "ui_precache", "0", FCVAR_ARCHIVE );
 	ui_showmodels = CVAR_REGISTER( "ui_showmodels", "0", FCVAR_ARCHIVE );
+
+	// show cl_predict dialog
+	CVAR_REGISTER( "menu_mp_firsttime", "1", FCVAR_ARCHIVE );
 
 	Cmd_AddCommand( "menu_main", UI_Main_Menu );
 	Cmd_AddCommand( "menu_newgame", UI_NewGame_Menu );
@@ -1602,6 +1719,7 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_touchbuttons", UI_TouchButtons_Menu );
 	Cmd_AddCommand( "menu_touchedit", UI_TouchEdit_Menu );
 	Cmd_AddCommand( "menu_filedialog", UI_FileDialog_Menu );
+	Cmd_AddCommand( "menu_gamepad", UI_GamePad_Menu );
 
 	CHECK_MAP_LIST( TRUE );
 
@@ -1634,8 +1752,8 @@ void UI_Shutdown( void )
 	Cmd_RemoveCommand( "menu_saveload" );
 	Cmd_RemoveCommand( "menu_multiplayer" );
 	Cmd_RemoveCommand( "menu_options" );
-	Cmd_RemoveCommand( "menu_intenetgames" );
 	Cmd_RemoveCommand( "menu_langame" );
+	Cmd_RemoveCommand( "menu_intenetgames" );
 	Cmd_RemoveCommand( "menu_playersetup" );
 	Cmd_RemoveCommand( "menu_controls" );
 	Cmd_RemoveCommand( "menu_advcontrols" );
@@ -1645,13 +1763,13 @@ void UI_Shutdown( void )
 	Cmd_RemoveCommand( "menu_video" );
 	Cmd_RemoveCommand( "menu_vidoptions" );
 	Cmd_RemoveCommand( "menu_vidmodes" );
-	Cmd_RemoveCommand( "menu_advanced" );
-	Cmd_RemoveCommand( "menu_performance" );
-	Cmd_RemoveCommand( "menu_network" );
-	Cmd_RemoveCommand( "menu_defaults" );
-	Cmd_RemoveCommand( "menu_cinematics" );
 	Cmd_RemoveCommand( "menu_customgame" );
-	Cmd_RemoveCommand( "menu_quit" );
+	Cmd_RemoveCommand( "menu_touch" );
+	Cmd_RemoveCommand( "menu_touchoptions" );
+	Cmd_RemoveCommand( "menu_touchbuttons" );
+	Cmd_RemoveCommand( "menu_touchedit" );
+	Cmd_RemoveCommand( "menu_filedialog" );
+	Cmd_RemoveCommand( "menu_gamepad" );
 
 	memset( &uiStatic, 0, sizeof( uiStatic_t ));
 }

@@ -148,6 +148,7 @@
     <ClCompile Include="common\imagelib\img_wad.c" />
     <ClCompile Include="common\infostring.c" />
     <ClCompile Include="common\input.c" />
+    <ClCompile Include="common\joyinput.c" />
     <ClCompile Include="common\keys.c" />
     <ClCompile Include="common\library.c" />
     <ClCompile Include="common\mathlib.c" />

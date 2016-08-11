@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "basemenu.h"
 #include "utils.h"
 #include "menu_btnsbmp_table.h"
+#include "keydefs.h"
 
 #define ART_BANNER			"gfx/shell/head_multi"
 
@@ -34,6 +35,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_CUSTOMIZE		5
 #define ID_CONTROLS			6
 #define ID_DONE			7
+
+#define ID_MSGBOX	 	8
+#define ID_MSGTEXT	 	9
+#define ID_YES		130
+#define ID_NO	 	131
 
 typedef struct
 {
@@ -48,9 +54,65 @@ typedef struct
 	menuPicButton_s	Customize;	// playersetup
 	menuPicButton_s	Controls;
 	menuPicButton_s	done;
+
+	// prompt dialog
+	menuAction_s	msgBox;
+	menuAction_s	promptMessage;
+	menuAction_s	promptMessage2;
+	menuAction_s	promptMessage3;
+	menuPicButton_s	yes;
+	menuPicButton_s	no;
 } uiMultiPlayer_t;
 
 static uiMultiPlayer_t	uiMultiPlayer;
+
+/*
+=================
+UI_MsgBox_Ownerdraw
+=================
+*/
+static void UI_MsgBox_Ownerdraw( void *self )
+{
+	menuCommon_s	*item = (menuCommon_s *)self;
+
+	UI_FillRect( item->x, item->y, item->width, item->height, uiPromptBgColor );
+}
+
+static void UI_PredictDialog( void )
+{
+	// toggle main menu between active\inactive
+	// show\hide remove dialog
+	uiMultiPlayer.internetGames.generic.flags ^= QMF_INACTIVE;
+	uiMultiPlayer.spectateGames.generic.flags ^= QMF_INACTIVE;
+	uiMultiPlayer.LANGame.generic.flags ^= QMF_INACTIVE;
+	uiMultiPlayer.Customize.generic.flags ^= QMF_INACTIVE;
+	uiMultiPlayer.Controls.generic.flags ^= QMF_INACTIVE;
+	uiMultiPlayer.done.generic.flags ^= QMF_INACTIVE;
+
+	uiMultiPlayer.msgBox.generic.flags ^= QMF_HIDDEN;
+	uiMultiPlayer.promptMessage.generic.flags ^= QMF_HIDDEN;
+	uiMultiPlayer.promptMessage2.generic.flags ^= QMF_HIDDEN;
+	uiMultiPlayer.promptMessage3.generic.flags ^= QMF_HIDDEN;
+	uiMultiPlayer.no.generic.flags ^= QMF_HIDDEN;
+	uiMultiPlayer.yes.generic.flags ^= QMF_HIDDEN;
+}
+
+
+/*
+=================
+UI_Multiplayer_KeyFunc
+=================
+*/
+static const char *UI_Multiplayer_KeyFunc( int key, int down )
+{
+	if( down && key == K_ESCAPE && !( uiMultiPlayer.promptMessage.generic.flags & QMF_HIDDEN ))
+	{
+		UI_PredictDialog();
+		return uiSoundNull;
+	}
+	return UI_DefaultKey( &uiMultiPlayer.menu, key, down );
+}
+
 
 /*
 =================
@@ -84,6 +146,12 @@ static void UI_MultiPlayer_Callback( void *self, int event )
 	case ID_DONE:
 		UI_PopMenu();
 		break;
+	case ID_YES:
+		CVAR_SET_FLOAT( "cl_predict", 1 );
+	case ID_NO:
+		CVAR_SET_FLOAT( "menu_mp_firsttime", 0 );
+		UI_PredictDialog();
+		break;
 	}
 }
 
@@ -95,6 +163,7 @@ UI_MultiPlayer_Init
 static void UI_MultiPlayer_Init( void )
 {
 	memset( &uiMultiPlayer, 0, sizeof( uiMultiPlayer_t ));
+	uiMultiPlayer.menu.keyFunc = UI_Multiplayer_KeyFunc;
 
 	uiMultiPlayer.menu.vidInitFunc = UI_MultiPlayer_Init;
 
@@ -182,6 +251,55 @@ static void UI_MultiPlayer_Init( void )
 
 	UI_UtilSetupPicButton( &uiMultiPlayer.done, PC_DONE );
 
+	uiMultiPlayer.msgBox.generic.id = ID_MSGBOX;
+	uiMultiPlayer.msgBox.generic.type = QMTYPE_ACTION;
+	uiMultiPlayer.msgBox.generic.flags = QMF_INACTIVE|QMF_HIDDEN;
+	uiMultiPlayer.msgBox.generic.ownerdraw = UI_MsgBox_Ownerdraw; // just a fill rectangle
+	uiMultiPlayer.msgBox.generic.x = DLG_X + 192;
+	uiMultiPlayer.msgBox.generic.y = 256;
+	uiMultiPlayer.msgBox.generic.width = 640;
+	uiMultiPlayer.msgBox.generic.height = 256;
+
+	uiMultiPlayer.promptMessage.generic.id = ID_MSGBOX;
+	uiMultiPlayer.promptMessage.generic.type = QMTYPE_ACTION;
+	uiMultiPlayer.promptMessage.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN;
+	uiMultiPlayer.promptMessage.generic.name = "It is recomended to enable\nclient movement prediction";
+	uiMultiPlayer.promptMessage.generic.x = DLG_X + 270;
+	uiMultiPlayer.promptMessage.generic.y = 280;
+
+	uiMultiPlayer.promptMessage2.generic.id = ID_MSGBOX;
+	uiMultiPlayer.promptMessage2.generic.type = QMTYPE_ACTION;
+	uiMultiPlayer.promptMessage2.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN;
+	uiMultiPlayer.promptMessage2.generic.name = " Or enable it later in\n^5(Multiplayer/Customize)";
+	uiMultiPlayer.promptMessage2.generic.x = DLG_X + 310;
+	uiMultiPlayer.promptMessage2.generic.y = 340;
+
+	uiMultiPlayer.promptMessage3.generic.id = ID_MSGBOX;
+	uiMultiPlayer.promptMessage3.generic.type = QMTYPE_ACTION;
+	uiMultiPlayer.promptMessage3.generic.flags = QMF_INACTIVE|QMF_DROPSHADOW|QMF_HIDDEN;
+	uiMultiPlayer.promptMessage3.generic.name = "Press OK to enable it now";
+	uiMultiPlayer.promptMessage3.generic.x = DLG_X + 290;
+	uiMultiPlayer.promptMessage3.generic.y = 400;
+
+	uiMultiPlayer.yes.generic.id = ID_YES;
+	uiMultiPlayer.yes.generic.type = QMTYPE_BM_BUTTON;
+	uiMultiPlayer.yes.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
+	uiMultiPlayer.yes.generic.name = "Ok";
+	uiMultiPlayer.yes.generic.x = DLG_X + 380;
+	uiMultiPlayer.yes.generic.y = 460;
+	uiMultiPlayer.yes.generic.callback = UI_MultiPlayer_Callback;
+
+	UI_UtilSetupPicButton( &uiMultiPlayer.yes, PC_OK );
+
+	uiMultiPlayer.no.generic.id = ID_NO;
+	uiMultiPlayer.no.generic.type = QMTYPE_BM_BUTTON;
+	uiMultiPlayer.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
+	uiMultiPlayer.no.generic.name = "Cancel";
+	uiMultiPlayer.no.generic.x = DLG_X + 530;
+	uiMultiPlayer.no.generic.y = 460;
+	uiMultiPlayer.no.generic.callback = UI_MultiPlayer_Callback;
+	UI_UtilSetupPicButton( &uiMultiPlayer.no, PC_CANCEL );
+
 	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.background );
 	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.banner );
 	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.internetGames );
@@ -190,6 +308,15 @@ static void UI_MultiPlayer_Init( void )
 	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.Customize );
 	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.Controls );
 	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.done );
+	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.msgBox );
+	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.promptMessage );
+	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.promptMessage2 );
+	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.promptMessage3 );
+	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.no );
+	UI_AddItem( &uiMultiPlayer.menu, (void *)&uiMultiPlayer.yes );
+
+	if( CVAR_GET_FLOAT( "menu_mp_firsttime" ) && !CVAR_GET_FLOAT( "cl_predict" ) )
+		UI_PredictDialog();
 }
 
 /*

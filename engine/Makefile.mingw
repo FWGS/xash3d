@@ -5,7 +5,7 @@ CFLAGS = -O2 -fno-omit-frame-pointer -ggdb -funsafe-loop-optimizations -funsafe-
 LDFLAGS =
 LIBS = -lm
 TOPDIR = $(PWD)/..
-INCLUDES = -I../SDL2/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared -Icommon/sdl
+INCLUDES = -I../SDL2/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared
 DEFINES = -DDBGHELP
 XASH_VGUI ?= 1
 ifeq ($(XASH_DEDICATED),1)
@@ -21,7 +21,7 @@ DEFINES += -DXASH_GLES -DXASH_NANOGL -DUSE_CORE_PROFILE
 LIBS += -lstdc++
 endif
 
-DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FASTSTR -DXASH_FORCEINLINE -DVECTORIZE_SINCOS
+DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FASTSTR -DXASH_FORCEINLINE -DVECTORIZE_SINCOS -DXASH_W32CON
 
 ifeq ($(XASH_VGUI),1)
 DEFINES += -DXASH_VGUI
@@ -39,10 +39,11 @@ ifeq ($(NANOGL),1)
 SRCS_CPP += $(wildcard ../nanogl/*.cpp)
 endif
 OBJS_CPP = $(SRCS_CPP:.cpp=.o)
-SRCS = $(wildcard server/*.c)  $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard ./common/sdl/*.c)
+SRCS = $(wildcard server/*.c)  $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard platform/win32/*.c)
 OBJS = $(SRCS:.c=.o)
 ifneq ($(XASH_DEDICATED),1)
 SRCS += $(wildcard client/*.c)
+SRCS += $(wildcard platform/sdl/*.c)
 endif
 xash_bin.exe: $(OBJS) $(OBJS_CPP)
 	$(CC) -o xash_bin.exe $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)

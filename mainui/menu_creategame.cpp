@@ -91,8 +91,13 @@ static void UI_CreateGame_Begin( void )
 	if( !MAP_IS_VALID( uiCreateGame.mapName[uiCreateGame.mapsList.curItem] ))
 		return;	// bad map
 
-	if( CVAR_GET_FLOAT( "host_serverstate" ) && CVAR_GET_FLOAT( "maxplayers" ) == 1 )
-		HOST_ENDGAME( "end of the game" );
+	if( CVAR_GET_FLOAT( "host_serverstate" ) )
+	{
+		if(	CVAR_GET_FLOAT( "maxplayers" ) == 1 )
+			HOST_ENDGAME( "end of the game" );
+		else
+			HOST_ENDGAME( "starting new server" );
+	}
 
 	CVAR_SET_FLOAT( "deathmatch", 1.0f );	// start deathmatch as default
 	CVAR_SET_FLOAT( "maxplayers", atoi( uiCreateGame.maxClients.buffer ));
@@ -119,9 +124,17 @@ static void UI_CreateGame_Begin( void )
 		HOST_WRITECONFIG ( CVAR_GET_STRING( "lservercfgfile" ));
 
 		char cmd[128];
-		sprintf( cmd, "exec %s\nmap %s\n", CVAR_GET_STRING( "lservercfgfile" ), CVAR_GET_STRING( "defaultmap" ));
+		sprintf( cmd, "exec %s\n", CVAR_GET_STRING( "lservercfgfile" ) );
 	
+		CLIENT_COMMAND( TRUE, cmd );
+
+		// dirty listenserver config form old xash may rewrite maxplayers
+		CVAR_SET_FLOAT( "maxplayers", atoi( uiCreateGame.maxClients.buffer ));
+
+		// hack: wait three frames allowing server to completely shutdown, reapply maxplayers and start new map
+		sprintf( cmd, "host_endgame;wait;wait;wait;maxplayers %i;latch;map %s\n", atoi( uiCreateGame.maxClients.buffer ), CVAR_GET_STRING( "defaultmap" ) );
 		CLIENT_COMMAND( FALSE, cmd );
+
 	}
 }
 
@@ -272,7 +285,7 @@ static void UI_CreateGame_Init( void )
 {
 	memset( &uiCreateGame, 0, sizeof( uiCreateGame_t ));
 
-	uiCreateGame.menu.vidInitFunc = UI_CreateGame_Init;
+	//uiCreateGame.menu.vidInitFunc = UI_CreateGame_Init;
 	uiCreateGame.menu.keyFunc = UI_CreateGame_KeyFunc;
 
 	StringConcat( uiCreateGame.hintText, "Map", MAPNAME_LENGTH );
@@ -333,7 +346,7 @@ static void UI_CreateGame_Init( void )
 
 	uiCreateGame.dedicatedServer.generic.id = ID_DEDICATED;
 	uiCreateGame.dedicatedServer.generic.type = QMTYPE_CHECKBOX;
-	uiCreateGame.dedicatedServer.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiCreateGame.dedicatedServer.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiCreateGame.dedicatedServer.generic.name = "Dedicated server";
 	uiCreateGame.dedicatedServer.generic.x = 72;
 	uiCreateGame.dedicatedServer.generic.y = 685;
@@ -342,7 +355,7 @@ static void UI_CreateGame_Init( void )
 
 	uiCreateGame.hltv.generic.id = ID_HLTV;
 	uiCreateGame.hltv.generic.type = QMTYPE_CHECKBOX;
-	uiCreateGame.hltv.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiCreateGame.hltv.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiCreateGame.hltv.generic.name = "HLTV";
 	uiCreateGame.hltv.generic.x = 72;
 	uiCreateGame.hltv.generic.y = 635;

@@ -32,8 +32,10 @@ GNU General Public License for more details.
 #include "touch.h"
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
-#include "sdl/events.h"
 #include "library.h"
+#ifdef XASH_SDL
+#include "platform/sdl/events.h"
+#endif
 
 typedef void (*pfnChangeGame)( const char *progname );
 
@@ -52,7 +54,8 @@ convar_t	*host_sleeptime;
 convar_t	*host_xashds_hacks;
 convar_t	*con_gamemaps;
 convar_t	*download_types;
-convar_t	*build, *ver;
+convar_t	*build, *ver; // original xash3d info
+convar_t	*host_build, *host_ver; // fork info
 convar_t	*host_mapdesign_fatal;
 convar_t 	*cmd_scripting = NULL;
 
@@ -174,12 +177,6 @@ aborts the current host frame and goes on with the next one
 ================
 */
 
-#ifdef __GNUC__
-void EXPORT Host_AbortCurrentFrame( void ) __attribute__ ((noreturn)) __attribute__ ((noinline)) ;
-#endif
-#ifdef _MSC_VER
-__declspec(noreturn) void EXPORT Host_AbortCurrentFrame( void );
-#endif
 void EXPORT Host_AbortCurrentFrame( void )
 {
 	if( host.framecount == 0 ) // abort frame was not set up
@@ -289,6 +286,23 @@ void Host_Exec_f( void )
 	Cbuf_InsertText( "\n" );
 	Cbuf_InsertText( f );
 	Mem_Free( f );
+}
+
+/*
+===============
+Host_Clear_f
+
+Clear all consoles
+===============
+*/
+void Host_Clear_f( void )
+{
+#ifndef XASH_DEDICATED
+	Con_Clear();
+#endif
+#ifdef XASH_W32CON
+	Wcon_Clear();
+#endif
 }
 
 /*
@@ -508,7 +522,7 @@ void Host_GetConsoleCommands( void )
 {
 	char	*cmd;
 
-	while( ( cmd = Con_Input() ) )
+	while( ( cmd = Sys_Input() ) )
 	{
 		Cbuf_AddText( cmd );
 		Cbuf_Execute();
@@ -908,6 +922,8 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	else
 		Sys_Error( "Changing working directory to %s failed.\n", host.rootdir );
 
+	Sys_InitLog();
+
 	// set default gamedir
 	if( progname[0] == '#' ) progname++;
 	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
@@ -925,11 +941,16 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 
 	host.old_developer = host.developer;
-	if( !Sys_CheckParm( "-nowcon" ) )
-		Con_CreateConsole();
+
+#ifdef XASH_W32CON
+	Wcon_Init();
+	Wcon_CreateConsole();
+#endif
+
+	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
 
 	// first text message into console or log 
-	MsgDev( D_NOTE, "Sys_LoadLibrary: Loading Engine Library - ok\n" );
+	MsgDev( D_NOTE, "Console initialized\n" );
 
 	// startup cmds and cvars subsystem
 	Cmd_Init();
@@ -1009,8 +1030,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	host_limitlocal = Cvar_Get( "host_limitlocal", "0", 0, "apply cl_cmdrate and rate to loopback connection" );
 	con_gamemaps = Cvar_Get( "con_mapfilter", "1", CVAR_ARCHIVE, "when enabled, show only maps in game folder (no maps from base folder when running mod)" );
 	download_types = Cvar_Get( "download_types", "msec", CVAR_ARCHIVE, "list of types to download: Model, Sounds, Events, Custom" );
-	build = Cvar_Get( "build", va( "%i", Q_buildnum()), CVAR_INIT, "returns a current build number" );
-	ver = Cvar_Get( "ver", va( "%i/%s.%i", PROTOCOL_VERSION, XASH_VERSION, Q_buildnum( ) ), CVAR_INIT, "shows an engine version" );
+	build = Cvar_Get( "build", va( "%i", Q_buildnum_compat()), CVAR_INIT, "returns an original xash3d build number. left for compability" );
+	ver = Cvar_Get( "ver", va( "%i/%g.%i", PROTOCOL_VERSION, BASED_VERSION, Q_buildnum_compat( ) ), CVAR_INIT, "shows an engine version. left for compabiltiy" );
+	host_build = Cvar_Get( "host_build", va("%i", Q_buildnum() ), CVAR_INIT, "returns current build number" );
+	host_ver = Cvar_Get( "host_ver", va("%i %s %s %s %s", Q_buildnum(), XASH_VERSION, Q_buildos(), Q_buildarch(), Q_buildcommit() ), CVAR_INIT, "detailed info about this build" );
 	host_mapdesign_fatal = Cvar_Get( "host_mapdesign_fatal", "1", CVAR_ARCHIVE, "make map design errors fatal" );
 	host_xashds_hacks = Cvar_Get( "xashds_hacks", "0", 0, "hacks for xashds in singleplayer" );
 
@@ -1019,7 +1042,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Cvar_Get( "violence_agibs", "1", CVAR_ARCHIVE, "show alien gib entities" );
 	Cvar_Get( "violence_hblood", "1", CVAR_ARCHIVE, "draw human blood" );
 	Cvar_Get( "violence_ablood", "1", CVAR_ARCHIVE, "draw alien blood" );
-
 	if( !Host_IsDedicated() )
 	{
 		// when we're in developer-mode, automatically turn cheats on
@@ -1051,7 +1073,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	switch( host.type )
 	{
 	case HOST_NORMAL:
-		Con_ShowConsole( false ); // hide console
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( false ); // hide console
+#endif
 		// execute startup config and cmdline
 		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ));
 		// intentional fallthrough
@@ -1069,7 +1093,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	if( Host_IsDedicated() )
 	{
 		char *defaultmap;
-		Con_InitConsoleCommands ();
 
 		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
 		Cmd_AddCommand( "exit", Sys_Quit, "quit the game" );
@@ -1192,6 +1215,7 @@ void EXPORT Host_Shutdown( void )
 	HTTP_Shutdown();
 	Cmd_Shutdown();
 	Host_FreeCommon();
-	Con_DestroyConsole();
+	Sys_DestroyConsole();
+	Sys_CloseLog();
 	Sys_RestoreCrashHandler();
 }

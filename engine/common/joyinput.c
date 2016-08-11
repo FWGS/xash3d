@@ -14,22 +14,27 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
 #include "port.h"
 #include "common.h"
 #include "input.h"
 #include "keydefs.h"
 #include "joyinput.h"
-#include "events.h"
+//#include "events.h"
 #include "client.h"
 #include "gl_local.h"
 //#include "SDL.h"
+
+#ifndef SHRT_MAX
+#define SHRT_MAX 0x7FFF
+#endif
 
 typedef enum engineAxis_e
 {
 	JOY_AXIS_SIDE = 0,
 	JOY_AXIS_FWD,
-	JOY_AXIS_YAW,
 	JOY_AXIS_PITCH,
+	JOY_AXIS_YAW,
 	JOY_AXIS_RT,
 	JOY_AXIS_LT,
 	JOY_AXIS_NULL
@@ -43,10 +48,10 @@ static engineAxis_t joyaxesmap[MAX_AXES] =
 {
 	JOY_AXIS_SIDE,  // left stick, x
 	JOY_AXIS_FWD,   // left stick, y
-	JOY_AXIS_YAW,   // right stick, x
 	JOY_AXIS_PITCH, // right stick, y
+	JOY_AXIS_YAW,   // right stick, x
 	JOY_AXIS_RT,    // right trigger
-	JOY_AXIS_LT,    // left trigger
+	JOY_AXIS_LT     // left trigger
 };
 
 static struct joy_axis_s
@@ -294,7 +299,7 @@ void Joy_ButtonEvent( int id, byte button, byte down )
 	if( !initialized )
 		return;
 
-	if( osk_enable )
+	if( osk_enable ) // On-Screen Keyboard code.
 	{
 		switch( osk_curbutton.val )
 		{
@@ -349,7 +354,7 @@ void Joy_ButtonEvent( int id, byte button, byte down )
 		return;
 	}
 
-
+	// generic game button code.
 	if( button > 32 )
 	{
 		int origbutton = button;
@@ -408,11 +413,11 @@ void Joy_FinalizeMove( float *fw, float *side, float *dpitch, float *dyaw )
 
 	if( joy_axis_binding->modified )
 	{
-		char bind[6] = { 0 }; // fill it with zeros
+		char bind[7] = { 0 }; // fill it with zeros
 		int i;
-		Q_strncpy( bind, joy_axis_binding->string, 6 );
+		Q_strncpy( bind, joy_axis_binding->string, sizeof(bind) );
 
-		for( i = 0; i < 6; i++ )
+		for( i = 0; i < sizeof(bind); i++ )
 		{
 			switch( bind[i] )
 			{
@@ -430,8 +435,14 @@ void Joy_FinalizeMove( float *fw, float *side, float *dpitch, float *dyaw )
 
 	*fw     -= (float)joyaxis[JOY_AXIS_FWD ].val/(float)SHRT_MAX;  // must be form -1.0 to 1.0
 	*side   += (float)joyaxis[JOY_AXIS_SIDE].val/(float)SHRT_MAX;
+#if !defined(XASH_SDL)
 	*dpitch += joy_pitch->value * (float)joyaxis[JOY_AXIS_PITCH].val/(float)SHRT_MAX * host.realframetime;  // abs axis rotate is frametime related
-	*dyaw   -= joy_yaw->value * (float)joyaxis[JOY_AXIS_YAW].val/(float)SHRT_MAX * host.realframetime;
+	*dyaw   -= joy_yaw->value   * (float)joyaxis[JOY_AXIS_YAW  ].val/(float)SHRT_MAX * host.realframetime;
+#else
+	// HACKHACK: SDL have inverted look axis.
+	*dpitch -= joy_pitch->value * (float)joyaxis[JOY_AXIS_PITCH].val/(float)SHRT_MAX * host.realframetime;
+	*dyaw   += joy_yaw->value   * (float)joyaxis[JOY_AXIS_YAW  ].val/(float)SHRT_MAX * host.realframetime;
+#endif
 }
 
 /*
@@ -471,8 +482,7 @@ void Joy_Init( void )
 	Cvar_SetFloat( "joy_found", SDLash_JoyInit( joy_index->integer ) );
 
 #elif defined(ANDROID)
-
-
+	// Initalized after first Joy_AddEvent
 #else
 #warning "Any platform must implement platform-dependent JoyInit, start event system. Otherwise no joystick support"
 #endif
@@ -612,3 +622,4 @@ void Joy_DrawOnScreenKeyboard( void )
 	Joy_DrawSpecialButton( "Enter", X_START + X_STEP * 12, Y_START + Y_STEP * 3, X_STEP, Y_STEP );
 }
 
+#endif

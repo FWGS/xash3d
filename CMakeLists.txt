@@ -38,6 +38,7 @@ option(XASH_NONSTANDARD_LOAD "Enable loading game libraries. Windows only." ${XA
 option(XASH_SDL "Enable SDL for client." ${XASH_SDL})
 option(XASH_VGUI "Enable VGUI support." ${XASH_VGUI})
 option(XASH_X11 "Enable X11 support." ${XASH_VGUI})
+option(XASH_RELEASE "Build as release version. Affects only Q_buildcommit() return value." NO)
 
 #-----------------
 # MAIN BUILD CODE \

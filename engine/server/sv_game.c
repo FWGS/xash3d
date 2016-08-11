@@ -1431,7 +1431,7 @@ edict_t *pfnFindEntityInSphere( edict_t *pStartEdict, const float *org, float fl
 		return ent;
 	}
 
-	return NULL;
+	return EDICT_NUM( 0 );
 }
 
 /*

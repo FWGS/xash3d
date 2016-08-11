@@ -222,7 +222,7 @@ static void UI_AdvControls_Init( void )
 
 	uiAdvControls.crosshair.generic.id = ID_CROSSHAIR;
 	uiAdvControls.crosshair.generic.type = QMTYPE_CHECKBOX;
-	uiAdvControls.crosshair.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAdvControls.crosshair.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAdvControls.crosshair.generic.x = 72;
 	uiAdvControls.crosshair.generic.y = 230;
 	uiAdvControls.crosshair.generic.name = "Crosshair";
@@ -231,7 +231,7 @@ static void UI_AdvControls_Init( void )
 
 	uiAdvControls.invertMouse.generic.id = ID_INVERTMOUSE;
 	uiAdvControls.invertMouse.generic.type = QMTYPE_CHECKBOX;
-	uiAdvControls.invertMouse.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAdvControls.invertMouse.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAdvControls.invertMouse.generic.x = 72;
 	uiAdvControls.invertMouse.generic.y = 280;
 	uiAdvControls.invertMouse.generic.name = MenuStrings[HINT_REVERSE_MOUSE];
@@ -240,7 +240,7 @@ static void UI_AdvControls_Init( void )
 
 	uiAdvControls.mouseLook.generic.id = ID_MOUSELOOK;
 	uiAdvControls.mouseLook.generic.type = QMTYPE_CHECKBOX;
-	uiAdvControls.mouseLook.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAdvControls.mouseLook.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAdvControls.mouseLook.generic.x = 72;
 	uiAdvControls.mouseLook.generic.y = 330;
 	uiAdvControls.mouseLook.generic.name = "Mouse look";
@@ -249,7 +249,7 @@ static void UI_AdvControls_Init( void )
 
 	uiAdvControls.lookSpring.generic.id = ID_LOOKSPRING;
 	uiAdvControls.lookSpring.generic.type = QMTYPE_CHECKBOX;
-	uiAdvControls.lookSpring.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAdvControls.lookSpring.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAdvControls.lookSpring.generic.x = 72;
 	uiAdvControls.lookSpring.generic.y = 380;
 	uiAdvControls.lookSpring.generic.name = "Look spring";
@@ -258,7 +258,7 @@ static void UI_AdvControls_Init( void )
 
 	uiAdvControls.lookStrafe.generic.id = ID_LOOKSTRAFE;
 	uiAdvControls.lookStrafe.generic.type = QMTYPE_CHECKBOX;
-	uiAdvControls.lookStrafe.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAdvControls.lookStrafe.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAdvControls.lookStrafe.generic.x = 72;
 	uiAdvControls.lookStrafe.generic.y = 430;
 	uiAdvControls.lookStrafe.generic.name = "Look strafe";
@@ -267,7 +267,7 @@ static void UI_AdvControls_Init( void )
 
 	uiAdvControls.mouseFilter.generic.id = ID_MOUSEFILTER;
 	uiAdvControls.mouseFilter.generic.type = QMTYPE_CHECKBOX;
-	uiAdvControls.mouseFilter.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAdvControls.mouseFilter.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAdvControls.mouseFilter.generic.x = 72;
 	uiAdvControls.mouseFilter.generic.y = 480;
 	uiAdvControls.mouseFilter.generic.name = "Mouse filter";
@@ -276,7 +276,7 @@ static void UI_AdvControls_Init( void )
 
 	uiAdvControls.autoaim.generic.id = ID_AUTOAIM;
 	uiAdvControls.autoaim.generic.type = QMTYPE_CHECKBOX;
-	uiAdvControls.autoaim.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiAdvControls.autoaim.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_NOTIFY|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAdvControls.autoaim.generic.x = 72;
 	uiAdvControls.autoaim.generic.y = 530;
 	uiAdvControls.autoaim.generic.name = "Autoaim";
@@ -285,7 +285,7 @@ static void UI_AdvControls_Init( void )
 
 	uiAdvControls.sensitivity.generic.id = ID_SENSITIVITY;
 	uiAdvControls.sensitivity.generic.type = QMTYPE_SLIDER;
-	uiAdvControls.sensitivity.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiAdvControls.sensitivity.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiAdvControls.sensitivity.generic.name = MenuStrings[HINT_MOUSE_SENSE];
 	uiAdvControls.sensitivity.generic.x = 72;
 	uiAdvControls.sensitivity.generic.y = 625;

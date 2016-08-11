@@ -74,7 +74,7 @@ GNU General Public License for more details.
 #define UI_OUTLINE_WIDTH		uiStatic.outlineWidth	// outline thickness
 
 #define UI_MAXGAMES			900	// slots for savegame/demos
-#define UI_MAX_SERVERS		32
+#define UI_MAX_SERVERS		256
 #define UI_MAX_BGMAPS		32
 
 #define MAX_HINT_TEXT		512
@@ -91,6 +91,9 @@ GNU General Public License for more details.
 #define UI_BUTTON_CHARWIDTH		14	// empirically determined value
 
 #define ID_BACKGROUND		0	// catch warning on change this
+#define ID_BANNER			1	// catch warning on change this
+#define ID_YES				130	// catch warning on change this
+#define ID_NO				131	// catch warning on change this
 
 // Generic types
 typedef enum
@@ -130,6 +133,7 @@ typedef enum
 #define QMF_ACT_ONRELEASE		(1U << 20)	// call Key_Event when button is released
 #define QMF_ALLOW_COLORSTRINGS	(1U << 21)	// allow colorstring in MENU_FIELD
 #define QMF_HIDEINPUT		(1U << 22)	// used for "password" field
+#define QMF_HASKEYBOARDFOCUS (1U << 23)
 
 // Callback notifications
 #define QM_GOTFOCUS			1
@@ -137,6 +141,12 @@ typedef enum
 #define QM_ACTIVATED		3
 #define QM_CHANGED			4
 #define QM_PRESSED			5
+
+// Server browser
+#define QMSB_GAME_LENGTH	25
+#define QMSB_MAPNAME_LENGTH	20+QMSB_GAME_LENGTH
+#define QMSB_MAXCL_LENGTH	10+QMSB_MAPNAME_LENGTH
+#define QMSB_PING_LENGTH    10+QMSB_MAXCL_LENGTH
 
 typedef struct
 {
@@ -335,6 +345,8 @@ typedef struct
 
 	netadr_t		serverAddresses[UI_MAX_SERVERS];
 	char		serverNames[UI_MAX_SERVERS][256];
+	float		serverPings[UI_MAX_SERVERS];
+	int		serversRefreshTime;
 	int		numServers;
 	int		updateServers;	// true is receive new info about servers
 
@@ -412,6 +424,8 @@ int UI_CursorInRect( int x, int y, int w, int h );
 void UI_UtilSetupPicButton( menuPicButton_s *pic, int ID );
 void UI_DrawPic( int x, int y, int w, int h, const int color, const char *pic );
 void UI_DrawPicAdditive( int x, int y, int w, int h, const int color, const char *pic );
+void UI_DrawPicTrans( int x, int y, int width, int height, const int color, const char *pic );
+void UI_DrawPicHoles( int x, int y, int width, int height, const int color, const char *pic );
 void UI_FillRect( int x, int y, int w, int h, const int color );
 #define UI_DrawRectangle( x, y, w, h, color ) UI_DrawRectangleExt( x, y, w, h, color, uiStatic.outlineWidth )
 void UI_DrawRectangleExt( int in_x, int in_y, int in_w, int in_h, const int color, int outlineWidth );
@@ -425,6 +439,7 @@ void UI_CursorMoved( menuFramework_s *menu );
 void UI_SetCursor( menuFramework_s *menu, int cursor );
 void UI_SetCursorToItem( menuFramework_s *menu, void *item );
 void *UI_ItemAtCursor( menuFramework_s *menu );
+bool UI_IsCurrentSelected( void *menu );
 void UI_AdjustCursor( menuFramework_s *menu, int dir );
 void UI_DrawMenu( menuFramework_s *menu );
 const char *UI_DefaultKey( menuFramework_s *menu, int key, int down );
@@ -465,6 +480,7 @@ void UI_TouchOptions_Precache( void );
 void UI_TouchButtons_Precache( void );
 void UI_TouchEdit_Precache( void );
 void UI_FileDialog_Precache( void );
+void UI_GamePad_Precache( void );
 
 // Menus
 void UI_Main_Menu( void );
@@ -494,6 +510,7 @@ void UI_TouchEdit_Menu( void );
 void UI_FileDialog_Menu( void );
 void UI_TouchButtons_AddButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
 void UI_TouchButtons_GetButtonList();
+void UI_GamePad_Menu( void );
 //
 //-----------------------------------------------------
 //

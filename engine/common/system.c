@@ -40,7 +40,7 @@ extern char **environ;
 #include "mathlib.h"
 
 qboolean	error_on_exit = false;	// arg for exit();
-
+#define DEBUG_BREAK
 #if defined _WIN32 && !defined XASH_SDL
 #include <winbase.h>
 /*
@@ -94,6 +94,54 @@ double Sys_DoubleTime( void )
 	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
 #endif
 }
+#endif
+
+#ifdef GDB_BREAK
+#include <fcntl.h>
+qboolean Sys_DebuggerPresent( void )
+{
+	char buf[1024];
+
+	int status_fd = open( "/proc/self/status", O_RDONLY );
+	if ( status_fd == -1 )
+		return 0;
+
+	ssize_t num_read = read( status_fd, buf, sizeof( buf ) );
+
+	if ( num_read > 0 )
+	{
+		static const char TracerPid[] = "TracerPid:";
+		const byte *tracer_pid;
+
+		buf[num_read] = 0;
+		tracer_pid    = (const byte*)Q_strstr( buf, TracerPid );
+		if( !tracer_pid )
+			return false;
+		printf( "%s\n", tracer_pid );
+		while( *tracer_pid < '0' || *tracer_pid > '9'  )
+			if( *tracer_pid++ == '\n' )
+				return false;
+		printf( "%s\n", tracer_pid );
+		return !!Q_atoi( (const char*)tracer_pid );
+	}
+
+	return false;
+}
+
+#undef DEBUG_BREAK
+#define DEBUG_BREAK \
+	if( Sys_DebuggerPresent() ) \
+		asm volatile("int $3;")
+		//raise( SIGINT )
+#endif
+#if defined _WIN32 && !defined __amd64__
+#ifdef _MSC_VER
+#define DEBUG_BREAK	if( IsDebuggerPresent() ) \
+		_asm{ int 3 }
+#else
+#define DEBUG_BREAK	if( IsDebuggerPresent() ) \
+		asm volatile("int $3;")
+#endif
 #endif
 
 /*
@@ -457,7 +505,9 @@ void Sys_WaitForQuit( void )
 #ifdef _WIN32
 	MSG	msg;
 
-	Con_RegisterHotkeys();		
+#ifdef XASH_W32CON
+	Wcon_RegisterHotkeys();
+#endif
 
 	msg.message = 0;
 
@@ -474,7 +524,7 @@ void Sys_WaitForQuit( void )
 #endif
 }
 
-
+#if 0
 /*
 ================
 Sys_Crash
@@ -670,7 +720,7 @@ long _stdcall Sys_Crash( PEXCEPTION_POINTERS pInfo )
 		}
 
 		// all other states keep unchanged to let debugger find bug
-		Con_DestroyConsole();
+		Sys_DestroyConsole();
 	}
 
 	if( oldFilter )
@@ -860,7 +910,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	Sys_Quit();
 }
 
-void Sys_SetupCrashHandler()
+void Sys_SetupCrashHandler( void )
 {
 	struct sigaction act;
 	act.sa_sigaction = Sys_Crash;
@@ -873,6 +923,10 @@ void Sys_SetupCrashHandler()
 
 void Sys_RestoreCrashHandler( void )
 {
+	sigaction(SIGSEGV, &oldFilter, NULL);
+	sigaction(SIGABRT, &oldFilter, NULL);
+	sigaction(SIGBUS, &oldFilter, NULL);
+	sigaction(SIGILL, &oldFilter, NULL);
 	// stub
 }
 
@@ -887,7 +941,7 @@ void Sys_RestoreCrashHandler( void )
 	// stub
 }
 #endif
-
+#endif
 /*
 ================
 Sys_Warn
@@ -949,16 +1003,19 @@ void Sys_Error( const char *format, ... )
 
 	if( host.developer > 0 )
 	{
-		Con_ShowConsole( true );
-		Con_DisableInput();	// disable input line for dedicated server
-
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( true );
+		Wcon_DisableInput();	// disable input line for dedicated server
+#endif
 		Sys_Print( text );	// print error message
 		MSGBOX( text );
 		Sys_WaitForQuit();
 	}
 	else
 	{
-		Con_ShowConsole( false );
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( false );
+#endif
 		MSGBOX( text );
 	}
 
@@ -996,15 +1053,19 @@ void Sys_Break( const char *format, ... )
 
 	if( Host_IsDedicated() || host.developer > 0 )
 	{
-		Con_ShowConsole( true );
-		Con_DisableInput();	// disable input line for dedicated server
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( true );
+		Wcon_DisableInput();	// disable input line for dedicated server
+#endif
 		Sys_Print( text );
 		MSGBOX( text );
 		Sys_WaitForQuit();
 	}
 	else
 	{
-		Con_ShowConsole( false );
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( false );
+#endif
 		MSGBOX( text );
 	}
 
@@ -1017,8 +1078,10 @@ Sys_Quit
 */
 void Sys_Quit( void )
 {
-	MsgDev(D_INFO, "Shutting down...\n");
+	MsgDev( D_INFO, "Shutting down...\n" );
 	Host_Shutdown();
+	if( host.crashed )
+		exit( 127 );
 	exit( error_on_exit );
 }
 
@@ -1033,7 +1096,8 @@ void Sys_Print( const char *pMsg )
 {
 	if( !Host_IsDedicated() )
 		Con_Print( pMsg );
-#ifdef _WIN32
+
+#ifdef XASH_W32CON
 
 	{
 		const char	*msg;
@@ -1090,11 +1154,12 @@ void Sys_Print( const char *pMsg )
 		*b = *c = 0; // cutoff garbage
 
 		Sys_PrintLog( logbuf );
-		Con_WinPrint( buffer );
+		Wcon_Print( buffer );
 	}
 #else
 	Sys_PrintLog( pMsg );
 #endif
+
 	if( host.rd.target )
 	{
 		if(( Q_strlen( pMsg ) + Q_strlen( host.rd.buffer )) > ( host.rd.buffersize - 1 ))
