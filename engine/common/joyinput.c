@@ -20,7 +20,7 @@ GNU General Public License for more details.
 #include "input.h"
 #include "keydefs.h"
 #include "joyinput.h"
-#include "events.h"
+//#include "events.h"
 #include "client.h"
 #include "gl_local.h"
 //#include "SDL.h"

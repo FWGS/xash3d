@@ -152,7 +152,7 @@ void Sys_InitLog( void )
 	}
 }
 
-void Sys_CloseLog( void )
+/*void Sys_CloseLog( void )
 {
 	char	event_name[64];
 
@@ -184,7 +184,7 @@ void Sys_CloseLog( void )
 		fclose( s_ld.logfile );
 		s_ld.logfile = NULL;
 	}
-}
+}*/
 
 void Sys_PrintLog( const char *pMsg )
 {
