@@ -1400,6 +1400,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 
 			Netchan_OutOfBandPrint( NS_CLIENT, servadr, "info %i", PROTOCOL_VERSION );
 		}
+
+		// execute at next frame preventing relation on fps
+		Cbuf_AddText("menu_resetping\n");
 	}
 	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{

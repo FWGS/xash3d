@@ -1366,6 +1366,70 @@ void UI_SetActiveMenu( int fActive )
 	}
 }
 
+
+#if defined _WIN32 && !defined XASH_SDL
+#include <winbase.h>
+/*
+================
+Sys_DoubleTime
+================
+*/
+double Sys_DoubleTime( void )
+{
+	static LARGE_INTEGER g_PerformanceFrequency;
+	static LARGE_INTEGER g_ClockStart;
+	LARGE_INTEGER CurrentTime;
+
+	if( !g_PerformanceFrequency.QuadPart )
+	{
+		QueryPerformanceFrequency( &g_PerformanceFrequency );
+		QueryPerformanceCounter( &g_ClockStart );
+	}
+
+	QueryPerformanceCounter( &CurrentTime );
+	return (double)( CurrentTime.QuadPart - g_ClockStart.QuadPart ) / (double)( g_PerformanceFrequency.QuadPart );
+}
+#else
+#if _MSC_VER == 1200
+typedef __int64 longtime_t; //msvc6
+#elif defined (XASH_SDL)
+typedef Uint64 longtime_t;
+#else
+typedef unsigned long long longtime_t;
+#endif
+#include <time.h>
+/*
+================
+Sys_DoubleTime
+================
+*/
+double Sys_DoubleTime( void )
+{
+	static longtime_t g_PerformanceFrequency;
+	static longtime_t g_ClockStart;
+	longtime_t CurrentTime;
+#ifdef XASH_SDL
+	if( !g_PerformanceFrequency )
+	{
+		g_PerformanceFrequency = SDL_GetPerformanceFrequency();
+		g_ClockStart = SDL_GetPerformanceCounter();
+	}
+	CurrentTime = SDL_GetPerformanceCounter();
+	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
+#else
+	struct timespec ts;
+	if( !g_PerformanceFrequency )
+	{
+		struct timespec res;
+		if( !clock_getres(CLOCK_MONOTONIC, &res) )
+			g_PerformanceFrequency = 1000000000LL/res.tv_nsec;
+	}
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
+#endif
+}
+#endif
+
 /*
 =================
 UI_AddServerToList
@@ -1395,8 +1459,21 @@ void UI_AddServerToList( netadr_t adr, const char *info )
 	uiStatic.updateServers = true; // info has been updated
 	uiStatic.serverAddresses[uiStatic.numServers] = adr;
 	strncpy( uiStatic.serverNames[uiStatic.numServers], info, 256 );
-	uiStatic.serverPings[uiStatic.numServers] = gpGlobals->time - uiStatic.serversRefreshTime;
+	uiStatic.serverPings[uiStatic.numServers] = Sys_DoubleTime() - uiStatic.serversRefreshTime;
+	if( uiStatic.serverPings[uiStatic.numServers] < 0 || uiStatic.serverPings[uiStatic.numServers] > 9.999f )
+		uiStatic.serverPings[uiStatic.numServers] = 9.999f;
 	uiStatic.numServers++;
+}
+
+/*
+=================
+UI_MenuResetPing_f
+=================
+*/
+void UI_MenuResetPing_f( void )
+{
+	Con_Printf("UI_MenuResetPing_f\n");
+	uiStatic.serversRefreshTime = Sys_DoubleTime();
 }
 
 /*
@@ -1720,6 +1797,7 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_touchedit", UI_TouchEdit_Menu );
 	Cmd_AddCommand( "menu_filedialog", UI_FileDialog_Menu );
 	Cmd_AddCommand( "menu_gamepad", UI_GamePad_Menu );
+	Cmd_AddCommand( "menu_resetping", UI_MenuResetPing_f );
 
 	CHECK_MAP_LIST( TRUE );
 
