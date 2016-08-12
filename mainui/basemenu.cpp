@@ -1368,6 +1368,7 @@ void UI_SetActiveMenu( int fActive )
 
 
 #if defined _WIN32 && !defined XASH_SDL
+#include <windows.h>
 #include <winbase.h>
 /*
 ================
