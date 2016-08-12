@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 
-#define XASH_GENERATE_BUILDNUM
+//#define XASH_GENERATE_BUILDNUM
 
 #if defined(XASH_GENERATE_BUILDNUM)
 static char *date = __DATE__ ;
@@ -54,7 +54,7 @@ int Q_buildnum( void )
 
 	return b;
 #else
-	return 3224; // TODO: change it in day of release
+	return 500; // Aug 13 2016
 #endif
 }
 
