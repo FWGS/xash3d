@@ -1708,7 +1708,7 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		byte	*color = g_color_table[7];
 		int	stringLen, width = 0, charH;
 
-		Q_snprintf( curbuild, MAX_STRING, "Xash3D SDL %i/%s build %i (based on %g build%i)",
+		Q_snprintf( curbuild, MAX_STRING, "Xash3D FWGS %i/%s build %i (based on %g build%i)",
 					PROTOCOL_VERSION,
 					XASH_VERSION, Q_buildnum( ), // fork info
 					BASED_VERSION, Q_buildnum_compat( )); // original xash3d info
