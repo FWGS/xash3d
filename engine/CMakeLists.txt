@@ -50,7 +50,6 @@ include_directories (. common/
     server/
     ../common
     ../pm_shared
-    ${HL_SDK_DIR}/public
     )
 
 add_library (${XASH_ENGINE_LIBRARY} SHARED ${XASH_ENGINE_HEADERS} ${XASH_ENGINE_SOURCES})

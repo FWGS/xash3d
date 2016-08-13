@@ -33,7 +33,7 @@ set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -O3")
 set (MAINUI_LIBRARY xashmenu)
 
 file (GLOB MAINUI_SOURCES *.cpp)
-include_directories (../common ../engine ${HL_SDK_DIR}/pm_shared)
+include_directories (../common ../engine ../pm_shared)
 add_library (${MAINUI_LIBRARY} SHARED ${MAINUI_SOURCES})
 
 set_target_properties (${MAINUI_SHARED} PROPERTIES
