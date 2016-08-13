@@ -1367,7 +1367,7 @@ void UI_SetActiveMenu( int fActive )
 }
 
 
-#if defined _WIN32 && !defined XASH_SDL
+#if defined _WIN32
 #include <windows.h>
 #include <winbase.h>
 /*
@@ -1393,8 +1393,6 @@ double Sys_DoubleTime( void )
 #else
 #if _MSC_VER == 1200
 typedef __int64 longtime_t; //msvc6
-#elif defined (XASH_SDL)
-typedef Uint64 longtime_t;
 #else
 typedef unsigned long long longtime_t;
 #endif
@@ -1409,15 +1407,6 @@ double Sys_DoubleTime( void )
 	static longtime_t g_PerformanceFrequency;
 	static longtime_t g_ClockStart;
 	longtime_t CurrentTime;
-#ifdef XASH_SDL
-	if( !g_PerformanceFrequency )
-	{
-		g_PerformanceFrequency = SDL_GetPerformanceFrequency();
-		g_ClockStart = SDL_GetPerformanceCounter();
-	}
-	CurrentTime = SDL_GetPerformanceCounter();
-	return (double)( CurrentTime - g_ClockStart ) / (double)( g_PerformanceFrequency );
-#else
 	struct timespec ts;
 	if( !g_PerformanceFrequency )
 	{
@@ -1427,7 +1416,6 @@ double Sys_DoubleTime( void )
 	}
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
-#endif
 }
 #endif
 
