@@ -298,6 +298,7 @@ typedef struct host_redirect_s
 	int		buffersize;
 	netadr_t		address;
 	void		(*flush)( netadr_t adr, rdtype_t target, char *buffer );
+	int lines;
 } host_redirect_t;
 
 typedef struct
@@ -912,6 +913,7 @@ int SCR_GetAudioChunk( char *rawdata, int length );
 wavdata_t *SCR_GetMovieInfo( void );
 void SCR_Shutdown( void );
 void Con_Print( const char *txt );
+void Rcon_Print( const char *pMsg );
 void Con_NPrintf( int idx, char *fmt, ... ) _format(2);
 void Con_NXPrintf( struct con_nprint_s *info, char *fmt, ... ) _format(2);
 void UI_NPrintf( int idx, char *fmt, ... ) _format(2);

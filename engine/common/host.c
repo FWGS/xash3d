@@ -640,19 +640,7 @@ If no console is visible, the text will appear at the top of the game window
 */
 void Host_Print( const char *txt )
 {
-	if( host.rd.target )
-	{
-		if(( Q_strlen( txt ) + Q_strlen( host.rd.buffer )) > ( host.rd.buffersize - 1 ))
-		{
-			if( host.rd.flush )
-			{
-				host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
-				*host.rd.buffer = 0;
-			}
-		}
-		Q_strcat( host.rd.buffer, txt );
-		return;
-	}
+	Rcon_Print( txt );
 	Con_Print( txt ); // echo to client console
 }
 

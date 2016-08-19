@@ -535,6 +535,8 @@ void SV_BeginRedirect( netadr_t adr, int target, char *buffer, int buffersize, v
 	host.rd.flush = flush;
 	host.rd.address = adr;
 	host.rd.buffer[0] = 0;
+	if( !host.rd.lines )
+		host.rd.lines = -1;
 }
 
 void SV_FlushRedirect( netadr_t adr, int dest, char *buf )
@@ -561,6 +563,9 @@ void SV_FlushRedirect( netadr_t adr, int dest, char *buf )
 
 void SV_EndRedirect( void )
 {
+	if( host.rd.lines > 0 )
+		return;
+
 	if( host.rd.flush )
 		host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
 
@@ -568,6 +573,32 @@ void SV_EndRedirect( void )
 	host.rd.buffer = NULL;
 	host.rd.buffersize = 0;
 	host.rd.flush = NULL;
+}
+
+/*
+================
+Rcon_Print
+
+Print message to rcon buffer and send to rcon redirect target
+================
+*/
+
+void Rcon_Print( const char *pMsg )
+{
+	if( host.rd.target && host.rd.lines && host.rd.flush )
+	{
+		int len = Q_strncat( host.rd.buffer, pMsg, host.rd.buffersize );
+		
+		if( len && host.rd.buffer[len-1] == '\n' )
+		{
+			host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
+			if( host.rd.lines > 0 )
+				host.rd.lines--;
+			host.rd.buffer[0] = 0;
+			if( !host.rd.lines )
+				Msg( "End of redirection!\n" ); 
+		}
+	}
 }
 
 /*
@@ -834,7 +865,7 @@ void SV_RemoteCommand( netadr_t from, sizebuf_t *msg )
 	int		i;
 
 	MsgDev( D_INFO, "Rcon from %s:\n%s\n", NET_AdrToString( from ), BF_GetData( msg ) + 4 );
-	SV_BeginRedirect( from, RD_PACKET, outputbuf, sizeof( outputbuf ) - 16, SV_FlushRedirect );
+	SV_BeginRedirect( from, RD_PACKET, outputbuf, sizeof( outputbuf ), SV_FlushRedirect );
 
 	if( Rcon_Validate( ))
 	{
