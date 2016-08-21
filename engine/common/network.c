@@ -775,8 +775,10 @@ static void NET_OpenIP( void )
 
 	if( !ip_sockets[NS_SERVER] )
 	{
-		port = Cvar_Get( "ip_hostport", "0", CVAR_INIT, "network server port" )->integer;
-		if( !port ) port = Cvar_Get( "port", va( "%i", PORT_SERVER ), CVAR_INIT, "network default port" )->integer;
+		port = Cvar_VariableInteger("ip_hostport");
+		if( !port ) port = Cvar_VariableInteger("port");
+		Cvar_FullSet( "port", va( "%i", Cvar_VariableInteger("port") ), CVAR_INIT );
+		Cvar_FullSet( "ip_hostport", va( "%i", Cvar_VariableInteger("ip_hostport") ), CVAR_INIT );
 
 		ip_sockets[NS_SERVER] = NET_IPSocket( net_ip->string, port );
 		if( !ip_sockets[NS_SERVER] && Host_IsDedicated() )
