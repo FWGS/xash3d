@@ -132,7 +132,7 @@ static void UI_CreateGame_Begin( void )
 		CVAR_SET_FLOAT( "maxplayers", atoi( uiCreateGame.maxClients.buffer ));
 
 		// hack: wait three frames allowing server to completely shutdown, reapply maxplayers and start new map
-		sprintf( cmd, "host_endgame;wait;wait;wait;maxplayers %i;latch;map %s\n", atoi( uiCreateGame.maxClients.buffer ), CVAR_GET_STRING( "defaultmap" ) );
+		sprintf( cmd, "host_endgame;wait;wait;wait;maxplayers %i;latch;map %s\n", atoi( uiCreateGame.maxClients.buffer ), uiCreateGame.mapName[uiCreateGame.mapsList.curItem] );
 		CLIENT_COMMAND( FALSE, cmd );
 
 	}
