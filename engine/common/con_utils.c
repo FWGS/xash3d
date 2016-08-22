@@ -1217,6 +1217,7 @@ void Cmd_WriteVariables( file_t *f )
 
 void Cmd_WriteServerVariables( file_t *f )
 {
+	FS_Printf( f, "// servernotify cvars\n" );
 	Cvar_LookupVars( CVAR_SERVERNOTIFY, NULL, f, (void*)Cmd_WriteServerCvar );
 }
 
@@ -1299,12 +1300,12 @@ void Host_WriteConfig( void )
 
 /*
 ===============
-Host_WriteServerConfig
+Host_WriteGameConfig
 
 save serverinfo variables into server.cfg (using for dedicated server too)
 ===============
 */
-void Host_WriteServerConfig( const char *name )
+void Host_WriteGameConfig( const char *name )
 {
 	/* Old Xash3D behaviour is writing listenserver config
 	every time when starting server from ui.
@@ -1319,7 +1320,11 @@ void Host_WriteServerConfig( const char *name )
 		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\tgame.cfg - multiplayer config\n" );
 		FS_Printf( f, "//=======================================================================\n" );
+
 		Cmd_WriteServerVariables( f );
+		CSCR_WriteGameCVars( f, "user.scr" );
+		CSCR_WriteGameCVars( f, "settings.scr" );
+
 		FS_Close( f );
 	}
 	else MsgDev( D_ERROR, "Couldn't write game.cfg.\n" );

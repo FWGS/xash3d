@@ -987,7 +987,7 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnCheckGameDll,
 	pfnGetClipboardData,
 	(void*)Sys_ShellExecute,
-	Host_WriteServerConfig,
+	Host_WriteGameConfig,
 	pfnChangeInstance,
 	pfnStartBackgroundTrack,
 	pfnHostEndGame,

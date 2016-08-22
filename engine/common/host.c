@@ -1062,7 +1062,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	case HOST_NORMAL:
 		Con_ShowConsole( false ); // hide console
 		// execute startup config and cmdline
-		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ));
+		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ) );
+		CSCR_LoadDefaultCVars( "settings.scr" );
+		CSCR_LoadDefaultCVars( "user.scr" );
 		// intentional fallthrough
 	case HOST_DEDICATED:
 		Cbuf_Execute(); // force stuffcmds run if it is in cbuf
