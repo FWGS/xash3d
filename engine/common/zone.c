@@ -458,7 +458,11 @@ void Mem_PrintList( size_t minallocationsize )
 	{
 		// poolnames can contain color symbols, make sure what color is reset
 		if( (pool->totalsize - pool->lastchecksize ) != 0 )
-			Msg( "%5luk (%5luk actual) %s (^7%+3li byte change)\n", (long unsigned int)((pool->totalsize + 1023) / 1024), (long unsigned int)((pool->realsize + 1023) / 1024), pool->name, pool->totalsize - pool->lastchecksize );
+			Msg( "%5luk (%5luk actual) %s (^7%+3li byte change)\n",
+				 (long unsigned int)((pool->totalsize + 1023) / 1024),
+				 (long unsigned int)((pool->realsize + 1023) / 1024),
+				 pool->name,
+				 pool->totalsize - pool->lastchecksize );
 		else Msg( "%5luk (%5luk actual) %s\n", (long unsigned int)((pool->totalsize + 1023) / 1024), (long unsigned int)((pool->realsize + 1023) / 1024), pool->name );
 		pool->lastchecksize = pool->totalsize;
 		for( mem = pool->chain; mem; mem = mem->next )

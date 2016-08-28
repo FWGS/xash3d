@@ -71,7 +71,7 @@ void Log_Printf( const char *fmt, ... )
 
 void Log_PrintServerVars( void )
 {
-	convar_t *var;
+	cvar_t *var;
 
 	if ( !svs.log.active )
 		return;

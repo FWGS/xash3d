@@ -346,11 +346,11 @@ void Cvar_RegisterVariable( cvar_t *var )
 		for( current = NULL, next = cvar_vars ; next && Q_strcmp( next->name, var->name ) < 0 ; current = next, next = next->next );
 
 		if( current )
-			current->next = var;
+			current->next = (convar_t *)var;
 		else
-			cvar_vars = var;
+			cvar_vars = (convar_t *)var;
 
-		var->next = next;
+		var->next = (cvar_t *)next;
 
 		// add to bucket
 		// we got a cvar_t from gamedll, where we have no left to chain in bucket

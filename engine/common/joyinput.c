@@ -20,10 +20,12 @@ GNU General Public License for more details.
 #include "input.h"
 #include "keydefs.h"
 #include "joyinput.h"
-//#include "events.h"
 #include "client.h"
 #include "gl_local.h"
-//#include "SDL.h"
+
+#if defined(XASH_SDL)
+#include "platform/sdl/events.h"
+#endif
 
 #ifndef SHRT_MAX
 #define SHRT_MAX 0x7FFF
