@@ -975,6 +975,11 @@ typedef struct
 void Con_CompleteCommand( field_t *field );
 void Con_ClearAutoComplete();
 
+//
+// console.c
+//
+void Con_Clear( void );
+
 extern const char *svc_strings[256];
 
 // soundlib shared exports

@@ -21,7 +21,7 @@ GNU General Public License for more details.
 
 #ifdef XASH_SDL
 #include <SDL_keyboard.h>
-#include <events.h>
+#include <platform/sdl/events.h>
 #endif
 
 typedef struct key_s

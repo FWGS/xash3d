@@ -32,8 +32,10 @@ GNU General Public License for more details.
 #include "touch.h"
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
-#include "sdl/events.h"
 #include "library.h"
+#ifdef XASH_SDL
+#include "platform/sdl/events.h"
+#endif
 
 typedef void (*pfnChangeGame)( const char *progname );
 
@@ -288,6 +290,23 @@ void Host_Exec_f( void )
 
 /*
 ===============
+Host_Clear_f
+
+Clear all consoles
+===============
+*/
+void Host_Clear_f( void )
+{
+#ifndef XASH_DEDICATED
+	Con_Clear();
+#endif
+#ifdef XASH_W32CON
+	Wcon_Clear();
+#endif
+}
+
+/*
+===============
 Host_MemStats_f
 ===============
 */
@@ -503,7 +522,7 @@ void Host_GetConsoleCommands( void )
 {
 	char	*cmd;
 
-	while( ( cmd = Con_Input() ) )
+	while( ( cmd = Sys_Input() ) )
 	{
 		Cbuf_AddText( cmd );
 		Cbuf_Execute();
@@ -891,6 +910,8 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	else
 		Sys_Error( "Changing working directory to %s failed.\n", host.rootdir );
 
+	Sys_InitLog();
+
 	// set default gamedir
 	if( progname[0] == '#' ) progname++;
 	Q_strncpy( SI.ModuleName, progname, sizeof( SI.ModuleName ));
@@ -908,11 +929,16 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 
 	host.old_developer = host.developer;
-	if( !Sys_CheckParm( "-nowcon" ) )
-		Con_CreateConsole();
+
+#ifdef XASH_W32CON
+	Wcon_Init();
+	Wcon_CreateConsole();
+#endif
+
+	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
 
 	// first text message into console or log 
-	MsgDev( D_NOTE, "Sys_LoadLibrary: Loading Engine Library - ok\n" );
+	MsgDev( D_NOTE, "Console initialized\n" );
 
 	// startup cmds and cvars subsystem
 	Cmd_Init();
@@ -1035,7 +1061,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	switch( host.type )
 	{
 	case HOST_NORMAL:
-		Con_ShowConsole( false ); // hide console
+#ifdef XASH_W32CON
+		Wcon_ShowConsole( false ); // hide console
+#endif
 		// execute startup config and cmdline
 		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ));
 		// intentional fallthrough
@@ -1053,7 +1081,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	if( Host_IsDedicated() )
 	{
 		char *defaultmap;
-		Con_InitConsoleCommands ();
 
 		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
 		Cmd_AddCommand( "exit", Sys_Quit, "quit the game" );
@@ -1176,6 +1203,7 @@ void EXPORT Host_Shutdown( void )
 	HTTP_Shutdown();
 	Cmd_Shutdown();
 	Host_FreeCommon();
-	Con_DestroyConsole();
+	Sys_DestroyConsole();
+	Sys_CloseLog();
 	Sys_RestoreCrashHandler();
 }
