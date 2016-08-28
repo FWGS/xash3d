@@ -314,8 +314,16 @@ void Android_RunEvents()
 		else
 			ch = Con_UtfProcessCharForce( (unsigned char)events.inputtext[i] );
 
-		if( !ch )
+		if( !ch ) // utf-8
 			continue;
+
+		// some keyboards may send enter as text
+		if( ch == '\n' )
+		{
+			Key_Event( K_ENTER, true );
+			Key_Event( K_ENTER, false );
+			continue;
+		}
 
 		// otherwise just push it by char, text render will decode unicode strings
 		Con_CharEvent( ch );

@@ -906,6 +906,7 @@ void Cvar_SetU_f( void )
 
 	if( !v ) return;
 	v->flags |= CVAR_USERINFO;
+	userinfo->modified = true;
 }
 
 /*
@@ -930,6 +931,7 @@ void Cvar_SetP_f( void )
 
 	if( !v ) return;
 	v->flags |= CVAR_PHYSICINFO;
+	physinfo->modified = true;
 }
 
 /*
@@ -953,6 +955,7 @@ void Cvar_SetS_f( void )
 
 	if( !v ) return;
 	v->flags |= CVAR_SERVERINFO;
+	serverinfo->modified = true;
 }
 
 /*

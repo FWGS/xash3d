@@ -26,10 +26,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ART_BANNER			"gfx/shell/head_audio"
 
 #define ID_BACKGROUND 0
+#define ID_BANNER 1
+
 enum
 {
-	ID_BANNER = 1,
-	ID_DONE,
+	ID_DONE = 2,
 	ID_RT_COMMAND,
 	ID_RT_THRESHOLD,
 	ID_LT_COMMAND,

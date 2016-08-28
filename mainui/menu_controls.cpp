@@ -58,10 +58,13 @@ typedef struct
 
 	menuBitmap_s	background;
 	menuBitmap_s	banner;
+
+	// state toggle by UI_ToggleMainControlsState
 	menuPicButton_s	defaults;
 	menuPicButton_s	advanced;
 	menuPicButton_s	done;
 	menuPicButton_s	cancel;
+	menuScrollList_s keysList;
 
 	// redefine key wait dialog
 	menuAction_s	msgBox1;	// small msgbox
@@ -71,25 +74,30 @@ typedef struct
 	menuPicButton_s	yes;
 	menuPicButton_s	no;
 
-	menuScrollList_s	keysList;
 	menuAction_s	hintMessage;
-	char		hintText[MAX_HINT_TEXT];
-
-	int		bind_grab;	// waiting for key input
+	char			hintText[MAX_HINT_TEXT];
+	int				bind_grab;	// waiting for key input
 } uiControls_t;
 
 static uiControls_t		uiControls;
 extern bool		hold_button_stack;
 
-static void UI_ResetToDefaultsDialog( void )
+static void UI_ToggleMainControlsState( void )
 {
 	// toggle main menu between active\inactive
-	// show\hide reset to defaults dialog
-	uiControls.defaults.generic.flags ^= QMF_INACTIVE; 
+	uiControls.defaults.generic.flags ^= QMF_INACTIVE;
 	uiControls.advanced.generic.flags ^= QMF_INACTIVE;
 	uiControls.done.generic.flags ^= QMF_INACTIVE;
 	uiControls.cancel.generic.flags ^= QMF_INACTIVE;
+	uiControls.keysList.generic.flags ^= QMF_INACTIVE;
+}
 
+static void UI_ResetToDefaultsDialog( void )
+{
+	// toggle main menu between active\inactive
+	UI_ToggleMainControlsState();
+
+	// show\hide reset to defaults dialog
 	uiControls.msgBox2.generic.flags ^= QMF_HIDDEN;
 	uiControls.promptMessage.generic.flags ^= QMF_HIDDEN;
 	uiControls.yes.generic.flags ^= QMF_HIDDEN;
@@ -233,14 +241,9 @@ static void UI_Controls_ParseKeysList( void )
 static void UI_PromptDialog( void )
 {
 	// toggle main menu between active\inactive
+	UI_ToggleMainControlsState();
+
 	// show\hide quit dialog
-	uiControls.defaults.generic.flags ^= QMF_INACTIVE; 
-	uiControls.advanced.generic.flags ^= QMF_INACTIVE;
-	uiControls.done.generic.flags ^= QMF_INACTIVE;
-	uiControls.cancel.generic.flags ^= QMF_INACTIVE;
-
-	uiControls.keysList.generic.flags ^= QMF_INACTIVE;
-
 	uiControls.msgBox1.generic.flags ^= QMF_HIDDEN;
 	uiControls.dlgMessage.generic.flags ^= QMF_HIDDEN;
 }

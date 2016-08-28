@@ -553,6 +553,7 @@ SYSTEM LOG
 
 ===============================================================================
 */
+
 void Sys_InitLog( void )
 {
 	const char	*mode;
@@ -564,7 +565,7 @@ void Sys_InitLog( void )
 
 	// print log to stdout
 	printf( "================================================================================\n" );
-	printf( "\t%s (build %i) started at %s\n", s_ld.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
+	printf( "\t%s (build %i, %s-%s) started at %s\n", s_ld.title, Q_buildnum(), Q_buildos(), Q_buildarch(), Q_timestamp( TIME_FULL ));
 	printf( "================================================================================\n" );
 
 	s_ld.logfileno = -1;
@@ -576,7 +577,7 @@ void Sys_InitLog( void )
 		else s_ld.logfileno = fileno( s_ld.logfile );
 
 		fprintf( s_ld.logfile, "================================================================================\n" );
-		fprintf( s_ld.logfile, "\t%s (build %i) started at %s\n", s_ld.title, Q_buildnum(), Q_timestamp( TIME_FULL ));
+		fprintf( s_ld.logfile, "\t%s (build %i, %s-%s) started at %s\n", s_ld.title, Q_buildnum(), Q_buildos(), Q_buildarch(), Q_timestamp( TIME_FULL ));
 		fprintf( s_ld.logfile, "================================================================================\n" );
 	}
 }
@@ -601,13 +602,13 @@ void Sys_CloseLog( void )
 	}
 
 	printf( "\n================================================================================\n");
-	printf( "\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+	printf( "\t%s (build %i, %s-%s) %s at %s\n", s_ld.title, Q_buildnum(), Q_buildos(), Q_buildarch(), event_name, Q_timestamp( TIME_FULL ));
 	printf( "================================================================================\n");
 
 	if( s_ld.logfile )
 	{
 		fprintf( s_ld.logfile, "\n================================================================================\n");
-		fprintf( s_ld.logfile, "\t%s (build %i) %s at %s\n", s_ld.title, Q_buildnum(), event_name, Q_timestamp( TIME_FULL ));
+		fprintf( s_ld.logfile, "\t%s (build %i, %s-%s) %s at %s\n", s_ld.title, Q_buildnum(), Q_buildos(), Q_buildarch(), event_name, Q_timestamp( TIME_FULL ));
 		fprintf( s_ld.logfile, "================================================================================\n");
 
 		fclose( s_ld.logfile );
