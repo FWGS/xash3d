@@ -1056,8 +1056,6 @@ void CL_CheckingResFile( char *pResFileName )
 
 	if( FS_FileExists( pResFileName, false ))
 		return;	// already exists
-	if( FS_FileExists( FS_ToLowerCase( pResFileName ), false ) )
-		return;
 
 	cls.downloadcount++;
 

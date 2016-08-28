@@ -243,14 +243,14 @@ int sel(const struct dirent *d)
 #endif
 
 
-static void listdirectory( stringlist_t *list, const char *path )
+static void listdirectory( stringlist_t *list, const char *path, qboolean lowercase )
 {
 	int		i;
 	signed char		pattern[4096], *c;
 #ifdef _WIN32
 	struct _finddata_t	n_file;
 #else
-	struct dirent **n_file;
+	struct dirent **n_file = NULL;
 #endif
 	int		hFile;
 
@@ -283,18 +283,73 @@ static void listdirectory( stringlist_t *list, const char *path )
 	for( i = 0; i < hFile; i++)
 	{
 		stringlistappend( list, n_file[i]->d_name );
+		free( n_file[i] );
 	}
+	free( n_file );
 #endif
 
 	// convert names to lowercase because windows doesn't care, but pattern matching code often does
-	for( i = 0; i < list->numstrings; i++ )
+	if( lowercase )
 	{
-		for( c = (signed char *)list->strings[i]; *c; c++ )
+		for( i = 0; i < list->numstrings; i++ )
 		{
-			if( *c >= 'A' && *c <= 'Z' )
-				*c += 'a' - 'A';
+			for( c = (signed char *)list->strings[i]; *c; c++ )
+			{
+				if( *c >= 'A' && *c <= 'Z' )
+					*c += 'a' - 'A';
+			}
 		}
 	}
+}
+
+#ifndef _WIN32
+static char *filtercaseinsensitive_fname;
+int filtercaseinsensitive( const struct dirent *ent )
+{
+	return !Q_stricmp( ent->d_name, filtercaseinsensitive_fname );
+}
+#endif
+/*
+==================
+FS_FixFileCase
+
+emulate WIN32 FS behaviour when opening local file
+==================
+*/
+const char *FS_FixFileCase( const char *path )
+{
+#ifndef _WIN32
+	int n = 0;
+	char path2[PATH_MAX];
+	struct dirent **namelist = NULL;
+
+	Msg( "FS_FixFileCase: %s\n", path );
+
+	Q_snprintf( path2, sizeof( path2 ), "./%s", path );
+
+	filtercaseinsensitive_fname = Q_strrchr( path2, '/' );
+
+	if( filtercaseinsensitive_fname )
+		*filtercaseinsensitive_fname++ = 0;
+	else
+	{
+		filtercaseinsensitive_fname = (char*)path;
+		Q_strcpy( path2, ".");
+	}
+
+	n = scandir( path2, &namelist, filtercaseinsensitive, NULL );
+
+	if( (n > 0) && namelist && namelist[0] && namelist[0]->d_name )
+		path = va( "%s/%s", path2, namelist[0]->d_name );
+	while( n-- > 0 )
+	{
+		Msg( "FS_FixFileCase: %s %s %s %s\n", path, path2, filtercaseinsensitive_fname, namelist[n]->d_name );
+		free( namelist[n] );
+	}
+	free( namelist );
+
+#endif
+	return path;
 }
 
 /*
@@ -468,6 +523,8 @@ pack_t *FS_LoadPackPAK( const char *packfile, int *error )
 	dpackfile_t	*info;
 
 	packhandle = open( packfile, O_RDONLY|O_BINARY );
+	if( packhandle < 0 )
+		packhandle = open( FS_FixFileCase( packfile ), O_RDONLY|O_BINARY );
 
 	if( packhandle < 0 )
 	{
@@ -730,9 +787,8 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	if(!( flags & FS_NOWRITE_PATH ))
 		Q_strncpy( fs_gamedir, dir, sizeof( fs_gamedir ));
 
-
 	stringlistinit( &list );
-	listdirectory( &list, dir );
+	listdirectory( &list, dir, false );
 	stringlistsort( &list );
 
 	// For priority files, first is unpacked, then WAD and last PAK
@@ -1691,7 +1747,7 @@ void FS_Init( void )
 	if( host.type != HOST_UNKNOWN )
 	{
 		stringlistinit( &dirs );
-		listdirectory( &dirs, "./" );
+		listdirectory( &dirs, "./", false );
 		stringlistsort( &dirs );
 		SI.numgames = 0;
 	
@@ -1861,9 +1917,15 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 	file->handle = open( filepath, mod|opt, 0666 );
 	if( file->handle < 0 )
 	{
+		filepath = FS_FixFileCase( filepath );
+		file->handle = open( filepath, mod|opt, 0666 );
+	}
+	if( file->handle < 0 )
+	{
 		Mem_Free( file );
 		return NULL;
 	}
+
 
 	file->real_length = lseek( file->handle, 0, SEEK_END );
 	if( file->real_length == -1 )
@@ -1926,6 +1988,8 @@ qboolean FS_SysFileExists( const char *path )
 	int desc;
      
 	desc = open( path, O_RDONLY|O_BINARY );
+	if( desc < 0 )
+		desc = open( FS_FixFileCase( path ), O_RDONLY|O_BINARY );
 
 	if( desc < 0 ) return false;
 	close( desc );
@@ -1951,10 +2015,12 @@ qboolean FS_SysFolderExists( const char *path )
 	if(dir)
 	{
 		closedir(dir);
+		Msg("SysFolderExists %s 1\n", path);
 		return 1;
 	}
 	else if((errno == ENOENT) || (errno == ENOTDIR))
 	{
+		Msg("SysFolderExists %s 0\n", path);
 		return 0;
 	}
 	else
@@ -3085,7 +3151,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 			// get a directory listing and look at each name
 			Q_sprintf( netpath, "%s%s", searchpath->filename, basepath );
 			stringlistinit( &dirlist );
-			listdirectory( &dirlist, netpath );
+			listdirectory( &dirlist, netpath, true );
 			for( dirlistindex = 0; dirlistindex < dirlist.numstrings; dirlistindex++ )
 			{
 				Q_sprintf( temp, "%s%s", basepath, dirlist.strings[dirlistindex] );
@@ -3381,6 +3447,13 @@ wfile_t *W_Open( const char *filename, const char *mode )
 	else if( mode[0] == 'w' ) wad->handle = open( filename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
 	else if( mode[0] == 'r' ) wad->handle = open( filename, O_RDONLY|O_BINARY, 0x666 );
 
+	if( wad->handle < 0 )
+	{
+		filename = FS_FixFileCase( filename );
+		if( mode[0] == 'a' ) wad->handle = open( filename, O_RDWR|O_BINARY, 0x666 );
+		else if( mode[0] == 'w' ) wad->handle = open( filename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
+		else if( mode[0] == 'r' ) wad->handle = open( filename, O_RDONLY|O_BINARY, 0x666 );
+	}
 	if( wad->handle < 0 )
 	{
 		W_Close( wad );
