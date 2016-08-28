@@ -227,22 +227,56 @@ void SDLash_EventFilter( void *ev )
 
 	/* Touch events */
 	case SDL_FINGERDOWN:
-		IN_TouchEvent( event_down, event->tfinger.fingerId,
-					   event->tfinger.x, event->tfinger.y,
-					   event->tfinger.dx, event->tfinger.dy );
-		break;
-
 	case SDL_FINGERUP:
-		IN_TouchEvent( event_up, event->tfinger.fingerId,
-					   event->tfinger.x, event->tfinger.y,
-					   event->tfinger.dx, event->tfinger.dy );
-		break;
-
 	case SDL_FINGERMOTION:
-		IN_TouchEvent( event_motion, event->tfinger.fingerId,
-					   event->tfinger.x, event->tfinger.y,
-					   event->tfinger.dx, event->tfinger.dy );
+	{
+		touchEventType type;
+		static int scale = 0;
+		float x, y, dx, dy;
+
+		if( event->type == SDL_FINGERDOWN )
+			type = event_down;
+		else if( event->type == SDL_FINGERUP )
+			type = event_up ;
+		else if(event->type == SDL_FINGERMOTION )
+			type = event_motion;
+		else break;
+
+		/*
+		SDL sends coordinates in [0..width],[0..height] values
+		on some devices
+		*/
+		if( !scale )
+		{
+			if( ( event->tfinger.x > 0 ) && ( event->tfinger.y > 0 ) )
+			{
+				if( ( event->tfinger.x > 2 ) && ( event->tfinger.y > 2 ) )
+				{
+					scale = 2;
+					MsgDev( D_INFO, "SDL reports screen coordinates, workaround enabled!\n");
+				}
+				else
+					scale = 1;
+			}
+		}
+		if( scale == 2 )
+		{
+			x = event->tfinger.x / scr_width->value;
+			y = event->tfinger.y / scr_height->value;
+			dx = event->tfinger.dx / scr_width->value;
+			dy = event->tfinger.dy / scr_height->value;
+		}
+		else
+		{
+			x = event->tfinger.x;
+			y = event->tfinger.y;
+			dx = event->tfinger.dx;
+			dy = event->tfinger.dy;
+		}
+
+		IN_TouchEvent( type, event->tfinger.fingerId, x, y, dx, dy );
 		break;
+	}
 
 
 	/* IME */
