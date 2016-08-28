@@ -287,3 +287,6 @@ FakesAssemblies/
 **/*.Server/GeneratedArtifacts
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
+
+# PVS Studio for Linux output
+*.cl.cfg

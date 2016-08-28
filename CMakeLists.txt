@@ -60,6 +60,9 @@ option(XASH_SDL "Enable SDL." ON)
 option(XASH_VGUI "Enable VGUI support." ON)
 option(XASH_X11 "Enable X11 support." ON)
 
+# Pre-build analyze step
+option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
+
 #-----------------
 # MAIN BUILD CODE \
 ###################\
