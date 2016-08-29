@@ -270,7 +270,7 @@ void Host_Exec_f( void )
 	Q_strncpy( cfgpath, Cmd_Argv( 1 ), sizeof( cfgpath )); 
 	FS_DefaultExtension( cfgpath, ".cfg" ); // append as default
 
-	f = (char *)FS_LoadFile( cfgpath, NULL, true );
+	f = (char *)FS_LoadFile( cfgpath, NULL, false );
 	if( !f )
 	{
 		MsgDev( D_NOTE, "couldn't exec %s\n", Cmd_Argv( 1 ));
