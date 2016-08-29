@@ -616,6 +616,9 @@ void CL_Drop( void )
 	if( cls.state == ca_uninitialized )
 		return;
 	CL_Disconnect();
+
+	// This fixes crash in menu_playersetup after disconnecting from server
+	CL_ClearEdicts();
 }
 
 /*
@@ -1379,6 +1382,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		// a disconnect message from the server, which will happen if the server
 		// dropped the connection but it is still getting packets from us
 		CL_Disconnect();
+		CL_ClearEdicts();
 	}
 	else if( !Q_strcmp( c, "f") )
 	{
@@ -1517,6 +1521,7 @@ void CL_ReadPackets( void )
 			{
 				Msg( "\nServer connection timed out.\n" );
 				CL_Disconnect();
+				CL_ClearEdicts();
 				return;
 			}
 		}
