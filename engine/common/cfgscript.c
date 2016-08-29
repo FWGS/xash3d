@@ -220,18 +220,19 @@ int CSCR_WriteGameCVars( file_t *cfg, const char *scriptfilename )
 	parserstate_t state = {0};
 	qboolean success;
 
-	MsgDev( D_INFO, "Reading config script file %s\n", scriptfilename );
 	state.filename = scriptfilename;
 
 	state.buf = (char*)FS_LoadFile( scriptfilename, &length, true );
 
 	start = state.buf;
 
-	if( state.buf == 0 || length == 0)
+	if( state.buf == 0 || length == 0 )
 	{
-		MsgDev( D_ERROR, "Failed to read %s\n", scriptfilename );
-		goto finish;
+		if( start )
+			Mem_Free( start );
+		return 0;
 	}
+	MsgDev( D_INFO, "Reading config script file %s\n", scriptfilename );
 
 	if( !CSCR_ParseHeader( &state ) )
 	{
@@ -273,7 +274,7 @@ int CSCR_WriteGameCVars( file_t *cfg, const char *scriptfilename )
 finish:
 	if( !success )
 	{
-		state.token[ sizeof( state.token ) ] = 0;
+		state.token[ sizeof( state.token ) - 1 ] = 0;
 		if( start && state.buf )
 			MsgDev( D_ERROR, "Parse error in %s, byte %d, token %s\n", scriptfilename, (int)( state.buf - start ), state.token );
 		else
@@ -300,7 +301,7 @@ int CSCR_LoadDefaultCVars( const char *scriptfilename )
 	parserstate_t state = {0};
 	qboolean success = false;
 
-	MsgDev( D_INFO, "Reading config script file %s\n", scriptfilename );
+
 	state.filename = scriptfilename;
 
 	state.buf = (char*)FS_LoadFile( scriptfilename, &length, true );
@@ -309,9 +310,12 @@ int CSCR_LoadDefaultCVars( const char *scriptfilename )
 
 	if( state.buf == 0 || length == 0)
 	{
-		MsgDev( D_ERROR, "Failed to read %s\n", scriptfilename );
-		goto finish;
+		if( start )
+			Mem_Free( start );
+		return 0;
 	}
+
+	MsgDev( D_INFO, "Reading config script file %s\n", scriptfilename );
 
 	if( !CSCR_ParseHeader( &state ) )
 	{
@@ -344,7 +348,7 @@ int CSCR_LoadDefaultCVars( const char *scriptfilename )
 finish:
 	if( !success )
 	{
-		state.token[ sizeof( state.token ) ] = 0;
+		state.token[ sizeof( state.token ) - 1 ] = 0;
 		if( start && state.buf )
 			MsgDev( D_ERROR, "Parse error in %s, byte %d, token %s\n", scriptfilename, (int)( state.buf - start ), state.token );
 		else
