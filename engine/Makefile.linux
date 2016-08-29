@@ -1,13 +1,14 @@
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?= -O2 -march=i686 -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
+CFLAGS ?= -O2 -march=native -fno-omit-frame-pointer -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
 LIBS = -lm
 LBITS := $(shell getconf LONG_BIT)
-
-ifeq ($(LBITS),64)
-	LDFLAGS += -m32
-	CFLAGS += -m32
+ifneq ($(64BIT),1)
+	ifeq ($(LBITS),64)
+		LDFLAGS += -m32
+		CFLAGS += -m32
+	endif
 endif
 TOPDIR = $(PWD)/..
 INCLUDES :=
@@ -17,12 +18,15 @@ ifeq ($(NANOGL),1)
 INCLUDES += -I../nanogl -I../nanogl/GL
 endif
 INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl
-DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DXASH_FASTSTR -DGDB_BREAK
+DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DGDB_BREAK
+ifneq ($(64BIT),1)
+DEFINES += -DXASG_FASTSTR
+endif
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
 else
-    DEFINES += -DXASH_SDL
-    LIBS += -lSDL2 -pthread
+   DEFINES += -DXASH_SDL
+   LIBS += -lSDL2 -pthread
 endif
 
 ifeq ($(NANOGL),1)
