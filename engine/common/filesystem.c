@@ -2015,12 +2015,10 @@ qboolean FS_SysFolderExists( const char *path )
 	if(dir)
 	{
 		closedir(dir);
-		Msg("SysFolderExists %s 1\n", path);
 		return 1;
 	}
 	else if((errno == ENOENT) || (errno == ENOTDIR))
 	{
-		Msg("SysFolderExists %s 0\n", path);
 		return 0;
 	}
 	else
