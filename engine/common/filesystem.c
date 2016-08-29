@@ -323,7 +323,7 @@ const char *FS_FixFileCase( const char *path )
 	char path2[PATH_MAX];
 	struct dirent **namelist = NULL;
 
-	Msg( "FS_FixFileCase: %s\n", path );
+	//Msg( "FS_FixFileCase: %s\n", path );
 
 	Q_snprintf( path2, sizeof( path2 ), "./%s", path );
 
@@ -343,7 +343,7 @@ const char *FS_FixFileCase( const char *path )
 		path = va( "%s/%s", path2, namelist[0]->d_name );
 	while( n-- > 0 )
 	{
-		Msg( "FS_FixFileCase: %s %s %s %s\n", path, path2, filtercaseinsensitive_fname, namelist[n]->d_name );
+		//Msg( "FS_FixFileCase: %s %s %s %s\n", path, path2, filtercaseinsensitive_fname, namelist[n]->d_name );
 		free( namelist[n] );
 	}
 	free( namelist );
