@@ -326,7 +326,7 @@ void Con_CreateConsole( void )
 		rect.top = 0;
 		rect.bottom = 364;
 		Q_strncpy( FontName, "Fixedsys", sizeof( FontName ));
-		Q_strncpy( s_wcd.title, va( "Xash3D %s", XASH_VERSION ), sizeof( s_wcd.title ));
+		Q_strncpy( s_wcd.title, va( "Xash3D FWGS %s", XASH_VERSION ), sizeof( s_wcd.title ));
 		Q_strncpy( s_ld.log_path, "engine.log", sizeof( s_ld.log_path ));
 		fontsize = 8;
 	}
@@ -337,7 +337,7 @@ void Con_CreateConsole( void )
 		rect.top = 0;
 		rect.bottom = 392;
 		Q_strncpy( FontName, "System", sizeof( FontName ));
-		Q_strncpy( s_wcd.title, "Xash Dedicated Server", sizeof( s_wcd.title ));
+		Q_strncpy( s_wcd.title, "Xash3D FWGS Dedicated Server", sizeof( s_wcd.title ));
 		Q_strncpy( s_ld.log_path, "dedicated.log", sizeof( s_ld.log_path ));
 		s_ld.log_active = true; // always make log
 		fontsize = 14;
@@ -561,7 +561,7 @@ void Sys_InitLog( void )
 	if( host.change_game )
 		mode = "a";
 	else mode = "w";
-	Q_strncpy( s_ld.title, "Xash", sizeof ( s_ld.title ) );
+	Q_strncpy( s_ld.title, "Xash3D FWGS", sizeof ( s_ld.title ) );
 
 	// print log to stdout
 	printf( "================================================================================\n" );
