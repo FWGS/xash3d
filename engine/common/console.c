@@ -1489,13 +1489,24 @@ qboolean Con_DrawProgress( void )
 		if( scr_download->value > 0 )
 		{
 			while( x < scr_download->value * (scr_width->value - QCHAR_WIDTH * 2)  / 100 )
-				x += Con_DrawCharacter( x, y, '=', g_color_table[7] );
+			{
+				int dx = Con_DrawCharacter( x, y, '=', g_color_table[7] );
+				if( !dx )
+					break;
+				x += dx;
+			}
 		}
 		else if( scr_loading->value > 0 )
 		{
 			while( x < scr_loading->value * (scr_width->value - QCHAR_WIDTH * 2) / 100 )
-				x += Con_DrawCharacter( x, y, '=', g_color_table[7] );
+			{
+				int dx = Con_DrawCharacter( x, y, '=', g_color_table[7] );
+				if( !dx )
+					break;
+				x += dx;
+			}
 		}
+
 		else return false;
 	return true;
 }

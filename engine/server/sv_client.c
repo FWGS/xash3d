@@ -2129,7 +2129,7 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 	vec3_t forward;
 	AngleVectors( player->v.v_angle, forward, NULL, NULL );
 
-	while( ( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) ) )
+	while( ( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) ) != EDICT_NUM( 0 ) )
 	{
 		vec3_t vecLOS;
 		float flDot;

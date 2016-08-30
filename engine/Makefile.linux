@@ -20,7 +20,7 @@ endif
 INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl
 DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DGDB_BREAK
 ifneq ($(64BIT),1)
-DEFINES += -DXASG_FASTSTR
+DEFINES += -DXASH_FASTSTR
 endif
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
