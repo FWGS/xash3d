@@ -87,7 +87,7 @@ static void FS_InitMemory( void );
 static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const signed char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
-static qboolean FS_SysFileExists( const char *path );
+static qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive );
 static qboolean FS_SysFolderExists( const char *path );
 static int FS_SysFileTime( const char *filename );
 static signed char W_TypeFromExt( const char *lumpname );
@@ -322,8 +322,9 @@ const char *FS_FixFileCase( const char *path )
 	int n = 0;
 	char path2[PATH_MAX];
 	struct dirent **namelist = NULL;
-
-	//Msg( "FS_FixFileCase: %s\n", path );
+	if( !Q_strncmp( path, "valve/custom", sizeof( "valve/custom" ) - 1))
+		return;
+	Msg( "FS_FixFileCase: %s\n", path );
 
 	Q_snprintf( path2, sizeof( path2 ), "./%s", path );
 
@@ -343,7 +344,7 @@ const char *FS_FixFileCase( const char *path )
 		path = va( "%s/%s", path2, namelist[0]->d_name );
 	while( n-- > 0 )
 	{
-		//Msg( "FS_FixFileCase: %s %s %s %s\n", path, path2, filtercaseinsensitive_fname, namelist[n]->d_name );
+		Msg( "FS_FixFileCase: %s %s %s %s\n", path, path2, filtercaseinsensitive_fname, namelist[n]->d_name );
 		free( namelist[n] );
 	}
 	free( namelist );
@@ -1983,12 +1984,14 @@ FS_SysFileExists
 Look for a file in the filesystem only
 ==================
 */
-qboolean FS_SysFileExists( const char *path )
+qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive )
 {
 	int desc;
      
 	desc = open( path, O_RDONLY|O_BINARY );
-	if( desc < 0 )
+
+	// speedup custom path search
+	if( casensensitive && ( desc < 0 ) )
 		desc = open( FS_FixFileCase( path ), O_RDONLY|O_BINARY );
 
 	if( desc < 0 ) return false;
@@ -2126,7 +2129,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 		{
 			char	netpath[MAX_SYSPATH];
 			Q_sprintf( netpath, "%s%s", search->filename, name );
-			if( FS_SysFileExists( netpath ))
+			if( FS_SysFileExists( netpath, !(search->flags & FS_CUSTOM_PATH ) ) )
 			{
 				if( index != NULL ) *index = -1;
 				return search;
@@ -2147,7 +2150,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 		Q_strcat( search->filename, "\\" );
 		Q_snprintf( netpath, MAX_SYSPATH, "%s%s", search->filename, name );
 
-		if( FS_SysFileExists( netpath ))
+		if( FS_SysFileExists( netpath, !(search->flags & FS_CUSTOM_PATH ) ) )
 		{
 			if( index != NULL )
 				*index = -1;
@@ -2163,7 +2166,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 			Q_strcat( search->filename, "\\" );
 			Q_snprintf( netpath, MAX_SYSPATH, "%s%s", search->filename, name );
 
-			if( FS_SysFileExists( netpath ))
+			if( FS_SysFileExists( netpath, !(search->flags & FS_CUSTOM_PATH ) ) )
 			{
 				if( index != NULL )
 					*index = -1;
