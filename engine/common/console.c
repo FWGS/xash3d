@@ -303,7 +303,7 @@ void Con_CheckResize( void )
 	if( !glw_state.initialized )
 	{
 		// video hasn't been initialized yet
-		con.linewidth = width;
+		con.linewidth = 80;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
 
 		for( i = 0; i < CON_TEXTSIZE; i++ )
