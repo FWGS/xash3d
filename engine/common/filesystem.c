@@ -82,7 +82,9 @@ char		fs_falldir[MAX_SYSPATH];	// game falling directory
 char		fs_gamedir[MAX_SYSPATH];	// game current directory
 char		gs_basedir[MAX_SYSPATH];	// initial dir before loading gameinfo.txt (used for compilers too)
 qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ paths 
-
+#ifndef _WIN32
+qboolean		fs_caseinsensitive = true; // try to search missing files
+#endif
 static void FS_InitMemory( void );
 static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const signed char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
@@ -302,7 +304,7 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 	}
 }
 
-#ifndef _WIN32
+#if 0
 static char *filtercaseinsensitive_fname;
 int filtercaseinsensitive( const struct dirent *ent )
 {
@@ -318,10 +320,13 @@ emulate WIN32 FS behaviour when opening local file
 */
 const char *FS_FixFileCase( const char *path )
 {
-#ifndef _WIN32
+#if 0
 	int n = 0;
 	char path2[PATH_MAX];
 	struct dirent **namelist = NULL;
+
+	if( !fs_caseinsensitive )
+		return path;
 
 	MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
 
@@ -348,6 +353,59 @@ const char *FS_FixFileCase( const char *path )
 	}
 	free( namelist );
 
+#endif
+#ifndef _WIN32
+	DIR *dir; struct dirent *entry;
+	char path2[PATH_MAX], *fname;
+
+	if( !fs_caseinsensitive )
+		return path;
+
+	Q_snprintf( path2, sizeof( path2 ), "./%s", path );
+
+	fname = Q_strrchr( path2, '/' );
+
+	if( fname )
+		*fname++ = 0;
+	else
+	{
+		fname = (char*)path;
+		Q_strcpy( path2, ".");
+	}
+
+	/* android has too slow directory scanning,
+	   so drop out some not useful cases */
+	if( fname - path2 > 4 )
+	{
+		char *point;
+		// too many wad textures
+		if( !Q_stricmp( fname - 5, ".wad") )
+			return path;
+		point = Q_strchr( fname, '.' );
+		if( point )
+		{
+			if( !Q_strcmp( point, ".mip") || !Q_strcmp( point, ".dds" ) || !Q_strcmp( point, ".ent" ) )
+				return path;
+			if( fname[0] == '{' )
+				return path;
+		}
+	}
+
+	MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
+
+	if( !( dir = opendir( path2 ) ) )
+		return path;
+
+	while( ( entry = readdir( dir ) ) )
+	{
+		if( Q_stricmp( entry->d_name, fname ) )
+			continue;
+
+		path = va( "%s/%s", path2, entry->d_name );
+		MsgDev( D_NOTE, "FS_FixFileCase: %s %s %s\n", path2, fname, entry->d_name );
+		break;
+	}
+	closedir( dir );
 #endif
 	return path;
 }
@@ -1751,6 +1809,11 @@ void FS_Init( void )
 	Cmd_AddCommand( "fs_rescan", FS_Rescan_f, "rescan filesystem search paths" );
 	Cmd_AddCommand( "fs_path", FS_Path_f, "show filesystem search paths" );
 	Cmd_AddCommand( "fs_clearpaths", FS_ClearPaths_f, "clear filesystem search paths" );
+
+#ifndef _WIN32
+	if( Sys_CheckParm( "-casesensitive" ) )
+		fs_caseinsensitive = false;
+#endif
 
 	// ignore commandlineoption "-game" for other stuff
 	if( host.type != HOST_UNKNOWN )
