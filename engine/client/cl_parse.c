@@ -922,6 +922,7 @@ void CL_UpdateUserinfo( sizebuf_t *msg )
 		Q_strncpy( player->userinfo, BF_ReadString( msg ), sizeof( player->userinfo ));
 		Q_strncpy( player->name, Info_ValueForKey( player->userinfo, "name" ), sizeof( player->name ));
 		Q_strncpy( player->model, Info_ValueForKey( player->userinfo, "model" ), sizeof( player->model ));
+		cl.playermodels[slot] = 0;
 		player->topcolor = Q_atoi( Info_ValueForKey( player->userinfo, "topcolor" ));
 		player->bottomcolor = Q_atoi( Info_ValueForKey( player->userinfo, "bottomcolor" ));
 

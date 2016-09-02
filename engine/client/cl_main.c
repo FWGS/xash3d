@@ -1236,6 +1236,8 @@ void CL_PrepVideo( void )
 
 	Mod_FreeUnused ();
 
+	Q_memset( cl.playermodels, 0, sizeof( cl.playermodels ) );
+
 	Cvar_SetFloat( "scr_loading", 100.0f );	// all done
 
 	if( host.decalList )

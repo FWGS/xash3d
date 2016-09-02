@@ -161,6 +161,7 @@ typedef struct
 	int predicted_viewmodel;
 	float weaponstarttime;
 	int weaponseq;
+	model_t *playermodels[32];
 #if 0 // used by SetUpPlayerPrediction
 	predicted_player_t predicted_players[MAX_CLIENTS];
 #endif
