@@ -322,9 +322,8 @@ const char *FS_FixFileCase( const char *path )
 	int n = 0;
 	char path2[PATH_MAX];
 	struct dirent **namelist = NULL;
-	if( !Q_strncmp( path, "valve/custom", sizeof( "valve/custom" ) - 1))
-		return;
-	Msg( "FS_FixFileCase: %s\n", path );
+
+	MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
 
 	Q_snprintf( path2, sizeof( path2 ), "./%s", path );
 
@@ -344,7 +343,7 @@ const char *FS_FixFileCase( const char *path )
 		path = va( "%s/%s", path2, namelist[0]->d_name );
 	while( n-- > 0 )
 	{
-		Msg( "FS_FixFileCase: %s %s %s %s\n", path, path2, filtercaseinsensitive_fname, namelist[n]->d_name );
+		MsgDev( D_NOTE, "FS_FixFileCase: %s %s %s %s\n", path, path2, filtercaseinsensitive_fname, namelist[n]->d_name );
 		free( namelist[n] );
 	}
 	free( namelist );
@@ -524,8 +523,15 @@ pack_t *FS_LoadPackPAK( const char *packfile, int *error )
 	dpackfile_t	*info;
 
 	packhandle = open( packfile, O_RDONLY|O_BINARY );
+
+#ifndef _WIN32
 	if( packhandle < 0 )
-		packhandle = open( FS_FixFileCase( packfile ), O_RDONLY|O_BINARY );
+	{
+		const char *fpackfile = FS_FixFileCase( packfile );
+		if( fpackfile!= packfile )
+			packhandle = open( FS_FixFileCase( packfile ), O_RDONLY|O_BINARY );
+	}
+#endif
 
 	if( packhandle < 0 )
 	{
@@ -1916,11 +1922,16 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 	file->ungetc = EOF;
 
 	file->handle = open( filepath, mod|opt, 0666 );
+
+#ifndef _WIN32
 	if( file->handle < 0 )
 	{
-		filepath = FS_FixFileCase( filepath );
-		file->handle = open( filepath, mod|opt, 0666 );
+		const char *ffilepath = FS_FixFileCase( filepath );
+		if( ffilepath != filepath )
+			file->handle = open( filepath, mod|opt, 0666 );
 	}
+#endif
+
 	if( file->handle < 0 )
 	{
 		Mem_Free( file );
@@ -1989,11 +2000,15 @@ qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive )
 	int desc;
      
 	desc = open( path, O_RDONLY|O_BINARY );
-
+#ifndef _WIN32
 	// speedup custom path search
-	if( casensensitive && ( desc < 0 ) )
-		desc = open( FS_FixFileCase( path ), O_RDONLY|O_BINARY );
-
+	if( caseinsensitive && ( desc < 0 ) )
+	{
+		const char *fpath = FS_FixFileCase( path );
+		if( fpath != path )
+			desc = open( fpath, O_RDONLY|O_BINARY );
+	}
+#endif
 	if( desc < 0 ) return false;
 	close( desc );
 	return true;
@@ -3448,13 +3463,19 @@ wfile_t *W_Open( const char *filename, const char *mode )
 	else if( mode[0] == 'w' ) wad->handle = open( filename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
 	else if( mode[0] == 'r' ) wad->handle = open( filename, O_RDONLY|O_BINARY, 0x666 );
 
+#ifndef _WIN32
 	if( wad->handle < 0 )
 	{
-		filename = FS_FixFileCase( filename );
-		if( mode[0] == 'a' ) wad->handle = open( filename, O_RDWR|O_BINARY, 0x666 );
-		else if( mode[0] == 'w' ) wad->handle = open( filename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
-		else if( mode[0] == 'r' ) wad->handle = open( filename, O_RDONLY|O_BINARY, 0x666 );
+		const char *ffilename = FS_FixFileCase( filename );
+		if( ffilename != filename )
+		{
+			if( mode[0] == 'a' ) wad->handle = open( filename, O_RDWR|O_BINARY, 0x666 );
+			else if( mode[0] == 'w' ) wad->handle = open( filename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
+			else if( mode[0] == 'r' ) wad->handle = open( filename, O_RDONLY|O_BINARY, 0x666 );
+		}
 	}
+#endif
+
 	if( wad->handle < 0 )
 	{
 		W_Close( wad );
