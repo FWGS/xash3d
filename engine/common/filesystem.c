@@ -587,7 +587,7 @@ pack_t *FS_LoadPackPAK( const char *packfile, int *error )
 	{
 		const char *fpackfile = FS_FixFileCase( packfile );
 		if( fpackfile!= packfile )
-			packhandle = open( FS_FixFileCase( packfile ), O_RDONLY|O_BINARY );
+			packhandle = open( fpackfile, O_RDONLY|O_BINARY );
 	}
 #endif
 
@@ -1993,7 +1993,7 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 	{
 		const char *ffilepath = FS_FixFileCase( filepath );
 		if( ffilepath != filepath )
-			file->handle = open( filepath, mod|opt, 0666 );
+			file->handle = open( ffilepath, mod|opt, 0666 );
 	}
 #endif
 
@@ -3534,9 +3534,9 @@ wfile_t *W_Open( const char *filename, const char *mode )
 		const char *ffilename = FS_FixFileCase( filename );
 		if( ffilename != filename )
 		{
-			if( mode[0] == 'a' ) wad->handle = open( filename, O_RDWR|O_BINARY, 0x666 );
-			else if( mode[0] == 'w' ) wad->handle = open( filename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
-			else if( mode[0] == 'r' ) wad->handle = open( filename, O_RDONLY|O_BINARY, 0x666 );
+			if( mode[0] == 'a' ) wad->handle = open( ffilename, O_RDWR|O_BINARY, 0x666 );
+			else if( mode[0] == 'w' ) wad->handle = open( ffilename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
+			else if( mode[0] == 'r' ) wad->handle = open( ffilename, O_RDONLY|O_BINARY, 0x666 );
 		}
 	}
 #endif
