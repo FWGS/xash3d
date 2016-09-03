@@ -2776,7 +2776,7 @@ static model_t *R_StudioSetupPlayerModel( int index )
 	if( !info->model[0] ) return NULL;
 
 	// FS_FileExists is too slow to use it 32 times at every frame
-	if( cl.playermodels[index] )
+	if( ( cls.key_dest != key_menu || index ) && cl.playermodels[index] )
 		return cl.playermodels[index];
 
 	if( !Q_stricmp( info->model, "player" ))
