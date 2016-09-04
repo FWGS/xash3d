@@ -9,12 +9,10 @@
 #include "events.h"
 #include "touch.h"
 #include "joyinput.h"
+#include "sound.h"
 
 extern convar_t *vid_fullscreen;
 extern convar_t *snd_mute_losefocus;
-static qboolean lostFocusOnce;
-static float oldVolume;
-static float oldMusicVolume;
 static int wheelbutton;
 static SDL_Joystick *joy;
 
@@ -333,10 +331,9 @@ void SDLash_EventFilter( void *ev )
 		case SDL_WINDOWEVENT_FOCUS_GAINED:
 			host.state = HOST_FRAME;
 			IN_ActivateMouse(true);
-			if( lostFocusOnce && snd_mute_losefocus->integer )
+			if( snd_mute_losefocus->integer )
 			{
-				Cvar_SetFloat("volume", oldVolume);
-				Cvar_SetFloat("musicvolume", oldMusicVolume);
+				S_Activate( true );
 			}
 			break;
 		case SDL_WINDOWEVENT_MINIMIZED:
@@ -347,11 +344,7 @@ void SDLash_EventFilter( void *ev )
 			IN_DeactivateMouse();
 			if( snd_mute_losefocus->integer )
 			{
-				lostFocusOnce  = true;
-				oldVolume      = Cvar_VariableValue("volume");
-				oldMusicVolume = Cvar_VariableValue("musicvolume");
-				Cvar_SetFloat("volume", 0);
-				Cvar_SetFloat("musicvolume", 0);
+				S_Activate( false );
 			}
 			break;
 		case SDL_WINDOWEVENT_CLOSE:
