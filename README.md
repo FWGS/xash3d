@@ -1,4 +1,4 @@
-# Xash3D SDL Engine [![Build Status](https://travis-ci.org/FWGS/xash3d.svg)](https://travis-ci.org/FWGS/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/FWGS/xash3d?branch=master&svg=true)](https://ci.appveyor.com/project/a1batross/xash3d)
+# Xash3D FWGS Engine [![Build Status](https://travis-ci.org/FWGS/xash3d.svg)](https://travis-ci.org/FWGS/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/FWGS/xash3d?branch=master&svg=true)](https://ci.appveyor.com/project/a1batross/xash3d)
 
 Latest version of the engine is available at:
 https://github.com/FWGS/xash3d
@@ -12,10 +12,10 @@ The multiplayer part is not yet completed, multiplayer mods should work just
 fine, but bear in mind that some features may not work at all or work not
 exactly the way they do in Gold Source Engine.
 
-Xash3D SDL is a fork of Xash3D Engine, which aims on crossplatform and compability 
+Xash3D FWGS is a fork of Xash3D Engine, which aims on crossplatform and compability 
 with original Xash3D and Gold Source.
 
-- [Building and running Xash3D SDL](https://github.com/FWGS/xash3d/wiki/Building-and-running)
+- [Building and running Xash3D FWGS](https://github.com/FWGS/xash3d/wiki/Building-and-running)
 - [Installing and setting up the server on Debian/Ubuntu Linux](https://github.com/FWGS/xash3d/wiki/How-to-set-up-a-Xash3D-Dedicated-Server-on-Debian-Ubuntu-Linux)
 
 # License
