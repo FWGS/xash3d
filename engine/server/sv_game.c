@@ -340,6 +340,13 @@ qboolean SV_Send( int dest, const vec3_t origin, const edict_t *ent )
 		if( cl->state != cs_spawned && !reliable )
 			continue;
 
+		// do not send unregistered messages to client
+		if( sv_fixmulticast->integer )
+		{
+			if( cl->state == cs_connected && reliable )
+				continue;
+		}
+
 		if( specproxy && !cl->hltv_proxy )
 			continue;
 

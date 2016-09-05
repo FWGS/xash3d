@@ -89,6 +89,7 @@ convar_t	*sv_skipshield; // HACK for shield
 convar_t	*sv_trace_messages;
 convar_t	*sv_master;
 convar_t	*sv_corpse_solid;
+convar_t	*sv_fixmulticast;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -891,6 +892,8 @@ void SV_Init( void )
 	sv_trace_messages = Cvar_Get( "sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)" );
 	sv_master = Cvar_Get( "sv_master", MASTERSERVER_ADR, CVAR_ARCHIVE, "master server address" );
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
+	sv_fixmulticast = Cvar_Get( "sv_fixmulticast", "1", CVAR_ARCHIVE, "do not send multicast to not spawned clients" );
+
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
 	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
