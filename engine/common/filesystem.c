@@ -304,13 +304,6 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 	}
 }
 
-#if 0
-static char *filtercaseinsensitive_fname;
-int filtercaseinsensitive( const struct dirent *ent )
-{
-	return !Q_stricmp( ent->d_name, filtercaseinsensitive_fname );
-}
-#endif
 /*
 ==================
 FS_FixFileCase
@@ -320,40 +313,6 @@ emulate WIN32 FS behaviour when opening local file
 */
 const char *FS_FixFileCase( const char *path )
 {
-#if 0
-	int n = 0;
-	char path2[PATH_MAX];
-	struct dirent **namelist = NULL;
-
-	if( !fs_caseinsensitive )
-		return path;
-
-	MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
-
-	Q_snprintf( path2, sizeof( path2 ), "./%s", path );
-
-	filtercaseinsensitive_fname = Q_strrchr( path2, '/' );
-
-	if( filtercaseinsensitive_fname )
-		*filtercaseinsensitive_fname++ = 0;
-	else
-	{
-		filtercaseinsensitive_fname = (char*)path;
-		Q_strcpy( path2, ".");
-	}
-
-	n = scandir( path2, &namelist, filtercaseinsensitive, NULL );
-
-	if( (n > 0) && namelist && namelist[0] && namelist[0]->d_name )
-		path = va( "%s/%s", path2, namelist[0]->d_name );
-	while( n-- > 0 )
-	{
-		MsgDev( D_NOTE, "FS_FixFileCase: %s %s %s %s\n", path, path2, filtercaseinsensitive_fname, namelist[n]->d_name );
-		free( namelist[n] );
-	}
-	free( namelist );
-
-#endif
 #ifndef _WIN32
 	DIR *dir; struct dirent *entry;
 	char path2[PATH_MAX], *fname;
@@ -391,7 +350,7 @@ const char *FS_FixFileCase( const char *path )
 		}
 	}
 
-	MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
+	//MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
 
 	if( !( dir = opendir( path2 ) ) )
 		return path;
@@ -402,7 +361,7 @@ const char *FS_FixFileCase( const char *path )
 			continue;
 
 		path = va( "%s/%s", path2, entry->d_name );
-		MsgDev( D_NOTE, "FS_FixFileCase: %s %s %s\n", path2, fname, entry->d_name );
+		//MsgDev( D_NOTE, "FS_FixFileCase: %s %s %s\n", path2, fname, entry->d_name );
 		break;
 	}
 	closedir( dir );
