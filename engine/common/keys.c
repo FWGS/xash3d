@@ -125,8 +125,8 @@ keyname_t keynames[] =
 {"AUX30", K_AUX30, ""},
 {"AUX31", K_AUX31, ""},
 {"AUX32", K_AUX32, ""},
-{"JOY1" , K_JOY1 , ""}, // bind to dpad?
-{"JOY2" , K_JOY2 , ""},
+{"LTRIGGER" , K_JOY1 , ""},
+{"RTRIGGER" , K_JOY2 , ""},
 {"JOY3" , K_JOY3 , ""},
 {"JOY4" , K_JOY4 , ""},
 // raw semicolon seperates commands
