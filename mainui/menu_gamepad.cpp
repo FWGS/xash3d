@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "utils.h"
 #include "menu_btnsbmp_table.h"
 
-#define ART_BANNER			"gfx/shell/head_audio"
+#define ART_BANNER			"gfx/shell/head_gamepad"
 
 #define ID_BACKGROUND 0
 #define ID_BANNER 1
@@ -469,6 +469,7 @@ static void UI_GamePad_Init( void )
 	UI_GamePad_GetConfig();
 
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.background );
+	UI_AddItem( &uiGamePad.menu, &uiGamePad.banner );
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.done );
 	for( int i = 0; i < 6; i++ )
 	{
