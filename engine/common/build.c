@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 
-//#define XASH_GENERATE_BUILDNUM
+#define XASH_GENERATE_BUILDNUM
 
 #if defined(XASH_GENERATE_BUILDNUM)
 static char *date = __DATE__ ;
