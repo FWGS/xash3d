@@ -1199,6 +1199,7 @@ void IN_TouchDraw( void )
 // clear move and selection state
 void IN_TouchEditClear( void )
 {
+	touch.move_finger = touch.look_finger = -1;
 	if( touch.state < state_edit )
 		return;
 	touch.state = state_edit;
@@ -1263,6 +1264,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	// simulate menu mouse click
 	if( cls.key_dest != key_game && !touch_in_menu->value )
 	{
+		touch.move_finger = touch.resize_finger = touch.look_finger = -1;
 		// Hack for keyboard, hope it help
 		if( cls.key_dest == key_console || cls.key_dest == key_message ) 
 		{
