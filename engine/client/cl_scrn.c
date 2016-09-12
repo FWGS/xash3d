@@ -491,44 +491,50 @@ void SCR_UpdateScreen( void )
 void SCR_LoadCreditsFont( void )
 {
 	int	fontWidth;
+	dword crc = 0;
+	const char *path = "gfx/creditsfont.fnt";
+	byte	*buffer;
+	fs_offset_t	length;
+	qfont_t	*src;
 
 	if( cls.creditsFont.valid ) return; // already loaded
 
-	cls.creditsFont.hFontTexture = GL_LoadTexture( "gfx.wad/creditsfont.fnt", NULL, 0, TF_IMAGE, NULL );
+	// replace default gfx.wad textures by current charset's font
+	if( !CRC32_File( &crc, "gfx.wad" ) || crc == 0x49eb9f16 )
+	{
+		const char *path2 = va("creditsfont_%s.fnt", Cvar_VariableString( "con_charset" ) );
+		if( FS_FileExists( path2, false ) )
+			path = path2;
+	}
+
+	cls.creditsFont.hFontTexture = GL_LoadTexture( path, NULL, 0, TF_IMAGE, NULL );
 	R_GetTextureParms( &fontWidth, NULL, cls.creditsFont.hFontTexture );
 
 	if( fontWidth == 0 ) return;
 	
 	// setup creditsfont
-	if( FS_FileExists( "gfx/creditsfont.fnt", false ))
+	// half-life font with variable chars width
+	buffer = FS_LoadFile( path, &length, false );
+
+	if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
 	{
-		byte	*buffer;
-		fs_offset_t	length;
-		qfont_t	*src;
+		int	i;
 
-		// half-life font with variable chars width
-		buffer = FS_LoadFile( "gfx/creditsfont.fnt", &length, false );
-	
-		if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
+		src = (qfont_t *)buffer;
+		cls.creditsFont.charHeight = clgame.scrInfo.iCharHeight = src->rowheight;
+
+		// build rectangles
+		for( i = 0; i < 256; i++ )
 		{
-			int	i;
-	
-			src = (qfont_t *)buffer;
-			cls.creditsFont.charHeight = clgame.scrInfo.iCharHeight = src->rowheight;
-
-			// build rectangles
-			for( i = 0; i < 256; i++ )
-			{
-				cls.creditsFont.fontRc[i].left = (word)src->fontinfo[i].startoffset % fontWidth;
-				cls.creditsFont.fontRc[i].right = cls.creditsFont.fontRc[i].left + src->fontinfo[i].charwidth;
-				cls.creditsFont.fontRc[i].top = (word)src->fontinfo[i].startoffset / fontWidth;
-				cls.creditsFont.fontRc[i].bottom = cls.creditsFont.fontRc[i].top + src->rowheight;
-				cls.creditsFont.charWidths[i] = clgame.scrInfo.charWidths[i] = src->fontinfo[i].charwidth;
-			}
-			cls.creditsFont.valid = true;
+			cls.creditsFont.fontRc[i].left = (word)src->fontinfo[i].startoffset % fontWidth;
+			cls.creditsFont.fontRc[i].right = cls.creditsFont.fontRc[i].left + src->fontinfo[i].charwidth;
+			cls.creditsFont.fontRc[i].top = (word)src->fontinfo[i].startoffset / fontWidth;
+			cls.creditsFont.fontRc[i].bottom = cls.creditsFont.fontRc[i].top + src->rowheight;
+			cls.creditsFont.charWidths[i] = clgame.scrInfo.charWidths[i] = src->fontinfo[i].charwidth;
 		}
-		if( buffer ) Mem_Free( buffer );
+		cls.creditsFont.valid = true;
 	}
+	if( buffer ) Mem_Free( buffer );
 }
 
 void SCR_InstallParticlePalette( void )
