@@ -1487,6 +1487,7 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			// this does nothing
 			break;
 		case svc_disconnect:
+			MsgDev( D_INFO, "Disconnected from server\n" );
 			CL_Drop ();
 			Host_AbortCurrentFrame ();
 			break;
