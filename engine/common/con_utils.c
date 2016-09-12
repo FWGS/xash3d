@@ -743,6 +743,70 @@ qboolean Cmd_GetSoundList( const char *s, char *completedname, int length )
 
 /*
 =====================================
+Cmd_GetFilesList
+
+Prints or complete filename
+=====================================
+*/
+qboolean Cmd_GetFilesList( const char *s, char *completedname, int length )
+{
+	search_t		*t;
+	string		matchbuf;
+	int		i, numfiles;
+	char *pfilename;
+
+	t = FS_Search( va( "%s*",  s ), true, false );
+	if( !t ) return false;
+
+	pfilename = t->filenames[0];
+	if( *pfilename == '/' )
+		pfilename++;
+
+	Q_strncpy( matchbuf, pfilename, MAX_STRING );
+
+	if( completedname && length ) Q_strncpy( completedname, matchbuf, length );
+	if( t->numfilenames == 1 )
+
+		return true;
+
+	for(i = 0, numfiles = 0; i < t->numfilenames; i++)
+	{
+		pfilename = t->filenames[i];
+		if( *pfilename == '/' )
+			pfilename++;
+		Q_strncpy( matchbuf, pfilename, MAX_STRING );
+		Msg( "%16s\n", t->filenames[i] );
+		numfiles++;
+	}
+
+	Msg( "\n^3 %i files found.\n", numfiles );
+	Mem_Free( t );
+
+	// cut shortestMatch to the amount common with s
+	if( completedname && length )
+	{
+		char *pmatchbuf  = matchbuf, *pcompletedname = completedname;
+		for( ; *pmatchbuf; ++pmatchbuf, ++pcompletedname )
+		{
+			if( *pmatchbuf == '/' )
+			{
+				pmatchbuf++;
+			}
+			if( *pcompletedname == '/' )
+			{
+				pcompletedname++;
+			}
+			if( Q_tolower( *pcompletedname ) != Q_tolower( *pmatchbuf ) )
+				*pcompletedname = 0;
+		}
+	}
+
+	return true;
+}
+
+
+/*
+=====================================
 Cmd_GetItemsList
 
 Prints or complete item classname (weapons only)
@@ -1167,6 +1231,8 @@ autocomplete_list_t cmd_list[] =
 { "play", Cmd_GetSoundList },
 { "map", Cmd_GetMapList },
 { "cd", Cmd_GetCdCommands },
+{ "md5", Cmd_GetFilesList },
+{ "crc32", Cmd_GetFilesList },
 { NULL }, // terminator
 };
 
