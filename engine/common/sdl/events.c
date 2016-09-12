@@ -80,6 +80,11 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 		case SDL_SCANCODE_NUMLOCKCLEAR: keynum = K_KP_NUMLOCK; break;
 		case SDL_SCANCODE_CAPSLOCK: keynum = K_CAPSLOCK; break;
 		case SDL_SCANCODE_APPLICATION: keynum = K_WIN; break; // (compose key) ???
+		case SDL_SCANCODE_SLASH: keynum = '/'; break;
+		case SDL_SCANCODE_PERIOD: keynum = '.'; break;
+		case SDL_SCANCODE_SEMICOLON: keynum = ';'; break;
+		case SDL_SCANCODE_APOSTROPHE: keynum = '\''; break;
+		case SDL_SCANCODE_COMMA: keynum = ','; break;
 		case SDL_SCANCODE_UNKNOWN:
 		{
 			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n");
