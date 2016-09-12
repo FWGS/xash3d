@@ -478,6 +478,41 @@ void FS_ClearPaths_f( void )
 	FS_ClearSearchPath();
 }
 
+void FS_Crc32_f( void )
+{
+	dword crc = 0;
+
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Use crc32 <path>\n");
+		return;
+	}
+	if( CRC32_File( &crc, Cmd_Argv( 1 ) ) )
+		Msg( "0x%x\n", crc );
+}
+
+void FS_MD5_f( void )
+{
+	unsigned char hash[16];
+
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Use md5 <path>\n");
+		return;
+	}
+
+	if( MD5_HashFile( hash, Cmd_Argv( 1 ), NULL ) )
+	{
+		char hex[33], *phex = hex;
+		int i;
+
+		for( i = 0; i < 16; i++ )
+			phex += Q_sprintf( phex, "%hhx", hash[i] );
+		Msg( "%s\n", hex );
+	}
+}
+
+
 /*
 ============
 FS_FileBase
@@ -1768,6 +1803,9 @@ void FS_Init( void )
 	Cmd_AddCommand( "fs_rescan", FS_Rescan_f, "rescan filesystem search paths" );
 	Cmd_AddCommand( "fs_path", FS_Path_f, "show filesystem search paths" );
 	Cmd_AddCommand( "fs_clearpaths", FS_ClearPaths_f, "clear filesystem search paths" );
+	Cmd_AddCommand( "crc32", FS_Crc32_f, "print crc32 of for file" );
+	Cmd_AddCommand( "md5", FS_MD5_f, "print md5 of for file" );
+
 
 #ifndef _WIN32
 	if( Sys_CheckParm( "-casesensitive" ) )
