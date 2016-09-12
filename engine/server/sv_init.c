@@ -760,7 +760,7 @@ qboolean SV_NewGame( const char *mapName, qboolean loadGame )
 		SV_DeactivateServer ();
 	}
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		Cbuf_InsertText(va("wait;rcon map %s\n", mapName));
 		Cbuf_AddText("wait;connect 127.0.0.1\n");

@@ -58,6 +58,7 @@ convar_t	*cl_charset;
 convar_t	*cl_sprite_nearest;
 convar_t	*hud_scale;
 convar_t	*cl_maxpacket;
+convar_t	*hud_utf8;
 //
 // userinfo
 //
@@ -1681,6 +1682,8 @@ void CL_InitLocal( void )
 	cl_sprite_nearest = Cvar_Get( "cl_sprite_nearest", "0", CVAR_ARCHIVE, "disable texture filtering on sprites" );
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
+	hud_utf8 = Cvar_Get( "hud_utf8", "0", CVAR_ARCHIVE, "Use utf-8 encoding for hud text" );
+
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
 	Cvar_Get( "cl_updaterate", "60", CVAR_USERINFO|CVAR_ARCHIVE, "refresh rate of server messages" );
 	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicates that background map is running" );

@@ -925,7 +925,7 @@ static void IN_TouchCheckCoords( float *x1, float *y1, float *x2, float *y2  )
 		*y1 -= *y2 - 1, *y2 = 1;
 	if( *x2 > 1 )
 		*x1 -= *x2 - 1, *x2 = 1;
-	if ( touch_grid_enable->value )
+	if ( touch_grid_enable->integer )
 	{
 		*x1 = GRID_ROUND_X( *x1 );
 		*x2 = GRID_ROUND_X( *x2 );
@@ -1002,18 +1002,18 @@ void IN_TouchDraw( void )
 {
 	touchbutton2_t *button;
 
-	if( !touch.initialized || !touch_enable->value )
+	if( !touch.initialized || !touch_enable->integer )
 		return;
 
-	if( cls.key_dest != key_game && touch_in_menu->value == 0 )
+	if( cls.key_dest != key_game && touch_in_menu->integer == 0 )
 		return;
 
 	GL_SetRenderMode( kRenderTransTexture );
 
-	if( touch.state >= state_edit && touch_grid_enable->value )
+	if( touch.state >= state_edit && touch_grid_enable->integer )
 	{
 		float x;
-		if( touch_in_menu->value )
+		if( touch_in_menu->integer )
 			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 32, 32, 32, 255 );
 		else
 			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 0, 0, 0, 112 );
@@ -1262,7 +1262,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	touchbutton2_t *button;
 	
 	// simulate menu mouse click
-	if( cls.key_dest != key_game && !touch_in_menu->value )
+	if( cls.key_dest != key_game && !touch_in_menu->integer )
 	{
 		touch.move_finger = touch.resize_finger = touch.look_finger = -1;
 		// Hack for keyboard, hope it help
@@ -1300,7 +1300,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		return 0;
 	}
 	
-	if( !touch.initialized || !touch_enable->value )
+	if( !touch.initialized || !touch_enable->integer )
 		return 0;
 
 	if( touch.state == state_edit_move )
@@ -1322,7 +1322,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			if( ( y > GRID_Y * 2 ) && ( y < GRID_Y * 4 )  ) // close button
 			{
 				IN_TouchDisableEdit_f();
-				if( touch_in_menu->value )
+				if( touch_in_menu->integer )
 				{
 					Cvar_Set("touch_in_menu","0");
 				}

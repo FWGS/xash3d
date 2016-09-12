@@ -1593,7 +1593,7 @@ void S_RenderFrame( ref_params_t *fd )
 	}
 
 	// debugging output
-	if( s_show->value )
+	if( s_show->integer )
 	{
 		info.color[0] = 1.0f;
 		info.color[1] = 0.6f;

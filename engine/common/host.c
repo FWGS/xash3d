@@ -792,7 +792,7 @@ void Host_MapDesignError( const char *format, ... )
 	va_start( argptr, format );
 	Q_vsnprintf( str, 256, format, argptr );
 	va_end( argptr );
-	if( host_mapdesign_fatal->value )
+	if( host_mapdesign_fatal->integer )
 		Host_Error( "Map Design Error: %s\n", str );
 	else
 		Msg( "^1Map Design Error: ^3%s", str );

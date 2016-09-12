@@ -1172,7 +1172,7 @@ void CL_ExtraUpdate( void )
 {
 	if( !cls.initialized )
 		return;
-	if( !m_ignore->value )
+	if( !m_ignore->integer )
 		clgame.dllFuncs.IN_Accumulate();
 	S_ExtraUpdate();
 }

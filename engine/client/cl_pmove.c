@@ -960,7 +960,7 @@ void CL_PredictMovement( void )
 	AngleVectors( cl.refdef.cl_viewangles, cl.refdef.forward, cl.refdef.right, cl.refdef.up );
 
 	ASSERT( cl.refdef.cmd != NULL );
-	if( !cl_predict->value || Host_IsLocalClient() )
+	if( !cl_predict->integer || Host_IsLocalClient() )
 	{
 		// fake prediction code
 		// we need to perform cl_lw prediction while cl_predict is disabled

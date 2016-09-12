@@ -1061,7 +1061,7 @@ void CL_CheckingResFile( char *pResFileName )
 	cls.downloadcount++;
 
 	
-	if( cl_allow_fragment->value )
+	if( cl_allow_fragment->integer )
 	{
 		Msg( "Starting file download: %s\n", pResFileName );
 		if( cls.state == ca_disconnected ) return;
@@ -1427,7 +1427,7 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 void CL_ParseStuffText( sizebuf_t *msg )
 {
 	char *s = BF_ReadString( msg );
-	if( cl_trace_stufftext->value )
+	if( cl_trace_stufftext->integer )
 	{
 		Msg("^3STUFFTEXT:\n^2%s\n^3END^7\n", s);
 	}

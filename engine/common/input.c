@@ -410,7 +410,7 @@ void IN_MouseMove( void )
 	if( !in_mouseinitialized || !in_mouseactive || !UI_IsVisible( ))
 		return;
 
-	if( m_ignore->value )
+	if( m_ignore->integer )
 		return;
 
 	// Show cursor in UI
@@ -437,7 +437,7 @@ void IN_MouseEvent( int mstate )
 	int	i;
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
-	if( m_ignore->value )
+	if( m_ignore->integer )
 		return;
 	if( cls.key_dest == key_game )
 	{

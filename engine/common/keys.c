@@ -769,7 +769,7 @@ void Key_SetKeyDest( int key_dest )
 	{
 	case key_game:
 		Key_EnableTextInput( false, false );
-		if( host_xashds_hacks->value )
+		if( host_xashds_hacks->integer )
 		{
 			Cbuf_Execute();
 			if( cl.refdef.paused )

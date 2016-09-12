@@ -185,7 +185,7 @@ void SV_Map_f( void )
 		return;
 	}
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		CL_Disconnect();
 		Cbuf_InsertText(va("wait;rcon map %s\n",Cmd_Argv( 1 )));
@@ -383,7 +383,7 @@ void SV_Load_f( void )
 		return;
 	}
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		Cbuf_InsertText(va("rcon load %s\n",Cmd_Argv( 1 )));
 		Cbuf_AddText("connect 127.0.0.1\n");
@@ -432,7 +432,7 @@ void SV_Save_f( void )
 		return;
 	}
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		Cbuf_InsertText(va("rcon save %s\n", Cmd_Argv( 1 )));
 		return;
@@ -506,7 +506,7 @@ void SV_ChangeLevel_f( void )
 		return;
 	}
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		Cbuf_InsertText(va("rcon changelevel %s %s\n",Cmd_Argv( 1 ), Cmd_Argv( 2 )));
 		return;
@@ -609,7 +609,7 @@ void SV_ChangeLevel2_f( void )
 		return;
 	}
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		Cbuf_InsertText(va("rcon changelevel2 %s %s\n",Cmd_Argv( 1 ), Cmd_Argv( 2 )));
 		return;

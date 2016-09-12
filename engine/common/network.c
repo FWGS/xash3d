@@ -1189,7 +1189,7 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 			return;
 		}
 		// Called because there was no servers to download, free file now
-		if( http_autoremove->value == 1 )
+		if( http_autoremove->integer == 1 )
 			// remove broken file
 			FS_Delete( incname );
 		else

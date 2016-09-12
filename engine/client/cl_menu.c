@@ -52,7 +52,7 @@ void UI_SetActiveMenu( qboolean fActive )
 {
 	movie_state_t	*cin_state;
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		if( !cl.refdef.paused && !cls.changelevel && fActive )
 		{

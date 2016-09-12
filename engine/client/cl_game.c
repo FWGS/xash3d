@@ -1238,7 +1238,7 @@ pfnSPR_Load
 HSPRITE pfnSPR_Load( const char *szPicName )
 {
 	int texFlags = TF_NOPICMIP;
-	if( cl_sprite_nearest->value )
+	if( cl_sprite_nearest->integer )
 		texFlags |= TF_NEAREST;
 
 	return pfnSPR_LoadExt( szPicName, texFlags );
@@ -1687,7 +1687,9 @@ int pfnDrawCharacter( int x, int y, int number, int r, int g, int b )
 		return 0;
 
 	number &= 255;
-	number = Con_UtfProcessChar( number );
+
+	if( hud_utf8->integer )
+		number = Con_UtfProcessChar( number );
 
 	if( number < 32 ) return 0;
 	if( y < -clgame.scrInfo.iCharHeight )
@@ -2555,7 +2557,7 @@ model_t *pfnLoadMapSprite( const char *filename )
 	int texFlags = TF_NOPICMIP;
 
 
-	if( cl_sprite_nearest->value )
+	if( cl_sprite_nearest->integer )
 		texFlags |= TF_NEAREST;
 
 	if( !filename || !*filename )

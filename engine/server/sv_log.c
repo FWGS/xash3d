@@ -58,14 +58,14 @@ void Log_Printf( const char *fmt, ... )
 	if ( svs.log.network_logging )
 		Netchan_OutOfBandPrint( NS_SERVER, svs.log.net_address, "log %s", string );
 
-	if ( svs.log.active && (sv_maxclients->integer > 1 || sv_log_singleplayer->value != 0.0f ) )
+	if ( svs.log.active && (sv_maxclients->integer > 1 || sv_log_singleplayer->integer != 0 ) )
 	{
-		if ( mp_logecho->value != 0.0f )
+		if ( mp_logecho->integer != 0 )
 			Con_Printf( "%s", string );
 
 		if( svs.log.file )
 		{
-			if ( mp_logfile->value != 0.0f )
+			if ( mp_logfile->integer != 0 )
 				FS_Printf( svs.log.file, "%s", string );
 		}
 	}
@@ -110,10 +110,10 @@ void Log_Open( void )
 	file_t *fp;
 	char *temp;
 
-	if ( !svs.log.active || ( sv_log_onefile->value != 0.0f && svs.log.file ) )
+	if ( !svs.log.active || ( sv_log_onefile->integer != 0 && svs.log.file ) )
 		return;
 
-	if ( mp_logfile->value == 0.0f )
+	if ( mp_logfile->integer == 0 )
 		Con_Printf( "Server logging data to console.\n" );
 	else
 	{
