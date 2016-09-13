@@ -1,29 +1,33 @@
 CC = gcc -g
 CXX ?= g++
-CFLAGS ?= -O2 -march=i686 -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
+CFLAGS ?= -O2 -march=native -fno-omit-frame-pointer -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
 LIBS = -lm
 LBITS := $(shell getconf LONG_BIT)
-
-ifeq ($(LBITS),64)
-	LDFLAGS += -m32
-	CFLAGS += -m32
+ifneq ($(64BIT),1)
+	ifeq ($(LBITS),64)
+		LDFLAGS += -m32
+		CFLAGS += -m32
+	endif
 endif
 TOPDIR = $(PWD)/..
 INCLUDES :=
 XASH_SINGLE_BINARY ?= 1
 INSTALL_DIR ?= ./install/
 ifeq ($(NANOGL),1)
-INCLUDES += -I../nanogl -I../nanogl/GL
+INCLUDES += -Inanogl -Inanogl/GL
 endif
 INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl
-DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DXASH_FASTSTR -DGDB_BREAK
 
+DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DGDB_BREAK
+ifneq ($(64BIT),1)
+DEFINES += -DXASH_FASTSTR
+endif
 ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
 else
-    DEFINES += -DXASH_SDL
-    LIBS += -lSDL2 -pthread
+   DEFINES += -DXASH_SDL
+   LIBS += -lSDL2 -pthread
 endif
 
 ifeq ($(NANOGL),1)
@@ -71,10 +75,11 @@ SRCS_CPP =
 #endif
 
 ifeq ($(NANOGL),1)
-SRCS_CPP += $(wildcard ../nanogl/*.cpp)
+SRCS_CPP += $(wildcard nanogl/*.cpp)
 endif
-OBJS_CPP = $(SRCS_CPP:.cpp=.o)
+OBJS_CPP = $(patsubst %.cpp,obj/%.o,$(SRCS_CPP))
 SRCS = $(wildcard server/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c)
+
 ifneq ($(XASH_DEDICATED),1)
 SRCS += $(wildcard client/*.c)
 SRCS += $(wildcard platform/sdl/*.c)
@@ -110,7 +115,7 @@ obj:
 	mkdir -p obj/common/imagelib
 	mkdir -p obj/common/soundlib/libmpg
 	mkdir -p obj/platform/sdl
-
+	mkdir -p obj/nanogl
 
 obj/%.o : %.c
 	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"  -Wno-unused-result -fvisibility=hidden

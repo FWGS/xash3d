@@ -89,6 +89,7 @@ convar_t	*sv_skipshield; // HACK for shield
 convar_t	*sv_trace_messages;
 convar_t	*sv_master;
 convar_t	*sv_corpse_solid;
+convar_t	*sv_fixmulticast;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -812,7 +813,9 @@ void SV_Init( void )
 	Cvar_Get( "sv_allow_PhysX", "1", CVAR_ARCHIVE, "allow XashXT to use PhysX engine" ); // XashXT cvar
 	Cvar_Get( "sv_precache_meshes", "1", CVAR_ARCHIVE, "cache SOLID_CUSTOM meshes before level loads" ); // Paranoia 2 cvar
 	Cvar_Get( "mp_allowmonsters", "0", CVAR_SERVERNOTIFY | CVAR_LATCH, "allow monsters in multiplayer" );
-		
+	Cvar_Get( "port", va( "%i", PORT_SERVER ), 0, "network default port" );
+	Cvar_Get( "ip_hostport", "0", 0, "network server port" );
+
 	// half-life shared variables
 	sv_zmax = Cvar_Get ("sv_zmax", "4096", CVAR_PHYSICINFO, "zfar server value" );
 	sv_wateramp = Cvar_Get ("sv_wateramp", "0", CVAR_PHYSICINFO, "global water wave height" );
@@ -890,6 +893,8 @@ void SV_Init( void )
 	sv_trace_messages = Cvar_Get( "sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)" );
 	sv_master = Cvar_Get( "sv_master", MASTERSERVER_ADR, CVAR_ARCHIVE, "master server address" );
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
+	sv_fixmulticast = Cvar_Get( "sv_fixmulticast", "1", CVAR_ARCHIVE, "do not send multicast to not spawned clients" );
+
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
 	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
@@ -926,7 +931,7 @@ void SV_FinalMessage( char *message, qboolean reconnect )
 	{
 		BF_WriteByte( &msg, svc_changing );
 
-		if( sv.loadgame || sv_maxclients->integer > 1 || sv.changelevel )
+		if( sv.loadgame || svgame.globals->maxClients > 1 || sv.changelevel )
 			BF_WriteOneBit( &msg, 1 ); // changelevel
 		else BF_WriteOneBit( &msg, 0 );
 	}
@@ -937,11 +942,11 @@ void SV_FinalMessage( char *message, qboolean reconnect )
 
 	// send it twice
 	// stagger the packets to crutch operating system limited buffers
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, cl = svs.clients; i < svgame.globals->maxClients; i++, cl++ )
 		if( cl->state >= cs_connected && !cl->fakeclient )
 			Netchan_Transmit( &cl->netchan, BF_GetNumBytesWritten( &msg ), BF_GetData( &msg ));
 
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, cl = svs.clients; i < svgame.globals->maxClients; i++, cl++ )
 		if( cl->state >= cs_connected && !cl->fakeclient )
 			Netchan_Transmit( &cl->netchan, BF_GetNumBytesWritten( &msg ), BF_GetData( &msg ));
 }

@@ -171,10 +171,16 @@ UI_InternetGames_JoinGame
 */
 static void UI_InternetGames_JoinGame( void )
 {
+	// close dialog
+	if( !(uiInternetGames.yes.generic.flags & QMF_HIDDEN ) )
+		UI_PromptDialog();
+
 	if( !strlen( uiInternetGames.gameDescription[uiInternetGames.gameList.curItem] ))
 		return;
 
 	CLIENT_JOIN( uiStatic.serverAddresses[uiInternetGames.gameList.curItem] );
+	// prevent refresh durning connect
+	uiInternetGames.refreshTime = uiStatic.realTime + 999999999;
 }
 
 /*
@@ -189,7 +195,7 @@ static void UI_Background_Ownerdraw( void *self )
 
 	if( uiStatic.realTime > uiInternetGames.refreshTime )
 	{
-		uiInternetGames.refreshTime = uiStatic.realTime + 10000; // refresh every 10 secs
+		uiInternetGames.refreshTime = uiStatic.realTime + 20000; // refresh every 10 secs
 		UI_RefreshInternetServerList();
 	}
 
@@ -463,9 +469,6 @@ void UI_InternetGames_Menu( void )
 
 	UI_InternetGames_Precache();
 	UI_InternetGames_Init();
-
-	uiInternetGames.refreshTime = uiStatic.realTime + 10000; // refresh every 10 secs
-	UI_RefreshInternetServerList();
 
 	UI_PushMenu( &uiInternetGames.menu );
 }

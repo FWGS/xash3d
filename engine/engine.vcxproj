@@ -164,6 +164,7 @@
     <ClCompile Include="common\pm_surface.c" />
     <ClCompile Include="common\pm_trace.c" />
     <ClCompile Include="common\random.c" />
+    <ClCompile Include="common\cfgscript.c" />
     <ClCompile Include="common\sdl\events.c" />
     <ClCompile Include="common\soundlib\snd_main.c" />
     <ClCompile Include="common\soundlib\snd_mp3.c" />

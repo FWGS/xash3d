@@ -1317,7 +1317,7 @@ void SV_New_f( sv_client_t *cl )
 		// NOTE: enable for testing
 		// Still have problems with download reject
 		// It's difficult to implement fastdl and forbid direct download
-		if( sv_maxclients->integer == 1 || sv_allow_download->value == 0 )
+		if( sv_maxclients->integer == 1 || sv_allow_download->integer == 0 )
 		{
 			Q_memset( &cl->lastcmd, 0, sizeof( cl->lastcmd ));
 
@@ -2119,7 +2119,7 @@ static void SV_Noclip_f( sv_client_t *cl )
 {
 	edict_t	*pEntity = cl->edict;
 
-	if( !Cvar_VariableInteger( "sv_cheats" ) || sv.background || !sv_allow_noclip->value )
+	if( !Cvar_VariableInteger( "sv_cheats" ) || sv.background || !sv_allow_noclip->integer )
 		return;
 
 	if( pEntity->v.movetype != MOVETYPE_NOCLIP )
@@ -2204,7 +2204,7 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 	vec3_t forward;
 	AngleVectors( player->v.v_angle, forward, NULL, NULL );
 
-	while( ( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) ) )
+	while( ( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) ) != EDICT_NUM( 0 ) )
 	{
 		vec3_t vecLOS;
 		float flDot;
@@ -2314,7 +2314,7 @@ edict_t *SV_EntFindSingle( sv_client_t *cl, const char *pattern )
 	{
 		i = Q_atoi( pattern );
 
-		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+		if( ( !sv_enttools_players->integer && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return NULL;
 	}
 	else if( !Q_stricmp( pattern, "!cross" ) )
@@ -2373,7 +2373,7 @@ void SV_EntInfo_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	vec3_t borigin;
 
-	if( ( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
+	if( ( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->integer && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 
 	if( Cmd_Argc() != 2 )
@@ -2477,7 +2477,7 @@ void SV_EntFire_f( sv_client_t *cl )
 	int	i = 1, count = 0;
 	qboolean single; // true if user specified something that match single entity
 
-	if( ( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
+	if( ( !sv_enttools_enable->integer && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 
 	Msg( "Player %i: %s called ent_fire: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
@@ -2494,7 +2494,7 @@ void SV_EntFire_f( sv_client_t *cl )
 	{
 		i = Q_atoi( Cmd_Argv( 1 ) );
 
-		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+		if( ( !sv_enttools_players->integer && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return;
 
 		ent = EDICT_NUM( i );
@@ -2505,7 +2505,7 @@ void SV_EntFire_f( sv_client_t *cl )
 		if( !SV_IsValidEdict( ent ) )
 			return;
 		i = NUM_FOR_EDICT( ent );
-		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+		if( ( !sv_enttools_players->integer && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return;
 	}
 	else if( ( single = ( Cmd_Argv( 1 )[0] == '!') ) ) // Check for correct instanse with !(num)_(serial)
@@ -2518,7 +2518,7 @@ void SV_EntFire_f( sv_client_t *cl )
 		if( *cmd++ != '_' )
 			return;
 
-		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+		if( ( !sv_enttools_players->integer && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
 			return;
 
 		ent = EDICT_NUM( i );
@@ -2527,7 +2527,7 @@ void SV_EntFire_f( sv_client_t *cl )
 	}
 	else
 	{
-		if( !sv_enttools_players->value )
+		if( !sv_enttools_players->integer )
 		i = svgame.globals->maxClients + 1;
 	}
 
@@ -2767,7 +2767,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	int	i;
 
-	if( ( !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
+	if( ( !sv_enttools_enable->integer && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
 		return;
 	// log all dangerous actions
 	Msg( "Player %i: %s called ent_create: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,

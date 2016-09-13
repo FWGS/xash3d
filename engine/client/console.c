@@ -306,7 +306,7 @@ void Con_CheckResize( void )
 	if( !glw_state.initialized )
 	{
 		// video hasn't been initialized yet
-		con.linewidth = width;
+		con.linewidth = 80;
 		con.totallines = CON_TEXTSIZE / con.linewidth;
 
 		for( i = 0; i < CON_TEXTSIZE; i++ )
@@ -420,47 +420,54 @@ Con_LoadConsoleFont
 static void Con_LoadConsoleFont( int fontNumber, cl_font_t *font )
 {
 	int	fontWidth;
+	const char *path = NULL;
+	byte	*buffer;
+	fs_offset_t	length;
+	qfont_t	*src;
+	dword crc = 0;
 
 	ASSERT( font != NULL );
 
 	if( font->valid ) return; // already loaded
+	// replace default fonts.wad textures by current charset's font
+	if( !CRC32_File( &crc, "fonts.wad" ) || crc == 0x3c0a0029 )
+	{
+		const char *path2 = va("font%i_%s.fnt", fontNumber, Cvar_VariableString( "con_charset" ) );
+		if( FS_FileExists( path2, false ) )
+			path = path2;
+	}
+
+	if( !path )
+		path = va( "fonts.wad/font%i", fontNumber );
 
 	// loading conchars
-	font->hFontTexture = GL_LoadTexture( va( "fonts.wad/font%i", fontNumber ), NULL, 0, TF_FONT|TF_NEAREST, NULL );
+	font->hFontTexture = GL_LoadTexture( path, NULL, 0, TF_FONT|TF_NEAREST, NULL );
 	R_GetTextureParms( &fontWidth, NULL, font->hFontTexture );
 	
 	if( fontWidth == 0 ) return;
 
-	// setup creditsfont
-	if( FS_FileExists( va( "fonts.wad/font%i.fnt", fontNumber ), false ) )
+	// half-life font with variable chars witdh
+	buffer = FS_LoadFile( path, &length, false );
+
+	if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
 	{
-		byte	*buffer;
-		fs_offset_t	length;
-		qfont_t	*src;
-	
-		// half-life font with variable chars witdh
-		buffer = FS_LoadFile( va( "fonts.wad/font%i", fontNumber ), &length, false );
+		int	i;
 
-		if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
+		src = (qfont_t *)buffer;
+		font->charHeight = src->rowheight;
+
+		// build rectangles
+		for( i = 0; i < 256; i++ )
 		{
-			int	i;
-	
-			src = (qfont_t *)buffer;
-			font->charHeight = src->rowheight;
-
-			// build rectangles
-			for( i = 0; i < 256; i++ )
-			{
-				font->fontRc[i].left = (word)src->fontinfo[i].startoffset % fontWidth;
-				font->fontRc[i].right = font->fontRc[i].left + src->fontinfo[i].charwidth;
-				font->fontRc[i].top = (word)src->fontinfo[i].startoffset / fontWidth;
-				font->fontRc[i].bottom = font->fontRc[i].top + src->rowheight;
-				font->charWidths[i] = src->fontinfo[i].charwidth;
-			}
-			font->valid = true;
+			font->fontRc[i].left = (word)src->fontinfo[i].startoffset % fontWidth;
+			font->fontRc[i].right = font->fontRc[i].left + src->fontinfo[i].charwidth;
+			font->fontRc[i].top = (word)src->fontinfo[i].startoffset / fontWidth;
+			font->fontRc[i].bottom = font->fontRc[i].top + src->rowheight;
+			font->charWidths[i] = src->fontinfo[i].charwidth;
 		}
-		if( buffer ) Mem_Free( buffer );
+		font->valid = true;
 	}
+	if( buffer ) Mem_Free( buffer );
 }
 
 /*
@@ -569,6 +576,12 @@ int Con_UtfProcessCharForce( int in )
 						return i + 0x80;
 			}
 		}
+		else if( g_codepage == 1252 )
+		{
+			if( uc < 255 )
+				return uc;
+		}
+
 		// not implemented yet
 		return '?';
 	}
@@ -1491,13 +1504,24 @@ qboolean Con_DrawProgress( void )
 		if( scr_download->value > 0 )
 		{
 			while( x < scr_download->value * (scr_width->value - QCHAR_WIDTH * 2)  / 100 )
-				x += Con_DrawCharacter( x, y, '=', g_color_table[7] );
+			{
+				int dx = Con_DrawCharacter( x, y, '=', g_color_table[7] );
+				if( dx < 1 )
+					break;
+				x += dx;
+			}
 		}
 		else if( scr_loading->value > 0 )
 		{
 			while( x < scr_loading->value * (scr_width->value - QCHAR_WIDTH * 2) / 100 )
-				x += Con_DrawCharacter( x, y, '=', g_color_table[7] );
+			{
+				int dx = Con_DrawCharacter( x, y, '=', g_color_table[7] );
+				if( dx < 1 )
+					break;
+				x += dx;
+			}
 		}
+
 		else return false;
 	return true;
 }
@@ -1523,7 +1547,7 @@ int Con_DrawDebugLines( void )
 		if( host.realtime < con.notify[i].expire && con.notify[i].key_dest == cls.key_dest )
 		{
 			int	x, len;
-			int	fontTall;
+			int	fontTall = 0;
 
 			Con_DrawStringLen( con.notify[i].szNotify, &len, &fontTall );
 			x = scr_width->integer - max( defaultX, len ) - 10;
@@ -1671,7 +1695,7 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		if( fill )
 		{
 			GL_SetRenderMode( kRenderNormal );
-			if( con_black->value )
+			if( con_black->integer )
 			{
 				pglColor4ub( 0, 0, 0, 255 );
 				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
@@ -1856,7 +1880,7 @@ void Con_DrawVersion( void )
 {
 	// draws the current build
 	byte	*color = g_color_table[7];
-	int	i, stringLen, width = 0, charH;
+	int	i, stringLen, width = 0, charH = 0;
 	int	start, height = scr_height->integer;
 	qboolean	draw_version = false;
 	string	curbuild;
@@ -1929,11 +1953,22 @@ void Con_RunConsole( void )
 			con.displayFrac = con.finalFrac;
 	}
 
-	// update codepage parameters
-	g_codepage = 0;
-	if( !Q_stricmp( con_charset->string, "cp1251" ) )
-		g_codepage = 1251;
-	g_utf8 = !Q_stricmp( cl_charset->string, "utf-8" );
+	if( con_charset->modified )
+	{
+		// update codepage parameters
+		g_codepage = 0;
+		if( !Q_stricmp( con_charset->string, "cp1251" ) )
+			g_codepage = 1251;
+		else if( !Q_stricmp( con_charset->string, "cp1252" ) )
+			g_codepage = 1252;
+
+		g_utf8 = !Q_stricmp( cl_charset->string, "utf-8" );
+		Con_InvalidateFonts();
+		Con_LoadConchars();
+		cls.creditsFont.valid = false;
+		SCR_LoadCreditsFont();
+		con_charset->modified = false;
+	}
 }
 
 /*

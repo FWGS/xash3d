@@ -390,15 +390,18 @@ void CL_SetSolidPlayers( int playernum )
 #if 1 // came from SetUpPlayerPrediction
 		state = cl.frames[cl.parsecountmod].playerstate + j;
 
-		// This makes all players no
-		//if( state->messagenum != cl.parsecount )
-		//	continue; // not present this frame [2]*/
+		if( ent->curstate.messagenum != cl.parsecount )
+			continue; // not present this frame [2]
+
+		if( ent->curstate.movetype == MOVETYPE_NONE )
+			continue;
 
 		if( state->effects & EF_NODRAW )
 			continue; // skip invisible
 
 		if( !state->solid )
 			continue; // not solid
+
 #endif
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
 		if( CL_CopyPlayerToPhysEnt( pe, ent ))
@@ -1202,7 +1205,7 @@ void CL_PredictMovement( void )
 
 	ASSERT( cl.refdef.cmd != NULL );
 
-	if( !cl_predict->value || Host_IsLocalClient() )
+	if( !cl_predict->integer || Host_IsLocalClient() )
 	{
 		// fake prediction code
 		// we need to perform cl_lw prediction while cl_predict is disabled

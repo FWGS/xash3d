@@ -1245,7 +1245,6 @@ void R_BeginFrame( qboolean clearScene )
 		{
 			SCR_RebuildGammaTable();
 			GL_UpdateGammaRamp();
-			vid_gamma->modified = false;
 		}
 		else
 		{
@@ -1254,6 +1253,7 @@ void R_BeginFrame( qboolean clearScene )
 			GL_RebuildLightmaps();
 			glConfig.softwareGammaUpdate = false;
 		}
+		vid_gamma->modified = false;
 	}
 
 	R_Set2DMode( true );

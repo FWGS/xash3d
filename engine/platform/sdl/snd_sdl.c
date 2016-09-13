@@ -252,5 +252,21 @@ void S_PrintDeviceName( void )
 	Msg( "Audio: SDL (driver: %s)\n", SDL_GetCurrentAudioDriver() );
 #endif
 }
+
+
+/*
+===========
+S_Activate
+Called when the main window gains or loses focus.
+The window have been destroyed and recreated
+between a deactivate and an activate.
+===========
+*/
+void S_Activate( qboolean active )
+{
+#ifdef XASH_SDL
+	SDL_PauseAudio( !active );
+#endif
+}
 #endif
 #endif // XASH_DEDICATED

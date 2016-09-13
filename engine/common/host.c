@@ -279,6 +279,19 @@ void Host_Exec_f( void )
 		return;
 	}
 
+	if( !Q_stricmp( Cvar_VariableString( "lservercfgfile" ),  Cmd_Argv( 1 )))
+	{
+		if( Q_strstr( f, "//=======================================================================" ) &&
+			Q_strstr( f, "//\t\t\tCopyright XashXT Group" ) &&
+			Q_strstr( f, "//\t\t\tserver.cfg - server temp" ) )
+		{
+			Msg( "^1Found old generated xash3d listenserver config, skipping!\n" );
+			Msg( "^1Remove Xash3D header to use it\n" );
+			Mem_Free( f );
+			return;
+		}
+	}
+
 	MsgDev( D_INFO, "execing %s\n", Cmd_Argv( 1 ));
 
 	// terminate the string with newline just in case it's missing
@@ -732,9 +745,6 @@ void Host_Error( const char *error, ... )
 	SV_Shutdown( false );
 	CL_Drop(); // drop clients
 
-	// recreate world if required
-	CL_ClearEdicts ();
-
 	// release all models
 	Mod_ClearAll( false );
 
@@ -789,7 +799,7 @@ void Host_MapDesignError( const char *format, ... )
 	va_start( argptr, format );
 	Q_vsnprintf( str, 256, format, argptr );
 	va_end( argptr );
-	if( host_mapdesign_fatal->value )
+	if( host_mapdesign_fatal->integer )
 		Host_Error( "Map Design Error: %s\n", str );
 	else
 		Msg( "^1Map Design Error: ^3%s", str );
@@ -1065,7 +1075,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Wcon_ShowConsole( false ); // hide console
 #endif
 		// execute startup config and cmdline
-		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ));
+		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ) );
+		CSCR_LoadDefaultCVars( "settings.scr" );
+		CSCR_LoadDefaultCVars( "user.scr" );
 		// intentional fallthrough
 	case HOST_DEDICATED:
 		Cbuf_Execute(); // force stuffcmds run if it is in cbuf

@@ -77,6 +77,7 @@ typedef struct
 	menuAction_s	dlgMessage1;
 	menuPicButton_s	yes;
 	menuPicButton_s	no;
+	void ( *promptAction )( void );
 } uiMain_t;
 
 static uiMain_t		uiMain;
@@ -175,6 +176,13 @@ static void UI_PromptDialog( void )
 
 }
 
+static void UI_ShowPrompt( void ( *action )( void ), const char *message )
+{
+	uiMain.promptAction = action;
+	uiMain.dlgMessage1.generic.name = message;
+	UI_PromptDialog();
+}
+
 /*
 =================
 UI_Main_KeyFunc
@@ -239,6 +247,15 @@ static void UI_Main_HazardCourse( void )
 	CLIENT_COMMAND( FALSE, "hazardcourse\n" );
 }
 
+static void UI_Main_Disconnect( void )
+{
+	if( CVAR_GET_FLOAT( "host_serverstate" ) )
+		CLIENT_COMMAND( TRUE, "endgame;wait;wait;wait;menu_options;menu_main\n");
+	else
+		CLIENT_COMMAND( TRUE, "cmd disconnect;wait;wait;wait;menu_options;menu_main\n");
+	UI_Main_Menu();
+}
+
 /*
 =================
 UI_Main_Callback
@@ -275,18 +292,14 @@ static void UI_Main_Callback( void *self, int event )
 		UI_CloseMenu();
 		break;
 	case ID_DISCONNECT:
-		if( CVAR_GET_FLOAT( "host_serverstate" ) )
-			CLIENT_COMMAND( TRUE, "endgame;wait;wait;wait;menu_options;menu_main\n");
-		else
-			CLIENT_COMMAND( TRUE, "cmd disconnect;wait;wait;wait;menu_options;menu_main\n");
-		UI_Main_Menu();
+		UI_ShowPrompt( UI_Main_Disconnect, "Really disconnect?" );
 		break;
 	case ID_NEWGAME:
 		UI_NewGame_Menu();
 		break;
 	case ID_HAZARDCOURSE:
 		if( CL_IsActive( ))
-			UI_PromptDialog();
+			UI_ShowPrompt( UI_Main_HazardCourse, MenuStrings[HINT_RESTART_HZ] );
 		else UI_Main_HazardCourse();
 		break;
 	case ID_MULTIPLAYER:
@@ -316,7 +329,8 @@ static void UI_Main_Callback( void *self, int event )
 	case ID_YES:
 		if( !( uiMain.quitMessage.generic.flags & QMF_HIDDEN ))
 			CLIENT_COMMAND( FALSE, "quit\n" );
-		else UI_Main_HazardCourse();
+		else
+			uiMain.promptAction();
 		break;
 	case ID_NO:
 		if( !( uiMain.quitMessage.generic.flags & QMF_HIDDEN ))

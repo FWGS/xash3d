@@ -192,7 +192,7 @@ void Host_ClientFrame()
 
 void Host_InputFrame()
 {
-
+	Cbuf_Execute();
 }
 
 void R_ClearAllDecals()

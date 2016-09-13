@@ -63,6 +63,7 @@ convar_t	*hud_scale;
 convar_t	*cl_maxpacket;
 convar_t    *r_bmodelinterp;
 
+convar_t	*hud_utf8;
 //
 // userinfo
 //
@@ -651,6 +652,9 @@ void CL_Drop( void )
 	if( cls.state == ca_uninitialized )
 		return;
 	CL_Disconnect();
+
+	// This fixes crash in menu_playersetup after disconnecting from server
+	CL_ClearEdicts();
 }
 
 /*
@@ -964,6 +968,8 @@ void CL_LocalServers_f( void )
 	Netchan_OutOfBandPrint( NS_CLIENT, adr, "info %i", PROTOCOL_VERSION );
 }
 
+#define MS_SCAN_REQUEST "1\xFF" "0.0.0.0:0\0" "\\gamedir\\"
+
 /*
 =================
 CL_InternetServers_f
@@ -972,17 +978,18 @@ CL_InternetServers_f
 void CL_InternetServers_f( void )
 {
 	netadr_t	adr;
-	char	fullquery[512] = "1\xFF" "0.0.0.0:0\0" "\\gamedir\\";
+	char	fullquery[512] = MS_SCAN_REQUEST;
 
 	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
 	NET_Config( true ); // allow remote
 
 	if( !NET_StringToAdr( sv_master->string, &adr ) )
+	{
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
+		return;
+	}
 
-	Q_strcpy( &fullquery[22], GI->gamedir );
-
-	NET_SendPacket( NS_CLIENT, 23 + Q_strlen(GI->gamedir), fullquery, adr );
+	NET_SendPacket( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strcpy( fullquery + sizeof( MS_SCAN_REQUEST ) - 1, GI->gamedir ), fullquery, adr );
 }
 
 /*
@@ -1269,6 +1276,8 @@ void CL_PrepVideo( void )
 
 	Mod_FreeUnused ();
 
+	Q_memset( cl.playermodels, 0, sizeof( cl.playermodels ) );
+
 	Cvar_SetFloat( "scr_loading", 100.0f );	// all done
 
 	if( host.decalList )
@@ -1420,6 +1429,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		// a disconnect message from the server, which will happen if the server
 		// dropped the connection but it is still getting packets from us
 		CL_Disconnect();
+		CL_ClearEdicts();
 	}
 	else if( !Q_strcmp( c, "f") )
 	{
@@ -1562,6 +1572,7 @@ void CL_ReadPackets( void )
 			{
 				Msg( "\nServer connection timed out.\n" );
 				CL_Disconnect();
+				CL_ClearEdicts();
 				return;
 			}
 		}
@@ -1723,6 +1734,8 @@ void CL_InitLocal( void )
 	r_bmodelinterp = Cvar_Get( "r_bmodelinterp", "1", 0, "enable bmodel interpolation" );
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
+	hud_utf8 = Cvar_Get( "hud_utf8", "0", CVAR_ARCHIVE, "Use utf-8 encoding for hud text" );
+
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
 	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicates that background map is running" );
 

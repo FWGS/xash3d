@@ -786,22 +786,23 @@ void IN_TouchInit( void )
 	MakeRGBA( color, 255, 255, 255, 255 );
 	IN_TouchAddDefaultButton( "look", "", "_look", 0.500000, 0.000000, 1.000000, 1, color, 0, 0, 0 );
 	IN_TouchAddDefaultButton( "move", "", "_move", 0.000000, 0.000000, 0.500000, 1, color, 0, 0, 0 );
-	IN_TouchAddDefaultButton( "invnext", "touch_default/next_weap.tga", "invnext", 0.000000, 0.530200, 0.120000, 0.757428, color, 2, 0.999998, 0 );
-	IN_TouchAddDefaultButton( "invprev", "touch_default/prev_weap.tga", "invprev", 0.000000, 0.075743, 0.120000, 0.302971, color, 2, 0.999998, 0 );
-	IN_TouchAddDefaultButton( "use", "touch_default/use.tga", "+use", 0.880000, 0.454457, 1.000000, 0.681685, color, 2, 0.999998, 0 );
-	IN_TouchAddDefaultButton( "jump", "touch_default/jump.tga", "+jump", 0.880000, 0.227228, 1.000000, 0.454457, color, 2, 1.000003, 0 );
-	IN_TouchAddDefaultButton( "attack", "touch_default/shoot.tga", "+attack", 0.760000, 0.530200, 0.880000, 0.757428, color, 2, 0.999998, 0 );
-	IN_TouchAddDefaultButton( "attack2", "touch_default/shoot_alt.tga", "+attack2", 0.760000, 0.302971, 0.880000, 0.530200, color, 2, 1.000003, 0 );
-	IN_TouchAddDefaultButton( "loadquick", "touch_default/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.151486, color, 2, 1.000003, 16 );
-	IN_TouchAddDefaultButton( "savequick", "touch_default/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.151486, color, 2, 1.000002, 16 );
-	IN_TouchAddDefaultButton( "messagemode", "touch_default/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.151486, color, 2, 1.000002, 8 );
-	IN_TouchAddDefaultButton( "reload", "touch_default/reload.tga", "+reload", 0.000000, 0.302971, 0.120000, 0.530200, color, 2, 1.000003, 0 );
-	IN_TouchAddDefaultButton( "flashlight", "touch_default/flash_light_filled.tga", "impulse 100", 0.920000, 0.000000, 1.000000, 0.151486, color, 2, 1.000003, 0 );
-	IN_TouchAddDefaultButton( "scores", "touch_default/map.tga", "+showscores", 0.760000, 0.000000, 0.840000, 0.151486, color, 2, 1.000003, 8 );
-	IN_TouchAddDefaultButton( "show_numbers", "touch_default/show_weapons.tga", "exec touch_default/numbers.cfg", 0.440000, 0.833171, 0.520000, 0.984656, color, 2, 0.999996, 0 );
-	IN_TouchAddDefaultButton( "duck", "touch_default/crouch.tga", "+duck", 0.880000, 0.757428, 1.000000, 0.984656, color, 2, 0.999998, 0 );
-	IN_TouchAddDefaultButton( "tduck", "touch_default/tduck.tga", ";+duck", 0.560000, 0.833171, 0.620000, 0.946785, color, 2, 0.999998, 0 );
-	IN_TouchAddDefaultButton( "edit", "touch_default/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.151486, color, 2, 1.000003, 32 );
+	IN_TouchAddDefaultButton( "invnext", "touch_default/next_weap.tga", "invnext", 0.000000, 0.530200, 0.120000, 0.757428, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "invprev", "touch_default/prev_weap.tga", "invprev", 0.000000, 0.075743, 0.120000, 0.302971, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "use", "touch_default/use.tga", "+use", 0.880000, 0.454457, 1.000000, 0.681685, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "jump", "touch_default/jump.tga", "+jump", 0.880000, 0.227228, 1.000000, 0.454457, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "attack", "touch_default/shoot.tga", "+attack", 0.760000, 0.530200, 0.880000, 0.757428, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "attack2", "touch_default/shoot_alt.tga", "+attack2", 0.760000, 0.302971, 0.880000, 0.530200, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "loadquick", "touch_default/load.tga", "loadquick", 0.760000, 0.000000, 0.840000, 0.151486, color, 2, 1, 16 );
+	IN_TouchAddDefaultButton( "savequick", "touch_default/save.tga", "savequick", 0.840000, 0.000000, 0.920000, 0.151486, color, 2, 1, 16 );
+	IN_TouchAddDefaultButton( "messagemode", "touch_default/keyboard.tga", "messagemode", 0.840000, 0.000000, 0.920000, 0.151486, color, 2, 1, 8 );
+	IN_TouchAddDefaultButton( "reload", "touch_default/reload.tga", "+reload", 0.000000, 0.302971, 0.120000, 0.530200, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "flashlight", "touch_default/flash_light_filled.tga", "impulse 100", 0.920000, 0.000000, 1.000000, 0.151486, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "scores", "touch_default/map.tga", "+showscores", 0.760000, 0.000000, 0.840000, 0.151486, color, 2, 1, 8 );
+	IN_TouchAddDefaultButton( "show_numbers", "touch_default/show_weapons.tga", "exec touch_default/numbers.cfg", 0.440000, 0.833171, 0.520000, 0.984656, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "duck", "touch_default/crouch.tga", "+duck", 0.880000, 0.757428, 1.000000, 0.984656, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "tduck", "touch_default/tduck.tga", ";+duck", 0.560000, 0.833171, 0.620000, 0.946785, color, 2, 1, 0 );
+	IN_TouchAddDefaultButton( "edit", "touch_default/settings.tga", "touch_enableedit", 0.420000, 0.000000, 0.500000, 0.151486, color, 2, 1, 32 );
+	IN_TouchAddDefaultButton( "menu", "touch_default/menu.tga", "escape", 0.000000, 0.833171, 0.080000, 0.984656, color, 2, 1, 0 );
 
 	
 	Cmd_AddCommand( "touch_addbutton", IN_TouchAddButton_f, "add native touch button" );
@@ -924,7 +925,7 @@ static void IN_TouchCheckCoords( float *x1, float *y1, float *x2, float *y2  )
 		*y1 -= *y2 - 1, *y2 = 1;
 	if( *x2 > 1 )
 		*x1 -= *x2 - 1, *x2 = 1;
-	if ( touch_grid_enable->value )
+	if ( touch_grid_enable->integer )
 	{
 		*x1 = GRID_ROUND_X( *x1 );
 		*x2 = GRID_ROUND_X( *x2 );
@@ -1001,18 +1002,18 @@ void IN_TouchDraw( void )
 {
 	touchbutton2_t *button;
 
-	if( !touch.initialized || !touch_enable->value )
+	if( !touch.initialized || !touch_enable->integer )
 		return;
 
-	if( cls.key_dest != key_game && touch_in_menu->value == 0 )
+	if( cls.key_dest != key_game && touch_in_menu->integer == 0 )
 		return;
 
 	GL_SetRenderMode( kRenderTransTexture );
 
-	if( touch.state >= state_edit && touch_grid_enable->value )
+	if( touch.state >= state_edit && touch_grid_enable->integer )
 	{
 		float x;
-		if( touch_in_menu->value )
+		if( touch_in_menu->integer )
 			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 32, 32, 32, 255 );
 		else
 			IN_TouchDrawTexture( 0, 0, 1, 1, cls.fillImage, 0, 0, 0, 112 );
@@ -1198,6 +1199,7 @@ void IN_TouchDraw( void )
 // clear move and selection state
 void IN_TouchEditClear( void )
 {
+	touch.move_finger = touch.look_finger = -1;
 	if( touch.state < state_edit )
 		return;
 	touch.state = state_edit;
@@ -1260,29 +1262,34 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	touchbutton2_t *button;
 	
 	// simulate menu mouse click
-	if( cls.key_dest != key_game && !touch_in_menu->value )
+	if( cls.key_dest != key_game && !touch_in_menu->integer )
 	{
+		touch.move_finger = touch.resize_finger = touch.look_finger = -1;
 		// Hack for keyboard, hope it help
 		if( cls.key_dest == key_console || cls.key_dest == key_message ) 
 		{
 			Key_EnableTextInput( true, true );
 			if( cls.key_dest == key_console )
 			{
-				static float y = 0;
-				y += dy;
+				static float y1 = 0;
+				y1 += dy;
 				if( dy > 0.4 )
 					Con_Bottom();
-				if( y > 0.01 )
+				if( y1 > 0.01 )
 				{
 					Con_PageUp( 1 );
-					y = 0;
+					y1 = 0;
 				}
-				if( y < -0.01 )
+				if( y1 < -0.01 )
 				{
 					Con_PageDown( 1 );
-					y = 0;
+					y1 = 0;
 				}
 			}
+
+			// exit of console area
+			if( type == event_down && x < 0.1f && y > 0.9f )
+				Cbuf_AddText( "escape\n" );
 		}
 		UI_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
 		//MsgDev( D_NOTE, "touch %d %d\n", TO_SCRN_X(x), TO_SCRN_Y(y) );
@@ -1293,7 +1300,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		return 0;
 	}
 	
-	if( !touch.initialized || !touch_enable->value )
+	if( !touch.initialized || !touch_enable->integer )
 		return 0;
 
 	if( touch.state == state_edit_move )
@@ -1315,7 +1322,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			if( ( y > GRID_Y * 2 ) && ( y < GRID_Y * 4 )  ) // close button
 			{
 				IN_TouchDisableEdit_f();
-				if( touch_in_menu->value )
+				if( touch_in_menu->integer )
 				{
 					Cvar_Set("touch_in_menu","0");
 				}

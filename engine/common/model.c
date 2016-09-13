@@ -2984,20 +2984,12 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 
 	if( !buf )
 	{
-		// Try to load this model with lowered file name
-		char *loweredName = FS_ToLowerCase( tempname );
-		buf = FS_LoadFile( loweredName, NULL, false );
-		free(loweredName);
-		if( !buf )
-		{
-			Q_memset( mod, 0, sizeof( model_t ));
+		Q_memset( mod, 0, sizeof( model_t ));
 
-			if( crash ) Host_MapDesignError( "Mod_ForName: %s couldn't load\n", tempname );
-			else MsgDev( D_ERROR, "Mod_ForName: %s couldn't load\n", tempname );
+		if( crash ) Host_MapDesignError( "Mod_ForName: %s couldn't load\n", tempname );
+		else MsgDev( D_ERROR, "Mod_ForName: %s couldn't load\n", tempname );
 
-			return NULL;
-		}
-
+		return NULL;
 	}
 
 	FS_FileBase( mod->name, modelname );

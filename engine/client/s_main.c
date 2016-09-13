@@ -362,7 +362,7 @@ channel_t *SND_PickStaticChannel( int entnum, sfx_t *sfx, const vec3_t pos )
 	channel_t	*ch = NULL;
 	int	i;
 
-#if 0	
+#if 1
 	int dupe = 0;
 
 	// TODO: remove this code when predicting is will be done
@@ -1593,7 +1593,7 @@ void S_RenderFrame( ref_params_t *fd )
 	}
 
 	// debugging output
-	if( s_show->value )
+	if( s_show->integer )
 	{
 		info.color[0] = 1.0f;
 		info.color[1] = 0.6f;
@@ -1769,21 +1769,6 @@ S_Init
 */
 qboolean S_Init( void )
 {
-	if( Sys_CheckParm( "-nosound" ))
-	{
-		MsgDev( D_INFO, "Audio: Disabled\n" );
-		return false;
-	}
-#ifdef XASH_SDL
-	if( SDL_Init( SDL_INIT_AUDIO ) )
-	{
-		MsgDev( D_ERROR, "Audio: SDL: %s \n", SDL_GetError() );
-		return false;
-	}
-#elif !defined(XASH_OPENSL)
-	return false;
-#endif
-
 	s_volume = Cvar_Get( "volume", "0.7", CVAR_ARCHIVE, "sound volume" );
 	s_musicvolume = Cvar_Get( "musicvolume", "1.0", CVAR_ARCHIVE, "background music volume" );
 	s_mixahead = Cvar_Get( "_snd_mixahead", "0.12", 0, "how much sound to mix ahead of time" );
@@ -1803,6 +1788,21 @@ qboolean S_Init( void )
 	s_test = Cvar_Get( "s_test", "0", 0, "engine developer cvar for quick testing of new features" );
 	s_phs = Cvar_Get( "s_phs", "0", CVAR_ARCHIVE, "cull sounds by PHS" );
 	s_khz = Cvar_Get("s_khz", "44", CVAR_ARCHIVE, "set sampling frequency, available values are 11, 22, 44, 48");
+
+	if( Sys_CheckParm( "-nosound" ))
+	{
+		MsgDev( D_INFO, "Audio: Disabled\n" );
+		return false;
+	}
+#ifdef XASH_SDL
+	if( SDL_Init( SDL_INIT_AUDIO ) )
+	{
+		MsgDev( D_ERROR, "Audio: SDL: %s \n", SDL_GetError() );
+		return false;
+	}
+#elif !defined(XASH_OPENSL)
+	return false;
+#endif
 
 	Cmd_AddCommand( "play", S_Play_f, "play a specified sound file" );
 	Cmd_AddCommand( "playvol", S_PlayVol_f, "play a specified sound file with specified volume" );

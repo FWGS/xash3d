@@ -39,7 +39,7 @@ void Android_Vibrate( float life, char flags );
 
 static void pfnVibrate( float life, char flags )
 {
-	if( !vibration_enable->value )
+	if( !vibration_enable->integer )
 		return;
 
 	if( life < 0.0f )

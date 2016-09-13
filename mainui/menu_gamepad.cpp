@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "utils.h"
 #include "menu_btnsbmp_table.h"
 
-#define ART_BANNER			"gfx/shell/head_audio"
+#define ART_BANNER			"gfx/shell/head_gamepad"
 
 #define ID_BACKGROUND 0
 #define ID_BANNER 1
@@ -31,9 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 enum
 {
 	ID_DONE = 2,
-	ID_RT_COMMAND,
 	ID_RT_THRESHOLD,
-	ID_LT_COMMAND,
 	ID_LT_THRESHOLD,
 	ID_SIDE,
 	ID_FORWARD,
@@ -81,18 +79,12 @@ typedef struct
 	menuBitmap_s	banner;
 
 	menuPicButton_s	done;
-
-	menuField_s       rt_command,   lt_command;
-
 	menuSlider_s side, forward, pitch, yaw;
 	menuCheckBox_s invSide, invFwd, invPitch, invYaw;
 
 	menuSpinControl_s axisBind[6];
 
 	menuAction_s axisBind_label;
-	menuAction_s rt_command_label;
-	menuAction_s lt_command_label;
-
 } uiGamePad_t;
 
 static uiGamePad_t		uiGamePad;
@@ -108,8 +100,6 @@ static void UI_GamePad_GetConfig( void )
 	char binding[7] = { 0 };
 	static char lt_threshold_text[8], rt_threshold_text[8];
 
-	strcpy( uiGamePad.rt_command.buffer, CVAR_GET_STRING( "joy_rt_command") );
-	strcpy( uiGamePad.lt_command.buffer, CVAR_GET_STRING( "joy_lt_command") );
 	strncpy( binding, CVAR_GET_STRING( "joy_axis_binding"), sizeof( binding ));
 
 	side = CVAR_GET_FLOAT( "joy_side" );
@@ -208,8 +198,6 @@ static void UI_GamePad_SetConfig( void )
 	CVAR_SET_FLOAT( "joy_pitch", pitch );
 	CVAR_SET_FLOAT( "joy_yaw", yaw );
 	CVAR_SET_STRING( "joy_axis_binding", binding );
-	CVAR_SET_STRING( "joy_rt_command", uiGamePad.rt_command.buffer );
-	CVAR_SET_STRING( "joy_lt_command", uiGamePad.lt_command.buffer );
 }
 
 /*
@@ -416,59 +404,10 @@ static void UI_GamePad_Init( void )
 	uiGamePad.invYaw.generic.callback = UI_GamePad_Callback;
 	uiGamePad.invYaw.generic.statusText = "Invert yaw axis";
 
-	uiGamePad.rt_command.generic.id = ID_RT_COMMAND;
-	uiGamePad.rt_command.generic.type = QMTYPE_FIELD;
-	uiGamePad.rt_command.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiGamePad.rt_command.generic.x = 400;
-	uiGamePad.rt_command.generic.y = 430;
-	uiGamePad.rt_command.generic.height = 26;
-	uiGamePad.rt_command.generic.width = 200;
-	uiGamePad.rt_command.generic.charHeight = 22;
-	uiGamePad.rt_command.generic.charWidth = 14;
-	uiGamePad.rt_command.generic.callback = UI_GamePad_Callback;
-	uiGamePad.rt_command.generic.statusText = "When execute right trigger command";
-
-	uiGamePad.lt_command.generic.id = ID_LT_COMMAND;
-	uiGamePad.lt_command.generic.type = QMTYPE_FIELD;
-	uiGamePad.lt_command.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiGamePad.lt_command.generic.x = 400;
-	uiGamePad.lt_command.generic.y = 480;
-	uiGamePad.lt_command.generic.height = 26;
-	uiGamePad.lt_command.generic.width = 200;
-	uiGamePad.lt_command.generic.charHeight = 22;
-	uiGamePad.lt_command.generic.charWidth = 14;
-	uiGamePad.lt_command.generic.callback = UI_GamePad_Callback;
-	uiGamePad.lt_command.generic.statusText = "When execute left trigger command";
-
-	uiGamePad.rt_command_label.generic.type = QMTYPE_ACTION;
-	uiGamePad.rt_command_label.generic.flags = QMF_CENTER_JUSTIFY|QMF_INACTIVE|QMF_DROPSHADOW;
-	uiGamePad.rt_command_label.generic.x = 610;
-	uiGamePad.rt_command_label.generic.y = 430;
-	uiGamePad.rt_command_label.generic.color = uiColorHelp;
-	uiGamePad.rt_command_label.generic.height = 26;
-	uiGamePad.rt_command_label.generic.width = 200;
-	uiGamePad.rt_command_label.generic.charHeight = 22;
-	uiGamePad.rt_command_label.generic.charWidth = 11;
-	uiGamePad.rt_command_label.generic.callback = UI_GamePad_Callback;
-	uiGamePad.rt_command_label.generic.name = "Right trigger command";
-
-	uiGamePad.lt_command_label.generic.type = QMTYPE_ACTION;
-	uiGamePad.lt_command_label.generic.flags = QMF_CENTER_JUSTIFY|QMF_INACTIVE|QMF_DROPSHADOW;
-	uiGamePad.lt_command_label.generic.x = 610;
-	uiGamePad.lt_command_label.generic.y = 480;
-	uiGamePad.lt_command_label.generic.color = uiColorHelp;
-	uiGamePad.lt_command_label.generic.height = 26;
-	uiGamePad.lt_command_label.generic.width = 200;
-	uiGamePad.lt_command_label.generic.charHeight = 22;
-	uiGamePad.lt_command_label.generic.charWidth = 11;
-	uiGamePad.lt_command_label.generic.callback = UI_GamePad_Callback;
-	uiGamePad.lt_command_label.generic.name = "Left trigger command";
-
-
-
 	UI_GamePad_GetConfig();
 
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.background );
+	UI_AddItem( &uiGamePad.menu, &uiGamePad.banner );
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.done );
 	for( int i = 0; i < 6; i++ )
 	{
@@ -482,10 +421,6 @@ static void UI_GamePad_Init( void )
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.invPitch );
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.yaw );
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.invYaw );
-	UI_AddItem( &uiGamePad.menu, &uiGamePad.rt_command );
-	UI_AddItem( &uiGamePad.menu, &uiGamePad.lt_command );
-	UI_AddItem( &uiGamePad.menu, &uiGamePad.lt_command_label );
-	UI_AddItem( &uiGamePad.menu, &uiGamePad.rt_command_label );
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.axisBind_label );
 }
 

@@ -221,8 +221,9 @@ qboolean CRC32_File( dword *crcvalue, const char *filename )
 
 		if( num_bytes > 0 )
 			CRC32_ProcessBuffer( crcvalue, buffer, num_bytes );
+		else break;
 
-		if( FS_Eof( f )) break;
+		if( FS_Eof( f ) ) break;
 	}
 
 	FS_Close( f );
@@ -564,6 +565,7 @@ qboolean MD5_HashFile( byte digest[16], const char *pszFileName, uint seed[4] )
 
 		if( bytes > 0 )
 			MD5Update( &MD5_Hash, (byte *)buffer, bytes );
+		else break;
 
 		if( FS_Eof( file ))
 			break;

@@ -856,9 +856,9 @@ void CheckNewDspPresets( void )
 		return;
 
 	if( cl.predicted.waterlevel > 2 )
-		idsp_room = roomwater_type->value;
+		idsp_room = roomwater_type->integer;
 	else
-		idsp_room = room_type->value;
+		idsp_room = room_type->integer;
 
 	if( idsp_room == room_typeprev && idsp_room == 0 )
 		return;

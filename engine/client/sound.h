@@ -265,6 +265,7 @@ wavdata_t *S_LoadSound( sfx_t *sfx );
 float S_GetMasterVolume( void );
 float S_GetMusicVolume( void );
 void S_PrintDeviceName( void );
+void S_Activate( qboolean active );
 
 //
 // s_main.c
