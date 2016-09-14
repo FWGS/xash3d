@@ -117,11 +117,11 @@ qboolean Sys_DebuggerPresent( void )
 		tracer_pid    = (const byte*)Q_strstr( buf, TracerPid );
 		if( !tracer_pid )
 			return false;
-		printf( "%s\n", tracer_pid );
+		//printf( "%s\n", tracer_pid );
 		while( *tracer_pid < '0' || *tracer_pid > '9'  )
 			if( *tracer_pid++ == '\n' )
 				return false;
-		printf( "%s\n", tracer_pid );
+		//printf( "%s\n", tracer_pid );
 		return !!Q_atoi( (const char*)tracer_pid );
 	}
 
@@ -129,10 +129,15 @@ qboolean Sys_DebuggerPresent( void )
 }
 
 #undef DEBUG_BREAK
+#ifdef __i386__
 #define DEBUG_BREAK \
 	if( Sys_DebuggerPresent() ) \
 		asm volatile("int $3;")
-		//raise( SIGINT )
+#else
+#define DEBUG_BREAK \
+	if( Sys_DebuggerPresent() ) \
+		raise( SIGINT )
+#endif
 #endif
 #if defined _WIN32 && !defined __amd64__
 #ifdef _MSC_VER
