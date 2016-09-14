@@ -250,9 +250,9 @@ gotnewcl:
 				// clear any dlls data but keep engine data
 				Mem_Free( ent->pvPrivateData );
 				ent->pvPrivateData = NULL;
+				ent->serialnumber++;
 			}
-			// invalidate serial number
-			ent->serialnumber++;
+
 		}
 		// "3" enables both clean and disconnect
 		if( sv_clientclean->integer & 2 )
