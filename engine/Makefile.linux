@@ -105,18 +105,14 @@ xash: $(OBJS) $(OBJS_CPP)
 
 endif
 
-$(OBJS): | obj
 
-obj:
-	mkdir -p obj
-	mkdir -p obj/server
-	mkdir -p obj/client/vgui
-	mkdir -p obj/common/sdl
-	mkdir -p obj/common/imagelib
-	mkdir -p obj/common/soundlib/libmpg
-	mkdir -p obj/platform/sdl
-	mkdir -p obj/nanogl
+DIRS := obj obj/server obj/client/vgui obj/common/sdl obj/common/imagelib obj/common/soundlib/libmpg obj/platform/sdl obj/nanogl
 
+
+$(OBJS): | $(DIRS)
+
+$(DIRS) :
+	mkdir -p $(DIRS)
 obj/%.o : %.c
 	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"  -Wno-unused-result -fvisibility=hidden
 
