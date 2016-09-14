@@ -248,19 +248,20 @@ int sel(const struct dirent *d)
 static void listdirectory( stringlist_t *list, const char *path, qboolean lowercase )
 {
 	int		i;
-	signed char		pattern[4096], *c;
+	signed char *c;
 #ifdef _WIN32
+	char pattern[4096];
 	struct _finddata_t	n_file;
-#else
-	struct dirent **n_file = NULL;
-#endif
 	int		hFile;
+#else
+	DIR *dir;
+	struct dirent *entry;
+#endif
 
-	Q_strncpy( (char *)pattern, path, sizeof( pattern ));
-	Q_strncat( (char *)pattern, "*", sizeof( pattern ));
+#ifdef _WIN32
+	Q_snprintf( pattern, sizeof( pattern ), "%s*", path );
 
 	// ask for the directory listing handle
-#ifdef _WIN32
 	hFile = _findfirst( pattern, &n_file );
 	if( hFile == -1 ) return;
 
@@ -271,23 +272,13 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
 #else
-	// ask for the directory listing handle
-	hFile = scandir( path, &n_file, NULL, NULL );
-	if( hFile < 1 )
-	{
-#if 0
-		MsgDev( D_INFO, "listdirectory: scandir() failed, %s at %s", strerror(hFile), path );
-#endif
+	if( !( dir = opendir( path ) ) )
 		return;
-	}
 
 	// iterate through the directory
-	for( i = 0; i < hFile; i++)
-	{
-		stringlistappend( list, n_file[i]->d_name );
-		free( n_file[i] );
-	}
-	free( n_file );
+	while( ( entry = readdir( dir ) ))
+		stringlistappend( list, entry->d_name );
+	closedir( dir );
 #endif
 
 	// convert names to lowercase because windows doesn't care, but pattern matching code often does
