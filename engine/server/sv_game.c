@@ -4864,6 +4864,7 @@ void SV_UnloadProgs( void )
 
 	// restore lost cvars after unlink
 	Cbuf_AddText( "exec game.cfg\n" );
+	Cbuf_Execute();
 
 	Mod_ResetStudioAPI ();
 	Com_FreeLibrary( svgame.hInstance );
