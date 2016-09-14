@@ -184,7 +184,7 @@ qboolean CL_CopyEntityToPhysEnt( physent_t *pe, cl_entity_t *ent )
 		VectorClear( pe->maxs );
 		break;
 	case SOLID_BBOX:
-		if( mod && mod->type == mod_studio && mod->flags & STUDIO_TRACE_HITBOX )
+		if( !pe->player && mod && mod->type == mod_studio && mod->flags & STUDIO_TRACE_HITBOX )
 			pe->studiomodel = mod;
 		VectorCopy( ent->curstate.mins, pe->mins );
 		VectorCopy( ent->curstate.maxs, pe->maxs );
