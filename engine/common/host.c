@@ -945,8 +945,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Wcon_CreateConsole();
 #endif
 
-	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
-
 	// first text message into console or log 
 	MsgDev( D_NOTE, "Console initialized\n" );
 
@@ -1066,6 +1064,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	CL_Init();
 
 	HTTP_Init();
+
+	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
 
 	// post initializations
 	switch( host.type )

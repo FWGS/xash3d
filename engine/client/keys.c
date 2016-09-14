@@ -773,8 +773,10 @@ void Key_SetKeyDest( int key_dest )
 		{
 			Cbuf_Execute();
 			if( cl.refdef.paused )
+			{
 				Cbuf_InsertText("pause\n");
-			Cbuf_Execute();
+				Cbuf_Execute();
+			}
 			cl.refdef.paused = 0;
 		}
 		cls.key_dest = key_game;

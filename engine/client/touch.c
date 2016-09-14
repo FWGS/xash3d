@@ -1199,7 +1199,8 @@ void IN_TouchDraw( void )
 // clear move and selection state
 void IN_TouchEditClear( void )
 {
-	touch.move_finger = touch.look_finger = -1;
+	// Allow keep move/look fingers when doing touch_removeall
+	//touch.move_finger = touch.look_finger = -1;
 	if( touch.state < state_edit )
 		return;
 	touch.state = state_edit;
