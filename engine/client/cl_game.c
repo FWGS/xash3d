@@ -3151,7 +3151,7 @@ int TriWorldToScreen( float *world, float *screen )
 
 	retval = R_WorldToScreen( world, screen );
 
-	screen[0] =  0.5f * (float)cl.refdef.viewport[2];
+	screen[0] =  0.5f * screen[0] * (float)cl.refdef.viewport[2];
 	screen[1] = -0.5f * screen[1] * (float)cl.refdef.viewport[3];
 	screen[0] += 0.5f * (float)cl.refdef.viewport[2];
 	screen[1] += 0.5f * (float)cl.refdef.viewport[3];
