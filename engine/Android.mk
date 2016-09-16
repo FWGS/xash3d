@@ -95,7 +95,7 @@ LOCAL_SRC_FILES := \
            common/avikit.c \
            common/build.c \
            common/base_cmd.c \
-		   common/cfgscript.c \
+           common/cfgscript.c \
            common/cmd.c \
            common/common.c \
            common/con_utils.c \

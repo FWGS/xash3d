@@ -7,13 +7,14 @@ nicknekit
 #define GAME_PATH	"valve"	// default dir to start from
 
 #include "common.h"
+#ifdef XASH_SDL
 #include <android/log.h>
 #include <jni.h>
 
 
 
 
-#ifdef XASH_SDL
+
 /* Include the SDL main definition header */
 #include "SDL_main.h"
 

@@ -746,9 +746,9 @@ void Key_Event( int key, qboolean down )
 
 void Key_EnableTextInput( qboolean enable, qboolean force )
 {
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 	SDLash_EnableTextInput( enable, force );
-#elif defined(__ANDROID__)
+#elif XASH_INPUT == INPUT_ANDROID
 	Android_EnableTextInput( enable, force );
 #endif
 #if 0

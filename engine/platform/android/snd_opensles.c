@@ -19,7 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "common.h"
-#ifdef XASH_OPENSL
+#if XASH_SOUND = SOUND_OPENSLES
 #include <SLES/OpenSLES.h>
 #include "pthread.h"
 #include "sound.h"

@@ -79,7 +79,6 @@ SRCS_CPP += $(wildcard nanogl/*.cpp)
 endif
 OBJS_CPP = $(patsubst %.cpp,obj/%.o,$(SRCS_CPP))
 SRCS = $(wildcard server/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c)
-
 ifneq ($(XASH_DEDICATED),1)
 SRCS += $(wildcard client/*.c)
 SRCS += $(wildcard platform/sdl/*.c)
@@ -139,7 +138,7 @@ depend: Makefile.dep
 
 Makefile.dep: $(SRCS)
 	rm -f ./Makefile.dep
-	$(CC) $(CFLAGS) $(filter-out -I/usr/include/SDL2,$(INCLUDES)) $(filter-out -DXASH_SDL,$(DEFINES)) -MM $^>>./Makefile.dep
+	$(CC) $(CFLAGS) $(filter-out -I/usr/include/SDL2,$(INCLUDES)) $(filter-out -DXASH_SDL,$(DEFINES)) -DXASH_VIDEO=-1 -MM $(SRCS)>>./Makefile.dep
 
 install: $(BINARIES)
 

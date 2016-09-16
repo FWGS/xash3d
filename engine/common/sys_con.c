@@ -152,40 +152,6 @@ void Sys_InitLog( void )
 	}
 }
 
-/*void Sys_CloseLog( void )
-{
-	char	event_name[64];
-
-	// continue logged
-	switch( host.state )
-	{
-	case HOST_CRASHED:
-		Q_strncpy( event_name, "crashed", sizeof( event_name ));
-		break;
-	case HOST_ERR_FATAL:
-		Q_strncpy( event_name, "stopped with error", sizeof( event_name ));
-		break;
-	default:
-		if( !host.change_game ) Q_strncpy( event_name, "stopped", sizeof( event_name ));
-		else Q_strncpy( event_name, host.finalmsg, sizeof( event_name ));
-		break;
-	}
-
-	printf( "\n================================================================================\n");
-	printf( "\t%s (build %i, %s-%s) %s at %s\n", s_ld.title, Q_buildnum(), Q_buildos(), Q_buildarch(), event_name, Q_timestamp( TIME_FULL ));
-	printf( "================================================================================\n");
-
-	if( s_ld.logfile )
-	{
-		fprintf( s_ld.logfile, "\n================================================================================\n");
-		fprintf( s_ld.logfile, "\t%s (build %i, %s-%s) %s at %s\n", s_ld.title, Q_buildnum(), Q_buildos(), Q_buildarch(), event_name, Q_timestamp( TIME_FULL ));
-		fprintf( s_ld.logfile, "================================================================================\n");
-
-		fclose( s_ld.logfile );
-		s_ld.logfile = NULL;
-	}
-}*/
-
 void Sys_PrintLog( const char *pMsg )
 {
 	time_t		crt_time;

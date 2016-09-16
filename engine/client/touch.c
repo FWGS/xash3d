@@ -141,13 +141,6 @@ convar_t *touch_highlight_a;
 convar_t *touch_precise_amount;
 convar_t *touch_joy_texture;
 
-// enable on android by default
-#ifdef __ANDROID__
-#define TOUCH_ENABLE "1"
-#else
-#define TOUCH_ENABLE "0"
-#endif
-
 // code looks smaller with it
 #define B(x) button->x
 #define SCR_W (scr_width->value)
@@ -845,7 +838,7 @@ void IN_TouchInit( void )
 	touch_move_indicator = Cvar_Get( "touch_move_indicator", "0.0", 0, "indicate move events (0 to disable)" );
 	touch_joy_texture = Cvar_Get( "touch_joy_texture", "touch_default/joy.tga", 0, "texture for move indicator");
 
-	touch_enable = Cvar_Get( "touch_enable", TOUCH_ENABLE, CVAR_ARCHIVE, "enable touch controls" );
+	touch_enable = Cvar_Get( "touch_enable", DEFAULT_TOUCH_ENABLE, CVAR_ARCHIVE, "enable touch controls" );
 #if defined(XASH_SDL) && defined(__ANDROID__)
 	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
 #endif

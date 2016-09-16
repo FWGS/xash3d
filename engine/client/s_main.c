@@ -1769,6 +1769,13 @@ S_Init
 */
 qboolean S_Init( void )
 {
+#if XASH_SOUND != SOUND_NULL
+	if( Sys_CheckParm( "-nosound" ))
+	{
+		MsgDev( D_INFO, "Audio: Disabled\n" );
+		return false;
+	}
+
 	s_volume = Cvar_Get( "volume", "0.7", CVAR_ARCHIVE, "sound volume" );
 	s_musicvolume = Cvar_Get( "musicvolume", "1.0", CVAR_ARCHIVE, "background music volume" );
 	s_mixahead = Cvar_Get( "_snd_mixahead", "0.12", 0, "how much sound to mix ahead of time" );
@@ -1836,6 +1843,9 @@ qboolean S_Init( void )
 	AllocDsps ();
 
 	return true;
+#else
+	return false;
+#endif
 }
 
 // =======================================================================

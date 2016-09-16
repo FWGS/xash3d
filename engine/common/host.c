@@ -176,7 +176,6 @@ Host_AbortCurrentFrame
 aborts the current host frame and goes on with the next one
 ================
 */
-
 void EXPORT Host_AbortCurrentFrame( void )
 {
 	if( host.framecount == 0 ) // abort frame was not set up
@@ -879,7 +878,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialization started
-	host.developer = host.old_developer = 0;
+	host.developer = host.old_developer = DEFAULT_DEV;
 	host.textmode = false;
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
@@ -944,6 +943,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Wcon_Init();
 	Wcon_CreateConsole();
 #endif
+	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
 
 	// first text message into console or log 
 	MsgDev( D_NOTE, "Console initialized\n" );
@@ -1154,10 +1154,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	// main window message loop
 	while( !host.crashed && !host.shutdown_issued )
 	{
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
-#elif defined(__ANDROID__)
+#elif XASH_INPUT == INPUT_ANDROID
 		Android_RunEvents();
 #endif
 		newtime = Sys_DoubleTime ();
