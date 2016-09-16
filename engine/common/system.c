@@ -43,6 +43,7 @@ qboolean	error_on_exit = false;	// arg for exit();
 #define DEBUG_BREAK
 #if defined _WIN32 && !defined XASH_SDL
 #include <winbase.h>
+#endif
 /*
 ================
 Sys_DoubleTime
@@ -104,58 +105,6 @@ double Sys_DoubleTime( void )
 #endif
 
 #define DEBUG_BREAK
-
-#ifdef GDB_BREAK
-#include <fcntl.h>
-qboolean Sys_DebuggerPresent( void )
-{
-	char buf[1024];
-
-	int status_fd = open( "/proc/self/status", O_RDONLY );
-	if ( status_fd == -1 )
-		return 0;
-
-	ssize_t num_read = read( status_fd, buf, sizeof( buf ) );
-
-	if ( num_read > 0 )
-	{
-		static const char TracerPid[] = "TracerPid:";
-		const byte *tracer_pid;
-
-		buf[num_read] = 0;
-		tracer_pid    = (const byte*)Q_strstr( buf, TracerPid );
-		if( !tracer_pid )
-			return false;
-		printf( "%s\n", tracer_pid );
-		while( *tracer_pid < '0' || *tracer_pid > '9'  )
-			if( *tracer_pid++ == '\n' )
-				return false;
-		printf( "%s\n", tracer_pid );
-		return !!Q_atoi( (const char*)tracer_pid );
-	}
-
-	return false;
-}
-
-#undef DEBUG_BREAK
-#define DEBUG_BREAK \
-	if( Sys_DebuggerPresent() ) \
-		asm volatile("int $3;")
-		//raise( SIGINT )
-#endif
-#if defined _WIN32 && !defined __amd64__
-#if _MSC_VER == 1200
-BOOL WINAPI IsDebuggerPresent(void);
-#endif
-#ifdef _MSC_VER
-#define DEBUG_BREAK	if( IsDebuggerPresent() ) \
-		_asm{ int 3 }
-#else
-#define DEBUG_BREAK	if( IsDebuggerPresent() ) \
-		asm volatile("int $3;")
-#endif
-#endif
-
 #ifdef GDB_BREAK
 #include <fcntl.h>
 qboolean Sys_DebuggerPresent( void )

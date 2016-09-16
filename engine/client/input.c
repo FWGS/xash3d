@@ -629,7 +629,6 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 	{
 		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
 #if XASH_INPUT == INPUT_SDL
-		IN_SDL_JoyMove( frametime, &forward, &side, &dpitch, &dyaw );
 		if( m_enginemouse->integer )
 		{
 			int mouse_x, mouse_y;
