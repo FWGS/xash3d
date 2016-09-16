@@ -77,6 +77,7 @@ LOCAL_SRC_FILES := \
            client/gl_studio.c \
            client/vid_common.c \
            client/gl_warp.c \
+           client/joyinput.c \
            platform/android/snd_opensles.c \
            client/input.c \
            client/keys.c \
@@ -106,7 +107,6 @@ LOCAL_SRC_FILES := \
            common/host.c \
            common/hpak.c \
            common/infostring.c \
-           common/joyinput.c \
            common/library.c \
            common/mathlib.c \
            common/matrixlib.c \
