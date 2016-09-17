@@ -19,6 +19,9 @@ GNU General Public License for more details.
 #include "cvardef.h"
 #include "gameinfo.h"
 #include "wrect.h"
+#include "netadr.h"
+
+#include <stddef.h>
 
 typedef int		HIMAGE;		// handle to a graphic
 
