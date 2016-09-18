@@ -26,9 +26,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 static convar_t *s_bits;
 static convar_t *s_channels;
-convar_t		*s_primary;
+extern convar_t		*s_primary;
 convar_t		*s_khz;
-dma_t			dma;
+extern dma_t			dma;
 
 static SLObjectItf snddma_android_engine = NULL;
 static SLObjectItf snddma_android_outputMix = NULL;

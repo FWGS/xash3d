@@ -78,8 +78,6 @@ convar_t	*sv_sendvelocity;
 convar_t	*sv_airmove;
 convar_t	*sv_quakehulls;
 convar_t	*mp_consistency;
-convar_t	*serverinfo;
-convar_t	*physinfo;
 convar_t	*clockwindow;
 convar_t	*deathmatch;
 convar_t	*teamplay;

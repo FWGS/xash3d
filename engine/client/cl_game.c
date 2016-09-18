@@ -41,7 +41,7 @@ GNU General Public License for more details.
 char			cl_textbuffer[MAX_TEXTCHANNELS][512];
 client_textmessage_t	cl_textmessage[MAX_TEXTCHANNELS];
 
-rgba_t g_color_table[8];
+extern rgba_t g_color_table[8];
 
 static dllfunc_t cdll_exports[] =
 {

@@ -31,9 +31,9 @@ Global variables. Must be visible to window-procedure function
 so it can unlock and free the data block after it has been played.
 =======================================================================
 */
-convar_t		*s_primary;
+extern convar_t		*s_primary;
 convar_t		*s_khz;
-dma_t			dma;
+extern dma_t			dma;
 
 //static qboolean	snd_firsttime = true;
 //static qboolean	primary_format_set;
