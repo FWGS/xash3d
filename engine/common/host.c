@@ -943,15 +943,18 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Wcon_Init();
 	Wcon_CreateConsole();
 #endif
-	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
 
 	// first text message into console or log 
 	MsgDev( D_NOTE, "Console initialized\n" );
 
+#if 1
+	BaseCmd_Init();
+#endif
 	// startup cmds and cvars subsystem
 	Cmd_Init();
 	Cvar_Init();
 
+	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
 
 	// share developer level across all dlls
 	Q_snprintf( dev_level, sizeof( dev_level ), "%i", host.developer );
