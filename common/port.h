@@ -42,11 +42,13 @@ GNU General Public License for more details.
 	#if defined(__APPLE__)
 		#include <sys/syslimits.h>
 		#define OS_LIB_EXT "dylib"
+        #define OPEN_COMMAND "open"
 	#else
 		#if defined(__linux__)
 			#include <linux/limits.h>
 		#endif
 		#define OS_LIB_EXT "so"
+        #define OPEN_COMMAND "xdg-open"
 	#endif
 
 	#if defined(__ANDROID__)

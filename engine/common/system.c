@@ -227,8 +227,7 @@ char *Sys_GetCurrentUser( void )
 }
 
 #if (defined(__linux__) && !defined(__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
-
-qboolean findExecutable( const char *baseName, char *buf, size_t size )
+qboolean Sys_FindExecutable( const char *baseName, char *buf, size_t size )
 {
 	char *envPath;
 	char *part;
@@ -284,9 +283,9 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 {
 #ifdef _WIN32
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
-#elif (defined(__linux__) && !defined __ANDROID__) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
+#elif (defined(__linux__) && !defined (__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 	char xdgOpen[128];
-	if( findExecutable( "xdg-open", xdgOpen, sizeof( xdgOpen ) ) )
+	if( Sys_FindExecutable( OPEN_COMMAND, xdgOpen, sizeof( xdgOpen ) ) )
 	{
 		const char *argv[] = {xdgOpen, path, NULL};
 		pid_t id = fork( );
@@ -297,10 +296,11 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 			_exit( 1 );
 		}
 	}
-	else MsgDev( D_WARN, "Could not find xdg-open utility\n" );
+	else MsgDev( D_WARN, "Could not find "OPEN_COMMAND" utility\n" );
 #endif
-//TODO: Use 'open' on OS X?
-	if( shouldExit ) Sys_Quit();
+
+	if( shouldExit )
+		Sys_Quit();
 }
 
 /*
