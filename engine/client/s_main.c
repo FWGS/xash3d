@@ -771,23 +771,27 @@ void SND_Spatialize( channel_t *ch )
 	wavdata_t	*pSource;
 
 	// anything coming from the view entity will allways be full volume
+
 	if( S_IsClient( ch->entnum ))
 	{
 		if( !s_cull->integer )
 		{
-			ch->leftvol = ch->master_vol;
-			ch->rightvol = ch->master_vol;
+			ch->leftvol = ch->rightvol = ch->master_vol;
+			VOX_SetChanVol( ch );
 			return;
 		}
-
 		// sounds coming from listener actually come from a short distance directly in front of listener
 		fplayersound = true;
 	}
 
-	pSource = ch->sfx->cache;
+	if( s_cull->integer )
+	{
+		pSource = ch->sfx->cache;
 
-	if( ch->use_loop && pSource && pSource->loopStart != -1 )
-		looping = true;
+		if( ch->use_loop && pSource && pSource->loopStart != -1 )
+			looping = true;
+	}
+
 
 	if( !ch->staticsound )
 	{
@@ -810,19 +814,26 @@ void SND_Spatialize( channel_t *ch )
 	dot = DotProduct( s_listener.right, source_vec );
 
 	// for sounds with a radius, spatialize left/right evenly within the radius
-	if( ch->radius > 0 && dist < ch->radius )
+
+	// Commented because this code cause too LOUD sounds in multiplayers.
+	// when blend is equal 0
+	// TODO: Test sound behaviour without radius code, maybe it must be reviewed or deleted
+
+	/*if( ch->radius > 0 && dist < ch->radius )
 	{
 		float	interval = ch->radius * 0.5f;
 		float	blend = dist - interval;
 
-		if( blend < 0 ) blend = 0;
+		if( blend < 0 )
+			blend = 0;
+
 		blend /= interval;	
 
 		// blend is 0.0 - 1.0, from 50% radius -> 100% radius
 		// at radius * 0.5, dot is 0 (ie: sound centered left/right)
 		// at radius dot == dot
 		dot *= blend;
-	}
+	}*/
 
 	if( s_cull->integer )
 	{
@@ -1605,8 +1616,8 @@ void S_RenderFrame( ref_params_t *fd )
 			if( ch->sfx && ( ch->leftvol || ch->rightvol ))
 			{
 				info.index = total;
-				Con_NXPrintf( &info, "chan %i, pos (%.f %.f %.f) ent %i, lv%3i rv%3i %s\n",
-				i, ch->origin[0], ch->origin[1], ch->origin[2], ch->entnum, ch->leftvol, ch->rightvol, ch->sfx->name );
+				Con_NXPrintf( &info, "chan %i, pos (%.f %.f %.f) %f ent %i, lv%3i rv%3i %s\n",
+				i, ch->origin[0], ch->origin[1], ch->origin[2], ch->radius, ch->entnum, ch->leftvol, ch->rightvol, ch->sfx->name );
 				total++;
 			}
 		}
