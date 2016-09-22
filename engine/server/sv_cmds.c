@@ -16,6 +16,8 @@ GNU General Public License for more details.
 #include "common.h"
 #include "server.h"
 
+void Con_ListMaps( void ); // filesystem.c (for now)
+
 /*
 =================
 SV_ClientPrintf
@@ -1022,6 +1024,7 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "playersonly", SV_PlayersOnly_f, "freezes physics, except for players" );
 
 	Cmd_AddCommand( "map", SV_Map_f, "start new level" );
+	Cmd_AddCommand( "maps", Con_ListMaps, "list maps" );
 	Cmd_AddCommand( "newgame", SV_NewGame_f, "begin new game" );
 	Cmd_AddCommand( "endgame", SV_EndGame_f, "end current game, takes ending message" );
 	Cmd_AddCommand( "killgame", SV_KillGame_f, "end current game" );
