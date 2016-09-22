@@ -2398,7 +2398,7 @@ static void R_StudioDrawPoints( void )
 	mstudiotexture_t	*ptexture;
 	mstudiomesh_t	*pmesh;
 	short		*pskinref;
-	float		*av, *lv, *nv, scale = 0.0f;
+	float		*lv, scale = 0.0f;
 
 	if( !r_studio_drawelements->integer )
 	{

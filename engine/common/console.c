@@ -183,7 +183,7 @@ Con_ClearTyping
 */
 void Con_ClearTyping( void )
 {
-	int	i;
+//	int	i;
 
 	Con_ClearField( &con.input );
 	con.input.widthInChars = con.linewidth;
@@ -601,7 +601,8 @@ get position of previous printful char
 */
 int Con_UtfMoveLeft( char *str, int pos )
 {
-	int i, j, k = 0;
+	int i, k = 0;
+	// int j;
 	if( !g_utf8 )
 		return pos - 1;
 	Con_UtfProcessChar( 0 );

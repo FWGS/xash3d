@@ -241,7 +241,7 @@ void CL_TextMessageParse( byte *pMemFile, int fileSize )
 	int			mode = MSGFILE_NAME; // searching for a message name	
 	int			lineNumber, filePos, lastLinePos;
 	client_textmessage_t	textMessages[MAX_MESSAGES];
-	int			i, nameHeapSize, textHeapSize, messageSize, nameOffset;
+	int			i, nameHeapSize, textHeapSize, messageSize; //, nameOffset;
 	int			messageCount, lastNamePos;
 
 	lastNamePos = 0;
