@@ -254,7 +254,6 @@ void SV_Map_f( void )
 	SV_ActivateServer ();
 }
 
-
 /*
 ==================
 
@@ -273,12 +272,10 @@ void SV_Maps_f(void)
 		Msg("Usage:  maps <substring>\nmaps * for full listing\n");
 		return;
 	}
-	
-	char mapName[256], seperator[32] = "-------------------";
+	char mapName[256], *seperator = "-------------------";
 	char *argStr = Cmd_Argv(1); //Substr
 	int listIndex;
 	search_t *mapList = FS_Search(va("maps/*%s*.bsp", argStr), true, true);
-
 	if (!mapList)
 	{
 		Msg("No related map found in \"%s/maps\"\n", GI->gamedir);
@@ -288,12 +285,11 @@ void SV_Maps_f(void)
 	for (listIndex = 0; listIndex != mapList->numfilenames; ++listIndex)
 	{
 		Q_strncpy(mapName, mapList->filenames[listIndex], sizeof(mapName) - 1);
-		mapName[255] = '\0';
 		const char *ext = FS_FileExtension(mapName);
 		if (Q_strcmp(ext, "bsp")) continue;
-		if ( (Q_strcmp(argStr, "*") == 0) || (Q_stristr(mapName, argStr) != NULL) ) //Reduced performance but no repeated code.
+		if ( (Q_strcmp(argStr, "*") == 0) || (Q_stristr(mapName, argStr) != NULL) )
 		{
-			Msg("%s\n", &mapName[5]); //Remove "maps/"
+			Msg("%s\n", &mapName[5]); //Do not show "maps/"
 		}
 	}
 	Msg("%s\nDirectory: \"%s/maps\" - Maps listed: %d\n", seperator, GI->basedir, mapList->numfilenames);
