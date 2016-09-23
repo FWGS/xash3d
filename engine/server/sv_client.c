@@ -103,6 +103,7 @@ void SV_DirectConnect( netadr_t from )
 	int		qport, version;
 	int		count = 0;
 	int		challenge;
+	unsigned int requested_extensions, extensions = 0;
 	edict_t		*ent;
 
 	if( !svs.initialized )
@@ -124,6 +125,8 @@ void SV_DirectConnect( netadr_t from )
 	qport = Q_atoi( Cmd_Argv( 2 ));
 	challenge = Q_atoi( Cmd_Argv( 3 ));
 	Q_strncpy( userinfo, Cmd_Argv( 4 ), sizeof( userinfo ));
+
+	requested_extensions = Q_atoi( Cmd_Argv( 5 ) );
 
 	// quick reject
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
@@ -232,6 +235,24 @@ gotnewcl:
 
 	// initailize netchan here because SV_DropClient will clear network buffer
 	Netchan_Setup( NS_SERVER, &newcl->netchan, from, qport );
+
+	if( sv_allow_compress->integer && ( requested_extensions & NET_EXT_HUFF ) )
+	{
+		extensions |= NET_EXT_HUFF;
+		newcl->netchan.compress = true;
+	}
+	if( sv_allow_split->integer && ( requested_extensions & NET_EXT_SPLIT ) )
+	{
+		unsigned int maxpacket = Q_atoi( Info_ValueForKey( userinfo, "cl_maxpacket") );
+		extensions |= NET_EXT_SPLIT;
+		newcl->netchan.split = true;
+		if( maxpacket < 100 || maxpacket >= 40000 )
+			maxpacket = 1400;
+		if( maxpacket > sv_maxpacket->integer )
+			maxpacket = sv_maxpacket->integer;
+		newcl->netchan.maxpacket = maxpacket;
+	}
+
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
 	// prevent memory leak and client crashes.
 	// This should not happend, need to test it,
@@ -280,7 +301,7 @@ gotnewcl:
 	}
 
 	// send the connect packet to the client
-	Netchan_OutOfBandPrint( NS_SERVER, from, "client_connect" );
+	Netchan_OutOfBandPrint( NS_SERVER, from, "client_connect %d\n", extensions );
 
 	Log_Printf( "\"%s<%i><%s><>\" connected, address \"%s\"\n", Info_ValueForKey( userinfo, "name" ),
 				newcl->userid, SV_GetClientIDString( newcl ), NET_AdrToString( newcl->netchan.remote_address ) );
@@ -2048,13 +2069,13 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	cl->local_weapons = Q_atoi( Info_ValueForKey( cl->userinfo, "cl_lw" )) ? true : false;
 	cl->lag_compensation = Q_atoi( Info_ValueForKey( cl->userinfo, "cl_lc" )) ? true : false;
 	val = Info_ValueForKey( cl->userinfo, "cl_maxpacket" );
-	if( *val )
+	if( !cl->netchan.split && *val )
 	{
 		cl->maxpacket = Q_atoi( val );
 		cl->maxpacket = bound( 100, cl->maxpacket, ( NET_MAX_PAYLOAD / 2 ) );
 	}
 	else
-		cl->maxpacket = ( NET_MAX_PAYLOAD / 2 );
+		cl->maxpacket = sv_maxpacket->integer;
 	if( sv_maxclients->integer == 1 )
 		cl->maxpacket = NET_MAX_PAYLOAD / 2;
 

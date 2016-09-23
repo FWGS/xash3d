@@ -88,6 +88,9 @@ convar_t	*sv_trace_messages;
 convar_t	*sv_master;
 convar_t	*sv_corpse_solid;
 convar_t	*sv_fixmulticast;
+convar_t	*sv_allow_split;
+convar_t	*sv_allow_compress;
+convar_t	*sv_maxpacket;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -341,9 +344,10 @@ void SV_ReadPackets( void )
 
 	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, &curSize ))
 	{
-		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
 		if( !svs.initialized )
 		{
+			BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
+
 			// check for rcon here
 			if( BF_GetMaxBytes( &net_message ) >= 4 && *(int *)net_message.pData == -1 )
 			{
@@ -360,12 +364,46 @@ void SV_ReadPackets( void )
 			}
 			continue;
 		}
+		if( *((int *)&net_message_buffer) == 0xFFFFFFFE )
+		{
+			if( curSize <= NETSPLIT_HEADER_SIZE )
+				continue;
+
+			// find client with this address and enabled netsplit
+			// netsplit packets does not allow changing ports
+
+			for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+			{
+				if( cl->state == cs_free || cl->fakeclient )
+					continue;
+
+				if( !NET_CompareBaseAdr( net_from, cl->netchan.remote_address ))
+					continue;
+
+				if( !cl->netchan.split )
+					continue;
+			}
+
+			// not a client
+			if( i >= sv_maxclients->integer )
+			{
+				MsgDev( D_INFO, "netsplit from unknown addr %s\n", NET_AdrToString( net_from ) );
+				continue;
+			}
+
+			// Will rewrite existing packet by merged
+			if( !NetSplit_GetLong( &cl->netchan.netsplit, &net_from, net_message_buffer, &curSize ) )
+				continue;
+		}
+		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
+
 		// check for connectionless packet (0xffffffff) first
 		if( BF_GetMaxBytes( &net_message ) >= 4 && *(int *)net_message.pData == -1 )
 		{
 			SV_ConnectionlessPacket( net_from, &net_message );
 			continue;
 		}
+
 
 		// read the qport out of the message so we can fix up
 		// stupid address translating routers
@@ -892,6 +930,9 @@ void SV_Init( void )
 	sv_master = Cvar_Get( "sv_master", DEFAULT_SV_MASTER, CVAR_ARCHIVE, "master server address" );
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
 	sv_fixmulticast = Cvar_Get( "sv_fixmulticast", "1", CVAR_ARCHIVE, "do not send multicast to not spawned clients" );
+	sv_allow_compress = Cvar_Get( "sv_allow_compress", "1", CVAR_ARCHIVE, "allow Huffman compression on server" );
+	sv_allow_split= Cvar_Get( "sv_allow_split", "1", CVAR_ARCHIVE, "allow splitting packets on server" );
+	sv_maxpacket = Cvar_Get( "sv_maxpacket", "40000", CVAR_ARCHIVE, "limit cl_maxpacket for all clients" );
 
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 

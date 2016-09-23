@@ -669,6 +669,7 @@ void CL_SendConnectPacket( void )
 {
 	netadr_t	adr;
 	int	port;
+	unsigned int extensions = 0;
 
 	if( !NET_StringToAdr( cls.servername, &adr ))
 	{
@@ -681,7 +682,17 @@ void CL_SendConnectPacket( void )
 	port = Cvar_VariableValue( "net_qport" );
 
 	userinfo->modified = false;
-	Netchan_OutOfBandPrint( NS_CLIENT, adr, "connect %i %i %i \"%s\"\n", PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo( ));
+
+	if( adr.type != NA_LOOPBACK )
+	{
+		if( Cvar_VariableInteger( "cl_enable_compress" ) )
+			extensions |= NET_EXT_HUFF;
+
+		if( Cvar_VariableInteger( "cl_enable_split" ) )
+			extensions |= NET_EXT_SPLIT;
+	}
+
+	Netchan_OutOfBandPrint( NS_CLIENT, adr, "connect %i %i %i \"%s\" %d\n", PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo( ), extensions );
 }
 
 /*
@@ -1354,13 +1365,30 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	// server connection
 	if( !Q_strcmp( c, "client_connect" ))
 	{
+		unsigned int extensions = Q_atoi( Cmd_Argv( 1 ) );
 		if( cls.state == ca_connected )
 		{
 			MsgDev( D_INFO, "Dup connect received. Ignored.\n");
 			return;
 		}
 
-		Netchan_Setup( NS_CLIENT, &cls.netchan, from, net_qport->integer);
+		Netchan_Setup( NS_CLIENT, &cls.netchan, from, net_qport->integer );
+
+		if( extensions & NET_EXT_SPLIT )
+		{
+			if( cl_maxpacket->integer >= 40000 || cl_maxpacket->integer < 100 )
+				Cvar_SetFloat( "cl_maxpacket", 1400 );
+
+			cls.netchan.maxpacket = Cvar_VariableInteger( "cl_maxoutpacket" );
+			if( cls.netchan.maxpacket < 100 )
+				cls.netchan.maxpacket = cl_maxpacket->integer;
+
+			cls.netchan.split = true;
+		}
+
+		if( extensions & NET_EXT_HUFF )
+			cls.netchan.compress = true;
+
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "new" );
 		cls.state = ca_connected;
@@ -1491,6 +1519,11 @@ void CL_ReadNetMessage( void )
 
 	while( CL_GetMessage( net_message_buffer, &curSize ))
 	{
+		if( *((int *)&net_message_buffer) == 0xFFFFFFFE )
+			// Will rewrite existing packet by merged
+			if( !NetSplit_GetLong( &cls.netchan.netsplit, &net_from, net_message_buffer, &curSize ) )
+				continue;
+
 		BF_Init( &net_message, "ServerData", net_message_buffer, curSize );
 
 		// check for connectionless packet (0xffffffff) first
@@ -1738,6 +1771,10 @@ void CL_InitLocal( void )
 
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
 	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicates that background map is running" );
+
+	Cvar_Get( "cl_enable_compress", "0", CVAR_ARCHIVE, "request huffman compression from server" );
+	Cvar_Get( "cl_enable_split", "1", CVAR_ARCHIVE, "request packet split from server" );
+	Cvar_Get( "cl_maxoutpacket", "0", CVAR_ARCHIVE, "max outcoming packet size (equal cl_maxpacket if 0)" );
 
 	// these two added to shut up CS 1.5 about 'unknown' commands
 	Cvar_Get( "lightgamma", "1", 0, "ambient lighting level (legacy, unused)" );
