@@ -16,8 +16,6 @@ GNU General Public License for more details.
 #include "common.h"
 #include "server.h"
 
-void Con_ListMaps( void ); // filesystem.c (for now)
-
 /*
 =================
 SV_ClientPrintf
@@ -254,6 +252,51 @@ void SV_Map_f( void )
 	}
 	SV_LevelInit( mapname, NULL, NULL, false );
 	SV_ActivateServer ();
+}
+
+
+/*
+==================
+
+SV_Maps_f
+
+Lists maps according to given substring.
+
+TODO: Make it more convenient. (Timestamp check, temporary file, ...)
+
+==================
+*/
+void SV_Maps_f(void)
+{
+	if (Cmd_Argc() != 2)
+	{
+		Msg("Usage:  maps <substring>\nmaps * for full listing\n");
+		return;
+	}
+	
+	char mapName[256], seperator[32] = "-------------------";
+	char *argStr = Cmd_Argv(1); //Substr
+	int listIndex;
+	search_t *mapList = FS_Search(va("maps/*%s*.bsp", argStr), true, true);
+
+	if (!mapList)
+	{
+		Msg("No related map found in \"%s/maps\"\n", GI->gamedir);
+		return;
+	}
+	Msg("%s\n", seperator);
+	for (listIndex = 0; listIndex != mapList->numfilenames; ++listIndex)
+	{
+		Q_strncpy(mapName, mapList->filenames[listIndex], sizeof(mapName) - 1);
+		mapName[255] = '\0';
+		const char *ext = FS_FileExtension(mapName);
+		if (Q_strcmp(ext, "bsp")) continue;
+		if ( (Q_strcmp(argStr, "*") == 0) || (Q_stristr(mapName, argStr) != NULL) ) //Reduced performance but no repeated code.
+		{
+			Msg("%s\n", &mapName[5]); //Remove "maps/"
+		}
+	}
+	Msg("%s\nDirectory: \"%s/maps\" - Maps listed: %d\n", seperator, GI->basedir, mapList->numfilenames);
 }
 
 /*
@@ -1024,7 +1067,7 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "playersonly", SV_PlayersOnly_f, "freezes physics, except for players" );
 
 	Cmd_AddCommand( "map", SV_Map_f, "start new level" );
-	Cmd_AddCommand( "maps", Con_ListMaps, "list maps" );
+	Cmd_AddCommand( "maps", SV_Maps_f, "list maps" );
 	Cmd_AddCommand( "newgame", SV_NewGame_f, "begin new game" );
 	Cmd_AddCommand( "endgame", SV_EndGame_f, "end current game, takes ending message" );
 	Cmd_AddCommand( "killgame", SV_KillGame_f, "end current game" );
