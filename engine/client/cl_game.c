@@ -41,7 +41,7 @@ GNU General Public License for more details.
 char			cl_textbuffer[MAX_TEXTCHANNELS][512];
 client_textmessage_t	cl_textmessage[MAX_TEXTCHANNELS];
 
-rgba_t g_color_table[8];
+extern rgba_t g_color_table[8];
 
 static dllfunc_t cdll_exports[] =
 {
@@ -1238,7 +1238,7 @@ pfnSPR_Load
 HSPRITE pfnSPR_Load( const char *szPicName )
 {
 	int texFlags = TF_NOPICMIP;
-	if( cl_sprite_nearest->value )
+	if( cl_sprite_nearest->integer )
 		texFlags |= TF_NEAREST;
 
 	return pfnSPR_LoadExt( szPicName, texFlags );
@@ -1687,7 +1687,9 @@ int pfnDrawCharacter( int x, int y, int number, int r, int g, int b )
 		return 0;
 
 	number &= 255;
-	number = Con_UtfProcessChar( number );
+
+	if( hud_utf8->integer )
+		number = Con_UtfProcessChar( number );
 
 	if( number < 32 ) return 0;
 	if( y < -clgame.scrInfo.iCharHeight )
@@ -2474,7 +2476,7 @@ model_t *pfnLoadMapSprite( const char *filename )
 	int texFlags = TF_NOPICMIP;
 
 
-	if( cl_sprite_nearest->value )
+	if( cl_sprite_nearest->integer )
 		texFlags |= TF_NEAREST;
 
 	if( !filename || !*filename )
@@ -3149,7 +3151,7 @@ int TriWorldToScreen( float *world, float *screen )
 
 	retval = R_WorldToScreen( world, screen );
 
-	screen[0] =  0.5f * (float)cl.refdef.viewport[2];
+	screen[0] =  0.5f * screen[0] * (float)cl.refdef.viewport[2];
 	screen[1] = -0.5f * screen[1] * (float)cl.refdef.viewport[3];
 	screen[0] += 0.5f * (float)cl.refdef.viewport[2];
 	screen[1] += 0.5f * (float)cl.refdef.viewport[3];

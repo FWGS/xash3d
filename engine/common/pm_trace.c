@@ -161,6 +161,9 @@ hull_t *PM_HullForStudio( physent_t *pe, playermove_t *pmove, int *numhitboxes )
 	VectorSubtract( pmove->player_maxs[pmove->usehull], pmove->player_mins[pmove->usehull], size );
 	VectorScale( size, 0.5f, size );
 
+	if( pe->player )
+		 return PM_HullForBox( pe->mins, pe->maxs );
+
 	return Mod_HullForStudio( pe->studiomodel, pe->frame, pe->sequence, pe->angles, pe->origin, size, pe->controller, pe->blending, numhitboxes, NULL );
 }
 /* "Not a number" possible here.

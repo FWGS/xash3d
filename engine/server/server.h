@@ -456,6 +456,10 @@ extern	convar_t		*sv_log_singleplayer;
 extern	convar_t		*sv_log_onefile;
 extern	convar_t		*mp_logecho;
 extern	convar_t		*mp_logfile;
+extern	convar_t		*sv_fixmulticast;
+extern	convar_t		*sv_allow_split;
+extern	convar_t		*sv_allow_compress;
+extern	convar_t		*sv_maxpacket;
 
 //===========================================================
 //

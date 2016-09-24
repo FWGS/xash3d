@@ -63,6 +63,7 @@ convar_t	*hud_scale;
 convar_t	*cl_maxpacket;
 convar_t    *r_bmodelinterp;
 
+convar_t	*hud_utf8;
 //
 // userinfo
 //
@@ -651,6 +652,9 @@ void CL_Drop( void )
 	if( cls.state == ca_uninitialized )
 		return;
 	CL_Disconnect();
+
+	// This fixes crash in menu_playersetup after disconnecting from server
+	CL_ClearEdicts();
 }
 
 /*
@@ -665,6 +669,7 @@ void CL_SendConnectPacket( void )
 {
 	netadr_t	adr;
 	int	port;
+	unsigned int extensions = 0;
 
 	if( !NET_StringToAdr( cls.servername, &adr ))
 	{
@@ -677,7 +682,17 @@ void CL_SendConnectPacket( void )
 	port = Cvar_VariableValue( "net_qport" );
 
 	userinfo->modified = false;
-	Netchan_OutOfBandPrint( NS_CLIENT, adr, "connect %i %i %i \"%s\"\n", PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo( ));
+
+	if( adr.type != NA_LOOPBACK )
+	{
+		if( Cvar_VariableInteger( "cl_enable_compress" ) )
+			extensions |= NET_EXT_HUFF;
+
+		if( Cvar_VariableInteger( "cl_enable_split" ) )
+			extensions |= NET_EXT_SPLIT;
+	}
+
+	Netchan_OutOfBandPrint( NS_CLIENT, adr, "connect %i %i %i \"%s\" %d\n", PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo( ), extensions );
 }
 
 /*
@@ -964,6 +979,8 @@ void CL_LocalServers_f( void )
 	Netchan_OutOfBandPrint( NS_CLIENT, adr, "info %i", PROTOCOL_VERSION );
 }
 
+#define MS_SCAN_REQUEST "1\xFF" "0.0.0.0:0\0" "\\gamedir\\"
+
 /*
 =================
 CL_InternetServers_f
@@ -972,17 +989,18 @@ CL_InternetServers_f
 void CL_InternetServers_f( void )
 {
 	netadr_t	adr;
-	char	fullquery[512] = "1\xFF" "0.0.0.0:0\0" "\\gamedir\\";
+	char	fullquery[512] = MS_SCAN_REQUEST;
 
 	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
 	NET_Config( true ); // allow remote
 
 	if( !NET_StringToAdr( sv_master->string, &adr ) )
+	{
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
+		return;
+	}
 
-	Q_strcpy( &fullquery[22], GI->gamedir );
-
-	NET_SendPacket( NS_CLIENT, 23 + Q_strlen(GI->gamedir), fullquery, adr );
+	NET_SendPacket( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strcpy( fullquery + sizeof( MS_SCAN_REQUEST ) - 1, GI->gamedir ), fullquery, adr );
 }
 
 /*
@@ -1269,6 +1287,8 @@ void CL_PrepVideo( void )
 
 	Mod_FreeUnused ();
 
+	Q_memset( cl.playermodels, 0, sizeof( cl.playermodels ) );
+
 	Cvar_SetFloat( "scr_loading", 100.0f );	// all done
 
 	if( host.decalList )
@@ -1345,13 +1365,35 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	// server connection
 	if( !Q_strcmp( c, "client_connect" ))
 	{
+		unsigned int extensions = Q_atoi( Cmd_Argv( 1 ) );
 		if( cls.state == ca_connected )
 		{
 			MsgDev( D_INFO, "Dup connect received. Ignored.\n");
 			return;
 		}
 
-		Netchan_Setup( NS_CLIENT, &cls.netchan, from, net_qport->integer);
+		Netchan_Setup( NS_CLIENT, &cls.netchan, from, net_qport->integer );
+
+		if( extensions & NET_EXT_SPLIT )
+		{
+			if( cl_maxpacket->integer >= 40000 || cl_maxpacket->integer < 100 )
+				Cvar_SetFloat( "cl_maxpacket", 1400 );
+
+			cls.netchan.maxpacket = Cvar_VariableInteger( "cl_maxoutpacket" );
+			if( cls.netchan.maxpacket < 100 )
+				cls.netchan.maxpacket = cl_maxpacket->integer;
+
+			cls.netchan.split = true;
+			MsgDev( D_INFO, "^2NET_EXT_SPLIT enabled^7 (packet sizes is %d/%d)\n", cl_maxpacket->integer, cls.netchan.maxpacket );
+		}
+
+		if( extensions & NET_EXT_HUFF )
+		{
+			MsgDev( D_INFO, "^2NET_EXT_HUFF enabled\n" );
+
+			cls.netchan.compress = true;
+		}
+
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "new" );
 		cls.state = ca_connected;
@@ -1420,6 +1462,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		// a disconnect message from the server, which will happen if the server
 		// dropped the connection but it is still getting packets from us
 		CL_Disconnect();
+		CL_ClearEdicts();
 	}
 	else if( !Q_strcmp( c, "f") )
 	{
@@ -1481,6 +1524,11 @@ void CL_ReadNetMessage( void )
 
 	while( CL_GetMessage( net_message_buffer, &curSize ))
 	{
+		if( *((int *)&net_message_buffer) == 0xFFFFFFFE )
+			// Will rewrite existing packet by merged
+			if( !NetSplit_GetLong( &cls.netchan.netsplit, &net_from, net_message_buffer, &curSize ) )
+				continue;
+
 		BF_Init( &net_message, "ServerData", net_message_buffer, curSize );
 
 		// check for connectionless packet (0xffffffff) first
@@ -1562,6 +1610,7 @@ void CL_ReadPackets( void )
 			{
 				Msg( "\nServer connection timed out.\n" );
 				CL_Disconnect();
+				CL_ClearEdicts();
 				return;
 			}
 		}
@@ -1723,8 +1772,14 @@ void CL_InitLocal( void )
 	r_bmodelinterp = Cvar_Get( "r_bmodelinterp", "1", 0, "enable bmodel interpolation" );
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
+	hud_utf8 = Cvar_Get( "hud_utf8", "0", CVAR_ARCHIVE, "Use utf-8 encoding for hud text" );
+
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
 	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicates that background map is running" );
+
+	Cvar_Get( "cl_enable_compress", "0", CVAR_ARCHIVE, "request huffman compression from server" );
+	Cvar_Get( "cl_enable_split", "1", CVAR_ARCHIVE, "request packet split from server" );
+	Cvar_Get( "cl_maxoutpacket", "0", CVAR_ARCHIVE, "max outcoming packet size (equal cl_maxpacket if 0)" );
 
 	// these two added to shut up CS 1.5 about 'unknown' commands
 	Cvar_Get( "lightgamma", "1", 0, "ambient lighting level (legacy, unused)" );

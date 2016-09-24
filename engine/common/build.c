@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 
-//#define XASH_GENERATE_BUILDNUM
+#define XASH_GENERATE_BUILDNUM
 
 #if defined(XASH_GENERATE_BUILDNUM)
 static char *date = __DATE__ ;
@@ -149,5 +149,5 @@ IMPORTANT: this value must be acquired through "build" cvar.
 */
 int Q_buildnum_compat( void )
 {
-	return 3224;
+	return 3366;
 }

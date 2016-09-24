@@ -176,7 +176,6 @@ Host_AbortCurrentFrame
 aborts the current host frame and goes on with the next one
 ================
 */
-
 void EXPORT Host_AbortCurrentFrame( void )
 {
 	if( host.framecount == 0 ) // abort frame was not set up
@@ -277,6 +276,19 @@ void Host_Exec_f( void )
 	{
 		MsgDev( D_NOTE, "couldn't exec %s\n", Cmd_Argv( 1 ));
 		return;
+	}
+
+	if( !Q_stricmp( Cvar_VariableString( "lservercfgfile" ),  Cmd_Argv( 1 )))
+	{
+		if( Q_strstr( f, "//=======================================================================" ) &&
+			Q_strstr( f, "//\t\t\tCopyright XashXT Group" ) &&
+			Q_strstr( f, "//\t\t\tserver.cfg - server temp" ) )
+		{
+			Msg( "^1Found old generated xash3d listenserver config, skipping!\n" );
+			Msg( "^1Remove Xash3D header to use it\n" );
+			Mem_Free( f );
+			return;
+		}
 	}
 
 	MsgDev( D_INFO, "execing %s\n", Cmd_Argv( 1 ));
@@ -732,9 +744,6 @@ void Host_Error( const char *error, ... )
 	SV_Shutdown( false );
 	CL_Drop(); // drop clients
 
-	// recreate world if required
-	CL_ClearEdicts ();
-
 	// release all models
 	Mod_ClearAll( false );
 
@@ -789,7 +798,7 @@ void Host_MapDesignError( const char *format, ... )
 	va_start( argptr, format );
 	Q_vsnprintf( str, 256, format, argptr );
 	va_end( argptr );
-	if( host_mapdesign_fatal->value )
+	if( host_mapdesign_fatal->integer )
 		Host_Error( "Map Design Error: %s\n", str );
 	else
 		Msg( "^1Map Design Error: ^3%s", str );
@@ -869,7 +878,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialization started
-	host.developer = host.old_developer = 0;
+	host.developer = host.old_developer = DEFAULT_DEV;
 	host.textmode = false;
 
 	host.mempool = Mem_AllocPool( "Zone Engine" );
@@ -935,15 +944,17 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Wcon_CreateConsole();
 #endif
 
-	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
-
 	// first text message into console or log 
 	MsgDev( D_NOTE, "Console initialized\n" );
 
+#if 1
+	BaseCmd_Init();
+#endif
 	// startup cmds and cvars subsystem
 	Cmd_Init();
 	Cvar_Init();
 
+	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
 
 	// share developer level across all dlls
 	Q_snprintf( dev_level, sizeof( dev_level ), "%i", host.developer );
@@ -1057,6 +1068,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	HTTP_Init();
 
+	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
+
 	// post initializations
 	switch( host.type )
 	{
@@ -1065,7 +1078,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Wcon_ShowConsole( false ); // hide console
 #endif
 		// execute startup config and cmdline
-		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ));
+		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ) );
+		CSCR_LoadDefaultCVars( "settings.scr" );
+		CSCR_LoadDefaultCVars( "user.scr" );
 		// intentional fallthrough
 	case HOST_DEDICATED:
 		Cbuf_Execute(); // force stuffcmds run if it is in cbuf
@@ -1142,10 +1157,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	// main window message loop
 	while( !host.crashed && !host.shutdown_issued )
 	{
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
 			SDLash_EventFilter( &event );
-#elif defined(__ANDROID__)
+#elif XASH_INPUT == INPUT_ANDROID
 		Android_RunEvents();
 #endif
 		newtime = Sys_DoubleTime ();

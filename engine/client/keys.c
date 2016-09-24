@@ -125,8 +125,8 @@ keyname_t keynames[] =
 {"AUX30", K_AUX30, ""},
 {"AUX31", K_AUX31, ""},
 {"AUX32", K_AUX32, ""},
-{"JOY1" , K_JOY1 , ""}, // bind to dpad?
-{"JOY2" , K_JOY2 , ""},
+{"LTRIGGER" , K_JOY1 , ""},
+{"RTRIGGER" , K_JOY2 , ""},
 {"JOY3" , K_JOY3 , ""},
 {"JOY4" , K_JOY4 , ""},
 // raw semicolon seperates commands
@@ -746,9 +746,9 @@ void Key_Event( int key, qboolean down )
 
 void Key_EnableTextInput( qboolean enable, qboolean force )
 {
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 	SDLash_EnableTextInput( enable, force );
-#elif defined(__ANDROID__)
+#elif XASH_INPUT == INPUT_ANDROID
 	Android_EnableTextInput( enable, force );
 #endif
 #if 0
@@ -769,12 +769,14 @@ void Key_SetKeyDest( int key_dest )
 	{
 	case key_game:
 		Key_EnableTextInput( false, false );
-		if( host_xashds_hacks->value )
+		if( host_xashds_hacks->integer )
 		{
 			Cbuf_Execute();
 			if( cl.refdef.paused )
+			{
 				Cbuf_InsertText("pause\n");
-			Cbuf_Execute();
+				Cbuf_Execute();
+			}
 			cl.refdef.paused = 0;
 		}
 		cls.key_dest = key_game;

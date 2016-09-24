@@ -5315,7 +5315,7 @@ static short expSDL_GameControllerGetAxis(void* gc,int a)
 	return 0;
 }
 
-
+#define GLAPI  STDCALL __attribute__((force_align_arg_pointer))
 #include "glfuncs.inc"
 #include "glvars.inc"
 

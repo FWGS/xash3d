@@ -51,7 +51,7 @@ void UI_SetActiveMenu( qboolean fActive )
 {
 	movie_state_t	*cin_state;
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		if( !cl.refdef.paused && !cls.changelevel && fActive )
 		{
@@ -986,7 +986,7 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnCheckGameDll,
 	pfnGetClipboardData,
 	(void*)Sys_ShellExecute,
-	Host_WriteServerConfig,
+	Host_WriteGameConfig,
 	pfnChangeInstance,
 	pfnStartBackgroundTrack,
 	pfnHostEndGame,

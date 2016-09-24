@@ -935,7 +935,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 	cmd_condlevel = 0;
 
 	// cvar value substitution
-	if( cmd_scripting && cmd_scripting->value )
+	if( cmd_scripting && cmd_scripting->integer )
 	{
 		while( *text )
 		{

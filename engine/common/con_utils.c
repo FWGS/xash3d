@@ -743,6 +743,70 @@ qboolean Cmd_GetSoundList( const char *s, char *completedname, int length )
 
 /*
 =====================================
+Cmd_GetFilesList
+
+Prints or complete filename
+=====================================
+*/
+qboolean Cmd_GetFilesList( const char *s, char *completedname, int length )
+{
+	search_t		*t;
+	string		matchbuf;
+	int		i, numfiles;
+	char *pfilename;
+
+	t = FS_Search( va( "%s*",  s ), true, false );
+	if( !t ) return false;
+
+	pfilename = t->filenames[0];
+	if( *pfilename == '/' )
+		pfilename++;
+
+	Q_strncpy( matchbuf, pfilename, MAX_STRING );
+
+	if( completedname && length ) Q_strncpy( completedname, matchbuf, length );
+	if( t->numfilenames == 1 )
+
+		return true;
+
+	for(i = 0, numfiles = 0; i < t->numfilenames; i++)
+	{
+		pfilename = t->filenames[i];
+		if( *pfilename == '/' )
+			pfilename++;
+		Q_strncpy( matchbuf, pfilename, MAX_STRING );
+		Msg( "%16s\n", t->filenames[i] );
+		numfiles++;
+	}
+
+	Msg( "\n^3 %i files found.\n", numfiles );
+	Mem_Free( t );
+
+	// cut shortestMatch to the amount common with s
+	if( completedname && length )
+	{
+		char *pmatchbuf  = matchbuf, *pcompletedname = completedname;
+		for( ; *pmatchbuf; ++pmatchbuf, ++pcompletedname )
+		{
+			if( *pmatchbuf == '/' )
+			{
+				pmatchbuf++;
+			}
+			if( *pcompletedname == '/' )
+			{
+				pcompletedname++;
+			}
+			if( Q_tolower( *pcompletedname ) != Q_tolower( *pmatchbuf ) )
+				*pcompletedname = 0;
+		}
+	}
+
+	return true;
+}
+
+
+/*
+=====================================
 Cmd_GetItemsList
 
 Prints or complete item classname (weapons only)
@@ -1167,6 +1231,8 @@ autocomplete_list_t cmd_list[] =
 { "play", Cmd_GetSoundList },
 { "map", Cmd_GetMapList },
 { "cd", Cmd_GetCdCommands },
+{ "md5", Cmd_GetFilesList },
+{ "crc32", Cmd_GetFilesList },
 { NULL }, // terminator
 };
 
@@ -1217,6 +1283,7 @@ void Cmd_WriteVariables( file_t *f )
 
 void Cmd_WriteServerVariables( file_t *f )
 {
+	FS_Printf( f, "// servernotify cvars\n" );
 	Cvar_LookupVars( CVAR_SERVERNOTIFY, NULL, f, (void*)Cmd_WriteServerCvar );
 }
 
@@ -1254,7 +1321,7 @@ void Host_WriteConfig( void )
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n");
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\tconfig.cfg - archive of cvars\n" );
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteVariables( f );
@@ -1273,7 +1340,7 @@ void Host_WriteConfig( void )
 		if( f )
 		{
 			FS_Printf( f, "//=======================================================================\n");
-			FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+			FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 			FS_Printf( f, "//\t\t\tkeyboard.cfg - archive of keybindings\n" );
 			FS_Printf( f, "//=======================================================================\n" );
 			Key_WriteBindings( f );
@@ -1299,12 +1366,12 @@ void Host_WriteConfig( void )
 
 /*
 ===============
-Host_WriteServerConfig
+Host_WriteGameConfig
 
 save serverinfo variables into server.cfg (using for dedicated server too)
 ===============
 */
-void Host_WriteServerConfig( const char *name )
+void Host_WriteGameConfig( const char *name )
 {
 	/* Old Xash3D behaviour is writing listenserver config
 	every time when starting server from ui.
@@ -1316,10 +1383,14 @@ void Host_WriteServerConfig( const char *name )
 	if(( f = FS_Open( "game.cfg", "w", false )) != NULL )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t\tgame.cfg - multiplayer config\n" );
 		FS_Printf( f, "//=======================================================================\n" );
+
 		Cmd_WriteServerVariables( f );
+		CSCR_WriteGameCVars( f, "user.scr" );
+		CSCR_WriteGameCVars( f, "settings.scr" );
+
 		FS_Close( f );
 	}
 	else MsgDev( D_ERROR, "Couldn't write game.cfg.\n" );
@@ -1342,7 +1413,7 @@ void Host_WriteOpenGLConfig( void )
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t    opengl.cfg - archive of opengl extension cvars\n");
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteOpenGLVariables( f );
@@ -1370,7 +1441,7 @@ void Host_WriteVideoConfig( void )
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\tvideo.cfg - archive of renderer variables\n");
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteRenderVariables( f );
@@ -1395,7 +1466,7 @@ void Key_EnumCmds_f( void )
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n");
-		FS_Printf( f, "//\t\t\tCopyright XashXT Group %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+		FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\thelp.txt - xash commands and console variables\n");
 		FS_Printf( f, "//=======================================================================\n");
 

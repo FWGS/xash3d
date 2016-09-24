@@ -272,7 +272,7 @@ void Wcon_CreateConsole( void )
 		rect.top = 0;
 		rect.bottom = 364;
 		Q_strncpy( FontName, "Fixedsys", sizeof( FontName ));
-		Q_strncpy( s_wcd.title, va( "Xash3D %s", XASH_VERSION ), sizeof( s_wcd.title ));
+		Q_strncpy( s_wcd.title, va( "Xash3D FWGS %s", XASH_VERSION ), sizeof( s_wcd.title ));
 		fontsize = 8;
 	}
 	else // dedicated console
@@ -282,7 +282,7 @@ void Wcon_CreateConsole( void )
 		rect.top = 0;
 		rect.bottom = 392;
 		Q_strncpy( FontName, "System", sizeof( FontName ));
-		Q_strncpy( s_wcd.title, "Xash Dedicated Server", sizeof( s_wcd.title ));
+		Q_strncpy( s_wcd.title, "Xash3D FWGS Dedicated Server", sizeof( s_wcd.title ));
 		fontsize = 14;
 	}
 

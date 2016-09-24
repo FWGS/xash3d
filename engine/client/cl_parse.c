@@ -954,6 +954,7 @@ void CL_UpdateUserinfo( sizebuf_t *msg )
 		Q_strncpy( player->userinfo, BF_ReadString( msg ), sizeof( player->userinfo ));
 		Q_strncpy( player->name, Info_ValueForKey( player->userinfo, "name" ), sizeof( player->name ));
 		Q_strncpy( player->model, Info_ValueForKey( player->userinfo, "model" ), sizeof( player->model ));
+		cl.playermodels[slot] = 0;
 		player->topcolor = Q_atoi( Info_ValueForKey( player->userinfo, "topcolor" ));
 		player->bottomcolor = Q_atoi( Info_ValueForKey( player->userinfo, "bottomcolor" ));
 
@@ -1088,13 +1089,11 @@ void CL_CheckingResFile( char *pResFileName )
 
 	if( FS_FileExists( pResFileName, false ))
 		return;	// already exists
-	if( FS_FileExists( FS_ToLowerCase( pResFileName ), false ) )
-		return;
 
 	cls.downloadcount++;
 
 	
-	if( cl_allow_fragment->value )
+	if( cl_allow_fragment->integer )
 	{
 		Msg( "Starting file download: %s\n", pResFileName );
 		if( cls.state == ca_disconnected ) return;
@@ -1460,7 +1459,7 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 void CL_ParseStuffText( sizebuf_t *msg )
 {
 	char *s = BF_ReadString( msg );
-	if( cl_trace_stufftext->value )
+	if( cl_trace_stufftext->integer )
 	{
 		Msg("^3STUFFTEXT:\n^2%s\n^3END^7\n", s);
 	}
@@ -1520,6 +1519,7 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			// this does nothing
 			break;
 		case svc_disconnect:
+			MsgDev( D_INFO, "Disconnected from server\n" );
 			CL_Drop ();
 			Host_AbortCurrentFrame ();
 			break;

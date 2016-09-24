@@ -19,15 +19,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "common.h"
-#ifdef XASH_OPENSL
+#if XASH_SOUND == SOUND_OPENSLES
 #include <SLES/OpenSLES.h>
 #include "pthread.h"
 #include "sound.h"
 
 static convar_t *s_bits;
 static convar_t *s_channels;
-convar_t		*s_primary;
-dma_t			dma;
+
+extern convar_t		*s_primary;
+extern dma_t			dma;
 
 static SLObjectItf snddma_android_engine = NULL;
 static SLObjectItf snddma_android_outputMix = NULL;

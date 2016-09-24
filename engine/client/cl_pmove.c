@@ -159,11 +159,19 @@ qboolean CL_CopyEntityToPhysEnt( physent_t *pe, cl_entity_t *ent )
 	model_t	*mod = Mod_Handle( ent->curstate.modelindex );
 
 	if( !mod ) return false;
-	pe->info = (int)(ent - clgame.entities);
 	pe->player = false;
 
-	// otherwise copy the modelname
-	Q_strncpy( pe->name, mod->name, sizeof( pe->name ));
+	if( ent->player )
+	{
+		// client or bot
+		Q_strncpy( pe->name, "player", sizeof( pe->name ));
+		pe->player = (int)(ent - clgame.entities);
+	}
+	else
+	{
+		// otherwise copy the modelname
+		Q_strncpy( pe->name, mod->name, sizeof( pe->name ));
+	}
 
 	pe->model = pe->studiomodel = NULL;
 
@@ -176,7 +184,7 @@ qboolean CL_CopyEntityToPhysEnt( physent_t *pe, cl_entity_t *ent )
 		VectorClear( pe->maxs );
 		break;
 	case SOLID_BBOX:
-		if( mod && mod->type == mod_studio && mod->flags & STUDIO_TRACE_HITBOX )
+		if( !pe->player && mod && mod->type == mod_studio && mod->flags & STUDIO_TRACE_HITBOX )
 			pe->studiomodel = mod;
 		VectorCopy( ent->curstate.mins, pe->mins );
 		VectorCopy( ent->curstate.maxs, pe->maxs );
@@ -194,6 +202,7 @@ qboolean CL_CopyEntityToPhysEnt( physent_t *pe, cl_entity_t *ent )
 		break;
 	}
 
+	pe->info = (int)(ent - clgame.entities);
 	VectorCopy( ent->curstate.origin, pe->origin );
 	VectorCopy( ent->curstate.angles, pe->angles );
 
@@ -228,62 +237,6 @@ qboolean CL_CopyEntityToPhysEnt( physent_t *pe, cl_entity_t *ent )
 	VectorCopy( ent->curstate.vuser4, pe->vuser4 );
 
 	return true;
-}
-
-/*
-===================
-CL_CopyPlayerToPhysEnt
-
-create physent for player
-===================
-*/
-qboolean CL_CopyPlayerToPhysEnt( physent_t *pe, cl_entity_t *ent )
-{
-	ASSERT( ent->player );
-
-	pe->info = ent->curstate.number;
-	pe->player = 1;
-	// important! If studiomodel set, any tracing occur "sequence out of range" spamming
-	pe->model = pe->studiomodel = NULL;
-
-	Q_snprintf( pe->name, sizeof(pe->name), "player %i", pe->info );
-
-	VectorCopy( ent->curstate.origin, pe->origin );
-	VectorCopy( ent->curstate.angles, pe->origin );
-
-	// any player is SOLID_BBOX, so just copy it
-	VectorCopy( ent->curstate.mins, pe->mins );
-	VectorCopy( ent->curstate.maxs, pe->maxs );
-
-
-	pe->blooddecal = 1; // unused in GoldSrc
-	pe->takedamage = 0;
-
-	pe->skin        = CONTENTS_NONE;
-	pe->solid       = ent->curstate.solid;
-	pe->rendermode  = ent->curstate.rendermode;
-	pe->frame       = ent->curstate.frame;
-	pe->sequence    = ent->curstate.sequence;
-	pe->movetype    = ent->curstate.movetype;
-	pe->team        = ent->curstate.team;
-	pe->classnumber = ent->curstate.playerclass;
-	Q_memcpy( pe->controller, ent->curstate.controller, sizeof( pe->controller ));
-	Q_memcpy( pe->blending, ent->curstate.blending, sizeof( pe->blending ));
-
-	pe->iuser1 = ent->curstate.iuser1;
-	pe->iuser2 = ent->curstate.iuser2;
-	pe->iuser3 = ent->curstate.iuser3;
-	pe->iuser4 = ent->curstate.iuser4;
-
-	pe->fuser1 = ent->curstate.fuser1;
-	pe->fuser2 = ent->curstate.fuser2;
-	pe->fuser3 = ent->curstate.fuser3;
-	pe->fuser4 = ent->curstate.fuser4;
-
-	VectorCopy( ent->curstate.vuser1, pe->vuser1 );
-	VectorCopy( ent->curstate.vuser2, pe->vuser2 );
-	VectorCopy( ent->curstate.vuser3, pe->vuser3 );
-	VectorCopy( ent->curstate.vuser4, pe->vuser4 );
 }
 
 /*
@@ -390,18 +343,21 @@ void CL_SetSolidPlayers( int playernum )
 #if 1 // came from SetUpPlayerPrediction
 		state = cl.frames[cl.parsecountmod].playerstate + j;
 
-		// This makes all players no
-		//if( state->messagenum != cl.parsecount )
-		//	continue; // not present this frame [2]*/
+		if( ent->curstate.messagenum != cl.parsecount )
+			continue; // not present this frame [2]
+
+		if( ent->curstate.movetype == MOVETYPE_NONE )
+			continue;
 
 		if( state->effects & EF_NODRAW )
 			continue; // skip invisible
 
 		if( !state->solid )
 			continue; // not solid
+
 #endif
 		pe = &clgame.pmove->physents[clgame.pmove->numphysent];
-		if( CL_CopyPlayerToPhysEnt( pe, ent ))
+		if( CL_CopyEntityToPhysEnt( pe, ent ))
 			clgame.pmove->numphysent++;
 	}
 }
@@ -1202,7 +1158,7 @@ void CL_PredictMovement( void )
 
 	ASSERT( cl.refdef.cmd != NULL );
 
-	if( !cl_predict->value || Host_IsLocalClient() )
+	if( !cl_predict->integer || Host_IsLocalClient() )
 	{
 		// fake prediction code
 		// we need to perform cl_lw prediction while cl_predict is disabled

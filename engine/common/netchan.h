@@ -59,7 +59,6 @@ GNU General Public License for more details.
 //  bytes will be stripped by the networking channel layer
 #define NET_MAX_MESSAGE		PAD_NUMBER(( NET_MAX_PAYLOAD + HEADER_BYTES ), 16 )
 
-#define MASTERSERVER_ADR		"ms.xash.su:27010"
 #define PORT_MASTER			27010
 #define PORT_CLIENT			27005
 #define PORT_SERVER			27015
@@ -84,6 +83,9 @@ NET
 
 #define FRAG_NORMAL_STREAM		0
 #define FRAG_FILE_STREAM		1
+
+#define NET_EXT_HUFF	(1U<<0)
+#define NET_EXT_SPLIT	(1U<<1)
 
 // message data
 typedef struct
@@ -123,6 +125,41 @@ typedef struct fragbufwaiting_s
 	int		fragbufcount;	// number of buffers in this chain
 	fragbuf_t		*fragbufs;	// the actual buffers
 } fragbufwaiting_t;
+
+
+#define NETSPLIT_BACKUP 8
+#define NETSPLIT_BACKUP_MASK (NETSPLIT_BACKUP - 1)
+#define NETSPLIT_HEADER_SIZE 18
+
+typedef struct netsplit_chain_packet_s
+{
+	// bool vector
+	unsigned int recieved_v[8];
+	// serial number
+	unsigned int id;
+	byte data[NET_MAX_PAYLOAD];
+	byte received;
+	byte count;
+} netsplit_chain_packet_t;
+
+// raw packet format
+typedef struct netsplit_packet_s
+{
+	unsigned int signature; // 0xFFFFFFFE
+	unsigned int length;
+	unsigned int part;
+	unsigned int id;
+	// max 256 parts
+	byte count;
+	byte index;
+	byte data[NET_MAX_PAYLOAD - NETSPLIT_HEADER_SIZE];
+} netsplit_packet_t;
+
+
+typedef struct netsplit_s
+{
+	netsplit_chain_packet_t packets[NETSPLIT_BACKUP];
+} netsplit_t;
 
 // Network Connection Channel
 typedef struct netchan_s
@@ -189,6 +226,10 @@ typedef struct netchan_s
 
 	size_t		total_received;
 	size_t		total_received_uncompressed;
+	qboolean	split;
+	unsigned int	maxpacket;
+	unsigned int	splitid;
+	netsplit_t netsplit;
 } netchan_t;
 
 extern netadr_t		net_from;
@@ -216,6 +257,9 @@ qboolean Netchan_IncomingReady( netchan_t *chan );
 qboolean Netchan_CanPacket( netchan_t *chan );
 void Netchan_FragSend( netchan_t *chan );
 void Netchan_Clear( netchan_t *chan );
+
+// packet splitting
+qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *length );
 
 // huffman compression
 void Huff_Init( void );

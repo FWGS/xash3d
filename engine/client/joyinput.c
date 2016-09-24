@@ -141,8 +141,6 @@ convar_t *joy_found;
 convar_t *joy_index;
 convar_t *joy_lt_threshold;
 convar_t *joy_rt_threshold;
-convar_t *joy_lt_command;
-convar_t *joy_rt_command;
 convar_t *joy_osk_enable;
 convar_t *joy_axis_binding;
 
@@ -202,7 +200,7 @@ Axis events
 void Joy_AxisMotionEvent( int id, byte axis, short value )
 {
 	byte engineAxis;
-	convar_t *trig_command, *trig_threshold;
+	int trigButton, trigThreshold;
 
 	if( !initialized )
 		return;
@@ -222,25 +220,25 @@ void Joy_AxisMotionEvent( int id, byte axis, short value )
 		return; // it is not an update
 
 	// update axis values
-	joyaxis[engineAxis].prevval = joyaxis[engineAxis].val,
-			joyaxis[engineAxis].val = value;
+	joyaxis[engineAxis].prevval = joyaxis[engineAxis].val;
+	joyaxis[engineAxis].val = value;
 
 	switch( engineAxis )
 	{
 	case JOY_AXIS_RT:
-		trig_command = joy_rt_command;
-		trig_threshold = joy_rt_threshold;
+		trigButton = K_JOY2;
+		trigThreshold = joy_rt_threshold->integer;
 		break;
 	case JOY_AXIS_LT:
-		trig_command = joy_lt_command;
-		trig_threshold = joy_lt_threshold;
+		trigButton = K_JOY1;
+		trigThreshold = joy_lt_threshold->integer;
 		break;
 	default:
 		return; // next code only for triggers
 	}
 
-	if( joyaxis[engineAxis].val > trig_threshold->integer &&
-		joyaxis[engineAxis].prevval <= trig_threshold->integer ) // ignore random press
+	if( joyaxis[engineAxis].val > trigThreshold &&
+		joyaxis[engineAxis].prevval <= trigThreshold ) // ignore random press
 	{
 		if( osk_enable )
 		{
@@ -253,24 +251,14 @@ void Joy_AxisMotionEvent( int id, byte axis, short value )
 					UI_CharEvent ( ' ' );
 			}
 		}
-		else
-			Cmd_ExecuteString( trig_command->string, src_command );
+		else Key_Event( trigButton, true );
 	}
-	else if( joyaxis[engineAxis].val < trig_threshold->integer &&
-			 joyaxis[engineAxis].prevval >= trig_threshold->integer ) // we're unpressing (inverted)
+	else if( joyaxis[engineAxis].val < trigThreshold &&
+			 joyaxis[engineAxis].prevval >= trigThreshold ) // we're unpressing (inverted)
 	{
 		if( osk_enable && engineAxis == JOY_AXIS_LT )
 			Key_Event( K_BACKSPACE, false );
-		else
-		{
-			if( trig_command->string[0] == '+' ) // invert
-				trig_command->string[0] = '-';
-
-			Cmd_ExecuteString( trig_command->string, src_command );
-
-			if( trig_command->string[0] == '-') // get back actual cvar value
-				trig_command->string[0] = '+';
-		}
+		else Key_Event( trigButton, false );
 	}
 }
 
@@ -366,8 +354,6 @@ void Joy_ButtonEvent( int id, byte button, byte down )
 	}
 	else button += K_AUX1;
 
-	MsgDev( D_INFO, "%s\n", Key_KeynumToString( button ) );
-
 	Key_Event( button, down );
 }
 
@@ -381,7 +367,7 @@ Called when joystick is removed. For future expansion
 void Joy_RemoveEvent( int id )
 {
 	if( !forcedisable && initialized && joy_found->integer )
-		Cvar_SetFloat("joy_found", joy_found->integer - 1);
+		Cvar_SetFloat("joy_found", joy_found->value - 1.0f);
 }
 
 /*
@@ -398,7 +384,7 @@ void Joy_AddEvent( int id )
 
 	initialized = true;
 
-	Cvar_SetFloat("joy_found", joy_found->integer + 1);
+	Cvar_SetFloat("joy_found", joy_found->value + 1.0f);
 }
 
 /*
@@ -469,8 +455,6 @@ void Joy_Init( void )
 
 	joy_lt_threshold = Cvar_Get( "joy_lt_threshold", "-16384", CVAR_ARCHIVE, "left trigger threshold. Value from -32768 to 32767");
 	joy_rt_threshold = Cvar_Get( "joy_rt_threshold", "-16384", CVAR_ARCHIVE, "right trigger threshold. Value from -32768 to 32767" );
-	joy_lt_command   = Cvar_Get( "joy_lt_command", "+attack2", CVAR_ARCHIVE, "command to execute on left trigger");
-	joy_rt_command   = Cvar_Get( "joy_rt_command", "+attack", CVAR_ARCHIVE, "command to execute on right trigger" );
 	joy_osk_enable   = Cvar_Get( "joy_osk_enable", "0", CVAR_ARCHIVE, "enable built-in on-screen keyboard" );
 	joy_axis_binding = Cvar_Get( "joy_axis_binding", "sfpyrl", CVAR_ARCHIVE, "axis hardware id to engine inner axis binding, "
 																			 "s - side, f - forward, y - yaw, p - pitch, r - left trigger, l - right trigger" );

@@ -340,6 +340,13 @@ qboolean SV_Send( int dest, const vec3_t origin, const edict_t *ent )
 		if( cl->state != cs_spawned && !reliable )
 			continue;
 
+		// do not send unregistered messages to client
+		if( sv_fixmulticast->integer )
+		{
+			if( cl->state == cs_connected && reliable )
+				continue;
+		}
+
 		if( specproxy && !cl->hltv_proxy )
 			continue;
 
@@ -4854,6 +4861,10 @@ void SV_UnloadProgs( void )
 	// before pointers on them will be lost...
 	Cmd_ExecuteString( "@unlink\n", src_command );
 	Cmd_Unlink( CMD_EXTDLL );
+
+	// restore lost cvars after unlink
+	Cbuf_AddText( "exec game.cfg\n" );
+	Cbuf_Execute();
 
 	Mod_ResetStudioAPI ();
 	Com_FreeLibrary( svgame.hInstance );

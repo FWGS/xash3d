@@ -78,8 +78,6 @@ convar_t	*sv_sendvelocity;
 convar_t	*sv_airmove;
 convar_t	*sv_quakehulls;
 convar_t	*mp_consistency;
-convar_t	*serverinfo;
-convar_t	*physinfo;
 convar_t	*clockwindow;
 convar_t	*deathmatch;
 convar_t	*teamplay;
@@ -89,6 +87,10 @@ convar_t	*sv_skipshield; // HACK for shield
 convar_t	*sv_trace_messages;
 convar_t	*sv_master;
 convar_t	*sv_corpse_solid;
+convar_t	*sv_fixmulticast;
+convar_t	*sv_allow_split;
+convar_t	*sv_allow_compress;
+convar_t	*sv_maxpacket;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -342,9 +344,10 @@ void SV_ReadPackets( void )
 
 	while( NET_GetPacket( NS_SERVER, &net_from, net_message_buffer, &curSize ))
 	{
-		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
 		if( !svs.initialized )
 		{
+			BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
+
 			// check for rcon here
 			if( BF_GetMaxBytes( &net_message ) >= 4 && *(int *)net_message.pData == -1 )
 			{
@@ -361,12 +364,46 @@ void SV_ReadPackets( void )
 			}
 			continue;
 		}
+		if( *((int *)&net_message_buffer) == 0xFFFFFFFE )
+		{
+			if( curSize <= NETSPLIT_HEADER_SIZE )
+				continue;
+
+			// find client with this address and enabled netsplit
+			// netsplit packets does not allow changing ports
+
+			for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+			{
+				if( cl->state == cs_free || cl->fakeclient )
+					continue;
+
+				if( !NET_CompareBaseAdr( net_from, cl->netchan.remote_address ))
+					continue;
+
+				if( !cl->netchan.split )
+					continue;
+			}
+
+			// not a client
+			if( i >= sv_maxclients->integer )
+			{
+				MsgDev( D_INFO, "netsplit from unknown addr %s\n", NET_AdrToString( net_from ) );
+				continue;
+			}
+
+			// Will rewrite existing packet by merged
+			if( !NetSplit_GetLong( &cl->netchan.netsplit, &net_from, net_message_buffer, &curSize ) )
+				continue;
+		}
+		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );
+
 		// check for connectionless packet (0xffffffff) first
 		if( BF_GetMaxBytes( &net_message ) >= 4 && *(int *)net_message.pData == -1 )
 		{
 			SV_ConnectionlessPacket( net_from, &net_message );
 			continue;
 		}
+
 
 		// read the qport out of the message so we can fix up
 		// stupid address translating routers
@@ -812,7 +849,9 @@ void SV_Init( void )
 	Cvar_Get( "sv_allow_PhysX", "1", CVAR_ARCHIVE, "allow XashXT to use PhysX engine" ); // XashXT cvar
 	Cvar_Get( "sv_precache_meshes", "1", CVAR_ARCHIVE, "cache SOLID_CUSTOM meshes before level loads" ); // Paranoia 2 cvar
 	Cvar_Get( "mp_allowmonsters", "0", CVAR_SERVERNOTIFY | CVAR_LATCH, "allow monsters in multiplayer" );
-		
+	Cvar_Get( "port", va( "%i", PORT_SERVER ), 0, "network default port" );
+	Cvar_Get( "ip_hostport", "0", 0, "network server port" );
+
 	// half-life shared variables
 	sv_zmax = Cvar_Get ("sv_zmax", "4096", CVAR_PHYSICINFO, "zfar server value" );
 	sv_wateramp = Cvar_Get ("sv_wateramp", "0", CVAR_PHYSICINFO, "global water wave height" );
@@ -878,7 +917,7 @@ void SV_Init( void )
 	sv_allow_download = Cvar_Get( "sv_allow_download", "0", CVAR_ARCHIVE, "allow clients to download missing resources" );
 	sv_allow_fragment = Cvar_Get( "sv_allow_fragment", "0", CVAR_ARCHIVE, "allow direct download from server" );
 	sv_downloadurl = Cvar_Get( "sv_downloadurl", "", CVAR_ARCHIVE, "custom fastdl server to pass to client" );
-	sv_clientclean = Cvar_Get( "sv_clientclean", "0", CVAR_ARCHIVE, "client cleaning mode (0-3), useful for bots" );
+	sv_clientclean = Cvar_Get( "sv_clientclean", "1", CVAR_ARCHIVE, "client cleaning mode (0-3), useful for bots" );
 	sv_send_logos = Cvar_Get( "sv_send_logos", "1", 0, "send custom player decals to other clients" );
 	sv_send_resources = Cvar_Get( "sv_send_resources", "1", 0, "send generic resources that are specified in 'mapname.res'" );
 	sv_sendvelocity = Cvar_Get( "sv_sendvelocity", "1", CVAR_ARCHIVE, "force to send velocity for event_t structure across network" );
@@ -888,8 +927,13 @@ void SV_Init( void )
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
 	sv_skipshield = Cvar_Get( "sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
 	sv_trace_messages = Cvar_Get( "sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)" );
-	sv_master = Cvar_Get( "sv_master", MASTERSERVER_ADR, CVAR_ARCHIVE, "master server address" );
+	sv_master = Cvar_Get( "sv_master", DEFAULT_SV_MASTER, CVAR_ARCHIVE, "master server address" );
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
+	sv_fixmulticast = Cvar_Get( "sv_fixmulticast", "1", CVAR_ARCHIVE, "do not send multicast to not spawned clients" );
+	sv_allow_compress = Cvar_Get( "sv_allow_compress", "1", CVAR_ARCHIVE, "allow Huffman compression on server" );
+	sv_allow_split= Cvar_Get( "sv_allow_split", "1", CVAR_ARCHIVE, "allow splitting packets on server" );
+	sv_maxpacket = Cvar_Get( "sv_maxpacket", "40000", CVAR_ARCHIVE, "limit cl_maxpacket for all clients" );
+
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
 	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
@@ -926,7 +970,7 @@ void SV_FinalMessage( char *message, qboolean reconnect )
 	{
 		BF_WriteByte( &msg, svc_changing );
 
-		if( sv.loadgame || sv_maxclients->integer > 1 || sv.changelevel )
+		if( sv.loadgame || svgame.globals->maxClients > 1 || sv.changelevel )
 			BF_WriteOneBit( &msg, 1 ); // changelevel
 		else BF_WriteOneBit( &msg, 0 );
 	}
@@ -937,11 +981,11 @@ void SV_FinalMessage( char *message, qboolean reconnect )
 
 	// send it twice
 	// stagger the packets to crutch operating system limited buffers
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, cl = svs.clients; i < svgame.globals->maxClients; i++, cl++ )
 		if( cl->state >= cs_connected && !cl->fakeclient )
 			Netchan_Transmit( &cl->netchan, BF_GetNumBytesWritten( &msg ), BF_GetData( &msg ));
 
-	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
+	for( i = 0, cl = svs.clients; i < svgame.globals->maxClients; i++, cl++ )
 		if( cl->state >= cs_connected && !cl->fakeclient )
 			Netchan_Transmit( &cl->netchan, BF_GetNumBytesWritten( &msg ), BF_GetData( &msg ));
 }

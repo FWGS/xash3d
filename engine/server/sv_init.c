@@ -411,7 +411,7 @@ void SV_DeactivateServer( void )
 	if( sv_maxclients->integer > 32 )
 		Cvar_SetFloat( "maxplayers", 32.0f );
 
-	for( i = 0; i < sv_maxclients->integer; i++ )
+	for( i = 0; i < svgame.globals->maxClients; i++ )
 	{
 		// release client frames
 		if( svs.clients[i].frames )
@@ -760,7 +760,7 @@ qboolean SV_NewGame( const char *mapName, qboolean loadGame )
 		SV_DeactivateServer ();
 	}
 
-	if( host_xashds_hacks->value )
+	if( host_xashds_hacks->integer )
 	{
 		Cbuf_InsertText(va("wait;rcon map %s\n", mapName));
 		Cbuf_AddText("wait;connect 127.0.0.1\n");

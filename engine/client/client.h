@@ -190,6 +190,7 @@ typedef struct
 	float weaponstarttime;
 	int weaponseq;
 	int     scr_fov;
+	model_t *playermodels[32];
 #if 0 // used by SetUpPlayerPrediction
 	predicted_player_t predicted_players[MAX_CLIENTS];
 #endif
@@ -570,6 +571,7 @@ extern convar_t	*scr_dark;	// start from dark
 extern convar_t	*userinfo;
 extern convar_t	*hltv;
 extern convar_t *m_ignore;
+extern convar_t *hud_utf8;
 
 
 //=============================================================================

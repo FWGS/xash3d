@@ -410,7 +410,7 @@ void IN_MouseMove( void )
 	if( !in_mouseinitialized || !in_mouseactive || !UI_IsVisible( ))
 		return;
 
-	if( m_ignore->value )
+	if( m_ignore->integer )
 		return;
 
 	// Show cursor in UI
@@ -437,7 +437,7 @@ void IN_MouseEvent( int mstate )
 	int	i;
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
-	if( m_ignore->value )
+	if( m_ignore->integer )
 		return;
 	if( cls.key_dest == key_game )
 	{
@@ -628,7 +628,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 	if(active)
 	{
 		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 		if( m_enginemouse->integer )
 		{
 			int mouse_x, mouse_y;

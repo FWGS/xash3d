@@ -2771,8 +2771,13 @@ static model_t *R_StudioSetupPlayerModel( int index )
 		info = &cl.players[index];
 	}
 
+
 	// set to invisible, skip
 	if( !info->model[0] ) return NULL;
+
+	// FS_FileExists is too slow to use it 32 times at every frame
+	if( ( cls.key_dest != key_menu || index ) && cl.playermodels[index] )
+		return cl.playermodels[index];
 
 	if( !Q_stricmp( info->model, "player" ))
 	{
@@ -2790,7 +2795,7 @@ static model_t *R_StudioSetupPlayerModel( int index )
 	if( !FS_FileExists( modelpath, false ))
 		return NULL;
 
-	return Mod_ForName( modelpath, false );
+	return cl.playermodels[index] = Mod_ForName( modelpath, false );
 }
 
 /*
