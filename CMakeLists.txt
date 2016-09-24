@@ -53,12 +53,18 @@ option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 
 # Shared library loader implementation. Must be checked one of these or both.
 option(XASH_LIBDL "Enable libdl" ON)
-option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." ON)
+option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
 
 # Desktop-version options
-option(XASH_SDL "Enable SDL." ON)
-option(XASH_VGUI "Enable VGUI support." ON)
-option(XASH_X11 "Enable X11 support." ON)
+if(XASH_DEDICATED) 
+	option(XASH_SDL "Enable SDL." OFF) # Dedicated servers still can use SDL
+	set(XASH_VGUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
+	set(XASH_X11 OFF)
+else()
+	option(XASH_SDL "Enable SDL." ON)
+	option(XASH_VGUI "Enable VGUI support." ON)
+	option(XASH_X11 "Enable X11 support." ON)
+endif()
 
 # Pre-build analyze step
 option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
