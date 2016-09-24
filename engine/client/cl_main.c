@@ -1384,10 +1384,15 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 				cls.netchan.maxpacket = cl_maxpacket->integer;
 
 			cls.netchan.split = true;
+			MsgDev( D_INFO, "^2NET_EXT_SPLIT enabled^7 (packet sizes is %d/%d)\n", cl_maxpacket->integer, cls.netchan.maxpacket );
 		}
 
 		if( extensions & NET_EXT_HUFF )
+		{
+			MsgDev( D_INFO, "^2NET_EXT_HUFF enabled\n" );
+
 			cls.netchan.compress = true;
+		}
 
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "new" );
