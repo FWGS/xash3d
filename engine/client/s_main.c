@@ -1813,7 +1813,6 @@ qboolean S_Init( void )
 	s_cull = Cvar_Get( "s_cull", "0", CVAR_ARCHIVE, "cull sounds by geometry" );
 	s_test = Cvar_Get( "s_test", "0", 0, "engine developer cvar for quick testing of new features" );
 	s_phs = Cvar_Get( "s_phs", "0", CVAR_ARCHIVE, "cull sounds by PHS" );
-	s_khz = Cvar_Get("s_khz", "44", CVAR_ARCHIVE, "set sampling frequency, available values are 11, 22, 44, 48");
 
 	Cmd_AddCommand( "play", S_Play_f, "play a specified sound file" );
 	Cmd_AddCommand( "playvol", S_PlayVol_f, "play a specified sound file with specified volume" );

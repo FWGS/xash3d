@@ -27,7 +27,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static convar_t *s_bits;
 static convar_t *s_channels;
 convar_t		*s_primary;
-convar_t		*s_khz;
 dma_t			dma;
 
 static SLObjectItf snddma_android_engine = NULL;
@@ -145,13 +144,14 @@ static const char *SNDDMA_Android_Init( void )
 	result = (*snddma_android_outputMix)->Realize( snddma_android_outputMix, SL_BOOLEAN_FALSE );
 	if( result != SL_RESULT_SUCCESS ) return "outputMix->Realize";
 
-	if( s_khz->integer >= 44 )
+	/*if( s_khz->integer >= 44 )
 		freq = 44100;
 	else if( s_khz->integer >= 22 )
 		freq = 22050;
 	else
-		freq = 11025;
+		freq = 11025;*/
 
+	freq = SOUND_DMA_SPEED;
 	sourceLocator.locatorType = SL_DATALOCATOR_BUFFERQUEUE;
 	sourceLocator.numBuffers = 2;
 	sourceFormat.formatType = SL_DATAFORMAT_PCM;

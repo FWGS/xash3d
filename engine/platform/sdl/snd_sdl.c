@@ -32,7 +32,6 @@ so it can unlock and free the data block after it has been played.
 =======================================================================
 */
 convar_t		*s_primary;
-convar_t		*s_khz;
 dma_t			dma;
 
 //static qboolean	snd_firsttime = true;
@@ -77,22 +76,7 @@ qboolean SNDDMA_Init( void *hInst )
 	}
 
 	Q_memset(&desired, 0, sizeof(desired));
-	switch (s_khz->integer)
-	{
-	case 44:
-		desired.freq = SOUND_44k;
-		break;
-	case 32:
-		desired.freq = SOUND_32k;
-		break;
-	case 22:
-		desired.freq = SOUND_22k;
-		break;
-	default:
-		desired.freq = SOUND_11k;
-		break;
-	}
-
+	desired.freq = SOUND_DMA_SPEED;
 	desired.format = AUDIO_S16LSB;
 	desired.samples = 1024;
 	desired.channels = 2;

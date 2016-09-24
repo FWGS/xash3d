@@ -1,6 +1,6 @@
 /*
 s_dsp.c - digital signal processing algorithms for audio FX
-Copyright (C) 2009 Uncle Mike
+Copyright (C) 2016 a1batross
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -188,7 +188,7 @@ void SX_Init( void )
 	sxamodr = sxamodl = sxamodrt = sxamodlt = 255;
 
 	sxhires = sxhiresprev = 0;
-	speed = dma.format.speed;
+	speed = SOUND_32k;
 
 	sxmod1cur = sxmod1 = 350 * ( speed / SOUND_11k );
 	sxmod2cur = sxmod2 = 450 * ( speed / SOUND_11k );
@@ -849,8 +849,8 @@ CheckNewDspPresets
 */
 void CheckNewDspPresets( void )
 {
-	sxhires = 1;
-	sxhiresprev = 1;
+	/*sxhires = 1;
+	sxhiresprev = 1;*/
 
 	if( dsp_off->value != 0.0f )
 		return;
