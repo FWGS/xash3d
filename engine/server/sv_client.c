@@ -229,6 +229,8 @@ gotnewcl:
 	ent = EDICT_NUM( edictnum );
 	newcl->edict = ent;
 	newcl->challenge = challenge; // save challenge for checksumming
+	if( newcl->frames )
+		Mem_Free( newcl->frames );
 	newcl->frames = (client_frame_t *)Z_Malloc( sizeof( client_frame_t ) * SV_UPDATE_BACKUP );
 	newcl->userid = g_userid++;	// create unique userid
 	newcl->authentication_method = 2;
