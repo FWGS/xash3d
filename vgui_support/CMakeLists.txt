@@ -23,13 +23,6 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (VGUI_SUPPORT)
 
-# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-set (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -Os")
-set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -O3")
-
 set (VGUI_SUPPORT_LIBRARY vgui_support)
 
 file (GLOB VGUI_SUPPORT_SOURCES *.cpp *.c)
@@ -48,7 +41,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(${VGUI_SUPPORT_LIBRARY} -L. -l:vgui.so)
 endif()
 
-add_definitions(-DXASH_VGUI)
+add_definitions(-DXASH_VGUI -DXASH_DEDICATED) # Backend system hack :(
 
 set_target_properties (${VGUI_SUPPORT_SHARED} PROPERTIES
 	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}

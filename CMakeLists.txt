@@ -34,6 +34,8 @@ set (HL_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/hlsdk/)
 # Servers must choose this
 option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF)
 
+option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompile game for 64 bit." OFF)
+
 # Windows only. Enable it by default for Windows.
 if(NOT WIN32)
 	option(XASH_IPX "Enable IPX support for networking. Windows only." OFF)
@@ -89,7 +91,7 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # Build 32-bit Xash on 64-bit, because Xash3D not support this
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
 	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
 	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m32")
