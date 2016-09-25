@@ -1216,10 +1216,11 @@ void EXPORT Host_Shutdown( void )
 	Mod_Shutdown();
 	NET_Shutdown();
 	HTTP_Shutdown();
+	Con_ClearAutoComplete();
 	Cmd_Shutdown();
 	Host_FreeCommon();
 	Sys_DestroyConsole();
 	Sys_CloseLog();
 	Sys_RestoreCrashHandler();
-	Con_ClearAutoComplete();
+
 }
