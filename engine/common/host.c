@@ -1221,4 +1221,5 @@ void EXPORT Host_Shutdown( void )
 	Sys_DestroyConsole();
 	Sys_CloseLog();
 	Sys_RestoreCrashHandler();
+	Con_ClearAutoComplete();
 }
