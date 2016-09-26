@@ -20,7 +20,14 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-#include <port.h>
+
+
+#ifdef __GNUC__
+#define _format(x) __attribute__((format(printf, x, x+1)))
+#else
+#define _format(x)
+#endif
+
 
 #include <setjmp.h>
 #include <stdio.h>
@@ -45,25 +52,8 @@ extern "C" {
 #define MSGBOX2( x )	 fprintf(stderr, BORDER1"Host Error: %s\n"BORDER1,x)
 #define MSGBOX3( x )	 fprintf(stderr, BORDER1"Host Recursive Error: %s\n"BORDER1,x)
 #endif
-// basic typedefs
 
-typedef int		sound_t;
-typedef float		vec_t;
-typedef vec_t		vec2_t[2];
-typedef vec_t		vec3_t[3];
-typedef vec_t		vec4_t[4];
-typedef vec_t		quat_t[4];
-typedef byte		rgba_t[4];	// unsigned byte colorpack
-typedef byte		rgb_t[3];		// unsigned byte colorpack
-typedef vec_t		matrix3x4[3][4];
-typedef vec_t		matrix4x4[4][4];
-#if _MSC_VER == 1200
-typedef __int64 longtime_t; //msvc6
-#elif defined (XASH_SDL)
-typedef Uint64 longtime_t;
-#else
-typedef unsigned long long longtime_t;
-#endif
+#include "types.h"
 #include "const.h"
 
 #define ASSERT( exp )	if(!( exp )) Sys_Break( "assert failed at %s:%i\n", __FILE__, __LINE__ )

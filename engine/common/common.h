@@ -22,6 +22,29 @@ extern "C" {
 
 #include "port.h"
 
+#include "backends.h"
+#include "defaults.h"
+//
+// check if selected backend not allowed
+//
+#if XASH_TIMER == TIMER_NULL
+	#error "Please select timer backend"
+#endif
+
+#ifndef XASH_DEDICATED
+	#if XASH_VIDEO == VIDEO_NULL
+		#error "Please select video backend"
+	#endif
+#endif
+
+#ifndef XASH_SDL
+
+#if XASH_TIMER == TIMER_SDL || XASH_VIDEO == VIDEO_SDL || XASH_SOUND == SOUND_SDL || XASH_INPUT == INPUT_SDL
+#error "SDL backends without XASH_SDL not allowed"
+#endif
+
+#endif
+
 #ifndef _WIN32
 #ifdef __linux__
 #include <linux/limits.h> // PATH_MAX

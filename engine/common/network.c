@@ -31,7 +31,6 @@ GNU General Public License for more details.
 #include <errno.h>
 #include <fcntl.h>
 #endif
-#include "port.h"
 #include "common.h"
 #include "netchan.h"
 

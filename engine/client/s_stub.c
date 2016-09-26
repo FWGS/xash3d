@@ -14,10 +14,10 @@ GNU General Public License for more details.
 */
 
 
-
-#include "port.h"
-#if XASH_SOUND == SOUND_NULL
+#ifndef XASH_DEDICATED
 #include "common.h"
+#if XASH_SOUND == SOUND_NULL
+
 #include "sound.h"
 
 #define SAMPLE_16BIT_SHIFT		1
@@ -150,4 +150,5 @@ void S_PrintDeviceName( void )
 {
 	Msg( "Audio: No sound backend!\n" );
 }
+#endif
 #endif

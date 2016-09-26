@@ -13,8 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "port.h"
-
+#include "common.h"
 #if defined(XASH_SDL)
 #include <SDL.h>
 #endif
@@ -22,7 +21,7 @@ GNU General Public License for more details.
 #include <stdarg.h>  // va_args
 #include <errno.h> // errno
 
-#include "common.h"
+
 #include "netchan.h"
 #include "server.h"
 #include "protocol.h"
