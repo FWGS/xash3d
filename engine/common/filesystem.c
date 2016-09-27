@@ -13,7 +13,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "port.h"
+
+#include "common.h"
+#include "wadfile.h"
+#include "filesystem.h"
+#include "library.h"
+#include "mathlib.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -30,12 +35,6 @@ GNU General Public License for more details.
 #include <errno.h>
 #include <unistd.h>
 #endif
-
-#include "common.h"
-#include "wadfile.h"
-#include "filesystem.h"
-#include "library.h"
-#include "mathlib.h"
 
 #define FILE_BUFF_SIZE		2048
 #define PAK_LOAD_OK			0

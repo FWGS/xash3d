@@ -16,8 +16,6 @@ GNU General Public License for more details.
 #ifndef GL_LOCAL_H
 #define GL_LOCAL_H
 
-#include "port.h"
-
 #ifdef XASH_SDL
 #include <SDL_video.h>
 #endif

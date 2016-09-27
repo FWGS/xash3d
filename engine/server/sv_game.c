@@ -23,7 +23,6 @@ GNU General Public License for more details.
 #include "const.h"
 #include "render_api.h"	// modelstate_t
 
-#include "port.h"
 
 // fatpvs stuff
 static byte fatpvs[MAX_MAP_LEAFS/8];
@@ -35,8 +34,11 @@ static int fatbytes;
 
 // exports
 typedef void (__cdecl *LINK_ENTITY_FUNC)( entvars_t *pev );
+#ifdef _WIN32
 typedef void (__stdcall *GIVEFNPTRSTODLL)( enginefuncs_t* engfuncs, globalvars_t *pGlobals );
-
+#else
+typedef void (__cdecl *GIVEFNPTRSTODLL)( enginefuncs_t* engfuncs, globalvars_t *pGlobals );
+#endif
 /*
 =============
 EntvarsDescription

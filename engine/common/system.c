@@ -13,7 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #define _GNU_SOURCE
-#include "port.h"
+
+#include "common.h"
+#include "mathlib.h"
+
 #ifdef XASH_SDL
 #include <SDL_timer.h>
 #include <SDL_clipboard.h>
@@ -36,8 +39,6 @@ extern char **environ;
 #include <time.h>
 #endif
 
-#include "common.h"
-#include "mathlib.h"
 
 qboolean	error_on_exit = false;	// arg for exit();
 #define DEBUG_BREAK

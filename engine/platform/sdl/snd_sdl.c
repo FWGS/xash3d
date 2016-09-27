@@ -13,11 +13,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-
-
-#include "port.h"
-#if XASH_SOUND == SOUND_SDL
 #include "common.h"
+#if XASH_SOUND == SOUND_SDL
+
 #include "sound.h"
 
 #include <SDL.h>

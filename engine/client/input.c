@@ -13,7 +13,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 #ifndef XASH_DEDICATED
-#include "port.h"
 
 #include "common.h"
 #include "input.h"

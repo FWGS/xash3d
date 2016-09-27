@@ -17,9 +17,6 @@ GNU General Public License for more details.
 #ifndef PORT_H
 #define PORT_H
 
-#include "backends.h"
-#include "defaults.h"
-
 #ifdef XASH_VGUI
 	#if !(defined(__i386__) || defined(_X86_) || defined(_M_IX86))
 		#error "VGUI is exists only for x86. You must disable VGUI flag or build Xash3D for x86 target."
@@ -73,12 +70,7 @@ GNU General Public License for more details.
 
 	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT
 
-	#define TRUE	    1
-	#define FALSE	    0
-
 	// Windows-specific
-	#define _stdcall
-	#define __stdcall
 	#define __cdecl
 	#define _inline	static inline
 	#define O_BINARY 0 // O_BINARY is Windows extension
@@ -90,7 +82,7 @@ GNU General Public License for more details.
 	#define GetProcAddress( x, y )		dlsym( x, y )
 	#define SetCurrentDirectory( x )	(!chdir( x ))
 	#define FreeLibrary( x )			dlclose( x )
-	#define MAKEWORD( a, b )			((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
+	//#define MAKEWORD( a, b )			((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
 	#define max( a, b )                 (((a) > (b)) ? (a) : (b))
 	#define min( a, b )                 (((a) < (b)) ? (a) : (b))
 	#define tell( a )					lseek(a, 0, SEEK_CUR)
@@ -144,33 +136,6 @@ GNU General Public License for more details.
 	#define MENUDLL "menu"ARCH_SUFFIX"." OS_LIB_EXT
 	#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
-#endif
-
-#ifdef __GNUC__
-#define _format(x) __attribute__((format(printf, x, x+1)))
-#else
-#define _format(x)
-#endif
-
-//
-// check if selected not allowed backend
-//
-#if XASH_TIMER == TIMER_NULL
-	#error "Please select timer backend"
-#endif
-
-#ifndef XASH_DEDICATED
-	#if XASH_VIDEO == VIDEO_NULL
-		#error "Please select video backend"
-	#endif
-#endif
-
-#ifndef XASH_SDL
-
-#if XASH_TIMER == TIMER_SDL || XASH_VIDEO == VIDEO_SDL || XASH_SOUND == SOUND_SDL || XASH_INPUT == INPUT_SDL
-#error "SDL backends without XASH_SDL not allowed"
-#endif
-
 #endif
 
 #endif // PORT_H
