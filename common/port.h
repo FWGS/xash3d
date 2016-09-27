@@ -81,7 +81,7 @@ GNU General Public License for more details.
 	#define LoadLibrary( x )			dlopen( x, RTLD_NOW )
 	#define GetProcAddress( x, y )		dlsym( x, y )
 	#define SetCurrentDirectory( x )	(!chdir( x ))
-	//#define FreeLibrary( x )			dlclose( x )
+	#define FreeLibrary( x )			dlclose( x )
 	//#define MAKEWORD( a, b )			((short int)(((unsigned char)(a))|(((short int)((unsigned char)(b)))<<8)))
 	#define max( a, b )                 (((a) > (b)) ? (a) : (b))
 	#define min( a, b )                 (((a) < (b)) ? (a) : (b))
