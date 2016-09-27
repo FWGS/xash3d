@@ -33,6 +33,7 @@ GNU General Public License for more details.
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
 #include "library.h"
+#include "base_cmd.h"
 #ifdef XASH_SDL
 #include "platform/sdl/events.h"
 #endif

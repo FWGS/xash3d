@@ -30,6 +30,7 @@ typedef enum base_command_type
 
 typedef void base_command_t;
 
+void BaseCmd_Init( void );
 base_command_t *BaseCmd_Find( base_command_type_e type, const char *name );
 void BaseCmd_Insert ( base_command_type_e type, base_command_t *basecmd, const char *name );
 void BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const char *name ); // only if same name
