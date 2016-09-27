@@ -29,7 +29,12 @@ file( GLOB_RECURSE XASH_ENGINE_SDL_SOURCES platform/sdl/*.c ) # SDL version sour
 file( GLOB_RECURSE XASH_ENGINE_ANDROID_SOURCES platform/android/*.c ) # Android sources
 file( GLOB_RECURSE XASH_ENGINE_CLIENT_SOURCES client/*.c ) # Client sources
 
-set( _XASH_CLIENT NOT XASH_DEDICATED ) # Hack for a macro. Also just a shortcut
+# TODO: How to evaluate expression in set?
+if( NOT XASH_DEDICATED )
+	set( _XASH_CLIENT 1 ) # Hack for a macro. Also just a shortcut
+else( )
+	set( _XASH_CLIENT 0 )
+endif( )
 
 macro( cond_list_append arg1 arg2 arg3 )
 	if( ${arg1} )
