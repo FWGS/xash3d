@@ -3292,9 +3292,13 @@ pfnServerPrint
 */
 void pfnServerPrint( const char *szMsg )
 {
+#if 0
 	// while loading in-progress we can sending message only for local client
 	if( sv.state != ss_active ) MsgDev( D_INFO, "%s", szMsg );
 	else SV_BroadcastPrintf( PRINT_HIGH, "%s", szMsg );
+#else
+	MsgDev( D_INFO, "%s", szMsg );
+#endif
 }
 
 /*
