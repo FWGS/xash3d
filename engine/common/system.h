@@ -28,6 +28,7 @@ extern "C" {
 #define _format(x)
 #endif
 
+#include "port.h"
 
 #include <setjmp.h>
 #include <stdio.h>
@@ -39,18 +40,18 @@ extern "C" {
 #define MSGBOX2( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Error", x, NULL )
 #define MSGBOX3( x )	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Host Recursive Error", x, NULL )
 #elif defined(__ANDROID__)
-#define MSGBOX( x )		Android_MessageBox("Xash Error", x )
+#define MSGBOX( x ) 	Android_MessageBox("Xash Error", x )
 #define MSGBOX2( x )	Android_MessageBox("Host Error", x )
 #define MSGBOX3( x )	Android_MessageBox("Host Recursive Error", x )
 #elif defined _WIN32
-#define MSGBOX( x ) MessageBox( NULL, x, "Xash Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
-#define MSGBOX2( x ) MessageBox( host.hWnd, x, "Host Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
-#define MSGBOX3( x ) MessageBox( host.hWnd, x, "Host Recursive Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
+#define MSGBOX( x ) 	MessageBox( NULL, x, "Xash Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
+#define MSGBOX2( x )	MessageBox( host.hWnd, x, "Host Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
+#define MSGBOX3( x )	MessageBox( host.hWnd, x, "Host Recursive Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
 #else
 #define BORDER1 "======================================\n"
-#define MSGBOX( x )	 fprintf(stderr, BORDER1"Xash Error: %s\n"BORDER1,x)
-#define MSGBOX2( x )	 fprintf(stderr, BORDER1"Host Error: %s\n"BORDER1,x)
-#define MSGBOX3( x )	 fprintf(stderr, BORDER1"Host Recursive Error: %s\n"BORDER1,x)
+#define MSGBOX( x )		fprintf(stderr, BORDER1"Xash Error: %s\n"BORDER1,x)
+#define MSGBOX2( x )	fprintf(stderr, BORDER1"Host Error: %s\n"BORDER1,x)
+#define MSGBOX3( x )	fprintf(stderr, BORDER1"Host Recursive Error: %s\n"BORDER1,x)
 #endif
 
 #include "types.h"

@@ -1870,7 +1870,7 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
 	}
 	else //  ENTITY_NORMAL or other (try predict type)
 	{
-		/* Omit connection drop on wromg data from server.
+		/* Omit connection drop on wrong data from server.
 		 * I know that it is very dirty,
 		 * but i don't know how to do it better.*/
 		if( to->entityType != ENTITY_NORMAL )

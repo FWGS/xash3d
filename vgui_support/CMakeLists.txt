@@ -41,8 +41,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     target_link_libraries(${VGUI_SUPPORT_LIBRARY} -L. -l:vgui.so)
 endif()
 
-add_definitions(-DXASH_VGUI -DXASH_DEDICATED) # Backend system hack :(
-
+add_definitions(-DXASH_VGUI)
 set_target_properties (${VGUI_SUPPORT_SHARED} PROPERTIES
 	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
 	POSITION_INDEPENDENT_CODE 1)
