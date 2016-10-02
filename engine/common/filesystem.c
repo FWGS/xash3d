@@ -1262,9 +1262,7 @@ FS_CreateDefaultGameInfo
 */
 void FS_CreateDefaultGameInfo( const char *filename )
 {
-	gameinfo_t	defGI;
-
-	Q_memset( &defGI, 0, sizeof( defGI ));
+	gameinfo_t	defGI = {0};
 
 	// setup default values
 	defGI.max_edicts = 900;	// default value if not specified
@@ -1470,9 +1468,7 @@ FS_ConvertGameInfo
 */
 void FS_ConvertGameInfo( const char *gamedir, const char *gameinfo_path, const char *liblist_path )
 {
-	gameinfo_t	GameInfo;
-
-	Q_memset( &GameInfo, 0, sizeof( GameInfo ));
+	gameinfo_t	GameInfo = {0};
 
 	if( FS_ParseLiblistGam( liblist_path, gamedir, &GameInfo ))
 	{

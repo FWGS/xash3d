@@ -290,12 +290,10 @@ static void SV_EmitEvents( sv_client_t *cl, client_frame_t *to, sizebuf_t *msg )
 	event_state_t	*es;
 	event_info_t	*info;
 	entity_state_t	*state;
-	event_args_t	nullargs;
+	event_args_t	nullargs = {0};
 	int		ev_count = 0;
 	int		count, ent_index;
 	int		i, j, ev;
-
-	Q_memset( &nullargs, 0, sizeof( nullargs ));
 
 	es = &cl->events;
 
@@ -440,15 +438,13 @@ SV_WriteClientdataToMessage
 */
 void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 {
-	clientdata_t	nullcd;
+	clientdata_t	nullcd = {0};
 	clientdata_t	*from_cd, *to_cd;
 	weapon_data_t	nullwd;
 	weapon_data_t	*from_wd, *to_wd;
 	client_frame_t	*frame;
 	edict_t		*clent;
 	int		i;
-
-	Q_memset( &nullcd, 0, sizeof( nullcd ));
 
 	clent = cl->edict;
 	frame = &cl->frames[cl->netchan.outgoing_sequence & SV_UPDATE_MASK];
@@ -617,13 +613,12 @@ SV_SendClientDatagram
 */
 void SV_SendClientDatagram( sv_client_t *cl )
 {
-	byte    	msg_buf[NET_MAX_PAYLOAD];
+	byte    	msg_buf[NET_MAX_PAYLOAD] = {0};
 	sizebuf_t	msg;
 
 	svs.currentPlayer = cl;
 	svs.currentPlayerNum = (cl - svs.clients);
 
-	Q_memset( msg_buf, 0, NET_MAX_PAYLOAD );
 	BF_Init( &msg, "Datagram", msg_buf, sizeof( msg_buf ));
 
 	// always send servertime at new frame

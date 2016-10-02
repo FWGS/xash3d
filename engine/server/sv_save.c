@@ -790,13 +790,10 @@ SAVERESTOREDATA *SV_SaveInit( int size )
 void SV_SaveGameStateGlobals( SAVERESTOREDATA *pSaveData )
 {
 	sv_client_t	*cl;
-	SAVE_HEADER	header;
-	SAVE_LIGHTSTYLE	light;
+	SAVE_HEADER	header = {0};
+	SAVE_LIGHTSTYLE	light = {0};
 	int		i;
 	
-	Q_memset( &header, 0, sizeof( SAVE_HEADER ) );
-	Q_memset( &light, 0, sizeof( SAVE_LIGHTSTYLE ) );
-
 	// write global data
 	header.skillLevel = Cvar_VariableValue( "skill" ); // This is created from an int even though it's a float
 	header.connectionCount = pSaveData->connectionCount;
@@ -1820,12 +1817,11 @@ int SV_CreateEntityTransitionList( SAVERESTOREDATA *pSaveData, int levelMask )
 void SV_LoadAdjacentEnts( const char *pOldLevel, const char *pLandmarkName )
 {
 	SAVE_HEADER	header;
-	SAVERESTOREDATA	currentLevelData, *pSaveData;
+	SAVERESTOREDATA	currentLevelData = {0}, *pSaveData;
 	int		i, test, flags, index, movedCount = 0;
 	qboolean		foundprevious = false;
 	vec3_t		landmarkOrigin;
 	
-	Q_memset( &currentLevelData, 0, sizeof( SAVERESTOREDATA ));
 	svgame.globals->pSaveData = &currentLevelData;
 
 	// build the adjacent map list

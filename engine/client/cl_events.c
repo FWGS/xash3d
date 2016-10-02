@@ -311,11 +311,9 @@ CL_ParseReliableEvent
 void CL_ParseReliableEvent( sizebuf_t *msg )
 {
 	int		event_index;
-	event_args_t	nullargs, args;
+	event_args_t	nullargs = {0}, args;
 	float		delay = 0.0f;
 	cl_entity_t	*pEnt;
-
-	Q_memset( &nullargs, 0, sizeof( nullargs ));
 
 	event_index = BF_ReadUBitLong( msg, MAX_EVENT_BITS );
 
@@ -350,13 +348,11 @@ void CL_ParseEvent( sizebuf_t *msg )
 	int		event_index;
 	int		i, num_events;
 	int		packet_ent;
-	event_args_t	nullargs, args;
+	event_args_t	nullargs = {0}, args;
 	qboolean		has_update;
 	entity_state_t	*state;
 	cl_entity_t	*pEnt;
 	float		delay;
-
-	Q_memset( &nullargs, 0, sizeof( nullargs ));
 
 	num_events = BF_ReadUBitLong( msg, 5 );
 

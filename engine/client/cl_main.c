@@ -285,10 +285,10 @@ CL_CreateCmd
 */
 void CL_CreateCmd( void )
 {
-	usercmd_t		cmd = { 0 };
+	usercmd_t	cmd = {0};
 	color24		color;
 	vec3_t		angles;
-	qboolean		active;
+	qboolean	active;
 	int		ms;
 
 	ms = host.frametime * 1000;

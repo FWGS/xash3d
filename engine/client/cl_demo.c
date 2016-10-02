@@ -512,10 +512,9 @@ void CL_ReadDemoUserCmd( qboolean discard )
 
 	if( !discard )
 	{
-		usercmd_t	nullcmd;
+		usercmd_t	nullcmd = {0};
 		sizebuf_t	buf;
 
-		Q_memset( &nullcmd, 0, sizeof( nullcmd ));
 		BF_Init( &buf, "UserCmd", data, sizeof( data ));
 
 		// always delta'ing from null

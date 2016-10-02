@@ -310,14 +310,13 @@ pmtrace_t PM_PlayerTraceExt( playermove_t *pmove, vec3_t start, vec3_t end, int 
 	matrix4x4	matrix;
 	pmtrace_t	trace_bbox;
 	pmtrace_t	trace_hitbox;
-	pmtrace_t	trace_total;
+	pmtrace_t	trace_total = {0};
 	vec3_t	offset, start_l, end_l;
 	vec3_t	temp, mins, maxs;
 	int	i, j, hullcount;
 	qboolean	rotated, transform_bbox;
 	hull_t	*hull = NULL;
 
-	Q_memset( &trace_total, 0, sizeof( trace_total ));
 	VectorCopy( end, trace_total.endpos );
 	trace_total.fraction = 1.0f;
 	trace_total.ent = -1;

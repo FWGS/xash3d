@@ -94,7 +94,9 @@ float Com_RandomFloat( float flLow, float flHigh )
 int Com_RandomLong( int lLow, int lHigh )
 {
 	dword	maxAcceptable;
-	dword	n, x = lHigh-lLow + 1; 	
+	dword	n, x;
+
+	x = (dword)( (long)lHigh - (long)lLow + 1L );
 
 	if( idum == 0 ) COM_SetRandomSeed(0);
 

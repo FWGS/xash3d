@@ -426,11 +426,9 @@ static client entity
 */
 void CL_ParseStaticEntity( sizebuf_t *msg )
 {
-	entity_state_t	state;
+	entity_state_t	state = {0};
 	cl_entity_t	*ent;
 	int		i;
-
-	Q_memset( &state, 0, sizeof( state ));
 
 	state.modelindex = BF_ReadShort( msg );
 	state.sequence = BF_ReadByte( msg );

@@ -997,9 +997,8 @@ otherwise see code SV_UpdateMovevars()
 */
 void SV_FullUpdateMovevars( sv_client_t *cl, sizebuf_t *msg )
 {
-	movevars_t	nullmovevars;
+	movevars_t	nullmovevars = {0};
 
-	Q_memset( &nullmovevars, 0, sizeof( nullmovevars ));
 	MSG_WriteDeltaMovevars( msg, &nullmovevars, &svgame.movevars );
 }
 
@@ -1308,7 +1307,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 {
 	int		index = 0;
 	int		rescount = 0;
-	resourcelist_t	reslist;	// g-cont. what about stack???
+	resourcelist_t	reslist = {0};	// g-cont. what about stack???
 	size_t		msg_size;
 	int msg_start, msg_end;
 	char *resfile;
@@ -1316,8 +1315,6 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	char mapresfilename[256];
 	char token[256];
 	char *pfile;
-
-	Q_memset( &reslist, 0, sizeof( resourcelist_t ));
 
 	// transfer fastdl servers list
 	if( *sv_downloadurl->string )
@@ -3014,16 +3011,14 @@ static void SV_ParseClientMove( sv_client_t *cl, sizebuf_t *msg )
 	client_frame_t	*frame;
 	int		key, size, checksum1, checksum2;
 	int		i, numbackup, newcmds, numcmds;
-	usercmd_t		nullcmd, *from;
-	usercmd_t		cmds[32], *to;
+	usercmd_t		nullcmd = {0}, *from;
+	usercmd_t		cmds[32] = {0}, *to;
 	edict_t		*player;
 
 	numbackup = 2;
 	player = cl->edict;
 
 	frame = &cl->frames[cl->netchan.incoming_acknowledged & SV_UPDATE_MASK];
-	Q_memset( &nullcmd, 0, sizeof( usercmd_t ));
-	Q_memset( cmds, 0, sizeof( cmds ));
 
 	key = BF_GetRealBytesRead( msg );
 	checksum1 = BF_ReadByte( msg );
