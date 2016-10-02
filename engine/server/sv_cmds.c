@@ -790,8 +790,8 @@ void SV_Status_f( void )
 	}
 
 	Msg( "map: %s\n", sv.name );
-	Msg( "num score ping    name            lastmsg address               port \n" );
-	Msg( "--- ----- ------- --------------- ------- --------------------- ------\n" );
+	Msg( "num score ping    name                             lastmsg   address               port  \n" );
+	Msg( "--- ----- ------- -------------------------------- --------- --------------------- ------\n" );
 
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
@@ -813,9 +813,9 @@ void SV_Status_f( void )
 		}
 
 		Msg( "%s", cl->name );
-		l = 24 - Q_strlen( cl->name );
+		l = 33 - Q_strlen( cl->name );
 		for( j = 0; j < l; j++ ) Msg( " " );
-		Msg( "%g ", ( host.realtime - cl->lastmessage ));
+		Msg( "%9g ", ( host.realtime - cl->lastmessage ));
 		s = NET_BaseAdrToString( cl->netchan.remote_address );
 		Msg( "%s", s );
 		l = 22 - Q_strlen( s );
