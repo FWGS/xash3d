@@ -813,7 +813,7 @@ An svc_packetentities has just been parsed, deal with the
 rest of the data stream.
 ==================
 */
-void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
+int CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 {
 	frame_t		*newframe, *oldframe;
 	int		oldindex, newnum, oldnum;
@@ -821,6 +821,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 	cl_entity_t	*player;
 	entity_state_t	*oldent;
 	int		i, count;
+	int playerbytes = 0, bufstart;
 
 	// save first uncompressed packet as timestamp
 	if( cls.changelevel && !delta && cls.demorecording )
@@ -835,6 +836,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 	newframe->first_entity = cls.next_client_entities;
 	newframe->num_entities = 0;
 	newframe->valid = true; // assume valid
+	Q_memset( &newframe->graphdata, 0, sizeof( netbandwidthgraph_t ));
 
 	if( delta )
 	{
@@ -848,7 +850,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 			MsgDev( D_NOTE, "CL_DeltaPacketEntities: update too old (flush)\n" );
 			Con_NPrintf( 2, "^3Warning:^1 update too old\n^7\n" );
 			CL_FlushEntityPacket( msg );
-			return;
+			return 0; // broken packet, so no players was been parsed
 		}
 
 
@@ -858,7 +860,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 			// we can't use this, it is too old
 			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old: overflow^7\n" );
 			CL_FlushEntityPacket( msg );
-			return;
+			return 0; // broken packet, so no players was been parsed
 		}
 
 		oldframe = &cl.frames[oldpacket & CL_UPDATE_MASK];
@@ -868,7 +870,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 			MsgDev( D_NOTE, "CL_ParsePacketEntities: delta frame is too old (flush)\n");
 			Con_NPrintf( 2, "^3Warning:^1 delta frame is too old^7\n" );
 			CL_FlushEntityPacket( msg );
-			return;
+			return 0; // broken packet, so no players was been parsed
 		}
 	}
 	else
@@ -914,7 +916,10 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 		while( oldnum < newnum )
 		{	
 			// one or more entities from the old packet are unchanged
+			bufstart = BF_GetNumBytesRead( msg );
 			CL_DeltaEntity( msg, newframe, oldnum, oldent, true );
+			if( CL_IsPlayerIndex( oldnum ) )
+				playerbytes += BF_GetNumBytesRead( msg ) - bufstart;
 			
 			oldindex++;
 
@@ -932,7 +937,10 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 		if( oldnum == newnum )
 		{	
 			// delta from previous state
+			bufstart = BF_GetNumBytesRead( msg );
 			CL_DeltaEntity( msg, newframe, newnum, oldent, false );
+			if( CL_IsPlayerIndex( newnum ) )
+				playerbytes += BF_GetNumBytesRead( msg ) - bufstart;
 			oldindex++;
 
 			if( oldindex >= oldframe->num_entities )
@@ -950,7 +958,10 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 		if( oldnum > newnum )
 		{	
 			// delta from baseline ?
+			bufstart = BF_GetNumBytesRead( msg );
 			CL_DeltaEntity( msg, newframe, newnum, NULL, false );
+			if( CL_IsPlayerIndex( newnum ) )
+				playerbytes += BF_GetNumBytesRead( msg ) - bufstart;
 			continue;
 		}
 	}
@@ -959,7 +970,11 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 	while( oldnum != MAX_ENTNUMBER )
 	{	
 		// one or more entities from the old packet are unchanged
+		bufstart = BF_GetNumBytesRead( msg );
 		CL_DeltaEntity( msg, newframe, oldnum, oldent, true );
+		if( CL_IsPlayerIndex( newnum ) )
+			playerbytes += BF_GetNumBytesRead( msg ) - bufstart;
+
 		oldindex++;
 
 		if( oldindex >= oldframe->num_entities )
@@ -978,7 +993,7 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 
 	cl.frame = *newframe;
 
-	if( !cl.frame.valid ) return;
+	if( !cl.frame.valid ) return 0;
 
 	player = CL_GetLocalPlayer();
 
@@ -1017,6 +1032,8 @@ void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 	{
 		CL_CheckPredictionError();
 	}
+
+	return playerbytes;
 }
 
 /*

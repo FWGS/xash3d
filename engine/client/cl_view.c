@@ -420,6 +420,7 @@ void V_PostRender( void )
 		SCR_NetSpeeds();
 		SCR_DrawFPS();
 		SCR_DrawPos();
+		SCR_DrawNetGraph();
 		SV_DrawOrthoTriangles();
 		CL_DrawDemoRecording();
 		R_ShowTextures();

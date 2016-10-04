@@ -1483,11 +1483,11 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 	char	*s;
 	int	i, j, cmd;
 	int	param1, param2;
-	int	bufStart;
+	int	bufStart, playerbytes;
 
 	cls_message_debug.parsing = true;		// begin parsing
 	starting_count = BF_GetNumBytesRead( msg );	// updates each frame
-	
+
 	// parse the message
 	while( 1 )
 	{
@@ -1553,6 +1553,8 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_sound:
 			CL_ParseSoundPacket( msg, false );
+
+			cl.frames[cl.parsecountmod].graphdata.sound += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_time:
 			// shuffle timestamps
@@ -1582,12 +1584,20 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_clientdata:
 			CL_ParseClientData( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.client += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_packetentities:
-			CL_ParsePacketEntities( msg, false );
+			playerbytes = CL_ParsePacketEntities( msg, false );
+
+			cl.frames[cl.parsecountmod].graphdata.players += playerbytes;
+			cl.frames[cl.parsecountmod].graphdata.entities += BF_GetNumBytesRead( msg ) - bufStart - playerbytes;
 			break;
 		case svc_deltapacketentities:
-			CL_ParsePacketEntities( msg, true );
+			playerbytes = CL_ParsePacketEntities( msg, true );
+
+			cl.frames[cl.parsecountmod].graphdata.players += playerbytes;
+			cl.frames[cl.parsecountmod].graphdata.entities += BF_GetNumBytesRead( msg ) - bufStart - playerbytes;
 			break;
 		case svc_updatepings:
 			CL_UpdateUserPings( msg );
@@ -1615,6 +1625,8 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_temp_entity:
 			CL_ParseTempEntity( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.tentities += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_setpause:
 			cl.refdef.paused = ( BF_ReadOneBit( msg ) != 0 );
@@ -1630,9 +1642,13 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_event:
 			CL_ParseEvent( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.event += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_event_reliable:
 			CL_ParseReliableEvent( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.event += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_updateuserinfo:
 			CL_UpdateUserinfo( msg );
@@ -1706,9 +1722,14 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		default:
 			CL_ParseUserMessage( msg, cmd );
+
+			cl.frames[cl.parsecountmod].graphdata.usr += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		}
+
+		cl.frames[cl.parsecountmod].graphdata.msgbytes += BF_GetNumBytesRead( msg ) - bufStart;
 	}
+
 
 	cls_message_debug.parsing = false;	// done
 

@@ -48,6 +48,19 @@ GNU General Public License for more details.
 #define VID_SNAPSHOT	4	// save screenshot into root dir and no gamma correction
 
 //=============================================================================
+typedef struct netbandwithgraph_s
+{
+	unsigned short client;
+	unsigned short players;
+	unsigned short entities; // entities bytes, except for players
+	unsigned short tentities; // temp entities
+	unsigned short sound;
+	unsigned short event;
+	unsigned short usr;
+	unsigned short msgbytes;
+	//unsigned short voicebytes; // TODO: enable it someday...
+} netbandwidthgraph_t;
+
 typedef struct frame_s
 {
 	// received from server
@@ -63,6 +76,7 @@ typedef struct frame_s
 	int		first_entity;	// into the circular cl_packet_entities[]
 
 	qboolean		valid;		// cleared if delta parsing was invalid
+	netbandwidthgraph_t graphdata;
 } frame_t;
 
 typedef struct runcmd_s
@@ -556,6 +570,7 @@ extern convar_t	*cl_lightstyle_lerping;
 extern convar_t	*cl_draw_particles;
 extern convar_t	*cl_levelshot_name;
 extern convar_t	*cl_draw_beams;
+extern convar_t *cl_cmdrate;
 extern convar_t	*cl_lw;
 extern convar_t *cl_trace_events;
 extern convar_t *cl_trace_stufftext;
@@ -721,7 +736,7 @@ void SCR_NetSpeeds( void );
 void SCR_RSpeeds( void );
 void SCR_DrawFPS( void );
 void SCR_DrawPos( void );
-
+void SCR_DrawNetGraph( void );
 
 //
 // cl_view.c
@@ -766,7 +781,7 @@ void CL_InitStudioAPI( void );
 //
 // cl_frame.c
 //
-void CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta );
+int CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta );
 qboolean CL_AddVisibleEntity( cl_entity_t *ent, int entityType );
 void CL_UpdateStudioVars( cl_entity_t *ent, entity_state_t *newstate, qboolean noInterp );
 qboolean CL_GetEntitySpatialization( int entnum, vec3_t origin, float *pradius );
