@@ -1780,12 +1780,6 @@ S_Init
 */
 qboolean S_Init( void )
 {
-#if XASH_SOUND != SOUND_NULL
-	if( Sys_CheckParm( "-nosound" ))
-	{
-		MsgDev( D_INFO, "Audio: Disabled\n" );
-		return false;
-	}
 
 	s_volume = Cvar_Get( "volume", "0.7", CVAR_ARCHIVE, "sound volume" );
 	s_musicvolume = Cvar_Get( "musicvolume", "1.0", CVAR_ARCHIVE, "background music volume" );
@@ -1806,6 +1800,7 @@ qboolean S_Init( void )
 	s_test = Cvar_Get( "s_test", "0", 0, "engine developer cvar for quick testing of new features" );
 	s_phs = Cvar_Get( "s_phs", "0", CVAR_ARCHIVE, "cull sounds by PHS" );
 
+#if XASH_SOUND != SOUND_NULL
 	if( Sys_CheckParm( "-nosound" ))
 	{
 		MsgDev( D_INFO, "Audio: Disabled\n" );
@@ -1854,6 +1849,7 @@ qboolean S_Init( void )
 
 	return true;
 #else
+	MsgDev( D_INFO, "Audio: Not supported in this build\n" );
 	return false;
 #endif
 }
