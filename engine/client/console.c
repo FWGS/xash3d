@@ -29,6 +29,8 @@ convar_t	*con_halffrac;
 convar_t	*con_charset;
 convar_t	*con_alpha;
 convar_t	*con_black;
+convar_t	*con_fontscale;
+convar_t	*con_fontnum;
 
 static int g_codepage = 0;
 static qboolean g_utf8 = false;
@@ -454,7 +456,7 @@ static void Con_LoadConsoleFont( int fontNumber, cl_font_t *font )
 		int	i;
 
 		src = (qfont_t *)buffer;
-		font->charHeight = src->rowheight;
+		font->charHeight = src->rowheight * con_fontscale->value;
 
 		// build rectangles
 		for( i = 0; i < 256; i++ )
@@ -463,7 +465,7 @@ static void Con_LoadConsoleFont( int fontNumber, cl_font_t *font )
 			font->fontRc[i].right = font->fontRc[i].left + src->fontinfo[i].charwidth;
 			font->fontRc[i].top = (word)src->fontinfo[i].startoffset / fontWidth;
 			font->fontRc[i].bottom = font->fontRc[i].top + src->rowheight;
-			font->charWidths[i] = src->fontinfo[i].charwidth;
+			font->charWidths[i] = src->fontinfo[i].charwidth * con_fontscale->value;
 		}
 		font->valid = true;
 	}
@@ -484,7 +486,9 @@ static void Con_LoadConchars( void )
 		Con_LoadConsoleFont( i, con.chars + i );
 
 	// select properly fontsize
-	if( scr_width->integer <= 640 )
+	if( con_fontnum->integer >= 0 && con_fontnum->integer <= 2)
+		fontSize = con_fontnum->integer;
+	else if( scr_width->integer <= 640 )
 		fontSize = 0;
 	else if( scr_width->integer >= 1280 )
 		fontSize = 2;
@@ -665,8 +669,8 @@ int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 	t1 = (float)rc->top / height;
 	s2 = (float)rc->right / width;
 	t2 = (float)rc->bottom / height;
-	width = rc->right - rc->left;
-	height = rc->bottom - rc->top;
+	width = (rc->right - rc->left) * con_fontscale->value;
+	height = (rc->bottom - rc->top) * con_fontscale->value;
 
 	TextAdjustSize( &x, &y, &width, &height );
 	R_DrawStretchPic( x, y, width, height, s1, t1, s2, t2, con.curFont->hFontTexture );		
@@ -817,12 +821,14 @@ void Con_Init( void )
 	scr_height = Cvar_Get( "height", "480", CVAR_RENDERINFO, "screen height" );
 	scr_conspeed = Cvar_Get( "scr_conspeed", "600", 0, "console moving speed" );
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0, "notify time to live" );
-	con_fontsize = Cvar_Get( "con_fontsize", "1", CVAR_ARCHIVE, "console font number (0, 1 or 2)" );
+	con_fontsize = Cvar_Get( "con_fontsize", "1", CVAR_ARCHIVE, "chat or client font number (0, 1 or 2)" );
 	con_maxfrac = Cvar_Get( "con_maxfrac", "1.0", CVAR_ARCHIVE, "console max height" );
 	con_halffrac = Cvar_Get( "con_halffrac", "0.5", CVAR_ARCHIVE, "console half height" );
 	con_charset = Cvar_Get( "con_charset", "cp1251", CVAR_ARCHIVE, "console font charset (only cp1251 supported now)" );
 	con_alpha = Cvar_Get( "con_alpha", "1.0", CVAR_ARCHIVE, "console alpha value" );
 	con_black = Cvar_Get( "con_black", "0", CVAR_ARCHIVE, "make console black like a nigga" );
+	con_fontscale = Cvar_Get( "con_fontscale", "1.0", CVAR_ARCHIVE, "scale font texture" );
+	con_fontnum = Cvar_Get( "con_fontnum", "-1", CVAR_ARCHIVE, "console font number (0, 1 or 2), -1 for autoselect" );
 
 	Con_CheckResize();
 
@@ -1953,7 +1959,7 @@ void Con_RunConsole( void )
 			con.displayFrac = con.finalFrac;
 	}
 
-	if( con_charset->modified )
+	if( con_charset->modified || con_fontscale->modified || con_fontnum->modified )
 	{
 		// update codepage parameters
 		g_codepage = 0;
