@@ -1973,7 +1973,7 @@ void Con_RunConsole( void )
 		Con_LoadConchars();
 		cls.creditsFont.valid = false;
 		SCR_LoadCreditsFont();
-		con_charset->modified = false;
+		con_charset->modified = con_fontscale->modified = con_fontnum->modified = false;
 	}
 }
 
