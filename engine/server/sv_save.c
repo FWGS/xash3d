@@ -1599,7 +1599,7 @@ int SV_LoadGameState( char const *level, qboolean createPlayers )
 					if(!( pEntInfo->flags & FENTTABLE_PLAYER ))
 					{
 						MsgDev( D_WARN, "ENTITY IS NOT A PLAYER: %d\n", i );
-						ASSERT( 0 );
+						//ASSERT( 0 );
 					}
 
 					ed = EDICT_NUM( pEntInfo->id );
