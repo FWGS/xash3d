@@ -1115,9 +1115,12 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 		glState.wideScreen = true;
 	else glState.wideScreen = false;
 
+	// as we don't recreate window here, update center positions by hand
+	host.window_center_x = width / 2;
+	host.window_center_y = height / 2;
+
 	SCR_VidInit();
 }
-
 
 rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 {
