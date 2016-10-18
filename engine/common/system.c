@@ -173,7 +173,7 @@ char *Sys_GetClipboardData( void )
 	char *buffer = SDL_GetClipboardText();
 	if( buffer )
 	{
-		Q_strncpy( data, buffer = SDL_GetClipboardText(), 1024 );
+		Q_strncpy( data, buffer = SDL_GetClipboardText(), sizeof( data ) );
 		SDL_free( buffer );
 	}
 #endif
@@ -201,9 +201,12 @@ Sys_Sleep
 freeze application for some time
 ================
 */
-void Sys_Sleep( int msec )
+void Sys_Sleep( unsigned int msec )
 {
-	msec = bound( 1, msec, 1000 );
+	if( !msec )
+		return;
+
+	msec = min( msec, 1000 );
 #if XASH_TIMER == TIMER_SDL
 	SDL_Delay( msec );
 #elif XASH_TIMER == TIMER_WIN32
@@ -223,22 +226,23 @@ returns username for current profile
 char *Sys_GetCurrentUser( void )
 {
 #if defined(_WIN32)
+
 	static string	s_userName;
 	unsigned long size = sizeof( s_userName );
 
 	if( GetUserName( s_userName, &size ))
 		return s_userName;
-	return "Player";
+
 #elif !defined(__ANDROID__)
+
 	uid_t uid = geteuid();
 	struct passwd *pw = getpwuid( uid );
 
-	if ( pw ) return pw->pw_name;
+	if( pw )
+		return pw->pw_name;
 
-	return "Player";
-#else
-	return "Player";
 #endif
+	return "Player";
 }
 
 #if (defined(__linux__) && !defined(__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
@@ -337,15 +341,15 @@ void Sys_ParseCommandLine( int argc, const char** argv )
 	for( i = 0; i < host.argc; i++ )
 	{
 		// we don't want to return to first game
-		if( !Q_stricmp( "-game", host.argv[i] )) host.argv[i] = (char *)blank;
+			 if( !Q_stricmp( "-game", host.argv[i] )) host.argv[i] = (char *)blank;
 		// probably it's timewaster, because engine rejected second change
-		if( !Q_stricmp( "+game", host.argv[i] )) host.argv[i] = (char *)blank;
+		else if( !Q_stricmp( "+game", host.argv[i] )) host.argv[i] = (char *)blank;
 		// you sure that map exists in new game?
-		if( !Q_stricmp( "+map", host.argv[i] )) host.argv[i] = (char *)blank;
+		else if( !Q_stricmp( "+map", host.argv[i] )) host.argv[i] = (char *)blank;
 		// just stupid action
-		if( !Q_stricmp( "+load", host.argv[i] )) host.argv[i] = (char *)blank;
+		else if( !Q_stricmp( "+load", host.argv[i] )) host.argv[i] = (char *)blank;
 		// changelevel beetwen games? wow it's great idea!
-		if( !Q_stricmp( "+changelevel", host.argv[i] )) host.argv[i] = (char *)blank;
+		else if( !Q_stricmp( "+changelevel", host.argv[i] )) host.argv[i] = (char *)blank;
 	}
 }
 

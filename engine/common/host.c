@@ -600,7 +600,7 @@ Host_Autosleep
 */
 void Host_Autosleep( void )
 {
-	int sleeptime = host_sleeptime->value;
+	int sleeptime = host_sleeptime->integer;
 
 	if( Host_IsDedicated() )
 	{
