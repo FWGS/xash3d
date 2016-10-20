@@ -3079,8 +3079,9 @@ void TriBrightness( float brightness )
 	rgba[0] = clgame.ds.triColor[0] * brightness;
 	rgba[1] = clgame.ds.triColor[1] * brightness;
 	rgba[2] = clgame.ds.triColor[2] * brightness;
+	rgba[3] = clgame.ds.triColor[3] * brightness;
 
-	pglColor3ub( rgba[0], rgba[1], rgba[2] );
+	pglColor4ubv( rgba );
 }
 
 /*
