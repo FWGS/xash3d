@@ -59,7 +59,7 @@ int		uiColorBlack	= 0xFF000000;	//  0,   0,   0,  255	// some controls backgroun
 int		uiColorConsole	= 0xFFF0B418;	// just for reference 
 
 // color presets (this is nasty hack to allow color presets to part of text)
-const int g_iColorTable[8] =
+const unsigned int g_iColorTable[8] =
 {
 0xFF000000, // black
 0xFFFF0000, // red
