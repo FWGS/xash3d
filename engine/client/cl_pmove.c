@@ -1274,6 +1274,11 @@ void CL_PredictMovement( void )
 		// save for debug checking
 		VectorCopy( to->playerstate.origin, cl.predicted.origins[current_command_mod] );
 
+		/*if( !VectorIsNull( from->client.punchangle ) )
+		{
+			MsgDev( D_INFO, "%f %f %f\n", from->client.punchangle[0], from->client.punchangle[1], from->client.punchangle[2]);
+		}*/
+
 		from = to;
 		frame++;
 	}
@@ -1317,6 +1322,10 @@ void CL_PredictMovement( void )
 				VectorSubtract( to->client.view_ofs, from->client.view_ofs, delta_viewofs );
 				VectorMA( from->client.view_ofs, t, delta_viewofs, cl.predicted.viewofs );
 			}
+			else
+			{
+				VectorCopy( to->client.view_ofs, cl.predicted.viewofs );
+			}
 		}
 
 		cl.predicted.waterlevel = to->client.waterlevel;
@@ -1354,25 +1363,16 @@ void CL_PredictMovement( void )
 		{
 			float d;
 			vec3_t delta;
-			int i;
-
-			cl.predicted.correction_time = cl.predicted.correction_time - host.frametime;
 
 			if( cl_smoothtime->value <= 0 )
 				Cvar_SetFloat( "cl_smoothtime", 0.1 );
 
-			if( cl.predicted.correction_time < 0 )
-				cl.predicted.correction_time = 0;
+			cl.predicted.correction_time = bound( 0, cl.predicted.correction_time - host.frametime, cl_smoothtime->value );
 
-			if( cl_smoothtime->value <= cl.predicted.correction_time )
-				cl.predicted.correction_time = cl_smoothtime->value;
+			d = 1 - cl.predicted.correction_time / cl_smoothtime->value;
 
-			d = cl.predicted.correction_time / cl_smoothtime->value;
-
-			for( i = 0; i < 3; i++ )
-			{
-				cl.predicted.origin[i] = cl.predicted.lastorigin[i] + ( cl.predicted.origin[i] - cl.predicted.lastorigin[i] ) * (1.0 - d);
-			}
+			VectorSubtract( cl.predicted.origin, cl.predicted.lastorigin, delta );
+			VectorMA( cl.predicted.lastorigin, d, delta, cl.predicted.origin );
 		}
 		VectorCopy( cl.predicted.origin, cl.predicted.lastorigin );
 		CL_SetIdealPitch();
