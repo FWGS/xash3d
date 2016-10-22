@@ -64,8 +64,8 @@ GNU General Public License for more details.
 		#define SERVERDLL "libserver" POSTFIX "." OS_LIB_EXT
 		#define GAMEPATH "/sdcard/xash"
 	#else
-		#define MENUDLL "libxashmenu"ARCH_SUFFIX"." OS_LIB_EXT
-		#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
+        #define MENUDLL "libxashmenu" ARCH_SUFFIX "." OS_LIB_EXT
+        #define CLIENTDLL "client" ARCH_SUFFIX "." OS_LIB_EXT
 	#endif
 
 	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT

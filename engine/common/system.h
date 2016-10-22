@@ -49,9 +49,9 @@ extern "C" {
 #define MSGBOX3( x )	MessageBox( host.hWnd, x, "Host Recursive Error", MB_OK|MB_SETFOREGROUND|MB_ICONSTOP )
 #else
 #define BORDER1 "======================================\n"
-#define MSGBOX( x )		fprintf(stderr, BORDER1"Xash Error: %s\n"BORDER1,x)
-#define MSGBOX2( x )	fprintf(stderr, BORDER1"Host Error: %s\n"BORDER1,x)
-#define MSGBOX3( x )	fprintf(stderr, BORDER1"Host Recursive Error: %s\n"BORDER1,x)
+#define MSGBOX( x )		fprintf(stderr, BORDER1 "Xash Error: %s\n" BORDER1,x)
+#define MSGBOX2( x )	fprintf(stderr, BORDER1 "Host Error: %s\n" BORDER1,x)
+#define MSGBOX3( x )	fprintf(stderr, BORDER1 "Host Recursive Error: %s\n" BORDER1,x)
 #endif
 
 #include "types.h"
