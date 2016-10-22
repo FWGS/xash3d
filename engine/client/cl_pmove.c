@@ -871,10 +871,10 @@ void CL_SetSolidEntities( void )
 	}
 }
 
-void CL_SetupPMove( playermove_t *pmove, local_state_t *from, usercmd_t *ucmd, qboolean runfuncs, double time )
+void CL_SetupPMove( playermove_t *pmove, const local_state_t *from, const usercmd_t *ucmd, const qboolean runfuncs, const double time )
 {
-	entity_state_t	*ps;
-	clientdata_t	*cd;
+	const entity_state_t *ps;
+	const clientdata_t   *cd;
 
 	ps = &from->playerstate;
 	cd = &from->client;
@@ -933,7 +933,7 @@ void CL_SetupPMove( playermove_t *pmove, local_state_t *from, usercmd_t *ucmd, q
 	Q_strncpy( pmove->physinfo, cd->physinfo, MAX_INFO_STRING );
 }
 
-void CL_FinishPMove( playermove_t *pmove, local_state_t *to )
+void CL_FinishPMove( const playermove_t *pmove, local_state_t *to )
 {
 	entity_state_t	*ps;
 	clientdata_t	*cd;
@@ -989,10 +989,8 @@ Runs prediction code for user cmd
 void CL_RunUsercmd( local_state_t *from, local_state_t *to, usercmd_t *u, qboolean runfuncs, double *time, unsigned int random_seed )
 {
 	usercmd_t cmd;
-	local_state_t temp;
+	local_state_t temp = { 0 };
 	usercmd_t split;
-
-	Q_memset( &temp, 0, sizeof( temp ));
 
 	while( u->msec > 50 )
 	{
@@ -1077,10 +1075,8 @@ used while predicting is off but local weapons is on
 */
 void CL_PostRunCmd( usercmd_t *ucmd, int random_seed )
 {
-	local_state_t	from, to;
+	local_state_t	from = { 0 }, to = { 0 };
 
-	Q_memset( &from, 0, sizeof( local_state_t ) );
-	Q_memset( &to, 0, sizeof( local_state_t ) );
 	Q_memcpy( from.weapondata, cl.frame.weapondata, sizeof( from.weapondata ));
 
 	from.playerstate = cl.frame.playerstate[cl.playernum];
@@ -1102,7 +1098,7 @@ Runs client weapons prediction code
 void CL_FakeUsercmd(local_state_t * from, local_state_t * to, usercmd_t * u, qboolean runfuncs, double * pfElapsed, unsigned int random_seed)
 {
 	usercmd_t cmd;
-	local_state_t temp;
+	local_state_t temp = { 0 };
 	usercmd_t split;
 
 	while (u->msec > 50)

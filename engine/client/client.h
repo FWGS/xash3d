@@ -766,7 +766,7 @@ int CL_TruePointContents( const vec3_t p );
 int CL_PointContents( const vec3_t p );
 int CL_WaterEntity( const float *rgflPos );
 cl_entity_t *CL_GetWaterEntity( const float *rgflPos );
-void CL_SetupPMove( playermove_t *pmove, local_state_t *from, usercmd_t *ucmd, qboolean runfuncs, double time );
+void CL_SetupPMove( playermove_t *pmove, const local_state_t *from, const usercmd_t *ucmd, const qboolean runfuncs, const double time );
 pmtrace_t CL_TraceLine( vec3_t start, vec3_t end, int flags );
 void CL_ClearPhysEnts( void );
 void CL_PushPMStates( void );
