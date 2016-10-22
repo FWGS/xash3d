@@ -303,7 +303,7 @@ NetGraph_DrawLine
 CL_FillRGBA shortcut
 ==========
 */
-inline void NetGraph_DrawRect( wrect_t *rect, byte colors[3], byte alpha )
+static inline void NetGraph_DrawRect( wrect_t *rect, byte colors[3], byte alpha )
 {
 	CL_FillRGBA( rect->left, rect->top, rect->right, rect->bottom, colors[0], colors[1], colors[2], alpha );
 }
