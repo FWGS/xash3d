@@ -3644,7 +3644,7 @@ void pfnSetClientKeyValue( int clientIndex, char *infobuffer, char *key, char *v
 	if( svs.clients[clientIndex].state < cs_spawned || infobuffer == NULL )
 		return;
 
-	Info_SetValueForKey( infobuffer, key, value );
+	Info_SetValueForStarKey( infobuffer, key, value, MAX_INFO_STRING );
 	svs.clients[clientIndex].sendinfo = true;
 }
 
