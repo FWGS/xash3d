@@ -71,9 +71,15 @@ endif()
 # Pre-build analyze step
 option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
 #-----------------
 # MAIN BUILD CODE \
 ###################\
+
+if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+	message(FATAL_ERROR "Xash3D don't well work with 64 bit sysems. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
+endif()
 
 # Dependencies
 if(XASH_STATIC)
@@ -88,17 +94,6 @@ if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER)
 	message(FATAL_ERROR "You must choose XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-
-# Build 32-bit Xash on 64-bit, because Xash3D not support this
-if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
-	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
-	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m32")
-	if(NOT DEFINED LIB_SUFFIX) 
-		set (LIB_SUFFIX "32")
-	endif()
-endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
     set(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
