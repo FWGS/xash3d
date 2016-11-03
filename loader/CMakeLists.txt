@@ -26,7 +26,7 @@ project (LOADER)
 set (LOADER_LIBRARY loader)
 
 file (GLOB_RECURSE LOADER_SOURCES *.c)
-INCLUDE_DIRECTORIES(. wine/)
+include_directories(. wine/ ../engine/common ../engine ../engine/client ../common )
 if(XASH_STATIC)
 	add_library (${LOADER_LIBRARY} STATIC ${LOADER_SOURCES})
 else()
