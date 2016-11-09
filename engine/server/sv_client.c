@@ -256,38 +256,6 @@ gotnewcl:
 	}
 
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
-	// prevent memory leak and client crashes.
-	// This should not happend, need to test it,
-
-	if( ( sv_maxclients->integer > 1 ) && ent->pvPrivateData )
-	{
-		// Force clean this client data
-		if( sv_clientclean->integer & 1 )
-		{
-			if( ent->pvPrivateData != NULL )
-			{
-				// NOTE: new interface can be missing
-				if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
-					svgame.dllFuncs2.pfnOnFreeEntPrivateData( ent );
-
-				// clear any dlls data but keep engine data
-				Mem_Free( ent->pvPrivateData );
-				ent->pvPrivateData = NULL;
-				ent->serialnumber++;
-			}
-
-		}
-		// "3" enables both clean and disconnect
-		if( sv_clientclean->integer & 2 )
-		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "print\nTry again later.\n" );
-
-			MsgDev( D_ERROR, "SV_DirectConnect: private data not freed!\n");
-			Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
-			SV_DropClient( newcl );
-			return;
-		}
-	}
 
 	// get the game a chance to reject this connection or modify the userinfo
 	if( !( SV_ClientConnect( ent, userinfo )))
@@ -314,6 +282,7 @@ gotnewcl:
 	newcl->lastconnect = host.realtime;
 	newcl->delta_sequence = -1;
 	newcl->resources_sent = 1;
+	newcl->hasusrmsgs = false;
 
 	// parse some info from the info strings (this can override cl_updaterate)
 	SV_UserinfoChanged( newcl, userinfo );
@@ -1186,8 +1155,23 @@ void SV_PutClientInServer( edict_t *ent )
 
 	if( !sv.loadgame )
 	{	
-		client->hltv_proxy = Q_atoi( Info_ValueForKey( client->userinfo, "hltv" )) ? true : false;
+		//client->hltv_proxy = Q_atoi( Info_ValueForKey( client->userinfo, "hltv" )) ? true : false;
 
+		if( ent->pvPrivateData != NULL )
+		{
+			// NOTE: new interface can be missing
+			if( svgame.dllFuncs2.pfnOnFreeEntPrivateData != NULL )
+				svgame.dllFuncs2.pfnOnFreeEntPrivateData( ent );
+
+			// clear any dlls data but keep engine data
+			Mem_Free( ent->pvPrivateData );
+			ent->pvPrivateData = NULL;
+			ent->serialnumber++;
+		}
+
+		Q_memset( &ent->v, 0, sizeof( ent->v ) );
+
+		ent->v.colormap = NUM_FOR_EDICT( ent );
 		if( client->hltv_proxy )
 			ent->v.flags |= FL_PROXY;
 		else ent->v.flags = 0;
@@ -1196,6 +1180,8 @@ void SV_PutClientInServer( edict_t *ent )
 
 		// fisrt entering
 		svgame.globals->time = sv.time;
+		ent->v.pContainingEntity = ent;
+
 		svgame.dllFuncs.pfnClientPutInServer( ent );
 
 		if( sv.background )	// don't attack player in background mode
@@ -1779,7 +1765,11 @@ void SV_UserMessages_f( sv_client_t *cl )
 		start++;
 	}
 
-	if( start == MAX_USER_MESSAGES ) Q_snprintf( cmd, MAX_STRING, "cmd deltainfo %i 0 0\n", svs.spawncount );
+	if( start == MAX_USER_MESSAGES )
+	{
+		Q_snprintf( cmd, MAX_STRING, "cmd deltainfo %i 0 0\n", svs.spawncount );
+		cl->hasusrmsgs = true;
+	}
 	else Q_snprintf( cmd, MAX_STRING, "cmd usermsgs %i %i\n", svs.spawncount, start );
 
 	// send next command
@@ -2067,6 +2057,8 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	// msg command
 	val = Info_ValueForKey( cl->userinfo, "msg" );
 	if( Q_strlen( val )) cl->messagelevel = Q_atoi( val );
+
+	cl->hltv_proxy = Q_atoi( Info_ValueForKey( cl->userinfo, "hltv" ));
 
 	cl->local_weapons = Q_atoi( Info_ValueForKey( cl->userinfo, "cl_lw" )) ? true : false;
 	cl->lag_compensation = Q_atoi( Info_ValueForKey( cl->userinfo, "cl_lc" )) ? true : false;

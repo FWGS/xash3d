@@ -202,7 +202,8 @@ typedef struct sv_client_s
 
 	qboolean		local_weapons;		// enable weapon predicting
 	qboolean		lag_compensation;		// enable lag compensation
-	qboolean		hltv_proxy;		// this is spectator proxy (hltv)		
+	qboolean		hltv_proxy;		// this is spectator proxy (hltv)
+	qboolean		hasusrmsgs;
 
 	netchan_t		netchan;
 	int		chokecount;         	// number of messages rate supressed
@@ -441,8 +442,7 @@ extern	convar_t		*sv_skyangle;
 extern	convar_t		*sv_quakehulls;
 extern	convar_t		*sv_validate_changelevel;
 extern	convar_t		*sv_downloadurl;
-extern	convar_t		*sv_clientclean;
-extern 	convar_t		*sv_skipshield; // HACK for shield
+extern 	convar_t		*sv_skipshield; // HACK for shield (cstrike)
 extern	convar_t		*sv_trace_messages;
 extern	convar_t		*mp_consistency;
 extern	convar_t		*public_server;

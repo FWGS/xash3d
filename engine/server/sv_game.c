@@ -345,7 +345,7 @@ qboolean SV_Send( int dest, const vec3_t origin, const edict_t *ent )
 		// do not send unregistered messages to client
 		if( sv_fixmulticast->integer )
 		{
-			if( cl->state == cs_connected && reliable )
+			if( cl->state == cs_connected && reliable && !cl->hasusrmsgs )
 				continue;
 		}
 

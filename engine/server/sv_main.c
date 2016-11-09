@@ -60,7 +60,6 @@ convar_t	*sv_allow_upload;
 convar_t	*sv_allow_download;
 convar_t	*sv_allow_fragment;
 convar_t	*sv_downloadurl;
-convar_t	*sv_clientclean;
 convar_t	*sv_allow_studio_attachment_angles;
 convar_t	*sv_allow_rotate_pushables;
 convar_t	*sv_allow_godmode;
@@ -917,7 +916,6 @@ void SV_Init( void )
 	sv_allow_download = Cvar_Get( "sv_allow_download", "0", CVAR_ARCHIVE, "allow clients to download missing resources" );
 	sv_allow_fragment = Cvar_Get( "sv_allow_fragment", "0", CVAR_ARCHIVE, "allow direct download from server" );
 	sv_downloadurl = Cvar_Get( "sv_downloadurl", "", CVAR_ARCHIVE, "custom fastdl server to pass to client" );
-	sv_clientclean = Cvar_Get( "sv_clientclean", "1", CVAR_ARCHIVE, "client cleaning mode (0-3), useful for bots" );
 	sv_send_logos = Cvar_Get( "sv_send_logos", "1", 0, "send custom player decals to other clients" );
 	sv_send_resources = Cvar_Get( "sv_send_resources", "1", 0, "send generic resources that are specified in 'mapname.res'" );
 	sv_sendvelocity = Cvar_Get( "sv_sendvelocity", "1", CVAR_ARCHIVE, "force to send velocity for event_t structure across network" );
