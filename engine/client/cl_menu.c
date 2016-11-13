@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "library.h"
 #include "input.h"
+#include "server.h" // !!svgame.hInstance
 
 static MENUAPI	GetMenuAPI;
 static ADDTOUCHBUTTONTOLIST pfnAddTouchButtonToList;
@@ -843,11 +844,12 @@ int pfnCheckGameDll( void )
 {
 	void	*hInst;
 
-	if( SV_Active( ) )
+	if( svgame.hInstance )
 		return true;
 
 	if( Cvar_VariableInteger("xashds_hacks") )
 		return true;
+
 	Com_ResetLibraryError();
 	if(( hInst = Com_LoadLibrary( SI.gamedll, true )) != NULL )
 	{
