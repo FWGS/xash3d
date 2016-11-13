@@ -999,9 +999,8 @@ before Sys_Quit or Sys_Error
 void SV_Shutdown( qboolean reconnect )
 {
 	// already freed
-	if( !SV_Active( )) // library may be loaded
+	if( !SV_Active( ))
 	{
-		SV_UnloadProgs();
 		return;
 	}
 
@@ -1017,8 +1016,7 @@ void SV_Shutdown( qboolean reconnect )
 	if( public_server->integer && sv_maxclients->integer != 1 )
 		Master_Shutdown();
 
-	if( !reconnect ) SV_UnloadProgs ();
-	else SV_DeactivateServer ();
+	SV_DeactivateServer ();
 
 	// free current level
 	Q_memset( &sv, 0, sizeof( sv ));

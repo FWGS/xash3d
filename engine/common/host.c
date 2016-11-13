@@ -1211,6 +1211,7 @@ void EXPORT Host_Shutdown( void )
 	Log_Close();
 
 	SV_Shutdown( false );
+	SV_UnloadProgs();
 	CL_Shutdown();
 
 	Mod_Shutdown();
