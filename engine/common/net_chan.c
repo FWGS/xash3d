@@ -169,7 +169,7 @@ qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *l
 	// rewrite results of NET_GetPacket
 	if( p->received == packet->count )
 	{
-		ASSERT( packet->length % packet->part == *length - NETSPLIT_HEADER_SIZE );
+		ASSERT( packet->length % packet->part == (*length - NETSPLIT_HEADER_SIZE) % packet->part );
 		*length = packet->length;
 
 		// MsgDev( D_NOTE, "NetSplit_GetLong: packet from %s, id %d received %d length %d\n", NET_AdrToString( *from ), (int)packet->id, (int)p->received, (int)packet->length );
