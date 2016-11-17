@@ -209,7 +209,7 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 #endif
 	// Note: dladdr() is a glibc extension
 	{
-		Dl_info info;
+		Dl_info info = {0};
 		dladdr((void*)function, &info);
 		return info.dli_sname;
 	}
