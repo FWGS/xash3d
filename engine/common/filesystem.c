@@ -893,8 +893,11 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 				MsgDev( D_NOTE, "%d %s %s\n", i, SI.games[i]->gamedir, SI.games[i]->basedir );
 				if( !Q_strnicmp( dir, SI.games[i]->gamedir, 64 ) )
 				{
-					if( Q_strnicmp( SI.games[i]->gamedir, SI.games[i]->basedir, 64 ) )
+					if( !SI.games[i]->added && Q_strnicmp( SI.games[i]->gamedir, SI.games[i]->basedir, 64 ) )
+					{
+						SI.games[i]->added = true;
 						FS_AddGameHierarchy( SI.games[i]->basedir, flags );
+					}
 				}
 			}
 
