@@ -785,7 +785,7 @@ void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 
 	Info_SetValueForKey(s, "secure",    "0" ); // server anti-cheat
 	Info_SetValueForKey(s, "lan",       "0" ); // LAN servers doesn't send info to master
-	Info_SetValueForKey(s, "version",   XASH_VERSION ); // server region. 255 -- all regions
+	Info_SetValueForKey(s, "version",   XASH_VERSION ); // server version
 	Info_SetValueForKey(s, "region",    "255" ); // server region. 255 -- all regions
 	Info_SetValueForKey(s, "product",   GI->gamefolder ); // product? Where is the difference with gamedir?
 
