@@ -1191,10 +1191,15 @@ void SV_PutClientInServer( edict_t *ent )
 
 		if( svgame.globals->cdAudioTrack )
 		{
-			BF_WriteByte( &client->netchan.message, svc_stufftext );
-			BF_WriteString( &client->netchan.message, va( "cd loop %3d\n", svgame.globals->cdAudioTrack ));
+			//BF_WriteByte( &client->netchan.message, svc_stufftext );
+			//BF_WriteString( &client->netchan.message, va( "cd loop %3d\n", svgame.globals->cdAudioTrack ));
+
+			BF_WriteByte( &client->netchan.message, svc_cdtrack );
+			BF_WriteByte( &client->netchan.message, svgame.globals->cdAudioTrack );
+			BF_WriteByte( &client->netchan.message, svgame.globals->cdAudioTrack );
 			svgame.globals->cdAudioTrack = 0;
 		}
+
 	}
 	else
 	{
