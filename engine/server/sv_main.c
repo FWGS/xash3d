@@ -121,36 +121,17 @@ Updates the cl->ping variables
 void SV_CalcPings( void )
 {
 	sv_client_t	*cl;
-	int		i, j;
-	int		total, count;
-
-	//if( !svs.clients )
-	return;
+	int			i;
 
 	// clamp fps counter
 	for( i = 0; i < sv_maxclients->integer; i++ )
 	{
 		cl = &svs.clients[i];
 
-		if( cl->state != cs_spawned || cl->fakeclient )
+		if( cl->state != cs_spawned )
 			continue;
 
-		total = count = 0;
-
-		for( j = 0; j < (SV_UPDATE_BACKUP / 2); j++ )
-		{
-			client_frame_t	*frame;
-
-			frame = &cl->frames[(cl->netchan.incoming_acknowledged - (j + 1)) & SV_UPDATE_MASK];
-			if( frame->latency > 0 )
-			{
-				count++;
-				total += frame->latency;
-			}
-		}
-
-		if( !count ) cl->ping = 0;
-		else cl->ping = (float)total / (float)count;
+		cl->ping = SV_CalcPing( cl );
 	}
 }
 
