@@ -1463,7 +1463,6 @@ void S_StopAllSounds( void )
 	S_InitAmbientChannels ();
 
 	S_ClearBuffer ();
-	S_StopBackgroundTrack();
 
 	// clear any remaining soundfade
 	Q_memset( &soundfade, 0, sizeof( soundfade ));
