@@ -931,6 +931,67 @@ void GL_RemoveCommands( void )
 	Cmd_RemoveCommand( "texturelist" );
 }
 
+#ifdef WIN32
+typedef enum _XASH_DPI_AWARENESS
+{
+	XASH_DPI_UNAWARE = 0,
+	XASH_SYSTEM_DPI_AWARE = 1,
+	XASH_PER_MONITOR_DPI_AWARE = 2
+} XASH_DPI_AWARENESS;
+
+void Win_SetDPIAwareness( void )
+{
+	HMODULE hModule;
+	HRESULT ( __stdcall *pSetProcessDpiAwareness )( XASH_DPI_AWARENESS );
+	BOOL ( __stdcall *pSetProcessDPIAware )( void );
+	BOOL bSuccess = FALSE;
+
+	if( ( hModule = LoadLibrary( "shcore.dll" ) ) )
+	{
+		if( ( pSetProcessDpiAwareness = (void*)GetProcAddress( hModule, "SetProcessDpiAwareness" ) ) )
+		{
+			// I hope SDL don't handle WM_DPICHANGED message
+			HRESULT hResult = pSetProcessDpiAwareness( XASH_SYSTEM_DPI_AWARE );
+
+			if( hResult == S_OK )
+			{
+				MsgDev( D_NOTE, "SetDPIAwareness: Success\n" );
+				bSuccess = TRUE;
+			}
+			else if( hResult = E_INVALIDARG ) MsgDev( D_NOTE, "SetDPIAwareness: Invalid argument\n" );
+			else if( hResult == E_ACCESSDENIED ) MsgDev( D_NOTE, "SetDPIAwareness: Access Denied\n" );
+		}
+		else MsgDev( D_NOTE, "SetDPIAwareness: Can't get SetProcessDpiAwareness\n" );
+		FreeLibrary( hModule );
+	}
+	else MsgDev( D_NOTE, "SetDPIAwareness: Can't load shcore.dll" );
+
+
+	if( !bSuccess )
+	{
+		MsgDev( D_NOTE, "SetDPIAwareness: Trying SetProcessDPIAware..." );
+
+		if( ( hModule = LoadLibrary( "user32.dll" ) ) )
+		{
+			if( ( pSetProcessDPIAware = ( void* )GetProcAddress( hModule, "SetProcessDPIAware" ) ) )
+			{
+				// I hope SDL don't handle WM_DPICHANGED message
+				BOOL hResult = pSetProcessDPIAware();
+
+				if( hResult )
+				{
+					MsgDev( D_NOTE, "SetDPIAwareness: Success\n" );
+					bSuccess = TRUE;
+				}
+				else MsgDev( D_NOTE, "SetDPIAwareness: fail\n" );
+			}
+			else MsgDev( D_NOTE, "SetDPIAwareness: Can't get SetProcessDPIAware\n" );
+			FreeLibrary( hModule );
+		}
+		else MsgDev( D_NOTE, "SetDPIAwareness: Can't load user32.dll" );
+	}
+}
+#endif
 /*
 ===============
 R_Init
@@ -946,6 +1007,10 @@ qboolean R_Init( void )
 
 	GL_InitCommands();
 	GL_SetDefaultState();
+
+#ifdef WIN32
+	Win_SetDPIAwareness( );
+#endif
 
 	// create the window and set up the context
 	if( !R_Init_OpenGL( ))
