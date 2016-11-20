@@ -29,9 +29,19 @@ file (GLOB MAINUI_SOURCES *.cpp)
 include_directories (../common ../engine ../pm_shared)
 add_library (${MAINUI_LIBRARY} SHARED ${MAINUI_SOURCES})
 
-set_target_properties (${MAINUI_SHARED} PROPERTIES
+if( MSVC )
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif( )
+
+set_target_properties (${MAINUI_LIBRARY} PROPERTIES
 	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
-	POSITION_INDEPENDENT_CODE 1)
+	POSITION_INDEPENDENT_CODE 1
+	OUTPUT_NAME menu )
+
+if( WIN32 )
+	set_target_properties(${MAINUI_LIBRARY} PROPERTIES
+		OUTPUT_NAME menu)
+endif()
 
 install( TARGETS ${MAINUI_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d 
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)

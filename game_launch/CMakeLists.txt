@@ -23,7 +23,7 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (XASH_LAUNCHER)
 
-if(XASH_SDL)
+if(XASH_SDL AND NOT WIN32) # WinMain is used
 	find_package(SDL2 REQUIRED sdl2)
 	include_directories(${SDL2_INCLUDE_DIR})
 
@@ -33,11 +33,19 @@ endif()
 set (XASH_LAUNCHER_EXECUTABLE xash3d)
 
 file (GLOB XASH_LAUNCHER_SOURCES *.c)
+if(WIN32)
+	list(APPEND XASH_LAUNCHER_SOURCES game.rc)
+endif()
 
-add_executable (${XASH_LAUNCHER_EXECUTABLE} ${XASH_LAUNCHER_SOURCES})
+add_executable (${XASH_LAUNCHER_EXECUTABLE} WIN32 ${XASH_LAUNCHER_SOURCES})
 
-if(XASH_SDL)
+if(XASH_SDL AND NOT WIN32) # WinMain is used
 	target_link_libraries(${XASH_LAUNCHER_EXECUTABLE} ${SDL2_LIBRARY})
+endif()
+
+if(WIN32)
+	set_target_property(${XASH_LAUNCHER_EXECUTABLE} PROPERTIES
+		OUTPUT_NAME xash)
 endif()
 
 target_link_libraries(${XASH_LAUNCHER_EXECUTABLE}

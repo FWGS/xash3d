@@ -54,7 +54,11 @@ option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executa
 option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 
 # Shared library loader implementation. Must be checked one of these or both.
-option(XASH_LIBDL "Enable libdl" ON)
+if(NOT WIN32)
+	option(XASH_LIBDL "Enable libdl" ON)
+else()
+	option(XASH_LIBDL "Enable libdl" OFF)
+endif()
 option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
 
 # Desktop-version options
@@ -65,7 +69,11 @@ if(XASH_DEDICATED)
 else()
 	option(XASH_SDL "Enable SDL." ON)
 	option(XASH_VGUI "Enable VGUI support." ON)
-	option(XASH_X11 "Enable X11 support." ON)
+	if( NOT WIN32 )
+		option(XASH_X11 "Enable X11 support." ON)
+	else()
+		option(XASH_X11 "Enable X11 support." OFF)
+	endif()
 endif()
 
 # Pre-build analyze step
@@ -90,7 +98,7 @@ if(XASH_NANOGL)
 	set(XASH_GLES "ON")
 endif()
 
-if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER)
+if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER AND NOT XASH_NONSTANDARD_LOAD)
 	message(FATAL_ERROR "You must choose XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
 endif()
 

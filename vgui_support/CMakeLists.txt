@@ -30,7 +30,11 @@ include_directories (. ../common ../engine ../engine/common ../engine/client ../
 
 add_library (${VGUI_SUPPORT_LIBRARY} MODULE ${VGUI_SUPPORT_SOURCES})
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if(WIN32)
+	
+	target_link_libraries(${VGUI_SUPPORT_LIBRARY} 
+${HL_SDK_DIR}/utils/vgui/lib/win32_vc6/vgui.lib)
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(${VGUI_SUPPORT_LIBRARY} -L${HL_SDK_DIR}/linux/release/ ${HL_SDK_DIR}/linux/release/vgui.dylib)
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
