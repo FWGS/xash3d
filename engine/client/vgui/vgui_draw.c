@@ -65,7 +65,7 @@ void *VGUI_EngineMalloc(size_t size)
 	return Z_Malloc( size );
 }
 
-qboolean VGUI_IsInGame()
+qboolean VGUI_IsInGame( void )
 {
 	return cls.state == ca_active && cls.key_dest == key_game;
 }
