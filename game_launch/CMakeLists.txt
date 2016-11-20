@@ -44,7 +44,7 @@ if(XASH_SDL AND NOT WIN32) # WinMain is used
 endif()
 
 if(WIN32)
-	set_target_property(${XASH_LAUNCHER_EXECUTABLE} PROPERTIES
+	set_target_properties(${XASH_LAUNCHER_EXECUTABLE} PROPERTIES
 		OUTPUT_NAME xash)
 endif()
 

@@ -163,7 +163,7 @@ if( WIN32 )
 			OUTPUT_NAME "xash_dedicated" )
 	else()
 		set_target_properties( ${XASH_ENGINE_LIBRARY} PROPERTIES
-			OUTPUT_NAME "xash-sdl" )
+			OUTPUT_NAME "xash_sdl" )
 	endif()
 endif( )
 
