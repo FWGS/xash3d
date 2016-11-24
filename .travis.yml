@@ -2,14 +2,19 @@ language: c
 compiler: gcc
 sudo: true
 before_script:
-    - sudo apt-get update -qq
-    - sudo apt-get install -qq --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch
-    - sudo apt-get install -qq --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
-    - sudo apt-get install -qq --force-yes gcc-multilib
-    - sudo apt-get install -qq --force-yes libX11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev
-    - sudo apt-get install -qq --force-yes libasound-dev
+    - sudo apt-get -qq update
+    - sudo apt-get -qq install --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch
+    - sudo apt-get -qq install --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
+    - sudo apt-get -qq install --force-yes gcc-multilib
+    - sudo apt-get -qq install --force-yes libX11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev
+    - sudo apt-get -qq install --force-yes libasound-dev
     - jdk_switcher use oraclejdk7
-    - android-update-sdk --components=platform-tools
+    - wget -O android-sdk.tgz http://dl.google.com/android/android-sdk_r22.0.4-linux.tgz
+    - tar xzf android-sdk.tgz
+    - export ANDROID_HOME=$PWD/android-sdk-linux
+    - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools
+    - sleep 3s; echo y | android update sdk -u --filter platform-tools
+    - sleep 3s; echo y | android update sdk -u --filter build-tools,android-13,extra-android-support
     
     - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
     - tar xf SDL2-devel-2.0.4-mingw.tar.gz
