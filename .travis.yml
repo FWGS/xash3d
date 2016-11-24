@@ -12,9 +12,11 @@ before_script:
     - wget -O android-sdk.tgz http://dl.google.com/android/android-sdk_r22.0.4-linux.tgz
     - tar xzf android-sdk.tgz
     - export ANDROID_HOME=$PWD/android-sdk-linux
-    - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools
-    - sleep 3s; echo y | android update sdk -u --filter platform-tools --force --all
-    - sleep 3s; echo y | android update sdk -u --filter build-tools-19.0.0,android-19,extra-android-support --force --all
+    - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk
+    - sleep 3s; echo y | android update sdk -u --filter platform-tools,build-tools-19.0.0,android-19,extra-android-support --force --all > /dev/null
+    - wget http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
+    - chmod +x android-ndk-r10e-linux-x86_64.bin && ./android-ndk-r10e-linux-x86_64.bin > /dev/null
+    - mv android-ndk-r10e android-ndk
     - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
     - tar xf SDL2-devel-2.0.4-mingw.tar.gz
     - mv SDL2-2.0.4 SDL2
@@ -27,6 +29,7 @@ script:
     - cd xash3d-android-project
     - sh gen-version.sh travis build
     - sh gen-config.sh test
+    - ndk-build -j2 APP_CFLAGS="-w"
     - ant debug -Dtest.version=1
     - cp bin/xashdroid-debug.apk ../engine/xash3d.apk
     - cd ..
@@ -52,4 +55,5 @@ script:
 after_script:
     - curl --upload-file xash3d-mingw.7z https://transfer.sh/xash3d-mingw-`date -u +%y-%m-%d_%H-%M`.7z
     - curl --upload-file xash3d-linux.7z https://transfer.sh/xash3d-linux-`date -u +%y-%m-%d_%H-%M`.7z
+    - curl --upload-file xash3d.apk https://transfer.sh/xash3d-android-`date -u +%y-%m-%d_%H-%M`.apk
     - sh ../travis-deploy.sh xash3d-mingw.7z xash3d-linux.7z
