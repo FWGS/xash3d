@@ -11,6 +11,7 @@ else
  git config user.email mittorn@sibmail.com
  git remote add travis-deploy-public https://mittorn:${GH_TOKEN}@github.com/mittorn/xash3d-travis.git
  git add .
- git commit -m "Laterst travis deploy"
- git push --force travis-deploy-public master
+ git commit -m "Laterst travis deploy $TRAVIS_COMMIT"
+ git checkout -b travis-$TRAVIS_BRANCH
+ git push --force travis-deploy-public travis-$TRAVIS_BRANCH
 fi

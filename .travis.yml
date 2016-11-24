@@ -32,9 +32,10 @@ script:
     - ln -s $TRAVIS_BUILD_DIR jni/src/Xash3D/xash3d
     - sh gen-version.sh travis build
     - sh gen-config.sh test
+    - python2 makepak.py xash-extras assets/extras.pak
     - ndk-build -j2 APP_CFLAGS="-w"
     - ant debug -Dtest.version=1
-    - cp bin/xashdroid-debug.apk ../engine/xash3d.apk
+    - cp bin/xashdroid-debug.apk ../engine/xash3d-generic.apk
     - cd ..
     - cd engine
     - make -f Makefile.mingw CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ -j2
@@ -56,7 +57,5 @@ script:
     - mv libSDL2.so libSDL2-2.0.so.0
     - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2-2.0.so.0 libvgui_support.so vgui.so
 after_script:
-    - curl --upload-file xash3d-mingw.7z https://transfer.sh/xash3d-mingw-`date -u +%y-%m-%d_%H-%M`.7z
-    - curl --upload-file xash3d-linux.7z https://transfer.sh/xash3d-linux-`date -u +%y-%m-%d_%H-%M`.7z
-    - curl --upload-file xash3d.apk https://transfer.sh/xash3d-android-`date -u +%y-%m-%d_%H-%M`.apk
-    - sh ../travis-deploy.sh xash3d-mingw.7z xash3d-linux.7z
+    - sh ../travis-deploy.sh xash3d-mingw.7z xash3d-linux.7z xash3d.apk
+    - sh ../travis-upload.sh xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk
