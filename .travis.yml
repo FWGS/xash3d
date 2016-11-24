@@ -27,6 +27,9 @@ before_script:
     - git clone --depth 1 -b ant-test https://github.com/mittorn/xash3d-android-project
 script:
     - cd xash3d-android-project
+    - git submodule update --init jni/src/NanoGL/nanogl jni/src/hlsdk-xash3d xash-extras
+    - rm -r jni/src/Xash3D/xash3d
+    - ln -s $TRAVIS_BUILD_DIR jni/src/Xash3D/xash3d
     - sh gen-version.sh travis build
     - sh gen-config.sh test
     - ndk-build -j2 APP_CFLAGS="-w"
