@@ -13,9 +13,8 @@ before_script:
     - tar xzf android-sdk.tgz
     - export ANDROID_HOME=$PWD/android-sdk-linux
     - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools
-    - sleep 3s; echo y | android update sdk -u --filter platform-tools
-    - sleep 3s; echo y | android update sdk -u --filter build-tools,android-13,extra-android-support
-    
+    - sleep 3s; echo y | android update sdk -u --filter platform-tools --force --all
+    - sleep 3s; echo y | android update sdk -u --filter build-tools-19.0.0,android-19,extra-android-support --force --all
     - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
     - tar xf SDL2-devel-2.0.4-mingw.tar.gz
     - mv SDL2-2.0.4 SDL2
@@ -23,7 +22,14 @@ before_script:
     - tar xf SDL2-2.0.4.tar.gz
     - git clone https://github.com/FWGS/vgui-dev
     - git clone https://github.com/FWGS/vgui_support_bin
+    - git clone --depth 1 -b ant-test https://github.com/mittorn/xash3d-android-project
 script:
+    - cd xash3d-android-project
+    - sh gen-version.sh travis build
+    - sh gen-config.sh test
+    - ant debug -Dtest.version=1
+    - cp bin/xashdroid-debug.apk ../engine/xash3d.apk
+    - cd ..
     - cd engine
     - make -f Makefile.mingw CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ -j2
     - cp ../vgui_support_bin/vgui_support.dll .
