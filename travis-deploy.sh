@@ -15,3 +15,4 @@ else
  git checkout -b travis-$TRAVIS_BRANCH
  git push --force travis-deploy-public travis-$TRAVIS_BRANCH
 fi
+exit 0
