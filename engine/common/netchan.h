@@ -127,7 +127,7 @@ typedef struct fragbufwaiting_s
 } fragbufwaiting_t;
 
 
-#define NETSPLIT_BACKUP 8
+#define NETSPLIT_BACKUP 64
 #define NETSPLIT_BACKUP_MASK (NETSPLIT_BACKUP - 1)
 #define NETSPLIT_HEADER_SIZE 18
 
