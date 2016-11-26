@@ -969,6 +969,15 @@ void R_ChangeDisplaySettingsFast( int width, int height );
 
 void *SDL_GetVideoDevice( void );
 
+#ifdef _WIN32
+#define XASH_SDL_WINDOW_RECREATE
+#elif defined XASH_X11
+#define XASH_SDL_USE_FAKEWND
+#endif
+
+
+#ifdef XASH_SDL_USE_FAKEWND
+
 SDL_Window *fakewnd;
 
 qboolean VID_SetScreenResolution( int width, int height )
@@ -1010,7 +1019,6 @@ qboolean VID_SetScreenResolution( int width, int height )
 	SDL_GL_GetDrawableSize( host.hWnd, &got.w, &got.h );
 
 	R_ChangeDisplaySettingsFast( got.w, got.h );
-	SDL_HideWindow( fakewnd );
 	return true;
 }
 
@@ -1018,7 +1026,7 @@ void VID_RestoreScreenResolution( void )
 {
 	if( fakewnd )
 	{
-
+		SDL_HideWindow( fakewnd );
 		SDL_ShowWindow( fakewnd );
 		SDL_DestroyWindow( fakewnd );
 	}
@@ -1034,6 +1042,69 @@ void VID_RestoreScreenResolution( void )
 		SDL_MinimizeWindow( host.hWnd );
 	}
 }
+#else
+static qboolean recreate = false;
+qboolean VID_SetScreenResolution( int width, int height )
+{
+	SDL_DisplayMode want, got;
+	Uint32 wndFlags = 0;
+	static string wndname;
+
+	if( vid_highdpi->integer ) wndFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
+	Q_strncpy( wndname, GI->title, sizeof( wndname ));
+
+	want.w = width;
+	want.h = height;
+	want.driverdata = NULL;
+	want.format = want.refresh_rate = 0; // don't care
+
+	if( !SDL_GetClosestDisplayMode(0, &want, &got) )
+		return false;
+
+	MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
+
+#ifdef XASH_SDL_WINDOW_RECREATE
+	if( recreate )
+	{
+	SDL_DestroyWindow( host.hWnd );
+	host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, wndFlags | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
+	SDL_GL_MakeCurrent( host.hWnd, glw_state.context );
+	recreate = false;
+	}
+#endif
+
+	if( SDL_SetWindowDisplayMode( host.hWnd, &got) == -1 )
+		return false;
+
+	if( SDL_SetWindowFullscreen( host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
+		return false;
+	SDL_SetWindowBordered( host.hWnd, SDL_FALSE );
+	SDL_SetWindowPosition( host.hWnd, 0, 0 );
+	SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
+	SDL_SetWindowSize( host.hWnd, got.w, got.h );
+
+	SDL_GL_GetDrawableSize( host.hWnd, &got.w, &got.h );
+
+	R_ChangeDisplaySettingsFast( got.w, got.h );
+	return true;
+}
+
+void VID_RestoreScreenResolution( void )
+{
+	if( !Cvar_VariableInteger("fullscreen") )
+	{
+		SDL_SetWindowBordered( host.hWnd, SDL_TRUE );
+		SDL_SetWindowPosition( host.hWnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED  );
+		SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
+	}
+	else
+	{
+		SDL_MinimizeWindow( host.hWnd );
+		SDL_SetWindowFullscreen( host.hWnd, 0 );
+		recreate = true;
+	}
+}
+#endif
 
 qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
@@ -1049,7 +1120,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		r_ypos->integer, width, height, wndFlags | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
 	else
 	{
-		host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
+		host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, wndFlags | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
 		SDL_SetWindowFullscreen( host.hWnd, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS );
 	}
 
@@ -1214,6 +1285,7 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	}
 	else if( fullscreen )
 	{
+		//recreate = true;
 		if( !VID_SetScreenResolution( width, height ) )
 			return rserr_invalid_fullscreen;
 	}
