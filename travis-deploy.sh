@@ -7,9 +7,9 @@ else
  cp -a $* xash3d-travis/
  cd xash3d-travis
  git init
- git config user.name mittorn
- git config user.email mittorn@sibmail.com
- git remote add travis-deploy-public https://mittorn:${GH_TOKEN}@github.com/mittorn/xash3d-travis.git
+ git config user.name FWGS-deployer
+ git config user.email FWGS-deployer@users.noreply.github.com
+ git remote add travis-deploy-public https://FWGS-deployer:${GH_TOKEN}@github.com/FWGS/xash3d-deploy.git
  git add .
  git commit -m "Laterst travis deploy $TRAVIS_COMMIT"
  git checkout -b travis-$TRAVIS_BRANCH
