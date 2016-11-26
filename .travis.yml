@@ -57,5 +57,5 @@ script:
     - mv libSDL2.so libSDL2-2.0.so.0
     - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2-2.0.so.0 libvgui_support.so vgui.so
 after_script:
-    - sh ../travis-deploy.sh xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk
+    - sh ../travis-deploy.sh travis xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk
     - sh ../travis-upload.sh xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk
