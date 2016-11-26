@@ -17,7 +17,7 @@ POSTFIX=$TRAVIS_BRANCH-$COMMITHASH
 
 YADISKPATH=`date +%Y/%m/%d`
 
-curl -s -u $YADISK_USERNAME:$YADISK_PASSWORD -X MKCOL https://webdav.yandex.ru/XashTestVersions/`date +%Y` > /dev/null'
+curl -s -u $YADISK_USERNAME:$YADISK_PASSWORD -X MKCOL https://webdav.yandex.ru/XashTestVersions/`date +%Y` > /dev/null
 curl -s -u $YADISK_USERNAME:$YADISK_PASSWORD -X MKCOL https://webdav.yandex.ru/XashTestVersions/`date +%Y/%m`/ > /dev/null
 curl -s -u $YADISK_USERNAME:$YADISK_PASSWORD -X MKCOL https://webdav.yandex.ru/XashTestVersions/`date +%Y/%m/%d`/ > /dev/null
 
