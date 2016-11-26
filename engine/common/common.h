@@ -87,6 +87,12 @@ extern "C" {
 #define xash_force_inline
 #endif
 
+#if defined __i386__ &&  defined __GNUC__
+#define GAME_EXPORT __attribute__((force_align_arg_pointer))
+#else
+#define GAME_EXPORT
+#endif
+
 typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];

@@ -38,7 +38,7 @@ CL_PushPMStates
 
 =============
 */
-void CL_PushPMStates( void )
+void GAME_EXPORT CL_PushPMStates( void )
 {
 	if( clgame.pushed )
 	{
@@ -59,7 +59,7 @@ CL_PopPMStates
 
 =============
 */
-void CL_PopPMStates( void )
+void GAME_EXPORT CL_PopPMStates( void )
 {
 	if( clgame.pushed )
 	{
@@ -79,7 +79,7 @@ CL_SetUpPlayerPrediction
 
 =============
 */
-void CL_SetUpPlayerPrediction( int dopred, int includeLocal )
+void GAME_EXPORT CL_SetUpPlayerPrediction( int dopred, int includeLocal )
 {
 #if 0
 	int i;
@@ -318,7 +318,7 @@ pmove must be setup with world and solid entity hulls before calling
 (via CL_PredictMove)
 ===============
 */
-void CL_SetSolidPlayers( int playernum )
+void GAME_EXPORT CL_SetSolidPlayers( int playernum )
 {
 	int		       j;
 	cl_entity_t	   *ent;
@@ -429,7 +429,7 @@ CL_WaterEntity
 
 =============
 */
-int CL_WaterEntity( const float *rgflPos )
+int GAME_EXPORT CL_WaterEntity( const float *rgflPos )
 {
 	physent_t		*pe;
 	hull_t		*hull;
@@ -514,7 +514,7 @@ cl_entity_t *CL_GetWaterEntity( const float *rgflPos )
 	return CL_GetEntityByIndex( entnum );
 }
 
-static void pfnParticle( float *origin, int color, float life, int zpos, int zvel )
+static void GAME_EXPORT pfnParticle( float *origin, int color, float life, int zpos, int zvel )
 {
 	particle_t	*p;
 
@@ -535,12 +535,12 @@ static void pfnParticle( float *origin, int color, float life, int zpos, int zve
 	VectorSet( p->vel, 0.0f, 0.0f, ( zpos * zvel ));
 }
 
-static int pfnTestPlayerPosition( float *pos, pmtrace_t *ptrace )
+static int GAME_EXPORT pfnTestPlayerPosition( float *pos, pmtrace_t *ptrace )
 {
 	return PM_TestPlayerPosition( clgame.pmove, pos, ptrace, NULL );
 }
 
-static void pfnStuckTouch( int hitent, pmtrace_t *tr )
+static void GAME_EXPORT pfnStuckTouch( int hitent, pmtrace_t *tr )
 {
 	int	i;
 
@@ -562,7 +562,7 @@ static void pfnStuckTouch( int hitent, pmtrace_t *tr )
 	clgame.pmove->touchindex[clgame.pmove->numtouch++] = *tr;
 }
 
-static int pfnPointContents( float *p, int *truecontents )
+static int GAME_EXPORT pfnPointContents( float *p, int *truecontents )
 {
 	int	cont, truecont;
 
@@ -574,17 +574,17 @@ static int pfnPointContents( float *p, int *truecontents )
 	return cont;
 }
 
-static int pfnTruePointContents( float *p )
+static int GAME_EXPORT pfnTruePointContents( float *p )
 {
 	return CL_TruePointContents( p );
 }
 
-static int pfnHullPointContents( struct hull_s *hull, int num, float *p )
+static int GAME_EXPORT pfnHullPointContents( struct hull_s *hull, int num, float *p )
 {
 	return PM_HullPointContents( hull, num, p );
 }
 #if defined(DLL_LOADER) || defined(__MINGW32__)
-static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t * retvalue, float *start, float *end, int traceFlags, int ignore_pe)
+static pmtrace_t *GAME_EXPORT pfnPlayerTrace_w32(pmtrace_t * retvalue, float *start, float *end, int traceFlags, int ignore_pe)
 {
 	pmtrace_t tmp;
 	tmp = PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, ignore_pe, NULL );
@@ -592,12 +592,12 @@ static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t * retvalue, float *start, float *
 	return retvalue;
 }
 #endif
-static pmtrace_t pfnPlayerTrace( float *start, float *end, int traceFlags, int ignore_pe )
+static pmtrace_t GAME_EXPORT pfnPlayerTrace( float *start, float *end, int traceFlags, int ignore_pe )
 {
 	return PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, ignore_pe, NULL );
 }
 
-static pmtrace_t *pfnTraceLine( float *start, float *end, int flags, int usehull, int ignore_pe )
+static pmtrace_t *GAME_EXPORT pfnTraceLine( float *start, float *end, int flags, int usehull, int ignore_pe )
 {
 	static pmtrace_t	tr;
 	int		old_usehull;
@@ -620,12 +620,12 @@ static pmtrace_t *pfnTraceLine( float *start, float *end, int flags, int usehull
 	return &tr;
 }
 
-static hull_t *pfnHullForBsp( physent_t *pe, float *offset )
+static hull_t *GAME_EXPORT pfnHullForBsp( physent_t *pe, float *offset )
 {
 	return PM_HullForBsp( pe, clgame.pmove, offset );
 }
 
-static float pfnTraceModel( physent_t *pe, float *start, float *end, trace_t *trace )
+static float GAME_EXPORT pfnTraceModel( physent_t *pe, float *start, float *end, trace_t *trace )
 {
 	int	old_usehull;
 	vec3_t	start_l, end_l;
@@ -671,7 +671,7 @@ static float pfnTraceModel( physent_t *pe, float *start, float *end, trace_t *tr
 	return trace->fraction;
 }
 
-static const char *pfnTraceTexture( int ground, float *vstart, float *vend )
+static const char *GAME_EXPORT pfnTraceTexture( int ground, float *vstart, float *vend )
 {
 	physent_t *pe;
 
@@ -682,7 +682,7 @@ static const char *pfnTraceTexture( int ground, float *vstart, float *vend )
 	return PM_TraceTexture( pe, vstart, vend );
 }
 
-static void pfnPlaySound( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
+static void GAME_EXPORT pfnPlaySound( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
 {
 	sound_t	snd;
 
@@ -694,7 +694,7 @@ static void pfnPlaySound( int channel, const char *sample, float volume, float a
 	S_StartSound( NULL, clgame.pmove->player_index + 1, channel, snd, volume, attenuation, pitch, fFlags );
 }
 
-static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, float delay, float *origin,
+static void GAME_EXPORT pfnPlaybackEventFull( int flags, int clientindex, word eventindex, float delay, float *origin,
 	float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 )
 {
 	cl_entity_t	*ent;
@@ -709,7 +709,7 @@ static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, f
 		bparam1, bparam2 );
 }
 #if defined(DLL_LOADER) || defined(__MINGW32__)
-static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t * retvalue, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
+static pmtrace_t *GAME_EXPORT pfnPlayerTraceEx_w32( pmtrace_t * retvalue, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
 {
 	pmtrace_t tmp;
 	tmp = PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, -1, pmFilter );
@@ -717,17 +717,17 @@ static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t * retvalue, float *start, floa
 	return retvalue;
 }
 #endif
-static pmtrace_t pfnPlayerTraceEx( float *start, float *end, int traceFlags, pfnIgnore pmFilter )
+static pmtrace_t GAME_EXPORT pfnPlayerTraceEx( float *start, float *end, int traceFlags, pfnIgnore pmFilter )
 {
 	return PM_PlayerTraceExt( clgame.pmove, start, end, traceFlags, clgame.pmove->numphysent, clgame.pmove->physents, -1, pmFilter );
 }
 
-static int pfnTestPlayerPositionEx( float *pos, pmtrace_t *ptrace, pfnIgnore pmFilter )
+static int GAME_EXPORT pfnTestPlayerPositionEx( float *pos, pmtrace_t *ptrace, pfnIgnore pmFilter )
 {
 	return PM_TestPlayerPosition( clgame.pmove, pos, ptrace, pmFilter );
 }
 
-static pmtrace_t *pfnTraceLineEx( float *start, float *end, int flags, int usehull, pfnIgnore pmFilter )
+static pmtrace_t *GAME_EXPORT pfnTraceLineEx( float *start, float *end, int flags, int usehull, pfnIgnore pmFilter )
 {
 	static pmtrace_t	tr;
 	int		old_usehull;
@@ -750,7 +750,7 @@ static pmtrace_t *pfnTraceLineEx( float *start, float *end, int flags, int usehu
 	return &tr;
 }
 
-static struct msurface_s *pfnTraceSurface( int ground, float *vstart, float *vend )
+static struct msurface_s *GAME_EXPORT pfnTraceSurface( int ground, float *vstart, float *vend )
 {
 	physent_t *pe;
 

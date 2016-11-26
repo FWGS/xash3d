@@ -53,7 +53,7 @@ Sys_DoubleTime
 #if XASH_TIMER == TIMER_WIN32
 #include <winbase.h>
 
-double Sys_DoubleTime( void )
+double GAME_EXPORT Sys_DoubleTime( void )
 {
 	static LARGE_INTEGER g_PerformanceFrequency;
 	static LARGE_INTEGER g_ClockStart;
@@ -71,7 +71,7 @@ double Sys_DoubleTime( void )
 
 #elif XASH_TIMER == TIMER_SDL
 
-double Sys_DoubleTime( void )
+double GAME_EXPORT Sys_DoubleTime( void )
 {
 	static longtime_t g_PerformanceFrequency;
 	static longtime_t g_ClockStart;
@@ -87,7 +87,7 @@ double Sys_DoubleTime( void )
 }
 #elif XASH_TIMER == TIMER_LINUX
 
-double Sys_DoubleTime( void )
+double GAME_EXPORT Sys_DoubleTime( void )
 {
 	static longtime_t g_PerformanceFrequency;
 	static longtime_t g_ClockStart;

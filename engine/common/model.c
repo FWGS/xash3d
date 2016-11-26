@@ -3049,7 +3049,7 @@ Mod_ForName
 Loads in a model for the given name
 ==================
 */
-model_t *Mod_ForName( const char *name, qboolean crash )
+model_t *GAME_EXPORT Mod_ForName( const char *name, qboolean crash )
 {
 	model_t	*mod;
 	
@@ -3201,7 +3201,7 @@ Mod_Calloc
 
 ===============
 */
-void *Mod_Calloc( int number, size_t size )
+void *GAME_EXPORT Mod_Calloc( int number, size_t size )
 {
 	cache_user_t	*cu;
 
@@ -3218,7 +3218,7 @@ Mod_CacheCheck
 
 ===============
 */
-void *Mod_CacheCheck( cache_user_t *c )
+void *GAME_EXPORT Mod_CacheCheck( cache_user_t *c )
 {
 	return Cache_Check( com_studiocache, c );
 }
@@ -3229,7 +3229,7 @@ Mod_LoadCacheFile
 
 ===============
 */
-void Mod_LoadCacheFile( const char *filename, cache_user_t *cu )
+void GAME_EXPORT Mod_LoadCacheFile( const char *filename, cache_user_t *cu )
 {
 	byte	*buf;
 	string	name;
@@ -3288,7 +3288,7 @@ Mod_Extradata
 
 ===============
 */
-void *Mod_Extradata( model_t *mod )
+void *GAME_EXPORT Mod_Extradata( model_t *mod )
 {
 	if( mod && mod->type == mod_studio )
 		return mod->cache.data;
@@ -3301,7 +3301,7 @@ Mod_Handle
 
 ==================
 */
-model_t *Mod_Handle( int handle )
+model_t *GAME_EXPORT Mod_Handle( int handle )
 {
 	if( handle < 0 || handle >= MAX_MODELS )
 	{

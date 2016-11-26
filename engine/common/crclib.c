@@ -89,7 +89,7 @@ static const dword crc32table[NUM_BYTES] =
 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-void CRC32_Init( dword *pulCRC )
+void GAME_EXPORT CRC32_Init( dword *pulCRC )
 {
 	*pulCRC = CRC32_INIT_VALUE;
 }
@@ -99,7 +99,7 @@ void CRC32_Final( dword *pulCRC )
 	*pulCRC ^= CRC32_XOR_VALUE;
 }
 
-void CRC32_ProcessByte( dword *pulCRC, byte ch )
+void GAME_EXPORT CRC32_ProcessByte( dword *pulCRC, byte ch )
 {
 	dword	ulCrc = *pulCRC;
 
@@ -108,7 +108,7 @@ void CRC32_ProcessByte( dword *pulCRC, byte ch )
 	*pulCRC = ulCrc;
 }
 
-void CRC32_ProcessBuffer( dword *pulCRC, const void *pBuffer, int nBuffer )
+void GAME_EXPORT CRC32_ProcessBuffer( dword *pulCRC, const void *pBuffer, int nBuffer )
 {
 	dword	poolpb, ulCrc = *pulCRC;
 	byte	*pb = (byte *)pBuffer;

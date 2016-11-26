@@ -890,7 +890,7 @@ void SV_FreeEdict( edict_t *pEdict )
 	pEdict->free = true;
 }
 
-edict_t *SV_AllocEdict( void )
+edict_t *GAME_EXPORT SV_AllocEdict( void )
 {
 	edict_t	*pEdict;
 	int	i;
@@ -1107,7 +1107,7 @@ pfnPrecacheModel
 
 =========
 */
-int pfnPrecacheModel( const char *s )
+int GAME_EXPORT pfnPrecacheModel( const char *s )
 {
 	int modelIndex = SV_ModelIndex( s );
 
@@ -1122,7 +1122,7 @@ pfnSetModel
 
 =================
 */
-void pfnSetModel( edict_t *e, const char *m )
+void GAME_EXPORT pfnSetModel( edict_t *e, const char *m )
 {
 	if( !SV_IsValidEdict( e ))
 	{
@@ -1145,7 +1145,7 @@ pfnModelIndex
 
 =================
 */
-int pfnModelIndex( const char *m )
+int GAME_EXPORT pfnModelIndex( const char *m )
 {
 	int	i;
 
@@ -1168,7 +1168,7 @@ pfnModelFrames
 
 =================
 */
-int pfnModelFrames( int modelIndex )
+int GAME_EXPORT pfnModelFrames( int modelIndex )
 {
 	int	numFrames = 0;
 
@@ -1183,7 +1183,7 @@ pfnSetSize
 
 =================
 */
-void pfnSetSize( edict_t *e, const float *rgflMin, const float *rgflMax )
+void GAME_EXPORT pfnSetSize( edict_t *e, const float *rgflMin, const float *rgflMax )
 {
 	if( !SV_IsValidEdict( e ))
 	{
@@ -1200,7 +1200,7 @@ pfnChangeLevel
 
 =================
 */
-void pfnChangeLevel( const char* s1, const char* s2 )
+void GAME_EXPORT pfnChangeLevel( const char* s1, const char* s2 )
 {
 	static uint	last_spawncount = 0;
 
@@ -1232,7 +1232,7 @@ pfnGetSpawnParms
 obsolete
 =================
 */
-void pfnGetSpawnParms( edict_t *ent )
+void GAME_EXPORT pfnGetSpawnParms( edict_t *ent )
 {
 	Host_Error( "SV_GetSpawnParms: %s [%i]\n", SV_ClassName( ent ), NUM_FOR_EDICT( ent ));
 }
@@ -1244,7 +1244,7 @@ pfnSaveSpawnParms
 obsolete
 =================
 */
-void pfnSaveSpawnParms( edict_t *ent )
+void GAME_EXPORT pfnSaveSpawnParms( edict_t *ent )
 {
 	Host_Error( "SV_SaveSpawnParms: %s [%i]\n", SV_ClassName( ent ), NUM_FOR_EDICT( ent ));
 }
@@ -1255,7 +1255,7 @@ pfnVecToYaw
 
 =================
 */
-float pfnVecToYaw( const float *rgflVector )
+float GAME_EXPORT pfnVecToYaw( const float *rgflVector )
 {
 	if( !rgflVector ) return 0.0f;
 	return SV_VecToYaw( rgflVector );
@@ -1267,7 +1267,7 @@ pfnMoveToOrigin
 
 =================
 */
-void pfnMoveToOrigin( edict_t *ent, const float *pflGoal, float dist, int iMoveType )
+void GAME_EXPORT pfnMoveToOrigin( edict_t *ent, const float *pflGoal, float dist, int iMoveType )
 {
 	if( !SV_IsValidEdict( ent ))
 	{
@@ -1290,7 +1290,7 @@ pfnChangeYaw
 
 ==============
 */
-void pfnChangeYaw( edict_t* ent )
+void GAME_EXPORT pfnChangeYaw( edict_t* ent )
 {
 	if( !SV_IsValidEdict( ent ))
 	{
@@ -1307,7 +1307,7 @@ pfnChangePitch
 
 ==============
 */
-void pfnChangePitch( edict_t* ent )
+void GAME_EXPORT pfnChangePitch( edict_t* ent )
 {
 	if( !SV_IsValidEdict( ent ))
 	{
@@ -1324,7 +1324,7 @@ SV_FindEntityByString
 
 =========
 */
-edict_t* SV_FindEntityByString( edict_t *pStartEdict, const char *pszField, const char *pszValue )
+edict_t* GAME_EXPORT SV_FindEntityByString( edict_t *pStartEdict, const char *pszField, const char *pszValue )
 {
 	int		index = 0, e = 0;
 	TYPEDESCRIPTION	*desc = NULL;
@@ -1381,7 +1381,7 @@ pfnGetEntityIllum
 returns weighted lightvalue for entity position
 ==============
 */
-int pfnGetEntityIllum( edict_t* pEnt )
+int GAME_EXPORT pfnGetEntityIllum( edict_t* pEnt )
 {
 	if( !SV_IsValidEdict( pEnt ))
 	{
@@ -1399,7 +1399,7 @@ pfnFindEntityInSphere
 return NULL instead of world!
 =================
 */
-edict_t *pfnFindEntityInSphere( edict_t *pStartEdict, const float *org, float flRadius )
+edict_t *GAME_EXPORT pfnFindEntityInSphere( edict_t *pStartEdict, const float *org, float flRadius )
 {
 	edict_t	*ent;
 	float	distSquared;
@@ -1522,7 +1522,7 @@ pfnFindClientInPVS
 
 =================
 */
-edict_t* pfnFindClientInPVS( edict_t *pEdict )
+edict_t* GAME_EXPORT pfnFindClientInPVS( edict_t *pEdict )
 {
 	edict_t	*pClient;
 	vec3_t	view;
@@ -1584,7 +1584,7 @@ pfnEntitiesInPVS
 
 =================
 */
-edict_t *pfnEntitiesInPVS( edict_t *pview )
+edict_t *GAME_EXPORT pfnEntitiesInPVS( edict_t *pview )
 {
 	edict_t	*chain;
 	edict_t	*pEdict, *pEdict2;
@@ -1636,7 +1636,7 @@ pfnMakeVectors
 
 ==============
 */
-void pfnMakeVectors( const float *rgflVector )
+void GAME_EXPORT pfnMakeVectors( const float *rgflVector )
 {
 	AngleVectors( rgflVector, svgame.globals->v_forward, svgame.globals->v_right, svgame.globals->v_up );
 }
@@ -1648,7 +1648,7 @@ pfnRemoveEntity
 free edict private mem, unlink physics etc
 ==============
 */
-void pfnRemoveEntity( edict_t* e )
+void GAME_EXPORT pfnRemoveEntity( edict_t* e )
 {
 	if( !SV_IsValidEdict( e ))
 	{
@@ -1672,7 +1672,7 @@ pfnCreateNamedEntity
 
 ==============
 */
-edict_t* pfnCreateNamedEntity( string_t className )
+edict_t* GAME_EXPORT pfnCreateNamedEntity( string_t className )
 {
 	return SV_AllocPrivateData( NULL, className );
 }
@@ -1684,7 +1684,7 @@ pfnMakeStatic
 move entity to client (Q1 legacy)
 =============
 */
-static void pfnMakeStatic( edict_t *ent )
+static void GAME_EXPORT pfnMakeStatic( edict_t *ent )
 {
 	sv_static_entity_t	*clent;
 
@@ -1730,7 +1730,7 @@ pfnEntIsOnFloor
 legacy builtin
 =============
 */
-static int pfnEntIsOnFloor( edict_t *e )
+static int GAME_EXPORT pfnEntIsOnFloor( edict_t *e )
 {
 	if( !SV_IsValidEdict( e ))
 	{
@@ -1747,7 +1747,7 @@ pfnDropToFloor
 
 ===============
 */
-int pfnDropToFloor( edict_t* e )
+int GAME_EXPORT pfnDropToFloor( edict_t* e )
 {
 	vec3_t	end;
 	trace_t	trace;
@@ -1783,7 +1783,7 @@ pfnWalkMove
 
 ===============
 */
-int pfnWalkMove( edict_t *ent, float yaw, float dist, int iMode )
+int GAME_EXPORT pfnWalkMove( edict_t *ent, float yaw, float dist, int iMode )
 {
 	vec3_t	move;
 
@@ -1820,7 +1820,7 @@ pfnSetOrigin
 
 =================
 */
-void pfnSetOrigin( edict_t *e, const float *rgflOrigin )
+void GAME_EXPORT pfnSetOrigin( edict_t *e, const float *rgflOrigin )
 {
 	if( !SV_IsValidEdict( e ))
 	{
@@ -1934,7 +1934,7 @@ SV_StartSound
 
 =================
 */
-void SV_StartSound( edict_t *ent, int chan, const char *sample, float vol, float attn, int flags, int pitch )
+void GAME_EXPORT SV_StartSound( edict_t *ent, int chan, const char *sample, float vol, float attn, int flags, int pitch )
 {
 	int 	sound_idx;
 	int	entityIndex;
@@ -2026,7 +2026,7 @@ pfnEmitAmbientSound
 
 =================
 */
-void pfnEmitAmbientSound( edict_t *ent, float *pos, const char *sample, float vol, float attn, int flags, int pitch )
+void GAME_EXPORT pfnEmitAmbientSound( edict_t *ent, float *pos, const char *sample, float vol, float attn, int flags, int pitch )
 {
 	int 	number = 0, sound_idx;
 	int	msg_dest = MSG_PAS_R;
@@ -2119,7 +2119,7 @@ pfnTraceLine
 
 =================
 */
-static void pfnTraceLine( const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr )
+static void GAME_EXPORT pfnTraceLine( const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr )
 {
 	trace_t	trace;
 
@@ -2136,7 +2136,7 @@ pfnTraceToss
 
 =================
 */
-static void pfnTraceToss( edict_t* pent, edict_t* pentToIgnore, TraceResult *ptr )
+static void GAME_EXPORT pfnTraceToss( edict_t* pent, edict_t* pentToIgnore, TraceResult *ptr )
 {
 	trace_t	trace;
 
@@ -2158,7 +2158,7 @@ pfnTraceHull
 
 =================
 */
-static void pfnTraceHull( const float *v1, const float *v2, int fNoMonsters, int hullNumber, edict_t *pentToSkip, TraceResult *ptr )
+static void GAME_EXPORT pfnTraceHull( const float *v1, const float *v2, int fNoMonsters, int hullNumber, edict_t *pentToSkip, TraceResult *ptr )
 {
 	float	*mins, *maxs;
 	trace_t	trace;
@@ -2181,7 +2181,7 @@ pfnTraceMonsterHull
 
 =============
 */
-static int pfnTraceMonsterHull( edict_t *pEdict, const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr )
+static int GAME_EXPORT pfnTraceMonsterHull( edict_t *pEdict, const float *v1, const float *v2, int fNoMonsters, edict_t *pentToSkip, TraceResult *ptr )
 {
 	trace_t	trace;
 
@@ -2205,7 +2205,7 @@ pfnTraceModel
 
 =============
 */
-static void pfnTraceModel( const float *v1, const float *v2, int hullNumber, edict_t *pent, TraceResult *ptr )
+static void GAME_EXPORT pfnTraceModel( const float *v1, const float *v2, int hullNumber, edict_t *pent, TraceResult *ptr )
 {
 	float	*mins, *maxs;
 	trace_t	trace;
@@ -2257,7 +2257,7 @@ pfnTraceTexture
 returns texture basename
 =============
 */
-static const char *pfnTraceTexture( edict_t *pTextureEntity, const float *v1, const float *v2 )
+static const char *GAME_EXPORT pfnTraceTexture( edict_t *pTextureEntity, const float *v1, const float *v2 )
 {
 	if( !SV_IsValidEdict( pTextureEntity ))
 	{
@@ -2275,7 +2275,7 @@ pfnTraceSphere
 trace sphere instead of bbox
 =============
 */
-void pfnTraceSphere( const float *v1, const float *v2, int fNoMonsters, float radius, edict_t *pentToSkip, TraceResult *ptr )
+void GAME_EXPORT pfnTraceSphere( const float *v1, const float *v2, int fNoMonsters, float radius, edict_t *pentToSkip, TraceResult *ptr )
 {
 	Host_Error( "TraceSphere not yet implemented!\n" );
 }
@@ -2287,7 +2287,7 @@ pfnGetAimVector
 NOTE: speed is unused
 =============
 */
-void pfnGetAimVector( edict_t* ent, float speed, float *rgflReturn )
+void GAME_EXPORT pfnGetAimVector( edict_t* ent, float speed, float *rgflReturn )
 {
 	edict_t		*check;
 	vec3_t		start, dir, end, bestdir;
@@ -2345,7 +2345,7 @@ pfnServerCommand
 
 =========
 */
-void pfnServerCommand( const char* str )
+void GAME_EXPORT pfnServerCommand( const char* str )
 {
 	if( SV_IsValidCmd( str )) Cbuf_AddText( str );
 	else MsgDev( D_ERROR, "bad server command %s\n", str );
@@ -2357,7 +2357,7 @@ pfnClientCommand
 
 =========
 */
-void pfnClientCommand( edict_t* pEdict, char* szFmt, ... )
+void GAME_EXPORT pfnClientCommand( edict_t* pEdict, char* szFmt, ... )
 {
 	sv_client_t	*client;
 	string		buffer;
@@ -2396,7 +2396,7 @@ pfnParticleEffect
 Make sure the event gets sent to all clients
 =================
 */
-void pfnParticleEffect( const float *org, const float *dir, float color, float count )
+void GAME_EXPORT pfnParticleEffect( const float *org, const float *dir, float color, float count )
 {
 	int	i, v;
 
@@ -2427,7 +2427,7 @@ pfnLightStyle
 
 ===============
 */
-void pfnLightStyle( int style, const char* val )
+void GAME_EXPORT pfnLightStyle( int style, const char* val )
 {
 	if( style < 0 ) style = 0;
 	if( style >= MAX_LIGHTSTYLES )
@@ -2443,7 +2443,7 @@ pfnDecalIndex
 register decal shader on client
 =================
 */
-int pfnDecalIndex( const char *m )
+int GAME_EXPORT pfnDecalIndex( const char *m )
 {
 	int	i;
 
@@ -2468,7 +2468,7 @@ pfnPointContents
 
 =============
 */
-static int pfnPointContents( const float *rgflVector )
+static int GAME_EXPORT pfnPointContents( const float *rgflVector )
 {
 	if( !rgflVector ) return CONTENTS_NONE;
 	return SV_PointContents( rgflVector );
@@ -2482,7 +2482,7 @@ pfnMessageBegin
 
 =============
 */
-void pfnMessageBegin( int msg_dest, int msg_num, const float *pOrigin, edict_t *ed )
+void GAME_EXPORT pfnMessageBegin( int msg_dest, int msg_num, const float *pOrigin, edict_t *ed )
 {
 	int	i, iSize;
 
@@ -2553,7 +2553,7 @@ pfnMessageEnd
 
 =============
 */
-void pfnMessageEnd( void )
+void GAME_EXPORT pfnMessageEnd( void )
 {
 	const char	*name = "Unknown";
 	float		*org = NULL;
@@ -2652,7 +2652,7 @@ pfnWriteByte
 
 =============
 */
-void pfnWriteByte( int iValue )
+void GAME_EXPORT pfnWriteByte( int iValue )
 {
 	if( iValue == -1 ) iValue = 0xFF; // convert char to byte 
 	BF_WriteByte( &sv.multicast, (byte)iValue );
@@ -2666,7 +2666,7 @@ pfnWriteChar
 
 =============
 */
-void pfnWriteChar( int iValue )
+void GAME_EXPORT pfnWriteChar( int iValue )
 {
 	BF_WriteChar( &sv.multicast, (signed char)iValue );
 	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteChar( %i )\n", iValue );
@@ -2679,7 +2679,7 @@ pfnWriteShort
 
 =============
 */
-void pfnWriteShort( int iValue )
+void GAME_EXPORT pfnWriteShort( int iValue )
 {
 	BF_WriteShort( &sv.multicast, (short)iValue );
 	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteShort( %i )\n", iValue );
@@ -2692,7 +2692,7 @@ pfnWriteLong
 
 =============
 */
-void pfnWriteLong( int iValue )
+void GAME_EXPORT pfnWriteLong( int iValue )
 {
 	BF_WriteLong( &sv.multicast, iValue );
 	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteLong( %i )\n", iValue );
@@ -2706,7 +2706,7 @@ pfnWriteAngle
 this is low-res angle
 =============
 */
-void pfnWriteAngle( float flValue )
+void GAME_EXPORT pfnWriteAngle( float flValue )
 {
 	int	iAngle = ((int)(( flValue ) * 256 / 360) & 255);
 
@@ -2721,7 +2721,7 @@ pfnWriteCoord
 
 =============
 */
-void pfnWriteCoord( float flValue )
+void GAME_EXPORT pfnWriteCoord( float flValue )
 {
 	BF_WriteCoord( &sv.multicast, flValue );
 	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3    WriteCoord( %f )\n", flValue );
@@ -2734,7 +2734,7 @@ pfnWriteString
 
 =============
 */
-void pfnWriteString( const char *src )
+void GAME_EXPORT pfnWriteString( const char *src )
 {
 	char	*dst, string[MAX_SYSPATH];
 	int	len = Q_strlen( src ) + 1;
@@ -2791,7 +2791,7 @@ pfnWriteEntity
 
 =============
 */
-void pfnWriteEntity( int iValue )
+void GAME_EXPORT pfnWriteEntity( int iValue )
 {
 	if( iValue < 0 || iValue >= svgame.numEntities )
 		Host_Error( "BF_WriteEntity: invalid entnumber %i\n", iValue );
@@ -2806,7 +2806,7 @@ pfnAlertMessage
 
 =============
 */
-static void pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
+static void GAME_EXPORT pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 {
 	char	buffer0[2048];	// must support > 1k messages
 	va_list	args;
@@ -2880,7 +2880,7 @@ pfnEngineFprintf
 legacy. probably was a part of early save\restore system
 =============
 */
-static void pfnEngineFprintf( FILE *pfile, char *szFmt, ... )
+static void GAME_EXPORT pfnEngineFprintf( FILE *pfile, char *szFmt, ... )
 {
 	char	buffer[2048];
 	va_list	args;
@@ -2899,7 +2899,7 @@ pfnBuildSoundMsg
 Customizable sound message
 =============
 */
-void pfnBuildSoundMsg( edict_t *pSource, int chan, const char *samp, float fvol, float attn, int fFlags, int pitch, int msg_dest, int msg_type, const float *pOrigin, edict_t *pSend )
+void GAME_EXPORT pfnBuildSoundMsg( edict_t *pSource, int chan, const char *samp, float fvol, float attn, int fFlags, int pitch, int msg_dest, int msg_type, const float *pOrigin, edict_t *pSend )
 {
 	pfnMessageBegin( msg_dest, msg_type, pOrigin, pSend );
 	SV_BuildSoundMsg( pSource, chan, samp, fvol * 255, attn, fFlags, pitch, pOrigin );
@@ -2912,7 +2912,7 @@ pfnPvAllocEntPrivateData
 
 =============
 */
-void *pfnPvAllocEntPrivateData( edict_t *pEdict, long cb )
+void *GAME_EXPORT pfnPvAllocEntPrivateData( edict_t *pEdict, long cb )
 {
 	ASSERT( pEdict );
 
@@ -2934,7 +2934,7 @@ pfnPvEntPrivateData
 we already have copy of this function in 'enginecallback.h' :-)
 =============
 */
-void *pfnPvEntPrivateData( edict_t *pEdict )
+void *GAME_EXPORT pfnPvEntPrivateData( edict_t *pEdict )
 {
 	if( pEdict )
 		return pEdict->pvPrivateData;
@@ -2947,7 +2947,7 @@ pfnFreeEntPrivateData
 
 =============
 */
-void pfnFreeEntPrivateData( edict_t *pEdict )
+void GAME_EXPORT pfnFreeEntPrivateData( edict_t *pEdict )
 {
 	SV_FreePrivateData( pEdict );
 }
@@ -2964,7 +2964,7 @@ SV_AllocString
 allocate new engine string
 =============
 */
-string_t SV_AllocString( const char *szValue )
+string_t GAME_EXPORT SV_AllocString( const char *szValue )
 {
 	const char *newString;
 
@@ -3006,7 +3006,7 @@ SV_GetString
 
 =============
 */
-const char *SV_GetString( string_t iString )
+const char *GAME_EXPORT SV_GetString( string_t iString )
 {
 	if( svgame.physFuncs.pfnGetString != NULL )
 		return svgame.physFuncs.pfnGetString( iString );
@@ -3019,7 +3019,7 @@ pfnGetVarsOfEnt
 
 =============
 */
-entvars_t *pfnGetVarsOfEnt( edict_t *pEdict )
+entvars_t *GAME_EXPORT pfnGetVarsOfEnt( edict_t *pEdict )
 {
 	if( pEdict )
 		return &pEdict->v;
@@ -3032,7 +3032,7 @@ pfnPEntityOfEntOffset
 
 =============
 */
-edict_t* pfnPEntityOfEntOffset( int iEntOffset )
+edict_t* GAME_EXPORT pfnPEntityOfEntOffset( int iEntOffset )
 {
 	return (&((edict_t*)svgame.vp)[iEntOffset]);
 }
@@ -3043,7 +3043,7 @@ pfnEntOffsetOfPEntity
 
 =============
 */
-int pfnEntOffsetOfPEntity( const edict_t *pEdict )
+int GAME_EXPORT pfnEntOffsetOfPEntity( const edict_t *pEdict )
 {
 	return ((byte *)pEdict - (byte *)svgame.vp);
 }
@@ -3054,7 +3054,7 @@ pfnIndexOfEdict
 
 =============
 */
-int pfnIndexOfEdict( const edict_t *pEdict )
+int GAME_EXPORT pfnIndexOfEdict( const edict_t *pEdict )
 {
 	int	number;
 
@@ -3070,7 +3070,7 @@ pfnPEntityOfEntIndex
 
 =============
 */
-edict_t* pfnPEntityOfEntIndex( int iEntIndex )
+edict_t* GAME_EXPORT pfnPEntityOfEntIndex( int iEntIndex )
 {
 	if( iEntIndex < 0 || iEntIndex >= svgame.numEntities )
 		return NULL; // out of range
@@ -3085,7 +3085,7 @@ pfnFindEntityByVars
 debug routine
 =============
 */
-edict_t* pfnFindEntityByVars( entvars_t *pvars )
+edict_t* GAME_EXPORT pfnFindEntityByVars( entvars_t *pvars )
 {
 	edict_t	*e;
 	int	i;
@@ -3117,7 +3117,7 @@ pfnGetModelPtr
 returns pointer to a studiomodel
 =============
 */
-static void *pfnGetModelPtr( edict_t *pEdict )
+static void *GAME_EXPORT pfnGetModelPtr( edict_t *pEdict )
 {
 	model_t	*mod;
 
@@ -3134,7 +3134,7 @@ pfnRegUserMsg
 
 =============
 */
-int pfnRegUserMsg( const char *pszName, int iSize )
+int GAME_EXPORT pfnRegUserMsg( const char *pszName, int iSize )
 {
 	int	i;
 	
@@ -3201,7 +3201,7 @@ pfnAnimationAutomove
 animating studiomodel
 =============
 */
-void pfnAnimationAutomove( const edict_t* pEdict, float flTime )
+void GAME_EXPORT pfnAnimationAutomove( const edict_t* pEdict, float flTime )
 {
 	// this is empty in the original HL
 }
@@ -3212,7 +3212,7 @@ pfnGetBonePosition
 
 =============
 */
-static void pfnGetBonePosition( const edict_t* pEdict, int iBone, float *rgflOrigin, float *rgflAngles )
+static void GAME_EXPORT pfnGetBonePosition( const edict_t* pEdict, int iBone, float *rgflOrigin, float *rgflAngles )
 {
 	if( !SV_IsValidEdict( pEdict ))
 	{
@@ -3229,7 +3229,7 @@ pfnFunctionFromName
 
 =============
 */
-void *pfnFunctionFromName( const char *pName )
+void *GAME_EXPORT pfnFunctionFromName( const char *pName )
 {
 	return Com_FunctionFromName( svgame.hInstance, pName );
 }
@@ -3240,7 +3240,7 @@ pfnNameForFunction
 
 =============
 */
-const char *pfnNameForFunction( void *function )
+const char *GAME_EXPORT pfnNameForFunction( void *function )
 {
 	return Com_NameForFunction( svgame.hInstance, (void *)function );
 }
@@ -3251,7 +3251,7 @@ pfnClientPrintf
 
 =============
 */
-void pfnClientPrintf( edict_t* pEdict, PRINT_TYPE ptype, const char *szMsg )
+void GAME_EXPORT pfnClientPrintf( edict_t* pEdict, PRINT_TYPE ptype, const char *szMsg )
 {
 	sv_client_t	*client;
 
@@ -3292,7 +3292,7 @@ pfnServerPrint
 
 =============
 */
-void pfnServerPrint( const char *szMsg )
+void GAME_EXPORT pfnServerPrint( const char *szMsg )
 {
 #if 0
 	// while loading in-progress we can sending message only for local client
@@ -3309,7 +3309,7 @@ pfnGetAttachment
 
 =============
 */
-static void pfnGetAttachment( const edict_t *pEdict, int iAttachment, float *rgflOrigin, float *rgflAngles )
+static void GAME_EXPORT pfnGetAttachment( const edict_t *pEdict, int iAttachment, float *rgflOrigin, float *rgflAngles )
 {
 	if( !SV_IsValidEdict( pEdict ))
 	{
@@ -3326,7 +3326,7 @@ pfnCRC32_Final
 
 =============
 */
-dword pfnCRC32_Final( dword pulCRC )
+dword GAME_EXPORT pfnCRC32_Final( dword pulCRC )
 {
 	CRC32_Final( &pulCRC );
 
@@ -3339,7 +3339,7 @@ pfnCrosshairAngle
 
 =============
 */
-void pfnCrosshairAngle( const edict_t *pClient, float pitch, float yaw )
+void GAME_EXPORT pfnCrosshairAngle( const edict_t *pClient, float pitch, float yaw )
 {
 	sv_client_t	*client;
 
@@ -3368,7 +3368,7 @@ pfnSetView
 
 =============
 */
-void pfnSetView( const edict_t *pClient, const edict_t *pViewent )
+void GAME_EXPORT pfnSetView( const edict_t *pClient, const edict_t *pViewent )
 {
 	sv_client_t	*client;
 
@@ -3406,7 +3406,7 @@ pfnTime
 
 =============
 */
-float pfnTime( void )
+float GAME_EXPORT pfnTime( void )
 {
 	return (float)Sys_DoubleTime();
 }
@@ -3417,7 +3417,7 @@ pfnStaticDecal
 
 =============
 */
-void pfnStaticDecal( const float *origin, int decalIndex, int entityIndex, int modelIndex )
+void GAME_EXPORT pfnStaticDecal( const float *origin, int decalIndex, int entityIndex, int modelIndex )
 {
 	if( !origin )
 	{
@@ -3434,7 +3434,7 @@ pfnIsDedicatedServer
 
 =============
 */
-int pfnIsDedicatedServer( void )
+int GAME_EXPORT pfnIsDedicatedServer( void )
 {
 	return (Host_IsDedicated());
 }
@@ -3445,7 +3445,7 @@ pfnGetPlayerWONId
 
 =============
 */
-uint pfnGetPlayerWONId( edict_t *e )
+uint GAME_EXPORT pfnGetPlayerWONId( edict_t *e )
 {
 	sv_client_t	*cl;
 	int		i;
@@ -3472,7 +3472,7 @@ pfnIsMapValid
 vaild map must contain one info_player_deatchmatch
 =============
 */
-int pfnIsMapValid( char *filename )
+int GAME_EXPORT pfnIsMapValid( char *filename )
 {
 	char	*spawn_entity;
 	int	flags;
@@ -3495,7 +3495,7 @@ pfnFadeClientVolume
 
 =============
 */
-void pfnFadeClientVolume( const edict_t *pEdict, int fadePercent, int fadeOutSeconds, int holdTime, int fadeInSeconds )
+void GAME_EXPORT pfnFadeClientVolume( const edict_t *pEdict, int fadePercent, int fadeOutSeconds, int holdTime, int fadeInSeconds )
 {
 	sv_client_t	*cl;
 
@@ -3521,7 +3521,7 @@ pfnSetClientMaxspeed
 fakeclients can be changed speed to
 =============
 */
-void pfnSetClientMaxspeed( const edict_t *pEdict, float fNewMaxspeed )
+void GAME_EXPORT pfnSetClientMaxspeed( const edict_t *pEdict, float fNewMaxspeed )
 {
 	sv_client_t	*cl;
 
@@ -3541,7 +3541,7 @@ pfnRunPlayerMove
 
 =============
 */
-void pfnRunPlayerMove( edict_t *pClient, const float *v_angle, float fmove, float smove, float upmove, word buttons, byte impulse, byte msec )
+void GAME_EXPORT pfnRunPlayerMove( edict_t *pClient, const float *v_angle, float fmove, float smove, float upmove, word buttons, byte impulse, byte msec )
 {
 	sv_client_t	*cl, *oldcl;
 	usercmd_t		cmd;
@@ -3591,7 +3591,7 @@ pfnNumberOfEntities
 returns actual entity count
 =============
 */
-int pfnNumberOfEntities( void )
+int GAME_EXPORT pfnNumberOfEntities( void )
 {
 	int	i, total = 0;
 
@@ -3611,7 +3611,7 @@ pfnGetInfoKeyBuffer
 
 =============
 */
-char *pfnGetInfoKeyBuffer( edict_t *e )
+char *GAME_EXPORT pfnGetInfoKeyBuffer( edict_t *e )
 {
 	sv_client_t	*cl;
 
@@ -3634,7 +3634,7 @@ pfnSetClientKeyValue
 
 =============
 */
-void pfnSetClientKeyValue( int clientIndex, char *infobuffer, char *key, char *value )
+void GAME_EXPORT pfnSetClientKeyValue( int clientIndex, char *infobuffer, char *key, char *value )
 {
 	clientIndex -= 1;
 
@@ -3654,7 +3654,7 @@ pfnGetPhysicsKeyValue
 
 =============
 */
-const char *pfnGetPhysicsKeyValue( const edict_t *pClient, const char *key )
+const char *GAME_EXPORT pfnGetPhysicsKeyValue( const edict_t *pClient, const char *key )
 {
 	sv_client_t	*cl;
 
@@ -3674,7 +3674,7 @@ pfnSetPhysicsKeyValue
 
 =============
 */
-void pfnSetPhysicsKeyValue( const edict_t *pClient, const char *key, const char *value )
+void GAME_EXPORT pfnSetPhysicsKeyValue( const edict_t *pClient, const char *key, const char *value )
 {
 	sv_client_t	*cl;
 
@@ -3694,7 +3694,7 @@ pfnGetPhysicsInfoString
 
 =============
 */
-const char *pfnGetPhysicsInfoString( const edict_t *pClient )
+const char *GAME_EXPORT pfnGetPhysicsInfoString( const edict_t *pClient )
 {
 	sv_client_t	*cl;
 
@@ -3716,7 +3716,7 @@ register or returns already registered event id
 a type of event is ignored at this moment
 =============
 */
-word pfnPrecacheEvent( int type, const char *psz )
+word GAME_EXPORT pfnPrecacheEvent( int type, const char *psz )
 {
 	return (word)SV_EventIndex( psz );
 }
@@ -3727,7 +3727,7 @@ pfnPlaybackEvent
 
 =============
 */
-void SV_PlaybackEventFull( int flags, const edict_t *pInvoker, word eventindex, float delay, float *origin,
+void GAME_EXPORT SV_PlaybackEventFull( int flags, const edict_t *pInvoker, word eventindex, float delay, float *origin,
 	float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 )
 {
 	sv_client_t	*cl;
@@ -3939,7 +3939,7 @@ The client will interpolate the view position,
 so we can't use a single PVS point
 =============
 */
-byte *pfnSetFatPVS( const float *org )
+byte *GAME_EXPORT pfnSetFatPVS( const float *org )
 {
 	if( !sv.worldmodel->visdata || sv_novis->integer || !org || CL_DisableVisibility( ))
 		return Mod_DecompressVis( NULL );
@@ -3991,7 +3991,7 @@ The client will interpolate the hear position,
 so we can't use a single PHS point
 =============
 */
-byte *pfnSetFatPAS( const float *org )
+byte *GAME_EXPORT pfnSetFatPAS( const float *org )
 {
 	if( !sv.worldmodel->visdata || sv_novis->integer || !org || CL_DisableVisibility( ))
 		return Mod_DecompressVis( NULL );
@@ -4041,7 +4041,7 @@ pfnCheckVisibility
 
 =============
 */
-int pfnCheckVisibility( const edict_t *ent, byte *pset )
+int GAME_EXPORT pfnCheckVisibility( const edict_t *ent, byte *pset )
 {
 	int	i;
 
@@ -4097,7 +4097,7 @@ pfnCanSkipPlayer
 
 =============
 */
-int pfnCanSkipPlayer( const edict_t *player )
+int GAME_EXPORT pfnCanSkipPlayer( const edict_t *player )
 {
 	sv_client_t	*cl;
 
@@ -4113,7 +4113,7 @@ pfnGetCurrentPlayer
 
 =============
 */
-int pfnGetCurrentPlayer( void )
+int GAME_EXPORT pfnGetCurrentPlayer( void )
 {
 	if( svs.currentPlayer )
 		return (svs.currentPlayer - svs.clients);
@@ -4126,7 +4126,7 @@ pfnSetGroupMask
 
 =============
 */
-void pfnSetGroupMask( int mask, int op )
+void GAME_EXPORT pfnSetGroupMask( int mask, int op )
 {
 	svs.groupmask = mask;
 	svs.groupop = op;
@@ -4138,7 +4138,7 @@ pfnCreateInstancedBaseline
 
 =============
 */
-int pfnCreateInstancedBaseline( int classname, struct entity_state_s *baseline )
+int GAME_EXPORT pfnCreateInstancedBaseline( int classname, struct entity_state_s *baseline )
 {
 	int	i;
 
@@ -4160,7 +4160,7 @@ pfnEndSection
 
 =============
 */
-void pfnEndSection( const char *pszSection )
+void GAME_EXPORT pfnEndSection( const char *pszSection )
 {
 	if( !Q_stricmp( "oem_end_credits", pszSection ))
 		Host_Credits ();
@@ -4173,7 +4173,7 @@ pfnGetPlayerUserId
 
 =============
 */
-int pfnGetPlayerUserId( edict_t *e )
+int GAME_EXPORT pfnGetPlayerUserId( edict_t *e )
 {
 	sv_client_t	*cl;
 	int		i;
@@ -4200,7 +4200,7 @@ pfnGetPlayerStats
 
 =============
 */
-void pfnGetPlayerStats( const edict_t *pClient, int *ping, int *packet_loss )
+void GAME_EXPORT pfnGetPlayerStats( const edict_t *pClient, int *ping, int *packet_loss )
 {
 	sv_client_t	*cl;
 
@@ -4220,7 +4220,7 @@ pfnForceUnmodified
 
 =============
 */
-void pfnForceUnmodified( FORCE_TYPE type, float *mins, float *maxs, const char *filename )
+void GAME_EXPORT pfnForceUnmodified( FORCE_TYPE type, float *mins, float *maxs, const char *filename )
 {
 	sv_consistency_t	*pData;
 	int		i;
@@ -4265,7 +4265,7 @@ pfnVoice_GetClientListening
 
 =============
 */
-qboolean pfnVoice_GetClientListening( int iReceiver, int iSender )
+qboolean GAME_EXPORT pfnVoice_GetClientListening( int iReceiver, int iSender )
 {
 	int	iMaxClients = sv_maxclients->integer;
 
@@ -4286,7 +4286,7 @@ pfnVoice_SetClientListening
 
 =============
 */
-qboolean pfnVoice_SetClientListening( int iReceiver, int iSender, qboolean bListen )
+qboolean GAME_EXPORT pfnVoice_SetClientListening( int iReceiver, int iSender, qboolean bListen )
 {
 	int	iMaxClients = sv_maxclients->integer;
 
@@ -4318,7 +4318,7 @@ but Xash3D currently doesn't have any security checks
 return nullstring for now
 =============
 */
-const char *pfnGetPlayerAuthId( edict_t *e )
+const char *GAME_EXPORT pfnGetPlayerAuthId( edict_t *e )
 {
 	sv_client_t	*cl;
 	static string	result;
@@ -4353,7 +4353,7 @@ pfnGetFileSize
 returns the filesize in bytes
 =============
 */
-int pfnGetFileSize( char *filename )
+int GAME_EXPORT pfnGetFileSize( char *filename )
 {
 	return FS_FileSize( filename, false );
 }
@@ -4365,7 +4365,7 @@ pfnGetLocalizedStringLength
 used by CS:CZ (client stub)
 =============
 */
-int pfnGetLocalizedStringLength( const char *label )
+int GAME_EXPORT pfnGetLocalizedStringLength( const char *label )
 {
 	return 0;
 }
@@ -4377,7 +4377,7 @@ pfnQueryClientCvarValue
 request client cvar value
 =============
 */
-void pfnQueryClientCvarValue( const edict_t *player, const char *cvarName )
+void GAME_EXPORT pfnQueryClientCvarValue( const edict_t *player, const char *cvarName )
 {
 	sv_client_t *cl;
 
@@ -4407,7 +4407,7 @@ pfnQueryClientCvarValue2
 request client cvar value (bugfixed)
 =============
 */
-void pfnQueryClientCvarValue2( const edict_t *player, const char *cvarName, int requestID )
+void GAME_EXPORT pfnQueryClientCvarValue2( const edict_t *player, const char *cvarName, int requestID )
 {
 	sv_client_t *cl;
 
@@ -4437,7 +4437,7 @@ pfnCheckParm
 
 =============
 */
-static int pfnCheckParm( char *parm, char **ppnext )
+static int GAME_EXPORT pfnCheckParm( char *parm, char **ppnext )
 {
 	int i = Sys_CheckParm( parm );
 

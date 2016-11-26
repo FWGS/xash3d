@@ -27,7 +27,7 @@ COM_ParseFile
 text parser
 ==============
 */
-char *COM_ParseFile( char *data, char *token )
+char *GAME_EXPORT COM_ParseFile( char *data, char *token )
 {
 	int	c, len;
 
@@ -120,7 +120,7 @@ COM_FileSize
 
 =============
 */
-int COM_FileSize( const char *filename )
+int GAME_EXPORT COM_FileSize( const char *filename )
 {
 	return FS_FileSize( filename, false );
 }
@@ -131,7 +131,7 @@ COM_AddAppDirectoryToSearchPath
 
 =============
 */
-void COM_AddAppDirectoryToSearchPath( const char *pszBaseDir, const char *appName )
+void GAME_EXPORT COM_AddAppDirectoryToSearchPath( const char *pszBaseDir, const char *appName )
 {
 	string	dir;
 
@@ -153,7 +153,7 @@ Finds the file in the search path, copies over the name with the full path name.
 This doesn't search in the pak file.
 ===========
 */
-int COM_ExpandFilename( const char *fileName, char *nameOutBuffer, int nameOutBufferSize )
+int GAME_EXPORT COM_ExpandFilename( const char *fileName, char *nameOutBuffer, int nameOutBufferSize )
 {
 	const char	*path;
 	char		result[MAX_SYSPATH];
@@ -201,7 +201,7 @@ COM_MemFgets
 
 =============
 */
-char *COM_MemFgets( byte *pMemFile, int fileSize, int *filePos, char *pBuffer, int bufferSize )
+char *GAME_EXPORT COM_MemFgets( byte *pMemFile, int fileSize, int *filePos, char *pBuffer, int bufferSize )
 {
 	int	i, last, stop;
 
@@ -273,7 +273,7 @@ COM_LoadFileForMe
 
 =============
 */
-byte* COM_LoadFileForMe( const char *filename, int *pLength )
+byte* GAME_EXPORT COM_LoadFileForMe( const char *filename, int *pLength )
 {
 	string	name;
 	byte	*file, *pfile;
@@ -309,7 +309,7 @@ COM_LoadFile
 
 =============
 */
-byte *COM_LoadFile( const char *filename, int usehunk, int *pLength )
+byte *GAME_EXPORT COM_LoadFile( const char *filename, int usehunk, int *pLength )
 {
 	string	name;
 	byte	*file, *pfile;
@@ -347,7 +347,7 @@ COM_FreeFile
 
 =============
 */
-void COM_FreeFile( void *buffer )
+void GAME_EXPORT COM_FreeFile( void *buffer )
 {
 	free( buffer ); 
 }
@@ -358,7 +358,7 @@ pfnGetModelType
 
 =============
 */
-int pfnGetModelType( model_t *mod )
+int GAME_EXPORT pfnGetModelType( model_t *mod )
 {
 	if( !mod ) return mod_bad;
 	return mod->type;
@@ -370,7 +370,7 @@ pfnGetModelBounds
 
 =============
 */
-void pfnGetModelBounds( model_t *mod, float *mins, float *maxs )
+void GAME_EXPORT pfnGetModelBounds( model_t *mod, float *mins, float *maxs )
 {
 	if( mod )
 	{
@@ -391,7 +391,7 @@ pfnCvar_RegisterVariable
 
 =============
 */
-cvar_t *pfnCvar_RegisterVariable( const char *szName, const char *szValue, int flags )
+cvar_t *GAME_EXPORT pfnCvar_RegisterVariable( const char *szName, const char *szValue, int flags )
 {
 	return (cvar_t *)Cvar_Get( szName, szValue, flags|CVAR_CLIENTDLL, "client cvar" );
 }
@@ -403,7 +403,7 @@ pfnCVarGetPointer
 can return NULL
 =============
 */
-cvar_t *pfnCVarGetPointer( const char *szVarName )
+cvar_t *GAME_EXPORT pfnCVarGetPointer( const char *szVarName )
 {
 	cvar_t	*cvPtr;
 
@@ -418,7 +418,7 @@ pfnAddClientCommand
 
 =============
 */
-int pfnAddClientCommand( const char *cmd_name, xcommand_t func )
+int GAME_EXPORT pfnAddClientCommand( const char *cmd_name, xcommand_t func )
 {
 	if( !cmd_name || !*cmd_name )
 		return 0;
@@ -435,7 +435,7 @@ Con_Printf
 
 =============
 */
-void Con_Printf( char *szFmt, ... )
+void GAME_EXPORT Con_Printf( char *szFmt, ... )
 {
 	static char	buffer[16384];	// must support > 1k messages
 	va_list		args;
@@ -456,7 +456,7 @@ Con_DPrintf
 
 =============
 */
-void Con_DPrintf( char *szFmt, ... )
+void GAME_EXPORT Con_DPrintf( char *szFmt, ... )
 {
 	static char	buffer[16384];	// must support > 1k messages
 	va_list		args;
@@ -477,7 +477,7 @@ COM_CompareFileTime
 
 =============
 */
-int COM_CompareFileTime( const char *filename1, const char *filename2, int *iCompare )
+int GAME_EXPORT COM_CompareFileTime( const char *filename1, const char *filename2, int *iCompare )
 {
 	int	bRet = 0;
 
@@ -504,7 +504,7 @@ pfnGetGameDir
 
 =============
 */
-void pfnGetGameDir( char *szGetGameDir )
+void GAME_EXPORT pfnGetGameDir( char *szGetGameDir )
 {
 	if( !szGetGameDir ) return;
 	Q_sprintf( szGetGameDir, "%s", GI->gamedir );
@@ -517,7 +517,7 @@ pfnSequenceGet
 used by CS:CZ
 =============
 */
-void *pfnSequenceGet( const char *fileName, const char *entryName )
+void *GAME_EXPORT pfnSequenceGet( const char *fileName, const char *entryName )
 {
 	Msg( "Sequence_Get: file %s, entry %s\n", fileName, entryName );
 	return NULL;
@@ -530,7 +530,7 @@ pfnSequencePickSentence
 used by CS:CZ
 =============
 */
-void *pfnSequencePickSentence( const char *groupName, int pickMethod, int *picked )
+void *GAME_EXPORT pfnSequencePickSentence( const char *groupName, int pickMethod, int *picked )
 {
 	Msg( "Sequence_PickSentence: group %s, pickMethod %i\n", groupName, pickMethod );
 	*picked = 0;
@@ -545,7 +545,7 @@ pfnIsCareerMatch
 used by CS:CZ (client stub)
 =============
 */
-int pfnIsCareerMatch( void )
+int GAME_EXPORT GAME_EXPORT pfnIsCareerMatch( void )
 {
 	return 0;
 }
@@ -557,7 +557,7 @@ pfnRegisterTutorMessageShown
 only exists in PlayStation version
 =============
 */
-void pfnRegisterTutorMessageShown( int mid )
+void GAME_EXPORT pfnRegisterTutorMessageShown( int mid )
 {
 }
 
@@ -568,7 +568,7 @@ pfnGetTimesTutorMessageShown
 only exists in PlayStation version
 =============
 */
-int pfnGetTimesTutorMessageShown( int mid )
+int GAME_EXPORT pfnGetTimesTutorMessageShown( int mid )
 {
 	return 0;
 }
@@ -580,7 +580,7 @@ pfnProcessTutorMessageDecayBuffer
 only exists in PlayStation version
 =============
 */
-void pfnProcessTutorMessageDecayBuffer( int *buffer, int bufferLength )
+void GAME_EXPORT pfnProcessTutorMessageDecayBuffer( int *buffer, int bufferLength )
 {
 }
 
@@ -591,7 +591,7 @@ pfnConstructTutorMessageDecayBuffer
 only exists in PlayStation version
 =============
 */
-void pfnConstructTutorMessageDecayBuffer( int *buffer, int bufferLength )
+void GAME_EXPORT pfnConstructTutorMessageDecayBuffer( int *buffer, int bufferLength )
 {
 }
 
@@ -602,6 +602,6 @@ pfnResetTutorMessageDecayData
 only exists in PlayStation version
 =============
 */
-void pfnResetTutorMessageDecayData( void )
+void GAME_EXPORT pfnResetTutorMessageDecayData( void )
 {
 }
