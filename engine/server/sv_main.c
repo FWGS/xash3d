@@ -90,6 +90,7 @@ convar_t	*sv_fixmulticast;
 convar_t	*sv_allow_split;
 convar_t	*sv_allow_compress;
 convar_t	*sv_maxpacket;
+convar_t	*sv_forcesimulating;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -611,6 +612,9 @@ SV_IsSimulating
 */
 qboolean SV_IsSimulating( void )
 {
+	if ( sv_forcesimulating->integer )
+		return true;
+
 	if( sv.background && SV_Active() && CL_Active())
 	{
 		if( CL_IsInConsole( ))
@@ -931,6 +935,7 @@ void SV_Init( void )
 	sv_allow_compress = Cvar_Get( "sv_allow_compress", "1", CVAR_ARCHIVE, "allow Huffman compression on server" );
 	sv_allow_split= Cvar_Get( "sv_allow_split", "1", CVAR_ARCHIVE, "allow splitting packets on server" );
 	sv_maxpacket = Cvar_Get( "sv_maxpacket", "40000", CVAR_ARCHIVE, "limit cl_maxpacket for all clients" );
+	sv_forcesimulating = Cvar_Get( "sv_forcesimulating", "0", CVAR_ARCHIVE, "forcing world simulating when server don't have active players" );
 
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
