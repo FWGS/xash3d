@@ -1073,7 +1073,7 @@ void CL_ServerInfo( sizebuf_t *msg )
 
 	Q_strncpy( key, BF_ReadString( msg ), sizeof( key ));
 	Q_strncpy( value, BF_ReadString( msg ), sizeof( value ));
-	Info_SetValueForKey( cl.serverinfo, key, value );
+	Info_SetValueForKey( cl.serverinfo, key, value, sizeof( cl.serverinfo ) );
 }
 
 /*

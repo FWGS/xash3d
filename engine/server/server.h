@@ -34,6 +34,9 @@ GNU General Public License for more details.
 #define SV_UPDATE_MASK	(SV_UPDATE_BACKUP - 1)
 extern int SV_UPDATE_BACKUP;
 
+#define MAX_LOCALINFO 4096
+extern char localinfo[MAX_LOCALINFO];
+
 // hostflags
 #define SVF_SKIPLOCALHOST	BIT( 0 )
 #define SVF_PLAYERSONLY	BIT( 1 )

@@ -108,6 +108,8 @@ convar_t	*sv_skyspeed;
 
 void Master_Shutdown( void );
 
+char localinfo[MAX_LOCALINFO];
+
 //============================================================================
 
 /*
@@ -782,30 +784,30 @@ void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 
 	challenge = BF_ReadUBitLong( msg, sizeof( uint ) << 3 );
 
-	Info_SetValueForKey(s, "protocol",  va( "%d", PROTOCOL_VERSION ) ); // protocol version
-	Info_SetValueForKey(s, "challenge", va( "%u", challenge ) ); // challenge number
-	Info_SetValueForKey(s, "players",   va( "%d", clients ) ); // current player number, without bots
-	Info_SetValueForKey(s, "max",       sv_maxclients->string ); // max_players
-	Info_SetValueForKey(s, "bots",      va( "%d", bots ) ); // bot count
-	Info_SetValueForKey(s, "gamedir",   GI->gamedir ); // gamedir
-	Info_SetValueForKey(s, "map",       sv.name ); // current map
+	Info_SetValueForKey(s, "protocol",  va( "%d", PROTOCOL_VERSION ), sizeof( s ) ); // protocol version
+	Info_SetValueForKey(s, "challenge", va( "%u", challenge ), sizeof( s )  ); // challenge number
+	Info_SetValueForKey(s, "players",   va( "%d", clients ), sizeof( s ) ); // current player number, without bots
+	Info_SetValueForKey(s, "max",       sv_maxclients->string, sizeof( s ) ); // max_players
+	Info_SetValueForKey(s, "bots",      va( "%d", bots ), sizeof( s ) ); // bot count
+	Info_SetValueForKey(s, "gamedir",   GI->gamedir, sizeof( s ) ); // gamedir
+	Info_SetValueForKey(s, "map",       sv.name, sizeof( s ) ); // current map
 	if( Host_IsDedicated() )
-		Info_SetValueForKey(s, "type",  "d" ); // dedicated
+		Info_SetValueForKey(s, "type",  "d", sizeof( s ) ); // dedicated
 	else
-		Info_SetValueForKey(s, "type",  "l" ); // local
-	Info_SetValueForKey(s, "password",  "0" ); // is password set
+		Info_SetValueForKey(s, "type",  "l", sizeof( s ) ); // local
+	Info_SetValueForKey(s, "password",  "0", sizeof( s ) ); // is password set
 
 #ifdef _WIN32
-	Info_SetValueForKey(s, "os",        "w" ); // Windows
+	Info_SetValueForKey(s, "os",        "w", sizeof( s ) ); // Windows
 #else
-	Info_SetValueForKey(s, "os",        "l" ); // Linux
+	Info_SetValueForKey(s, "os",        "l", sizeof( s ) ); // Linux
 #endif
 
-	Info_SetValueForKey(s, "secure",    "0" ); // server anti-cheat
-	Info_SetValueForKey(s, "lan",       "0" ); // LAN servers doesn't send info to master
-	Info_SetValueForKey(s, "version",   XASH_VERSION ); // server region. 255 -- all regions
-	Info_SetValueForKey(s, "region",    "255" ); // server region. 255 -- all regions
-	Info_SetValueForKey(s, "product",   GI->gamefolder ); // product? Where is the difference with gamedir?
+	Info_SetValueForKey(s, "secure",    "0", sizeof( s ) ); // server anti-cheat
+	Info_SetValueForKey(s, "lan",       "0", sizeof( s ) ); // LAN servers doesn't send info to master
+	Info_SetValueForKey(s, "version",   XASH_VERSION, sizeof( s ) ); // server region. 255 -- all regions
+	Info_SetValueForKey(s, "region",    "255", sizeof( s ) ); // server region. 255 -- all regions
+	Info_SetValueForKey(s, "product",   GI->gamefolder, sizeof( s ) ); // product? Where is the difference with gamedir?
 
 	NET_SendPacket( NS_SERVER, Q_strlen( s ), s, from );
 }
