@@ -67,6 +67,7 @@ void S_TransferPaintBuffer( int endtime )
 	int	*snd_p, snd_linear_count;
 	int	lpos, lpaintedtime;
 	int	i, val, sampleMask;
+	int ls, rs;
 	short	*snd_out;
 	dword	*pbuf;
 
@@ -74,6 +75,19 @@ void S_TransferPaintBuffer( int endtime )
 	snd_p = (int *)PAINTBUFFER;
 	lpaintedtime = paintedtime;
 	sampleMask = ((dma.samples >> 1) - 1);
+
+	if( s_reverse_channels->integer )
+	{
+		// this will reverse channel position in dma buffer
+		ls = 1;
+		rs = 0;
+	}
+	else
+	{
+		// default
+		ls = 0;
+		rs = 1;
+	}
 
 	while( lpaintedtime < endtime )
 	{
@@ -91,18 +105,22 @@ void S_TransferPaintBuffer( int endtime )
 		// write a linear blast of samples
 		for( i = 0; i < snd_linear_count; i += 2 )
 		{
-			val = (snd_p[i+0] * 256) >> 8;
+			val = ( snd_p[i + ls] * 256 ) >> 8;
 
-			if( val > 0x7fff ) snd_out[i+0] = 0x7fff;
-			else if( val < (short)0x8000 )
-				snd_out[i+0] = (short)0x8000;
-			else snd_out[i+0] = val;
+			if ( val > 0x7fff )
+				snd_out[i + 0] = 0x7fff;
+			else if ( val < (short)0x8000 )
+				snd_out[i + 0] = (short)0x8000;
+			else
+				snd_out[i + 0] = val;
 
-			val = (snd_p[i+1] * 256) >> 8;
-			if( val > 0x7fff ) snd_out[i+1] = 0x7fff;
-			else if( val < (short)0x8000 )
-				snd_out[i+1] = (short)0x8000;
-			else snd_out[i+1] = val;
+			val = ( snd_p[i + rs] * 256 ) >> 8;
+			if ( val > 0x7fff )
+				snd_out[i + 1] = 0x7fff;
+			else if ( val < (short)0x8000 )
+				snd_out[i + 1] = (short)0x8000;
+			else
+				snd_out[i + 1] = val;
 		}
 
 		snd_p += snd_linear_count;
