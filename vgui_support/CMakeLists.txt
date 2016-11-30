@@ -30,12 +30,10 @@ include_directories (. ../common ../engine ../engine/common ../engine/client ../
 
 add_library (${VGUI_SUPPORT_LIBRARY} MODULE ${VGUI_SUPPORT_SOURCES})
 
-if(WIN32)
-	
-	target_link_libraries(${VGUI_SUPPORT_LIBRARY} 
-${HL_SDK_DIR}/utils/vgui/lib/win32_vc6/vgui.lib)
+if(WIN32)	
+	target_link_libraries(${VGUI_SUPPORT_LIBRARY} ${HL_SDK_DIR}/utils/vgui/lib/win32_vc6/vgui.lib)
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    target_link_libraries(${VGUI_SUPPORT_LIBRARY} -L${HL_SDK_DIR}/linux/release/ ${HL_SDK_DIR}/linux/release/vgui.dylib)
+	target_link_libraries(${VGUI_SUPPORT_LIBRARY} ${HL_SDK_DIR}/linux/release/vgui.dylib)
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
     #Make GCC don't put full path to vgui.so
@@ -46,7 +44,6 @@ endif()
 
 add_definitions(-DXASH_VGUI)
 set_target_properties (${VGUI_SUPPORT_SHARED} PROPERTIES
-	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
 	POSITION_INDEPENDENT_CODE 1)
 
 install( TARGETS ${VGUI_SUPPORT_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d
