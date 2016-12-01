@@ -496,26 +496,24 @@ NetGraph_DrawTextFields
 void NetGraph_DrawTextFields( int x, int y, int count, float avg, int packet_loss, int packet_choke )
 {
 	static int lastout;
-	float framerate = 0;
 
-	float latency;
 	rgba_t colors = { 0.9 * 255, 0.9 * 255, 0.7 * 255, 255 };
 
+	float latency = count > 0 ? max( 0,  avg / count - 0.5 * host.frametime - 1000.0 / cl_updaterate->value ) : 0;
 
-	latency = count > 0 ? max( 0,  avg / count - 0.5 * host.frametime - 1000.0 / cl_updaterate->value ) : 0;
+	float framerate = 1 / host.realframetime;
+	int i = ( cls.netchan.outgoing_sequence - 1 ) & TIMINGS_MASK;
 
-	framerate = 0.5 * host.realframetime + 0.5 * framerate;
-
-	Con_DrawString( x, y - net_graphheight->integer, va( "%.1ffps" , 0.5 / framerate ), colors );
+	Con_DrawString( x, y - net_graphheight->integer, va( "%.1ffps" , framerate ), colors );
 	Con_DrawString( x + 75, y - net_graphheight->integer, va( "%i ms" , (int)latency ), colors );
 	Con_DrawString( x + 150, y - net_graphheight->integer, va( "%i/s" , cl_updaterate->integer ), colors );
 
-	if( cmdinfo[( cls.netchan.outgoing_sequence - 1 ) & TIMINGS_MASK].size )
-		lastout =  cmdinfo[( cls.netchan.outgoing_sequence - 1 ) & TIMINGS_MASK].size;
+	if( cmdinfo[i].size )
+		lastout =  cmdinfo[i].size;
 
 	Con_DrawString( x, y - net_graphheight->integer + 15,
 		va( "in :  %i %.2f k/s",
-			graph[cls.netchan.incoming_sequence & TIMINGS_MASK].msgbytes,
+			graph[i].msgbytes,
 			cls.netchan.flow[FLOW_INCOMING].avgkbytespersec ),
 		colors );
 	Con_DrawString( x, y - net_graphheight->integer + 30,
