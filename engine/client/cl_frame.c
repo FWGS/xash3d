@@ -133,10 +133,28 @@ int CL_InterpolateModel( cl_entity_t *e )
 	VectorCopy( e->curstate.origin, e->origin );
 	VectorCopy( e->curstate.angles, e->angles );
 
-	if ( cls.timedemo || !e->model || ( e->model->name[0] == '*' && !r_bmodelinterp->integer ) || RP_LOCALCLIENT(e) || cl.maxclients == 1 )
+	// disable interpolating in singleplayer
+	if( cls.timedemo || cl.maxclients == 1 )
 		return 1;
 
+	// don't inerpolate modelless entities or bmodels
+	if( !e->model || ( e->model->type == mod_brush && !r_bmodelinterp->integer ) )
+		return 1;
+
+	// skip local client
+	if( RP_LOCALCLIENT(e) )
+		return 1;
+
+	// skip entity on which we ride
 	if( cl.predicted.moving && cl.predicted.onground == e->index )
+		return 1;
+
+	// don't interpolate new entities(TEST IT!!!1)
+	if( e->prevstate.messagenum == e->curstate.messagenum )
+		return 1;
+
+	// don't interpolate MOVETYPE_NONE players. They should be dead(TEST IT!!!111)
+	if( e->player && ( e->curstate.movetype == MOVETYPE_NONE || e->prevstate.movetype == MOVETYPE_NONE ) )
 		return 1;
 
 	t = cl.time - cl_interp->value;
