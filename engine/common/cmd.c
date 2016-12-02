@@ -145,7 +145,7 @@ void Cbuf_InsertText( const char *text )
 Cbuf_Execute
 ============
 */
-void Cbuf_Execute( void )
+void GAME_EXPORT Cbuf_Execute( void )
 {
 	int		i;
 	char	*text;
@@ -489,7 +489,7 @@ cmd_source_t		cmd_source;
 Cmd_Argc
 ============
 */
-int Cmd_Argc( void )
+int GAME_EXPORT Cmd_Argc( void )
 {
 	return cmd_argc;
 }
@@ -499,7 +499,7 @@ int Cmd_Argc( void )
 Cmd_Argv
 ============
 */
-char *Cmd_Argv( int arg )
+char *GAME_EXPORT Cmd_Argv( int arg )
 {
 	if( arg >= cmd_argc )
 		return "";
@@ -511,7 +511,7 @@ char *Cmd_Argv( int arg )
 Cmd_Args
 ============
 */
-char *Cmd_Args( void )
+char *GAME_EXPORT Cmd_Args( void )
 {
 	return cmd_args;
 }
@@ -521,7 +521,7 @@ char *Cmd_Args( void )
 Cmd_AliasGetList
 ============
 */
-cmdalias_t *Cmd_AliasGetList( void )
+cmdalias_t *GAME_EXPORT Cmd_AliasGetList( void )
 {
 	return cmd_alias;
 }
@@ -531,7 +531,7 @@ cmdalias_t *Cmd_AliasGetList( void )
 Cmd_GetList
 ============
 */
-cmd_t *Cmd_GetFirstFunctionHandle( void )
+cmd_t *GAME_EXPORT Cmd_GetFirstFunctionHandle( void )
 {
 	return cmd_functions;
 }
@@ -541,7 +541,7 @@ cmd_t *Cmd_GetFirstFunctionHandle( void )
 Cmd_GetNext
 ============
 */
-cmd_t *Cmd_GetNextFunctionHandle( cmd_t *cmd )
+cmd_t *GAME_EXPORT Cmd_GetNextFunctionHandle( cmd_t *cmd )
 {
 	return (cmd) ? cmd->next : NULL;
 }
@@ -551,7 +551,7 @@ cmd_t *Cmd_GetNextFunctionHandle( cmd_t *cmd )
 Cmd_GetName
 ============
 */
-char *Cmd_GetName( cmd_t *cmd )
+char *GAME_EXPORT Cmd_GetName( cmd_t *cmd )
 {
 	return cmd->name;
 }
@@ -667,7 +667,7 @@ void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *cmd_
 Cmd_AddGameCommand
 ============
 */
-void Cmd_AddGameCommand( const char *cmd_name, xcommand_t function )
+void GAME_EXPORT Cmd_AddGameCommand( const char *cmd_name, xcommand_t function )
 {
 	cmd_t	*cmd;
 	cmd_t	*prev, *current;

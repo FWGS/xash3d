@@ -26,7 +26,7 @@ convar_t	*userinfo, *physinfo, *serverinfo, *renderinfo;
 Cvar_GetList
 ============
 */
-cvar_t *Cvar_GetList( void )
+cvar_t *GAME_EXPORT Cvar_GetList( void )
 {
 	return (cvar_t *)cvar_vars;
 }
@@ -83,7 +83,7 @@ convar_t *Cvar_FindVar( const char *var_name )
 Cvar_VariableValue
 ============
 */
-float Cvar_VariableValue( const char *var_name )
+float GAME_EXPORT Cvar_VariableValue( const char *var_name )
 {
 	convar_t	*var;
 
@@ -112,7 +112,7 @@ int Cvar_VariableInteger( const char *var_name )
 Cvar_VariableString
 ============
 */
-char *Cvar_VariableString( const char *var_name )
+char *GAME_EXPORT Cvar_VariableString( const char *var_name )
 {
 	convar_t	*var;
 
@@ -285,7 +285,7 @@ Cvar_RegisterVariable
 Adds a freestanding variable to the variable list.
 ============
 */
-void Cvar_RegisterVariable( cvar_t *var )
+void GAME_EXPORT Cvar_RegisterVariable( cvar_t *var )
 {
 	convar_t	*current, *next, *cvar;
 
@@ -546,7 +546,7 @@ convar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force )
 Cvar_Set
 ============
 */
-void Cvar_Set( const char *var_name, const char *value )
+void GAME_EXPORT Cvar_Set( const char *var_name, const char *value )
 {
 	Cvar_Set2( var_name, value, true );
 }
@@ -626,7 +626,7 @@ void Cvar_FullSet( const char *var_name, const char *value, int flags )
 Cvar_DirectSet
 ============
 */
-void Cvar_DirectSet( cvar_t *var, const char *value )
+void GAME_EXPORT Cvar_DirectSet( cvar_t *var, const char *value )
 {
 	cvar_t		*test;
 	const char	*pszValue;
@@ -724,7 +724,7 @@ void Cvar_DirectSet( cvar_t *var, const char *value )
 Cvar_SetFloat
 ============
 */
-void Cvar_SetFloat( const char *var_name, float value )
+void GAME_EXPORT Cvar_SetFloat( const char *var_name, float value )
 {
 	char	val[32];
 

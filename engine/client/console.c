@@ -409,7 +409,7 @@ void Con_Bottom( void )
 Con_Visible
 ================
 */
-qboolean Con_Visible( void )
+qboolean GAME_EXPORT Con_Visible( void )
 {
 	return (con.displayFrac != 0.0f);
 }
@@ -592,7 +592,7 @@ int Con_UtfProcessCharForce( int in )
 	return 0;
 }
 
-int Con_UtfProcessChar( int in )
+int GAME_EXPORT Con_UtfProcessChar( int in )
 {
 	if( !g_utf8 )
 		return in;
@@ -949,7 +949,7 @@ Con_NPrint
 Draw a single debug line with specified height
 ================
 */
-void Con_NPrintf( int idx, char *fmt, ... )
+void GAME_EXPORT Con_NPrintf( int idx, char *fmt, ... )
 {
 	va_list	args;
 
@@ -976,7 +976,7 @@ Con_NXPrint
 Draw a single debug line with specified height, color and time to live
 ================
 */
-void Con_NXPrintf( con_nprint_t *info, char *fmt, ... )
+void GAME_EXPORT Con_NXPrintf( con_nprint_t *info, char *fmt, ... )
 {
 	va_list	args;
 

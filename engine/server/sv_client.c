@@ -337,7 +337,7 @@ SV_FakeConnect
 A connection request that came from the game module
 ==================
 */
-edict_t *SV_FakeConnect( const char *netname )
+edict_t *GAME_EXPORT SV_FakeConnect( const char *netname )
 {
 	int		i, edictnum;
 	char		userinfo[MAX_INFO_STRING];
