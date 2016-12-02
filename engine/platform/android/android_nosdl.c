@@ -12,12 +12,10 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
- #if defined(__ANDROID__) && !defined( XASH_SDL )
-
+#include "common.h"
+#if XASH_VIDEO == VIDEO_ANDROID
 #include "nanogl.h" //use NanoGL
 #include <pthread.h>
-#include "common.h"
 #include "input.h"
 #include "joyinput.h"
 #include "touch.h"
@@ -236,9 +234,21 @@ void Android_RunEvents()
 
 		case event_key_down:
 			Key_Event( events.queue[i].arg, true );
+
+			if( events.queue[i].arg == K_AUX31 || events.queue[i].arg == K_AUX29 )
+			{
+				host.force_draw_version = true;
+				host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
+			}
 			break;
 		case event_key_up:
 			Key_Event( events.queue[i].arg, false );
+
+			if( events.queue[i].arg == K_AUX31 || events.queue[i].arg == K_AUX29 )
+			{
+				host.force_draw_version = true;
+				host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
+			}
 			break;
 
 		case event_set_pause:
@@ -250,6 +260,8 @@ void Android_RunEvents()
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 1 );
 				Android_UpdateSurface();
 				Android_SwapInterval( Cvar_VariableInteger( "gl_swapinterval" ) );
+				host.force_draw_version = true;
+				host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
 			}
 			if( events.queue[i].arg )
 			{

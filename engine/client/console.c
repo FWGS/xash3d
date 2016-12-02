@@ -1748,7 +1748,10 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 
 		for( i = 0; i < stringLen; i++ )
 			width += Con_DrawCharacter( start + width, 0, curbuild[i], color );
+
+		host.force_draw_version_time = 0;
 	}
+
 
 	// draw the text
 	con.vislines = lines;

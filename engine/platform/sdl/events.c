@@ -89,19 +89,20 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 		{
 			host.force_draw_version = true;
 			host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
+			break;
 		}
 		case SDL_SCANCODE_UNKNOWN:
 		{
-			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n");
+			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n" );
 			return;
 		}
 		default:
-			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown key: %s = %i\n", SDL_GetScancodeName(keynum), keynum );
+			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown key: %s = %i\n", SDL_GetScancodeName( keynum ), keynum );
 			return;
 		}
 	}
 
-	Key_Event(keynum, down);
+	Key_Event( keynum, down );
 }
 
 void SDLash_MouseEvent(SDL_MouseButtonEvent button)
@@ -337,6 +338,8 @@ void SDLash_EventFilter( void *ev )
 			break;
 		case SDL_WINDOWEVENT_RESTORED:
 			host.state = HOST_FRAME;
+			host.force_draw_version = true;
+			host.force_draw_version_time = host.realtime + 2;
 			break;
 		case SDL_WINDOWEVENT_FOCUS_GAINED:
 			host.state = HOST_FRAME;
@@ -345,6 +348,8 @@ void SDLash_EventFilter( void *ev )
 			{
 				S_Activate( true );
 			}
+			host.force_draw_version = true;
+			host.force_draw_version_time = host.realtime + 2;
 			break;
 		case SDL_WINDOWEVENT_MINIMIZED:
 			host.state = HOST_SLEEP;
@@ -356,6 +361,8 @@ void SDLash_EventFilter( void *ev )
 			{
 				S_Activate( false );
 			}
+			host.force_draw_version = true;
+			host.force_draw_version_time = host.realtime + 1;
 			break;
 		case SDL_WINDOWEVENT_CLOSE:
 			Sys_Quit();
