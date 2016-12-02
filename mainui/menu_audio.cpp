@@ -37,6 +37,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_MSGHINT			9
 #define ID_VIBRATION		10
 #define ID_VIBRATION_ENABLE	11
+#define ID_REVERSE_CHANNELS 12
+
 typedef struct
 {
 	float		soundVolume;
@@ -63,6 +65,7 @@ typedef struct
 	menuCheckBox_s	noDSP;
 	menuCheckBox_s	muteFocusLost;
 	menuCheckBox_s	vibrationEnable;
+	menuCheckBox_s  reverseChannels;
 } uiAudio_t;
 
 static uiAudio_t		uiAudio;
@@ -91,6 +94,9 @@ static void UI_Audio_GetConfig( void )
 	if( CVAR_GET_FLOAT("vibration_enable" ))
 		uiAudio.vibrationEnable.enabled = 1;
 
+	if( CVAR_GET_FLOAT("s_reverse_channels" ))
+		uiAudio.reverseChannels.enabled = 1;
+
 	// save initial values
 	uiAudioInitial.soundVolume = uiAudio.soundVolume.curValue;
 	uiAudioInitial.musicVolume = uiAudio.musicVolume.curValue;
@@ -112,6 +118,7 @@ static void UI_Audio_SetConfig( void )
 	CVAR_SET_FLOAT( "dsp_off", uiAudio.noDSP.enabled );
 	CVAR_SET_FLOAT( "snd_mute_losefocus", uiAudio.muteFocusLost.enabled );
 	CVAR_SET_FLOAT( "vibration_enable", uiAudio.vibrationEnable.enabled );
+	CVAR_SET_FLOAT( "s_reverse_channels", uiAudio.reverseChannels.enabled );
 }
 
 /*
@@ -279,22 +286,31 @@ static void UI_Audio_Init( void )
 	uiAudio.vibrationEnable.generic.type = QMTYPE_CHECKBOX;
 	uiAudio.vibrationEnable.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiAudio.vibrationEnable.generic.name = "Enable vibration";
-	uiAudio.vibrationEnable.generic.x = 320;
-	uiAudio.vibrationEnable.generic.y = 620;
+	uiAudio.vibrationEnable.generic.x = 700;
+	uiAudio.vibrationEnable.generic.y = 470;
 	uiAudio.vibrationEnable.generic.callback = UI_Audio_Callback;
-	uiAudio.vibrationEnable.generic.statusText = "enable vibration";
+	uiAudio.vibrationEnable.generic.statusText = "Enable vibration";
 
 	uiAudio.vibration.generic.id = ID_VIBRATION;
 	uiAudio.vibration.generic.type = QMTYPE_SLIDER;
 	uiAudio.vibration.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiAudio.vibration.generic.name = "Vibration";
-	uiAudio.vibration.generic.x = 320;
-	uiAudio.vibration.generic.y = 720;
+	uiAudio.vibration.generic.x = 700;
+	uiAudio.vibration.generic.y = 570;
 	uiAudio.vibration.generic.callback = UI_Audio_Callback;
 	uiAudio.vibration.generic.statusText = "Vibration length";
 	uiAudio.vibration.minValue = 0.0;
 	uiAudio.vibration.maxValue = 1.0;
 	uiAudio.vibration.range = 0.05f;
+
+	uiAudio.reverseChannels.generic.id = ID_REVERSE_CHANNELS;
+	uiAudio.reverseChannels.generic.type = QMTYPE_CHECKBOX;
+	uiAudio.reverseChannels.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
+	uiAudio.reverseChannels.generic.name = "Reverse audio channels";
+	uiAudio.reverseChannels.generic.x = 320;
+	uiAudio.reverseChannels.generic.y = 620;
+	uiAudio.reverseChannels.generic.callback = UI_Audio_Callback;
+	uiAudio.reverseChannels.generic.statusText = "Reverse audio channels";
 
 	UI_Audio_GetConfig();
 
@@ -307,6 +323,7 @@ static void UI_Audio_Init( void )
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.lerping );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.noDSP );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.muteFocusLost );
+	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.reverseChannels );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.vibrationEnable );
 	UI_AddItem( &uiAudio.menu, (void *)&uiAudio.vibration );
 }

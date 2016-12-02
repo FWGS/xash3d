@@ -573,7 +573,7 @@ void GL_SetExtension( int r_ext, int enable )
 	if( r_ext >= 0 && r_ext < GL_EXTCOUNT )
 		glConfig.extension[r_ext] = enable ? GL_TRUE : GL_FALSE;
 	else MsgDev( D_ERROR, "GL_SetExtension: invalid extension %d\n", r_ext );
-}
+} 
 
 /*
 =================
@@ -924,13 +924,74 @@ void GL_InitCommands( void )
 	Cmd_AddCommand( "r_info", R_RenderInfo_f, "display renderer info" );
 	Cmd_AddCommand( "texturelist", R_TextureList_f, "display loaded textures list" );
 }
-
+ 
 void GL_RemoveCommands( void )
 {
 	Cmd_RemoveCommand( "r_info");
 	Cmd_RemoveCommand( "texturelist" );
 }
 
+#ifdef WIN32
+typedef enum _XASH_DPI_AWARENESS
+{
+	XASH_DPI_UNAWARE = 0,
+	XASH_SYSTEM_DPI_AWARE = 1,
+	XASH_PER_MONITOR_DPI_AWARE = 2
+} XASH_DPI_AWARENESS;
+
+void Win_SetDPIAwareness( void )
+{
+	HMODULE hModule;
+	HRESULT ( __stdcall *pSetProcessDpiAwareness )( XASH_DPI_AWARENESS );
+	BOOL ( __stdcall *pSetProcessDPIAware )( void );
+	BOOL bSuccess = FALSE;
+
+	if( ( hModule = LoadLibrary( "shcore.dll" ) ) )
+	{
+		if( ( pSetProcessDpiAwareness = (void*)GetProcAddress( hModule, "SetProcessDpiAwareness" ) ) )
+		{
+			// I hope SDL don't handle WM_DPICHANGED message
+			HRESULT hResult = pSetProcessDpiAwareness( XASH_SYSTEM_DPI_AWARE );
+
+			if( hResult == S_OK )
+			{
+				MsgDev( D_NOTE, "SetDPIAwareness: Success\n" );
+				bSuccess = TRUE;
+			}
+			else if( hResult = E_INVALIDARG ) MsgDev( D_NOTE, "SetDPIAwareness: Invalid argument\n" );
+			else if( hResult == E_ACCESSDENIED ) MsgDev( D_NOTE, "SetDPIAwareness: Access Denied\n" );
+		}
+		else MsgDev( D_NOTE, "SetDPIAwareness: Can't get SetProcessDpiAwareness\n" );
+		FreeLibrary( hModule );
+	}
+	else MsgDev( D_NOTE, "SetDPIAwareness: Can't load shcore.dll\n" );
+
+
+	if( !bSuccess )
+	{
+		MsgDev( D_NOTE, "SetDPIAwareness: Trying SetProcessDPIAware...\n" );
+
+		if( ( hModule = LoadLibrary( "user32.dll" ) ) )
+		{
+			if( ( pSetProcessDPIAware = ( void* )GetProcAddress( hModule, "SetProcessDPIAware" ) ) )
+			{
+				// I hope SDL don't handle WM_DPICHANGED message
+				BOOL hResult = pSetProcessDPIAware();
+
+				if( hResult )
+				{
+					MsgDev( D_NOTE, "SetDPIAwareness: Success\n" );
+					bSuccess = TRUE;
+				}
+				else MsgDev( D_NOTE, "SetDPIAwareness: fail\n" );
+			}
+			else MsgDev( D_NOTE, "SetDPIAwareness: Can't get SetProcessDPIAware\n" );
+			FreeLibrary( hModule );
+		}
+		else MsgDev( D_NOTE, "SetDPIAwareness: Can't load user32.dll\n" );
+	}
+}
+#endif
 /*
 ===============
 R_Init
@@ -946,6 +1007,10 @@ qboolean R_Init( void )
 
 	GL_InitCommands();
 	GL_SetDefaultState();
+
+#ifdef WIN32
+	Win_SetDPIAwareness( );
+#endif
 
 	// create the window and set up the context
 	if( !R_Init_OpenGL( ))

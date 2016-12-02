@@ -654,13 +654,11 @@ void GL_InitExtensions( void )
 		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_NV;
 		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_NV, &glConfig.max_2d_rectangle_size );
 	}
-#ifndef __ANDROID__
 	else if( Q_strstr( glConfig.extensions_string, "GL_EXT_texture_rectangle" ))
 	{
 		glConfig.texRectangle = GL_TEXTURE_RECTANGLE_EXT;
 		pglGetIntegerv( GL_MAX_RECTANGLE_TEXTURE_SIZE_EXT, &glConfig.max_2d_rectangle_size );
 	}
-#endif
 	else glConfig.texRectangle = glConfig.max_2d_rectangle_size = 0; // no rectangle
 
 	glConfig.max_2d_texture_size = 0;
@@ -1047,6 +1045,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		{
 			// info.info.info.info.info... Holy shit, SDL?
 			SetClassLong( info.info.win.window, GCL_HICON, (LONG)ico );
+
+
 		}
 	}
 #endif

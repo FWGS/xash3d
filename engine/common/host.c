@@ -862,6 +862,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		if( !( baseDir = SDL_GetBasePath() ) )
 			Sys_Error( "couldn't determine current directory: %s", SDL_GetError() );
 		Q_strncpy( host.rootdir, baseDir, sizeof( host.rootdir ) );
+		SDL_free( baseDir );
 		#else
 		if( !getcwd( host.rootdir, sizeof(host.rootdir) ) )
 			host.rootdir[0] = 0;

@@ -85,6 +85,11 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 		case SDL_SCANCODE_SEMICOLON: keynum = ';'; break;
 		case SDL_SCANCODE_APOSTROPHE: keynum = '\''; break;
 		case SDL_SCANCODE_COMMA: keynum = ','; break;
+		case SDL_SCANCODE_PRINTSCREEN:
+		{
+			host.force_draw_version = true;
+			host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
+		}
 		case SDL_SCANCODE_UNKNOWN:
 		{
 			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n");

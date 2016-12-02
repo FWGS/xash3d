@@ -4210,7 +4210,7 @@ void GAME_EXPORT pfnGetPlayerStats( const edict_t *pClient, int *ping, int *pack
 		return;
 	}
 
-	if( ping ) *ping = cl->ping * 1000;	// this is should be cl->latency not ping!
+	if( ping ) *ping = cl->latency * 1000; // this is should be cl->latency not ping!
 	if( packet_loss ) *packet_loss = cl->packet_loss;
 }
 	

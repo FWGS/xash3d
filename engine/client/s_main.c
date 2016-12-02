@@ -59,6 +59,7 @@ convar_t		*s_refdb;
 convar_t		*s_cull;		// cull sounds by geometry
 convar_t		*s_test;		// cvar for testing new effects
 convar_t		*s_phs;
+convar_t		*s_reverse_channels;
 
 /*
 =============================================================================
@@ -1463,7 +1464,6 @@ void S_StopAllSounds( void )
 	S_InitAmbientChannels ();
 
 	S_ClearBuffer ();
-	S_StopBackgroundTrack();
 
 	// clear any remaining soundfade
 	Q_memset( &soundfade, 0, sizeof( soundfade ));
@@ -1799,6 +1799,7 @@ qboolean S_Init( void )
 	s_cull = Cvar_Get( "s_cull", "0", CVAR_ARCHIVE, "cull sounds by geometry" );
 	s_test = Cvar_Get( "s_test", "0", 0, "engine developer cvar for quick testing of new features" );
 	s_phs = Cvar_Get( "s_phs", "0", CVAR_ARCHIVE, "cull sounds by PHS" );
+	s_reverse_channels = Cvar_Get( "s_reverse_channels", "0", CVAR_ARCHIVE, "reverse left and right channels" );
 
 #if XASH_SOUND != SOUND_NULL
 	if( Sys_CheckParm( "-nosound" ))

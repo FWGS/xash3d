@@ -49,7 +49,7 @@ cond_list_append( _XASH_CLIENT XASH_ENGINE_SOURCES XASH_ENGINE_CLIENT_SOURCES )
 
 include_directories ( . common/ common/imagelib/  common/soundlib/ client/ client/vgui/ server/ ../common ../pm_shared )
 
-add_definitions( -DCOLORIZE_CONSOLE -DGDB_BREAK -DXASH_FORCEINLINE )
+add_definitions( -DXASH_FORCEINLINE )
 
 # Set executable or library
 if( XASH_SINGLE_BINARY )
@@ -59,6 +59,18 @@ else( )
 endif( )
 
 # ----- Conditions -----
+
+if( MSVC )
+	add_definitions( -D_CRT_SECURE_NO_WARNINGS 
+		-D_CRT_NONSTDC_NO_DEPRECATE 
+		-DXASH_CRASHHANDLER=2 ) # dbghelp crashhandler
+else()
+	add_definitions( -DUSE_SELECT -DCOLORIZE_CONSOLE )
+endif() 
+
+if( LINUX )
+	add_definitions( -DGDB_BREAK )
+endif()
 
 if( NOT XASH_64BIT )
 	add_definitions( -DXASH_FASTSTR )
@@ -136,11 +148,22 @@ else( )
 endif( )
 
 
-target_link_libraries( ${XASH_ENGINE_LIBRARY} -lm )
+if( NOT WIN32 )
+	target_link_libraries( ${XASH_ENGINE_LIBRARY} -lm )
+endif( )
 
-set_target_properties( ${XASH_ENGINE_SHARED} PROPERTIES
-	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
+set_target_properties( ${XASH_ENGINE_LIBRARY} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1 )
+
+if( WIN32 )
+	if( XASH_DEDICATED )
+		set_target_properties( ${XASH_ENGINE_LIBRARY} PROPERTIES
+			OUTPUT_NAME "xash_dedicated" )
+	else()
+		set_target_properties( ${XASH_ENGINE_LIBRARY} PROPERTIES
+			OUTPUT_NAME "xash_sdl" )
+	endif()
+endif( )
 
 # Installing
 install( TARGETS ${XASH_ENGINE_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d 

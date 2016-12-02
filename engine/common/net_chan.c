@@ -212,7 +212,7 @@ void NetSplit_SendLong( netsrc_t sock, size_t length, const void *data, netadr_t
 
 		length -= size;
 
-		Q_memcpy( packet.data, data + packet.index * part, size );
+		Q_memcpy( packet.data, (const byte*)data + packet.index * part, size );
 		//MsgDev( D_NOTE, "NetSplit_SendLong: packet to %s, id %d, index %d\n", NET_AdrToString( to ), (int)packet.id, (int)packet.index );
 		NET_SendPacket( sock, size + NETSPLIT_HEADER_SIZE, &packet, to );
 		packet.index++;

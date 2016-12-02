@@ -288,6 +288,11 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 #define IMAGE_SIZEOF_BASE_RELOCATION (sizeof(IMAGE_BASE_RELOCATION))
 #endif
 
+#if defined(_M_X64)
+#error "Xash's nonstandart loader will not work on Win64. Set target to Win32 or disable nonstandart loader"
+#endif
+
+
 typedef struct
 {
 	PIMAGE_NT_HEADERS	headers;
@@ -1160,7 +1165,8 @@ const char *Com_NameForFunction( void *hInstance, void * function )
 	{
 		index = hInst->ordinals[i];
 
-		if(( (char*)function - hInst->funcBase ) == hInst->funcs[index] )
+		// 32 bit only cast :(
+		if( ( (dword)function - hInst->funcBase ) == hInst->funcs[index] )
 			return hInst->names[i];
 	}
 	// couldn't find the function address to return name

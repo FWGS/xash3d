@@ -574,7 +574,7 @@ void GAME_EXPORT Key_Event( int key, qboolean down )
 
 	if( down )
 	{
-		//keys[key].repeats++;
+		keys[key].repeats++;
 
 		if( key != K_BACKSPACE && key != K_PAUSE && keys[key].repeats > 1 )
 		{

@@ -889,11 +889,11 @@ int SV_CalcPing( sv_client_t *cl )
 
 	// bots don't have a real ping
 	if( cl->fakeclient )
-		return 5;
+		return 0;
 
 	// client has no frame data
 	if( !cl->frames )
-		return 5;
+		return 0;
 
 	count = 0;
 
@@ -915,8 +915,8 @@ int SV_CalcPing( sv_client_t *cl )
 		}
 	}
 
-	if( !count ) return 0;
-
+	if( !count )
+		return 0;
 	return (( ping / count ) * 1000 );
 }
 
@@ -1081,15 +1081,16 @@ qboolean SV_ShouldUpdatePing( sv_client_t *cl )
 {
 	if( host.realtime > cl->next_checkpingtime )
 	{
-		SV_CalcPing( cl );
 		cl->next_checkpingtime = host.realtime + 2.0;
+
 		return true;
 		//return cl->lastcmd.buttons & IN_SCORE;	// they are viewing the scoreboard.  Send them pings.
 	}
-	else if ( cl->next_checkpingtime - host.realtime > 2.0 )
-		cl->next_checkpingtime = host.realtime + 2.0;
+	// this means the same? Useless check
+	//else if ( cl->next_checkpingtime - host.realtime > 2.0 )
+	//	cl->next_checkpingtime = host.realtime + 2.0;
 
-	return true;
+	return false;
 }
 
 /*
@@ -1103,34 +1104,6 @@ qboolean SV_IsPlayerIndex( int idx )
 	if( idx > 0 && idx <= sv_maxclients->integer )
 		return true;
 	return false;
-}
-
-/*
-===================
-SV_GetPlayerStats
-
-This function and its static vars track some of the networking
-conditions.  I haven't bothered to trace it beyond that, because
-this fucntion sucks pretty badly.
-===================
-*/
-void SV_GetPlayerStats( sv_client_t *cl, int *ping, int *packet_loss )
-{
-	static int	last_ping[MAX_CLIENTS];
-	static int	last_loss[MAX_CLIENTS];
-	int		i;
-
-	i = cl - svs.clients;
-
-	if( cl->next_checkpingtime < host.realtime )
-	{
-		cl->next_checkpingtime = host.realtime + 2.0;
-		last_ping[i] = SV_CalcPing( cl );
-		last_loss[i] = cl->packet_loss;
-	}
-
-	if( ping ) *ping = last_ping[i];
-	if( packet_loss ) *packet_loss = last_loss[i];
 }
 
 /*

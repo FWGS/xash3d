@@ -255,7 +255,7 @@ extern convar_t	*s_lerping;
 extern convar_t	*dsp_off;
 extern convar_t	*s_test;
 extern convar_t	*s_phs;
-extern convar_t *s_khz;
+extern convar_t *s_reverse_channels;
 extern convar_t	*dsp_room;
 
 extern portable_samplepair_t		s_rawsamples[MAX_RAW_SAMPLES];

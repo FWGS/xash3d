@@ -133,7 +133,7 @@ int CL_InterpolateModel( cl_entity_t *e )
 	VectorCopy( e->curstate.origin, e->origin );
 	VectorCopy( e->curstate.angles, e->angles );
 
-	if ( cls.timedemo || !e->model || e->model->name[0] == '*' && !r_bmodelinterp->value || RP_LOCALCLIENT(e) || cl.maxclients == 1 )
+	if ( cls.timedemo || !e->model || ( e->model->name[0] == '*' && !r_bmodelinterp->integer ) || RP_LOCALCLIENT(e) || cl.maxclients == 1 )
 		return 1;
 
 	if( cl.predicted.moving && cl.predicted.onground == e->index )

@@ -168,7 +168,7 @@ void Sys_PrintLog( const char *pMsg )
 
 
 	if( !lastchar || lastchar == '\n')
-	strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
+		strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
 
 #ifdef COLORIZE_CONSOLE
 	{
@@ -189,7 +189,7 @@ void Sys_PrintLog( const char *pMsg )
 				0 // COLOR_WHITE
 			};
 
-			if( *msg == '^' )
+			if( IsColorString( msg ) )
 			{
 				int color;
 
@@ -218,10 +218,11 @@ void Sys_PrintLog( const char *pMsg )
 	fflush( stdout );
 #endif
 	lastchar = pMsg[strlen(pMsg)-1];
-	if( !s_ld.logfile ) return;
+	if( !s_ld.logfile )
+		return;
 
 	if( !lastchar || lastchar == '\n')
-	strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
+		strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
 
 	fprintf( s_ld.logfile, "%s %s", logtime, pMsg );
 	fflush( s_ld.logfile );

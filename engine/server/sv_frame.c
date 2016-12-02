@@ -419,7 +419,8 @@ void SV_EmitPings( sizebuf_t *msg )
 		if( cl->state != cs_spawned )
 			continue;
 
-		SV_GetPlayerStats( cl, &ping, &packet_loss );
+		ping = cl->ping;
+		packet_loss = cl->packet_loss;
 
 		// there are 25 bits for each client
 		BF_WriteOneBit( msg, 1 );

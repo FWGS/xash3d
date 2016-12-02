@@ -19,6 +19,8 @@ GNU General Public License for more details.
 #include "client.h"
 #include "sound.h"
 
+// a1batross: trying to defend disgusting sound on 44k
+#define XASH_DSP_FIXES
 
 typedef struct sx_preset_s {
 	float room_lp; // lowpass
@@ -37,7 +39,7 @@ typedef struct sx_preset_s {
 } sx_preset_t;
 
 typedef struct dly_s {
-	size_t cdelaysamplesmax; // delay line array size
+	int cdelaysamplesmax; // delay line array size
 
 	// delay line pointers
 	size_t idelayinput;
@@ -65,7 +67,7 @@ typedef struct dly_s {
 
 const sx_preset_t rgsxpre[] =
 {
-//          -------reverb--------  -------delay--------
+//          -------reverb------  -------delay--------
 // lp  mod  size   refl   rvblp  delay  feedback  dlylp  left
 { 0.0, 0.0, 0.0,   0.0,   1.0,   0.0,   0.0,      2.0,   0.0    }, // 0 off
 { 0.0, 0.0, 0.0,   0.0,   1.0,   0.065, 0.1,      0.0,   0.01   }, // 1 generic
@@ -98,6 +100,23 @@ const sx_preset_t rgsxpre[] =
 { 0.0, 0.0, 0.001, 0.999, 0.0,   0.2,   0.8,      2.0,   0.05   }  // 28
 };
 
+enum
+{
+	MONODLY    = 0,
+	REVERBPOS,
+	REVERBPOS2,
+	STEREODLY,
+	MAXDLY
+};
+
+#define MAX_DELAY        0.4f
+#define MAX_MONO_DELAY   0.4f
+#define MAX_REVERB_DELAY 0.1f
+#define MAX_STEREO_DELAY 0.1f
+
+#define MAX_ROOM_TYPES ARRAYSIZE(rgsxpre)
+
+
 // cvars
 convar_t *dsp_off;        // disable dsp
 convar_t *roomwater_type;  // water room_type
@@ -121,38 +140,20 @@ convar_t *sxdly_feedback;  // cycles
 convar_t *sxdly_delay;     // current delay in seconds
 
 convar_t *dsp_room;        // for compability
+convar_t *hisound;
 int idsp_room;
-int room_typeprev;
 
+static int room_typeprev;
 // routines
-int sxamodl, sxamodr,      // amplitude modulation values
-	sxamodlt, sxamodrt;    // modulation targets
-int sxhires, sxhiresprev;
-int sxmod1, sxmod2,
-	sxmod1cur, sxmod2cur;
-
-int speed;  // dma sample speed
-
-portable_samplepair_t *paintto = NULL;
-
-#define MAX_DELAY 0.4f
-#define MAX_ROOM_TYPES ( sizeof( rgsxpre ) / sizeof( rgsxpre[0] ) )
-
-#define MONODLY 0
-#define MAX_MONO_DELAY 0.4f
-
-#define REVERBPOS 1
-#define MAX_REVERB_DELAY 0.1f
-
-#define STEREODLY 3
-#define MAX_STEREO_DELAY 0.1f
-
-#define MAXDLY (STEREODLY + 1)
-#define MAXLP  10
-#define MAXPRESETS ARRAYSIZE(rgsxpre)
-
-dly_t rgsxdly[MAXDLY]; // stereo is last
-int   rgsxlp[MAXLP];
+static int sxamodl, sxamodr,      // amplitude modulation values
+	sxamodlt, sxamodrt,    // modulation targets
+	sxmod1, sxmod2,
+	sxmod1cur, sxmod2cur,
+	sxhires;
+static int speed;  // dma sample speed (private to dsp)
+static portable_samplepair_t *paintto = NULL;
+static dly_t rgsxdly[MAXDLY]; // stereo is last
+static int   rgsxlp[10];
 
 void SX_Profiling_f( void );
 
@@ -185,10 +186,16 @@ void SX_Init( void )
 	Q_memset( rgsxdly, 0, sizeof( rgsxdly ) );
 	Q_memset( rgsxlp,  0, sizeof( rgsxlp  ) );
 
+#ifdef XASH_DSP_FIXES
+	speed = SOUND_11k; // dsp works best with 11k. Xash will upsample DSP buffer during mix
+#else
+	speed = SOUND_DMA_SPEED;
+#endif
+
 	sxamodr = sxamodl = sxamodrt = sxamodlt = 255;
 
-	sxhires = sxhiresprev = 0;
-	speed = SOUND_32k;
+	sxhires = 2;
+	hisound = Cvar_Get( "room_hires", "2", 0, "dsp quality. 1 for 22k, 2 for 44k(recommended) and 3 for 96k" );
 
 	sxmod1cur = sxmod1 = 350 * ( speed / SOUND_11k );
 	sxmod2cur = sxmod2 = 450 * ( speed / SOUND_11k );
@@ -210,6 +217,7 @@ void SX_Init( void )
 
 	sxste_delay      = Cvar_Get( "room_left", "0", 0, "left channel delay time" );
 
+
 	Cmd_AddCommand( "dsp_profile", SX_Profiling_f, "dsp stress-test, first argument is room_type" );
 
 	// for compability
@@ -229,11 +237,8 @@ void DLY_Free( int idelay )
 {
 	Assert( idelay >= 0 && idelay < MAXDLY );
 
-	if( rgsxdly[idelay].lpdelayline )
-	{
-		free( rgsxdly[idelay].lpdelayline );
-		rgsxdly[idelay].lpdelayline = NULL;
-	}
+	Z_Free( rgsxdly[idelay].lpdelayline );
+	rgsxdly[idelay].lpdelayline = NULL;
 }
 
 /*
@@ -272,7 +277,7 @@ int DLY_Init( int idelay, float delay )
 
 	cur = &rgsxdly[idelay];
 	cur->cdelaysamplesmax = ((int)(delay * speed) << sxhires) + 1;
-	cur->lpdelayline      = (int *) calloc( cur->cdelaysamplesmax, sizeof( int ) );
+	cur->lpdelayline      = (int *) Z_Malloc( cur->cdelaysamplesmax * sizeof( int ) );
 	if( !cur->lpdelayline )
 	{
 		MsgDev( D_ERROR, "Failed to allocate memory for SoundFX!\n");
@@ -327,6 +332,7 @@ void DLY_CheckNewStereoDelayVal( )
 
 	if( !sxste_delay->modified )
 		return;
+	sxste_delay->modified = false;
 
 	if( delay == 0 )
 	{
@@ -358,8 +364,6 @@ void DLY_CheckNewStereoDelayVal( )
 		if( dly->delaysamples == 0 )
 			DLY_Free( STEREODLY );
 	}
-
-	sxste_delay->modified = false;
 }
 
 /*
@@ -413,10 +417,10 @@ void DLY_DoStereoDelay( int count )
 			}
 
 			// save left value to delay line
-			dly->lpdelayline[dly->idelayinput] = paint->left;
+			dly->lpdelayline[dly->idelayinput] = CLIP(paint->left);
 
 			// paint new delay value
-			paint->left = CLIP(delay);
+			paint->left = delay;
 		}
 		else // clear delay line
 			dly->lpdelayline[dly->idelayinput] = 0;
@@ -438,35 +442,35 @@ void DLY_CheckNewDelayVal( )
 	float delay = sxdly_delay->value;
 	dly_t * const dly = &rgsxdly[MONODLY];
 
-	if( sxdly_delay->modified )
+	if( !sxdly_delay->modified )
+		return;
+	sxdly_delay->modified = false;
+
+
+	if( delay == 0 )
+		DLY_Free( MONODLY );
+	else
 	{
-		if( delay == 0 )
-			DLY_Free( MONODLY );
-		else
+		delay = min( delay, MAX_MONO_DELAY );
+		dly->delaysamples = (int)(delay * speed) << sxhires;
+
+		// init dly
+		if( !dly->lpdelayline )
+			DLY_Init( MONODLY, MAX_MONO_DELAY );
+
+		if( dly->lpdelayline )
 		{
-			delay = min( delay, MAX_MONO_DELAY );
-			dly->delaysamples = (int)(delay * speed) << sxhires;
-
-			// init dly
-			if( !dly->lpdelayline )
-				DLY_Init( MONODLY, MAX_MONO_DELAY );
-
-			if( dly->lpdelayline )
-			{
-				Q_memset( dly->lpdelayline, 0, dly->cdelaysamplesmax * sizeof( int ) );
-				dly->lp0 = dly->lp1 = dly->lp2 = 0;
-			}
-
-			dly->idelayinput = 0;
-			dly->idelayoutput = dly->cdelaysamplesmax - dly->delaysamples;
-
-			if( !dly->delaysamples )
-				DLY_Free( MONODLY );
-
+			Q_memset( dly->lpdelayline, 0, dly->cdelaysamplesmax * sizeof( int ) );
+			dly->lp0 = dly->lp1 = dly->lp2 = 0;
 		}
+
+		dly->idelayinput = 0;
+		dly->idelayoutput = dly->cdelaysamplesmax - dly->delaysamples;
+
+		if( !dly->delaysamples )
+			DLY_Free( MONODLY );
 	}
 
-	sxdly_delay->modified = false;
 	dly->lp = sxdly_lp->integer;
 	dly->delayfeedback = 255 * sxdly_feedback->value;
 }
@@ -484,7 +488,7 @@ void DLY_DoDelay( int count )
 	portable_samplepair_t *paint = paintto;
 	int delay;
 
-	if( !dly->lpdelayline || !count )
+	if( !dly->lpdelayline )
 		return; // inactive
 
 	for( ; count; count--, paint++ )
@@ -495,15 +499,18 @@ void DLY_DoDelay( int count )
 		if( delay || paint->left || paint->right )
 		{
 			// calculate delayed value from average
-			int val = (( paint->left + paint->right ) / 2 ) +
+			int val = (( paint->left + paint->right ) >> 1 ) +
 					 (( dly->delayfeedback * delay ) >> 8);
 			val = CLIP( val );
 
 			if( dly->lp ) // lowpass
 			{
+				int newval = ( dly->lp0 + dly->lp1 + (val << 1) ) >> 2;
+
 				dly->lp0 = dly->lp1;
 				dly->lp1 = val;
-				val = ( dly->lp0 + dly->lp1 + (val << 1) ) >> 2;
+
+				val = newval;
 			}
 
 			dly->lpdelayline[dly->idelayinput] = val;
@@ -573,21 +580,21 @@ void RVB_CheckNewReverbVal( )
 			  *const dly2 = &rgsxdly[REVERBPOS + 1];
 	int samples;
 
-	if( sxrvb_size->modified )
+	if( !sxrvb_size->modified )
+		return;
+	sxrvb_size->modified = false;
+
+	if( delay == 0.0f )
 	{
-		if( delay == 0.0f )
-		{
-			DLY_Free( REVERBPOS );
-			DLY_Free( REVERBPOS + 1 );
-		}
-		else
-		{
-			RVB_SetUpDly( REVERBPOS, sxrvb_size->value, 500 );
-			RVB_SetUpDly( REVERBPOS+1, sxrvb_size->value*0.71, 700 );
-		}
+		DLY_Free( REVERBPOS );
+		DLY_Free( REVERBPOS + 1 );
+	}
+	else
+	{
+		RVB_SetUpDly( REVERBPOS, sxrvb_size->value, 500 );
+		RVB_SetUpDly( REVERBPOS+1, sxrvb_size->value*0.71, 700 );
 	}
 
-	sxrvb_size->modified = false;
 	dly1->lp = dly2->lp = sxrvb_lp->integer;
 	dly1->delayfeedback = dly2->delayfeedback = (int)(255 * sxrvb_feedback->value);
 }
@@ -599,6 +606,7 @@ RVB_DoReverbForOneDly
 Do reverberation for one dly
 ===========
 */
+#define REVERB_XFADE 32
 int RVB_DoReverbForOneDly( dly_t *dly, const int vlr, const portable_samplepair_t *samplepair )
 {
 	int delay;
@@ -615,22 +623,20 @@ int RVB_DoReverbForOneDly( dly_t *dly, const int vlr, const portable_samplepair_
 	if( dly->xfade || delay || samplepair->left || samplepair->right )
 	{
 		// modulate delay rate
-#if 1
-		if( !dly->xfade && !dly->modcur && dly->mod )
+		if( !dly->mod )
 		{
 			dly->idelayoutputxf = dly->idelayoutput + ((Com_RandomLong( 0, 255 ) * delay) >> 9 );
 
-			//dly->xfade = 32;
+			if( dly->idelayoutputxf >= dly->cdelaysamplesmax )
+				dly->idelayoutputxf -= dly->cdelaysamplesmax;
+
+			dly->xfade = REVERB_XFADE;
 		}
-#endif
-
-		dly->idelayoutputxf %= dly->cdelaysamplesmax;
-
 
 		if( dly->xfade )
 		{
-			samplexf = (dly->lpdelayline[dly->idelayoutputxf] * (32 - dly->xfade)) / 32;
-			delay = delay * dly->xfade / 32 + samplexf;
+			samplexf = (dly->lpdelayline[dly->idelayoutputxf] * (REVERB_XFADE - dly->xfade)) / REVERB_XFADE;
+			delay = ((delay * dly->xfade) / REVERB_XFADE) + samplexf;
 
 			if( ++dly->idelayoutputxf >= dly->cdelaysamplesmax )
 				dly->idelayoutputxf = 0;
@@ -639,8 +645,14 @@ int RVB_DoReverbForOneDly( dly_t *dly, const int vlr, const portable_samplepair_
 				dly->idelayoutput = dly->idelayoutputxf;
 		}
 
-		val = delay ? vlr + ((dly->delayfeedback * delay) >> 8) : vlr;
-		val = CLIP(val);
+
+		if( delay )
+		{
+			val = vlr + ( ( dly->delayfeedback * delay ) >> 8 );
+			val = CLIP( val );
+		}
+		else
+			val = vlr;
 
 		if( dly->lp )
 		{
@@ -655,7 +667,7 @@ int RVB_DoReverbForOneDly( dly_t *dly, const int vlr, const portable_samplepair_
 	else
 	{
 		voutm = dly->lpdelayline[dly->idelayinput] = 0;
-		dly->lp0 = dly->lp1 = 0;
+		dly->lp0 = 0;
 	}
 
 	DLY_MovePointer( dly );
@@ -678,18 +690,18 @@ void RVB_DoReverb( int count )
 			  *const dly2 = &rgsxdly[REVERBPOS+1];
 	portable_samplepair_t *paint = paintto;
 
-	if( !dly1->lpdelayline || !count )
+	if( !dly1->lpdelayline )
 		return;
 
 	for( ; count; count--, paint++ )
 	{
-		int voutm;
+		int voutm = 0;
 		vlr = ( paint->left + paint->right ) >> 1;
 
 		voutm = RVB_DoReverbForOneDly( dly1, vlr, paint );
 		voutm += RVB_DoReverbForOneDly( dly2, vlr, paint );
 
-		voutm = 11 * voutm >> 6;
+		voutm = (11 * voutm) >> 6;
 
 		paint->left = CLIP( paint->left + voutm);
 		paint->right = CLIP( paint->right + voutm);
@@ -710,13 +722,10 @@ void RVB_DoAMod( int count )
 	if( !sxmod_lowpass->integer && !sxmod_mod->integer )
 		return;
 
-	if( !count )
-		return;
-
 	for( ; count; count--, paint++ )
 	{
 		portable_samplepair_t res = *paint;
-		if( sxmod_lowpass->value )
+		if( sxmod_lowpass->integer )
 		{
 			res.left  = rgsxlp[0] + rgsxlp[1] + rgsxlp[2] + rgsxlp[3] + rgsxlp[4] + res.left;
 			res.right = rgsxlp[5] + rgsxlp[6] + rgsxlp[7] + rgsxlp[8] + rgsxlp[9] + res.right;
@@ -791,6 +800,9 @@ void DSP_Process(int idsp, portable_samplepair_t *pbfront, int sampleCount)
 	if( cls.key_dest == key_menu )
 		return;
 
+	if( !sampleCount )
+		return;
+
 	// preset is already installed by CheckNewDspPresets
 	paintto = pbfront;
 
@@ -849,9 +861,6 @@ CheckNewDspPresets
 */
 void CheckNewDspPresets( void )
 {
-	/*sxhires = 1;
-	sxhiresprev = 1;*/
-
 	if( dsp_off->value != 0.0f )
 		return;
 
@@ -859,6 +868,13 @@ void CheckNewDspPresets( void )
 		idsp_room = roomwater_type->integer;
 	else
 		idsp_room = room_type->integer;
+
+	if( hisound->modified )
+	{
+		sxhires = hisound->integer;
+
+		hisound->modified = false;
+	}
 
 	if( idsp_room == room_typeprev && idsp_room == 0 )
 		return;

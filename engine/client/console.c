@@ -766,7 +766,7 @@ int Con_DrawGenericString( int x, int y, const char *string, rgba_t setColor, qb
 	s = string;
 	*(uint *)color = *(uint *)setColor;
 
-	while ( *s )
+	while ( s && *s )
 	{
 		if( *s == '\n' )
 		{
@@ -1740,10 +1740,8 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		byte	*color = g_color_table[7];
 		int	stringLen, width = 0, charH;
 
-		Q_snprintf( curbuild, MAX_STRING, "Xash3D FWGS %i/%s build %i (based on %g build%i)",
-					PROTOCOL_VERSION,
-					XASH_VERSION, Q_buildnum( ), // fork info
-					BASED_VERSION, Q_buildnum_compat( )); // original xash3d info
+		Q_snprintf( curbuild, MAX_STRING, "Xash3D FWGS %i/%s build %i %s %s-%s", PROTOCOL_VERSION,
+					XASH_VERSION, Q_buildnum( ), Q_buildcommit( ), Q_buildos( ), Q_buildarch( ) );
 		Con_DrawStringLen( curbuild, &stringLen, &charH );
 		start = scr_width->integer - stringLen;
 		stringLen = Con_StringLength( curbuild );
@@ -1906,14 +1904,17 @@ void Con_DrawVersion( void )
 		if(( cls.key_dest != key_menu && !draw_version ) || gl_overview->integer == 2 )
 			return;
 	}
+	else
+	{
+		if( host.realtime > host.force_draw_version_time )
+			host.force_draw_version = false;
+	}
 
 	if( host.force_draw_version || draw_version )
-		Q_snprintf( curbuild, MAX_STRING, "Xash3D SDL %i/%s build %i (based on %g build%i)", PROTOCOL_VERSION,
-					XASH_VERSION, Q_buildnum( ),
-					BASED_VERSION, Q_buildnum_compat( ));
-	else Q_snprintf( curbuild, MAX_STRING, "v%i/%s build %i (based on %g build%i)", PROTOCOL_VERSION,
-					 XASH_VERSION, Q_buildnum( ),
-					 BASED_VERSION, Q_buildnum_compat( ));
+		Q_snprintf( curbuild, MAX_STRING, "Xash3D FWGS %i/%s build %i %s %s-%s", PROTOCOL_VERSION,
+					XASH_VERSION, Q_buildnum( ), Q_buildcommit( ), Q_buildos( ), Q_buildarch( ) );
+	else Q_snprintf( curbuild, MAX_STRING, "v%i/%s build %i %s %s-%s", PROTOCOL_VERSION,
+					 XASH_VERSION, Q_buildnum( ), Q_buildcommit( ), Q_buildos( ), Q_buildarch( ));
 	Con_DrawStringLen( curbuild, &stringLen, &charH );
 	start = scr_width->integer - stringLen * 1.05f;
 	stringLen = Con_StringLength( curbuild );
