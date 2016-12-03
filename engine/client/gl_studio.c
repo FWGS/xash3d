@@ -2978,10 +2978,10 @@ static void R_StudioDrawPlanarShadow( void )
 
 #ifndef XASH_NANOGL
 	if( GL_Support( GL_DRAW_RANGEELEMENTS_EXT ))
-		pglDrawRangeElementsEXT( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
+		pglDrawRangeElementsEXT( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
 	else
 #endif
-	pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_INT, g_xarrayelems );
+	pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
 
 	if( glState.stencilEnabled )
 		pglDisable( GL_STENCIL_TEST );
