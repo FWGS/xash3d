@@ -551,20 +551,7 @@ void R_StudioSetUpTransform( cl_entity_t *e )
 		origin[1] += ( e->origin[1] - e->latched.prevorigin[1] ) * f;
 		origin[2] += ( e->origin[2] - e->latched.prevorigin[2] ) * f;
 
-		for( i = 0; i < 3; i++ )
-		{
-			float	ang1, ang2;
-
-			ang1 = e->angles[i];
-			ang2 = e->latched.prevangles[i];
-
-			d = ang1 - ang2;
-
-			if( d > 180.0f ) d -= 360.0f;
-			else if( d < -180.0f ) d += 360.0f;
-
-			angles[i] += d * f;
-		}
+		InterpolateAngles( e->angles, e->latched.prevangles, angles, f );
 	}
 
 	if( !( host.features & ENGINE_COMPENSATE_QUAKE_BUG ))
