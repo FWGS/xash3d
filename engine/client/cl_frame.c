@@ -129,15 +129,20 @@ void CL_InterpolatePlayer( cl_entity_t *e )
 	vec3_t              origin, angles, delta;
 	float		        t, t1, t2, frac;
 
-	if( cls.timedemo )
-		return;
-
 	if( e->index == cl.playernum + 1 )
 	{
 		VectorCopy( cl.predicted.origin, e->origin );
 		VectorCopy( e->curstate.angles, e->angles );
 		return;
 	}
+	else
+	{
+		VectorCopy( e->curstate.origin, e->origin );
+		VectorCopy( e->curstate.angles, e->angles );
+	}
+
+	if( cls.timedemo || cl.maxclients == 1 )
+		return;
 
 	// enitty was moved too far
 	if( fabs(e->curstate.origin[0] - e->prevstate.origin[0]) > 128.0f ||
