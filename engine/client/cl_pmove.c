@@ -1340,7 +1340,7 @@ void CL_PredictMovement( void )
 				vec3_t delta;
 				delta[0] = ent->curstate.origin[0] - ent->prevstate.origin[0];
 				delta[1] = ent->curstate.origin[1] - ent->prevstate.origin[1];
-				delta[2] = 0.0f;
+				delta[2] = ent->curstate.origin[2] - ent->prevstate.origin[2];
 
 				if( VectorLength( delta ) > 0.0f )
 				{

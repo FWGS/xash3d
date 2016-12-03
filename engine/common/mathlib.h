@@ -135,6 +135,7 @@ void AngleQuaternion( const vec3_t angles, vec4_t q );
 void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt );
 float RemapVal( float val, float A, float B, float C, float D );
 float ApproachVal( float target, float value, float speed );
+void InterpolateAngles( vec3_t start, vec3_t end, vec3_t output, float frac );
 
 //
 // matrixlib.c
