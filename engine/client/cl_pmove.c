@@ -1203,6 +1203,17 @@ void CL_PredictMovement( void )
 
 		if( to )
 			cl.predicted.viewmodel = to->client.viewmodel;
+
+		// keep cl.predicted.origin valid
+		VectorCopy( cl.frame.client.origin, cl.predicted.origin );
+		VectorCopy( cl.frame.client.velocity, cl.predicted.velocity );
+		VectorCopy( cl.frame.client.punchangle, cl.predicted.punchangle );
+		VectorCopy( cl.frame.client.view_ofs, cl.predicted.viewofs );
+		cl.predicted.usehull = from->playerstate.usehull;
+		cl.predicted.waterlevel = cl.frame.client.waterlevel;
+		cl.predicted.correction_time = 0;
+		cl.predicted.moving = 0;
+		cl.predicted.onground = -1;
 		return;
 	}
 
