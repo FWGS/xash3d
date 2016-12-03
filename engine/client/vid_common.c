@@ -573,7 +573,7 @@ void GL_SetExtension( int r_ext, int enable )
 	if( r_ext >= 0 && r_ext < GL_EXTCOUNT )
 		glConfig.extension[r_ext] = enable ? GL_TRUE : GL_FALSE;
 	else MsgDev( D_ERROR, "GL_SetExtension: invalid extension %d\n", r_ext );
-} 
+}
 
 /*
 =================
@@ -924,7 +924,7 @@ void GL_InitCommands( void )
 	Cmd_AddCommand( "r_info", R_RenderInfo_f, "display renderer info" );
 	Cmd_AddCommand( "texturelist", R_TextureList_f, "display loaded textures list" );
 }
- 
+
 void GL_RemoveCommands( void )
 {
 	Cmd_RemoveCommand( "r_info");

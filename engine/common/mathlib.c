@@ -368,6 +368,28 @@ void VectorsAngles( const vec3_t forward, const vec3_t right, const vec3_t up, v
 	angles[ROLL] = roll;
 }
 
+/*
+=================
+InterpolateAngles
+=================
+*/
+void InterpolateAngles( vec3_t start, vec3_t end, vec3_t out, float frac )
+{
+	float	d, ang1, ang2;
+	int i;
+	for( i = 0; i < 3; i++ )
+	{
+		ang1 = start[i];
+		ang2 = end[i];
+		d = ang1 - ang2;
+
+		if( d > 180.0f ) d -= 360.0f;
+		else if( d < -180.0f ) d += 360.0f;
+
+		out[i] = ang2 + d * frac;
+	}
+}
+
 //
 // bounds operations
 //
