@@ -1552,9 +1552,9 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	{
 		unsigned int size = BF_GetNumBytesWritten( &send );
 
-		//if( chan->split && size > chan->maxpacket )
-			//NetSplit_SendLong( chan->sock, size, BF_GetData( &send ), chan->remote_address, chan->maxpacket, chan->splitid++ );
-		//else
+		if( chan->split && size > chan->maxpacket )
+			NetSplit_SendLong( chan->sock, size, BF_GetData( &send ), chan->remote_address, chan->maxpacket, chan->splitid++ );
+		else
 			NET_SendPacket( chan->sock, size, BF_GetData( &send ), chan->remote_address );
 	}
 
