@@ -496,11 +496,14 @@ static const char *GAME_EXPORT pfnTraceTexture( int ground, float *vstart, float
 static void GAME_EXPORT pfnPlaySound( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
 {
 	edict_t	*ent;
+	sv_client_t *cl = svs.clients + svgame.pmove->player_index;
+	qboolean exclude;
 
 	ent = EDICT_NUM( svgame.pmove->player_index + 1 );
 	if( !SV_IsValidEdict( ent )) return;
 
-	SV_StartSound( ent, channel, sample, volume, attenuation, fFlags, pitch );
+	// exclude current player, because he played this sound locally during prediction
+	SV_StartSoundEx( ent, channel, sample, volume, attenuation, fFlags, pitch, true );
 }
 
 static void GAME_EXPORT pfnPlaybackEventFull( int flags, int clientindex, word eventindex, float delay, float *origin,

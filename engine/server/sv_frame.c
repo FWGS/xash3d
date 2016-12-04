@@ -679,7 +679,7 @@ void SV_UpdateToReliableMessages( void )
 		{
 			cl->sendmovevars = false;
 			SV_FullUpdateMovevars( cl, &cl->netchan.message );
-                    }
+		}
 	}
 
 	// 1% chanse for simulate random network bugs

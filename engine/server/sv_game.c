@@ -270,9 +270,11 @@ MSG_ONE	send to one client (ent can't be NULL)
 MSG_ALL	same as broadcast (origin can be NULL)
 MSG_PVS	send to clients potentially visible from org
 MSG_PHS	send to clients potentially hearable from org
+
+if excludeSource is true, ent can't be NULL, dest should not be MSG_ONE
 =================
 */
-qboolean SV_Send( int dest, const vec3_t origin, const edict_t *ent )
+qboolean SV_Send( int dest, const vec3_t origin, const edict_t *ent, qboolean excludeSource )
 {
 	byte		*mask = NULL;
 	int		j, numclients = sv_maxclients->integer;
@@ -324,6 +326,11 @@ qboolean SV_Send( int dest, const vec3_t origin, const edict_t *ent )
 		if( j < 1 || j > numclients ) return false;
 		current = svs.clients + (j - 1);
 		numclients = 1; // send to one
+		if( excludeSource )
+		{
+			MsgDev( D_ERROR, "SV_Send: trying to send message to nobody. Will send to requested entity anyway.\n" );
+			excludeSource = false;
+		}
 		break;
 	case MSG_SPEC:
 		specproxy = reliable = true;
@@ -354,6 +361,12 @@ qboolean SV_Send( int dest, const vec3_t origin, const edict_t *ent )
 
 		if( !cl->edict || cl->fakeclient )
 			continue;
+
+		if( excludeSource && cl->edict == ent )
+		{
+			//MsgDev( D_INFO, "%i excluded\n", j );
+			continue;
+		}
 
 		if( ent != NULL && ent->v.groupinfo && cl->edict->v.groupinfo )
 		{
@@ -1934,7 +1947,7 @@ SV_StartSound
 
 =================
 */
-void GAME_EXPORT SV_StartSound( edict_t *ent, int chan, const char *sample, float vol, float attn, int flags, int pitch )
+void SV_StartSoundEx( edict_t *ent, int chan, const char *sample, float vol, float attn, int flags, int pitch, qboolean excludeSource )
 {
 	int 	sound_idx;
 	int	entityIndex;
@@ -2017,7 +2030,18 @@ void GAME_EXPORT SV_StartSound( edict_t *ent, int chan, const char *sample, floa
 	BF_WriteWord( &sv.multicast, entityIndex );
 	BF_WriteVec3Coord( &sv.multicast, origin );
 
-	SV_Send( msg_dest, origin, NULL );
+	SV_Send( msg_dest, origin, ent, excludeSource );
+}
+
+/*
+=================
+SV_StartSound
+
+=================
+*/
+void GAME_EXPORT SV_StartSound( edict_t *ent, int chan, const char *sample, float vol, float attn, int flags, int pitch )
+{
+	SV_StartSoundEx( ent, chan, sample, vol, attn, flags, pitch, false );
 }
 
 /*
@@ -2097,7 +2121,7 @@ void GAME_EXPORT pfnEmitAmbientSound( edict_t *ent, float *pos, const char *samp
 	BF_WriteWord( &sv.multicast, number );
 	BF_WriteVec3Coord( &sv.multicast, pos );
 
-	SV_Send( msg_dest, pos, NULL );
+	SV_Send( msg_dest, pos, NULL, false );
 }
 
 /*
@@ -2110,7 +2134,7 @@ void SV_StartMusic( const char *curtrack, const char *looptrack, fs_offset_t pos
 {
 	BF_WriteByte( &sv.multicast, svc_stufftext );
 	BF_WriteString( &sv.multicast, va( "music \"%s\" \"%s\" %i\n", curtrack, looptrack, (int)position ));
-	SV_Send( MSG_ALL, NULL, NULL );
+	SV_Send( MSG_ALL, NULL, NULL, false );
 }
 
 /*
@@ -2642,7 +2666,7 @@ void GAME_EXPORT pfnMessageEnd( void )
 	if( !VectorIsNull( svgame.msg_org )) org = svgame.msg_org;
 	svgame.msg_dest = bound( MSG_BROADCAST, svgame.msg_dest, MSG_SPEC );
 
-	SV_Send( svgame.msg_dest, org, svgame.msg_ent );
+	SV_Send( svgame.msg_dest, org, svgame.msg_ent, false );
 	if( gIsUserMsg ) MsgDev( D_AICONSOLE, "^3MessageEnd( )\n");
 }
 
@@ -3186,7 +3210,7 @@ int GAME_EXPORT pfnRegUserMsg( const char *pszName, int iSize )
 		BF_WriteByte( &sv.multicast, svgame.msg[i].number );
 		BF_WriteByte( &sv.multicast, (byte)iSize );
 		BF_WriteString( &sv.multicast, svgame.msg[i].name );
-		SV_Send( MSG_ALL, NULL, NULL );
+		SV_Send( MSG_ALL, NULL, NULL, false );
 	}
 
 	if( sv_trace_messages->integer )
