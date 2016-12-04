@@ -3189,7 +3189,10 @@ int GAME_EXPORT pfnRegUserMsg( const char *pszName, int iSize )
 		SV_Send( MSG_ALL, NULL, NULL );
 	}
 
-	MsgDev( D_NOTE, "^3Added user message: %s (size == %i)\n", pszName, iSize );
+	if( sv_trace_messages->integer )
+	{
+		MsgDev( D_NOTE, "^3Added user message: %s (size == %i)\n", pszName, iSize );
+	}
 
 	return svgame.msg[i].number;
 }

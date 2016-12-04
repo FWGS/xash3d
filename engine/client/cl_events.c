@@ -137,7 +137,7 @@ qboolean CL_FireEvent( event_info_t *ei )
 	if( !ei || !ei->index )
 		return false;
 
-	if( cl_trace_events->value > 0.0f )
+	if( cl_trace_events->integer )
 	{
 		MsgDev( D_INFO, "^3EVENT  %s AT %.2f %.2f %.2f\n"    // event name
 					"     %.2f %.2f\n" // float params

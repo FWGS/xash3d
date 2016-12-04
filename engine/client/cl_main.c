@@ -56,6 +56,7 @@ convar_t	*cl_allow_fragment;
 convar_t	*cl_lw;
 convar_t	*cl_trace_events;
 convar_t	*cl_trace_stufftext;
+convar_t    *cl_trace_messages;
 convar_t	*cl_charset;
 convar_t	*cl_sprite_nearest;
 convar_t	*cl_updaterate;
@@ -1743,7 +1744,7 @@ void CL_InitLocal( void )
 	r_oldparticles = Cvar_Get("r_oldparticles", "0", CVAR_ARCHIVE, "make some particle textures a simple square, like with software rendering");
 
 	cl_trace_events = Cvar_Get( "cl_trace_events", "0", CVAR_ARCHIVE|CVAR_CHEAT, "enable client event tracing (good for developers)" );
-
+	cl_trace_messages = Cvar_Get( "cl_trace_messages", "0", CVAR_ARCHIVE|CVAR_CHEAT, "enable message names tracing (good for developers)");
 	cl_trace_stufftext = Cvar_Get( "cl_trace_stufftext", "0", CVAR_ARCHIVE|CVAR_CHEAT, "enable stufftext commands tracing (good for developers)" );
 
 	// userinfo

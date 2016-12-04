@@ -574,6 +574,7 @@ extern convar_t *cl_cmdrate;
 extern convar_t	*cl_lw;
 extern convar_t *cl_trace_events;
 extern convar_t *cl_trace_stufftext;
+extern convar_t *cl_trace_messages;
 extern convar_t	*cl_sprite_nearest;
 extern convar_t *cl_updaterate;
 extern convar_t *r_bmodelinterp;
