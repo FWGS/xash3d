@@ -1154,16 +1154,11 @@ void CL_PredictMovement( void )
 
 	ASSERT( cl.refdef.cmd != NULL );
 
-	if( !cl_predict->integer || Host_IsLocalClient() )
+	if( ( !cl_predict->integer || Host_IsLocalClient() )  && cl_lw->integer )
 	{
 		// fake prediction code
 		// we need to perform cl_lw prediction while cl_predict is disabled
 		// because cl_lw is enabled by default in Half-Life
-		if( !cl_lw->integer )
-		{
-			cl.predicted.viewmodel = cl.frame.client.viewmodel;
-			return;
-		}
 
 		ack = cls.netchan.incoming_acknowledged;
 		outgoing_command = cls.netchan.outgoing_sequence;
@@ -1175,10 +1170,13 @@ void CL_PredictMovement( void )
 
 		time = cl.frame.time;
 
+		CL_SetSolidEntities ();
+		CL_SetSolidPlayers ( cl.playernum );
+
 		while( 1 )
 		{
 			// we've run too far forward
-			if( frame >= CL_UPDATE_BACKUP - 1 )
+			if( frame >= CL_UPDATE_MASK )
 				break;
 
 			// Incoming_acknowledged is the last usercmd the server acknowledged having acted upon
@@ -1190,25 +1188,26 @@ void CL_PredictMovement( void )
 				break;
 
 			to = &cl.predict[( cl.parsecountmod + frame ) & CL_UPDATE_MASK];
+			runfuncs = !cl.commands[current_command_mod].processedfuncs;
+			ucmd = &cl.commands[current_command_mod].cmd;
 
-			CL_FakeUsercmd( from, to, &cl.commands[current_command_mod].cmd,
-				!cl.commands[current_command_mod].processedfuncs,
-				&time, cls.netchan.incoming_acknowledged + frame );
-
+			CL_RunUsercmd( from, to, ucmd, runfuncs, &time, cls.netchan.incoming_acknowledged + frame );
 			cl.commands[current_command_mod].processedfuncs = true;
+
+			// save for debug checking
+			VectorCopy( to->playerstate.origin, cl.predicted.origins[current_command_mod] );
 
 			from = to;
 			frame++;
 		}
 
-		if( to )
-			cl.predicted.viewmodel = to->client.viewmodel;
 
 		// keep cl.predicted.origin valid
 		VectorCopy( cl.frame.client.origin, cl.predicted.origin );
 		VectorCopy( cl.frame.client.velocity, cl.predicted.velocity );
 		VectorCopy( cl.frame.client.punchangle, cl.predicted.punchangle );
 		VectorCopy( cl.frame.client.view_ofs, cl.predicted.viewofs );
+		cl.predicted.viewmodel = cl.frame.client.viewmodel;
 		cl.predicted.usehull = from->playerstate.usehull;
 		cl.predicted.waterlevel = cl.frame.client.waterlevel;
 		cl.predicted.correction_time = 0;
@@ -1280,11 +1279,6 @@ void CL_PredictMovement( void )
 
 		// save for debug checking
 		VectorCopy( to->playerstate.origin, cl.predicted.origins[current_command_mod] );
-
-		/*if( !VectorIsNull( from->client.punchangle ) )
-		{
-			MsgDev( D_INFO, "%f %f %f\n", from->client.punchangle[0], from->client.punchangle[1], from->client.punchangle[2]);
-		}*/
 
 		from = to;
 		frame++;
