@@ -1053,7 +1053,7 @@ void CL_CheckPredictionError( void )
 	}
 	else
 	{
-		if( cl_showerror->value && len > 0.5f )
+		if( cl_showerror->integer && len > 0.5f )
 			MsgDev( D_ERROR, "prediction error on %i: %g\n", cl.parsecount, len );
 
 		VectorCopy( cl.frame.playerstate[cl.playernum].origin, cl.predicted.origins[frame] );

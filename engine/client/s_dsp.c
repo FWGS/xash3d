@@ -793,7 +793,7 @@ DSP_Process
 */
 void DSP_Process(int idsp, portable_samplepair_t *pbfront, int sampleCount)
 {
-	if( dsp_off->value != 0.0f )
+	if( dsp_off->integer )
 		return;
 
 	// HACKHACK: don't process while in menu
@@ -861,7 +861,7 @@ CheckNewDspPresets
 */
 void CheckNewDspPresets( void )
 {
-	if( dsp_off->value != 0.0f )
+	if( dsp_off->integer )
 		return;
 
 	if( cl.predicted.waterlevel > 2 )

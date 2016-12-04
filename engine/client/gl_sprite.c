@@ -312,7 +312,7 @@ void Mod_LoadMapSprite( model_t *mod, const void *buffer, size_t size, qboolean 
 	msprite_t		*psprite;
 	int texFlags = TF_IMAGE;
 
-	if( cl_sprite_nearest->value )
+	if( cl_sprite_nearest->integer )
 		texFlags |= TF_NEAREST;
 
 	if( loaded ) *loaded = false;
