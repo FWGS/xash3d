@@ -816,12 +816,13 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 	{	
 		// duplicate the current state so lerping doesn't hurt anything
 		ent->prevstate = *state;
-		CL_ResetPositions( ent );
+		if ( newent )
+			CL_ResetPositions( ent );
 	}
 	else if( ent->player && ( ent->curstate.movetype != MOVETYPE_NONE ) && ( ent->prevstate.movetype == MOVETYPE_NONE ) )
 		CL_ResetPositions( ent );
 	else
-	{	
+	{
 		// shuffle the last state to previous
 		ent->prevstate = ent->curstate;
 	}
