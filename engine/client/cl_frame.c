@@ -59,6 +59,16 @@ int CL_PushMoveFilter( physent_t *pe )
 	return 0;
 }
 
+void CL_ResetPositions( cl_entity_t *ent )
+{
+	position_history_t store = ent->ph[ent->current_position];
+
+	ent->current_position = 1;
+
+	Q_memset( ent->ph, 0, sizeof( ent->ph ) );
+	ent->ph[1] = ent->ph[0] = store;
+}
+
 /*
 =========================================================================
 
@@ -92,7 +102,11 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 	int	i, i0, i1, imod;
 	float	at;
 
-	imod = ent->current_position - 1;
+	// Debug on grenade
+	//qboolean debug = !Q_strcmp( ent->model->name, "models/w_grenade.mdl" );
+
+	// It is wrong, but it seems that courrent_position is wrong during interp
+	imod = ent->current_position - 2;
 	i0 = (imod + 1) & HISTORY_MASK;
 	i1 = imod & HISTORY_MASK;
 
@@ -103,7 +117,17 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 		for( i = 0; i < HISTORY_MAX - 2; i++ )
 		{
 			at = ent->ph[imod & HISTORY_MASK].animtime;
-			if( at == 0.0f ) break;
+
+			// if( debug )
+				// Msg( "CL_FindInterpolationUpdates: at %f %d\n", at, imod );
+
+			// Entity was not exist at targettime
+			if( at == 0.0f )
+			{
+				i0 = 1;
+				i1 = 0;
+				break;
+			}
 
 			if( at < targettime )
 			{
@@ -112,9 +136,13 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 				extrapolate = false;
 				break;
 			}
+
 			imod--;
 		}
 	}
+
+	// if( debug )
+		// Msg( "CL_FindInterpolationUpdates: %d %d %d %f\n", ent->current_position, i0, i1, ent->ph[i0].animtime - targettime );
 
 	if( ph0 != NULL ) *ph0 = &ent->ph[i0];
 	if( ph1 != NULL ) *ph1 = &ent->ph[i1];
@@ -142,6 +170,9 @@ void CL_InterpolatePlayer( cl_entity_t *e )
 	}
 
 	if( cls.timedemo || cl.maxclients == 1 )
+		return;
+
+	if( e->curstate.movetype == MOVETYPE_NONE  || e->prevstate.movetype == MOVETYPE_NONE )
 		return;
 
 	// enitty was moved too far
@@ -219,6 +250,8 @@ int CL_InterpolateModel( cl_entity_t *e )
 	if( e->curstate.movetype == MOVETYPE_NONE ||
 		e->curstate.movetype == MOVETYPE_WALK ||
 		e->curstate.movetype == MOVETYPE_FLY  ||
+		e->curstate.renderfx == kRenderFxDeadPlayer ||
+		e->prevstate.renderfx == kRenderFxDeadPlayer ||
 		// don't interpolate monsters in coop
 		( e->curstate.movetype == MOVETYPE_STEP && cls.netchan.remote_address.type != NA_LOOPBACK ) )
 		return 0;
@@ -230,8 +263,8 @@ int CL_InterpolateModel( cl_entity_t *e )
 	t1 = ph0->animtime;
 	t2 = ph1->animtime;
 
-	if( t - t2 < 0.0f )
-		return 0;
+	//if( t - t2 < 0.0f )
+		//return 0;
 
 	if( t2 == 0.0f || ( VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ) ) )
 	{
@@ -783,7 +816,10 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 	{	
 		// duplicate the current state so lerping doesn't hurt anything
 		ent->prevstate = *state;
+		CL_ResetPositions( ent );
 	}
+	else if( ent->player && ( ent->curstate.movetype != MOVETYPE_NONE ) && ( ent->prevstate.movetype == MOVETYPE_NONE ) )
+		CL_ResetPositions( ent );
 	else
 	{	
 		// shuffle the last state to previous
