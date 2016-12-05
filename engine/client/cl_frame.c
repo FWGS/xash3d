@@ -61,12 +61,12 @@ int CL_PushMoveFilter( physent_t *pe )
 
 void CL_ResetPositions( cl_entity_t *ent )
 {
-	position_history_t store = ent->ph[ent->current_position];
+	//position_history_t store = ent->ph[ent->current_position];
 
-	ent->current_position = 1;
+	ent->current_position = 0; //1;
 
 	Q_memset( ent->ph, 0, sizeof( ent->ph ) );
-	ent->ph[1] = ent->ph[0] = store;
+	//ent->ph[1] = ent->ph[0] = store;
 }
 
 /*
