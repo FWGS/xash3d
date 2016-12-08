@@ -771,7 +771,7 @@ void SV_Kick_f( void )
 
         if ( *message )
         {
-                SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from server with message: \"%s\"\n", message );
+                SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from server with message: %s\n", message );
         }
         else
         {
@@ -784,8 +784,8 @@ void SV_Kick_f( void )
 
         if ( *message )
         {
-                SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked with message: \"%s\"\n", save.name, message );
-                Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\" (message \"%s\")\n", save.name, save.userid, SV_GetClientIDString( &save ), message );
+                SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked with message: %s\n", save.name, message );
+                Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\" (message: %s)\n", save.name, save.userid, SV_GetClientIDString( &save ), message );
         }
         else
         {
