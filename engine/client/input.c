@@ -501,6 +501,11 @@ IN_Shutdown
 void IN_Shutdown( void )
 {
 	IN_DeactivateMouse( );
+
+#ifdef USE_EVDEV
+	Cmd_RemoveCommand( "evdev_mouseopen" );
+	Cmd_RemoveCommand( "evdev_mouseclose" );
+#endif
 }
 
 
