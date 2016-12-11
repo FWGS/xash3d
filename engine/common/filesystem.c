@@ -502,7 +502,6 @@ void FS_MD5_f( void )
 	}
 }
 
-
 /*
 ============
 FS_FileBase
@@ -537,6 +536,46 @@ void FS_FileBase( const char *in, char *out )
 	if( start < 0 || ( in[start] != '/' && in[start] != '\\' ))
 		start = 0;
 	else start++;
+
+	// length of new sting
+	len = end - start + 1;
+
+	// Copy partial string
+	Q_strncpy( out, &in[start], len + 1 );
+	out[len] = 0;
+}
+
+/*
+============
+FS_MapFileBase
+
+Extracts the base name of a map file (no extension, split map from path)
+============
+*/
+void FS_MapFileBase( const char *in, char *out )
+{
+	int	len, start, end;
+	const char *pstr;
+
+	len = Q_strlen( in );
+	if( !len ) return;
+
+	// scan backward for '.'
+	end = len - 1;
+
+	while( end && in[end] != '.' && in[end] != '/' && in[end] != '\\' )
+		end--;
+
+	if( in[end] != '.' )
+		end = len-1; // no '.', copy to end
+	else end--; // found ',', copy to left of '.'
+
+
+	// strip "maps/" if exists
+	start = 0;
+	pstr = Q_strstr( in, "maps/");
+	if( pstr )
+		start = pstr + 5 - in;
 
 	// length of new sting
 	len = end - start + 1;

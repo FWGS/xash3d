@@ -323,11 +323,12 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 	byte		buf[MAX_SYSPATH]; // 1 kb
 	int		i, nummaps;
 
-	t = FS_Search( va( "maps/%s*.bsp", s ), true, con_gamemaps->integer );
+	t = FS_Search( va( "maps/%s*.bsp", s ), false, con_gamemaps->integer );
 	if( !t ) return false;
 
-	FS_FileBase( t->filenames[0], matchbuf ); 
-	Q_strncpy( completedname, matchbuf, length );
+	FS_MapFileBase( t->filenames[0], matchbuf );
+	if( completedname && length )
+		Q_strncpy( completedname, matchbuf, length );
 	if( t->numfilenames == 1 ) return true;
 
 	for( i = 0, nummaps = 0; i < t->numfilenames; i++ )
@@ -422,7 +423,7 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 		}
 
 		if( f ) FS_Close(f);
-		FS_FileBase( t->filenames[i], matchbuf );
+		FS_MapFileBase( t->filenames[i], matchbuf );
 
 		switch( ver )
 		{
@@ -452,10 +453,13 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 	Mem_Free( t );
 
 	// cut shortestMatch to the amount common with s
-	for( i = 0; matchbuf[i]; i++ )
+	if( completedname && length )
 	{
-		if( Q_tolower( completedname[i] ) != Q_tolower( matchbuf[i] ))
-			completedname[i] = 0;
+		for( i = 0; matchbuf[i]; i++ )
+		{
+			if( Q_tolower( completedname[i] ) != Q_tolower( matchbuf[i] ))
+				completedname[i] = 0;
+		}
 	}
 	return true;
 }

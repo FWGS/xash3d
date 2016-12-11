@@ -572,7 +572,8 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 	}
 
 	// make sure what server name doesn't contain path and extension
-	FS_FileBase( mapname, sv.name );
+	FS_MapFileBase( mapname, sv.name );
+
 
 	if( startspot )
 		Q_strncpy( sv.startspot, startspot, sizeof( sv.startspot ));
