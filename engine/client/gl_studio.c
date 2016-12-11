@@ -2168,9 +2168,9 @@ R_StudioDrawMesh
 
 ===============
 */
-static void R_StudioDrawMesh(short *ptricmds, float s, float t )
+static void R_StudioDrawMesh(short *ptricmds, float s, float t, float a )
 {
-	GLubyte alpha = 255;
+	GLubyte alpha = 255 * a;
 	int i;
 	vec2_t uv;
 	float *av, *lv;
@@ -2365,7 +2365,7 @@ static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref )
 			GL_Bind( XASH_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
 		}
 
-		R_StudioDrawMesh(ptricmds, s, t);
+		R_StudioDrawMesh(ptricmds, s, t, alpha);
 	}
 }
 
