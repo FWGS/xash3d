@@ -192,12 +192,15 @@ void CL_InterpolatePlayer( cl_entity_t *e )
 	t1 = ph0->animtime;
 	t2 = ph1->animtime;
 
-	if( t1 == 0.0f )
+	if( !t1 || !t2 )
+		return;
+
+	/*if( t2 == 0.0f )
 	{
 		VectorCopy( ph0->origin, e->origin );
 		VectorCopy( ph0->angles, e->angles );
 		return;
-	}
+	}*/
 
 	VectorSubtract( ph0->origin, ph1->origin, delta );
 
@@ -263,8 +266,8 @@ int CL_InterpolateModel( cl_entity_t *e )
 	t1 = ph0->animtime;
 	t2 = ph1->animtime;
 
-	//if( t - t2 < 0.0f )
-		//return 0;
+	if( !t1 )
+		return 0;
 
 	if( t2 == 0.0f || ( VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ) ) )
 	{
