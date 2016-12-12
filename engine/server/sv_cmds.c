@@ -201,6 +201,19 @@ void SV_Map_f( void )
 		spawn_entity = GI->sp_entity;
 	else spawn_entity = GI->mp_entity;
 
+	if( Host_IsDedicated() )
+	{
+		// apply servercfgfile cvar on first dedicated server run
+		if( !host.stuffcmdsrun )
+			Cbuf_Execute();
+
+		// dedicated servers are using settings from server.cfg file
+		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
+	}
+
+	// make sure that all configs are executed
+	Cbuf_Execute();
+
 	flags = SV_MapIsValid( mapname, spawn_entity, NULL );
 
 	if( flags & MAP_INVALID_VERSION )

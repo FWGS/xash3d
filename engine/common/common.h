@@ -431,6 +431,7 @@ void FS_AddGameDirectory( const char *dir, int flags );
 void FS_AddGameHierarchy( const char *dir, int flags );
 void FS_LoadGameInfo( const char *rootfolder );
 void FS_FileBase( const char *in, char *out );
+void FS_MapFileBase( const char *in, char *out );
 const char *FS_FileExtension( const char *in );
 void FS_DefaultExtension( char *path, const char *extension );
 void FS_ExtractFilePath( const char *path, char* dest );
