@@ -22,11 +22,12 @@ else
   echo \* [$arg]\(https://github.com/FWGS/xash3d-deploy/blob/$SOURCE_NAME-$TRAVIS_BRANCH/$arg\?raw\=true\) >> README.md
   echo >> README.md
  done
+ echo $TRAVIS_COMMIT > commit.txt
  git add .
  git commit -m "Laterst travis deploy $TRAVIS_COMMIT"
  git checkout -b $SOURCE_NAME-$TRAVIS_BRANCH
  git push -q --force travis-deploy-public $SOURCE_NAME-$TRAVIS_BRANCH
- git checkout -b $SOURCE_NAME-laterst
- git push -q --force travis-deploy-public $SOURCE_NAME-laterst
+ git checkout -b $SOURCE_NAME-latest
+ git push -q --force travis-deploy-public $SOURCE_NAME-latest
 fi
 exit 0
