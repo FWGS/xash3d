@@ -20,7 +20,7 @@ script:
     - make -f Makefile.mingw CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ -j2
     - cp ../vgui_support_bin/vgui_support.dll .
     - cp ../SDL2/lib/x86/SDL2.dll .
-    - 7z a -t7z xash3d-mingw.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash_bin.exe SDL2.dll vgui_support.dll
+    - 7z a -t7z xash3d-mingw.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash_bin.exe SDL2.dll vgui_support.dll menu.dll
     - cd ../SDL2-2.0.4
     - CC="gcc -msse2 -march=i686 -m32 -ggdb -O2" ./configure --disable-dependency-tracking --enable-audio --enable-video --enable-events --disable-render --enable-joystick --disable-haptic --disable-power --enable-threads --enable-timers --enable-loadso --enable-video-opengl --enable-x11-shared --enable-video-x11 --enable-video-x11-xrandr --enable-video-x11-scrnsaver --enable-video-x11-xinput --disable-video-x11-xshape --disable-video-x11-xdbe --disable-libudev --disable-dbus --disable-ibus --enable-sdl-dlopen --disable-video-opengles --disable-cpuinfo --disable-assembly --disable-atomic --enable-alsa
     - make -j2
