@@ -39,4 +39,4 @@ after_script:
     - curl --upload-file xash3d-mingw.7z https://transfer.sh/xash3d-mingw-`date -u +%y-%m-%d_%H-%M`.7z
     - curl --upload-file xash3d-linux.7z https://transfer.sh/xash3d-linux-`date -u +%y-%m-%d_%H-%M`.7z
     
-    ls
+  -     ls
