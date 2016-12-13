@@ -248,7 +248,7 @@ gotnewcl:
 		unsigned int maxpacket = Q_atoi( Info_ValueForKey( userinfo, "cl_maxpacket") );
 		extensions |= NET_EXT_SPLIT;
 		newcl->netchan.split = true;
-		if( maxpacket < 100 || maxpacket >= 40000 )
+		if( maxpacket < 100 || maxpacket >= NET_MAX_PAYLOAD / 2 )
 			maxpacket = 1400;
 		if( maxpacket > sv_maxpacket->integer )
 			maxpacket = sv_maxpacket->integer;
@@ -2047,7 +2047,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	if( !cl->netchan.split && *val )
 	{
 		cl->maxpacket = Q_atoi( val );
-		cl->maxpacket = bound( 100, cl->maxpacket, ( NET_MAX_PAYLOAD / 2 ) );
+		cl->maxpacket = bound( 100, cl->maxpacket, ( sv_maxpacket->integer / 2 ) );
 	}
 	else
 		cl->maxpacket = sv_maxpacket->integer;
