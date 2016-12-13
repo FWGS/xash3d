@@ -120,8 +120,8 @@ qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *l
 	netsplit_packet_t *packet = (netsplit_packet_t*)data;
 	netsplit_chain_packet_t * p;
 
-	ASSERT( *length > NETSPLIT_HEADER_SIZE );
-	// if( *length <= NETSPLIT_HEADER_SIZE ) return false;
+	//ASSERT( *length > NETSPLIT_HEADER_SIZE );
+	if( *length <= NETSPLIT_HEADER_SIZE ) return false;
 
 	p = &ns->packets[packet->id & NETSPLIT_BACKUP_MASK];
 	// MsgDev( D_NOTE, "NetSplit_GetLong: packet from %s, id %d, index %d length %d\n", NET_AdrToString( *from ), (int)packet->id, (int)packet->index, (int)*length );
@@ -169,7 +169,7 @@ qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *l
 	// rewrite results of NET_GetPacket
 	if( p->received == packet->count )
 	{
-		ASSERT( packet->length % packet->part == (*length - NETSPLIT_HEADER_SIZE) % packet->part );
+		//ASSERT( packet->length % packet->part == (*length - NETSPLIT_HEADER_SIZE) % packet->part );
 		*length = packet->length;
 
 		// MsgDev( D_NOTE, "NetSplit_GetLong: packet from %s, id %d received %d length %d\n", NET_AdrToString( *from ), (int)packet->id, (int)p->received, (int)packet->length );
@@ -177,7 +177,7 @@ qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *l
 		return true;
 	}
 	else
-		ASSERT( *length = NETSPLIT_HEADER_SIZE + packet->part );
+		*length = NETSPLIT_HEADER_SIZE + packet->part;
 
 
 	return false;
