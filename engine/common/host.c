@@ -1104,14 +1104,12 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 		if( !Sys_CheckParm("+map") )
 		{
-			defaultmap = Cvar_VariableString( "defaultmap" );
-			if( !defaultmap[0] )
-				Msg( "Please add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
-			else
-				Cbuf_AddText( va( "map %s\n", defaultmap ));
+				Cbuf_AddText( "startdefaultmap" );
 		}
 
 		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
+
+		Cbuf_Execute(); // apply port cvar
 
 		NET_Config( true );
 	}
