@@ -16,7 +16,7 @@ else
  echo >> README.md
  echo Short changelog: >> README.md
  echo \`\`\` >> README.md
- echo $(cd ..;git log --oneline -n 10 HEAD `curl https://raw.githubusercontent.com/FWGS/xash3d-deploy/$SOURCE_NAME-$TRAVIS_BRANCH/commit.txt`.. ) >> README.md
+ (cd ..;git log --oneline -n 10 HEAD `curl https://raw.githubusercontent.com/FWGS/xash3d-deploy/$SOURCE_NAME-$TRAVIS_BRANCH/commit.txt`.. ) >> README.md
  echo \`\`\` >> README.md
  echo >> README.md
  echo [code on github]\(https://github.com/FWGS/xash3d/tree/$TRAVIS_COMMIT\) >> README.md
