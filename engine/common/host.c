@@ -1093,8 +1093,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	if( Host_IsDedicated() )
 	{
-		char *defaultmap;
-
 		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
 		Cmd_AddCommand( "exit", Sys_Quit, "quit the game" );
 
@@ -1103,9 +1101,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_AddText( "exec config.cfg\n" );
 
 		if( !Sys_CheckParm("+map") )
-		{
 				Cbuf_AddText( "startdefaultmap" );
-		}
 
 		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
 
