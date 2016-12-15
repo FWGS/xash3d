@@ -369,7 +369,7 @@ void SV_StartDefaultMap_f( void )
 
 	// get defaultmap cvar
 	Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
-	Cbuf_Execute()
+	Cbuf_Execute();
 
 	defaultmap = Cvar_VariableString( "defaultmap" );
 	if( !defaultmap[0] )
