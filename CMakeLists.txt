@@ -27,23 +27,22 @@ project (XASH3D)
 # USER DEFINES \
 ################\
 
-set (XASH3D_VERSION 0.18)
+set (XASH3D_VERSION 0.19)
 
 set (HL_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/hlsdk/)
 
+include( CMakeDependentOption )
+
 # Servers must choose this
 option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF)
-
 option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompile game for 64 bit." OFF)
 
 # Windows only. Enable it by default for Windows.
-if(NOT WIN32)
-	option(XASH_IPX "Enable IPX support for networking. Windows only." OFF)
-	option(XASH_NONSTANDARD_LOAD "Enable loading game libraries. Windows only." OFF)
-else()
-	option(XASH_IPX "Enable IPX support for networking. Windows only." ON)
-	option(XASH_NONSTANDARD_LOAD "Enable loading game libraries. Windows only." ON)
-endif()
+cmake_dependent_option(XASH_IPX "Enable IPX support for networking. Windows only." ON "WIN32" OFF)
+cmake_dependent_option(XASH_NONSTANDARD_LOAD "Enable own DLL loader in Windows." ON "WIN32" OFF)
+
+# POSIX only. Disable it by default for Linux
+cmake_dependent_option(XASH_USE_SELECT "Enable reading console commands from stdin." ON "NOT WIN32" OFF)
 
 # GLES hacks
 option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator." OFF)
@@ -54,11 +53,7 @@ option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executa
 option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 
 # Shared library loader implementation. Must be checked one of these or both.
-if(NOT WIN32)
-	option(XASH_LIBDL "Enable libdl" ON)
-else()
-	option(XASH_LIBDL "Enable libdl" OFF)
-endif()
+cmake_dependent_option(XASH_LIBDL "Enable libdl use. POSIX only." ON "NOT WIN32" OFF)
 option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
 
 # Desktop-version options

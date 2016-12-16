@@ -63,9 +63,12 @@ endif( )
 if( MSVC )
 	add_definitions( -D_CRT_SECURE_NO_WARNINGS 
 		-D_CRT_NONSTDC_NO_DEPRECATE 
-		-DXASH_CRASHHANDLER=2 ) # dbghelp crashhandler
+		-DXASH_CRASHHANDLER=2 -DXASH_W32CON ) # dbghelp crashhandler
 else()
-	add_definitions( -DUSE_SELECT -DCOLORIZE_CONSOLE )
+	if( XASH_USE_SELECT )
+		add_definitions( -DUSE_SELECT )
+	endif()
+	add_definitions( -DCOLORIZE_CONSOLE )
 endif() 
 
 if( LINUX )
