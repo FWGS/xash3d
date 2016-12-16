@@ -1337,6 +1337,7 @@ void FS_CreateDefaultGameInfo( const char *filename )
 static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, gameinfo_t *GameInfo )
 {
 	char	*afile, *pfile;
+	qboolean found_linux = false, found_osx = false;
 	string	token;
 
 	if( !GameInfo ) return false;	
@@ -1362,8 +1363,6 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
-	Q_strncpy( GameInfo->game_dll_osx, "dlls/hl.dylib", sizeof( GameInfo->game_dll_osx ));
-	Q_strncpy( GameInfo->game_dll_linux, "dlls/hl.so", sizeof( GameInfo->game_dll_linux ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
 	VectorSet( GameInfo->client_mins[0],   0,   0,  0  );
@@ -1417,10 +1416,12 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		else if( !Q_stricmp( token, "gamedll_linux" ))
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
+			found_linux = true;
 		}
 		else if( !Q_stricmp( token, "gamedll_osx" ))
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
+			found_osx = false;
 		}
 		else if( !Q_stricmp( token, "icon" ))
 		{
@@ -1484,6 +1485,21 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		}
 	}
 
+	if( !found_linux || !found_osx )
+	{
+		// just replace extension from dll to so/dylib
+
+		char gamedll[64];
+		Q_strncpy( gamedll, GameInfo->game_dll, sizeof( gamedll ));
+		FS_StripExtension( gamedll );
+
+		if( !found_linux )
+			snprintf( GameInfo->game_dll_linux, sizeof( GameInfo->game_dll_linux ), "%s.so", gamedll );
+
+		if( !found_osx )
+			snprintf( GameInfo->game_dll_osx, sizeof( GameInfo->game_dll_osx ), "%s.dylib", gamedll );
+	}
+
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
 
@@ -1523,6 +1539,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	char	*afile, *pfile;
 	string	fs_path, filepath;
 	string	liblist, token;
+	qboolean found_linux = false, found_osx = false;
 
 	Q_snprintf( filepath, sizeof( filepath ), "%s/gameinfo.txt", gamedir );
 	Q_snprintf( liblist, sizeof( liblist ), "%s/liblist.gam", gamedir );
@@ -1561,8 +1578,6 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 #else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
-	Q_strncpy( GameInfo->game_dll_osx, "dlls/hl.dylib", sizeof( GameInfo->game_dll_osx ));
-	Q_strncpy( GameInfo->game_dll_linux, "dlls/hl.so", sizeof( GameInfo->game_dll_linux ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 #endif
 	Q_strncpy( GameInfo->startmap, "", sizeof( GameInfo->startmap ));
@@ -1618,10 +1633,12 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		else if( !Q_stricmp( token, "gamedll_osx" ))
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
+			found_osx = true;
 		}
 		else if( !Q_stricmp( token, "gamedll_linux" ))
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
+			found_linux = true;
 		}
 		else if( !Q_stricmp( token, "clientlib" ))
 		{
@@ -1749,6 +1766,22 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		}
 	}
 
+#if !defined(ANDROID)
+	if( !found_linux || !found_osx )
+	{
+		// just replace extension from dll to so/dylib
+
+		char gamedll[64];
+		Q_strncpy( gamedll, GameInfo->game_dll, sizeof( gamedll ));
+		FS_StripExtension( gamedll );
+
+		if( !found_linux )
+			snprintf( GameInfo->game_dll_linux, sizeof( GameInfo->game_dll_linux ), "%s.so", gamedll );
+
+		if( !found_osx )
+			snprintf( GameInfo->game_dll_osx, sizeof( GameInfo->game_dll_osx ), "%s.dylib", gamedll );
+	}
+#endif
 	// make sure what gamedir is really exist
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
