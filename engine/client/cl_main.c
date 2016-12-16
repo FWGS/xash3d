@@ -350,6 +350,7 @@ void CL_CreateCmd( void )
 			cl.refdef.cmd = &cl.commands[cls.netchan.outgoing_sequence & CL_UPDATE_MASK].cmd;
 			*cl.refdef.cmd = cmd;
 		}
+		CL_PopPMStates();
 		return;
 	}
 
