@@ -377,7 +377,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 				snprintf( command, 256, "exec \"touch_presets/%s\"\n", uiTouchOptions.profileDesc[ i ] );
 				CLIENT_COMMAND( 1,  command );
 
-				while( FILE_EXISTS( curconfig ) )
+				while( FILE_EXISTS( curconfig, TRUE ) )
 				{
 					char copystring[256];
 					char filebase[256];
@@ -404,7 +404,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 			CLIENT_COMMAND( 1,  "touch_writeconfig\n" );
 
 			// check if it failed ant reset profile to default if it is
-			if( !FILE_EXISTS( CVAR_GET_STRING( "touch_config_file" ) ))
+			if( !FILE_EXISTS( CVAR_GET_STRING( "touch_config_file" ), TRUE ) )
 			{
 				CVAR_SET_STRING( "touch_config_file", "touch.cfg" );
 				uiTouchOptions.profiles.curItem = uiTouchOptions.firstProfile;

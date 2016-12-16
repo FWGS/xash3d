@@ -298,7 +298,7 @@ static void UI_SaveGame_Ownerdraw( void *self )
 
 			sprintf( saveshot, "save/%s.bmp", uiSaveGame.saveName[uiSaveGame.savesList.curItem] );
 
-			if( !FILE_EXISTS( saveshot ))
+			if( !FILE_EXISTS( saveshot, TRUE ))
 				UI_DrawPicAdditive( x, y, w, h, uiColorWhite, "{GRAF001" );
 			else UI_DrawPic( x, y, w, h, uiColorWhite, saveshot );
 		}
