@@ -2114,7 +2114,7 @@ static void R_StudioDrawPoints_legacy( void )
 				else pglTexCoord2f( ptricmds[2] * s, ptricmds[3] * t );
 
 				if(!( g_nForceFaceFlags & STUDIO_NF_CHROME ))
-										{
+				{
 					if( g_iRenderMode == kRenderTransAdd )
 					{
 						pglColor4f( 1.0f, 1.0f, 1.0f, alpha );
@@ -2168,12 +2168,12 @@ R_StudioDrawMesh
 
 ===============
 */
-static void R_StudioDrawMesh(short *ptricmds, float s, float t, float a )
+static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float scale )
 {
 	GLubyte alpha = 255 * a;
 	int i;
 	vec2_t uv;
-	float *av, *lv;
+	float *av, *lv, *nv;
 
 	g_nNumArrayVerts = g_nNumArrayElems = 0;
 
@@ -2235,8 +2235,8 @@ static void R_StudioDrawMesh(short *ptricmds, float s, float t, float a )
 			}
 			else if( g_nFaceFlags & STUDIO_NF_UV_COORDS )
 			{
-				uv[0] = ptricmds[2] * (1.0f / 32768.0f);
-				uv[1] = ptricmds[3] * (1.0f / 32768.0f);
+				uv[0] = HalfToFloat( ptricmds[2] );
+				uv[1] = HalfToFloat( ptricmds[3] );
 			}
 			else
 			{
@@ -2246,29 +2246,61 @@ static void R_StudioDrawMesh(short *ptricmds, float s, float t, float a )
 			g_xarraycoord[g_nNumArrayVerts][0] = uv[0];
 			g_xarraycoord[g_nNumArrayVerts][1] = uv[1];
 
-			lv = (float *)g_lightvalues[ptricmds[1]];
-			cl[0] = lv[0]*255;
-			cl[1] = lv[1]*255;
-			cl[2] = lv[2]*255;
-			cl[3] = alpha;
+			if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ) )
+			{
+				if( g_iRenderMode == kRenderTransAdd )
+				{
+					cl[0] = cl[1] = cl[2] = 255;
+					cl[3] = alpha;
+					//pglColor4f( 1.0f, 1.0f, 1.0f, alpha );
+				}
+				else if( g_iRenderMode == kRenderTransColor )
+				{
+					color24	*clr;
+					clr = &RI.currententity->curstate.rendercolor;
+					cl[0] = clr->r * 255;
+					cl[1] = clr->g * 255;
+					cl[2] = clr->b * 255;
+					cl[3] = alpha;
+					//pglColor4ub( clr->r, clr->g, clr->b, alpha * 255 );
+				}
+				else if( g_nFaceFlags & STUDIO_NF_FULLBRIGHT )
+				{
+					cl[0] = cl[1] = cl[2] = 255;
+					cl[3] = alpha;
+					//pglColor4f( 1.0f, 1.0f, 1.0f, alpha );
+				}
+				else
+				{
+					lv = (float *)g_lightvalues[ptricmds[1]];
+					cl[0] = lv[0]*255;
+					cl[1] = lv[1]*255;
+					cl[2] = lv[2]*255;
+					cl[3] = alpha;
+				}
+			}
+			else
+			{
+				color24	*clr;
+				clr = &RI.currententity->curstate.rendercolor;
+				cl[0] = clr->r * 255;
+				cl[1] = clr->g * 255;
+				cl[2] = clr->b * 255;
+				cl[3] = alpha;
+			}
 
 			Q_memcpy( g_xarraycolor[g_nNumArrayVerts], cl, sizeof(cl) );
 
 			av = g_xformverts[ptricmds[0]];
-			/*if( g_nForceFaceFlags & STUDIO_NF_CHROME )
+			if( g_nForceFaceFlags & STUDIO_NF_CHROME )
 			{
-				vec3_t	scaled_vertex;
 				nv = (float *)g_xformnorms[ptricmds[1]];
-				VectorMA( av, scale, nv, scaled_vertex );
-				pglVertex3fv( scaled_vertex );
+				VectorMA( av, scale, nv, av );
 			}
-			else*/
-			{
-				//pglVertex3f( av[0], av[1], av[2] );
-				ASSERT( g_nNumArrayVerts < MAXARRAYVERTS );
-				VectorCopy( av, g_xarrayverts[g_nNumArrayVerts] ); // store off vertex
-				g_nNumArrayVerts++;
-			}
+
+			ASSERT( g_nNumArrayVerts < MAXARRAYVERTS );
+			VectorCopy( av, g_xarrayverts[g_nNumArrayVerts] ); // store off vertex
+			g_nNumArrayVerts++;
 		}
 	}
 
@@ -2297,7 +2329,7 @@ R_StudioDrawMeshes
 
 ===============
 */
-static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref )
+static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref, float scale )
 {
 	int		j;
 	mstudiomesh_t	*pmesh;
@@ -2365,7 +2397,7 @@ static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref )
 			GL_Bind( XASH_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
 		}
 
-		R_StudioDrawMesh(ptricmds, s, t, alpha);
+		R_StudioDrawMesh(ptricmds, s, t, alpha, scale);
 	}
 }
 
@@ -2385,7 +2417,7 @@ static void GAME_EXPORT R_StudioDrawPoints( void )
 	mstudiotexture_t	*ptexture;
 	mstudiomesh_t	*pmesh;
 	short		*pskinref;
-	float		*av, *lv, *nv, scale = 0.0f;
+	float		*lv, scale = 0.0f;
 
 	if( !r_studio_drawelements->integer )
 	{
@@ -2458,7 +2490,7 @@ static void GAME_EXPORT R_StudioDrawPoints( void )
 		qsort( g_sortedMeshes, m_pSubModel->nummesh, sizeof( sortedmesh_t ), (void *)R_StudioMeshCompare );
 	}
 
-	R_StudioDrawMeshes(ptexture,pskinref);
+	R_StudioDrawMeshes( ptexture, pskinref, scale );
 
 	// restore depthmask for next call StudioDrawPoints
 	if( g_iRenderMode != kRenderTransAdd )
