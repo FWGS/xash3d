@@ -1139,7 +1139,7 @@ void SV_PutClientInServer( edict_t *ent )
 			// clear any dlls data but keep engine data
 			Mem_Free( ent->pvPrivateData );
 			ent->pvPrivateData = NULL;
-			ent->serialnumber++;
+			//ent->serialnumber++;
 		}
 
 		Q_memset( &ent->v, 0, sizeof( ent->v ) );
