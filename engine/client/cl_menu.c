@@ -23,6 +23,10 @@ GNU General Public License for more details.
 #include "input.h"
 #include "server.h" // !!svgame.hInstance
 
+#if defined(_WIN32)
+#define USE_VFW
+#endif
+
 static MENUAPI	GetMenuAPI;
 static ADDTOUCHBUTTONTOLIST pfnAddTouchButtonToList;
 static void UI_UpdateUserinfo( void );
