@@ -17,6 +17,10 @@ GNU General Public License for more details.
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef XASH_SDLMAIN
+#include "SDL.h"
+#endif
+
 char szGameDir[128]; // safe place to keep gamedir
 int szArgc;
 

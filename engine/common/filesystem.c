@@ -1112,6 +1112,8 @@ void FS_Rescan( void )
 	if( str = getenv("XASH3D_EXTRAS_PAK2") )
 		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	//FS_AddPack_Fullpath( "/data/data/in.celest.xash3d.hl.test/files/pak.pak", NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+#elif defined TARGET_OS_IPHONE
+	FS_AddPack_Fullpath( va("%sextras.pak",SDL_GetBasePath()), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 #endif
 
 	if( Q_stricmp( GI->basedir, GI->gamedir ))
@@ -1570,7 +1572,9 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->title, "New Game", sizeof( GameInfo->title ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
-#if defined(__ANDROID__)
+#if TARGET_OS_IPHONE
+	Q_strncpy( GameInfo->game_dll, va( "%sserver", SDL_GetBasePath() ), sizeof( GameInfo->game_dll ) );
+#elif defined(__ANDROID__)
 	Q_strncpy( GameInfo->dll_path, getenv("XASH3D_GAMELIBDIR"), sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 	Q_strncpy( GameInfo->game_dll, GameInfo->dll_path, sizeof( GameInfo->game_dll ));
@@ -1829,6 +1833,8 @@ void FS_LoadGameInfo( const char *rootfolder )
 	{
 #if defined(_WIN32)
 		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
+#elif TARGET_OS_IPHONE
+		Q_strncpy( SI.gamedll, va( "%sserver", SDL_GetBasePath() ), sizeof( SI.gamedll ) );
 #elif defined(__APPLE__)
 		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
 #elif defined(__ANDROID__)

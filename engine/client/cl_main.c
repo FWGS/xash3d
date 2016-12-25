@@ -1960,7 +1960,9 @@ void CL_Init( void )
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
 	IN_TouchInit();
-#if defined (__ANDROID__)
+#if TARGET_OS_IPHONE
+	loaded = CL_LoadProgs( va("%sclient", SDL_GetBasePath()) );
+#elif defined (__ANDROID__)
 	{
 		char clientlib[256];
 		Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_GAMELIBDIR"));

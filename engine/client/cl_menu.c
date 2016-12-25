@@ -1035,7 +1035,10 @@ qboolean UI_LoadProgs( void )
 
 	// setup globals
 	menu.globals = &gpGlobals;
-#if defined (__ANDROID__)
+#if TARGET_OS_IPHONE
+	if(!( menu.hInstance = Com_LoadLibrary( va("%smenu", SDL_GetBasePath()), false )))
+		return false;
+#elif defined (__ANDROID__)
 	char menulib[256];
 	Q_snprintf( menulib, 256, "%s/%s", getenv("XASH3D_GAMELIBDIR"), MENUDLL );
 	if(!( menu.hInstance = Com_LoadLibrary( menulib, false )))
