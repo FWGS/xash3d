@@ -1356,7 +1356,7 @@ void HTTP_Run( void )
 #ifdef _WIN32
 				if( pWSAGetLastError() != WSAEWOULDBLOCK && pWSAGetLastError() != WSAENOTCONN )
 #elif defined(__APPLE__) || defined(__FreeBSD__)
-				if( errno != EWOULDBLOCK || errno != ENOTCONN )
+				if( errno != EWOULDBLOCK && errno != ENOTCONN )
 #else
 				if( errno != EWOULDBLOCK )
 #endif
