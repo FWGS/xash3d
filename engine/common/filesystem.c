@@ -303,7 +303,7 @@ emulate WIN32 FS behaviour when opening local file
 */
 const char *FS_FixFileCase( const char *path )
 {
-#ifndef _WIN32
+#if !defined _WIN32 && !TARGET_OS_IPHONE // assume case insensitive
 	DIR *dir; struct dirent *entry;
 	char path2[PATH_MAX], *fname;
 
@@ -1573,7 +1573,9 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
 #if TARGET_OS_IPHONE
-	Q_strncpy( GameInfo->game_dll, va( "%sserver", SDL_GetBasePath() ), sizeof( GameInfo->game_dll ) );
+	//Q_strncpy( GameInfo->game_dll, va( "%sserver", SDL_GetBasePath() ), sizeof( GameInfo->game_dll ) );
+	
+	//Q_strncpy( GameInfo->game_dll, "hlsv.framework/hl", sizeof( GameInfo->game_dll ) );
 #elif defined(__ANDROID__)
 	Q_strncpy( GameInfo->dll_path, getenv("XASH3D_GAMELIBDIR"), sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
@@ -1834,7 +1836,7 @@ void FS_LoadGameInfo( const char *rootfolder )
 #if defined(_WIN32)
 		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
 #elif TARGET_OS_IPHONE
-		Q_strncpy( SI.gamedll, va( "%sserver", SDL_GetBasePath() ), sizeof( SI.gamedll ) );
+		Q_strncpy( SI.gamedll, va( "server_%s", GI->gamedir ), sizeof( SI.gamedll ) );
 #elif defined(__APPLE__)
 		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
 #elif defined(__ANDROID__)

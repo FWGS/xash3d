@@ -73,15 +73,46 @@ int dladdr( const void *addr, Dl_info *info )
 	return 0;
 }
 #endif
-
-
+#ifdef XASH_SDL
+#include <SDL_filesystem.h>
+#endif
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
 	searchpath_t	*search = NULL;
 	int		pack_ind;
 	char	path [MAX_SYSPATH];
-
 	void *pHandle;
+
+#ifdef TARGET_OS_IPHONE
+	string errorstring = "";
+
+	// load frameworks from Documents directory
+	// frameworks should be signed with same key with application
+	// Useful for debug to prevent rebuilding app on every library update
+	// NOTE: Apple polices forbids loading code from shared places
+#ifdef ENABLE_FRAMEWORK_SIDELOAD
+	Q_snprintf( path, MAX_SYSPATH, "%s.framework/lib", dllname );
+	if( pHandle = dlopen( path, RTLD_LAZY ) )
+		return pHandle;
+	Q_snprintf( errorstring, MAX_STRING, dlerror() );
+#endif
+
+#ifdef DLOPEN_FRAMEWORKS
+	// load frameworks as it should be located in Xcode builds
+	Q_snprintf( path, MAX_SYSPATH, "%s%s.framework/lib", SDL_GetBasePath(), dllname );
+#else
+	// load libraries from app root to allow re-signing ipa with custom utilities
+	Q_snprintf( path, MAX_SYSPATH, "%s%s", SDL_GetBasePath(), dllname );
+#endif
+	pHandle = dlopen( path, RTLD_LAZY );
+	if( !pHandle )
+	{
+		Com_PushLibraryError(errorstring);
+		Com_PushLibraryError(dlerror());
+	}
+	return pHandle;
+#endif
+
 	qboolean dll = host.enabledll && ( Q_stristr( dllname, ".dll" ) != 0 );
 #ifdef DLL_LOADER
 	if(dll)
