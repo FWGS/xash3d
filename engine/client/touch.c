@@ -723,7 +723,7 @@ void IN_TouchAddButton_f( void )
 		IN_TouchAddButton( Cmd_Argv(1), Cmd_Argv(2), Cmd_Argv(3), 0.4, 0.4, 0.6, 0.6, color );
 		return;
 	}
-	Msg( "Usage: touch_addbutton <name> <texture> <command> [<x1> <y1> <x2> <y2> [ r g b a] ]\n" );
+	Msg( "Usage: touch_addbutton <name> <texture> <command> [<x1> <y1> <x2> <y2> [ r g b a ] ]\n" );
 }
 
 void IN_TouchEnableEdit_f( void )
@@ -863,6 +863,23 @@ void IN_TouchInitConfig( void )
 }
 qboolean IN_TouchIsVisible( touchbutton2_t *button )
 {
+	if( !(button->flags & TOUCH_FL_CLIENT) && touch.clientonly )
+		return false; // skip nonclient buttons in clientonly mode
+
+	if( touch.state >= state_edit )
+		return true; //!!! Draw when editor is open
+
+	if( button->flags & TOUCH_FL_HIDE )
+		return false; // skip hidden
+
+	if( button->flags & TOUCH_FL_SP && CL_GetMaxClients() != 1 )
+		return false; // skip singleplayer(load, save) buttons in multiplayer
+
+	if( button->flags & TOUCH_FL_MP && CL_GetMaxClients() == 1 )
+		return false; // skip multiplayer buttons in singleplayer
+
+	return true;
+	/*
 	return ( !touch.clientonly || ( button->flags & TOUCH_FL_CLIENT) ) && 
 	( 
 	( touch.state >= state_edit )
@@ -870,6 +887,7 @@ qboolean IN_TouchIsVisible( touchbutton2_t *button )
 	&& ( !(button->flags & TOUCH_FL_SP) || ( CL_GetMaxClients() == 1 ) ) 
 	&& ( !(button->flags & TOUCH_FL_MP) || ( CL_GetMaxClients() !=  1 ) ) ) 
 	 );
+	 */
 }
 
 void IN_TouchDrawTexture ( float x1, float y1, float x2, float y2, int texture, byte r, byte g, byte b, byte a )
@@ -1371,10 +1389,11 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 				if( button->type == touch_command )
 				{
 					char command[256];
-					Q_snprintf( command, 256, "%s\n", button->command );
+					Q_snprintf( command, sizeof( command ), "%s\n", button->command );
+					Cbuf_AddText( command );
+
 					if( B(flags) & TOUCH_FL_PRECISION )
 						touch.precision = true;
-					Cbuf_AddText( command );
 				}
 				if( button->type == touch_move || button->type == touch_joy || button->type == touch_dpad  )
 				{
@@ -1441,10 +1460,13 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			if( fingerID == button->finger )
 			{
 				button->finger = -1;
+				if( !IN_TouchIsVisible( button ) )
+					continue;
+
 				if( ( button->type == touch_command ) && ( button->command[0] == '+' ) )
 				{
 					char command[256];
-					Q_snprintf( command, 256, "%s\n", button->command );
+					Q_snprintf( command, sizeof( command ), "%s\n", button->command );
 					command[0] = '-';
 					Cbuf_AddText( command );
 					if( B(flags) & TOUCH_FL_PRECISION )

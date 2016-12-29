@@ -852,65 +852,71 @@ particle spray 2
 */
 void GAME_EXPORT CL_BloodStream( const vec3_t org, const vec3_t dir, int pcolor, int speed )
 {
-	particle_t	*p;
-	int		i, j;
-	float arc;
+	particle_t *p;
+	vec3_t dirCopy;
+	float arc, num;
+	int count, count2, speedCopy = speed;
 
-	for( arc = 0.05, i = 0; i < 100; i++, arc -= 0.005 )
+	for( count = 0, arc = 0.05; count < 100; count++, arc -= 0.005 )
 	{
 		p = CL_AllocParticle( NULL );
+		if( !p )
+			return;
 
-		if( !p ) return;
-
-		p->die += 2.0f;
-		p->type = pt_vox_grav;
+		p->die = cl.time + 2;
 		p->color = pcolor + Com_RandomLong( 0, 9 );
-
+		p->type = pt_vox_grav;
 		VectorCopy( org, p->org );
-		VectorCopy( dir, p->vel );
 
-		p->vel[2] -= arc;
-		arc -= 0.005;
-
-		VectorScale( p->vel, speed, p->vel );
+		VectorCopy( dir, dirCopy );
+		dirCopy[2] -= arc;
+		VectorScale( dirCopy, speedCopy, p->vel );
+		// speedCopy -= 0.00001;
 	}
 
-	for( arc = 0.075, i = 0; i < speed / 2; i++, arc -= 0.005 )
+	for ( count = 0, arc = 0.075; count < ( speed / 5 ); count++ )
 	{
-		float num;
-
 		p = CL_AllocParticle( NULL );
-		if( !p ) return;
+		if ( !p )
+			return;
 
-		p->die += 3.0f;
+		p->die = cl.time + 3;
 		p->color = pcolor + Com_RandomLong( 0, 9 );
 		p->type = pt_vox_slowgrav;
 
+		VectorCopy( dir, dirCopy );
 		VectorCopy( org, p->org );
 
-		VectorCopy( dir, p->vel );
-		p->vel[2] -= arc;
-		num = Com_RandomFloat( 0, 1 );
-		num = 1.7 * num * (int)(num * speed);
-		VectorScale( p->vel, num, p->vel );
+		dirCopy[2] -= arc;
+		arc -= 0.005;
 
-		for( j = 0; j < 2; j++ )
+		num = Com_RandomFloat( 0, 1 );
+		speedCopy = speed * num;
+
+		num *= 1.7;
+
+		VectorScale( dirCopy, num, dirCopy );
+		VectorScale( dirCopy, speedCopy, p->vel );
+
+		for( count2 = 0; count2 < 2; count2++ )
 		{
 			p = CL_AllocParticle( NULL );
-			if( !p ) return;
+			if ( !p )
+				return;
 
-			p->die += 3.0f;
+			p->die = cl.time + 3;
 			p->color = pcolor + Com_RandomLong( 0, 9 );
 			p->type = pt_vox_slowgrav;
 
-			p->org[0] = org[0] + Com_RandomFloat( -1, 1 );
-			p->org[1] = org[1] + Com_RandomFloat( -1, 1 );
-			p->org[2] = org[2] + Com_RandomFloat( -1, 1 );
+			for( i = 0; i < 3; i++ )
+				p->org[i] = org[i] + Com_RandomFloat( -1, 1 );
 
-			VectorCopy( dir, p->vel );
-			p->vel[2] -= arc;
+			VectorCopy( dir, dirCopy );
 
-			VectorScale( p->vel, num, p->vel );
+			dirCopy[2] -= arc;
+
+			VectorScale( dirCopy, num, dirCopy );
+			VectorScale( dirCopy, speedCopy, p->vel );
 		}
 	}
 }
