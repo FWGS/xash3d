@@ -49,6 +49,14 @@ cond_list_append( _XASH_CLIENT XASH_ENGINE_SOURCES XASH_ENGINE_CLIENT_SOURCES )
 
 include_directories ( . common/ common/imagelib/  common/soundlib/ client/ client/vgui/ server/ ../common ../pm_shared )
 
+include( CheckSSEFeatures )
+
+if( SSE_FLAGS )
+	set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SSE_FLAGS}")
+	set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SSE_FLAGS}")
+	add_definitions( -DVECTORIZE_SINCOS )
+endif( )
+
 add_definitions( -DXASH_FORCEINLINE )
 
 # Set executable or library
