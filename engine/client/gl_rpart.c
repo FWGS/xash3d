@@ -855,7 +855,7 @@ void GAME_EXPORT CL_BloodStream( const vec3_t org, const vec3_t dir, int pcolor,
 	particle_t *p;
 	vec3_t dirCopy;
 	float arc, num;
-	int count, count2, speedCopy = speed;
+	int count, count2, speedCopy = speed, i;
 
 	for( count = 0, arc = 0.05; count < 100; count++, arc -= 0.005 )
 	{
