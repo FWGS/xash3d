@@ -214,13 +214,13 @@ void SinCosFastVector(float r1, float r2, float r3, float r4,
 	sincos_ps(rad_vector, &sin_vector, &cos_vector);
 
 	*s0 = sin_vector[0];
-	if(s1) *s1 = sin_vector[1];
-	if(s2) *s2 = sin_vector[2];
+	*s1 = sin_vector[1];
+	*s2 = sin_vector[2];
 	if(s3) *s3 = sin_vector[3];
 
 	*c0 = cos_vector[0];
-	if(s1) *c1 = cos_vector[1];
-	if(s2) *c2 = cos_vector[2];
+	*c1 = cos_vector[1];
+	*c2 = cos_vector[2];
 	if(s3) *c3 = cos_vector[3];
 }
 #endif

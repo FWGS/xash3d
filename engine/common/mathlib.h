@@ -116,7 +116,11 @@ void SinCos( float radians, float *sine, float *cosine );
 #ifdef VECTORIZE_SINCOS
 void SinCosFastVector(float r1, float r2, float r3, float r4,
 					  float *s0, float *s1, float *s2, float *s3,
-					  float *c0, float *c1, float *c2, float *c3);
+					  float *c0, float *c1, float *c2, float *c3)
+#if defined(__GNUC__)
+	__attribute__((nonnull(5, 6, 7, 9, 10, 11)))
+#endif
+;
 #endif
 float VectorNormalizeLength2( const vec3_t v, vec3_t out );
 void VectorVectors( const vec3_t forward, vec3_t right, vec3_t up );
