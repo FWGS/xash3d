@@ -1961,9 +1961,7 @@ void CL_Init( void )
 
 	IN_TouchInit();
 #if TARGET_OS_IPHONE
-	loaded = CL_LoadProgs( va("client_%s", GI->gamedir ) );
-	if( !loaded )
-		loaded = CL_LoadProgs( "client" );
+	loaded = CL_LoadProgs( "client" );
 #elif defined (__ANDROID__)
 	{
 		char clientlib[256];

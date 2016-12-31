@@ -72,20 +72,22 @@ int dladdr( const void *addr, Dl_info *info )
 {
 	return 0;
 }
+
+
+
 #endif
 #ifdef XASH_SDL
 #include <SDL_filesystem.h>
 #endif
-void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
-{
-	searchpath_t	*search = NULL;
-	int		pack_ind;
-	char	path [MAX_SYSPATH];
-	void *pHandle;
 
 #ifdef TARGET_OS_IPHONE
-	string errorstring = "";
 
+static void *IOS_LoadLibraryInternal( const char *dllname )
+{
+	void *pHandle;
+	string errorstring = "";
+	char path[MAX_SYSPATH];
+	
 	// load frameworks from Documents directory
 	// frameworks should be signed with same key with application
 	// Useful for debug to prevent rebuilding app on every library update
@@ -96,7 +98,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		return pHandle;
 	Q_snprintf( errorstring, MAX_STRING, dlerror() );
 #endif
-
+	
 #ifdef DLOPEN_FRAMEWORKS
 	// load frameworks as it should be located in Xcode builds
 	Q_snprintf( path, MAX_SYSPATH, "%s%s.framework/lib", SDL_GetBasePath(), dllname );
@@ -111,6 +113,34 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		Com_PushLibraryError(dlerror());
 	}
 	return pHandle;
+}
+extern char *g_szLibrarySuffix;
+static void *IOS_LoadLibrary( const char *dllname )
+{
+	string name;
+	char *postfix = g_szLibrarySuffix;
+	char *pHandle;
+
+	if( !postfix ) postfix = GI->gamedir;
+
+	Q_snprintf( name, MAX_STRING, "%s_%s", dllname, postfix );
+	pHandle = IOS_LoadLibraryInternal( name );
+	if( pHandle )
+		return pHandle;
+	return IOS_LoadLibraryInternal( dllname );
+}
+
+#endif
+
+void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
+{
+	searchpath_t	*search = NULL;
+	int		pack_ind;
+	char	path [MAX_SYSPATH];
+	void *pHandle;
+
+#ifdef TARGET_OS_IPHONE
+	return IOS_LoadLibrary(dllname);
 #endif
 
 	qboolean dll = host.enabledll && ( Q_stristr( dllname, ".dll" ) != 0 );
