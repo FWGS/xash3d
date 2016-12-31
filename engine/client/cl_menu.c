@@ -848,6 +848,13 @@ int pfnCheckGameDll( void )
 {
 	void	*hInst;
 
+#if TARGET_OS_IPHONE
+	// loading server library drains too many ram
+	// so 512MB iPod Touch cannot even connect to
+	// to servers in cstrike
+	return true;
+#endif
+
 	if( svgame.hInstance )
 		return true;
 
