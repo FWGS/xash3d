@@ -648,6 +648,8 @@ void VID_RestoreGamma( void )
 	// no hardware gamma
 }
 
+void R_ChangeDisplaySettingsFast( int width, int height );
+
 #ifdef XASH_SDL_USE_FAKEWND
 
 SDL_Window *fakewnd;
@@ -787,12 +789,18 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	if( vid_highdpi->integer ) wndFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
 
+#ifdef XASH_NOMODESWITCH
+	width = displayMode.w;
+	height = displayMode.h;
+	fullscreen = false;
+#endif
+
 	if( !fullscreen )
 	host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
 		r_ypos->integer, width, height, wndFlags | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
 	else
 	{
-		host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
+		host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, wndFlags | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
 		SDL_SetWindowFullscreen( host.hWnd, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS );
 	}
 
@@ -895,7 +903,7 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	SDL_DisplayMode displayMode;
 
 	SDL_GetCurrentDisplayMode(0, &displayMode);
-#ifdef __ANDROID__
+#ifdef XASH_NOMODESWITCH
 	width = displayMode.w;
 	height = displayMode.h;
 	fullscreen = false;
@@ -915,7 +923,7 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		if( !VID_CreateWindow( width, height, fullscreen ) )
 			return rserr_invalid_mode;
 	}
-#ifndef __ANDROID__
+#ifndef XASH_NOMODESWITCH
 	else if( fullscreen )
 	{
 		if( !VID_SetScreenResolution( width, height ) )
