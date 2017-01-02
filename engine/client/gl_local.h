@@ -696,5 +696,6 @@ extern convar_t	*vid_fullscreen;
 extern convar_t	*vid_gamma;
 extern convar_t	*vid_texgamma;
 extern convar_t	*vid_mode;
+extern convar_t *vid_highdpi;
 
 #endif//GL_LOCAL_H
