@@ -23,9 +23,6 @@ extern "C" {
 #include "port.h"
 
 #ifndef _WIN32
-#ifdef __linux__
-#include <linux/limits.h> // PATH_MAX
-#endif
 #include <stddef.h> // size_t
 #include <stdio.h> // off_t
 #include <stdarg.h> // va_list

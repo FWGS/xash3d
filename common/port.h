@@ -43,9 +43,6 @@ GNU General Public License for more details.
 		#include <sys/syslimits.h>
 		#define OS_LIB_EXT "dylib"
 	#else
-		#if defined(__linux__)
-			#include <linux/limits.h>
-		#endif
 		#define OS_LIB_EXT "so"
 	#endif
 
