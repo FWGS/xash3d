@@ -80,8 +80,6 @@ S_StartBackgroundTrack
 */
 void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int position )
 {
-	const char *fileName;
-
 	S_StopBackgroundTrack();
 
 	if( !dma.initialized ) return;
@@ -247,6 +245,11 @@ void S_StreamBackgroundTrack( void )
 			{
 				FS_FreeStream( s_bgTrack.stream );
 				s_bgTrack.stream = FS_OpenStream( va( "media/%s", s_bgTrack.loopName ));
+
+				// HACKHACK: see S_StartBackgroundTrack
+				if( !s_bgTrack.stream )
+					s_bgTrack.stream = FS_OpenStream( s_bgTrack.loopName );
+
 				Q_strncpy( s_bgTrack.current, s_bgTrack.loopName, sizeof( s_bgTrack.current ));
 
 				if( !s_bgTrack.stream ) return;
