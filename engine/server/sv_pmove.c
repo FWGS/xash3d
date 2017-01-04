@@ -149,11 +149,15 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 
 void SV_GetTrueOrigin( sv_client_t *cl, int edictnum, vec3_t origin )
 {
-	if( !cl->lag_compensation || !sv_unlag->integer )
+	if( !cl->local_weapons || !cl->lag_compensation )
+		return;
+
+	if( !sv_unlag->integer )
 		return;
 
 	// don't allow unlag in singleplayer
-	if( sv_maxclients->integer <= 1 ) return;
+	if( sv_maxclients->integer <= 1 )
+		return;
 
 	if( cl->state < cs_connected || edictnum < 0 || edictnum >= sv_maxclients->integer )
 		return;
@@ -166,7 +170,10 @@ void SV_GetTrueOrigin( sv_client_t *cl, int edictnum, vec3_t origin )
 
 void SV_GetTrueMinMax( sv_client_t *cl, int edictnum, vec3_t mins, vec3_t maxs )
 {
-	if( !cl->lag_compensation || !sv_unlag->integer )
+	if( !cl->local_weapons || !cl->lag_compensation )
+		return;
+
+	if( !sv_unlag->integer )
 		return;
 
 	// don't allow unlag in singleplayer
@@ -686,7 +693,7 @@ static void SV_SetupPMove( playermove_t *pmove, sv_client_t *cl, usercmd_t *ucmd
 
 	pmove->player_index = NUM_FOR_EDICT( clent ) - 1;
 	pmove->multiplayer = (sv_maxclients->integer > 1) ? true : false;
-	pmove->time = cl->timebase; // probably never used
+	pmove->time = cl->timebase * 1000; // probably never used
 	VectorCopy( clent->v.origin, pmove->origin );
 	VectorCopy( clent->v.v_angle, pmove->angles );
 	VectorCopy( clent->v.v_angle, pmove->oldangles );
@@ -844,7 +851,7 @@ qboolean SV_UnlagCheckTeleport( vec3_t old_pos, vec3_t new_pos )
 
 	for( i = 0; i < 3; i++ )
 	{
-		if( fabs( old_pos[i] - new_pos[i] ) > 64.0f )
+		if( fabs( old_pos[i] - new_pos[i] ) > 128.0f )
 			return true;
 	}
 	return false;
@@ -873,7 +880,7 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 		return;
 
 	// unlag disabled for current client
-	if( !cl->lag_compensation )
+	if( !cl->local_weapons || !cl->lag_compensation )
 		return;
 
 	has_update = true;
@@ -891,9 +898,7 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 		lerp->active = true;
 	}
 
-	if( cl->latency > 1.5f )
-		latency = 1.5f;
-	else latency = cl->latency;
+	latency = max( cl->latency, 1.5f );
 
 	if( sv_maxunlag->value != 0.0f )
 	{
@@ -905,9 +910,9 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 	}
 
 	lerp_msec = cl->lastcmd.lerp_msec * 0.001f;
-	if( lerp_msec > 0.1f ) lerp_msec = 0.1f;
-
-	if( lerp_msec < cl->cl_updaterate )
+	if( lerp_msec > 0.1f )
+		lerp_msec = 0.1f;
+	else if( lerp_msec < cl->cl_updaterate )
 		lerp_msec = cl->cl_updaterate;
 
 	finalpush = ( host.realtime - latency - lerp_msec ) + sv_unlagpush->value;
@@ -1032,7 +1037,7 @@ void SV_RestoreMoveInterpolant( sv_client_t *cl )
 		return;
 
 	// unlag disabled for current client
-	if( !cl->lag_compensation )
+	if( !cl->local_weapons || !cl->lag_compensation )
 		return;
 
 	for( i = 0, check = svs.clients; i < sv_maxclients->integer; i++, check++ )

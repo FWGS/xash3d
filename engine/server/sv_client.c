@@ -964,11 +964,13 @@ float SV_CalcClientTime( sv_client_t *cl )
 	int	i, count = 0;
 	int	backtrack;
 
-	backtrack = (int)sv_unlagsamples->integer;
-	if( backtrack < 1 ) backtrack = 1;
+	backtrack = sv_unlagsamples->integer;
 
-	if( backtrack >= (SV_UPDATE_BACKUP <= 16 ? SV_UPDATE_BACKUP : 16 ))
-		backtrack = ( SV_UPDATE_BACKUP <= 16 ? SV_UPDATE_BACKUP : 16 );
+	if( backtrack < 1 )
+		backtrack = 1;
+
+	if( backtrack > min( SV_UPDATE_BACKUP, 16 ) )
+		backtrack = min( SV_UPDATE_BACKUP, 16 );
 
 	if( backtrack <= 0 )
 		return 0.0f;
@@ -989,7 +991,7 @@ float SV_CalcClientTime( sv_client_t *cl )
 	maxping = -9999.0f;
 	ping /= count;
 	
-	for( i = 0; i < ( SV_UPDATE_BACKUP <= 4 ? SV_UPDATE_BACKUP : 4 ); i++ )
+	for( i = 0; i < min( SV_UPDATE_BACKUP, 4 ); i++ )
 	{
 		client_frame_t	*frame = &cl->frames[SV_UPDATE_MASK & (cl->netchan.incoming_acknowledged - i)];
 		if( frame->ping_time <= 0.0f )
