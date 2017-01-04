@@ -80,6 +80,8 @@ S_StartBackgroundTrack
 */
 void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int position )
 {
+	const char *fileName;
+
 	S_StopBackgroundTrack();
 
 	if( !dma.initialized ) return;
@@ -102,6 +104,12 @@ void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int 
 
 	// open stream
 	s_bgTrack.stream = FS_OpenStream( va( "media/%s", introTrack ));
+
+	// HACKHACK: try to open in case if mp3 file is outside from media folder
+	// e.g. mp3 play sounds/category/somefile.mp3
+	if( !s_bgTrack.stream )
+		s_bgTrack.stream = FS_OpenStream( introTrack );
+
 	Q_strncpy( s_bgTrack.current, introTrack, sizeof( s_bgTrack.current ));
 	Q_memset( &musicfade, 0, sizeof( musicfade )); // clear any soundfade
 	s_bgTrack.source = cls.key_dest;
