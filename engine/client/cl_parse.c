@@ -1266,16 +1266,26 @@ void CL_ParseScreenFade( sizebuf_t *msg )
 {
 	float		duration, holdTime;
 	screenfade_t	*sf = &clgame.fade;
+	float scale;
 
-	duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
-	holdTime = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
+	duration = (float)(word)BF_ReadShort( msg );
+	holdTime = (float)(word)BF_ReadShort( msg );
 	sf->fadeFlags = BF_ReadShort( msg );
+
+	// set longfade scale and multiply times
+	if( sf->fadeFlags & FFADE_LONGFADE )
+		scale = 1 / 256.0f;
+	else scale = 1 / 1024.0f;
+
+	duration *= scale;
+	holdTime *= scale;
 
 	sf->fader = BF_ReadByte( msg );
 	sf->fadeg = BF_ReadByte( msg );
 	sf->fadeb = BF_ReadByte( msg );
 	sf->fadealpha = BF_ReadByte( msg );
 	sf->fadeSpeed = 0.0f;
+
 	sf->fadeEnd = duration;
 	sf->fadeReset = holdTime;
 
