@@ -610,6 +610,7 @@ void CL_Quit_f( void );
 void CL_ScreenShot_f( void );
 void CL_SnapShot_f( void );
 void CL_PlayCDTrack_f( void );
+void CL_MP3Command_f( void );
 void CL_EnvShot_f( void );
 void CL_SkyShot_f( void );
 void CL_SaveShot_f( void );
@@ -719,6 +720,8 @@ extern rgba_t g_color_table[8];
 void CL_ParseServerMessage( sizebuf_t *msg );
 void CL_ParseTempEntity( sizebuf_t *msg );
 qboolean CL_DispatchUserMessage( const char *pszName, int iSize, void *pbuf );
+int CL_ParseScreenShake( const char *pszName, int iSize, void *pbuf );
+int CL_ParseScreenFade( const char *pszName, int iSize, void *pbuf );
 
 //
 // cl_scrn.c

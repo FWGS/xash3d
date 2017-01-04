@@ -4058,6 +4058,10 @@ qboolean CL_LoadProgs( const char *name )
 	}
 	Mobile_Init(); // Xash3D extension: mobile interface
 
+	// NOTE: some usermessages are handled into the engine
+	pfnHookUserMsg( "ScreenFade", CL_ParseScreenFade );
+	pfnHookUserMsg( "ScreenShake", CL_ParseScreenShake );
+
 	// initialize game
 	clgame.dllFuncs.pfnInit();
 
