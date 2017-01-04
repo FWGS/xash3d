@@ -355,6 +355,14 @@ void SDLash_EventFilter( void *ev )
 			host.state = HOST_SLEEP;
 			break;
 		case SDL_WINDOWEVENT_FOCUS_LOST:
+
+#if TARGET_OS_IPHONE
+			{
+				// Keep running if ftp server enabled
+				void IOS_StartBackgroundTask( void );
+				IOS_StartBackgroundTask();
+			}
+#endif
 			host.state = HOST_NOFOCUS;
 			IN_DeactivateMouse();
 			if( snd_mute_losefocus->integer )

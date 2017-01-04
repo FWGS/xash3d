@@ -558,7 +558,7 @@ void Sys_Warn( const char *format, ... )
 	DEBUG_BREAK;
 
 	va_start( argptr, format );
-	Q_vsprintf( text, format, argptr );
+	Q_vsnprintf( text, MAX_SYSPATH, format, argptr );
 	va_end( argptr );
 	if( !Host_IsDedicated() ) // dedicated server should not hang on messagebox
 		MSGBOX(text);

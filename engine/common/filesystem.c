@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include <stdarg.h> // va
 #ifdef XASH_SDL
 #include <SDL_system.h> // Android External storage
+#include <SDL_filesystem.h> // Android External storage
 #endif
 #ifdef _WIN32
 #include <io.h>
@@ -1112,8 +1113,11 @@ void FS_Rescan( void )
 	if( str = getenv("XASH3D_EXTRAS_PAK2") )
 		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	//FS_AddPack_Fullpath( "/data/data/in.celest.xash3d.hl.test/files/pak.pak", NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
-#elif defined TARGET_OS_IPHONE
-	FS_AddPack_Fullpath( va("%sextras.pak",SDL_GetBasePath()), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+#elif TARGET_OS_IPHONE
+	{
+		FS_AddPack_Fullpath( va( "%sextras.pak", SDL_GetBasePath() ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		FS_AddPack_Fullpath( va( "%sextras_%s.pak", SDL_GetBasePath(), GI->gamedir ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	}
 #endif
 
 	if( Q_stricmp( GI->basedir, GI->gamedir ))
@@ -1836,7 +1840,7 @@ void FS_LoadGameInfo( const char *rootfolder )
 #if defined(_WIN32)
 		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
 #elif TARGET_OS_IPHONE
-		Q_strncpy( SI.gamedll, va( "server_%s", GI->gamedir ), sizeof( SI.gamedll ) );
+		Q_strncpy( SI.gamedll, "server", sizeof( SI.gamedll ) );
 #elif defined(__APPLE__)
 		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
 #elif defined(__ANDROID__)

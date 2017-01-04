@@ -859,6 +859,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	else
 	{
 		#if TARGET_OS_IPHONE
+		const char *IOS_GetDocsDir();
 		Q_strncpy( host.rootdir, IOS_GetDocsDir(), sizeof(host.rootdir) );
 		#elif defined(XASH_SDL)
 		if( !( baseDir = SDL_GetBasePath() ) )
