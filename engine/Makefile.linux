@@ -13,6 +13,7 @@ endif
 TOPDIR = $(PWD)/..
 INCLUDES :=
 XASH_SINGLE_BINARY ?= 1
+XASH_X11 ?= 1
 INSTALL_DIR ?= ./install/
 ifeq ($(NANOGL),1)
 INCLUDES += -Inanogl -Inanogl/GL
@@ -28,6 +29,10 @@ ifeq ($(XASH_DEDICATED),1)
 else
    DEFINES += -DXASH_SDL
    LIBS += -lSDL2 -pthread
+ifeq ($(XASH_X11),1)
+	   LIBS += -lX11
+	   DEFINES += -DXASH_X11
+endif
 endif
 
 ifeq ($(NANOGL),1)
