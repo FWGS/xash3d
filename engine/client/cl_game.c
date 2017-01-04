@@ -3937,6 +3937,8 @@ void CL_UnloadProgs( void )
 	Cmd_Unlink( CMD_CLIENTDLL );
 }
 
+void Sequence_Init( void );
+
 qboolean CL_LoadProgs( const char *name )
 {
 	static playermove_t		gpMove;
@@ -4057,6 +4059,8 @@ qboolean CL_LoadProgs( const char *name )
 		MsgDev( D_WARN, "CL_LoadProgs: couldn't get render API\n" );
 	}
 	Mobile_Init(); // Xash3D extension: mobile interface
+
+	Sequence_Init();
 
 	// NOTE: some usermessages are handled into the engine
 	pfnHookUserMsg( "ScreenFade", CL_ParseScreenFade );

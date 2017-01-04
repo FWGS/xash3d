@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include "net_encode.h"
 
 #include "errno.h"
-
+#include "Sequence.h"
 #define HEARTBEAT_SECONDS	300.0f 		// 300 seconds
 
 convar_t	*sv_zmax;
@@ -1001,6 +1001,8 @@ void SV_Shutdown( qboolean reconnect )
 
 	if( public_server->integer && sv_maxclients->integer != 1 )
 		Master_Shutdown();
+
+	Sequence_PurgeEntries( true ); // clear Sequence
 
 	SV_DeactivateServer ();
 

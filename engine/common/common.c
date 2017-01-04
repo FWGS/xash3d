@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "const.h"
 #include "client.h"
 #include "library.h"
+#include "Sequence.h"
 
 /*
 ==============
@@ -520,7 +521,9 @@ used by CS:CZ
 void *GAME_EXPORT pfnSequenceGet( const char *fileName, const char *entryName )
 {
 	Msg( "Sequence_Get: file %s, entry %s\n", fileName, entryName );
-	return NULL;
+
+
+	return Sequence_Get( fileName, entryName );
 }
 
 /*
@@ -533,9 +536,9 @@ used by CS:CZ
 void *GAME_EXPORT pfnSequencePickSentence( const char *groupName, int pickMethod, int *picked )
 {
 	Msg( "Sequence_PickSentence: group %s, pickMethod %i\n", groupName, pickMethod );
-	*picked = 0;
 
-	return NULL;
+	return  Sequence_PickSentence( groupName, pickMethod, picked );
+
 }
 
 /*

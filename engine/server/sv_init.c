@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #include "common.h"
 #include "server.h"
 #include "library.h"
+#include "Sequence.h"
 
 int SV_UPDATE_BACKUP = SINGLEPLAYER_BACKUP;
 
@@ -582,6 +583,8 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 	Q_snprintf( sv.model_precache[1], sizeof( sv.model_precache[0] ), "maps/%s.bsp", sv.name );
 	Mod_LoadWorld( sv.model_precache[1], &sv.checksum, sv_maxclients->integer > 1 );
 	sv.worldmodel = Mod_Handle( 1 ); // get world pointer
+
+	Sequence_OnLevelLoad( sv.name );
 
 	for( i = 1; i < sv.worldmodel->numsubmodels; i++ )
 	{
