@@ -719,6 +719,7 @@ void VID_CheckChanges( void )
 		if( !VID_SetMode())
 		{
 			// can't initialize video subsystem
+			Sys_Warn( "Failed to initialise graphics.\nStarting dedicated server.\nAdd \"-dedicated\" to disable this message." );
 			Host_NewInstance( va("#%s", GI->gamefolder ), "fallback to dedicated mode\n" );
 		}
 		else

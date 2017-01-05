@@ -1352,6 +1352,7 @@ qboolean VID_SetMode( void )
 		{
 			Cvar_SetFloat( "fullscreen", 0 );
 			MsgDev( D_ERROR, "VID_SetMode: fullscreen unavailable in this mode\n" );
+			Sys_Warn("fullscreen unavailable in this mode!");
 			if(( err = R_ChangeDisplaySettings( iScreenWidth, iScreenHeight, false )) == rserr_ok )
 				return true;
 		}
@@ -1359,12 +1360,14 @@ qboolean VID_SetMode( void )
 		{
 			Cvar_SetFloat( "vid_mode", glConfig.prev_mode );
 			MsgDev( D_ERROR, "VID_SetMode: invalid mode\n" );
+			Sys_Warn("invalid mode");
 		}
 
 		// try setting it back to something safe
 		if(( err = R_ChangeDisplaySettings( glConfig.prev_width, glConfig.prev_height, false )) != rserr_ok )
 		{
 			MsgDev( D_ERROR, "VID_SetMode: could not revert to safe mode\n" );
+			Sys_Warn("could not revert to safe mode!");
 			return false;
 		}
 	}
