@@ -157,7 +157,8 @@ LOCAL_SRC_FILES := \
 	   common/soundlib/libmpg/layer2.c \
 	   common/soundlib/libmpg/layer3.c \
 	   common/soundlib/libmpg/tabinit.c \
-	   common/soundlib/libmpg/common.c
+	   common/soundlib/libmpg/common.c \
+	   common/Sequence.c
 
 
 ifeq ($(XASH_SDL),1)
