@@ -655,6 +655,9 @@ void CL_Drop( void )
 		return;
 	CL_Disconnect();
 
+	if( !SV_Active() )
+		Delta_Shutdown();
+
 	// This fixes crash in menu_playersetup after disconnecting from server
 	CL_ClearEdicts();
 }
