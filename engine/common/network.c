@@ -1214,7 +1214,7 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		if( last_file == first_file )
 		{
 			last_file = first_file = 0;
-			HTTP_ClearCustomServers();
+			//HTTP_ClearCustomServers();
 		}
 		else
 			first_file = file->next;
