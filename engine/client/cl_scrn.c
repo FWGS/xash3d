@@ -361,7 +361,7 @@ void NetGraph_GetFrameData( int *biggest_message, float *latency, int *latency_c
 		if( p->choked )
 			choke_count++;
 
-		if( !f->valid || f->receivedtime == -2.0f )
+		if( !f->valid || p->choked )
 		{
 			p->latency = 9998; // broken delta
 		}
@@ -373,7 +373,7 @@ void NetGraph_GetFrameData( int *biggest_message, float *latency, int *latency_c
 		else
 		{
 			int frame_latency = min( 1.0f, f->latency );
-			p->latency = (( frame_latency + 0.1 ) / 1.1) * (net_graphheight->value - LERP_HEIGHT - 2);
+			p->latency = (( frame_latency + 0.1 ) / 1.1) * (net_graphheight->integer - LERP_HEIGHT - 2);
 
 			if( i > cls.netchan.incoming_sequence - NUM_LATENCY_SAMPLES )
 			{
@@ -819,7 +819,7 @@ void SCR_DrawPlaque( void )
 	{
 		levelshot = GL_LoadTexture( cl_levelshot_name->string, NULL, 0, TF_IMAGE, NULL );
 		GL_SetRenderMode( kRenderNormal );
-		R_DrawStretchPic( 0, 0, scr_width->integer, scr_height->integer, 0, 0, 1, 1, levelshot );
+		R_DrawStretchPic( 0, 0, scr_width->value, scr_height->value, 0, 0, 1, 1, levelshot );
 		if( !cl.background ) CL_DrawHUD( CL_LOADING );
 	}
 }

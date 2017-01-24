@@ -644,8 +644,9 @@ int Con_UtfMoveRight( char *str, int pos, int length )
 
 int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 {
-	int	width, height;
+	float	width, height;
 	float	s1, t1, s2, t2;
+	int w, h;
 	wrect_t	*rc;
 
 	number &= 255;
@@ -662,7 +663,9 @@ int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 	rc = &con.curFont->fontRc[number];
 
 	pglColor4ubv( color );
-	R_GetTextureParms( &width, &height, con.curFont->hFontTexture );
+	R_GetTextureParms( &w, &h, con.curFont->hFontTexture );
+	width = w;
+	height = h;
 
 	// calc rectangle
 	s1 = (float)rc->left / width;
@@ -1704,12 +1707,12 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 			if( con_black->integer )
 			{
 				pglColor4ub( 0, 0, 0, 255 );
-				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
 			{
 				pglColor4ub( 255, 255, 255, 255 );
-				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, con.background );
 			}
 		}
 		else
@@ -1718,12 +1721,12 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 			if( con_black->value )
 			{
 				pglColor4ub( 0, 0, 0, 255 * con_alpha->value );
-				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
 			{
 				pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
-				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, con.background );
 			}
 		}
 		pglColor4ub( 255, 255, 255, 255 );

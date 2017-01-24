@@ -2147,7 +2147,7 @@ static void R_StudioDrawPoints_legacy( void )
 				}
 				else
 				{
-					pglVertex3f( av[0], av[1], av[2] );
+					pglVertex3fv( av );
 					ASSERT( g_nNumArrayVerts < MAXARRAYVERTS );
 					VectorCopy( av, g_xarrayverts[g_nNumArrayVerts] ); // store off vertex
 					g_nNumArrayVerts++;

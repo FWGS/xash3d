@@ -400,14 +400,15 @@ void SPR_AdjustSize( float *x, float *y, float *w, float *h )
 {
 	float	xscale, yscale;
 
-	if( !x && !y && !w && !h ) return;
+	ASSERT( x || y || w || h );
 
 	// scale for screen sizes
-	xscale = scr_width->integer / (float)clgame.scrInfo.iWidth;
-	yscale = scr_height->integer / (float)clgame.scrInfo.iHeight;
+	xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
+	yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
 
 	if( x ) *x *= xscale;
 	if( y ) *y *= yscale;
+
 	if( w ) *w *= xscale;
 	if( h ) *h *= yscale;
 }
@@ -423,12 +424,13 @@ void TextAdjustSize( int *x, int *y, int *w, int *h )
 {
 	float	xscale, yscale;
 
+	ASSERT( x || y || w || h );
+
 	if( !clgame.ds.adjust_size ) return;
-	if( !x && !y && !w && !h ) return;
 
 	// scale for screen sizes
-	xscale = scr_width->integer / (float)clgame.scrInfo.iWidth;
-	yscale = scr_height->integer / (float)clgame.scrInfo.iHeight;
+	xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
+	yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
 
 	if( x ) *x *= xscale;
 	if( y ) *y *= yscale;
@@ -451,8 +453,8 @@ void PicAdjustSize( float *x, float *y, float *w, float *h )
 	if( !x && !y && !w && !h ) return;
 
 	// scale for screen sizes
-	xscale = scr_width->integer / (float)clgame.scrInfo.iWidth;
-	yscale = scr_height->integer / (float)clgame.scrInfo.iHeight;
+	xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
+	yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
 
 	if( x ) *x *= xscale;
 	if( y ) *y *= yscale;
@@ -910,8 +912,8 @@ void CL_DrawCrosshair( void )
 		VectorAdd( cl.refdef.vieworg, forward, point );
 		R_WorldToScreen( point, screen );
 
-		x += 0.5f * screen[0] * scr_width->integer + 0.5f;
-		y += 0.5f * screen[1] * scr_height->integer + 0.5f;
+		x += 0.5f * screen[0] * scr_width->value + 0.5f;
+		y += 0.5f * screen[1] * scr_height->value + 0.5f;
 	}
 
 	clgame.ds.pSprite = clgame.ds.pCrosshair;
@@ -940,8 +942,8 @@ static void CL_DrawLoading( float percent )
 	x = ( clgame.scrInfo.iWidth - width ) >> 1;
 	y = ( clgame.scrInfo.iHeight - height) >> 1;
 
-	xscale = scr_width->integer / (float)clgame.scrInfo.iWidth;
-	yscale = scr_height->integer / (float)clgame.scrInfo.iHeight;
+	xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
+	yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
 
 	x *= xscale;
 	y *= yscale;
@@ -949,7 +951,7 @@ static void CL_DrawLoading( float percent )
 	height *= yscale;
 
 	if( cl_allow_levelshots->integer )
-          {
+	{
 		pglColor4ub( 128, 128, 128, 255 );
 		GL_SetRenderMode( kRenderTransTexture );
 		R_DrawStretchPic( x, y, width, height, 0, 0, 1, 1, cls.loadingBar );
@@ -988,8 +990,8 @@ static void CL_DrawPause( void )
 	x = ( clgame.scrInfo.iWidth - width ) >> 1;
 	y = ( clgame.scrInfo.iHeight - height) >> 1;
 
-	xscale = scr_width->integer / (float)clgame.scrInfo.iWidth;
-	yscale = scr_height->integer / (float)clgame.scrInfo.iHeight;
+	xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
+	yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
 
 	x *= xscale;
 	y *= yscale;
@@ -1467,8 +1469,8 @@ int GAME_EXPORT pfnGetScreenInfo( SCREENINFO *pscrinfo )
 	
 	if( scale_factor && scale_factor != 1.0f)
 	{
-		clgame.scrInfo.iWidth = scr_width->integer/scale_factor;
-		clgame.scrInfo.iHeight = scr_height->integer/scale_factor;
+		clgame.scrInfo.iWidth = scr_width->value / scale_factor;
+		clgame.scrInfo.iHeight = scr_height->value / scale_factor;
 		clgame.scrInfo.iFlags |= SCRINFO_STRETCHED;
 	}
 	else
