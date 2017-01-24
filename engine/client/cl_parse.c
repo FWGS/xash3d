@@ -1281,7 +1281,7 @@ int CL_ParseScreenFade( const char *pszName, int iSize, void *pbuf )
 	// set longfade scale and multiply times
 	if( sf->fadeFlags & FFADE_LONGFADE )
 		scale = 1 / 256.0f;
-	else scale = 1 / 1024.0f;
+	else scale = 1 / 4096.0f;
 
 	duration *= scale;
 	holdTime *= scale;
