@@ -873,7 +873,10 @@ void CL_ClearState( void )
 	host.developer = host.old_developer;
 
 	if( !SV_Active() )
-		Delta_Init();
+	{
+		Delta_Shutdown();
+		Delta_InitClient();
+	}
 	HTTP_ClearCustomServers();
 }
 

@@ -5057,10 +5057,5 @@ qboolean SV_LoadProgs( const char *name )
 	// initialize pm_shared
 	SV_InitClientMove();
 
-	Delta_Init ();
-
-	// register custom encoders
-	svgame.dllFuncs.pfnRegisterEncoders();
-
 	return true;
 }
