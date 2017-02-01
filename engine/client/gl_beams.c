@@ -84,8 +84,13 @@ static cl_entity_t *CL_GetBeamEntityByIndex( int index )
 {
 	cl_entity_t	*ent;
 
-	if( index > 0 ) index = BEAMENT_ENTITY( index );
-	ent = CL_GetEntityByIndex( index );
+	if( index < 0 )
+	{
+		index = BEAMENT_ENTITY( -index );
+		return clgame.dllFuncs.pfnGetUserEntity( index );
+	}
+	ent = CL_GetEntityByIndex( BEAMENT_ENTITY( index ) );
+
 
 	return ent;
 }
@@ -116,7 +121,6 @@ static qboolean ComputeBeamEntPosition( int beamEnt, vec3_t pt )
 	int		nAttachment;
 
 	pEnt = CL_GetBeamEntityByIndex( beamEnt );
-	nAttachment = ( beamEnt > 0 ) ? BEAMENT_ATTACHMENT( beamEnt ) : 0;
 
 	if( !pEnt )
 	{
@@ -124,17 +128,22 @@ static qboolean ComputeBeamEntPosition( int beamEnt, vec3_t pt )
 		return false;
 	}
 
-	if(( pEnt->index - 1 ) == cl.playernum && !cl.thirdperson )
-	{
-		// if we view beam at firstperson use viewmodel instead
-		pEnt = &clgame.viewent;
-	}
+	if( beamEnt < 0 )
+		nAttachment = BEAMENT_ATTACHMENT( -beamEnt );
+	else
+		nAttachment = BEAMENT_ATTACHMENT( beamEnt );
+
 
 	// get attachment
 	if( nAttachment > 0 )
 		VectorCopy( pEnt->attachment[nAttachment - 1], pt );
 	else
 	{
+		if(( pEnt->index - 1 ) == cl.playernum && !cl.thirdperson )
+		{
+			// if we view beam at firstperson use viewmodel instead
+			pEnt = &clgame.viewent;
+		}
 		VectorCopy( pEnt->origin, pt );
 	}
 
