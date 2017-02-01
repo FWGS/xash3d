@@ -1390,12 +1390,22 @@ double Sys_DoubleTime( void )
 	QueryPerformanceCounter( &CurrentTime );
 	return (double)( CurrentTime.QuadPart - g_ClockStart.QuadPart ) / (double)( g_PerformanceFrequency.QuadPart );
 }
-#else
-#if _MSC_VER == 1200
-typedef __int64 longtime_t; //msvc6
+#elif defined __APPLE__
+typedef unsigned long long longtime_t;
+#include <sys/time.h>
+/*
+================
+Sys_DoubleTime
+================
+*/
+double Sys_DoubleTime( void )
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (double) tv.tv_sec + (double) tv.tv_usec/1000000.0;
+}
 #else
 typedef unsigned long long longtime_t;
-#endif
 #include <time.h>
 /*
 ================
@@ -1404,16 +1414,7 @@ Sys_DoubleTime
 */
 double Sys_DoubleTime( void )
 {
-	static longtime_t g_PerformanceFrequency;
-	static longtime_t g_ClockStart;
-	longtime_t CurrentTime;
 	struct timespec ts;
-	if( !g_PerformanceFrequency )
-	{
-		struct timespec res;
-		if( !clock_getres(CLOCK_MONOTONIC, &res) )
-			g_PerformanceFrequency = 1000000000LL/res.tv_nsec;
-	}
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return (double) ts.tv_sec + (double) ts.tv_nsec/1000000000.0;
 }

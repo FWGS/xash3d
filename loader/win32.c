@@ -6580,6 +6580,7 @@ void *GL_GetProcAddress( const char *name ); // defined by Xash's video backend
 static void *WINAPI expwglGetProcAddress(const char *name)
 {
     int i;
+#ifdef SDL
     for(i=0; i < sizeof(glfunctions)/sizeof(struct glfuncs);i++)
     {
 	if(strcasecmp(glfunctions[i].name, name))
@@ -6590,6 +6591,7 @@ static void *WINAPI expwglGetProcAddress(const char *name)
 	return 0;
     }
     dbgprintf("Function %s not implemented in loader\n", name);
+#endif
     return 0;
 }
 
