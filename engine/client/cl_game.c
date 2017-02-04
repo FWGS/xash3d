@@ -115,7 +115,7 @@ cl_entity_t *GAME_EXPORT CL_GetEntityByIndex( int index )
 		return cl.world;
 
 	if( index < 0 )
-		return clgame.dllFuncs.pfnGetUserEntity( abs( index ));
+		return clgame.dllFuncs.pfnGetUserEntity( -index );
 
 	if( index >= clgame.maxEntities )
 		return NULL;
