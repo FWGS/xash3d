@@ -1412,7 +1412,7 @@ void HTTP_Run( void )
 					return;
 				}
 				// print size
-				length = Q_strstr(header, "Content-Length: ");
+				length = Q_stristr(header, "Content-Length: ");
 				if( length )
 				{
 					int size = Q_atoi( length += 16 );
