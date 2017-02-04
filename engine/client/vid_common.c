@@ -52,6 +52,8 @@ convar_t	*gl_nosort;
 convar_t	*gl_clear;
 convar_t	*gl_test;
 convar_t	*gl_msaa;
+convar_t	*gl_overbright;
+convar_t	*gl_overbright_studio;
 
 convar_t	*r_xpos;
 convar_t	*r_ypos;
@@ -911,6 +913,9 @@ void GL_InitCommands( void )
 	gl_test = Cvar_Get( "gl_test", "0", 0, "engine developer cvar for quick testing new features" );
 	gl_wireframe = Cvar_Get( "gl_wireframe", "0", 0, "show wireframe overlay" );
 	gl_overview = Cvar_Get( "dev_overview", "0", 0, "show level overview" );
+	gl_overbright = Cvar_Get( "gl_overbright", "0", CVAR_ARCHIVE, "Overbright mode (0-2)");
+	gl_overbright_studio = Cvar_Get( "gl_overbright_studio", "0", CVAR_ARCHIVE, "Overbright for studiomodels");
+
 	// these cvar not used by engine but some mods requires this
 	Cvar_Get( "gl_polyoffset", "-0.1", 0, "polygon offset for decals" );
 
