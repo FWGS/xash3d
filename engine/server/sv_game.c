@@ -1104,7 +1104,7 @@ void SV_SetClientMaxspeed( sv_client_t *cl, float fNewMaxspeed )
 	fNewMaxspeed = bound( -svgame.movevars.maxspeed, fNewMaxspeed, svgame.movevars.maxspeed );
 
 	cl->edict->v.maxspeed = fNewMaxspeed;
-	Info_SetValueForKey( cl->physinfo, "maxspd", va( "%.f", fNewMaxspeed ));
+	Info_SetValueForKey( cl->physinfo, "maxspd", va( "%.f", fNewMaxspeed ), sizeof( cl->physinfo ) );
 }
 
 /*
@@ -3640,19 +3640,42 @@ pfnGetInfoKeyBuffer
 */
 char *GAME_EXPORT pfnGetInfoKeyBuffer( edict_t *e )
 {
-	sv_client_t	*cl;
+	sv_client_t *cl;
 
-	if( !SV_IsValidEdict( e ))
-		return Cvar_Serverinfo(); // otherwise return ServerInfo
+	if ( !SV_IsValidEdict( e ) )
+		return localinfo;
+
+	if ( !NUM_FOR_EDICT( e ) )
+		return Cvar_Serverinfo( );
 
 	// pfnUserInfoChanged passed
-	if(( cl = SV_ClientFromEdict( e, false )) == NULL )
+	if ( ( cl = SV_ClientFromEdict( e, false ) ) == NULL )
 	{
 		MsgDev( D_ERROR, "SV_GetClientUserinfo: client is not connected!\n" );
-		return Cvar_Serverinfo(); // otherwise return ServerInfo
+		return "";
 	}
 
 	return cl->userinfo;
+}
+
+/*
+=============
+pfnSetKeyValue
+
+=============
+*/
+void pfnSetKeyValue( char *infobuffer, const char *key, const char *value )
+{
+	if ( infobuffer == localinfo )
+	{
+		Info_SetValueForKey( infobuffer, key, value, MAX_LOCALINFO );
+		return;
+	}
+	else
+	{
+		Info_SetValueForKey( infobuffer, key, value, MAX_INFO_STRING );
+		return;
+	}
 }
 
 /*
@@ -3712,7 +3735,7 @@ void GAME_EXPORT pfnSetPhysicsKeyValue( const edict_t *pClient, const char *key,
 		return;
 	}
 
-	Info_SetValueForKey( cl->physinfo, key, value );
+	Info_SetValueForKey( cl->physinfo, key, value, sizeof( cl->physinfo ) );
 }
 
 /*
@@ -4589,7 +4612,7 @@ static enginefuncs_t gEngfuncs =
 	pfnNumberOfEntities,
 	pfnGetInfoKeyBuffer,
 	(void*)Info_ValueForKey,
-	(void*)Info_SetValueForKey,
+	(void*)pfnSetKeyValue,
 	pfnSetClientKeyValue,
 	pfnIsMapValid,
 	pfnStaticDecal,

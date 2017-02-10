@@ -938,6 +938,38 @@ void SV_ServerInfo_f( void )
 	Info_Print( Cvar_Serverinfo( ));
 }
 
+void SV_LocalInfo_f( void )
+{
+	char *value;
+
+	if ( Cmd_Argc( ) > 3 )
+	{
+		Msg( "Usage: localinfo [ <key> [value] ]\n" );
+		return;
+	}
+
+	if ( Cmd_Argc( ) == 1 )
+	{
+		Msg( "Local info settings:\n" );
+		Info_Print( localinfo );
+		return;
+	}
+	else if ( Cmd_Argc( ) == 2 )
+	{
+		value = Info_ValueForKey( localinfo, Cmd_Argv( 1 ) );
+		Msg( "%s: %s\n", Cmd_Argv( 1 ), *value ? value : "Key not exists" );
+		return;
+	}
+
+	if ( Cmd_Argv( 1 )[0] == '*' )
+	{
+		Msg( "Star variables cannot be changed.\n" );
+		return;
+	}
+
+	Info_SetValueForKey( localinfo, Cmd_Argv( 1 ), Cmd_Argv( 2 ), MAX_LOCALINFO );
+}
+
 /*
 ===========
 SV_ClientInfo_f
@@ -1092,6 +1124,7 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "kick", SV_Kick_f, "kick a player off the server by number or name" );
 	Cmd_AddCommand( "status", SV_Status_f, "print server status information" );
 	Cmd_AddCommand( "serverinfo", SV_ServerInfo_f, "print server settings" );
+	Cmd_AddCommand( "localinfo", SV_LocalInfo_f, "print local info settings" );
 	Cmd_AddCommand( "clientinfo", SV_ClientInfo_f, "print user infostring (player num required)" );
 	Cmd_AddCommand( "playersonly", SV_PlayersOnly_f, "freezes physics, except for players" );
 

@@ -170,7 +170,7 @@ void SV_DirectConnect( netadr_t from )
 	}
 
 	// force the IP key/value pair so the game can filter based on ip
-	Info_SetValueForKey( userinfo, "ip", NET_AdrToString( from ));
+	Info_SetValueForKey( userinfo, "ip", NET_AdrToString( from ), sizeof( userinfo ) );
 
 	newcl = &temp;
 	Q_memset( newcl, 0, sizeof( sv_client_t ));
@@ -348,13 +348,13 @@ edict_t *GAME_EXPORT SV_FakeConnect( const char *netname )
 	userinfo[0] = '\0';
 
 	// setup fake client params
-	Info_SetValueForKey( userinfo, "name", netname );
-	Info_SetValueForKey( userinfo, "model", "gordon" );
-	Info_SetValueForKey( userinfo, "topcolor", "0" );
-	Info_SetValueForKey( userinfo, "bottomcolor", "0" );
+	Info_SetValueForKey( userinfo, "name", netname, sizeof( userinfo ) );
+	Info_SetValueForKey( userinfo, "model", "gordon", sizeof( userinfo ) );
+	Info_SetValueForKey( userinfo, "topcolor", "0", sizeof( userinfo ) );
+	Info_SetValueForKey( userinfo, "bottomcolor", "0", sizeof( userinfo ) );
 
 	// force the IP key/value pair so the game can filter based on ip
-	Info_SetValueForKey( userinfo, "ip", "127.0.0.1" );
+	Info_SetValueForKey( userinfo, "ip", "127.0.0.1", sizeof( userinfo ) );
 
 	// find a client slot
 	newcl = &temp;
@@ -438,7 +438,7 @@ qboolean SV_ClientConnect( edict_t *ent, char *userinfo )
 
 	MsgDev( D_NOTE, "SV_ClientConnect()\n" );
 	result = svgame.dllFuncs.pfnClientConnect( ent, pszName, pszAddress, szRejectReason );
-	if( szRejectReason[0] ) Info_SetValueForKey( userinfo, "rejmsg", szRejectReason );
+	if( szRejectReason[0] ) Info_SetValueForKey( userinfo, "rejmsg", szRejectReason, sizeof( userinfo ) );
 
 	return result;
 }
@@ -729,14 +729,14 @@ void SV_Info( netadr_t from )
 			if( svs.clients[i].state >= cs_connected )
 				count++;
 
-		Info_SetValueForKey( string, "host", hostname->string );
-		Info_SetValueForKey( string, "map", sv.name );
-		Info_SetValueForKey( string, "dm", va( "%i", (int)svgame.globals->deathmatch ));
-		Info_SetValueForKey( string, "team", va( "%i", (int)svgame.globals->teamplay ));
-		Info_SetValueForKey( string, "coop", va( "%i", (int)svgame.globals->coop ));
-		Info_SetValueForKey( string, "numcl", va( "%i", count ));
-		Info_SetValueForKey( string, "maxcl", va( "%i", sv_maxclients->integer ));
-		Info_SetValueForKey( string, "gamedir", gamedir );
+		Info_SetValueForKey( string, "host", hostname->string, sizeof( string ) );
+		Info_SetValueForKey( string, "map", sv.name, sizeof( string ) );
+		Info_SetValueForKey( string, "dm", va( "%i", (int)svgame.globals->deathmatch ), sizeof( string ) );
+		Info_SetValueForKey( string, "team", va( "%i", (int)svgame.globals->teamplay ), sizeof( string ) );
+		Info_SetValueForKey( string, "coop", va( "%i", (int)svgame.globals->coop ), sizeof( string ) );
+		Info_SetValueForKey( string, "numcl", va( "%i", count ), sizeof( string ) );
+		Info_SetValueForKey( string, "maxcl", va( "%i", sv_maxclients->integer ), sizeof( string ) );
+		Info_SetValueForKey( string, "gamedir", gamedir, sizeof( string ) );
 	}
 
 	Netchan_OutOfBandPrint( NS_SERVER, from, "info\n%s", string );
@@ -787,7 +787,7 @@ void SV_BuildNetAnswer( netadr_t from )
 			{
 				edict_t *ed = svs.clients[i].edict;
 				float time = host.realtime - svs.clients[i].lastconnect;
-				Q_strncat( string, va( "%c\\%s\\%i\\%f\\", count, svs.clients[i].name, (int)ed->v.frags, time ), sizeof( string ));
+				Q_strncat( string, va( "%c\\%s\\%i\\%f\\", count, svs.clients[i].name, (int)ed->v.frags, time ), sizeof( string ) );
 				count++;
 			}
 		}
@@ -803,11 +803,11 @@ void SV_BuildNetAnswer( netadr_t from )
 				count++;
 
 		string[0] = '\0';
-		Info_SetValueForKey( string, "hostname", hostname->string );
-		Info_SetValueForKey( string, "gamedir", GI->gamefolder );
-		Info_SetValueForKey( string, "current", va( "%i", count ));
-		Info_SetValueForKey( string, "max", va( "%i", sv_maxclients->integer ));
-		Info_SetValueForKey( string, "map", sv.name );
+		Info_SetValueForKey( string, "hostname", hostname->string, sizeof( string ) );
+		Info_SetValueForKey( string, "gamedir", GI->gamefolder, sizeof( string ) );
+		Info_SetValueForKey( string, "current", va( "%i", count ), sizeof( string ) );
+		Info_SetValueForKey( string, "max", va( "%i", sv_maxclients->integer ), sizeof( string ) );
+		Info_SetValueForKey( string, "map", sv.name, sizeof( string ) );
 
 		// send serverinfo
 		Q_snprintf( answer, sizeof( answer ), "netinfo %i %i %s\n", context, type, string );
@@ -1986,18 +1986,18 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 
 	if( !Q_stricmp( temp1, "console" )) // keyword came from OSHLDS
 	{
-		Info_SetValueForKey( cl->userinfo, "name", "unnamed" );
+		Info_SetValueForKey( cl->userinfo, "name", "unnamed", sizeof( cl->userinfo ) );
 		val = Info_ValueForKey( cl->userinfo, "name" );
 	}
 	else if( Q_strcmp( temp1, val ))
 	{
-		Info_SetValueForKey( cl->userinfo, "name", temp1 );
+		Info_SetValueForKey( cl->userinfo, "name", temp1, sizeof( cl->userinfo ) );
 		val = Info_ValueForKey( cl->userinfo, "name" );
 	}
 
 	if( !Q_strlen( temp1 ) )
 	{
-		Info_SetValueForKey( cl->userinfo, "name",	"unnamed" );
+		Info_SetValueForKey( cl->userinfo, "name",	"unnamed", sizeof( cl->userinfo ) );
 		val = Info_ValueForKey( cl->userinfo, "name" );
 		Q_strncpy( temp2, "unnamed", sizeof( temp2 ));
 		Q_strncpy( temp1, "unnamed", sizeof( temp1 ));
@@ -2019,7 +2019,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 		{
 			// dup name
 			Q_snprintf( temp2, sizeof( temp2 ), "%s (%u)", temp1, dupc++ );
-			Info_SetValueForKey( cl->userinfo, "name", temp2 );
+			Info_SetValueForKey( cl->userinfo, "name", temp2, sizeof( cl->userinfo ) );
 			val = Info_ValueForKey( cl->userinfo, "name" );
 			Q_strncpy( cl->name, temp2, sizeof( cl->name ) );
 		}
@@ -2087,7 +2087,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	// Force reset player model to "player"
 	if( cl->modelindex == 0 )
 	{
-		Info_SetValueForKey( cl->userinfo, "model", "player" );
+		Info_SetValueForKey( cl->userinfo, "model", "player", sizeof( cl->userinfo ) );
 		Mod_RegisterModel( "models/player.mdl", SV_ModelIndex( "models/player.mdl" ));
 		SV_SetModel( ent, "models/player.mdl" );
 	}

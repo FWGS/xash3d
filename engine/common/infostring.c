@@ -284,7 +284,7 @@ qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, i
 	return true;
 }
 
-qboolean GAME_EXPORT Info_SetValueForKey( char *s, const char *key, const char *value )
+qboolean GAME_EXPORT Info_SetValueForKey( char *s, const char *key, const char *value, size_t maxsize )
 {
 	if( key[0] == '*' )
 	{
@@ -292,12 +292,12 @@ qboolean GAME_EXPORT Info_SetValueForKey( char *s, const char *key, const char *
 		return false;
 	}
 
-	return Info_SetValueForStarKey( s, key, value, MAX_INFO_STRING );
+	return Info_SetValueForStarKey( s, key, value, maxsize );
 }
 
 static void Cvar_LookupBitInfo( const char *name, const char *string, void *info, void *unused )
 {
-	Info_SetValueForKey( (char *)info, name, string );
+	Info_SetValueForKey( (char *)info, name, string, MAX_INFO_STRING );
 }
 
 char *Cvar_Userinfo( void )
