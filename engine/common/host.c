@@ -858,10 +858,14 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 	else
 	{
-		#if defined(XASH_SDL)
+		#if TARGET_OS_IPHONE
+		const char *IOS_GetDocsDir();
+		Q_strncpy( host.rootdir, IOS_GetDocsDir(), sizeof(host.rootdir) );
+		#elif defined(XASH_SDL)
 		if( !( baseDir = SDL_GetBasePath() ) )
 			Sys_Error( "couldn't determine current directory: %s", SDL_GetError() );
 		Q_strncpy( host.rootdir, baseDir, sizeof( host.rootdir ) );
+		SDL_free( baseDir );
 		#else
 		if( !getcwd( host.rootdir, sizeof(host.rootdir) ) )
 			host.rootdir[0] = 0;
@@ -912,6 +916,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Sys_Warn( "SDL_Init failed: %s", SDL_GetError() );
 		host.type = HOST_DEDICATED;
 	}
+	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
 #endif
 
 	if ( SetCurrentDirectory( host.rootdir ) != 0)
@@ -1068,8 +1073,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	HTTP_Init();
 
-	Cmd_AddCommand( "clear", Host_Clear_f, "clear console history" );
-
 	// post initializations
 	switch( host.type )
 	{
@@ -1083,11 +1086,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		CSCR_LoadDefaultCVars( "user.scr" );
 		// intentional fallthrough
 	case HOST_DEDICATED:
-		Cbuf_Execute(); // force stuffcmds run if it is in cbuf
+		//Cbuf_Execute(); // force stuffcmds run if it is in cbuf
 		// if stuffcmds wasn't run, then init.rc is probably missing, use default
-		if( !host.stuffcmdsrun ) Cbuf_AddText( "stuffcmds\n" );
+		if( !FS_FileExists( va( "%s.rc\n", SI.ModuleName ), false ) ) Cbuf_AddText( "stuffcmds\n" );
 
-		Cbuf_Execute();
 		break;
 	case HOST_UNKNOWN:
 		break;
@@ -1095,8 +1097,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	if( Host_IsDedicated() )
 	{
-		char *defaultmap;
-
 		Cmd_AddCommand( "quit", Sys_Quit, "quit the game" );
 		Cmd_AddCommand( "exit", Sys_Quit, "quit the game" );
 
@@ -1104,17 +1104,12 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 		Cbuf_AddText( "exec config.cfg\n" );
 
-		// dedicated servers are using settings from server.cfg file
-		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
-		Cbuf_Execute();
-
-		defaultmap = Cvar_VariableString( "defaultmap" );
-		if( !defaultmap[0] )
-			Msg( "Please add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
-		else
-			Cbuf_AddText( va( "map %s\n", defaultmap ));
+		if( !Sys_CheckParm("+map") )
+				Cbuf_AddText( "startdefaultmap" );
 
 		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
+
+		Cbuf_Execute(); // apply port cvar
 
 		NET_Config( true );
 	}
@@ -1128,7 +1123,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	}
 
 	host.errorframe = 0;
-	Cbuf_Execute();
+
 
 	host.change_game = false;	// done
 	Cmd_RemoveCommand( "setr" );	// remove potential backdoor for changing renderer settings
@@ -1138,8 +1133,13 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	if( !Host_IsDedicated() )
 		Cmd_ExecuteString( "exec config.cfg\n", src_command );
 
+	Cbuf_Execute();
+
 	// exec all files from userconfig.d 
 	Host_Userconfigd_f();
+
+	// in case of empty init.rc
+	if( !host.stuffcmdsrun ) Cbuf_AddText( "stuffcmds\n" );
 
 	oldtime = Sys_DoubleTime();
 	IN_TouchInitConfig();

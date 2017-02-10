@@ -50,6 +50,11 @@ inline HIMAGE PIC_Load( const char *szPicName, const byte *ucRawImage, long ulRa
 	return g_engfuncs.pfnPIC_Load( szPicName, ucRawImage, ulRawImageSize, flags );
 }
 
+inline int FILE_EXISTS( const char *file, int gamedironly = FALSE )
+{
+	return g_engfuncs.pfnFileExists( file, gamedironly );
+}
+
 #define PIC_Free		(*g_engfuncs.pfnPIC_Free)
 #define PLAY_SOUND		(*g_engfuncs.pfnPlayLocalSound)
 #define CVAR_REGISTER	(*g_engfuncs.pfnRegisterVariable)
@@ -67,7 +72,6 @@ inline HIMAGE PIC_Load( const char *szPicName, const byte *ucRawImage, long ulRa
 #define R_RenderFrame	(*g_engfuncs.pfnRenderScene)
 
 #define LOAD_FILE		(*g_engfuncs.COM_LoadFile)
-#define FILE_EXISTS( file )	(*g_engfuncs.pfnFileExists)( file, FALSE )
 #define FREE_FILE		(*g_engfuncs.COM_FreeFile)
 #define GET_GAME_DIR	(*g_engfuncs.pfnGetGameDir)
 #define HOST_ERROR		(*g_engfuncs.pfnHostError)

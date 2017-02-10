@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include <stdarg.h> // va
 #ifdef XASH_SDL
 #include <SDL_system.h> // Android External storage
+#include <SDL_filesystem.h> // Android External storage
 #endif
 #ifdef _WIN32
 #include <io.h>
@@ -303,7 +304,7 @@ emulate WIN32 FS behaviour when opening local file
 */
 const char *FS_FixFileCase( const char *path )
 {
-#ifndef _WIN32
+#if !defined _WIN32 && !TARGET_OS_IPHONE // assume case insensitive
 	DIR *dir; struct dirent *entry;
 	char path2[PATH_MAX], *fname;
 
@@ -502,7 +503,6 @@ void FS_MD5_f( void )
 	}
 }
 
-
 /*
 ============
 FS_FileBase
@@ -537,6 +537,46 @@ void FS_FileBase( const char *in, char *out )
 	if( start < 0 || ( in[start] != '/' && in[start] != '\\' ))
 		start = 0;
 	else start++;
+
+	// length of new sting
+	len = end - start + 1;
+
+	// Copy partial string
+	Q_strncpy( out, &in[start], len + 1 );
+	out[len] = 0;
+}
+
+/*
+============
+FS_MapFileBase
+
+Extracts the base name of a map file (no extension, split map from path)
+============
+*/
+void FS_MapFileBase( const char *in, char *out )
+{
+	int	len, start, end;
+	const char *pstr;
+
+	len = Q_strlen( in );
+	if( !len ) return;
+
+	// scan backward for '.'
+	end = len - 1;
+
+	while( end && in[end] != '.' && in[end] != '/' && in[end] != '\\' )
+		end--;
+
+	if( in[end] != '.' )
+		end = len-1; // no '.', copy to end
+	else end--; // found ',', copy to left of '.'
+
+
+	// strip "maps/" if exists
+	start = 0;
+	pstr = Q_strstr( in, "maps/");
+	if( pstr )
+		start = pstr + 5 - in;
 
 	// length of new sting
 	len = end - start + 1;
@@ -1073,6 +1113,11 @@ void FS_Rescan( void )
 	if( str = getenv("XASH3D_EXTRAS_PAK2") )
 		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	//FS_AddPack_Fullpath( "/data/data/in.celest.xash3d.hl.test/files/pak.pak", NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+#elif TARGET_OS_IPHONE
+	{
+		FS_AddPack_Fullpath( va( "%sextras.pak", SDL_GetBasePath() ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		FS_AddPack_Fullpath( va( "%sextras_%s.pak", SDL_GetBasePath(), GI->gamedir ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	}
 #endif
 
 	if( Q_stricmp( GI->basedir, GI->gamedir ))
@@ -1298,6 +1343,7 @@ void FS_CreateDefaultGameInfo( const char *filename )
 static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, gameinfo_t *GameInfo )
 {
 	char	*afile, *pfile;
+	qboolean found_linux = false, found_osx = false;
 	string	token;
 
 	if( !GameInfo ) return false;	
@@ -1323,8 +1369,6 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
-	Q_strncpy( GameInfo->game_dll_osx, "dlls/hl.dylib", sizeof( GameInfo->game_dll_osx ));
-	Q_strncpy( GameInfo->game_dll_linux, "dlls/hl.so", sizeof( GameInfo->game_dll_linux ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
 	VectorSet( GameInfo->client_mins[0],   0,   0,  0  );
@@ -1378,10 +1422,12 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		else if( !Q_stricmp( token, "gamedll_linux" ))
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
+			found_linux = true;
 		}
 		else if( !Q_stricmp( token, "gamedll_osx" ))
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
+			found_osx = false;
 		}
 		else if( !Q_stricmp( token, "icon" ))
 		{
@@ -1445,6 +1491,21 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		}
 	}
 
+	if( !found_linux || !found_osx )
+	{
+		// just replace extension from dll to so/dylib
+
+		char gamedll[64];
+		Q_strncpy( gamedll, GameInfo->game_dll, sizeof( gamedll ));
+		FS_StripExtension( gamedll );
+
+		if( !found_linux )
+			snprintf( GameInfo->game_dll_linux, sizeof( GameInfo->game_dll_linux ), "%s.so", gamedll );
+
+		if( !found_osx )
+			snprintf( GameInfo->game_dll_osx, sizeof( GameInfo->game_dll_osx ), "%s.dylib", gamedll );
+	}
+
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
 
@@ -1484,6 +1545,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	char	*afile, *pfile;
 	string	fs_path, filepath;
 	string	liblist, token;
+	qboolean found_linux = false, found_osx = false;
 
 	Q_snprintf( filepath, sizeof( filepath ), "%s/gameinfo.txt", gamedir );
 	Q_snprintf( liblist, sizeof( liblist ), "%s/liblist.gam", gamedir );
@@ -1514,7 +1576,11 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->title, "New Game", sizeof( GameInfo->title ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
-#if defined(__ANDROID__)
+#if TARGET_OS_IPHONE
+	//Q_strncpy( GameInfo->game_dll, va( "%sserver", SDL_GetBasePath() ), sizeof( GameInfo->game_dll ) );
+	
+	//Q_strncpy( GameInfo->game_dll, "hlsv.framework/hl", sizeof( GameInfo->game_dll ) );
+#elif defined(__ANDROID__)
 	Q_strncpy( GameInfo->dll_path, getenv("XASH3D_GAMELIBDIR"), sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 	Q_strncpy( GameInfo->game_dll, GameInfo->dll_path, sizeof( GameInfo->game_dll ));
@@ -1522,8 +1588,6 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 #else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
-	Q_strncpy( GameInfo->game_dll_osx, "dlls/hl.dylib", sizeof( GameInfo->game_dll_osx ));
-	Q_strncpy( GameInfo->game_dll_linux, "dlls/hl.so", sizeof( GameInfo->game_dll_linux ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 #endif
 	Q_strncpy( GameInfo->startmap, "", sizeof( GameInfo->startmap ));
@@ -1579,10 +1643,12 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		else if( !Q_stricmp( token, "gamedll_osx" ))
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
+			found_osx = true;
 		}
 		else if( !Q_stricmp( token, "gamedll_linux" ))
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
+			found_linux = true;
 		}
 		else if( !Q_stricmp( token, "clientlib" ))
 		{
@@ -1710,6 +1776,22 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		}
 	}
 
+#if !defined(ANDROID)
+	if( !found_linux || !found_osx )
+	{
+		// just replace extension from dll to so/dylib
+
+		char gamedll[64];
+		Q_strncpy( gamedll, GameInfo->game_dll, sizeof( gamedll ));
+		FS_StripExtension( gamedll );
+
+		if( !found_linux )
+			snprintf( GameInfo->game_dll_linux, sizeof( GameInfo->game_dll_linux ), "%s.so", gamedll );
+
+		if( !found_osx )
+			snprintf( GameInfo->game_dll_osx, sizeof( GameInfo->game_dll_osx ), "%s.dylib", gamedll );
+	}
+#endif
 	// make sure what gamedir is really exist
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
@@ -1757,6 +1839,8 @@ void FS_LoadGameInfo( const char *rootfolder )
 	{
 #if defined(_WIN32)
 		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
+#elif TARGET_OS_IPHONE
+		Q_strncpy( SI.gamedll, "server", sizeof( SI.gamedll ) );
 #elif defined(__APPLE__)
 		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
 #elif defined(__ANDROID__)

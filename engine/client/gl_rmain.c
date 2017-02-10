@@ -204,7 +204,7 @@ R_WorldToScreen
 Convert a given point from world into screen space
 ===============
 */
-qboolean R_WorldToScreen( const vec3_t point, vec3_t screen )
+qboolean GAME_EXPORT R_WorldToScreen( const vec3_t point, vec3_t screen )
 {
 	matrix4x4	worldToScreen;
 	qboolean	behind;
@@ -242,7 +242,7 @@ R_ScreenToWorld
 Convert a given point from screen into world space
 ===============
 */
-void R_ScreenToWorld( const vec3_t screen, vec3_t point )
+void GAME_EXPORT R_ScreenToWorld( const vec3_t screen, vec3_t point )
 {
 	matrix4x4	screenToWorld;
 	float	w;

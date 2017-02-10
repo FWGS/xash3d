@@ -409,7 +409,7 @@ void Con_Bottom( void )
 Con_Visible
 ================
 */
-qboolean Con_Visible( void )
+qboolean GAME_EXPORT Con_Visible( void )
 {
 	return (con.displayFrac != 0.0f);
 }
@@ -592,7 +592,7 @@ int Con_UtfProcessCharForce( int in )
 	return 0;
 }
 
-int Con_UtfProcessChar( int in )
+int GAME_EXPORT Con_UtfProcessChar( int in )
 {
 	if( !g_utf8 )
 		return in;
@@ -644,8 +644,9 @@ int Con_UtfMoveRight( char *str, int pos, int length )
 
 int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 {
-	int	width, height;
+	float	width, height;
 	float	s1, t1, s2, t2;
+	int w, h;
 	wrect_t	*rc;
 
 	number &= 255;
@@ -662,7 +663,9 @@ int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 	rc = &con.curFont->fontRc[number];
 
 	pglColor4ubv( color );
-	R_GetTextureParms( &width, &height, con.curFont->hFontTexture );
+	R_GetTextureParms( &w, &h, con.curFont->hFontTexture );
+	width = w;
+	height = h;
 
 	// calc rectangle
 	s1 = (float)rc->left / width;
@@ -766,7 +769,7 @@ int Con_DrawGenericString( int x, int y, const char *string, rgba_t setColor, qb
 	s = string;
 	*(uint *)color = *(uint *)setColor;
 
-	while ( *s )
+	while ( s && *s )
 	{
 		if( *s == '\n' )
 		{
@@ -949,7 +952,7 @@ Con_NPrint
 Draw a single debug line with specified height
 ================
 */
-void Con_NPrintf( int idx, char *fmt, ... )
+void GAME_EXPORT Con_NPrintf( int idx, char *fmt, ... )
 {
 	va_list	args;
 
@@ -976,7 +979,7 @@ Con_NXPrint
 Draw a single debug line with specified height, color and time to live
 ================
 */
-void Con_NXPrintf( con_nprint_t *info, char *fmt, ... )
+void GAME_EXPORT Con_NXPrintf( con_nprint_t *info, char *fmt, ... )
 {
 	va_list	args;
 
@@ -1704,12 +1707,12 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 			if( con_black->integer )
 			{
 				pglColor4ub( 0, 0, 0, 255 );
-				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
 			{
 				pglColor4ub( 255, 255, 255, 255 );
-				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, con.background );
 			}
 		}
 		else
@@ -1718,12 +1721,12 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 			if( con_black->value )
 			{
 				pglColor4ub( 0, 0, 0, 255 * con_alpha->value );
-				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
 			{
 				pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
-				R_DrawStretchPic( 0, y - scr_width->integer * 3 / 4, scr_width->integer, scr_width->integer * 3 / 4, 0, 0, 1, 1, con.background );
+				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, con.background );
 			}
 		}
 		pglColor4ub( 255, 255, 255, 255 );
@@ -1740,17 +1743,18 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		byte	*color = g_color_table[7];
 		int	stringLen, width = 0, charH;
 
-		Q_snprintf( curbuild, MAX_STRING, "Xash3D FWGS %i/%s build %i (based on %g build%i)",
-					PROTOCOL_VERSION,
-					XASH_VERSION, Q_buildnum( ), // fork info
-					BASED_VERSION, Q_buildnum_compat( )); // original xash3d info
+		Q_snprintf( curbuild, MAX_STRING, "Xash3D FWGS %i/%s build %i %s %s-%s", PROTOCOL_VERSION,
+					XASH_VERSION, Q_buildnum( ), Q_buildcommit( ), Q_buildos( ), Q_buildarch( ) );
 		Con_DrawStringLen( curbuild, &stringLen, &charH );
 		start = scr_width->integer - stringLen;
 		stringLen = Con_StringLength( curbuild );
 
 		for( i = 0; i < stringLen; i++ )
 			width += Con_DrawCharacter( start + width, 0, curbuild[i], color );
+
+		host.force_draw_version_time = 0;
 	}
+
 
 	// draw the text
 	con.vislines = lines;
@@ -1906,14 +1910,17 @@ void Con_DrawVersion( void )
 		if(( cls.key_dest != key_menu && !draw_version ) || gl_overview->integer == 2 )
 			return;
 	}
+	else
+	{
+		if( host.realtime > host.force_draw_version_time )
+			host.force_draw_version = false;
+	}
 
 	if( host.force_draw_version || draw_version )
-		Q_snprintf( curbuild, MAX_STRING, "Xash3D SDL %i/%s build %i (based on %g build%i)", PROTOCOL_VERSION,
-					XASH_VERSION, Q_buildnum( ),
-					BASED_VERSION, Q_buildnum_compat( ));
-	else Q_snprintf( curbuild, MAX_STRING, "v%i/%s build %i (based on %g build%i)", PROTOCOL_VERSION,
-					 XASH_VERSION, Q_buildnum( ),
-					 BASED_VERSION, Q_buildnum_compat( ));
+		Q_snprintf( curbuild, MAX_STRING, "Xash3D FWGS %i/%s build %i %s %s-%s", PROTOCOL_VERSION,
+					XASH_VERSION, Q_buildnum( ), Q_buildcommit( ), Q_buildos( ), Q_buildarch( ) );
+	else Q_snprintf( curbuild, MAX_STRING, "v%i/%s build %i %s %s-%s", PROTOCOL_VERSION,
+					 XASH_VERSION, Q_buildnum( ), Q_buildcommit( ), Q_buildos( ), Q_buildarch( ));
 	Con_DrawStringLen( curbuild, &stringLen, &charH );
 	start = scr_width->integer - stringLen * 1.05f;
 	stringLen = Con_StringLength( curbuild );

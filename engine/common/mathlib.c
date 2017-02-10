@@ -214,13 +214,13 @@ void SinCosFastVector(float r1, float r2, float r3, float r4,
 	sincos_ps(rad_vector, &sin_vector, &cos_vector);
 
 	*s0 = sin_vector[0];
-	if(s1) *s1 = sin_vector[1];
-	if(s2) *s2 = sin_vector[2];
+	*s1 = sin_vector[1];
+	*s2 = sin_vector[2];
 	if(s3) *s3 = sin_vector[3];
 
 	*c0 = cos_vector[0];
-	if(s1) *c1 = cos_vector[1];
-	if(s2) *c2 = cos_vector[2];
+	*c1 = cos_vector[1];
+	*c2 = cos_vector[2];
 	if(s3) *c3 = cos_vector[3];
 }
 #endif
@@ -263,7 +263,7 @@ AngleVectors
 
 =================
 */
-void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
+void GAME_EXPORT AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
 {
 	static float	sr, sp, sy, cr, cp, cy;
 
@@ -366,6 +366,28 @@ void VectorsAngles( const vec3_t forward, const vec3_t right, const vec3_t up, v
 	angles[PITCH] = pitch;
 	angles[YAW] = yaw;
 	angles[ROLL] = roll;
+}
+
+/*
+=================
+InterpolateAngles
+=================
+*/
+void InterpolateAngles( vec3_t start, vec3_t end, vec3_t out, float frac )
+{
+	float	d, ang1, ang2;
+	int i;
+	for( i = 0; i < 3; i++ )
+	{
+		ang1 = start[i];
+		ang2 = end[i];
+		d = ang1 - ang2;
+
+		if( d > 180.0f ) d -= 360.0f;
+		else if( d < -180.0f ) d += 360.0f;
+
+		out[i] = ang2 + d * frac;
+	}
 }
 
 //

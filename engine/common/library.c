@@ -72,16 +72,77 @@ int dladdr( const void *addr, Dl_info *info )
 {
 	return 0;
 }
+
+
+
+#endif
+#ifdef XASH_SDL
+#include <SDL_filesystem.h>
 #endif
 
+#ifdef TARGET_OS_IPHONE
+
+static void *IOS_LoadLibraryInternal( const char *dllname )
+{
+	void *pHandle;
+	string errorstring = "";
+	char path[MAX_SYSPATH];
+	
+	// load frameworks from Documents directory
+	// frameworks should be signed with same key with application
+	// Useful for debug to prevent rebuilding app on every library update
+	// NOTE: Apple polices forbids loading code from shared places
+#ifdef ENABLE_FRAMEWORK_SIDELOAD
+	Q_snprintf( path, MAX_SYSPATH, "%s.framework/lib", dllname );
+	if( pHandle = dlopen( path, RTLD_LAZY ) )
+		return pHandle;
+	Q_snprintf( errorstring, MAX_STRING, dlerror() );
+#endif
+	
+#ifdef DLOPEN_FRAMEWORKS
+	// load frameworks as it should be located in Xcode builds
+	Q_snprintf( path, MAX_SYSPATH, "%s%s.framework/lib", SDL_GetBasePath(), dllname );
+#else
+	// load libraries from app root to allow re-signing ipa with custom utilities
+	Q_snprintf( path, MAX_SYSPATH, "%s%s", SDL_GetBasePath(), dllname );
+#endif
+	pHandle = dlopen( path, RTLD_LAZY );
+	if( !pHandle )
+	{
+		Com_PushLibraryError(errorstring);
+		Com_PushLibraryError(dlerror());
+	}
+	return pHandle;
+}
+extern char *g_szLibrarySuffix;
+static void *IOS_LoadLibrary( const char *dllname )
+{
+	string name;
+	char *postfix = g_szLibrarySuffix;
+	char *pHandle;
+
+	if( !postfix ) postfix = GI->gamedir;
+
+	Q_snprintf( name, MAX_STRING, "%s_%s", dllname, postfix );
+	pHandle = IOS_LoadLibraryInternal( name );
+	if( pHandle )
+		return pHandle;
+	return IOS_LoadLibraryInternal( dllname );
+}
+
+#endif
 
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
 	searchpath_t	*search = NULL;
 	int		pack_ind;
 	char	path [MAX_SYSPATH];
-
 	void *pHandle;
+
+#ifdef TARGET_OS_IPHONE
+	return IOS_LoadLibrary(dllname);
+#endif
+
 	qboolean dll = host.enabledll && ( Q_stristr( dllname, ".dll" ) != 0 );
 #ifdef DLL_LOADER
 	if(dll)
@@ -287,6 +348,11 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 // Vista SDKs no longer define IMAGE_SIZEOF_BASE_RELOCATION!?
 #define IMAGE_SIZEOF_BASE_RELOCATION (sizeof(IMAGE_BASE_RELOCATION))
 #endif
+
+#if defined(_M_X64)
+#error "Xash's nonstandart loader will not work on Win64. Set target to Win32 or disable nonstandart loader"
+#endif
+
 
 typedef struct
 {
@@ -1160,7 +1226,8 @@ const char *Com_NameForFunction( void *hInstance, void * function )
 	{
 		index = hInst->ordinals[i];
 
-		if(( (char*)function - hInst->funcBase ) == hInst->funcs[index] )
+		// 32 bit only cast :(
+		if( ( (dword)function - hInst->funcBase ) == hInst->funcs[index] )
 			return hInst->names[i];
 	}
 	// couldn't find the function address to return name

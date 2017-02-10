@@ -1298,10 +1298,10 @@ void HTTP_Run( void )
 		// Now set non-blocking mode
 		// You may skip this if not supported by system,
 		// but download will lock engine, maybe you will need to add manual returns
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__) || defined(__FreeBSD__)
 		mode = 1;
 		pIoctlSocket( curfile->socket, FIONBIO, &mode );
-#elif !defined(__FreeBSD__)
+#else
 		// SOCK_NONBLOCK is not portable, so use fcntl
 		fcntl( curfile->socket, F_SETFL, fcntl( curfile->socket, F_GETFL, 0 ) | O_NONBLOCK );
 #endif
@@ -1317,6 +1317,8 @@ void HTTP_Run( void )
 		{
 #ifdef _WIN32
 			if( pWSAGetLastError() == WSAEINPROGRESS || pWSAGetLastError() == WSAEWOULDBLOCK )
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+			if( errno == EINPROGRESS || errno == EWOULDBLOCK )
 #else
 			if( errno == EINPROGRESS ) // Should give EWOOLDBLOCK if try recv too soon
 #endif
@@ -1353,7 +1355,9 @@ void HTTP_Run( void )
 			{
 #ifdef _WIN32
 				if( pWSAGetLastError() != WSAEWOULDBLOCK && pWSAGetLastError() != WSAENOTCONN )
-#elif !defined(__FreeBSD__)
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+				if( errno != EWOULDBLOCK && errno != ENOTCONN )
+#else
 				if( errno != EWOULDBLOCK )
 #endif
 				{
@@ -1361,7 +1365,6 @@ void HTTP_Run( void )
 					HTTP_FreeFile( curfile, true );
 					return;
 				}
-#ifndef __FreeBSD__
 				// increase counter when blocking
 				curfile->blocktime += host.frametime;
 
@@ -1372,7 +1375,6 @@ void HTTP_Run( void )
 					return;
 				}
 				return;
-#endif
 			}
 			else
 			{

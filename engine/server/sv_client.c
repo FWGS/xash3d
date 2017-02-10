@@ -248,7 +248,7 @@ gotnewcl:
 		unsigned int maxpacket = Q_atoi( Info_ValueForKey( userinfo, "cl_maxpacket") );
 		extensions |= NET_EXT_SPLIT;
 		newcl->netchan.split = true;
-		if( maxpacket < 100 || maxpacket >= 40000 )
+		if( maxpacket < 100 || maxpacket >= NET_MAX_PAYLOAD / 2 )
 			maxpacket = 1400;
 		if( maxpacket > sv_maxpacket->integer )
 			maxpacket = sv_maxpacket->integer;
@@ -337,7 +337,7 @@ SV_FakeConnect
 A connection request that came from the game module
 ==================
 */
-edict_t *SV_FakeConnect( const char *netname )
+edict_t *GAME_EXPORT SV_FakeConnect( const char *netname )
 {
 	int		i, edictnum;
 	char		userinfo[MAX_INFO_STRING];
@@ -889,11 +889,11 @@ int SV_CalcPing( sv_client_t *cl )
 
 	// bots don't have a real ping
 	if( cl->fakeclient )
-		return 5;
+		return 0;
 
 	// client has no frame data
 	if( !cl->frames )
-		return 5;
+		return 0;
 
 	count = 0;
 
@@ -915,8 +915,8 @@ int SV_CalcPing( sv_client_t *cl )
 		}
 	}
 
-	if( !count ) return 0;
-
+	if( !count )
+		return 0;
 	return (( ping / count ) * 1000 );
 }
 
@@ -947,7 +947,7 @@ void SV_EstablishTimeBase( sv_client_t *cl, usercmd_t *cmds, int dropped, int nu
 	for( ; numcmds > 0; numcmds-- )
 		runcmd_time += cmds[numcmds - 1].msec / 1000.0;
 
-	cl->timebase = sv.time + cl->cl_updaterate - runcmd_time;
+	cl->timebase = sv.time + host.frametime - runcmd_time;
 }
 
 /*
@@ -964,11 +964,13 @@ float SV_CalcClientTime( sv_client_t *cl )
 	int	i, count = 0;
 	int	backtrack;
 
-	backtrack = (int)sv_unlagsamples->integer;
-	if( backtrack < 1 ) backtrack = 1;
+	backtrack = sv_unlagsamples->integer;
 
-	if( backtrack >= (SV_UPDATE_BACKUP <= 16 ? SV_UPDATE_BACKUP : 16 ))
-		backtrack = ( SV_UPDATE_BACKUP <= 16 ? SV_UPDATE_BACKUP : 16 );
+	if( backtrack < 1 )
+		backtrack = 1;
+
+	if( backtrack > min( SV_UPDATE_BACKUP, 16 ) )
+		backtrack = min( SV_UPDATE_BACKUP, 16 );
 
 	if( backtrack <= 0 )
 		return 0.0f;
@@ -989,7 +991,7 @@ float SV_CalcClientTime( sv_client_t *cl )
 	maxping = -9999.0f;
 	ping /= count;
 	
-	for( i = 0; i < ( SV_UPDATE_BACKUP <= 4 ? SV_UPDATE_BACKUP : 4 ); i++ )
+	for( i = 0; i < min( SV_UPDATE_BACKUP, 4 ); i++ )
 	{
 		client_frame_t	*frame = &cl->frames[SV_UPDATE_MASK & (cl->netchan.incoming_acknowledged - i)];
 		if( frame->ping_time <= 0.0f )
@@ -1081,15 +1083,16 @@ qboolean SV_ShouldUpdatePing( sv_client_t *cl )
 {
 	if( host.realtime > cl->next_checkpingtime )
 	{
-		SV_CalcPing( cl );
 		cl->next_checkpingtime = host.realtime + 2.0;
+
 		return true;
 		//return cl->lastcmd.buttons & IN_SCORE;	// they are viewing the scoreboard.  Send them pings.
 	}
-	else if ( cl->next_checkpingtime - host.realtime > 2.0 )
-		cl->next_checkpingtime = host.realtime + 2.0;
+	// this means the same? Useless check
+	//else if ( cl->next_checkpingtime - host.realtime > 2.0 )
+	//	cl->next_checkpingtime = host.realtime + 2.0;
 
-	return true;
+	return false;
 }
 
 /*
@@ -1103,34 +1106,6 @@ qboolean SV_IsPlayerIndex( int idx )
 	if( idx > 0 && idx <= sv_maxclients->integer )
 		return true;
 	return false;
-}
-
-/*
-===================
-SV_GetPlayerStats
-
-This function and its static vars track some of the networking
-conditions.  I haven't bothered to trace it beyond that, because
-this fucntion sucks pretty badly.
-===================
-*/
-void SV_GetPlayerStats( sv_client_t *cl, int *ping, int *packet_loss )
-{
-	static int	last_ping[MAX_CLIENTS];
-	static int	last_loss[MAX_CLIENTS];
-	int		i;
-
-	i = cl - svs.clients;
-
-	if( cl->next_checkpingtime < host.realtime )
-	{
-		cl->next_checkpingtime = host.realtime + 2.0;
-		last_ping[i] = SV_CalcPing( cl );
-		last_loss[i] = cl->packet_loss;
-	}
-
-	if( ping ) *ping = last_ping[i];
-	if( packet_loss ) *packet_loss = last_loss[i];
 }
 
 /*
@@ -1166,7 +1141,7 @@ void SV_PutClientInServer( edict_t *ent )
 			// clear any dlls data but keep engine data
 			Mem_Free( ent->pvPrivateData );
 			ent->pvPrivateData = NULL;
-			ent->serialnumber++;
+			//ent->serialnumber++;
 		}
 
 		Q_memset( &ent->v, 0, sizeof( ent->v ) );
@@ -1188,17 +1163,6 @@ void SV_PutClientInServer( edict_t *ent )
 			ent->v.flags |= (FL_GODMODE|FL_NOTARGET);
 
 		client->pViewEntity = NULL; // reset pViewEntity
-
-		if( svgame.globals->cdAudioTrack )
-		{
-			//BF_WriteByte( &client->netchan.message, svc_stufftext );
-			//BF_WriteString( &client->netchan.message, va( "cd loop %3d\n", svgame.globals->cdAudioTrack ));
-
-			BF_WriteByte( &client->netchan.message, svc_cdtrack );
-			BF_WriteByte( &client->netchan.message, svgame.globals->cdAudioTrack );
-			BF_WriteByte( &client->netchan.message, svgame.globals->cdAudioTrack );
-			svgame.globals->cdAudioTrack = 0;
-		}
 
 	}
 	else
@@ -1318,8 +1282,22 @@ void SV_New_f( sv_client_t *cl )
 	BF_WriteString( &cl->netchan.message, GI->gamefolder );
 	BF_WriteLong( &cl->netchan.message, host.features );
 
+	// send audio track info
+	if( svgame.globals->cdAudioTrack )
+	{
+		//BF_WriteByte( &client->netchan.message, svc_stufftext );
+		//BF_WriteString( &client->netchan.message, va( "cd loop %3d\n", svgame.globals->cdAudioTrack ));
+
+		BF_WriteByte( &cl->netchan.message, svc_cdtrack );
+		BF_WriteByte( &cl->netchan.message, svgame.globals->cdAudioTrack );
+		BF_WriteByte( &cl->netchan.message, svgame.globals->cdAudioTrack );
+		svgame.globals->cdAudioTrack = 0;
+	}
+
 	// refresh userinfo on spawn
 	SV_RefreshUserinfo();
+
+
 
 	// game server
 	if( sv.state == ss_active )
@@ -2071,7 +2049,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	if( !cl->netchan.split && *val )
 	{
 		cl->maxpacket = Q_atoi( val );
-		cl->maxpacket = bound( 100, cl->maxpacket, ( NET_MAX_PAYLOAD / 2 ) );
+		cl->maxpacket = bound( 100, cl->maxpacket, ( sv_maxpacket->integer / 2 ) );
 	}
 	else
 		cl->maxpacket = sv_maxpacket->integer;

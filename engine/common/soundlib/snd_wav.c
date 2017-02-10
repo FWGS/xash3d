@@ -76,8 +76,8 @@ static void FindNextChunk( const char *name )
 		iff_dataPtr += 4;
 		iff_chunkLen = GetLittleLong();
 
-		// limit chunk size to 1 mb
-		if( iff_chunkLen < 0 || iff_chunkLen > 1024 * 1024 )
+		// limit chunk size to 100 mb
+		if( iff_chunkLen < 0 || !Q_strcmp(name, "LIST") && iff_end < iff_dataPtr + 4 || iff_chunkLen > 1024 * 1024 * 100 )
 		{
 			iff_dataPtr = NULL;
 			return;

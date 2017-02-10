@@ -56,6 +56,7 @@ convar_t	*cl_allow_fragment;
 convar_t	*cl_lw;
 convar_t	*cl_trace_events;
 convar_t	*cl_trace_stufftext;
+convar_t    *cl_trace_messages;
 convar_t	*cl_charset;
 convar_t	*cl_sprite_nearest;
 convar_t	*cl_updaterate;
@@ -349,6 +350,7 @@ void CL_CreateCmd( void )
 			cl.refdef.cmd = &cl.commands[cls.netchan.outgoing_sequence & CL_UPDATE_MASK].cmd;
 			*cl.refdef.cmd = cmd;
 		}
+		CL_PopPMStates();
 		return;
 	}
 
@@ -1743,7 +1745,7 @@ void CL_InitLocal( void )
 	r_oldparticles = Cvar_Get("r_oldparticles", "0", CVAR_ARCHIVE, "make some particle textures a simple square, like with software rendering");
 
 	cl_trace_events = Cvar_Get( "cl_trace_events", "0", CVAR_ARCHIVE|CVAR_CHEAT, "enable client event tracing (good for developers)" );
-
+	cl_trace_messages = Cvar_Get( "cl_trace_messages", "0", CVAR_ARCHIVE|CVAR_CHEAT, "enable message names tracing (good for developers)");
 	cl_trace_stufftext = Cvar_Get( "cl_trace_stufftext", "0", CVAR_ARCHIVE|CVAR_CHEAT, "enable stufftext commands tracing (good for developers)" );
 
 	// userinfo
@@ -1808,6 +1810,7 @@ void CL_InitLocal( void )
 	Cmd_AddCommand ("localservers", CL_LocalServers_f, "collect info about local servers" );
 	Cmd_AddCommand ("internetservers", CL_InternetServers_f, "collect info about internet servers" );
 	Cmd_AddCommand ("cd", CL_PlayCDTrack_f, "play cd-track (not real cd-player of course)" );
+	Cmd_AddCommand ("mp3", CL_MP3Command_f, "mp3 command" );
 
 	Cmd_AddCommand ("userinfo", CL_Userinfo_f, "print current client userinfo" );
 	Cmd_AddCommand ("physinfo", CL_Physinfo_f, "print current client physinfo" );
@@ -1958,7 +1961,9 @@ void CL_Init( void )
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
 	IN_TouchInit();
-#if defined (__ANDROID__)
+#if TARGET_OS_IPHONE
+	loaded = CL_LoadProgs( "client" );
+#elif defined (__ANDROID__)
 	{
 		char clientlib[256];
 		Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_GAMELIBDIR"));

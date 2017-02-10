@@ -23,6 +23,10 @@ GNU General Public License for more details.
 #include "input.h"
 #include "server.h" // !!svgame.hInstance
 
+#if defined(_WIN32)
+#define USE_VFW
+#endif
+
 static MENUAPI	GetMenuAPI;
 static ADDTOUCHBUTTONTOLIST pfnAddTouchButtonToList;
 static void UI_UpdateUserinfo( void );
@@ -844,6 +848,13 @@ int pfnCheckGameDll( void )
 {
 	void	*hInst;
 
+#if TARGET_OS_IPHONE
+	// loading server library drains too many ram
+	// so 512MB iPod Touch cannot even connect to
+	// to servers in cstrike
+	return true;
+#endif
+
 	if( svgame.hInstance )
 		return true;
 
@@ -1031,7 +1042,10 @@ qboolean UI_LoadProgs( void )
 
 	// setup globals
 	menu.globals = &gpGlobals;
-#if defined (__ANDROID__)
+#if TARGET_OS_IPHONE
+	if(!( menu.hInstance = Com_LoadLibrary( "menu", false )))
+		return false;
+#elif defined (__ANDROID__)
 	char menulib[256];
 	Q_snprintf( menulib, 256, "%s/%s", getenv("XASH3D_GAMELIBDIR"), MENUDLL );
 	if(!( menu.hInstance = Com_LoadLibrary( menulib, false )))

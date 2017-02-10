@@ -121,7 +121,7 @@ Default build-depended cvar and constant values
 =========================================================================
 */
 
-#ifdef __ANDROID__
+#if defined __ANDROID__ || TARGET_OS_IPHONE
 	#define DEFAULT_TOUCH_ENABLE "1"
 #else
 	#define DEFAULT_TOUCH_ENABLE "0"

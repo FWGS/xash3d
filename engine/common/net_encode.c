@@ -1910,7 +1910,7 @@ qboolean MSG_ReadDeltaEntity( sizebuf_t *msg, entity_state_t *from, entity_state
   
 =============================================================================
 */
-void Delta_AddEncoder( char *name, pfnDeltaEncode encodeFunc )
+void GAME_EXPORT Delta_AddEncoder( char *name, pfnDeltaEncode encodeFunc )
 {
 	delta_info_t	*dt;
 
@@ -1950,7 +1950,7 @@ int Delta_FindField( delta_t *pFields, const char *fieldname )
 	return -1;
 }
 
-void Delta_SetField( delta_t *pFields, const char *fieldname )
+void GAME_EXPORT Delta_SetField( delta_t *pFields, const char *fieldname )
 {
 	delta_info_t	*dt;
 	delta_t		*pField;
@@ -1970,7 +1970,7 @@ void Delta_SetField( delta_t *pFields, const char *fieldname )
 	}
 }
 
-void Delta_UnsetField( delta_t *pFields, const char *fieldname )
+void GAME_EXPORT Delta_UnsetField( delta_t *pFields, const char *fieldname )
 {
 	delta_info_t	*dt;
 	delta_t		*pField;
@@ -1990,7 +1990,7 @@ void Delta_UnsetField( delta_t *pFields, const char *fieldname )
 	}
 }
 
-void Delta_SetFieldByIndex( delta_t *pFields, int fieldNumber )
+void GAME_EXPORT Delta_SetFieldByIndex( delta_t *pFields, int fieldNumber )
 {
 	delta_info_t	*dt;
 
@@ -2001,7 +2001,7 @@ void Delta_SetFieldByIndex( delta_t *pFields, int fieldNumber )
 	dt->pFields[fieldNumber].bInactive = false;
 }
 
-void Delta_UnsetFieldByIndex( delta_t *pFields, int fieldNumber )
+void GAME_EXPORT Delta_UnsetFieldByIndex( delta_t *pFields, int fieldNumber )
 {
 	delta_info_t	*dt;
 

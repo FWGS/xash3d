@@ -628,6 +628,8 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
+	
+	glState.wideScreen = true; // V_AdjustFov will check for widescreen
 
 	return rserr_ok;
 }

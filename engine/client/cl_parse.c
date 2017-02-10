@@ -1246,13 +1246,18 @@ CL_ParseScreenShake
 Set screen shake
 ==============
 */
-void CL_ParseScreenShake( sizebuf_t *msg )
+int CL_ParseScreenShake( const char *pszName, int iSize, void *pbuf )
 {
+	sizebuf_t _msg = { false, pszName, pbuf, 0, iSize * 8 };
+	sizebuf_t *msg = &_msg;
+
 	clgame.shake.amplitude = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
 	clgame.shake.duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
 	clgame.shake.frequency = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 8));
 	clgame.shake.time = cl.time + max( clgame.shake.duration, 0.01f );
 	clgame.shake.next_shake = 0.0f; // apply immediately
+
+	return 1;
 }
 
 /*
@@ -1262,20 +1267,31 @@ CL_ParseScreenFade
 Set screen fade
 ==============
 */
-void CL_ParseScreenFade( sizebuf_t *msg )
+int CL_ParseScreenFade( const char *pszName, int iSize, void *pbuf )
 {
-	float		duration, holdTime;
+	sizebuf_t _msg = { false, pszName, pbuf, 0, iSize * 8 };
+	sizebuf_t *msg = &_msg;
+	float		duration, holdTime, scale;
 	screenfade_t	*sf = &clgame.fade;
 
-	duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
-	holdTime = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
+	duration = (float)(word)BF_ReadShort( msg );
+	holdTime = (float)(word)BF_ReadShort( msg );
 	sf->fadeFlags = BF_ReadShort( msg );
+
+	// set longfade scale and multiply times
+	if( sf->fadeFlags & FFADE_LONGFADE )
+		scale = 1 / 256.0f;
+	else scale = 1 / 4096.0f;
+
+	duration *= scale;
+	holdTime *= scale;
 
 	sf->fader = BF_ReadByte( msg );
 	sf->fadeg = BF_ReadByte( msg );
 	sf->fadeb = BF_ReadByte( msg );
 	sf->fadealpha = BF_ReadByte( msg );
 	sf->fadeSpeed = 0.0f;
+
 	sf->fadeEnd = duration;
 	sf->fadeReset = holdTime;
 
@@ -1303,6 +1319,8 @@ void CL_ParseScreenFade( sizebuf_t *msg )
 			sf->fadeEnd += sf->fadeReset;
 		}
 	}
+
+	return 1;
 }
 
 /*
@@ -1416,18 +1434,6 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 		return;
 	}
 
-	// NOTE: some user messages handled into engine
-	if( !Q_strcmp( clgame.msg[i].name, "ScreenShake" ))
-	{
-		CL_ParseScreenShake( msg );
-		return;
-	}
-	else if( !Q_strcmp( clgame.msg[i].name, "ScreenFade" ))
-	{
-		CL_ParseScreenFade( msg );
-		return;
-	}
-
 	iSize = clgame.msg[i].size;
 
 	// message with variable sizes receive an actual size as first byte
@@ -1435,6 +1441,12 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 
 	// parse user message into buffer
 	BF_ReadBytes( msg, pbuf, iSize );
+
+	if( cl_trace_messages->integer )
+	{
+		MsgDev( D_INFO, "^3USERMSG %s SIZE %i SVC_NUM %i\n",
+			clgame.msg[i].name, iSize, clgame.msg[i].number );
+	}
 
 	if( clgame.msg[i].func )
 	{
@@ -1610,12 +1622,16 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_restoresound:
 			CL_ParseRestoreSoundPacket( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.sound += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_spawnstatic:
 			CL_ParseStaticEntity( msg );
 			break;
 		case svc_ambientsound:
 			CL_ParseSoundPacket( msg, true );
+
+			cl.frames[cl.parsecountmod].graphdata.sound += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_crosshairangle:
 			CL_ParseCrosshairAngle( msg );

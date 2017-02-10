@@ -200,7 +200,7 @@ qboolean SCR_DrawCinematic( void )
 		redraw = true;
 	}
 
-	R_DrawStretchRaw( 0, 0, scr_width->integer, scr_height->integer, xres, yres, frame, redraw );
+	R_DrawStretchRaw( 0, 0, scr_width->value, scr_height->value, xres, yres, frame, redraw );
 
 	return true;
 }

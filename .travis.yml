@@ -2,12 +2,21 @@ language: c
 compiler: gcc
 sudo: true
 before_script:
-    - sudo apt-get update -qq
-    - sudo apt-get install -qq --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch
-    - sudo apt-get install -qq --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
-    - sudo apt-get install -qq --force-yes gcc-multilib
-    - sudo apt-get install -qq --force-yes libX11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev
-    - sudo apt-get install -qq --force-yes libasound-dev
+    - sudo apt-get -qq update
+    - sudo apt-get -qq install --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch
+    - sudo apt-get -qq install --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
+    - sudo apt-get -qq install --force-yes gcc-multilib
+    - sudo apt-get -qq install --force-yes libX11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev
+    - sudo apt-get -qq install --force-yes libasound-dev
+    - jdk_switcher use oraclejdk7
+    - wget -O android-sdk.tgz http://dl.google.com/android/android-sdk_r22.0.4-linux.tgz
+    - tar xzf android-sdk.tgz
+    - export ANDROID_HOME=$PWD/android-sdk-linux
+    - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk
+    - sleep 3s; echo y | android update sdk -u --filter platform-tools,build-tools-19.0.0,android-19,extra-android-support --force --all > /dev/null
+    - wget http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
+    - chmod +x android-ndk-r10e-linux-x86_64.bin && ./android-ndk-r10e-linux-x86_64.bin > /dev/null
+    - mv android-ndk-r10e android-ndk
     - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz > SDL2-devel-2.0.4-mingw.tar.gz
     - tar xf SDL2-devel-2.0.4-mingw.tar.gz
     - mv SDL2-2.0.4 SDL2
@@ -15,7 +24,19 @@ before_script:
     - tar xf SDL2-2.0.4.tar.gz
     - git clone https://github.com/FWGS/vgui-dev
     - git clone https://github.com/FWGS/vgui_support_bin
+    - git clone --depth 1 -b ant-test https://github.com/mittorn/xash3d-android-project
 script:
+    - cd xash3d-android-project
+    - git submodule update --init jni/src/NanoGL/nanogl jni/src/hlsdk-xash3d xash-extras
+    - rm -r jni/src/Xash3D/xash3d
+    - ln -s $TRAVIS_BUILD_DIR jni/src/Xash3D/xash3d
+    - sh gen-version.sh travis build
+    - sh gen-config.sh test
+    - python2 makepak.py xash-extras assets/extras.pak
+    - ndk-build -j2 APP_CFLAGS="-w"
+    - ant debug -Dtest.version=1
+    - cp bin/xashdroid-debug.apk ../engine/xash3d-generic.apk
+    - cd ..
     - cd engine
     - make -f Makefile.mingw CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ -j2
     - cp ../vgui_support_bin/vgui_support.dll .
@@ -36,6 +57,5 @@ script:
     - mv libSDL2.so libSDL2-2.0.so.0
     - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2-2.0.so.0 libvgui_support.so vgui.so
 after_script:
-    - curl --upload-file xash3d-mingw.7z https://transfer.sh/xash3d-mingw-`date -u +%y-%m-%d_%H-%M`.7z
-    - curl --upload-file xash3d-linux.7z https://transfer.sh/xash3d-linux-`date -u +%y-%m-%d_%H-%M`.7z
-
+    - sh ../travis-deploy.sh travis xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk
+    - sh ../travis-upload.sh xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk

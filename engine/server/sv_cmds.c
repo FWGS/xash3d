@@ -16,6 +16,8 @@ GNU General Public License for more details.
 #include "common.h"
 #include "server.h"
 
+qboolean startingdefmap;
+
 /*
 =================
 SV_ClientPrintf
@@ -201,6 +203,21 @@ void SV_Map_f( void )
 		spawn_entity = GI->sp_entity;
 	else spawn_entity = GI->mp_entity;
 
+	if( Host_IsDedicated() && !startingdefmap )
+	{
+		// apply servercfgfile cvar on first dedicated server run
+		if( !host.stuffcmdsrun )
+			Cbuf_Execute();
+
+		// dedicated servers are using settings from server.cfg file
+		Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
+	}
+	else
+		startingdefmap = false;
+
+	// make sure that all configs are executed
+	Cbuf_Execute();
+
 	flags = SV_MapIsValid( mapname, spawn_entity, NULL );
 
 	if( flags & MAP_INVALID_VERSION )
@@ -328,6 +345,38 @@ void SV_NewGame_f( void )
 	}
 
 	Host_NewGame( GI->startmap, false );
+}
+
+/*
+==============
+SV_StartDefaultMap_f
+
+==============
+*/
+void SV_StartDefaultMap_f( void )
+{
+	char *defaultmap;
+
+	if( Cmd_Argc() != 1 )
+	{
+		Msg( "Usage: startdefaultmap\n" );
+		return;
+	}
+
+	// apply servercfgfile cvar on first dedicated server run
+	if( !host.stuffcmdsrun )
+		Cbuf_Execute();
+
+	// get defaultmap cvar
+	Cbuf_AddText( va( "exec %s\n", Cvar_VariableString( "servercfgfile" )));
+	Cbuf_Execute();
+
+	defaultmap = Cvar_VariableString( "defaultmap" );
+	if( !defaultmap[0] )
+		Msg( "Please add \"defaultmap\" cvar with default map name to your server.cfg!\n" );
+	else
+		Cbuf_AddText( va( "map %s\n", defaultmap ));
+	startingdefmap = true;
 }
 
 /*
@@ -806,9 +855,10 @@ void SV_Status_f( void )
 		if( cl->state == cs_connected ) Msg( "Connect" );
 		else if( cl->state == cs_zombie ) Msg( "Zombie " );
 		else if( cl->fakeclient ) Msg( "Bot   " );
+		else if( cl->netchan.remote_address.type == NA_LOOPBACK ) Msg( "Local ");
 		else
 		{
-			ping = cl->ping < 9999 ? cl->ping : 9999;
+			ping = min( cl->ping, 9999 );
 			Msg( "%7i ", ping );
 		}
 
@@ -1101,6 +1151,7 @@ void SV_InitOperatorCommands( void )
 	{
 		Cmd_AddCommand( "say", SV_ConSay_f, "send a chat message to everyone on the server" );
 		Cmd_AddCommand( "killserver", SV_KillServer_f, "shutdown current server" );
+		Cmd_AddCommand( "startdefaultmap", SV_StartDefaultMap_f, "start default map in dedicated server" );
 	}
 	else
 	{
@@ -1139,6 +1190,7 @@ void SV_KillOperatorCommands( void )
 	{
 		Cmd_RemoveCommand( "say" );
 		Cmd_RemoveCommand( "killserver" );
+		Cmd_RemoveCommand( "startdefaultmap" );
 	}
 	else
 	{

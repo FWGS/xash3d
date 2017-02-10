@@ -559,7 +559,7 @@ Key_Event
 Called by the system for both key up and key down events
 ===================
 */
-void Key_Event( int key, qboolean down )
+void GAME_EXPORT Key_Event( int key, qboolean down )
 {
 	const char	*kb;
 	char		cmd[1024];
@@ -574,7 +574,7 @@ void Key_Event( int key, qboolean down )
 
 	if( down )
 	{
-		//keys[key].repeats++;
+		keys[key].repeats++;
 
 		if( key != K_BACKSPACE && key != K_PAUSE && keys[key].repeats > 1 )
 		{

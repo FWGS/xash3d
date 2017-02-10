@@ -143,7 +143,13 @@ void Sys_InitLog( void )
 	if( s_ld.log_active )
 	{
 		s_ld.logfile = fopen( s_ld.log_path, mode );
-		if( !s_ld.logfile ) MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_ld.log_path );
+		if( !s_ld.logfile )
+		{
+				s_ld.log_active = false;
+				MsgDev( D_ERROR, "Sys_InitLog: can't create log file %s\n", s_ld.log_path );
+				Sys_Warn( "Failed to open log file %s!\nAre you sure you have write access?", s_ld.log_path );
+				return;
+		}
 		else s_ld.logfileno = fileno( s_ld.logfile );
 
 		fprintf( s_ld.logfile, "================================================================================\n" );
@@ -168,7 +174,7 @@ void Sys_PrintLog( const char *pMsg )
 
 
 	if( !lastchar || lastchar == '\n')
-	strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
+		strftime( logtime, sizeof( logtime ), "[%H:%M:%S] ", crt_tm ); //short time
 
 #ifdef COLORIZE_CONSOLE
 	{
@@ -189,7 +195,7 @@ void Sys_PrintLog( const char *pMsg )
 				0 // COLOR_WHITE
 			};
 
-			if( *msg == '^' )
+			if( IsColorString( msg ) )
 			{
 				int color;
 
@@ -218,10 +224,11 @@ void Sys_PrintLog( const char *pMsg )
 	fflush( stdout );
 #endif
 	lastchar = pMsg[strlen(pMsg)-1];
-	if( !s_ld.logfile ) return;
+	if( !s_ld.logfile )
+		return;
 
 	if( !lastchar || lastchar == '\n')
-	strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
+		strftime( logtime, sizeof( logtime ), "[%Y:%m:%d|%H:%M:%S]", crt_tm ); //full time
 
 	fprintf( s_ld.logfile, "%s %s", logtime, pMsg );
 	fflush( s_ld.logfile );

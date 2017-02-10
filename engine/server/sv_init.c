@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #include "common.h"
 #include "server.h"
 #include "library.h"
+#include "Sequence.h"
 
 int SV_UPDATE_BACKUP = SINGLEPLAYER_BACKUP;
 
@@ -61,7 +62,7 @@ int SV_ModelIndex( const char *filename )
 	return i;
 }
 
-int SV_SoundIndex( const char *filename )
+int GAME_EXPORT SV_SoundIndex( const char *filename )
 {
 	char	name[64];
 	int	i;
@@ -136,7 +137,7 @@ int SV_EventIndex( const char *filename )
 	return i;
 }
 
-int SV_GenericIndex( const char *filename )
+int GAME_EXPORT SV_GenericIndex( const char *filename )
 {
 	char	name[64];
 	int	i;
@@ -572,7 +573,8 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 	}
 
 	// make sure what server name doesn't contain path and extension
-	FS_FileBase( mapname, sv.name );
+	FS_MapFileBase( mapname, sv.name );
+
 
 	if( startspot )
 		Q_strncpy( sv.startspot, startspot, sizeof( sv.startspot ));
@@ -581,6 +583,8 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 	Q_snprintf( sv.model_precache[1], sizeof( sv.model_precache[0] ), "maps/%s.bsp", sv.name );
 	Mod_LoadWorld( sv.model_precache[1], &sv.checksum, sv_maxclients->integer > 1 );
 	sv.worldmodel = Mod_Handle( 1 ); // get world pointer
+
+	Sequence_OnLevelLoad( sv.name );
 
 	for( i = 1; i < sv.worldmodel->numsubmodels; i++ )
 	{

@@ -65,7 +65,7 @@ CL_EventIndex
 
 =============
 */
-word CL_EventIndex( const char *name )
+word GAME_EXPORT CL_EventIndex( const char *name )
 {
 	int	i;
 	
@@ -86,7 +86,7 @@ CL_EventIndex
 
 =============
 */
-const char *CL_IndexEvent( word index )
+const char *GAME_EXPORT CL_IndexEvent( word index )
 {
 	if( index >= MAX_EVENTS )
 		return 0;
@@ -137,7 +137,7 @@ qboolean CL_FireEvent( event_info_t *ei )
 	if( !ei || !ei->index )
 		return false;
 
-	if( cl_trace_events->value > 0.0f )
+	if( cl_trace_events->integer )
 	{
 		MsgDev( D_INFO, "^3EVENT  %s AT %.2f %.2f %.2f\n"    // event name
 					"     %.2f %.2f\n" // float params
@@ -452,7 +452,7 @@ CL_PlaybackEvent
 
 =============
 */
-void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, float delay, float *origin,
+void GAME_EXPORT CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, float delay, float *origin,
 	float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 )
 {
 	event_args_t	args;

@@ -124,7 +124,7 @@ static void UI_PlayerSetup_FindModels( void )
 	{
 		COM_FileBase( filenames[i], name );
 		snprintf( path, sizeof(path), "models/player/%s/%s.mdl", name, name );
-		if( !FILE_EXISTS( path )) continue;
+		if( !FILE_EXISTS( path, TRUE )) continue;
 
 		strcpy( uiPlayerSetup.models[uiPlayerSetup.num_models], name );
 		uiPlayerSetup.num_models++;

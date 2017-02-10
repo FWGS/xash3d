@@ -53,7 +53,7 @@ Sys_DoubleTime
 #if XASH_TIMER == TIMER_WIN32
 #include <winbase.h>
 
-double Sys_DoubleTime( void )
+double GAME_EXPORT Sys_DoubleTime( void )
 {
 	static LARGE_INTEGER g_PerformanceFrequency;
 	static LARGE_INTEGER g_ClockStart;
@@ -71,7 +71,7 @@ double Sys_DoubleTime( void )
 
 #elif XASH_TIMER == TIMER_SDL
 
-double Sys_DoubleTime( void )
+double GAME_EXPORT Sys_DoubleTime( void )
 {
 	static longtime_t g_PerformanceFrequency;
 	static longtime_t g_ClockStart;
@@ -87,7 +87,7 @@ double Sys_DoubleTime( void )
 }
 #elif XASH_TIMER == TIMER_LINUX
 
-double Sys_DoubleTime( void )
+double GAME_EXPORT Sys_DoubleTime( void )
 {
 	static longtime_t g_PerformanceFrequency;
 	static longtime_t g_ClockStart;
@@ -245,7 +245,7 @@ char *Sys_GetCurrentUser( void )
 	return "Player";
 }
 
-#if (defined(__linux__) && !defined(__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 qboolean Sys_FindExecutable( const char *baseName, char *buf, size_t size )
 {
 	char *envPath;
@@ -558,7 +558,7 @@ void Sys_Warn( const char *format, ... )
 	DEBUG_BREAK;
 
 	va_start( argptr, format );
-	Q_vsprintf( text, format, argptr );
+	Q_vsnprintf( text, MAX_SYSPATH, format, argptr );
 	va_end( argptr );
 	if( !Host_IsDedicated() ) // dedicated server should not hang on messagebox
 		MSGBOX(text);

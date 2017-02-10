@@ -383,7 +383,7 @@ void GL_FrontFace( GLenum front )
 	glState.frontFace = front;
 }
 
-void GL_SetRenderMode( int mode )
+void GAME_EXPORT GL_SetRenderMode( int mode )
 {
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
@@ -408,7 +408,7 @@ void GL_SetRenderMode( int mode )
 	case kRenderTransAdd:
 		pglEnable( GL_BLEND );
 		pglDisable( GL_ALPHA_TEST );
-#if defined(XASH_GLES) // Problem with blending exists on every GLES configuration, not only on Android
+#if defined(XASH_BLEND_ES_WORKAROUND) // Problem with blending exists on every GLES configuration, not only on Android
 		pglBlendFunc( GL_ONE, GL_ONE );
 #else
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );

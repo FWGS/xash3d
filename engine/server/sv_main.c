@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include "net_encode.h"
 
 #include "errno.h"
-
+#include "Sequence.h"
 #define HEARTBEAT_SECONDS	300.0f 		// 300 seconds
 
 convar_t	*sv_zmax;
@@ -43,8 +43,12 @@ convar_t	*sv_rollspeed;
 convar_t	*sv_wallbounce;
 convar_t	*sv_maxspeed;
 convar_t	*sv_spectatormaxspeed;
+
+
 convar_t	*sv_accelerate;
 convar_t	*sv_friction;
+
+
 convar_t	*sv_edgefriction;
 convar_t	*sv_waterfriction;
 convar_t	*sv_stopspeed;
@@ -90,6 +94,7 @@ convar_t	*sv_fixmulticast;
 convar_t	*sv_allow_split;
 convar_t	*sv_allow_compress;
 convar_t	*sv_maxpacket;
+convar_t	*sv_forcesimulating;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -122,36 +127,17 @@ Updates the cl->ping variables
 void SV_CalcPings( void )
 {
 	sv_client_t	*cl;
-	int		i, j;
-	int		total, count;
-
-	//if( !svs.clients )
-	return;
+	int			i;
 
 	// clamp fps counter
 	for( i = 0; i < sv_maxclients->integer; i++ )
 	{
 		cl = &svs.clients[i];
 
-		if( cl->state != cs_spawned || cl->fakeclient )
+		if( cl->state != cs_spawned )
 			continue;
 
-		total = count = 0;
-
-		for( j = 0; j < (SV_UPDATE_BACKUP / 2); j++ )
-		{
-			client_frame_t	*frame;
-
-			frame = &cl->frames[(cl->netchan.incoming_acknowledged - (j + 1)) & SV_UPDATE_MASK];
-			if( frame->latency > 0 )
-			{
-				count++;
-				total += frame->latency;
-			}
-		}
-
-		if( !count ) cl->ping = 0;
-		else cl->ping = (float)total / (float)count;
+		cl->ping = SV_CalcPing( cl );
 	}
 }
 
@@ -613,6 +599,9 @@ SV_IsSimulating
 */
 qboolean SV_IsSimulating( void )
 {
+	if ( sv_forcesimulating->integer )
+		return true;
+
 	if( sv.background && SV_Active() && CL_Active())
 	{
 		if( CL_IsInConsole( ))
@@ -808,7 +797,7 @@ void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 	Info_SetValueForKey(s, "version",   XASH_VERSION, sizeof( s ) ); // server region. 255 -- all regions
 	Info_SetValueForKey(s, "region",    "255", sizeof( s ) ); // server region. 255 -- all regions
 	Info_SetValueForKey(s, "product",   GI->gamefolder, sizeof( s ) ); // product? Where is the difference with gamedir?
-
+  
 	NET_SendPacket( NS_SERVER, Q_strlen( s ), s, from );
 }
 
@@ -932,7 +921,8 @@ void SV_Init( void )
 	sv_fixmulticast = Cvar_Get( "sv_fixmulticast", "1", CVAR_ARCHIVE, "do not send multicast to not spawned clients" );
 	sv_allow_compress = Cvar_Get( "sv_allow_compress", "1", CVAR_ARCHIVE, "allow Huffman compression on server" );
 	sv_allow_split= Cvar_Get( "sv_allow_split", "1", CVAR_ARCHIVE, "allow splitting packets on server" );
-	sv_maxpacket = Cvar_Get( "sv_maxpacket", "40000", CVAR_ARCHIVE, "limit cl_maxpacket for all clients" );
+	sv_maxpacket = Cvar_Get( "sv_maxpacket", "2000", CVAR_ARCHIVE, "limit cl_maxpacket for all clients" );
+	sv_forcesimulating = Cvar_Get( "sv_forcesimulating", "0", CVAR_ARCHIVE, "forcing world simulating when server don't have active players" );
 
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
@@ -1017,6 +1007,8 @@ void SV_Shutdown( qboolean reconnect )
 
 	if( public_server->integer && sv_maxclients->integer != 1 )
 		Master_Shutdown();
+
+	Sequence_PurgeEntries( true ); // clear Sequence
 
 	SV_DeactivateServer ();
 

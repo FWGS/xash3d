@@ -59,6 +59,16 @@ int CL_PushMoveFilter( physent_t *pe )
 	return 0;
 }
 
+void CL_ResetPositions( cl_entity_t *ent )
+{
+	//position_history_t store = ent->ph[ent->current_position];
+
+	ent->current_position = 0; //1;
+
+	Q_memset( ent->ph, 0, sizeof( ent->ph ) );
+	//ent->ph[1] = ent->ph[0] = store;
+}
+
 /*
 =========================================================================
 
@@ -92,7 +102,11 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 	int	i, i0, i1, imod;
 	float	at;
 
-	imod = ent->current_position - 1;
+	// Debug on grenade
+	//qboolean debug = !Q_strcmp( ent->model->name, "models/w_grenade.mdl" );
+
+	// It is wrong, but it seems that courrent_position is wrong during interp
+	imod = ent->current_position - 2;
 	i0 = (imod + 1) & HISTORY_MASK;
 	i1 = imod & HISTORY_MASK;
 
@@ -103,7 +117,17 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 		for( i = 0; i < HISTORY_MAX - 2; i++ )
 		{
 			at = ent->ph[imod & HISTORY_MASK].animtime;
-			if( at == 0.0f ) break;
+
+			// if( debug )
+				// Msg( "CL_FindInterpolationUpdates: at %f %d\n", at, imod );
+
+			// Entity was not exist at targettime
+			if( at == 0.0f )
+			{
+				i0 = 1;
+				i1 = 0;
+				break;
+			}
 
 			if( at < targettime )
 			{
@@ -112,9 +136,13 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 				extrapolate = false;
 				break;
 			}
+
 			imod--;
 		}
 	}
+
+	// if( debug )
+		// Msg( "CL_FindInterpolationUpdates: %d %d %d %f\n", ent->current_position, i0, i1, ent->ph[i0].animtime - targettime );
 
 	if( ph0 != NULL ) *ph0 = &ent->ph[i0];
 	if( ph1 != NULL ) *ph1 = &ent->ph[i1];
@@ -123,33 +151,122 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 	return extrapolate;
 }
 
-int CL_InterpolateModel( cl_entity_t *e )
+void CL_InterpolatePlayer( cl_entity_t *e )
 {
 	position_history_t  *ph0 = NULL, *ph1 = NULL;
 	vec3_t              origin, angles, delta;
 	float		        t, t1, t2, frac;
-	int		            i;
 
-	VectorCopy( e->curstate.origin, e->origin );
-	VectorCopy( e->curstate.angles, e->angles );
+	if( e->index == cl.playernum + 1 )
+	{
+		VectorCopy( cl.predicted.origin, e->origin );
+		VectorCopy( e->curstate.angles, e->angles );
+		return;
+	}
+	else
+	{
+		VectorCopy( e->curstate.origin, e->origin );
+		VectorCopy( e->curstate.angles, e->angles );
+	}
 
-	if ( cls.timedemo || !e->model || e->model->name[0] == '*' && !r_bmodelinterp->value || RP_LOCALCLIENT(e) || cl.maxclients == 1 )
-		return 1;
+	if( cls.timedemo || cl.maxclients == 1 )
+		return;
 
-	if( cl.predicted.moving && cl.predicted.onground == e->index )
-		return 1;
+	if( e->curstate.movetype == MOVETYPE_NONE  || e->prevstate.movetype == MOVETYPE_NONE )
+		return;
+
+	// enitty was moved too far
+	if( fabs(e->curstate.origin[0] - e->prevstate.origin[0]) > 128.0f ||
+		fabs(e->curstate.origin[1] - e->prevstate.origin[1]) > 128.0f ||
+		fabs(e->curstate.origin[2] - e->prevstate.origin[2]) > 128.0f )
+	{
+		VectorCopy( e->curstate.origin, e->origin );
+		VectorCopy( e->curstate.angles, e->angles );
+		return;
+	}
 
 	t = cl.time - cl_interp->value;
 
 	CL_FindInterpolationUpdates( e, t, &ph0, &ph1, NULL );
 
-	if( ph0 == NULL || ph1 == NULL )
+	t1 = ph0->animtime;
+	t2 = ph1->animtime;
+
+	if( !t1 || !t2 )
+		return;
+
+	/*if( t2 == 0.0f )
+	{
+		VectorCopy( ph0->origin, e->origin );
+		VectorCopy( ph0->angles, e->angles );
+		return;
+	}*/
+
+	VectorSubtract( ph0->origin, ph1->origin, delta );
+
+	if( t2 == t1 )
+	{
+		frac = 1.0f;
+	}
+	else
+	{
+		frac = (t - t2) / (t1 - t2);
+
+		if( frac < 0.0f )
+			frac = 0.0f;
+
+		if( frac > 1.2f )
+			frac = 1.2f;
+	}
+
+	VectorMA( ph1->origin, frac, delta, origin );
+	InterpolateAngles( ph0->angles, ph1->angles, angles, frac );
+
+	VectorCopy( origin, e->origin );
+	VectorCopy( angles, e->angles );
+
+	return;
+}
+
+int CL_InterpolateModel( cl_entity_t *e )
+{
+	position_history_t  *ph0 = NULL, *ph1 = NULL;
+	vec3_t              origin, angles, delta;
+	float		        t, t1, t2, frac;
+
+	VectorCopy( e->curstate.origin, e->origin );
+	VectorCopy( e->curstate.angles, e->angles );
+
+	// disable interpolating in singleplayer
+	if( cls.timedemo || cl.maxclients == 1 )
 		return 0;
+
+	// don't inerpolate modelless entities or bmodels
+	if( e->model && e->model->type == mod_brush && !r_bmodelinterp->integer )
+		return 0;
+
+	// skip entity on which we ride
+	if( cl.predicted.moving && cl.predicted.onground == e->index )
+		return 0;
+
+	// entities with these movetypes are ignored
+	if( e->curstate.movetype == MOVETYPE_NONE ||
+		e->curstate.movetype == MOVETYPE_WALK ||
+		e->curstate.movetype == MOVETYPE_FLY  ||
+		e->curstate.renderfx == kRenderFxDeadPlayer ||
+		e->prevstate.renderfx == kRenderFxDeadPlayer ||
+		// don't interpolate monsters in coop
+		( e->curstate.movetype == MOVETYPE_STEP && cls.netchan.remote_address.type != NA_LOOPBACK ) )
+		return 0;
+
+	t = cl.time - cl_interp->value;
+
+	CL_FindInterpolationUpdates( e, t, &ph0, &ph1, NULL );
 
 	t1 = ph0->animtime;
 	t2 = ph1->animtime;
 
-	if( t - t2 < 0.0f )
+	if( !t1 )
 		return 0;
 
 	if( t2 == 0.0f || ( VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ) ) )
@@ -167,6 +284,15 @@ int CL_InterpolateModel( cl_entity_t *e )
 	}
 
 	VectorSubtract( ph0->origin, ph1->origin, delta );
+
+	// no updates
+	if( VectorIsNull( delta ) && VectorCompare( ph0->angles, ph1->angles ) )
+	{
+		VectorCopy( ph0->origin, e->origin );
+		VectorCopy( ph0->angles, e->angles );
+		return 1;
+	}
+
 	frac = (t - t2) / (t1 - t2);
 
 	if( frac < 0.0f )
@@ -177,19 +303,7 @@ int CL_InterpolateModel( cl_entity_t *e )
 
 	VectorMA( ph1->origin, frac, delta, origin );
 
-	for( i = 0; i < 3; i++ )
-	{
-		float	d, ang1, ang2;
-
-		ang1 = ph0->angles[i];
-		ang2 = ph1->angles[i];
-		d = ang1 - ang2;
-
-		if( d > 180.0f ) d -= 360.0f;
-		else if( d < -180.0f ) d += 360.0f;
-
-		angles[i] = ang2 + d * frac;
-	}
+	InterpolateAngles( ph0->angles, ph1->angles, angles, frac );
 
 	VectorCopy( origin, e->origin );
 	VectorCopy( angles, e->angles );
@@ -199,8 +313,7 @@ int CL_InterpolateModel( cl_entity_t *e )
 
 void CL_InterpolateMovingEntity( cl_entity_t *ent )
 {
-	float		d, f = 0.0f;
-	int		i;
+	float f = 0.0f;
 
 	// don't do it if the goalstarttime hasn't updated in a while.
 	// NOTE: Because we need to interpolate multiplayer characters, the interpolation time limit
@@ -214,17 +327,7 @@ void CL_InterpolateMovingEntity( cl_entity_t *ent )
 	ent->origin[1] += ( ent->origin[1] - ent->latched.prevorigin[1] ) * f;
 	ent->origin[2] += ( ent->origin[2] - ent->latched.prevorigin[2] ) * f;
 
-	for( i = 0; i < 3; i++ )
-	{
-		float	ang1, ang2;
-
-		ang1 = ent->angles[i];
-		ang2 = ent->latched.prevangles[i];
-		d = ang1 - ang2;
-		if( d > 180.0f ) d -= 360.0f;
-		else if( d < -180.0f ) d += 360.0f;
-		ent->angles[i] += d * f;
-	}
+	InterpolateAngles( ent->angles, ent->latched.prevangles, ent->angles, f );
 }
 
 void CL_UpdateEntityFields( cl_entity_t *ent )
@@ -246,7 +349,11 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 	ent->model = Mod_Handle( ent->curstate.modelindex );
 	ent->curstate.msg_time = cl.time;
 
-	CL_InterpolateModel( ent );
+	if( ent->player )
+	{
+		CL_InterpolatePlayer( ent );
+	}
+	else CL_InterpolateModel( ent );
 
 
 	if( ent->player && RP_LOCALCLIENT( ent )) // stupid Half-Life bug
@@ -257,8 +364,7 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 		CL_InterpolateMovingEntity( ent );
 	else if( ent->model && ent->model->type == mod_brush && ent->curstate.animtime != 0.0f)
 	{
-		float		d, f = 0.0f;
-		int		i;
+		float f = 0.0f;
 
 		// don't do it if the goalstarttime hasn't updated in a while.
 		// NOTE: Because we need to interpolate multiplayer characters, the interpolation time limit
@@ -272,23 +378,12 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 		ent->origin[1] += ( ent->origin[1] - ent->latched.prevorigin[1] ) * f;
 		ent->origin[2] += ( ent->origin[2] - ent->latched.prevorigin[2] ) * f;
 
-		for( i = 0; i < 3; i++ )
-		{
-			float	ang1, ang2;
+		InterpolateAngles( ent->angles, ent->latched.prevangles, ent->angles, f );
 
-			ang1 = ent->angles[i];
-			ang2 = ent->latched.prevangles[i];
-			d = ang1 - ang2;
-			if( d > 180.0f ) d -= 360.0f;
-			else if( d < -180.0f ) d += 360.0f;
-			ent->angles[i] += d * f;
-		}
 	}
 	else if( ent->curstate.eflags & EFLAG_SLERP )
 	{
-		float		d, f = 0.0f;
-		cl_entity_t	*m_pGround = NULL;
-		int		i;
+		float		f = 0.0f;
 
 		// don't do it if the goalstarttime hasn't updated in a while.
 		// NOTE: Because we need to interpolate multiplayer characters, the interpolation time limit
@@ -304,22 +399,13 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 			ent->origin[1] += ( ent->curstate.origin[1] - ent->latched.prevorigin[1] ) * f;
 			ent->origin[2] += ( ent->curstate.origin[2] - ent->latched.prevorigin[2] ) * f;
 
-			for( i = 0; i < 3; i++ )
-			{
-				float	ang1, ang2;
-
-				ang1 = ent->curstate.angles[i];
-				ang2 = ent->latched.prevangles[i];
-				d = ang1 - ang2;
-				if( d > 180.0f ) d -= 360.0f;
-				else if( d < -180.0f ) d += 360.0f;
-				ent->angles[i] += d * f;
-			}
+			InterpolateAngles( ent->angles, ent->latched.prevangles, ent->angles, f );
 		}
 		else if( ent->curstate.movetype == MOVETYPE_STEP )
 		{
 			vec3_t	vecSrc, vecEnd;
 			pmtrace_t	trace;
+			cl_entity_t	*m_pGround = NULL;
 
 			if( ent->model )
 			{
@@ -347,17 +433,7 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 
 				if( applyAvel )
 				{
-					for( i = 0; i < 3; i++ )
-					{
-						float	ang1, ang2;
-
-						ang1 = m_pGround->curstate.angles[i];
-						ang2 = m_pGround->prevstate.angles[i];
-						d = ang1 - ang2;
-						if( d > 180.0f ) d -= 360.0f;
-						else if( d < -180.0f ) d += 360.0f;
-						ent->angles[i] += d * -1.0f;
-					}
+					InterpolateAngles( m_pGround->curstate.angles, m_pGround->prevstate.angles, ent->angles, -1.0f );
 				}
 			}
 
@@ -368,17 +444,7 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 				ent->origin[1] += ( ent->curstate.origin[1] - ent->latched.prevorigin[1] ) * f;
 				ent->origin[2] += ( ent->curstate.origin[2] - ent->latched.prevorigin[2] ) * f;
 
-				for( i = 0; i < 3; i++ )
-				{
-					float	ang1, ang2;
-
-					ang1 = ent->angles[i];
-					ang2 = ent->latched.prevangles[i];
-					d = ang1 - ang2;
-					if( d > 180.0f ) d -= 360.0f;
-					else if( d < -180.0f ) d += 360.0f;
-					ent->angles[i] += d * f;
-				}
+				InterpolateAngles( ent->angles, ent->latched.prevangles, ent->angles, f );
 			}
 		}
 	}
@@ -546,7 +612,7 @@ CL_WeaponAnim
 Set new weapon animation
 ==================
 */
-void CL_WeaponAnim( int iAnim, int body )
+void GAME_EXPORT CL_WeaponAnim( int iAnim, int body )
 {
 	cl_entity_t	*view = &clgame.viewent;
 	cl.weaponstarttime = 0;
@@ -753,9 +819,13 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 	{	
 		// duplicate the current state so lerping doesn't hurt anything
 		ent->prevstate = *state;
+		if ( newent )
+			CL_ResetPositions( ent );
 	}
+	else if( ent->player && ( ent->curstate.movetype != MOVETYPE_NONE ) && ( ent->prevstate.movetype == MOVETYPE_NONE ) )
+		CL_ResetPositions( ent );
 	else
-	{	
+	{
 		// shuffle the last state to previous
 		ent->prevstate = ent->curstate;
 	}

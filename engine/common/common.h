@@ -87,6 +87,12 @@ extern "C" {
 #define xash_force_inline
 #endif
 
+#if defined __i386__ &&  defined __GNUC__
+#define GAME_EXPORT __attribute__((force_align_arg_pointer))
+#else
+#define GAME_EXPORT
+#endif
+
 typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
@@ -130,7 +136,7 @@ typedef enum
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	"0.18.1"		// engine current version
+#define XASH_VERSION	"0.19"		// engine current version
 // since this fork have own version, this is just left for compability
 #define BASED_VERSION	0.98f
 
@@ -169,6 +175,8 @@ typedef enum
 #define GI              SI.GameInfo
 #define FS_Gamedir()	SI.GameInfo->gamedir
 #define FS_Title()		SI.GameInfo->title
+
+#define FORCE_DRAW_VERSION_TIME 5.0f // draw version for 5 seconds
 
 #ifdef _DEBUG
 void DBG_AssertFunction( qboolean fExpr, const char* szExpr, const char* szFile, int szLine, const char* szMessage );
@@ -383,6 +391,7 @@ typedef struct host_parm_s
 	qboolean		force_draw_version;	// used when fraps is loaded
 	qboolean		write_to_clipboard;	// put image to clipboard instead of disk
 	qboolean		crashed;		// set to true if crashed
+	double	force_draw_version_time; // time when disable force_draw_version
 
 	char		rootdir[256];	// member root directory
 	char		gamefolder[64];	// it's a default gamefolder	
@@ -422,6 +431,7 @@ void FS_AddGameDirectory( const char *dir, int flags );
 void FS_AddGameHierarchy( const char *dir, int flags );
 void FS_LoadGameInfo( const char *rootfolder );
 void FS_FileBase( const char *in, char *out );
+void FS_MapFileBase( const char *in, char *out );
 const char *FS_FileExtension( const char *in );
 void FS_DefaultExtension( char *path, const char *extension );
 void FS_ExtractFilePath( const char *path, char* dest );

@@ -93,7 +93,7 @@ byte *Sound_Copy( size_t size )
 	return out; 
 }
 
-uint Sound_GetApproxWavePlayLen( const char *filepath )
+uint GAME_EXPORT Sound_GetApproxWavePlayLen( const char *filepath )
 {
 	file_t	*f;
 	wavehdr_t	wav;

@@ -959,7 +959,7 @@ bool UI_StartBackGroundMap( void )
 
 	char cmd[128];
 	sprintf( cmd, "maps/%s.bsp", uiStatic.bgmaps[bgmapid] );
-	if( !FILE_EXISTS( cmd )) return FALSE; 
+	if( !FILE_EXISTS( cmd, TRUE )) return FALSE;
 
 	sprintf( cmd, "map_background %s\n", uiStatic.bgmaps[bgmapid] );
 	CLIENT_COMMAND( FALSE, cmd );
