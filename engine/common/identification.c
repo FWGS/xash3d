@@ -15,8 +15,9 @@ GNU General Public License for more details.
 
 #include "common.h"
 #include <fcntl.h>
+#ifndef _WIN32
 #include <dirent.h>
-
+#endif
 static char id_md5[33];
 static char id_customid[MAX_STRING];
 
@@ -65,6 +66,9 @@ uint BloomFilter_Weight( bloomfilter_t value )
 		if( value & 1 )
 			weight++;
 		value = value >> 1;
+#if _MSC_VER == 1200
+		value &= 0x7FFFFFFFFFFFFFFF;
+#endif
 	}
 
 	return weight;
@@ -214,6 +218,7 @@ qboolean ID_ProcessFile( bloomfilter_t *value, const char *path )
 #define MAXBITS_GEN 30
 #define MAXBITS_CHECK MAXBITS_GEN + 6
 
+#ifndef _WIN32
 int ID_ProcessFiles( bloomfilter_t *value, const char *prefix, const char *postfix )
 {
 	DIR *dir;
@@ -246,7 +251,127 @@ int ID_CheckFiles( bloomfilter_t value, const char *prefix, const char *postfix 
 	closedir( dir );
 	return count;
 }
+#else
+int ID_GetKeyData( HKEY hRootKey, char *subKey, char *value, LPBYTE data, DWORD cbData )
+{
+	HKEY hKey;
 
+	if( RegOpenKeyEx( hRootKey, subKey, 0, KEY_QUERY_VALUE, &hKey ) != ERROR_SUCCESS )
+		return 0;
+	
+	if( RegQueryValueEx( hKey, value, NULL, NULL, data, &cbData ) != ERROR_SUCCESS )
+	{
+		RegCloseKey( hKey );
+		return 0;
+	}
+
+	RegCloseKey( hKey );
+	return 1;
+}
+int ID_SetKeyData( HKEY hRootKey, char *subKey, DWORD dwType, char *value, LPBYTE data, DWORD cbData)
+{
+	HKEY hKey;
+	if( RegCreateKey( hRootKey, subKey, &hKey ) != ERROR_SUCCESS )
+		return 0;
+	
+	if( RegSetValueEx( hKey, value, 0, dwType, data, cbData ) != ERROR_SUCCESS )
+	{
+		RegCloseKey( hKey );
+		return 0;
+	}
+	
+	RegCloseKey( hKey );
+	return 1;
+}
+
+#define BUFSIZE 4096
+
+int ID_RunWMIC(char *buffer, const char *cmdline)
+{
+	HANDLE g_IN_Rd = NULL;
+	HANDLE g_IN_Wr = NULL;
+	HANDLE g_OUT_Rd = NULL;
+	HANDLE g_OUT_Wr = NULL;
+	DWORD dwRead;
+	BOOL bSuccess = FALSE;
+	SECURITY_ATTRIBUTES saAttr;
+	
+	STARTUPINFO si = {0};
+	
+	PROCESS_INFORMATION pi = {0};
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+	saAttr.bInheritHandle = TRUE;
+	saAttr.lpSecurityDescriptor = NULL;
+	
+	CreatePipe( &g_IN_Rd, &g_IN_Wr, &saAttr, 0 );
+	CreatePipe( &g_OUT_Rd, &g_OUT_Wr, &saAttr, 0 );
+	SetHandleInformation( g_IN_Wr, HANDLE_FLAG_INHERIT, 0 );
+	
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESTDHANDLES;
+	si.hStdInput = g_IN_Rd;
+	si.hStdOutput = g_OUT_Wr;
+	si.hStdError = g_OUT_Wr;
+	si.wShowWindow = SW_HIDE;
+	si.dwFlags |= STARTF_USESTDHANDLES;
+
+	CreateProcess( NULL, (char*)cmdline, NULL, NULL, true, CREATE_NO_WINDOW , NULL, NULL, &si, &pi );
+	
+	CloseHandle( g_OUT_Wr );
+	
+	WaitForSingleObject( pi.hProcess, INFINITE );
+	
+	bSuccess = ReadFile( g_OUT_Rd, buffer, BUFSIZE, &dwRead, NULL );
+	buffer[BUFSIZE-1] = 0;
+	CloseHandle( g_IN_Rd );
+	CloseHandle( g_IN_Wr );
+	CloseHandle( g_OUT_Rd );
+
+	return bSuccess;
+}
+
+int ID_ProcessWMIC( bloomfilter_t *value, const char *cmdline )
+{
+	char buffer[BUFSIZE], token[BUFSIZE], *pbuf;
+	int count = 0;
+
+	if( !ID_RunWMIC( buffer, cmdline ) )
+		return 0;
+	pbuf = COM_ParseFile( buffer, token ); // Header
+	while( pbuf = COM_ParseFile( pbuf, token ) )
+	{
+		if( !ID_VerifyHEX( token ) )
+			continue;
+
+		*value |= BloomFilter_ProcessStr( token );
+		count ++;
+	}
+
+	return count;
+}
+
+int ID_CheckWMIC( bloomfilter_t value, const char *cmdline )
+{
+	char buffer[BUFSIZE], token[BUFSIZE], *pbuf;
+	int count = 0;
+
+	if( !ID_RunWMIC( buffer, cmdline ) )
+		return 0;
+	pbuf = COM_ParseFile( buffer, token ); // Header
+	while( pbuf = COM_ParseFile( pbuf, token ) )
+	{
+		bloomfilter_t filter;
+
+		if( !ID_VerifyHEX( token ) )
+			continue;
+
+		filter = BloomFilter_ProcessStr( token );
+		count += ( filter & value ) == filter;
+	}
+
+	return count;
+}
+#endif
 
 bloomfilter_t ID_GenerateRawId( void )
 {
@@ -267,6 +392,10 @@ bloomfilter_t ID_GenerateRawId( void )
 	count += ID_ProcessCPUInfo( &value );
 	count += ID_ProcessFiles( &value, "/sys/block", "device/cid" );
 	count += ID_ProcessFiles( &value, "/sys/class/net", "address" );
+#endif
+#ifdef _WIN32
+	count += ID_ProcessWMIC( &value, "wmic path win32_physicalmedia get SerialNumber " );
+	count += ID_ProcessWMIC( &value, "wmic bios get serialnumber " );
 #endif
 
 	return value;
@@ -294,7 +423,11 @@ uint ID_CheckRawId( bloomfilter_t filter )
 	if( ID_ProcessCPUInfo( &value ) )
 		count += (filter & value) == value;
 #endif
-
+	
+#ifdef _WIN32
+	count += ID_CheckWMIC( filter, "wmic path win32_physicalmedia get SerialNumber" );
+	count += ID_CheckWMIC( filter, "wmic bios get serialnumber" );
+#endif
 	Msg( "CheckRawId: %d\n", count );
 
 	return count;
@@ -366,7 +499,14 @@ void ID_Init( void )
 	}
 	
 #elif defined _WIN32
-	// windows registry read
+	{
+		CHAR szBuf[MAX_PATH];
+		ID_GetKeyData( HKEY_CURRENT_USER, "Software\\Xash3D\\", "xash_id", szBuf, MAX_PATH );
+		
+		sscanf(szBuf, "%016llX", &id);
+		id ^= SYSTEM_XOR_MASK;
+		ID_Check();
+	}
 #else
 	{
 		const char *home = getenv( "HOME" );
@@ -412,7 +552,11 @@ void ID_Init( void )
 #ifdef __ANDROID__
 	Android_SaveID( va("%016llX", id^SYSTEM_XOR_MASK ) );
 #elif defined _WIN32
-	// windows registry write
+	{
+		CHAR Buf[MAX_PATH];
+		sprintf( Buf, "%016llX", id^SYSTEM_XOR_MASK );
+		ID_SetKeyData( HKEY_CURRENT_USER, "Software\\Xash3D\\", REG_SZ, "xash_id", Buf, Q_strlen(Buf) );
+	}
 #else
 	{
 		const char *home = getenv( "HOME" );
