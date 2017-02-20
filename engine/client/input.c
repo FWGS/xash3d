@@ -577,12 +577,12 @@ Common function for engine joystick movement
 ================
 */
 
-#define F 1U << 0	// Forward
-#define B 1U << 1	// Back
-#define L 1U << 2	// Left
-#define R 1U << 3	// Right
-#define T 1U << 4	// Forward stop
-#define S 1U << 5	// Side stop
+#define F (1U << 0)	// Forward
+#define B (1U << 1)	// Back
+#define L (1U << 2)	// Left
+#define R (1U << 3)	// Right
+#define T (1U << 4)	// Forward stop
+#define S (1U << 5)	// Side stop
 void IN_JoyAppendMove( usercmd_t *cmd, float forwardmove, float sidemove )
 {
 	static uint moveflags = T | S;
