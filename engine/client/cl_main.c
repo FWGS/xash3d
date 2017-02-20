@@ -382,7 +382,7 @@ void CL_CreateCmd( void )
 
 	// after command generated in client,
 	// add motion events from engine controls
-	IN_EngineAppendMove( host.frametime, &cmd, active);
+	IN_EngineAppendMove( host.frametime, &pcmd->cmd, active);
 
 	R_LightForPoint( cl.frame.client.origin, &color, false, false, 128.0f );
 	cmd.lightlevel = (color.r + color.g + color.b) / 3;
