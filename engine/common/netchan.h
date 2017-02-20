@@ -160,8 +160,8 @@ typedef struct netsplit_packet_s
 typedef struct netsplit_s
 {
 	netsplit_chain_packet_t packets[NETSPLIT_BACKUP];
-	unsigned long long total_received;
-	unsigned long long total_received_uncompressed;
+	integer64 total_received;
+	integer64 total_received_uncompressed;
 } netsplit_t;
 
 // Network Connection Channel

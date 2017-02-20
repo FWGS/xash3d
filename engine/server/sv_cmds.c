@@ -284,15 +284,18 @@ TODO: Make it more convenient. (Timestamp check, temporary file, ...)
 */
 void SV_Maps_f(void)
 {
+	char mapName[256], *seperator = "-------------------";
+	char *argStr = Cmd_Argv(1); //Substr
+	int listIndex;
+	search_t *mapList;
+
 	if (Cmd_Argc() != 2)
 	{
 		Msg("Usage:  maps <substring>\nmaps * for full listing\n");
 		return;
 	}
-	char mapName[256], *seperator = "-------------------";
-	char *argStr = Cmd_Argv(1); //Substr
-	int listIndex;
-	search_t *mapList = FS_Search(va("maps/*%s*.bsp", argStr), true, true);
+
+        mapList = FS_Search(va("maps/*%s*.bsp", argStr), true, true);
 	if (!mapList)
 	{
 		Msg("No related map found in \"%s/maps\"\n", GI->gamedir);
@@ -301,8 +304,9 @@ void SV_Maps_f(void)
 	Msg("%s\n", seperator);
 	for (listIndex = 0; listIndex != mapList->numfilenames; ++listIndex)
 	{
+		const char *ext;
 		Q_strncpy(mapName, mapList->filenames[listIndex], sizeof(mapName) - 1);
-		const char *ext = FS_FileExtension(mapName);
+		ext = FS_FileExtension(mapName);
 		if (Q_strcmp(ext, "bsp")) continue;
 		if ( (Q_strcmp(argStr, "*") == 0) || (Q_stristr(mapName, argStr) != NULL) )
 		{
