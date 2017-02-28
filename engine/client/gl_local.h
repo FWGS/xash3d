@@ -663,6 +663,9 @@ extern convar_t	*gl_nosort;
 extern convar_t	*gl_clear;
 extern convar_t	*gl_test;		// cvar to testify new effects
 extern convar_t	*gl_msaa;
+extern convar_t *gl_overbright;
+extern convar_t *gl_overbright_studio;
+
 
 extern convar_t	*r_ypos;
 extern convar_t	*r_xpos;
@@ -696,5 +699,6 @@ extern convar_t	*vid_fullscreen;
 extern convar_t	*vid_gamma;
 extern convar_t	*vid_texgamma;
 extern convar_t	*vid_mode;
+extern convar_t *vid_highdpi;
 
 #endif//GL_LOCAL_H

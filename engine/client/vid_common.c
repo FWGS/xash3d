@@ -52,6 +52,8 @@ convar_t	*gl_nosort;
 convar_t	*gl_clear;
 convar_t	*gl_test;
 convar_t	*gl_msaa;
+convar_t	*gl_overbright;
+convar_t	*gl_overbright_studio;
 
 convar_t	*r_xpos;
 convar_t	*r_ypos;
@@ -82,6 +84,7 @@ convar_t	*vid_fullscreen;
 convar_t	*vid_gamma;
 convar_t	*vid_texgamma;
 convar_t	*vid_mode;
+convar_t	*vid_highdpi;
 
 byte		*r_temppool;
 
@@ -718,6 +721,7 @@ void VID_CheckChanges( void )
 		if( !VID_SetMode())
 		{
 			// can't initialize video subsystem
+			Sys_Warn( "Failed to initialise graphics.\nStarting dedicated server.\nAdd \"-dedicated\" to disable this message." );
 			Host_NewInstance( va("#%s", GI->gamefolder ), "fallback to dedicated mode\n" );
 		}
 		else
@@ -909,6 +913,9 @@ void GL_InitCommands( void )
 	gl_test = Cvar_Get( "gl_test", "0", 0, "engine developer cvar for quick testing new features" );
 	gl_wireframe = Cvar_Get( "gl_wireframe", "0", 0, "show wireframe overlay" );
 	gl_overview = Cvar_Get( "dev_overview", "0", 0, "show level overview" );
+	gl_overbright = Cvar_Get( "gl_overbright", "0", CVAR_ARCHIVE, "Overbright mode (0-2)");
+	gl_overbright_studio = Cvar_Get( "gl_overbright_studio", "0", CVAR_ARCHIVE, "Overbright for studiomodels");
+
 	// these cvar not used by engine but some mods requires this
 	Cvar_Get( "gl_polyoffset", "-0.1", 0, "polygon offset for decals" );
 
@@ -916,10 +923,11 @@ void GL_InitCommands( void )
 	gl_swapInterval->modified = true;
 
 	vid_gamma = Cvar_Get( "gamma", "1.0", CVAR_ARCHIVE, "gamma amount" );
-	vid_texgamma = Cvar_Get( "texgamma", "2.2", CVAR_GLCONFIG, "texgamma amount (default Half-Life artwork gamma)" );
+	vid_texgamma = Cvar_Get( "texgamma", "2.2", 0, "texgamma amount (default Half-Life artwork gamma)" );
 	vid_mode = Cvar_Get( "vid_mode", VID_AUTOMODE, CVAR_RENDERINFO, "display resolution mode" );
 	vid_fullscreen = Cvar_Get( "fullscreen", "0", CVAR_RENDERINFO, "set in 1 to enable fullscreen mode" );
 	vid_displayfrequency = Cvar_Get ( "vid_displayfrequency", "0", CVAR_RENDERINFO, "fullscreen refresh rate" );
+	vid_highdpi = Cvar_Get( "vid_highdpi", "1", CVAR_RENDERINFO, "Enable High-DPI mode" );
 
 	Cmd_AddCommand( "r_info", R_RenderInfo_f, "display renderer info" );
 	Cmd_AddCommand( "texturelist", R_TextureList_f, "display loaded textures list" );

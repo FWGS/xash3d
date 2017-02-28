@@ -858,7 +858,14 @@ void R_BlendLightmaps( void )
 		}
 
 		pglDisable( GL_ALPHA_TEST );
-		pglBlendFunc( GL_ZERO, GL_SRC_COLOR );
+
+		if( gl_overbright->integer == 1 )
+			pglColor4f( 1 / 1.5, 1 / 1.5, 1 / 1.5, 1.0 );
+		if( gl_overbright->integer )
+			pglBlendFunc( GL_DST_COLOR, GL_SRC_COLOR );
+		else
+			pglBlendFunc( GL_ZERO, GL_SRC_COLOR );
+
 		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 	}
 

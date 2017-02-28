@@ -2044,7 +2044,17 @@ static void R_StudioDrawPoints_legacy( void )
 
 			if( g_iRenderMode == kRenderNormal )
 			{
-				pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+				if( gl_overbright->integer == 2 )
+				{
+					pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB );
+					pglTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE );
+					pglTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_PREVIOUS_ARB );
+					pglTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_TEXTURE );
+					pglTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 2 );
+
+				}
+				else
+					pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 				alpha = 1.0f;
 			}
 			else alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);
@@ -2386,7 +2396,17 @@ static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref, flo
 
 			if( g_iRenderMode == kRenderNormal )
 			{
-				pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+				if( gl_overbright->integer == 2 )
+				{
+					pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB );
+					pglTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE );
+					pglTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_PREVIOUS_ARB );
+					pglTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_TEXTURE );
+					pglTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 2 );
+
+				}
+				else
+					pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 				alpha = 1.0f;
 			}
 			else alpha = RI.currententity->curstate.renderamt * (1.0f / 255.0f);

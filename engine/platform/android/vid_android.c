@@ -635,6 +635,16 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 }
 
 
+qboolean VID_SetScreenResolution( int width, int height )
+{
+	return false;
+}
+
+void VID_RestoreScreenResolution( void )
+{
+
+}
+
 
 /*
 ==================

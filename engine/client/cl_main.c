@@ -871,6 +871,13 @@ void CL_ClearState( void )
 
 	// restore real developer level
 	host.developer = host.old_developer;
+
+	if( !SV_Active() )
+	{
+		Delta_Shutdown();
+		Delta_InitClient();
+	}
+	HTTP_ClearCustomServers();
 }
 
 /*

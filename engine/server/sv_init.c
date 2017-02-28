@@ -643,6 +643,12 @@ void SV_InitGame( void )
 
 		// make sure the client is down
 		CL_Drop();
+
+		Delta_Init ();
+
+		// register custom encoders
+		svgame.dllFuncs.pfnRegisterEncoders();
+
 	}
 
 	// now apply latched commands

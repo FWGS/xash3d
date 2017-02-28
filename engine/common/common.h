@@ -46,9 +46,6 @@ extern "C" {
 #endif
 
 #ifndef _WIN32
-#ifdef __linux__
-#include <linux/limits.h> // PATH_MAX
-#endif
 #include <stddef.h> // size_t
 #include <stdio.h> // off_t
 #include <stdarg.h> // va_list
@@ -990,6 +987,7 @@ void HTTP_ResetProcessState ( void );
 void HTTP_Init( void );
 void HTTP_Shutdown( void );
 void HTTP_Run( void );
+void HTTP_ClearCustomServers( void );
 void CL_ProcessFile( qboolean successfully_received, const char *filename );
 
 typedef struct autocomplete_list_s

@@ -47,6 +47,9 @@ void R_AnimateLight( void )
 
 	scale = r_lighting_modulate->value;
 
+	if( gl_overbright->integer == 2 )
+		scale /= 1.6;
+
 	// light animations
 	// 'm' is normal light, 'a' is no light, 'z' is double bright
 	for( i = 0, ls = cl.lightstyles; i < MAX_LIGHTSTYLES; i++, ls++ )

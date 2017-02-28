@@ -610,6 +610,11 @@ void GAME_EXPORT Key_Event( int key, qboolean down )
 			if( host.mouse_visible && cls.state != ca_cinematic )
 			{
 				clgame.dllFuncs.pfnKey_Event( down, key, keys[key].binding );
+
+				// enable anti-The_Swank system
+				if( cls.state == ca_connected && Con_Visible() )
+					Key_SetKeyDest( key_console );
+
 				return; // handled in client.dll
 			}
 			break;

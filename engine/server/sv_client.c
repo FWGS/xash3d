@@ -313,7 +313,7 @@ void SV_DisconnectClient( edict_t *pClient )
 
 	// don't send to other clients
 	pClient->v.modelindex = 0;
-
+#if 0
 	/* mittorn: pvPrivateData must be cleaned on edict remove
 	 * If it cleaned here, server will crash later */
 	if( pClient->pvPrivateData != NULL )
@@ -328,6 +328,7 @@ void SV_DisconnectClient( edict_t *pClient )
 	}
 	// HACK: invalidate serial number
 	pClient->serialnumber++;
+#endif
 }
 
 /*
