@@ -916,7 +916,7 @@ void pfnPIC_DrawAdditive( int x, int y, int width, int height, const wrect_t *pr
 // cl_mobile.c
 //
 void Mobile_Init( void );
-void Mobile_Destroy( void );
+void Mobile_Shutdown( void );
 
 //
 // cl_video.c

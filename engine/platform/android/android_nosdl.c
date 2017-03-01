@@ -762,6 +762,32 @@ void Android_Vibrate( float life, char flags )
 		(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.vibrate, (int)life );
 }
 
+/*
+========================
+Android_GetNativeObject
+========================
+*/
+void *Android_GetNativeObject( const char *objName )
+{
+	static const char *availObjects[] = { "JNIEnv", "ActivityClass", NULL };
+	void *object = NULL;
+	
+	if( !objName )
+	{
+		object = (void*)availObjects;
+	}
+	else if( !strcasecmp( objName, "JNIEnv" ) )
+	{
+		object = (void*)jni.env;
+	}
+	else if( !strcasecmp( objName, "ActivityClass" ) )
+	{
+		object = (void*)jni.actcls;
+	}
+	
+	return object;
+}
+
 
 /*
 ========================

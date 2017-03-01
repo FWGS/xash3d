@@ -2028,7 +2028,7 @@ void CL_Shutdown( void )
 	IN_TouchShutdown();
 	CL_CloseDemoHeader();
 	IN_Shutdown ();
-	Mobile_Destroy();
+	Mobile_Shutdown();
 
 	SCR_Shutdown ();
 	if( cls.initialized ) 

@@ -1,9 +1,17 @@
 #pragma once
 #ifndef ANDROID_MAIN_H
 #define ANDROID_MAIN_H
+
+//
+// mobility interface implementation
+//
 void Android_Vibrate( float life, char flags );
+void *Android_GetNativeObject( const char *obj );
+
 #ifndef XASH_SDL
+//
 // android_nosdl.c
+//
 void Android_SwapBuffers();
 void Android_GetScreenRes( int *width, int *height );
 void Android_Init( void );

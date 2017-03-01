@@ -23,18 +23,16 @@ GNU General Public License for more details.
 #include "touch.h"
 
 #if defined(__ANDROID__)
-//#include "platform/android/android-gameif.h"
 #ifdef XASH_SDL
 #include "SDL_system.h"
 #endif
+#include "platform/android/android-main.h"
 #endif
 
 mobile_engfuncs_t *gMobileEngfuncs;
 
 convar_t *vibration_length;
 convar_t *vibration_enable;
-
-void Android_Vibrate( float life, char flags );
 
 static void pfnVibrate( float life, char flags )
 {
@@ -97,6 +95,17 @@ static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b
 	return width;
 }
 
+static void *pfnGetNativeObject( const char *obj )
+{
+	// Backend should handle NULL
+	// Backend should consider that obj is case-sensitive
+#ifdef __ANDROID__
+	return Android_GetNativeObject( obj );
+#else
+	return NULL;
+#endif
+}
+
 static mobile_engfuncs_t gpMobileEngfuncs =
 {
 	MOBILITY_API_VERSION,
@@ -109,7 +118,8 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	(void*)IN_TouchSetClientOnly,
 	IN_TouchResetDefaultButtons,
 	pfnDrawScaledCharacter,
-	Sys_Warn
+	Sys_Warn,
+	pfnGetNativeObject
 };
 
 void Mobile_Init( void )
@@ -133,7 +143,7 @@ void Mobile_Init( void )
 	vibration_enable = Cvar_Get( "vibration_enable", "1", CVAR_ARCHIVE, "Enable vibration");
 }
 
-void Mobile_Destroy( void )
+void Mobile_Shutdown( void )
 {
 	Cmd_RemoveCommand( "vibrate" );
 }
