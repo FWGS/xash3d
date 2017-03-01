@@ -10,6 +10,7 @@
 #include "touch.h"
 #include "joyinput.h"
 #include "sound.h"
+#include "gl_vidnt.h"
 
 extern convar_t *vid_fullscreen;
 extern convar_t *snd_mute_losefocus;

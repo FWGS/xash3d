@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #include "server.h"
 #include "library.h"
 #include "Sequence.h"
+#include "net_encode.h"
 
 int SV_UPDATE_BACKUP = SINGLEPLAYER_BACKUP;
 

@@ -664,19 +664,17 @@ int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 
 	pglColor4ubv( color );
 	R_GetTextureParms( &w, &h, con.curFont->hFontTexture );
-	width = w;
-	height = h;
 
 	// calc rectangle
-	s1 = (float)rc->left / width;
-	t1 = (float)rc->top / height;
-	s2 = (float)rc->right / width;
-	t2 = (float)rc->bottom / height;
+	s1 = (float)rc->left / (float)w;
+	t1 = (float)rc->top / (float)h;
+	s2 = (float)rc->right / (float)w;
+	t2 = (float)rc->bottom / (float)h;
 	width = (rc->right - rc->left) * con_fontscale->value;
 	height = (rc->bottom - rc->top) * con_fontscale->value;
 
-	TextAdjustSize( &x, &y, &width, &height );
-	R_DrawStretchPic( x, y, width, height, s1, t1, s2, t2, con.curFont->hFontTexture );		
+	TextAdjustSize( &x, &y, NULL, NULL );
+	R_DrawStretchPic( x, y, width, height, s1, t1, s2, t2, con.curFont->hFontTexture );
 	pglColor4ub( 255, 255, 255, 255 ); // don't forget reset color
 
 	return con.curFont->charWidths[number];
