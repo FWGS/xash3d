@@ -22,9 +22,9 @@ before_script:
     - mv SDL2-2.0.4 SDL2
     - curl http://libsdl.org/release/SDL2-2.0.4.tar.gz > SDL2-2.0.4.tar.gz
     - tar xf SDL2-2.0.4.tar.gz
-    - git clone https://github.com/FWGS/vgui-dev
-    - git clone https://github.com/FWGS/vgui_support_bin
-    - git clone --depth 1 -b ant-test https://github.com/mittorn/xash3d-android-project
+    - git clone --depth 1 https://github.com/FWGS/vgui-dev
+    - git clone --depth 1 https://github.com/FWGS/vgui_support_bin
+    - git clone --depth 1 https://github.com/FWGS/xash3d-android-project
 script:
     - cd xash3d-android-project
     - git submodule update --init jni/src/NanoGL/nanogl jni/src/hlsdk-xash3d xash-extras
