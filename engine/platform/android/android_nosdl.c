@@ -159,7 +159,7 @@ static struct {
 static struct jnimethods_s
 {
 	jclass actcls;
-	Java_VM *vm;
+	JavaVM *vm;
 	JNIEnv *env;
 	jmethodID swapBuffers;
 	jmethodID toggleEGL;
@@ -624,7 +624,7 @@ DECLARE_JNI_INTERFACE( void, nativeJoyDel, jint id )
 	Android_PushEvent();
 }
 
-JAVA_EXPORT jint JNI_OnLoad( Java_VM *vm, void *reserved )
+JAVA_EXPORT jint JNI_OnLoad( JavaVM *vm, void *reserved )
 {
 	void *lib;
 	const char *libDir;
@@ -642,7 +642,7 @@ JAVA_EXPORT jint JNI_OnLoad( Java_VM *vm, void *reserved )
 		
 		if( lib ) 
 		{
-			jint (*JNI_OnLoad)( Java_VM *vm, void *reserved );
+			jint (*JNI_OnLoad)( JavaVM *vm, void *reserved );
 			
 			JNI_OnLoad = Com_GetProcAddress( lib, "JNI_OnLoad" );
 			if( JNI_OnLoad )
