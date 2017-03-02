@@ -159,6 +159,7 @@ static struct {
 static struct jnimethods_s
 {
 	jclass actcls;
+	Java_VM *vm;
 	JNIEnv *env;
 	jmethodID swapBuffers;
 	jmethodID toggleEGL;
@@ -623,6 +624,49 @@ DECLARE_JNI_INTERFACE( void, nativeJoyDel, jint id )
 	Android_PushEvent();
 }
 
+JAVA_EXPORT jint JNI_OnLoad( Java_VM *vm, void *reserved )
+{
+	void *lib;
+	const char *libDir;
+	
+	jni.vm = vm;
+	
+	libDir = getenv("XASH_GAMELIBDIR");
+	if( !libDir ) libDir = getenv("XASH_ENGLIBDIR");
+	
+	if( libDir )
+	{
+		char path[256];
+		Q_snprintf( path, sizeof(path), "%s/" CLIENTDLL, libDir );
+		lib = Com_LoadLibrary( path );
+		
+		if( lib ) 
+		{
+			jint (*JNI_OnLoad)( Java_VM *vm, void *reserved );
+			
+			JNI_OnLoad = Com_GetProcAddress( lib, "JNI_OnLoad" );
+			if( JNI_OnLoad )
+			{
+				__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "Found JNI_OnLoad in %s", path );
+				JNI_OnLoad( vm, reserved );
+			}
+			else
+			{
+				__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "JNI_OnLoad not found in %s", path );
+			}
+			
+			Com_FreeLibrary( lib );
+			lib = NULL;
+		}
+		
+		// Add here if server or menu lib will require JNI_OnLoad someday...
+	}
+	
+	
+	return JNI_VERSION_1_6;
+}
+
+
 /*
 ========================
 Android_SwapBuffers
@@ -788,7 +832,6 @@ void *Android_GetNativeObject( const char *objName )
 	return object;
 }
 
-
 /*
 ========================
 Android_MessageBox
@@ -815,5 +858,7 @@ void Android_SwapInterval( int interval )
 	if( negl.valid )
 		eglSwapInterval( negl.dpy, interval );
 }
+
+
 
 #endif
