@@ -540,16 +540,6 @@ void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jin
 	Android_PushEvent();
 }
 
-JAVA_EXPORT int Java_in_celest_xash3d_XashActivity_setenv( JNIEnv* env, jclass clazz, jstring key, jstring value, jboolean overwrite )
-{
-	char* k = (char *) (*env)->GetStringUTFChars(env, key, NULL);
-	char* v = (char *) (*env)->GetStringUTFChars(env, value, NULL);
-	int err = setenv(k, v, overwrite);
-	(*env)->ReleaseStringUTFChars(env, key, k);
-	(*env)->ReleaseStringUTFChars(env, value, v);
-	return err;
-}
-
 #define DECLARE_JNI_INTERFACE( ret, name, ... ) \
 	JAVA_EXPORT ret Java_in_celest_xash3d_XashActivity_##name( JNIEnv *env, jclass clazz, __VA_ARGS__ )
 
@@ -633,6 +623,7 @@ JAVA_EXPORT jint JNI_OnLoad( JavaVM *vm, void *reserved )
 	
 	libDir = getenv("XASH_GAMELIBDIR");
 	if( !libDir ) libDir = getenv("XASH_ENGLIBDIR");
+	if( !libDir ) libDir = "/data/data/in.celest.xash3d.cs16client/lib";
 	
 	if( libDir )
 	{
