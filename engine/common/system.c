@@ -674,7 +674,7 @@ void Sys_Break( const char *format, ... )
 }
 /*
 ================
-Sys_Quit
+Sys_Quit2
 ================
 */
 void Sys_Quit( void )

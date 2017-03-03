@@ -86,7 +86,8 @@ typedef enum event_type
 	event_joyaxis,
 	event_joyadd,
 	event_joyremove,
-	event_quit
+	event_quit,
+	event_onpause
 } eventtype_t;
 
 typedef struct touchevent_s
@@ -169,6 +170,7 @@ static struct jnimethods_s
 	jmethodID messageBox;
 	jmethodID createGLContext;
 	jmethodID deleteGLContext;
+	jmethodID notify;
 	int width, height;
 } jni;
 
@@ -313,7 +315,24 @@ void Android_RunEvents()
 			Joy_ButtonEvent( events.queue[i].arg, events.queue[i].button.button, (byte)events.queue[i].button.down );
 			break;
 		case event_quit:
+			host.skip_configs = true; // skip config save, because engine may be killed during config save
 			Sys_Quit();
+			break;
+		case event_onpause:
+			switch( host.state )
+			{
+			case HOST_INIT:
+			case HOST_CRASHED:
+			case HOST_ERR_FATAL:
+				MsgDev( D_WARN, "Abnormal host state during onPause (%d), skipping config save!\n", host.state );
+				break;
+			default:
+				// restore all latched cheat cvars
+				Cvar_SetCheatState( true );
+				Host_WriteConfig();
+			}
+			// stop blocking UI thread
+			(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.notify );
 			break;
 		}
 	}
@@ -415,6 +434,7 @@ DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 	jni.messageBox = (*env)->GetStaticMethodID(env, jni.actcls, "messageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
 	jni.createGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "createGLContext", "()Z");
 	jni.deleteGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "deleteGLContext", "()Z");
+	jni.notify = (*env)->GetStaticMethodID(env, jni.actcls, "engineThreadNotify", "()Z");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -621,10 +641,17 @@ DECLARE_JNI_INTERFACE( void, nativeJoyDel, jint id )
 	Android_PushEvent();
 }
 
-DECLARE_JNI_INTERFACE_VOID( void, nativeQuitEvent )
+DECLARE_JNI_INTERFACE_VOID( void, nativeOnStop )
 {
 	event_t *event = Android_AllocEvent();
 	event->type = event_quit;
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE_VOID( void, nativeOnPause )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_onpause;
 	Android_PushEvent();
 }
 

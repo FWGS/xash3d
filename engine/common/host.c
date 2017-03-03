@@ -1195,11 +1195,12 @@ void EXPORT Host_Shutdown( void )
 			host.state = HOST_SHUTDOWN;
 		break;
 	default:
-		if( !Host_IsDedicated() )
+		if( !Host_IsDedicated() && !host.skip_configs )
 		{
 			// restore all latched cheat cvars
 			Cvar_SetCheatState( true );
 			Host_WriteConfig();
+			host.skip_configs = false;
 		}
 		host.state = HOST_SHUTDOWN; // prepare host to normal shutdown
 	}

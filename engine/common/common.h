@@ -388,6 +388,7 @@ typedef struct host_parm_s
 	qboolean		force_draw_version;	// used when fraps is loaded
 	qboolean		write_to_clipboard;	// put image to clipboard instead of disk
 	qboolean		crashed;		// set to true if crashed
+	qboolean		skip_configs;	// skip config save during Host_Shutdown
 	double	force_draw_version_time; // time when disable force_draw_version
 
 	char		rootdir[256];	// member root directory
