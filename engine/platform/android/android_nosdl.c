@@ -85,7 +85,8 @@ typedef enum event_type
 	event_joybutton,
 	event_joyaxis,
 	event_joyadd,
-	event_joyremove
+	event_joyremove,
+	event_quit
 } eventtype_t;
 
 typedef struct touchevent_s
@@ -311,6 +312,9 @@ void Android_RunEvents()
 				Joy_AddEvent( 0 );
 			Joy_ButtonEvent( events.queue[i].arg, events.queue[i].button.button, (byte)events.queue[i].button.down );
 			break;
+		case event_quit:
+			Sys_Quit();
+			break;
 		}
 	}
 
@@ -365,7 +369,12 @@ nativeString
 nativeSetPause
 =====================================================
 */
-JAVA_EXPORT int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
+#define DECLARE_JNI_INTERFACE( ret, name, ... ) \
+	JNIEXPORT ret JNICALL Java_in_celest_xash3d_XashActivity_##name( JNIEnv *env, jclass clazz, __VA_ARGS__ )
+#define DECLARE_JNI_INTERFACE_VOID( ret, name ) \
+	JNIEXPORT ret JNICALL Java_in_celest_xash3d_XashActivity_##name( JNIEnv *env, jclass clazz )
+
+DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 {
 	int i;
 	int argc;
@@ -420,7 +429,7 @@ JAVA_EXPORT int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclas
 	return status;
 }
 
-JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_onNativeResize( JNIEnv* env, jclass cls, jint width, jint height )
+DECLARE_JNI_INTERFACE( void, onNativeResize, jint width, jint height )
 {
 	event_t *event;
 
@@ -435,10 +444,11 @@ JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_onNativeResize( JNIEnv* env,
 	Android_PushEvent();
 }
 
-JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
+DECLARE_JNI_INTERFACE_VOID( void, nativeQuit )
 {
 }
-JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_nativeSetPause(JNIEnv* env, jclass cls, jint pause )
+
+DECLARE_JNI_INTERFACE( void, nativeSetPause, jint pause )
 {
 	event_t *event = Android_AllocEvent();
 	event->type = event_set_pause;
@@ -456,7 +466,7 @@ JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_nativeSetPause(JNIEnv* env, 
 	}
 }
 
-JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclass cls, jint down, jint code)
+DECLARE_JNI_INTERFACE( void, nativeKey, jint down, jint code )
 {
 	event_t *event;
 
@@ -475,7 +485,7 @@ JAVA_EXPORT void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclas
 	Android_PushEvent();
 }
 
-void Java_in_celest_xash3d_XashActivity_nativeString(JNIEnv* env, jclass cls, jobject string)
+DECLARE_JNI_INTERFACE( void, nativeString, jobject string )
 {
 	char* str = (char *) (*env)->GetStringUTFChars(env, string, NULL);
 
@@ -487,9 +497,9 @@ void Java_in_celest_xash3d_XashActivity_nativeString(JNIEnv* env, jclass cls, jo
 }
 
 #ifdef SOFTFP_LINK
-void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint finger, jint action, jfloat x, jfloat y ) __attribute__((pcs("aapcs")));
+DECLARE_JNI_INTERFACE( void, nativeTouch, jint finger, jint action, jfloat x, jfloat y ) __attribute__((pcs("aapcs")));
 #endif
-void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint finger, jint action, jfloat x, jfloat y )
+DECLARE_JNI_INTERFACE( void, nativeTouch, jint finger, jint action, jfloat x, jfloat y )
 {
 	float dx, dy;
 	event_t *event;
@@ -539,9 +549,6 @@ void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jin
 	event->touch.dy = dy;
 	Android_PushEvent();
 }
-
-#define DECLARE_JNI_INTERFACE( ret, name, ... ) \
-	JAVA_EXPORT ret Java_in_celest_xash3d_XashActivity_##name( JNIEnv *env, jclass clazz, __VA_ARGS__ )
 
 DECLARE_JNI_INTERFACE( void, nativeBall, jint id, jbyte ball, jshort xrel, jshort yrel )
 {
@@ -611,6 +618,13 @@ DECLARE_JNI_INTERFACE( void, nativeJoyDel, jint id )
 	event_t *event = Android_AllocEvent();
 	event->type = event_joyremove;
 	event->arg = id;
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE_VOID( void, nativeQuitEvent )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_quit;
 	Android_PushEvent();
 }
 
