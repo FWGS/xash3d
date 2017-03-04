@@ -667,50 +667,22 @@ DECLARE_JNI_INTERFACE_VOID( void, nativeOnPause )
 DECLARE_JNI_INTERFACE_VOID( void, nativeOnDestroy )
 {
 	event_t *event = Android_AllocEvent();
-	event->type = event_onpause;
+	event->type = event_ondestroy;
 	Android_PushEvent();
 }
 
-JAVA_EXPORT jint JNI_OnLoad( JavaVM *vm, void *reserved )
+DECLARE_JNI_INTERFACE( int, setenv, jstring key, jstring value, jboolean overwrite )
 {
-	void *lib;
-	const char *libDir;
-	
-	jni.vm = vm;
-	
-	libDir = getenv("XASH_GAMELIBDIR");
-	if( !libDir ) libDir = getenv("XASH_ENGLIBDIR");
-	if( !libDir ) libDir = "/data/data/in.celest.xash3d.cs16client/lib";
-	
-	if( libDir )
-	{
-		char path[256];
-		Q_snprintf( path, sizeof(path), "%s/" CLIENTDLL, libDir );
-		lib = Com_LoadLibrary( path );
-		
-		if( lib ) 
-		{
-			jint (*JNI_OnLoad)( JavaVM *vm, void *reserved );
-			
-			JNI_OnLoad = Com_GetProcAddress( lib, "JNI_OnLoad" );
-			if( JNI_OnLoad )
-			{
-				__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "Found JNI_OnLoad in %s", path );
-				JNI_OnLoad( vm, reserved );
-			}
-			else
-			{
-				__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "JNI_OnLoad not found in %s", path );
-			}
-			
-			Com_FreeLibrary( lib );
-			lib = NULL;
-		}
-		
-		// Add here if server or menu lib will require JNI_OnLoad someday...
-	}
-	
-	
+	    char* k = (char *) (*env)->GetStringUTFChars(env, key, NULL);
+		char* v = (char *) (*env)->GetStringUTFChars(env, value, NULL);
+		int err = setenv(k, v, overwrite);
+		(*env)->ReleaseStringUTFChars(env, key, k);
+		(*env)->ReleaseStringUTFChars(env, value, v);
+		return err;
+}
+
+JNIEXPORT jint JNICALL JNI_OnLoad( JavaVM *vm, void *reserved )
+{
 	return JNI_VERSION_1_6;
 }
 
