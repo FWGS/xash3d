@@ -86,8 +86,9 @@ typedef enum event_type
 	event_joyaxis,
 	event_joyadd,
 	event_joyremove,
-	event_quit,
-	event_onpause
+	event_onstop,
+	event_onpause,
+	event_ondestroy
 } eventtype_t;
 
 typedef struct touchevent_s
@@ -314,7 +315,7 @@ void Android_RunEvents()
 				Joy_AddEvent( 0 );
 			Joy_ButtonEvent( events.queue[i].arg, events.queue[i].button.button, (byte)events.queue[i].button.down );
 			break;
-		case event_quit:
+		case event_ondestroy:
 			host.skip_configs = true; // skip config save, because engine may be killed during config save
 			Sys_Quit();
 			break;
@@ -331,6 +332,14 @@ void Android_RunEvents()
 				Cvar_SetCheatState( true );
 				Host_WriteConfig();
 			}
+			// stop blocking UI thread
+			(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.notify );
+			break;
+		case event_onstop:
+			// don't do anything.
+			// it's unsafe to move config save here
+			// but also we don't need to stop engine here
+
 			// stop blocking UI thread
 			(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.notify );
 			break;
@@ -434,7 +443,7 @@ DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 	jni.messageBox = (*env)->GetStaticMethodID(env, jni.actcls, "messageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
 	jni.createGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "createGLContext", "()Z");
 	jni.deleteGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "deleteGLContext", "()Z");
-	jni.notify = (*env)->GetStaticMethodID(env, jni.actcls, "engineThreadNotify", "()Z");
+	jni.notify = (*env)->GetStaticMethodID(env, jni.actcls, "engineThreadNotify", "()V");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -644,11 +653,18 @@ DECLARE_JNI_INTERFACE( void, nativeJoyDel, jint id )
 DECLARE_JNI_INTERFACE_VOID( void, nativeOnStop )
 {
 	event_t *event = Android_AllocEvent();
-	event->type = event_quit;
+	event->type = event_onstop;
 	Android_PushEvent();
 }
 
 DECLARE_JNI_INTERFACE_VOID( void, nativeOnPause )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_onpause;
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE_VOID( void, nativeOnDestroy )
 {
 	event_t *event = Android_AllocEvent();
 	event->type = event_onpause;
