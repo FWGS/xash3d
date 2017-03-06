@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include <android/log.h>
 #include <jni.h>
 #include <EGL/egl.h> // nanogl
+#include <errno.h>
 convar_t *android_sleep;
 
 #ifndef JAVA_EXPORT
@@ -673,12 +674,41 @@ DECLARE_JNI_INTERFACE_VOID( void, nativeOnDestroy )
 
 DECLARE_JNI_INTERFACE( int, setenv, jstring key, jstring value, jboolean overwrite )
 {
-	    char* k = (char *) (*env)->GetStringUTFChars(env, key, NULL);
-		char* v = (char *) (*env)->GetStringUTFChars(env, value, NULL);
-		int err = setenv(k, v, overwrite);
-		(*env)->ReleaseStringUTFChars(env, key, k);
-		(*env)->ReleaseStringUTFChars(env, value, v);
-		return err;
+	char* k = (char *) (*env)->GetStringUTFChars(env, key, NULL);
+	char* v = (char *) (*env)->GetStringUTFChars(env, value, NULL);
+	int err = setenv(k, v, overwrite);
+	(*env)->ReleaseStringUTFChars(env, key, k);
+	(*env)->ReleaseStringUTFChars(env, value, v);
+	return err;
+}
+
+DECLARE_JNI_INTERFACE( int, nativeTestWritePermission, jstring jPath )
+{
+	char *path = (char *)(*env)->GetStringUTFChars(env, jPath, NULL);
+	FILE *fd;
+	char testFile[PATH_MAX];
+	int ret = 0;
+	
+	// maybe generate new file everytime?
+	Q_snprintf( testFile, PATH_MAX, "%s/.testfile", path );
+	
+	fd = fopen( testFile, "w+" );
+	
+	if( fd )
+	{
+		ret = 1;
+		fclose( fd );
+		
+		remove( testFile );
+	}
+	else
+	{
+		__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "nativeTestWritePermission: file=%s, error=%s", testFile, strerror( errno ) );
+	}
+	
+	(*env)->ReleaseStringUTFChars( env, jPath, path );
+	
+	return ret;
 }
 
 JNIEXPORT jint JNICALL JNI_OnLoad( JavaVM *vm, void *reserved )
