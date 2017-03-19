@@ -1911,7 +1911,6 @@ static int R_StudioMeshCompare( const sortedmesh_t *a, const sortedmesh_t *b )
 	return 0;
 }
 
-
 /*
 ===============
 R_StudioDrawPoints
@@ -2322,7 +2321,8 @@ static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float 
 
 	pglEnableClientState( GL_COLOR_ARRAY );
 	pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_xarraycolor );
-#ifndef XASH_NANOGL
+
+#if !defined XASH_NANOGL || defined XASH_WES && defined __EMSCRIPTEN__ // WebGL need to know array sizes
 	if( pglDrawRangeElements )
 		pglDrawRangeElements( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
 	else

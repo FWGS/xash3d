@@ -22,6 +22,9 @@ GNU General Public License for more details.
 #undef pglMultiTexCoord2f
 
 #include <GL/gl.h>
+#if defined XASH_WES && defined __EMSCRIPTEN__
+GLvoid glDrawRangeElements( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices );
+#endif
 
 
 #define GL_TEXTURE0_ARB                     0x84C0
