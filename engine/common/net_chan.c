@@ -154,13 +154,13 @@ qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *l
 	// prevent overflow
 	if( packet->part * packet->index > NET_MAX_PAYLOAD )
 	{
-		MsgDev( D_WARN, "NetSplit_GetLong: packet out fo bounds from %s\n", NET_AdrToString( *from ) );
+		MsgDev( D_WARN, "NetSplit_GetLong: packet out fo bounds from %s (part %d index %d)\n", NET_AdrToString( *from ), packet->part, packet->index );
 		return false;
 	}
 
 	if( packet->length > NET_MAX_PAYLOAD )
 	{
-		MsgDev( D_WARN, "NetSplit_GetLong: packet out fo bounds from %s\n", NET_AdrToString( *from ) );
+		MsgDev( D_WARN, "NetSplit_GetLong: packet out fo bounds from %s (length %d)\n", NET_AdrToString( *from ), packet->length );
 		return false;
 	}
 
