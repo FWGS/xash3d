@@ -1839,7 +1839,7 @@ void FS_LoadGameInfo( const char *rootfolder )
 	{
 #if defined(_WIN32)
 		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
-#elif TARGET_OS_IPHONE
+#elif TARGET_OS_IPHONE || defined __EMSCRIPTEN__
 		Q_strncpy( SI.gamedll, "server", sizeof( SI.gamedll ) );
 #elif defined(__APPLE__)
 		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );

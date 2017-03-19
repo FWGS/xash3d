@@ -1042,7 +1042,7 @@ qboolean UI_LoadProgs( void )
 
 	// setup globals
 	menu.globals = &gpGlobals;
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE || defined __EMSCRIPTEN__
 	if(!( menu.hInstance = Com_LoadLibrary( "menu", false )))
 		return false;
 #elif defined (__ANDROID__)

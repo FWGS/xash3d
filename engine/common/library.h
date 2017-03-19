@@ -156,6 +156,7 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 void *Com_GetProcAddress( void *hInstance, const char *name );
 const char *Com_NameForFunction( void *hInstance, void *function );
 void *Com_FunctionFromName( void *hInstance, const char *pName );
+void *Com_FunctionFromName_SR( void *hInstance, const char *pName );
 void Com_FreeLibrary( void *hInstance );
 void Com_PushLibraryError( const char *error );
 void Com_ResetLibraryError();

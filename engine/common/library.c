@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "common.h"
 #include "library.h"
 #include "filesystem.h"
+#include "server.h"
 
 char lasterror[1024] = "";
 const char *Com_GetLibraryError()
@@ -132,6 +133,7 @@ static void *IOS_LoadLibrary( const char *dllname )
 
 #endif
 
+
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
 	searchpath_t	*search = NULL;
@@ -139,8 +141,23 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	char	path [MAX_SYSPATH];
 	void *pHandle;
 
-#ifdef TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
 	return IOS_LoadLibrary(dllname);
+#endif
+
+#ifdef __EMSCRIPTEN__
+	{
+		string prefix;
+		Q_strcpy(prefix, getenv( "LIBRARY_PREFIX" ) );
+		Q_snprintf( path, MAX_SYSPATH, "%s%s%s",  prefix, dllname, getenv( "LIBRARY_SUFFIX" ) );
+		pHandle = dlopen( path, RTLD_LAZY );
+		if( !pHandle )
+		{
+			Com_PushLibraryError( va("Loading %s:\n", path ) );
+			Com_PushLibraryError( dlerror() );
+		}
+		return pHandle;
+	}
 #endif
 
 	qboolean dll = host.enabledll && ( Q_stristr( dllname, ".dll" ) != 0 );
@@ -172,6 +189,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		}
 		sprintf( path, "%s%s", search->filename, dllname );
 
+
 #ifdef DLL_LOADER
 		if(dll)
 		{
@@ -188,7 +206,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		{
 			pHandle = dlopen( path, RTLD_LAZY );
 			if( !pHandle )
-				Com_PushLibraryError(dlerror());
+				Com_PushLibraryError( dlerror() );
 		}
 		if(!pHandle)
 		{
@@ -221,6 +239,25 @@ void *Com_GetProcAddress( void *hInstance, const char *name )
 	return dlsym( hInstance, name );
 }
 
+void *Com_FunctionFromName_SR( void *hInstance, const char *pName )
+{
+	#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+	if( !Q_memcmp( pName, "ofs:",4 ) )
+		return svgame.dllFuncs.pfnGameInit + Q_atoi(pName + 4);
+	#endif
+	return Com_FunctionFromName( hInstance, pName );
+}
+
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+char *Com_OffsetNameForFunction( void *function )
+{
+	static string sname;
+	Q_snprintf( sname, MAX_STRING, "ofs:%d", (int)(void*)(function - (void*)svgame.dllFuncs.pfnGameInit) );
+	MsgDev( D_NOTE, "Com_OffsetNameForFunction %s\n", sname );
+	return sname;
+}
+#endif
+
 void *Com_FunctionFromName( void *hInstance, const char *pName )
 {
 	void *function;
@@ -230,7 +267,7 @@ void *Com_FunctionFromName( void *hInstance, const char *pName )
 		return Loader_GetProcAddress(hInstance, pName);
 	else
 #endif
-	function = dlsym( hInstance, pName );	
+	function = dlsym( hInstance, pName );
 	if(!function)
 	{
 #ifdef __ANDROID__
@@ -272,8 +309,12 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 	{
 		Dl_info info = {0};
 		dladdr((void*)function, &info);
-		return info.dli_sname;
+		if(info.dli_sname)
+			return info.dli_sname;
 	}
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+	return Com_OffsetNameForFunction( function );
+#endif
 }
 #elif defined __amd64__
 #include <dbghelp.h>

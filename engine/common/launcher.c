@@ -58,6 +58,12 @@ int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int n
 int main( int argc, char** argv )
 {
 	const char *gamedir = getenv("XASH3D_GAMEDIR");
+#ifdef __EMSCRIPTEN__
+	// For some unknown reason emscripten refusing to load libraries later
+	Com_LoadLibrary("menu", 0 );
+	Com_LoadLibrary("server", 0 );
+	Com_LoadLibrary("client", 0 );
+#endif
 	if(!gamedir)
 		gamedir = "valve";
 	g_iArgc = argc;
