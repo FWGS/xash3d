@@ -37,6 +37,25 @@ void Com_PushLibraryError( const char *error )
 	Q_strncat( lasterror, "\n", sizeof( lasterror ) );
 }
 
+void *Com_FunctionFromName_SR( void *hInstance, const char *pName )
+{
+	#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+	if( !Q_memcmp( pName, "ofs:",4 ) )
+		return svgame.dllFuncs.pfnGameInit + Q_atoi(pName + 4);
+	#endif
+	return Com_FunctionFromName( hInstance, pName );
+}
+
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+char *Com_OffsetNameForFunction( void *function )
+{
+	static string sname;
+	Q_snprintf( sname, MAX_STRING, "ofs:%d", (int)(void*)(function - (void*)svgame.dllFuncs.pfnGameInit) );
+	MsgDev( D_NOTE, "Com_OffsetNameForFunction %s\n", sname );
+	return sname;
+}
+#endif
+
 #ifndef _WIN32
 
 #ifdef __ANDROID__
@@ -239,25 +258,6 @@ void *Com_GetProcAddress( void *hInstance, const char *name )
 	return dlsym( hInstance, name );
 }
 
-void *Com_FunctionFromName_SR( void *hInstance, const char *pName )
-{
-	#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
-	if( !Q_memcmp( pName, "ofs:",4 ) )
-		return svgame.dllFuncs.pfnGameInit + Q_atoi(pName + 4);
-	#endif
-	return Com_FunctionFromName( hInstance, pName );
-}
-
-#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
-char *Com_OffsetNameForFunction( void *function )
-{
-	static string sname;
-	Q_snprintf( sname, MAX_STRING, "ofs:%d", (int)(void*)(function - (void*)svgame.dllFuncs.pfnGameInit) );
-	MsgDev( D_NOTE, "Com_OffsetNameForFunction %s\n", sname );
-	return sname;
-}
-#endif
-
 void *Com_FunctionFromName( void *hInstance, const char *pName )
 {
 	void *function;
@@ -340,6 +340,7 @@ void *Com_FunctionFromName( void *hInstance, const char *name )
 
 const char *Com_NameForFunction( void *hInstance, void *function )
 {
+#if 0
 	static qboolean initialized = false;
 	if( initialized )
 	{
@@ -373,6 +374,12 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 		}
 
 	}
+#endif
+
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+	return Com_OffsetNameForFunction( function );
+#endif
+
 	return NULL;
 }
 
