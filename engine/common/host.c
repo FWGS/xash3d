@@ -176,13 +176,63 @@ Host_AbortCurrentFrame
 aborts the current host frame and goes on with the next one
 ================
 */
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#endif
+void Host_Frame( float time );
+void Host_RunFrame()
+{
+	static double	oldtime, newtime;
+	if( !oldtime )
+		oldtime = Sys_DoubleTime();
+#ifdef XASH_SDL
+	SDL_Event event;
+#endif
+
+#if XASH_INPUT == INPUT_SDL
+		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
+			SDLash_EventFilter( &event );
+#elif XASH_INPUT == INPUT_ANDROID
+		Android_RunEvents();
+#endif
+		newtime = Sys_DoubleTime ();
+		Host_Frame( newtime - oldtime );
+
+		oldtime = newtime;
+#ifdef __EMSCRIPTEN__
+#ifdef EMSCRIPTEN_ASYNC
+	emscripten_sleep(1);
+#else
+	if( host.crashed || host.shutdown_issued )
+		emscritpen_cancel_main_loop();
+#endif
+#endif
+}
+
+void Host_FrameLoop()
+{
+#if defined __EMSCRIPTEN__ && !defined EMSCRIPTEN_ASYNC
+	emscripten_cancel_main_loop();
+	emscripten_set_main_loop( Host_RunFrame, 0, 1 );
+#else
+	// main window message loop
+	while( !host.crashed && !host.shutdown_issued )
+	{
+		Host_RunFrame();
+	}
+#endif
+}
+
 void EXPORT Host_AbortCurrentFrame( void )
 {
+#ifndef NO_SJLJ
 	if( host.framecount == 0 ) // abort frame was not set up
 		Sys_Break("Could not abort current frame");
 	else
 		longjmp( host.abortframe, 1 );
-	exit(127);
+#else // sj/lj not supported, so re-run main loop with shifted stack
+	Host_FrameLoop();
+#endif
 }
 
 /*
@@ -635,8 +685,10 @@ Host_Frame
 */
 void Host_Frame( float time )
 {
+#ifndef NO_SJLJ
 	if( setjmp( host.abortframe ))
 		return;
+#endif
 
 	Host_Autosleep();
 
@@ -910,16 +962,18 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.mouse_visible = false;
 
 #ifdef XASH_SDL
-	if( SDL_Init( SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS ) )
+	// should work even if it failed
+	SDL_Init( SDL_INIT_TIMER );
+
+	if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS ) )
 	{
-		SDL_Init( SDL_INIT_TIMER );
 		Sys_Warn( "SDL_Init failed: %s", SDL_GetError() );
 		host.type = HOST_DEDICATED;
 	}
 	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
 #endif
 
-	if ( SetCurrentDirectory( host.rootdir ) != 0)
+	if ( !host.rootdir[0] || SetCurrentDirectory( host.rootdir ) != 0)
 		MsgDev( D_INFO, "%s is working directory now\n", host.rootdir );
 	else
 		Sys_Error( "Changing working directory to %s failed.\n", host.rootdir );
@@ -1007,10 +1061,6 @@ Host_Main
 */
 int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func )
 {
-	static double	oldtime, newtime;
-#ifdef XASH_SDL
-	SDL_Event event;
-#endif
 	pChangeGame = func;	// may be NULL
 
 	Host_InitCommon( argc, argv, progname, bChangeGame );
@@ -1141,7 +1191,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	// in case of empty init.rc
 	if( !host.stuffcmdsrun ) Cbuf_AddText( "stuffcmds\n" );
 
-	oldtime = Sys_DoubleTime();
 	IN_TouchInitConfig();
 	SCR_CheckStartupVids();	// must be last
 #ifdef XASH_SDL
@@ -1154,20 +1203,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	if( host.state == HOST_INIT )
 		host.state = HOST_FRAME; // initialization is finished
 
-	// main window message loop
-	while( !host.crashed && !host.shutdown_issued )
-	{
-#if XASH_INPUT == INPUT_SDL
-		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
-			SDLash_EventFilter( &event );
-#elif XASH_INPUT == INPUT_ANDROID
-		Android_RunEvents();
-#endif
-		newtime = Sys_DoubleTime ();
-		Host_Frame( newtime - oldtime );
-
-		oldtime = newtime;
-	}
+	Host_FrameLoop();
 
 	// never reached
 	return 0;
