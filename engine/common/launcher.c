@@ -57,15 +57,24 @@ int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int n
 #endif
 int main( int argc, char** argv )
 {
+	char gamedir_buf[32] = "";
 	const char *gamedir = getenv("XASH3D_GAMEDIR");
+
+	if(!gamedir)
+		gamedir = "valve";
+	else
+	{
+		strncpy( gamedir_buf, gamedir, 32 );
+		gamedir = gamedir_buf;
+	}
+
 #ifdef __EMSCRIPTEN__
 	// For some unknown reason emscripten refusing to load libraries later
 	Com_LoadLibrary("menu", 0 );
 	Com_LoadLibrary("server", 0 );
 	Com_LoadLibrary("client", 0 );
 #endif
-	if(!gamedir)
-		gamedir = "valve";
+
 	g_iArgc = argc;
 	g_pszArgv = argv;
 #if TARGET_OS_IPHONE
