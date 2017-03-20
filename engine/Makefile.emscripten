@@ -124,12 +124,12 @@ endif
 else
 BINARIES = xash
 
-/mnt/data2/xash-em/xash$(SIMD_SUF).html: $(OBJS) $(OBJS_CPP) shell.html
+/mnt/data2/xash-em/xash$(SIMD_SUF).html: $(OBJS) $(OBJS_CPP) platform/emscripten/shell.html
 
     ifeq ($(XASH_STATIC),1)
 	$(CXX) -o xash -static $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
     else
-	$(CXX) -s UNALIGNED_ACCESS_FUNCTION_LIST=\"unaligned.txt\" --llvm-lto 1 --shell-file shell.html -s NO_EXIT_RUNTIME=1 -s LZ4=1 -s -g0 -o /mnt/data2/xash-em/xash$(SIMD_SUF).html -s MAIN_MODULE=1 -s USE_SDL=2 -s TOTAL_MEMORY=150000000 -fvisibility=hidden $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
+	$(CXX) -s UNALIGNED_ACCESS_FUNCTION_LIST=\"platform/emscripten/unaligned.txt\" --llvm-lto 1 --shell-file platform/emscripten/shell.html -s NO_EXIT_RUNTIME=1 -s LZ4=1 -s -g0 -o /mnt/data2/xash-em/xash$(SIMD_SUF).html -s MAIN_MODULE=1 -s USE_SDL=2 -s TOTAL_MEMORY=150000000 -fvisibility=hidden $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
     endif
 
 endif
