@@ -39,6 +39,14 @@ GNU General Public License for more details.
 char			cl_textbuffer[MAX_TEXTCHANNELS][512];
 client_textmessage_t	cl_textmessage[MAX_TEXTCHANNELS];
 
+static struct crosshair_s
+{
+	// crosshair members
+	const model_t	*pCrosshair;
+	wrect_t		rcCrosshair;
+	rgba_t		rgbaCrosshair;
+} crosshair_state;
+
 extern rgba_t g_color_table[8];
 
 static dllfunc_t cdll_exports[] =
@@ -880,7 +888,7 @@ void CL_DrawCrosshair( void )
 	int		x, y, width, height;
 	cl_entity_t	*pPlayer;
 
-	if( !clgame.ds.pCrosshair || cl.refdef.crosshairangle[2] || !cl_crosshair->integer )
+	if( !crosshair_state.pCrosshair || cl.refdef.crosshairangle[2] || !cl_crosshair->integer )
 		return;
 
 	pPlayer = CL_GetLocalPlayer();
@@ -893,8 +901,8 @@ void CL_DrawCrosshair( void )
 		return;
 
 	// get crosshair dimension
-	width = clgame.ds.rcCrosshair.right - clgame.ds.rcCrosshair.left;
-	height = clgame.ds.rcCrosshair.bottom - clgame.ds.rcCrosshair.top;
+	width = crosshair_state.rcCrosshair.right - crosshair_state.rcCrosshair.left;
+	height = crosshair_state.rcCrosshair.bottom - crosshair_state.rcCrosshair.top;
 
 	x = clgame.scrInfo.iWidth / 2; 
 	y = clgame.scrInfo.iHeight / 2;
@@ -916,13 +924,13 @@ void CL_DrawCrosshair( void )
 		y += 0.5f * screen[1] * scr_height->value + 0.5f;
 	}
 
-	clgame.ds.pSprite = clgame.ds.pCrosshair;
+	clgame.ds.pSprite = crosshair_state.pCrosshair;
 
 	GL_SetRenderMode( kRenderTransTexture );
-	*(int *)clgame.ds.spriteColor = *(int *)clgame.ds.rgbaCrosshair;
+	*(int *)clgame.ds.spriteColor = *(int *)crosshair_state.rgbaCrosshair;
 
 	SPR_EnableScissor( x - 0.5f * width, y - 0.5f * height, width, height );
-	SPR_DrawGeneric( 0, x - 0.5f * width, y - 0.5f * height, -1, -1, &clgame.ds.rcCrosshair );
+	SPR_DrawGeneric( 0, x - 0.5f * width, y - 0.5f * height, -1, -1, &crosshair_state.rcCrosshair );
 	SPR_DisableScissor();
 }
 
@@ -1511,12 +1519,12 @@ setup crosshair
 */
 static void GAME_EXPORT pfnSetCrosshair( HSPRITE hspr, wrect_t rc, int r, int g, int b )
 {
-	clgame.ds.rgbaCrosshair[0] = (byte)r;
-	clgame.ds.rgbaCrosshair[1] = (byte)g;
-	clgame.ds.rgbaCrosshair[2] = (byte)b;
-	clgame.ds.rgbaCrosshair[3] = (byte)0xFF;
-	clgame.ds.pCrosshair = CL_GetSpritePointer( hspr );
-	clgame.ds.rcCrosshair = rc;
+	crosshair_state.rgbaCrosshair[0] = (byte)r;
+	crosshair_state.rgbaCrosshair[1] = (byte)g;
+	crosshair_state.rgbaCrosshair[2] = (byte)b;
+	crosshair_state.rgbaCrosshair[3] = (byte)0xFF;
+	crosshair_state.pCrosshair = CL_GetSpritePointer( hspr );
+	crosshair_state.rcCrosshair = rc;
 }
 
 /*

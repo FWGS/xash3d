@@ -296,10 +296,6 @@ typedef struct
 	rgba_t		spriteColor;
 	rgba_t		triColor;
 
-	// crosshair members
-	const model_t	*pCrosshair;
-	wrect_t		rcCrosshair;
-	rgba_t		rgbaCrosshair;
 	byte		gammaTable[256];
 } client_draw_t;
 
