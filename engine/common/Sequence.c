@@ -1562,10 +1562,9 @@ void Sequence_ParseFile( const char *fileName, qboolean isGlobal )
 	buffer = FS_LoadFile( va("sequences/%s.seq", fileName ), &bufSize, true );
 
 	if( !buffer )
-	{
-		MsgDev( D_WARN, "failed to locate sequence file: %s\n", fileName );
 		return;
-	}
+
+	MsgDev( D_INFO, "reading sequence file: %s\n", fileName );
 
 	Sequence_ParseBuffer( buffer, bufSize );
 
