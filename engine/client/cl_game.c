@@ -1831,7 +1831,7 @@ static int GAME_EXPORT pfnGetWindowCenterY( void )
 	{
 		POINT pos;
 		GetCursorPos( &pos );
-		return pos.x;
+		return pos.y;
 	}
 #endif
 #ifdef XASH_SDL

@@ -704,14 +704,7 @@ void Host_InputFrame( void )
 	}
 
 	IN_ActivateMouse( false );
-#ifdef XASH_SDL
-	if( m_ignore->integer )
-	{
-		int x,y;
-		SDL_GetRelativeMouseState(&x,&y);
 
-	}
-#endif
 	IN_MouseMove();
 }
 #endif

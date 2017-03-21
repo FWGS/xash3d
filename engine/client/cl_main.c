@@ -368,6 +368,14 @@ void CL_CreateCmd( void )
 
 	active = ( cls.state == ca_active && !cl.refdef.paused && !cls.demoplayback );
 
+#ifdef XASH_SDL
+	if( m_ignore->integer )
+	{
+		int x,y;
+		SDL_GetRelativeMouseState(&x,&y);
+	}
+#endif
+
 	clgame.dllFuncs.CL_CreateMove( cl.time - cl.oldtime, &pcmd->cmd, active );
 	CL_PopPMStates();
 
