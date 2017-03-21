@@ -343,7 +343,8 @@ void SDLash_EventFilter( void *ev )
 			host.state = HOST_FRAME;
 			host.force_draw_version = true;
 			host.force_draw_version_time = host.realtime + 2;
-			VID_SetMode();
+			if( vid_fullscreen->integer )
+				VID_SetMode();
 			break;
 		case SDL_WINDOWEVENT_FOCUS_GAINED:
 			host.state = HOST_FRAME;
@@ -354,7 +355,8 @@ void SDLash_EventFilter( void *ev )
 			}
 			host.force_draw_version = true;
 			host.force_draw_version_time = host.realtime + 2;
-			VID_SetMode();
+			if( vid_fullscreen->integer )
+				VID_SetMode();
 			break;
 		case SDL_WINDOWEVENT_MINIMIZED:
 			host.state = HOST_SLEEP;
