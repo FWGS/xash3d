@@ -644,7 +644,7 @@ int Con_UtfMoveRight( char *str, int pos, int length )
 
 int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 {
-	float	width, height;
+	int	width, height;
 	float	s1, t1, s2, t2;
 	int w, h;
 	wrect_t	*rc;
@@ -673,7 +673,7 @@ int Con_DrawGenericChar( int x, int y, int number, rgba_t color )
 	width = (rc->right - rc->left) * con_fontscale->value;
 	height = (rc->bottom - rc->top) * con_fontscale->value;
 
-	TextAdjustSize( &x, &y, NULL, NULL );
+	TextAdjustSize( &x, &y, &width, &height );
 	R_DrawStretchPic( x, y, width, height, s1, t1, s2, t2, con.curFont->hFontTexture );
 	pglColor4ub( 255, 255, 255, 255 ); // don't forget reset color
 
