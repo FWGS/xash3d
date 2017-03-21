@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="MobileOptimized" content="640"/>
+    <meta name="HandheldFriendly" content="true"/>
+    <title>Emscripten-Generated Code</title>
+    <style>
+      body {
+        font-family: arial;
+        margin: 0;
+        padding: none;
+      }
+
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      div.emscripten { text-align: center; }      
+      div.emscripten_border { border: 1px solid black; }
+      /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+      canvas.emscripten { border: 0px none; background-color: black; }
+
+      @-webkit-keyframes rotation {
+        from {-webkit-transform: rotate(0deg);}
+        to {-webkit-transform: rotate(360deg);}
+      }
+      @-moz-keyframes rotation {
+        from {-moz-transform: rotate(0deg);}
+        to {-moz-transform: rotate(360deg);}
+      }
+      @-o-keyframes rotation {
+        from {-o-transform: rotate(0deg);}
+        to {-o-transform: rotate(360deg);}
+      }
+      @keyframes rotation {
+        from {transform: rotate(0deg);}
+        to {transform: rotate(360deg);}
+      }
+
+
+      #controls {
+        display: inline-block;
+        float: right;
+        vertical-align: top;
+        margin-top: 30px;
+        margin-right: 20px;
+      }
+
+      #output {
+        width: 100%;
+        height: 200px;
+        margin: 0 auto;
+        margin-top: 10px;
+        border-left: 0px;
+        border-right: 0px;
+        padding-left: 0px;
+        padding-right: 0px;
+        display: block;
+        background-color: black;
+        color: white;
+        font-family: 'Lucida Console', Monaco, monospace;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="emscripten_border">
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    </div>
+
+    
+    <div style="float:left;" id="status">Downloading...</div>
+<span id='controls'>
+  <span><input type="checkbox" id="resize">Resize canvas</span>
+  <span><input type="checkbox" id="pointerLock" checked>Lock/hide mouse pointer &nbsp;&nbsp;&nbsp;</span>
+  <span><input type="button" value="Fullscreen" onclick="Module.requestFullscreen(document.getElementById('pointerLock').checked, 
+                                                                            document.getElementById('resize').checked)">
+  </span>
+</span>
+
+
+    
+    <textarea id="output" rows="8"></textarea><div  id="asyncDialog" style="float:left"></div>
+
+    <script type='text/javascript' src='browserfs.min.js'></script>
+    <script type='text/javascript'>
+      var statusElement = document.getElementById('status');
+      var asyncDialog = document.getElementById('asyncDialog');
+      var myerrorbuf = ''
+      var myerrordate = new Date();
+      var mounted = false;
+      var basedir = 'uplink';
+      var gamedir = 'uplink_gamedir'
+      var gameinfotext = 'basedir '+basedir+' gamedir '+gamedir+' title "Half-Life: Uplink" startmap hldemo1 trainmap t0a0';
+
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function() {
+          var element = document.getElementById('output');
+          if (element) element.value = ''; // clear browser cache
+          return function(text) {
+            if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+            // These replacements are necessary if you render to raw HTML
+            //text = text.replace(/&/g, "&amp;");
+            //text = text.replace(/</g, "&lt;");
+            //text = text.replace(/>/g, "&gt;");
+            //text = text.replace('\n', '<br>', 'g');
+            //console.log(text);
+            if(text)
+              myerrorbuf += text + '\n';
+            if (element) {
+              if(element.value.length > 65536)
+                element.value = element.value.substring(512) + myerrorbuf;
+              else
+                element.value += myerrorbuf;
+              element.scrollTop = element.scrollHeight; // focus on bottom
+              
+            }
+            myerrorbuf = ''
+          };
+        })(),
+        printErr: function(text) {
+          if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+          if (0) { // XXX disabled for safety typeof dump == 'function') {
+            dump(text + '\n'); // fast, straight to the real console
+          } else {
+            //console.error(text);
+            //Module.print(text)
+            if( myerrorbuf.length > 2048 )
+            myerrorbuf = 'some lines skipped\n'+ myerrorbuf.substring(512);
+            myerrorbuf += text + '\n';
+            if(  new Date() - myerrordate > 3000 )
+            {
+              myerrordate = new Date();
+              Module.print();
+            }
+          }
+        },
+        canvas: (function() {
+          var canvas = document.getElementById('canvas');
+
+          // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+          // application robust, you may want to override this behavior before shipping!
+          // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+
+          return canvas;
+        })(),
+        setStatus: function(text) {
+          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+          if (text === Module.setStatus.text) return;
+            if(  new Date() - myerrordate > 3000 )
+            {
+              myerrordate = new Date();
+              Module.print();
+            }
+
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+      };
+      Module.setStatus('Downloading...');
+      window.onerror = function(event) {
+      //alert("error")
+        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+        var text = 'Exception thrown: ' + event;
+        text = text.replace(/&/g, "&amp;");
+        text = text.replace(/</g, "&lt;");
+        text = text.replace(/>/g, "&gt;");
+        text = text.replace('\n', '<br>', 'g');
+        Module.setStatus(text);
+        Module.print('Exception thrown: ' + event);
+        if(mounted)
+        FS.syncfs(false,function(err){Module.print('Saving IDBFS: '+err);});
+      };
+      Module.arguments=window.location.hash.substring(1).split(',');
+      //alert(Module.arguments)
+      function haltRun()
+      {
+      }
+      var savedRun;
+      function startXash()
+      {
+        Module.arguments = document.getElementById('iArgs').value.split(' ');
+        Module.run = run = savedRun;
+        asyncDialog.innerHTML='';
+        savedRun();
+        window.addEventListener("beforeunload", function (e) {
+
+        var confirmationMessage = 'Leave the game?';
+
+        (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+        return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
+        });
+        
+      }
+      function setupFS()
+      {
+        FS.mkdir(gamedir);
+        var bIndexedDB = document.getElementById('rIndexedDB');
+        var bLocalStorage = document.getElementById('rLocalStorage')
+        function updategameinfo()
+        {
+        Module.print('Writing gameinfo');
+        try{
+        FS.unlink(gamedir+'/gameinfo.txt');
+        }catch(e){}
+        FS.writeFile(gamedir+'/gameinfo.txt', gameinfotext);
+
+        }
+        
+        if( bIndexedDB && bIndexedDB.checked )
+        {
+          FS.mount(IDBFS,{},'/'+gamedir);
+          FS.syncfs(true,function(err){if(err)Module.print('Loading IDBFS: ' + err);else updategameinfo() });
+          mounted = true;
+        }
+        if( bLocalStorage && bLocalStorage.checked )
+        {
+          BrowserFS.initialize(new BrowserFS.FileSystem.LocalStorage());
+          FS.mount(new BrowserFS.EmscriptenFS(), {root:'/'}, '/'+gamedir);
+          Module.print('LocalStorage mounted');
+        }
+        updategameinfo();
+        asyncDialog.innerHTML='<input type=text value="'+window.location.hash.substring(1).replace(',',' ')+'" id=iArgs /><button onclick=startXash()>Start</button>';
+        Module.setStatus('FS setup done, click "Start"');
+      }
+      function skipRun()
+      {
+        savedRun = run;
+        Module.run = haltRun;
+        run = haltRun;
+        Module.setStatus("Script downloaded! Please select filesystem type");
+        var html = '<form>Select filesystem for settings and saverestore<br>'
+        if( window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB )
+          html += '<input name=a type=radio id=rIndexedDB />IndexedDB (Need exit correctly to save changes)<br><input name=a type=radio id=rLocalStorage />';
+        else
+          html += '<input name=a type=radio id=rLocalStorage />';
+        html += 'LocalStorage (Sometimes not enough space)<br><input type=radio name=a id=rNone checked=true>None(in RAM)<br><input type=button onclick=setupFS() value="Setup filesystem" /></form>'
+        asyncDialog.innerHTML=html;
+        ENV.LIBRARY_PREFIX=basedir+'/';
+        ENV.LIBRARY_SUFFIX='.js';
+        ENV.XASH3D_GAMEDIR=gamedir;
+      }
+      Module.preInit = [skipRun];
+      Module.websocket = [];
+      //Module.websocket.url = 'wsproxy://the-swank.pp.ua:3000/'
+      ENV = [];
+      
+    </script>
+    <script type='text/javascript' src='uplink.js'></script>
+
+    {{{ SCRIPT }}}
+  </body>
+</html>

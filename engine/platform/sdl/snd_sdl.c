@@ -32,6 +32,8 @@ so it can unlock and free the data block after it has been played.
 extern convar_t		*s_primary;
 extern dma_t			dma;
 
+static int sdl_dev;
+
 //static qboolean	snd_firsttime = true;
 //static qboolean	primary_format_set;
 
@@ -63,7 +65,6 @@ Returns false if nothing is found.
 qboolean SNDDMA_Init( void *hInst )
 {
 	SDL_AudioSpec desired, obtained;
-	int ret = 0;
 
 	if( SDL_Init( SDL_INIT_AUDIO ) )
 	{
@@ -77,9 +78,11 @@ qboolean SNDDMA_Init( void *hInst )
 	desired.samples = 1024;
 	desired.channels = 2;
 	desired.callback = SDL_SoundCallback;
-	ret = SDL_OpenAudio(&desired, &obtained);
-	if (ret == -1) {
-		Con_Printf("Couldn't open SDL audio: %s\n", SDL_GetError());
+
+	sdl_dev = SDL_OpenAudioDevice( NULL, 0, &desired, &obtained, 0 );
+
+	if( !sdl_dev ) {
+		Con_Printf( "Couldn't open SDL audio: %s\n", SDL_GetError() );
 		return false;
 	}
 
@@ -103,7 +106,7 @@ qboolean SNDDMA_Init( void *hInst )
 
 	Con_Printf("Using SDL audio driver: %s @ %d Hz\n", SDL_GetCurrentAudioDriver(), obtained.freq);
 
-	SDL_PauseAudio(0);
+	SDL_PauseAudioDevice( sdl_dev, 0 );
 
 	dma.initialized = true;
 	return true;
@@ -201,7 +204,9 @@ void SNDDMA_Shutdown( void )
 	Con_Printf( "Shutting down audio.\n" );
 	dma.initialized = false;
 
-	SDL_CloseAudio();
+	if( sdl_dev )
+		SDL_CloseAudio( );
+
 	if( SDL_WasInit( SDL_INIT_AUDIO ) )
 		 SDL_QuitSubSystem( SDL_INIT_AUDIO );
 
@@ -234,7 +239,7 @@ between a deactivate and an activate.
 void S_Activate( qboolean active )
 {
 #ifdef XASH_SDL
-	SDL_PauseAudio( !active );
+	SDL_PauseAudioDevice( sdl_dev, !active );
 #endif
 }
 #endif

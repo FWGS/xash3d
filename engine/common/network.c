@@ -104,6 +104,7 @@ void NET_FreeWinSock( void )
 	Sys_FreeLibrary( &winsock_dll );
 }
 #else
+
 #define pHtons htons
 #define pConnect connect
 #define pInet_Addr inet_addr
@@ -124,6 +125,16 @@ void NET_FreeWinSock( void )
 #define pGetHostByName gethostbyname
 #define pSelect select
 #define SOCKET int
+#endif
+
+#ifdef __EMSCRIPTEN__
+/* All socket operations are non-blocking already */
+static int ioctl_stub( int d, unsigned long r, ...)
+{
+	return 0;
+}
+#undef pIoctlSocket
+#define pIoctlSocket ioctl_stub
 #endif
 
 typedef struct
@@ -734,8 +745,6 @@ static int NET_IPSocket( const char *netInterface, int port )
 	if( pSetSockopt( net_socket, SOL_SOCKET, SO_BROADCAST, (char *)&_true, sizeof( _true )) < 0 )
 	{
 		MsgDev( D_WARN, "NET_UDPSocket: setsockopt SO_BROADCAST = %s\n", NET_ErrorString( ));
-		pCloseSocket( net_socket );
-		return 0;
 	}
 #endif
 
@@ -1298,7 +1307,7 @@ void HTTP_Run( void )
 		// Now set non-blocking mode
 		// You may skip this if not supported by system,
 		// but download will lock engine, maybe you will need to add manual returns
-#if defined(_WIN32) || defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(_WIN32) || defined(__APPLE__) || defined(__FreeBSD__) || defined __EMSCRIPTEN__
 		mode = 1;
 		pIoctlSocket( curfile->socket, FIONBIO, &mode );
 #else
@@ -1317,7 +1326,7 @@ void HTTP_Run( void )
 		{
 #ifdef _WIN32
 			if( pWSAGetLastError() == WSAEINPROGRESS || pWSAGetLastError() == WSAEWOULDBLOCK )
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined __EMSCRIPTEN__
 			if( errno == EINPROGRESS || errno == EWOULDBLOCK )
 #else
 			if( errno == EINPROGRESS ) // Should give EWOOLDBLOCK if try recv too soon
@@ -1355,7 +1364,7 @@ void HTTP_Run( void )
 			{
 #ifdef _WIN32
 				if( pWSAGetLastError() != WSAEWOULDBLOCK && pWSAGetLastError() != WSAENOTCONN )
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined __EMSCRIPTEN__
 				if( errno != EWOULDBLOCK && errno != ENOTCONN )
 #else
 				if( errno != EWOULDBLOCK )
@@ -1782,7 +1791,7 @@ void HTTP_Init( void )
 		}
 		token = lineend;
 	}*/
-	line = serverfile = (char *)FS_LoadFile( "fastdl.txt", 0, true );
+	line = serverfile = (char *)FS_LoadFile( "fastdl.txt", 0, false );
 	if( serverfile )
 	{
 		while( ( line = COM_ParseFile( line, token ) ) )

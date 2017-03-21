@@ -539,8 +539,10 @@ void GL_SetupAttributes()
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 
+#ifndef XASH_WES
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
 
 	switch( gl_msaa->integer )
 	{
@@ -574,9 +576,13 @@ GL_CreateContext
 */
 qboolean GL_CreateContext( void )
 {
+#ifndef XASH_WES
 	nanoGL_Init();
+#endif
+
 	/*if( !Sys_CheckParm( "-gldebug" ) || host.developer < 1 ) // debug bit the kills perfomance
 		return true;*/
+
 #ifdef XASH_SDL
 	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
 	{
@@ -584,6 +590,11 @@ qboolean GL_CreateContext( void )
 		return GL_DeleteContext();
 	}
 #endif
+
+#ifdef XASH_WES
+	wes_init();
+#endif
+
 	return true;
 }
 
@@ -796,12 +807,21 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 #endif
 
 	if( !fullscreen )
-	host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
-		r_ypos->integer, width, height, wndFlags | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
+	{
+#ifndef XASH_SDL_DISABLE_RESIZE
+		wndFlags |= SDL_WINDOW_RESIZABLE;
+#endif
+		host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
+			r_ypos->integer, width, height, wndFlags | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL );
+	}
 	else
 	{
-		host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, wndFlags | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
-		SDL_SetWindowFullscreen( host.hWnd, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS );
+		int wndFullScreen = 0;
+#ifdef XASH_SDL_FULLSCREEN_DESKTOP
+		wndFullScreen |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+#endif
+		host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, wndFullScreen | wndFlags | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
+		SDL_SetWindowFullscreen( host.hWnd, wndFullScreen | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS );
 	}
 
 
@@ -962,14 +982,18 @@ qboolean VID_SetMode( void )
 
 	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
 	{
+#if !defined DEFAULT_MODE_WIDTH || !defined DEFAULT_MODE_HEIGHT
 		SDL_DisplayMode mode;
 
 		SDL_GetDesktopDisplayMode(0, &mode);
 
 		iScreenWidth = mode.w;
 		iScreenHeight = mode.h;
-
-		Cvar_SetFloat( "fullscreen", 1 );
+#else
+		iScreenWidth = DEFAULT_MODE_WIDTH;
+		iScreenHeight = DEFAULT_MODE_HEIGHT;
+#endif
+		Cvar_SetFloat( "fullscreen", DEFAULT_FULLSCREEN );
 	}
 	else if( vid_mode->modified && vid_mode->integer >= 0 && vid_mode->integer <= num_vidmodes )
 	{
@@ -1028,6 +1052,7 @@ R_Init_OpenGL
 qboolean R_Init_OpenGL( void )
 {
 	GL_SetupAttributes();
+
 #ifdef XASH_SDL
 	if( SDL_GL_LoadLibrary( EGL_LIB ) )
 	{
@@ -1035,6 +1060,7 @@ qboolean R_Init_OpenGL( void )
 		return false;
 	}
 #endif
+
 	return VID_SetMode();
 }
 

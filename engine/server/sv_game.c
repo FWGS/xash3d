@@ -3258,7 +3258,7 @@ pfnFunctionFromName
 */
 void *GAME_EXPORT pfnFunctionFromName( const char *pName )
 {
-	return Com_FunctionFromName( svgame.hInstance, pName );
+	return Com_FunctionFromName_SR( svgame.hInstance, pName );
 }
 
 /*

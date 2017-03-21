@@ -85,6 +85,8 @@ const char *Q_buildos( void )
 	osname = "NetBSD";
 #elif defined(__OpenBSD__)
 	osname = "OpenBSD";
+#elif defined __EMSCRIPTEN__
+	osname = "emscripten";
 #else
 #error "Place your operating system name here! If this is a mistake, try to fix conditions above and report a bug"
 #endif
@@ -109,6 +111,8 @@ const char *Q_buildarch( void )
 	archname = "i386";
 #elif defined(__arm__) || defined(_M_ARM)
 	archname = "arm";
+#elif defined __EMSCRIPTEN__
+	archname = "javascript";
 #else
 #error "Place your architecture name here! If this is a mistake, try to fix conditions above and report a bug"
 #endif

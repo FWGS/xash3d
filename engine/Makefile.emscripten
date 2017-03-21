@@ -1,0 +1,176 @@
+CC = /mnt/data2/emscripten/emcc --llvm-lto 1
+CXX = /mnt/data2/emscripten/em++ --llvm-lto 1
+ASYNC ?= 0
+
+ifeq ($(EMSCRIPTEN_SIMD),1)
+ SIMD_SUF=-simd
+ CC += -s SIMD=1
+ CXX += -s SIMD=1
+endif
+CFLAGS =-Os -g0 -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
+obj/common/launcher.o : override CFLAGS = -O0 -g0
+LDFLAGS =
+LIBS = -lm
+LBITS := $(shell getconf LONG_BIT)
+ifneq ($(64BIT),1)
+	ifeq ($(LBITS),64)
+		LDFLAGS += -m32
+		CFLAGS += -m32
+	endif
+endif
+TOPDIR = $(PWD)/..
+INCLUDES :=
+XASH_SINGLE_BINARY ?= 1
+XASH_X11 ?= 1
+INSTALL_DIR ?= ./install/
+ifeq ($(NANOGL),1)
+INCLUDES += -Inanogl -Inanogl/GL
+endif
+ifeq ($(WES),1)
+INCLUDES += -Inanogl -Inanogl/GL -Igl-wes-v2/src
+endif
+INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient -Iserver -Iclient/vgui -Icommon/sdl
+
+DEFINES = -DDEFAULT_DEV=5 -DXASH_SDL_DISABLE_RESIZE -DDEFAULT_MODE_WIDTH=640 -DDEFAULT_MODE_HEIGHT=480 -DDEFAULT_FULLSCREEN=0 -DWES_VBO -DXASH_ALLOW_SAVERESTORE_OFFSETS
+ifeq ($(ASYNC),1)
+DEFINES += -DEMSCRIPTEN_ASYNC
+CXX += -s ASYNCIFY=1
+else
+DEFINES += -DNO_SJLJ
+endif
+ifneq ($(64BIT),1)
+DEFINES += -DXASH_FASTSTR
+endif
+ifeq ($(XASH_DEDICATED),1)
+    DEFINES += -DXASH_DEDICATED
+else
+   DEFINES += -DXASH_SDL
+   LIBS += -lSDL2 -pthread
+ifeq ($(XASH_X11),1)
+	   LIBS += -lX11
+	   DEFINES += -DXASH_X11
+endif
+endif
+
+ifeq ($(NANOGL),1)
+DEFINES += -DXASH_GLES -DXASH_NANOGL -D__MULTITEXTURE_SUPPORT__  -DEGL_LIB=\"libEGL.so\"
+endif
+ifeq ($(WES),1)
+DEFINES += -DXASH_GLES -DXASH_NANOGL -DXASH_WES -D__MULTITEXTURE_SUPPORT__  -DEGL_LIB=\"libEGL.so\"
+endif
+# Some libc implementations cannot use libdl, so disable it by default
+ifeq ($(XASH_STATIC),1)
+
+    ifneq ($(XASH_STATIC_LIBDL),1)
+	DEFINES += -DNO_LIBDL
+    endif
+
+    XASH_SINGLE_BINARY := 1
+endif
+
+ifneq ($(XASH_STATIC),1)
+    LIBS += -ldl
+endif
+
+ifeq ($(XASH_STATIC_LIBDL),1)
+    LIBS += -ldl
+endif
+ifeq ($(XASH_DLL_LOADER),1)
+	DEFINES += -DDLL_LOADER
+    ifeq ($(XASH_SINGLE_BINARY),1)
+	LIBS += libloader.a -pthread -lm
+    else
+	LIBS += libloader.so
+    endif
+endif
+
+ifeq ($(XASH_SINGLE_BINARY),1)
+    DEFINES += -DSINGLE_BINARY
+endif
+
+ifeq ($(XASH_VGUI),1)
+    DEFINES += -DXASH_VGUI
+endif
+
+
+SRCS_CPP =
+SRCS_C =
+
+#ifeq ($(XASH_VGUI),1)
+#    SRCS_CPP += $(wildcard client/vgui/*.cpp)
+#endif
+
+ifeq ($(NANOGL),1)
+SRCS_CPP += $(wildcard nanogl/*.cpp)
+endif
+ifeq ($(WES),1)
+SRCS += $(wildcard gl-wes-v2/src/*.c)
+endif
+OBJS_CPP = $(patsubst %.cpp,obj/%.o,$(SRCS_CPP))
+SRCS += $(wildcard server/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c)
+ifneq ($(XASH_DEDICATED),1)
+SRCS += $(wildcard client/*.c)
+SRCS += $(wildcard platform/sdl/*.c)
+endif
+OBJS = $(patsubst %.c,obj/%.o,$(SRCS))
+ifeq ($(XASH_SINGLE_BINARY),0)
+BINARIES = libxash.so
+libxash.so : $(OBJS) $(OBJS_CPP)
+ifeq ($(XASH_DLL_LOADER),1)
+	cp $(TOPDIR)/loader/libloader.so .
+endif
+	$(CC) -fcommon -fvisibility=hidden -o libxash.so $(LDFLAGS) -shared $(OBJS) $(OBJS_CPP) $(LIBS)
+
+else
+BINARIES = xash
+
+/mnt/data2/xash-em/xash$(SIMD_SUF).html: $(OBJS) $(OBJS_CPP) platform/emscripten/shell.html
+
+    ifeq ($(XASH_STATIC),1)
+	$(CXX) -o xash -static $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
+    else
+	$(CXX) -s UNALIGNED_ACCESS_FUNCTION_LIST=\"platform/emscripten/unaligned.txt\" --llvm-lto 1 --shell-file platform/emscripten/shell.html -s NO_EXIT_RUNTIME=1 -s LZ4=1 -s -g0 -o /mnt/data2/xash-em/xash$(SIMD_SUF).html -s MAIN_MODULE=1 -s USE_SDL=2 -s TOTAL_MEMORY=150000000 -fvisibility=hidden $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
+    endif
+
+endif
+
+
+DIRS := obj obj/server obj/client/vgui obj/common/sdl obj/common/imagelib obj/common/soundlib/libmpg obj/platform/sdl obj/nanogl
+
+
+$(OBJS): | $(DIRS)
+
+$(DIRS) :
+	mkdir -p $(DIRS)
+obj/%.o : %.c
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"  -Wno-unused-result -fvisibility=hidden
+
+obj/%.o : %.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) $(DEFINES) -c "$<" -o "$@"
+
+
+default: $(BINARIES)
+
+.PHONY: depend clean list install
+
+clean:
+	$(RM) $(OBJS) $(OBJS_CPP) $(BINARIES)
+
+list:
+	@echo Sources:
+	@echo $(SRCS)
+	@echo C++ Sources:
+	@echo $(SRCS_CPP)
+	@echo Objects:
+	@echo $(OBJS) $(OBJS_CPP)
+
+install: $(BINARIES)
+
+	mkdir -p $(INSTALL_DIR)
+
+ifeq ($(XASH_SINGLE_BINARY),1)
+	cp xash $(INSTALL_DIR)/xash_bin
+else
+	cp libxash.so $(INSTALL_DIR)/
+	cp libloader.so $(INSTALL_DIR)/
+endif

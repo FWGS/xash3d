@@ -1968,7 +1968,7 @@ void CL_Init( void )
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
 	IN_TouchInit();
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE || defined __EMSCRIPTEN__
 	loaded = CL_LoadProgs( "client" );
 #elif defined (__ANDROID__)
 	{
