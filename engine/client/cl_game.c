@@ -1803,6 +1803,14 @@ GetWindowCenterX
 static int GAME_EXPORT pfnGetWindowCenterX( void )
 {
 	int x = 0;
+#ifdef _WIN32
+	if( m_ignore->integer )
+	{
+		POINT pos;
+		GetCursorPos( &pos );
+		return pos.x;
+	}
+#endif
 #ifdef XASH_SDL
 	SDL_GetWindowPosition( host.hWnd, &x, NULL );
 #endif
@@ -1818,6 +1826,14 @@ GetWindowCenterY
 static int GAME_EXPORT pfnGetWindowCenterY( void )
 {
 	int y = 0;
+#ifdef _WIN32
+	if( m_ignore->integer )
+	{
+		POINT pos;
+		GetCursorPos( &pos );
+		return pos.x;
+	}
+#endif
 #ifdef XASH_SDL
 	SDL_GetWindowPosition( host.hWnd, NULL, &y );
 #endif

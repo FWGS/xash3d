@@ -229,12 +229,8 @@ void IN_EvdevFrame ()
 void IN_StartupMouse( void )
 {
 	if( Host_IsDedicated() ) return;
-#ifdef __ANDROID__
-#define M_IGNORE "1"
-#else
-#define M_IGNORE "0"
-#endif
-	m_ignore = Cvar_Get( "m_ignore", M_IGNORE, CVAR_ARCHIVE , "ignore mouse events" );
+
+	m_ignore = Cvar_Get( "m_ignore", DEFAULT_M_IGNORE, CVAR_ARCHIVE , "ignore mouse events" );
 
 	m_enginemouse = Cvar_Get("m_enginemouse", "0", CVAR_ARCHIVE, "Read mouse events in engine instead of client");
 	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
@@ -633,7 +629,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 	{
 		float sensitivity = ((float)cl.refdef.fov_x / (float)90.0f);
 #if XASH_INPUT == INPUT_SDL
-		if( m_enginemouse->integer )
+		if( m_enginemouse->integer && !m_ignore->integer )
 		{
 			int mouse_x, mouse_y;
 			SDL_GetRelativeMouseState( &mouse_x, &mouse_y );
@@ -672,7 +668,7 @@ void Host_InputFrame( void )
 		int dx, dy;
 
 #ifndef __ANDROID__
-		if( in_mouseinitialized )
+		if( in_mouseinitialized && !m_ignore->integer )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );
 			pitch += dy * m_pitch->value, yaw -= dx * m_yaw->value; //mouse speed
@@ -708,6 +704,14 @@ void Host_InputFrame( void )
 	}
 
 	IN_ActivateMouse( false );
+#ifdef XASH_SDL
+	if( m_ignore->integer )
+	{
+		int x,y;
+		SDL_GetRelativeMouseState(&x,&y);
+
+	}
+#endif
 	IN_MouseMove();
 }
 #endif

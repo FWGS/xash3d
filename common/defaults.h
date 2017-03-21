@@ -123,8 +123,10 @@ Default build-depended cvar and constant values
 
 #if defined __ANDROID__ || TARGET_OS_IPHONE
 	#define DEFAULT_TOUCH_ENABLE "1"
+	#define DEFAULT_M_IGNORE "1"
 #else
 	#define DEFAULT_TOUCH_ENABLE "0"
+	#define DEFAULT_M_IGNORE "0"
 #endif
 
 #define DEFAULT_SV_MASTER "ms.xash.su:27010"
