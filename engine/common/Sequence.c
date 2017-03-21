@@ -1537,7 +1537,7 @@ void Sequence_ParseBuffer( byte *buffer, int bufferSize )
 			break;
 
 		default:
-			MsgDev( D_ERROR, "Parsing error on line %d of %s.seq: At file scope, lines must begin with '$' (modifier) or '%' (entry block) or '!' (sentence / global data block); found '%c'\n", g_lineNum, g_sequenceParseFileName, symbol );
+            MsgDev( D_ERROR, "Parsing error on line %d of %s.seq: At file scope, lines must begin with '$' (modifier) or '%%' (entry block) or '!' (sentence / global data block); found '%c'\n", g_lineNum, g_sequenceParseFileName, symbol );
 		}
 	}
 
