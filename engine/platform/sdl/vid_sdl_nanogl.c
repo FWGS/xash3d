@@ -908,12 +908,15 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 	Cvar_SetFloat("width", width);
 	Cvar_SetFloat("height", height);
 
-	glState.width = width;
-	glState.height = height;
+	if( glState.width != width || glState.height != height )
+	{
+		glState.width = width;
+		glState.height = height;
 
-	glState.wideScreen = true; // V_AdjustFov will check for widescreen
+		glState.wideScreen = true; // V_AdjustFov will check for widescreen
 
-	SCR_VidInit();
+		SCR_VidInit();
+	}
 }
 
 

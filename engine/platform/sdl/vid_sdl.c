@@ -1244,17 +1244,20 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 	Cvar_SetFloat("width", width);
 	Cvar_SetFloat("height", height);
 
-	glState.width = width;
-	glState.height = height;
-	if( width * 3 != height * 4 && width * 4 != height * 5 )
-		glState.wideScreen = true;
-	else glState.wideScreen = false;
+	if( glState.width != width || glState.height != height )
+	{
+		glState.width = width;
+		glState.height = height;
+		if( width * 3 != height * 4 && width * 4 != height * 5 )
+			glState.wideScreen = true;
+		else glState.wideScreen = false;
 
-	// as we don't recreate window here, update center positions by hand
-	host.window_center_x = width / 2;
-	host.window_center_y = height / 2;
+		// as we don't recreate window here, update center positions by hand
+		host.window_center_x = width / 2;
+		host.window_center_y = height / 2;
 
-	SCR_VidInit();
+		SCR_VidInit();
+	}
 }
 
 rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
