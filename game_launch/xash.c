@@ -21,7 +21,7 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#if _MSC_VER == 1200
+#if _MSC_VER <= 1600
 #define true 1
 #define false 0
 #else

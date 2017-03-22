@@ -211,14 +211,16 @@ Sequence_BakeDefaults
 */
 void Sequence_BakeDefaults( sequenceCommandLine_s *destination, sequenceCommandLine_s *source )
 {
+	char *saveName, *saveMessage;
+
 	if( !destination )
 		MsgDev( D_ERROR, "Attempt to bake defaults into a non-existant command." );
 
 	if( !source )
 		MsgDev( D_ERROR, "Attempt to bake defaults from a non-existant command." );
 
-	char *saveName = destination->clientMessage.pName;
-	char *saveMessage = destination->clientMessage.pMessage;
+	saveName= destination->clientMessage.pName;
+	saveMessage = destination->clientMessage.pMessage;
 
 	destination->clientMessage = source->clientMessage;
 

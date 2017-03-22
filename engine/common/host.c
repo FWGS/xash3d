@@ -183,11 +183,12 @@ void Host_Frame( float time );
 void Host_RunFrame()
 {
 	static double	oldtime, newtime;
-	if( !oldtime )
-		oldtime = Sys_DoubleTime();
 #ifdef XASH_SDL
 	SDL_Event event;
 #endif
+	if( !oldtime )
+		oldtime = Sys_DoubleTime();
+
 
 #if XASH_INPUT == INPUT_SDL
 		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )

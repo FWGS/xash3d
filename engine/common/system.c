@@ -149,8 +149,12 @@ qboolean Sys_DebuggerPresent( void )
 		raise( SIGINT )
 #endif
 #endif
+
 #if defined _WIN32 && !defined __amd64__
 #ifdef _MSC_VER
+
+
+BOOL WINAPI IsDebuggerPresent(void);
 #define DEBUG_BREAK	if( IsDebuggerPresent() ) \
 		_asm{ int 3 }
 #else
