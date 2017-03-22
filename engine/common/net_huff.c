@@ -534,6 +534,45 @@ void Huff_CompressPacket( sizebuf_t *msg, int offset )
 	msg->iCurBit = (offset + outLen) << 3;
 	Q_memcpy( data, buffer, outLen );
 }
+/*
+============
+Huff_CompressData
+
+Compress generic data buffer using dynamic Huffman tree
+============
+*/
+void Huff_CompressData( byte *data, size_t *length )
+{
+	tree_t	tree;
+	byte	buffer[NET_MAX_PAYLOAD];
+	int	outLen;
+	int	i, inLen;
+
+	inLen = *length;
+	if( inLen <= 0 || inLen >= NET_MAX_PAYLOAD )
+	{
+		MsgDev( D_ERROR, "Huff_CompressData: overflow\n");
+		return;
+	}
+
+	Huff_PrepareTree( tree );
+
+	buffer[0] = inLen >> 8;
+	buffer[1] = inLen & 0xFF;
+	huffBitPos = 16;
+
+	for( i = 0; i < inLen; i++ )
+	{
+		Huff_EmitByteDynamic( (void**)tree, data[i], buffer );
+		Huff_AddReference( tree, data[i] );
+	}
+
+	outLen = (huffBitPos >> 3) + 1;
+	*length = outLen;
+	Q_memcpy( data, buffer, outLen );
+}
+
+
 
 /*
 ============
@@ -560,9 +599,12 @@ void Huff_DecompressPacket( sizebuf_t *msg, int offset )
 
 	outLen = ( data[0] << 8 ) + data[1];
 	huffBitPos = 16;
-	
+
 	if( outLen > NET_MAX_PAYLOAD - offset )
+	{
 		outLen = NET_MAX_PAYLOAD - offset;
+		MsgDev( D_ERROR, "Huff_DecompressData: overflow\n");
+	}
 
 	for( i = 0; i < outLen; i++ )
 	{
@@ -588,6 +630,58 @@ void Huff_DecompressPacket( sizebuf_t *msg, int offset )
 	}
 
 	msg->nDataBits = ( offset + outLen ) << 3;
+	Q_memcpy( data, buffer, outLen );
+}
+
+/*
+============
+Huff_DecompressData
+
+Decompress generic data buffer using dynamic Huffman tree
+============
+*/
+void Huff_DecompressData( byte *data, size_t *length )
+{
+	tree_t	tree;
+	byte	buffer[NET_MAX_PAYLOAD];
+	int	outLen;
+	int	inLen = *length;
+	int	ch, i, j;
+
+	if( inLen <= 0 ) return;
+
+	Huff_PrepareTree( tree );
+
+	outLen = ( data[0] << 8 ) + data[1];
+	huffBitPos = 16;
+
+	if( outLen > NET_MAX_PAYLOAD )
+		outLen = NET_MAX_PAYLOAD;
+
+	for( i = 0; i < outLen; i++ )
+	{
+		if(( huffBitPos >> 3 ) > inLen )
+		{
+			buffer[i] = 0;
+			break;
+		}
+
+		ch = Huff_GetByteFromTree( (void**)tree[2], data );
+
+		if( ch == NOT_REFERENCED )
+		{
+			ch = 0; // just read 8 bits
+			for( j = 0; j < 8; j++ )
+			{
+				ch <<= 1;
+				ch |= Huff_GetBit( data );
+			}
+		}
+		buffer[i] = ch;
+		Huff_AddReference( tree, ch );
+	}
+
+	*length = outLen;
 	Q_memcpy( data, buffer, outLen );
 }
 

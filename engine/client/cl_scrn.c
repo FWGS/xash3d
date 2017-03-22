@@ -214,13 +214,16 @@ void SCR_NetSpeeds( void )
 	case 1:
 		if( cls.netchan.compress )
 		{
-			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\n Huffman %s\nUncompressed %s\n",
-			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received ), Q_memprint( cls.netchan.total_received_uncompressed ));
+			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\n Huffman %s\nUncompressed %s\nSplit %s\n",
+			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received ), Q_memprint( cls.netchan.total_received_uncompressed ),
+						Q_memprint( cls.netchan.netsplit.total_received ) );
 		}
 		else
 		{
-			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\nUncompressed %s\n",
-			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received_uncompressed ));
+			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\nUncompressed %s\nSplit %s/%s(%f)\n",
+			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received_uncompressed ),
+						Q_memprint( cls.netchan.netsplit.total_received ), Q_memprint( cls.netchan.netsplit.total_received_uncompressed ),
+						((float)cls.netchan.netsplit.total_received) / cls.netchan.netsplit.total_received_uncompressed );
 		}
 		break;
 	case 2:

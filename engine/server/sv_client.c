@@ -253,6 +253,11 @@ gotnewcl:
 		if( maxpacket > sv_maxpacket->integer )
 			maxpacket = sv_maxpacket->integer;
 		newcl->netchan.maxpacket = maxpacket;
+
+		if( sv_allow_compress->integer && sv_allow_split->integer
+				&& !( requested_extensions & NET_EXT_HUFF )
+				&& ( requested_extensions & NET_EXT_SPLITHUFF ) )
+			newcl->netchan.splitcompress = true, extensions |= NET_EXT_SPLITHUFF;
 	}
 
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf

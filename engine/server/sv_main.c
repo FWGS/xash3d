@@ -379,7 +379,8 @@ void SV_ReadPackets( void )
 			}
 
 			// Will rewrite existing packet by merged
-			if( !NetSplit_GetLong( &cl->netchan.netsplit, &net_from, net_message_buffer, &curSize ) )
+			// Client will not send compressed split packets
+			if( !NetSplit_GetLong( &cl->netchan.netsplit, &net_from, net_message_buffer, &curSize, false ) )
 				continue;
 		}
 		BF_Init( &net_message, "ClientPacket", net_message_buffer, curSize );

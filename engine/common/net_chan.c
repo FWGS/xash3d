@@ -115,7 +115,7 @@ Collect fragmrnts with signature 0xFFFFFFFE to single packet
 return true when got full packet
 ======================
 */
-qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *length )
+qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *length, qboolean decompress )
 {
 	netsplit_packet_t *packet = (netsplit_packet_t*)data;
 	netsplit_chain_packet_t * p;
@@ -170,10 +170,18 @@ qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *l
 	if( p->received == packet->count )
 	{
 		//ASSERT( packet->length % packet->part == (*length - NETSPLIT_HEADER_SIZE) % packet->part );
-		*length = packet->length;
+		size_t len = packet->length;
+
+		ns->total_received += len;
+
+		if( decompress )
+			Huff_DecompressData( p->data, &len );
+
+		ns->total_received_uncompressed += len;
+		*length = len;
 
 		// MsgDev( D_NOTE, "NetSplit_GetLong: packet from %s, id %d received %d length %d\n", NET_AdrToString( *from ), (int)packet->id, (int)p->received, (int)packet->length );
-		Q_memcpy( data, p->data, packet->length );
+		Q_memcpy( data, p->data, len );
 		return true;
 	}
 	else
@@ -190,10 +198,13 @@ NetSplit_SendLong
 Send parts that are less or equal maxpacket
 ======================
 */
-void NetSplit_SendLong( netsrc_t sock, size_t length, const void *data, netadr_t to, unsigned int maxpacket, unsigned int id )
+void NetSplit_SendLong( netsrc_t sock, size_t length, const void *data, netadr_t to, unsigned int maxpacket, unsigned int id, qboolean compress )
 {
 	netsplit_packet_t packet = {0};
 	unsigned int part = maxpacket - NETSPLIT_HEADER_SIZE;
+
+	if( compress )
+		Huff_CompressData( data, &length );
 
 	packet.signature = 0xFFFFFFFE;
 	packet.id = id;
@@ -1552,8 +1563,8 @@ void Netchan_TransmitBits( netchan_t *chan, int length, byte *data )
 	{
 		unsigned int size = BF_GetNumBytesWritten( &send );
 
-		if( chan->split && chan->remote_address.type != NA_LOOPBACK && size > chan->maxpacket )
-			NetSplit_SendLong( chan->sock, size, BF_GetData( &send ), chan->remote_address, chan->maxpacket, chan->splitid++ );
+		if( chan->split && size > chan->maxpacket )
+			NetSplit_SendLong( chan->sock, size, BF_GetData( &send ), chan->remote_address, chan->maxpacket, chan->splitid++, chan->splitcompress );
 		else
 			NET_SendPacket( chan->sock, size, BF_GetData( &send ), chan->remote_address );
 	}

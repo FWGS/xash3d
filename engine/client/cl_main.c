@@ -695,11 +695,16 @@ void CL_SendConnectPacket( void )
 
 	if( adr.type != NA_LOOPBACK )
 	{
-		if( Cvar_VariableInteger( "cl_enable_compress" ) )
+		qboolean huff = Cvar_VariableInteger( "cl_enable_compress" );
+		if( huff )
 			extensions |= NET_EXT_HUFF;
 
 		if( Cvar_VariableInteger( "cl_enable_split" ) )
+		{
 			extensions |= NET_EXT_SPLIT;
+			if( !huff && Cvar_VariableInteger( "cl_enable_splitcompress" ) )
+				extensions |= NET_EXT_SPLITHUFF;
+		}
 	}
 
 	Netchan_OutOfBandPrint( NS_CLIENT, adr, "connect %i %i %i \"%s\" %d\n", PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo( ), extensions );
@@ -1390,6 +1395,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		}
 
 		Netchan_Setup( NS_CLIENT, &cls.netchan, from, net_qport->integer );
+		cls.splitcompress = false;
 
 		if( extensions & NET_EXT_SPLIT )
 		{
@@ -1402,6 +1408,12 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 
 			cls.netchan.split = true;
 			MsgDev( D_INFO, "^2NET_EXT_SPLIT enabled^7 (packet sizes is %d/%d)\n", cl_maxpacket->integer, cls.netchan.maxpacket );
+
+			if( extensions & NET_EXT_SPLITHUFF )
+			{
+				MsgDev( D_INFO, "^2NET_EXT_SPLITHUFF enabled^7\n");
+				cls.splitcompress = true;
+			}
 		}
 
 		if( extensions & NET_EXT_HUFF )
@@ -1543,7 +1555,7 @@ void CL_ReadNetMessage( void )
 	{
 		if( *((int *)&net_message_buffer) == 0xFFFFFFFE )
 			// Will rewrite existing packet by merged
-			if( !NetSplit_GetLong( &cls.netchan.netsplit, &net_from, net_message_buffer, &curSize ) )
+			if( !NetSplit_GetLong( &cls.netchan.netsplit, &net_from, net_message_buffer, &curSize, cls.splitcompress ) )
 				continue;
 
 		BF_Init( &net_message, "ServerData", net_message_buffer, curSize );
@@ -1796,6 +1808,8 @@ void CL_InitLocal( void )
 
 	Cvar_Get( "cl_enable_compress", "0", CVAR_ARCHIVE, "request huffman compression from server" );
 	Cvar_Get( "cl_enable_split", "1", CVAR_ARCHIVE, "request packet split from server" );
+	Cvar_Get( "cl_enable_splitcompress", "0", CVAR_ARCHIVE, "request compressing all splitpackets" );
+
 	Cvar_Get( "cl_maxoutpacket", "0", CVAR_ARCHIVE, "max outcoming packet size (equal cl_maxpacket if 0)" );
 
 	// these two added to shut up CS 1.5 about 'unknown' commands

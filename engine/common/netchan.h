@@ -84,8 +84,9 @@ NET
 #define FRAG_NORMAL_STREAM		0
 #define FRAG_FILE_STREAM		1
 
-#define NET_EXT_HUFF	(1U<<0)
-#define NET_EXT_SPLIT	(1U<<1)
+#define NET_EXT_HUFF		(1U<<0)
+#define NET_EXT_SPLIT		(1U<<1)
+#define NET_EXT_SPLITHUFF	(1U<<2)
 
 // message data
 typedef struct
@@ -159,6 +160,8 @@ typedef struct netsplit_packet_s
 typedef struct netsplit_s
 {
 	netsplit_chain_packet_t packets[NETSPLIT_BACKUP];
+	unsigned long long total_received;
+	unsigned long long total_received_uncompressed;
 } netsplit_t;
 
 // Network Connection Channel
@@ -227,6 +230,7 @@ typedef struct netchan_s
 	size_t		total_received;
 	size_t		total_received_uncompressed;
 	qboolean	split;
+	qboolean	splitcompress;
 	unsigned int	maxpacket;
 	unsigned int	splitid;
 	netsplit_t netsplit;
@@ -259,11 +263,13 @@ void Netchan_FragSend( netchan_t *chan );
 void Netchan_Clear( netchan_t *chan );
 
 // packet splitting
-qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *length );
+qboolean NetSplit_GetLong(netsplit_t *ns, netadr_t *from, byte *data, size_t *length , qboolean decompress );
 
 // huffman compression
 void Huff_Init( void );
 void Huff_CompressPacket( sizebuf_t *msg, int offset );
 void Huff_DecompressPacket( sizebuf_t *msg, int offset );
+void Huff_CompressData( byte *data, size_t *length );
+void Huff_DecompressData( byte *data, size_t *length );
 
 #endif//NET_MSG_H
