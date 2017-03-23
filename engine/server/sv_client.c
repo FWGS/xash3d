@@ -711,18 +711,16 @@ Responds with short info for broadcast scans
 The second parameter should be the current protocol version number.
 ================
 */
-void SV_Info( netadr_t from )
+void SV_Info( netadr_t from, int version )
 {
 	char	string[MAX_INFO_STRING];
 	int	i, count = 0;
-	int	version;
 	char *gamedir = GI->gamefolder;
 
 	// ignore in single player
 	if( sv_maxclients->integer == 1 || !svs.initialized )
 		return;
 
-	version = Q_atoi( Cmd_Argv( 1 ));
 	string[0] = '\0';
 
 	if( version != PROTOCOL_VERSION )
@@ -3055,13 +3053,19 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	if( !Q_strcmp( c, "ping" )) SV_Ping( from );
 	else if( !Q_strcmp( c, "ack" )) SV_Ack( from );
 	else if( !Q_strcmp( c, "status" )) SV_Status( from );
-	else if( !Q_strcmp( c, "info" )) SV_Info( from );
+	else if( !Q_strcmp( c, "info" )) SV_Info( from, Q_atoi( Cmd_Argv(1) ) );
 	else if( !Q_strcmp( c, "getchallenge" )) SV_GetChallenge( from );
 	else if( !Q_strcmp( c, "connect" )) SV_DirectConnect( from );
 	else if( !Q_strcmp( c, "rcon" )) SV_RemoteCommand( from, msg );
 	else if( !Q_strcmp( c, "netinfo" )) SV_BuildNetAnswer( from );
 	else if( !Q_strcmp( c, "s")) SV_AddToMaster( from, msg );
 	else if( !Q_strcmp( c, "T" "Source" ) ) SV_TSourceEngineQuery( from );
+	else if( !Q_strcmp( c, "c" ) )
+	{
+		netadr_t to;
+		if( NET_StringToAdr( Cmd_Argv( 1 ), &to ) )
+			SV_Info( to, 48 );
+	}
 	else if( !Q_strcmp( c, "i" ) )
 	{
 		// A2A_PING
