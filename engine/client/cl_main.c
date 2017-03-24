@@ -666,6 +666,24 @@ void CL_Drop( void )
 
 	// This fixes crash in menu_playersetup after disconnecting from server
 	CL_ClearEdicts();
+
+	if( cls.need_save_config && !SV_Active() )
+		Cbuf_AddText( "host_writeconfig\n" );
+}
+
+/*
+================
+CL_TrySaveConfig_f
+
+Connfiguration changed in menu, so schedule config update
+================
+*/
+void CL_TrySaveConfig_f( void )
+{
+	if( cls.state <= ca_disconnected )
+		Cbuf_AddText( "host_writeconfig\n" );
+	else
+		cls.need_save_config = true;
 }
 
 /*
@@ -1882,6 +1900,7 @@ void CL_InitLocal( void )
 // 	Cmd_AddCommand ("packet", CL_Packet_f, "send a packet with custom contents" );
 
 	Cmd_AddCommand ("precache", CL_Precache_f, "precache specified resource (by index)" );
+	Cmd_AddCommand( "trysaveconfig", CL_TrySaveConfig_f, "schedule config save on disconnected state" );
 }
 
 //============================================================================

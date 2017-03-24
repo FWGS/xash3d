@@ -527,6 +527,7 @@ typedef struct
 	file_t		*demoheader;		// contain demo startup info in case we record a demo on this level
 	qboolean keybind_changed;
 	qboolean splitcompress;			// enabled only on server->client netchan
+	qboolean need_save_config;
 } client_static_t;
 
 #ifdef __cplusplus
