@@ -234,6 +234,7 @@ void EXPORT Host_AbortCurrentFrame( void )
 #else // sj/lj not supported, so re-run main loop with shifted stack
 	Host_FrameLoop();
 #endif
+	exit(127);
 }
 
 /*
