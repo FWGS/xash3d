@@ -1314,7 +1314,7 @@ void Host_WriteConfig( void )
 	file_t	*f;
 #ifndef XASH_DEDICATED
 	// if client not loaded, client cvars will lost
-	if( !clgame.hInstance )
+	if( !clgame.hInstance || Sys_CheckParm( "-nowriteconfig" ) )
 	{
 		MsgDev( D_NOTE, "Client not loaded, skipping config save!\n" );
 		return;
@@ -1418,7 +1418,12 @@ void Host_WriteOpenGLConfig( void )
 	file_t	*f;
 
 	MsgDev( D_NOTE, "Host_WriteGLConfig()\n" );
+
+	if( Sys_CheckParm( "-nowriteconfig" ) )
+		return;
+
 	f = FS_Open( "opengl.cfg.new", "w", false );
+
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
@@ -1449,7 +1454,12 @@ void Host_WriteVideoConfig( void )
 		return;
 
 	MsgDev( D_NOTE, "Host_WriteVideoConfig()\n" );
+
+	if( Sys_CheckParm( "-nowriteconfig" ) )
+		return;
+
 	f = FS_Open( "video.cfg.new", "w", false );
+
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
