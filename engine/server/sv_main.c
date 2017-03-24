@@ -19,7 +19,7 @@ GNU General Public License for more details.
 
 #include "errno.h"
 #include "Sequence.h"
-#define HEARTBEAT_SECONDS	300.0f 		// 300 seconds
+#define HEARTBEAT_SECONDS	(sv_nat->integer?60.0f:300.0f) 		// 1 or 5 minutes
 
 convar_t	*sv_zmax;
 convar_t	*sv_novis;			// disable server culling entities by vis
