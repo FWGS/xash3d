@@ -1172,6 +1172,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		// listenserver/multiplayer config.
 		// need load it to update menu options.
 		Cbuf_AddText( "exec game.cfg\n" );
+		Cmd_AddCommand( "host_writeconfig", Host_WriteConfig, "force save configs. use with care" );
 	}
 
 	host.errorframe = 0;
@@ -1238,6 +1239,7 @@ void EXPORT Host_Shutdown( void )
 			// restore all latched cheat cvars
 			Cvar_SetCheatState( true );
 			Host_WriteConfig();
+			IN_TouchWriteConfig();
 			host.skip_configs = false;
 		}
 		host.state = HOST_SHUTDOWN; // prepare host to normal shutdown

@@ -1321,7 +1321,7 @@ void Host_WriteConfig( void )
 	}
 
 	MsgDev( D_NOTE, "Host_WriteConfig()\n" );
-	f = FS_Open( "config.cfg", "w", true );
+	f = FS_Open( "config.cfg.new", "w", true );
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n");
@@ -1335,12 +1335,15 @@ void Host_WriteConfig( void )
 		FS_Printf( f, "exec userconfig.cfg\n" );
 
 		FS_Close( f );
+		FS_Rename( "config.cfg", "config.cfg.bak" );
+		FS_Rename( "config.cfg.new", "config.cfg" );
+		FS_Delete( "config.cfg.bak" );
 	}
 	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
 
 	if( cls.initialized && ( cls.keybind_changed || !FS_FileExists( "keyboard.cfg", true ) ) )
 	{
-		f = FS_Open( "keyboard.cfg", "w", true );
+		f = FS_Open( "keyboard.cfg.new", "w", true );
 		if( f )
 		{
 			FS_Printf( f, "//=======================================================================\n");
@@ -1359,12 +1362,14 @@ void Host_WriteConfig( void )
 				FS_Printf( f, "+jlook\n" );
 
 			FS_Close( f );
+			FS_Rename( "keyboard.cfg", "keyboard.cfg.bak" );
+			FS_Rename( "keyboard.cfg.new", "keyboard.cfg" );
+			FS_Delete( "keyboard.cfg.bak" );
 		}
 		else MsgDev( D_ERROR, "Couldn't write keyboard.cfg.\n" );
 	}
 	else
 		MsgDev( D_NOTE, "Keyboard configuration not changed\n" );
-	IN_TouchWriteConfig();
 #endif
 }
 
@@ -1413,7 +1418,7 @@ void Host_WriteOpenGLConfig( void )
 	file_t	*f;
 
 	MsgDev( D_NOTE, "Host_WriteGLConfig()\n" );
-	f = FS_Open( "opengl.cfg", "w", false );
+	f = FS_Open( "opengl.cfg.new", "w", false );
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
@@ -1421,7 +1426,10 @@ void Host_WriteOpenGLConfig( void )
 		FS_Printf( f, "//\t\t    opengl.cfg - archive of opengl extension cvars\n");
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteOpenGLVariables( f );
-		FS_Close( f );	
+		FS_Close( f );
+		FS_Rename( "opengl.cfg", "opengl.cfg.bak" );
+		FS_Rename( "opengl.cfg.new", "opengl.cfg" );
+		FS_Delete( "opengl.cfg.bak" );
 	}                                                
 	else MsgDev( D_ERROR, "Can't update opengl.cfg.\n" );
 }
@@ -1441,7 +1449,7 @@ void Host_WriteVideoConfig( void )
 		return;
 
 	MsgDev( D_NOTE, "Host_WriteVideoConfig()\n" );
-	f = FS_Open( "video.cfg", "w", false );
+	f = FS_Open( "video.cfg.new", "w", false );
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
@@ -1449,7 +1457,10 @@ void Host_WriteVideoConfig( void )
 		FS_Printf( f, "//\t\tvideo.cfg - archive of renderer variables\n");
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteRenderVariables( f );
-		FS_Close( f );	
+		FS_Close( f );
+		FS_Rename( "video.cfg", "video.cfg.bak" );
+		FS_Rename( "video.cfg.new", "video.cfg" );
+		FS_Delete( "video.cfg.bak" );
 	}                                                
 	else MsgDev( D_ERROR, "Can't update video.cfg.\n" );
 }
