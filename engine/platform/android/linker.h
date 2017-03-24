@@ -63,7 +63,7 @@ enum {
   RT_ADD,
   RT_DELETE
 };
-
+#if 0
 struct r_debug {
   int32_t r_version;
   link_map_t* r_map;
@@ -71,7 +71,7 @@ struct r_debug {
   int32_t r_state;
   uintptr_t r_ldbase;
 };
-
+#endif
 #define FLAG_LINKED     0x00000001
 #define FLAG_EXE        0x00000004 // The main executable
 #define FLAG_LINKER     0x00000010 // The linker itself
