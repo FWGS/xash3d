@@ -315,6 +315,7 @@ static void UI_InternetGames_Callback( void *self, int event )
 		uiStatic.numServers = 0;
 		uiInternetGames.gameList.numItems = 0; // reset it
 		uiInternetGames.gameList.curItem = 0; // reset it
+		uiInternetGames.gameList.numRows = 0;
 		for( int i = 0 ; i < UI_MAX_SERVERS; i++ )
 			uiInternetGames.gameDescriptionPtr[i] = NULL;
 		break;
@@ -329,6 +330,7 @@ static void UI_InternetGames_Callback( void *self, int event )
 		uiStatic.numServers = 0;
 		uiInternetGames.gameList.numItems = 0; // reset it
 		uiInternetGames.gameList.curItem = 0; // reset it
+		uiInternetGames.gameList.numRows = 0;
 		for( int i = 0 ; i < UI_MAX_SERVERS; i++ )
 			uiInternetGames.gameDescriptionPtr[i] = NULL;
 		break;
