@@ -38,6 +38,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_ALWAYSRUN		8
 #define ID_MAXPACKET		9
 #define ID_MAXPACKETMESSAGE		10
+#define ID_ANDROIDSLEEP			11
 
 typedef struct
 {
@@ -46,6 +47,7 @@ typedef struct
 	int		allowDownload;
 	int		alwaysRun;
 	float maxPacket;
+	int android_sleep;
 } uiGameValues_t;
 
 typedef struct
@@ -63,6 +65,7 @@ typedef struct
 	menuCheckBox_s	hand;
 	menuCheckBox_s	allowDownload;
 	menuCheckBox_s	alwaysRun;
+	menuCheckBox_s	android_sleep;
 
 	menuSpinControl_s	maxPacket;
 	menuAction_s	maxPacketmessage1;
@@ -104,6 +107,7 @@ static void UI_GameOptions_UpdateConfig( void )
 	CVAR_SET_FLOAT( "sv_allow_download", uiGameOptions.allowDownload.enabled );
 	CVAR_SET_FLOAT( "fps_max", uiGameOptions.maxFPS.curValue );
 	CVAR_SET_FLOAT( "cl_run", uiGameOptions.alwaysRun.enabled );
+	CVAR_SET_FLOAT( "android_sleep", uiGameOptions.android_sleep.enabled );
 }
 
 /*
@@ -118,6 +122,7 @@ static void UI_GameOptions_DiscardChanges( void )
 	CVAR_SET_FLOAT( "fps_max", uiGameInitial.maxFPS );
 	CVAR_SET_FLOAT( "cl_run", uiGameInitial.alwaysRun );
 	CVAR_SET_FLOAT( "cl_maxpacket", uiGameInitial.maxPacket );
+	CVAR_SET_FLOAT( "android_sleep", uiGameInitial.android_sleep );
 }
 
 /*
@@ -154,6 +159,9 @@ static void UI_GameOptions_GetConfig( void )
 	if( CVAR_GET_FLOAT( "sv_allow_download" ))
 		uiGameInitial.allowDownload = uiGameOptions.allowDownload.enabled = 1;
 
+	if( CVAR_GET_FLOAT( "android_sleep" ))
+		uiGameInitial.android_sleep = uiGameOptions.android_sleep.enabled = 1;
+
 	UI_GameOptions_UpdateConfig ();
 }
 
@@ -171,6 +179,7 @@ static void UI_GameOptions_Callback( void *self, int event )
 	case ID_HAND:
 	case ID_ALLOWDOWNLOAD:
 	case ID_ALWAYSRUN:
+	case ID_ANDROIDSLEEP:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -300,11 +309,20 @@ static void UI_GameOptions_Init( void )
 	uiGameOptions.alwaysRun.generic.callback = UI_GameOptions_Callback;
 	uiGameOptions.alwaysRun.generic.statusText = "Switch between run/step models when pressed 'run' button";
 
+	uiGameOptions.android_sleep.generic.id = ID_ANDROIDSLEEP;
+	uiGameOptions.android_sleep.generic.type = QMTYPE_CHECKBOX;
+	uiGameOptions.android_sleep.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
+	uiGameOptions.android_sleep.generic.x = 280;
+	uiGameOptions.android_sleep.generic.y = 510;
+	uiGameOptions.android_sleep.generic.name = "Pause in background (Android)";
+	uiGameOptions.android_sleep.generic.callback = UI_GameOptions_Callback;
+	uiGameOptions.android_sleep.generic.statusText = "Disable to run server in background";
+
 	uiGameOptions.maxPacket.generic.id = ID_MAXPACKET;
 	uiGameOptions.maxPacket.generic.type = QMTYPE_SPINCONTROL;
 	uiGameOptions.maxPacket.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
 	uiGameOptions.maxPacket.generic.x = 315;
-	uiGameOptions.maxPacket.generic.y = 560;
+	uiGameOptions.maxPacket.generic.y = 620;
 	uiGameOptions.maxPacket.generic.width = 168;
 	uiGameOptions.maxPacket.generic.height = 26;
 	uiGameOptions.maxPacket.generic.callback = UI_GameOptions_Callback;
@@ -317,7 +335,7 @@ static void UI_GameOptions_Init( void )
 	uiGameOptions.maxPacketmessage1.generic.type = QMTYPE_ACTION;
 	uiGameOptions.maxPacketmessage1.generic.flags = QMF_SMALLFONT|QMF_INACTIVE|QMF_DROPSHADOW;
 	uiGameOptions.maxPacketmessage1.generic.x = 280;
-	uiGameOptions.maxPacketmessage1.generic.y = 520;
+	uiGameOptions.maxPacketmessage1.generic.y = 580;
 	uiGameOptions.maxPacketmessage1.generic.name = "Limit network packet size";
 	uiGameOptions.maxPacketmessage1.generic.color = uiColorHelp;
 
@@ -325,7 +343,7 @@ static void UI_GameOptions_Init( void )
 	uiGameOptions.maxPacketmessage2.generic.type = QMTYPE_ACTION;
 	uiGameOptions.maxPacketmessage2.generic.flags = QMF_SMALLFONT|QMF_INACTIVE|QMF_DROPSHADOW;
 	uiGameOptions.maxPacketmessage2.generic.x = 280;
-	uiGameOptions.maxPacketmessage2.generic.y = 600;
+	uiGameOptions.maxPacketmessage2.generic.y = 660;
 	uiGameOptions.maxPacketmessage2.generic.name = "^3Use 700 or less if connection hangs\nafter \"^6Spooling demo header^3\" message";
 	uiGameOptions.maxPacketmessage2.generic.color = uiColorWhite;
 
@@ -338,6 +356,9 @@ static void UI_GameOptions_Init( void )
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.hand );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.allowDownload );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.alwaysRun );
+#ifdef __ANDROID__
+	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.android_sleep );
+#endif
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacket );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacketmessage1 );
 	UI_AddItem( &uiGameOptions.menu, (void *)&uiGameOptions.maxPacketmessage2 );
