@@ -47,15 +47,15 @@ const char	*uiSoundMove	= "";		// Xash3D not use movesound
 const char	*uiSoundNull	= "";
 
 int		uiColorHelp	= 0xFFFFFFFF;	// 255, 255, 255, 255	// hint letters color
-int		uiPromptBgColor	= 0xFF404040;	// 64,  64,  64,  255	// dialog background color
+int		uiPromptBgColor	= 0x80404040;	// 64,  64,  64,  255	// dialog background color
 int		uiPromptTextColor	= 0xFFF0B418;	// 255, 160,  0,  255	// dialog or button letters color
 int		uiPromptFocusColor	= 0xFFFFFF00;	// 255, 255,  0,  255	// dialog or button focus letters color
 int		uiInputTextColor	= 0xFFC0C0C0;	// 192, 192, 192, 255
-int		uiInputBgColor	= 0xFF404040;	// 64,  64,  64,  255	// field, scrollist, checkbox background color
+int		uiInputBgColor	= 0x80404040;	// 64,  64,  64,  255	// field, scrollist, checkbox background color
 int		uiInputFgColor	= 0xFF555555;	// 85,  85,  85,  255	// field, scrollist, checkbox foreground color
 int		uiColorWhite	= 0xFFFFFFFF;	// 255, 255, 255, 255	// useful for bitmaps
-int		uiColorDkGrey	= 0xFF404040;	// 64,  64,  64,  255	// shadow and grayed items
-int		uiColorBlack	= 0xFF000000;	//  0,   0,   0,  255	// some controls background
+int		uiColorDkGrey	= 0x80404040;	// 64,  64,  64,  255	// shadow and grayed items
+int		uiColorBlack	= 0x80000000;	//  0,   0,   0,  255	// some controls background
 int		uiColorConsole	= 0xFFF0B418;	// just for reference 
 
 // color presets (this is nasty hack to allow color presets to part of text)
