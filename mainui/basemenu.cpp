@@ -54,7 +54,7 @@ int		uiInputTextColor	= 0xFFC0C0C0;	// 192, 192, 192, 255
 int		uiInputBgColor	= 0x80404040;	// 64,  64,  64,  255	// field, scrollist, checkbox background color
 int		uiInputFgColor	= 0xFF555555;	// 85,  85,  85,  255	// field, scrollist, checkbox foreground color
 int		uiColorWhite	= 0xFFFFFFFF;	// 255, 255, 255, 255	// useful for bitmaps
-int		uiColorDkGrey	= 0x80404040;	// 64,  64,  64,  255	// shadow and grayed items
+int		uiColorDkGrey	= 0xB0404040;	// 64,  64,  64,  255	// shadow and grayed items
 int		uiColorBlack	= 0x80000000;	//  0,   0,   0,  255	// some controls background
 int		uiColorConsole	= 0xFFF0B418;	// just for reference 
 
@@ -256,7 +256,7 @@ void UI_DrawString( int x, int y, int w, int h, const char *string, const int co
 
 	if( shadow )
 	{
-		shadowModulate = PackAlpha( uiColorBlack, UnpackAlpha( color ));
+		shadowModulate = PackAlpha( uiColorBlack, UnpackAlpha( color )>>1);
 
 		ofsX = charW / 8;
 		ofsY = charH / 8;
