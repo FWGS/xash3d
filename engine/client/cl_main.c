@@ -668,7 +668,10 @@ void CL_Drop( void )
 	CL_ClearEdicts();
 
 	if( cls.need_save_config && !SV_Active() )
+	{
 		Cbuf_AddText( "host_writeconfig\n" );
+		cls.need_save_config = false;
+	}
 }
 
 /*
