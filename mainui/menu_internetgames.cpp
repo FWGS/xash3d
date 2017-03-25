@@ -319,6 +319,8 @@ static void UI_InternetGames_Callback( void *self, int event )
 			uiInternetGames.gameDescriptionPtr[i] = NULL;
 		break;
 	case ID_NAT:
+		if( uiInternetGames.refreshTime2 > uiStatic.realTime )
+		    break;
 		CVAR_SET_FLOAT( "cl_nat", 1 );
 		uiInternetGames.direct.generic.flags &= ~QMF_GRAYED;
 		uiInternetGames.nat.generic.flags |= QMF_GRAYED;
