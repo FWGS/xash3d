@@ -61,6 +61,41 @@ convar_t 	*cmd_scripting = NULL;
 
 static int num_decals;
 
+static const char *usage_str = "Usage:\n"
+"\t    "
+#ifndef __ANDROID__
+"<xash_binary>"
+#ifdef _WIN32
+".exe"
+#endif
+#endif
+" [options] [+command1] [+command2 arg]\n"
+"Availiable options:\n"
+#define O(x,y) "\t    "x"\t\t    "y"\n"
+O("-dev <level>  ","set developer level")
+O("-log          ","write log to \"engine.log")
+O("-toconsole    ","start witn console open")
+#ifdef __ANDROID__
+O("-nonativeegl  ","use java egl implementation. Use if screen does not update")
+#endif
+O("-nojoy        ","disable joystick support")
+O("-nosound      ","disable sound")
+O("-nowriteconfig","disable config save")
+O("-casesensitive","disable case-insensitivity hacks")
+#ifndef __ANDROID__
+O("-dedicated    ","run in deficated server mode")
+#endif
+#ifdef _WIN32
+O("-noavi        ","disable AVI support")
+O("-nointro      ","disable intro video")
+O("-nowcon       ","disable win32 console")
+O("-noipx        ","disable IPX")
+#endif
+O("-noip         ","disable TCP/IP")
+O("-noch         ","disable crashhandler")
+O("-disablehelp  ","disable this message")
+#undef O
+;
 // these cvars will be duplicated on each client across network
 int Host_ServerState( void )
 {
@@ -926,6 +961,13 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		#endif
 	}
 
+	if( !Sys_CheckParm( "-disablehelp" ) )
+	{
+	    if( Sys_CheckParm( "-help" ) || Sys_CheckParm( "-h" ) || Sys_CheckParm( "--help" ) )
+	    {
+		Sys_Error( usage_str );
+	    }
+	}
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
