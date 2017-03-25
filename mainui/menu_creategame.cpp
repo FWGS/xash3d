@@ -36,7 +36,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_MAXCLIENTS	7
 #define ID_HOSTNAME		8
 #define ID_PASSWORD		9
-#define ID_HLTV		10
+#define ID_NAT		10
 #define ID_DEDICATED	11
 
 #define ID_MSGBOX	 	12
@@ -64,7 +64,7 @@ typedef struct
 	menuField_s	maxClients;
 	menuField_s	hostName;
 	menuField_s	password;
-	menuCheckBox_s	hltv;
+	menuCheckBox_s	nat;
 	menuCheckBox_s	dedicatedServer;
 
 	// newgame prompt dialog
@@ -103,7 +103,7 @@ static void UI_CreateGame_Begin( void )
 	CVAR_SET_FLOAT( "maxplayers", atoi( uiCreateGame.maxClients.buffer ));
 	CVAR_SET_STRING( "hostname", uiCreateGame.hostName.buffer );
 	CVAR_SET_STRING( "defaultmap", uiCreateGame.mapName[uiCreateGame.mapsList.curItem] );
-	CVAR_SET_FLOAT( "hltv", uiCreateGame.hltv.enabled );
+	CVAR_SET_FLOAT( "sv_nat", uiCreateGame.nat.enabled );
 
 	BACKGROUND_TRACK( NULL, NULL );
 
@@ -155,7 +155,7 @@ static void UI_PromptDialog( void )
 	uiCreateGame.hostName.generic.flags ^= QMF_INACTIVE;
 	uiCreateGame.password.generic.flags ^= QMF_INACTIVE;
 	uiCreateGame.dedicatedServer.generic.flags ^= QMF_INACTIVE;
-	uiCreateGame.hltv.generic.flags ^= QMF_INACTIVE;
+	uiCreateGame.nat.generic.flags ^= QMF_INACTIVE;
 	uiCreateGame.mapsList.generic.flags ^= QMF_INACTIVE;
 
 	uiCreateGame.msgBox.generic.flags ^= QMF_HIDDEN;
@@ -245,7 +245,7 @@ static void UI_CreateGame_Callback( void *self, int event )
 
 	switch( item->id )
 	{
-	case ID_HLTV:
+	case ID_NAT:
 	case ID_DEDICATED:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
@@ -353,14 +353,15 @@ static void UI_CreateGame_Init( void )
 	uiCreateGame.dedicatedServer.generic.callback = UI_CreateGame_Callback;
 	uiCreateGame.dedicatedServer.generic.statusText = "faster, but you can't join the server from this machine";
 
-	uiCreateGame.hltv.generic.id = ID_HLTV;
-	uiCreateGame.hltv.generic.type = QMTYPE_CHECKBOX;
-	uiCreateGame.hltv.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
-	uiCreateGame.hltv.generic.name = "HLTV";
-	uiCreateGame.hltv.generic.x = 72;
-	uiCreateGame.hltv.generic.y = 635;
-	uiCreateGame.hltv.generic.callback = UI_CreateGame_Callback;
-	uiCreateGame.hltv.generic.statusText = "enable hltv mode in multiplayer";
+	uiCreateGame.nat.generic.id = ID_NAT;
+	uiCreateGame.nat.generic.type = QMTYPE_CHECKBOX;
+	uiCreateGame.nat.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
+	uiCreateGame.nat.generic.name = "NAT";
+	uiCreateGame.nat.generic.x = 72;
+	uiCreateGame.nat.generic.y = 635;
+	uiCreateGame.nat.generic.callback = UI_CreateGame_Callback;
+	uiCreateGame.nat.generic.statusText = "Use NAT Bypass instead of direct mode";
+	uiCreateGame.nat.enabled = true;
 
 	uiCreateGame.hintMessage.generic.id = ID_TABLEHINT;
 	uiCreateGame.hintMessage.generic.type = QMTYPE_ACTION;
@@ -470,7 +471,7 @@ static void UI_CreateGame_Init( void )
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.hostName );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.password );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.dedicatedServer );
-	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.hltv );
+	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.nat );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.hintMessage );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.mapsList );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.msgBox );
