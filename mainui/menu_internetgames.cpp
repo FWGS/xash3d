@@ -230,9 +230,17 @@ static void UI_Background_Ownerdraw( void *self )
 	UI_FillRect( 777 * uiStatic.scaleX, 180 * uiStatic.scaleY, (1000-780+6) * uiStatic.scaleX, 4 * uiStatic.scaleY, 0xFF555555 );
 	UI_FillRect( 777 * uiStatic.scaleX, 184 * uiStatic.scaleY, 4 * uiStatic.scaleX, 38 * uiStatic.scaleY, 0xFF555555 );
 	if( !CVAR_GET_FLOAT( "cl_nat") )
+	{
+		uiInternetGames.nat.generic.flags &= ~QMF_GRAYED;
+		uiInternetGames.direct.generic.flags |= QMF_GRAYED;
 		UI_FillRect( 780 * uiStatic.scaleX, 184 * uiStatic.scaleY, 120 * uiStatic.scaleX, 38 * uiStatic.scaleY, 0xFF555555 );
+	}
 	else
+	{
+		uiInternetGames.direct.generic.flags &= ~QMF_GRAYED;
+		uiInternetGames.nat.generic.flags |= QMF_GRAYED;
 		UI_FillRect( 900 * uiStatic.scaleX, 184 * uiStatic.scaleY, 102 * uiStatic.scaleX, 38 * uiStatic.scaleY, 0xFF555555 );
+	}
 
 	UI_FillRect( 338 * uiStatic.scaleX, 223 * uiStatic.scaleY, 662 * uiStatic.scaleX, 34 * uiStatic.scaleY, 0x80000000 );
 	UI_FillRect( 340 * uiStatic.scaleX, 221 * uiStatic.scaleY, 662 * uiStatic.scaleX, 4 * uiStatic.scaleY, 0xFF555555 );
@@ -289,6 +297,7 @@ static void UI_InternetGames_Callback( void *self, int event )
 		uiInternetGames.refresh.generic.flags |= QMF_GRAYED;
 		break;
 	case ID_DONE:
+		CVAR_SET_FLOAT( "cl_nat", 0 );
 		UI_PopMenu();
 		break;
 	case ID_YES:

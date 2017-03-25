@@ -103,7 +103,7 @@ static void UI_CreateGame_Begin( void )
 	CVAR_SET_FLOAT( "maxplayers", atoi( uiCreateGame.maxClients.buffer ));
 	CVAR_SET_STRING( "hostname", uiCreateGame.hostName.buffer );
 	CVAR_SET_STRING( "defaultmap", uiCreateGame.mapName[uiCreateGame.mapsList.curItem] );
-	CVAR_SET_FLOAT( "sv_nat", uiCreateGame.nat.enabled );
+	CVAR_SET_FLOAT( "sv_nat", CVAR_GET_FLOAT("public")?uiCreateGame.nat.enabled:0 );
 
 	BACKGROUND_TRACK( NULL, NULL );
 
@@ -471,6 +471,7 @@ static void UI_CreateGame_Init( void )
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.hostName );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.password );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.dedicatedServer );
+	if( CVAR_GET_FLOAT("public") )
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.nat );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.hintMessage );
 	UI_AddItem( &uiCreateGame.menu, (void *)&uiCreateGame.mapsList );
