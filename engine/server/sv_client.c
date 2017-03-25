@@ -496,7 +496,8 @@ void SV_DropClient( sv_client_t *drop )
 	Q_memset( drop->physinfo, 0, MAX_INFO_STRING );
 	//drop->edict = 0;
 	//Q_memset( &drop->edict->v, 0, sizeof( drop->edict->v ) );
-	drop->edict->v.frags = 0;
+	if( drop->edict )
+		drop->edict->v.frags = 0;
 
 	// send notification to all other clients
 	SV_FullClientUpdate( drop, &sv.reliable_datagram );
