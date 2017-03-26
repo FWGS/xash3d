@@ -154,6 +154,8 @@ static void IN_TouchCheckCoords( float *x1, float *y1, float *x2, float *y2  );
 void IN_TouchWriteConfig( void )
 {
 	file_t	*f;
+	char newconfigfile[64];
+	char oldconfigfile[64];
 
 	if( !touch.first ) return;
 
@@ -162,7 +164,10 @@ void IN_TouchWriteConfig( void )
 	if( Sys_CheckParm( "-nowriteconfig" ) )
 		return;
 
-	f = FS_Open( touch_config_file->string, "w", true );
+	Q_snprintf( newconfigfile, 64, "%s.new", touch_config_file->string );
+	Q_snprintf( oldconfigfile, 64, "%s.bak", touch_config_file->string );
+
+	f = FS_Open( newconfigfile, "w", true );
 	if( f )
 	{
 		touchbutton2_t *button;
@@ -217,6 +222,8 @@ void IN_TouchWriteConfig( void )
 		}
 
 		FS_Close( f );
+		FS_Rename( touch_config_file->string, oldconfigfile );
+		FS_Rename( newconfigfile, touch_config_file->string );
 	}
 	else MsgDev( D_ERROR, "Couldn't write %s.\n", touch_config_file->string );
 }
