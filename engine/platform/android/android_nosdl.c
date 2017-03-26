@@ -87,9 +87,10 @@ typedef enum event_type
 	event_joyaxis,
 	event_joyadd,
 	event_joyremove,
-	event_onstop,
 	event_onpause,
-	event_ondestroy
+	event_ondestroy,
+	event_onresume,
+	event_onfocuschange
 } eventtype_t;
 
 typedef struct touchevent_s
@@ -317,10 +318,12 @@ void Android_RunEvents()
 			Joy_ButtonEvent( events.queue[i].arg, events.queue[i].button.button, (byte)events.queue[i].button.down );
 			break;
 		case event_ondestroy:
-			host.skip_configs = true; // skip config save, because engine may be killed during config save
+			//host.skip_configs = true; // skip config save, because engine may be killed during config save
 			Sys_Quit();
+			(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.notify );
 			break;
 		case event_onpause:
+#ifdef PARANOID_CONFIG_SAVE
 			switch( host.state )
 			{
 			case HOST_INIT:
@@ -333,16 +336,24 @@ void Android_RunEvents()
 				Cvar_SetCheatState( true );
 				Host_WriteConfig();
 			}
+#endif
+			// disable sound during call/screen-off
+			S_Activate( false );
+			host.state = HOST_NOFOCUS;
 			// stop blocking UI thread
 			(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.notify );
-			break;
-		case event_onstop:
-			// don't do anything.
-			// it's unsafe to move config save here
-			// but also we don't need to stop engine here
 
-			// stop blocking UI thread
-			(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.notify );
+			break;
+		case event_onresume:
+			// re-enable sound after onPause
+			host.state = HOST_FRAME;
+			S_Activate( true );
+			host.force_draw_version = true;
+			host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
+			break;
+		case event_onfocuschange:
+			host.force_draw_version = true;
+			host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
 			break;
 		}
 	}
@@ -494,6 +505,13 @@ DECLARE_JNI_INTERFACE( void, nativeSetPause, jint pause )
 		else
 			pthread_mutex_unlock( &events.framemutex );
 	}
+}
+
+DECLARE_JNI_INTERFACE_VOID( void, nativeUnPause )
+{
+	// UnPause engine before sending critical events
+	if( android_sleep && android_sleep->integer )
+			pthread_mutex_unlock( &events.framemutex );
 }
 
 DECLARE_JNI_INTERFACE( void, nativeKey, jint down, jint code )
@@ -651,10 +669,17 @@ DECLARE_JNI_INTERFACE( void, nativeJoyDel, jint id )
 	Android_PushEvent();
 }
 
-DECLARE_JNI_INTERFACE_VOID( void, nativeOnStop )
+DECLARE_JNI_INTERFACE_VOID( void, nativeOnResume )
 {
 	event_t *event = Android_AllocEvent();
-	event->type = event_onstop;
+	event->type = event_onresume;
+	Android_PushEvent();
+}
+
+DECLARE_JNI_INTERFACE_VOID( void, nativeOnFocusChange )
+{
+	event_t *event = Android_AllocEvent();
+	event->type = event_onfocuschange;
 	Android_PushEvent();
 }
 

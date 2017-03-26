@@ -1,5 +1,5 @@
 /*
-touchscreen.c - touchscreen support prototype
+touch.c - touchscreen support prototype
 Copyright (C) 2015 a1batross
 
 This program is free software: you can redistribute it and/or modify
@@ -158,6 +158,10 @@ void IN_TouchWriteConfig( void )
 	if( !touch.first ) return;
 
 	MsgDev( D_NOTE, "IN_TouchWriteConfig(): %s\n", touch_config_file->string );
+
+	if( Sys_CheckParm( "-nowriteconfig" ) )
+		return;
+
 	f = FS_Open( touch_config_file->string, "w", true );
 	if( f )
 	{

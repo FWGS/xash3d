@@ -186,6 +186,7 @@ static void UI_VidOptions_Callback( void *self, int event )
 	{
 	case ID_DONE:
 		UI_VidOptions_SetConfig();
+		CLIENT_COMMAND( FALSE, "trysaveconfig\n" );
 		UI_PopMenu();
 		break;
 	}

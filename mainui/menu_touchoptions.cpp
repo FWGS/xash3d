@@ -285,6 +285,7 @@ static void UI_TouchOptions_Callback( void *self, int event )
 	{
 	case ID_DONE:
 		UI_TouchOptions_SetConfig();
+		CLIENT_COMMAND( FALSE, "trysaveconfig\n" );
 		UI_PopMenu();
 		break;
 	case ID_RESET:

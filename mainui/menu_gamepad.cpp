@@ -198,6 +198,7 @@ static void UI_GamePad_SetConfig( void )
 	CVAR_SET_FLOAT( "joy_pitch", pitch );
 	CVAR_SET_FLOAT( "joy_yaw", yaw );
 	CVAR_SET_STRING( "joy_axis_binding", binding );
+	CLIENT_COMMAND( FALSE, "trysaveconfig\n" );
 }
 
 /*

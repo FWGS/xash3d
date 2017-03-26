@@ -60,6 +60,7 @@ convar_t    *cl_trace_messages;
 convar_t	*cl_charset;
 convar_t	*cl_sprite_nearest;
 convar_t	*cl_updaterate;
+convar_t	*cl_nat;
 convar_t	*hud_scale;
 convar_t	*cl_maxpacket;
 convar_t    *r_bmodelinterp;
@@ -665,6 +666,27 @@ void CL_Drop( void )
 
 	// This fixes crash in menu_playersetup after disconnecting from server
 	CL_ClearEdicts();
+
+	if( cls.need_save_config && !SV_Active() )
+	{
+		Cbuf_AddText( "host_writeconfig\n" );
+		cls.need_save_config = false;
+	}
+}
+
+/*
+================
+CL_TrySaveConfig_f
+
+Connfiguration changed in menu, so schedule config update
+================
+*/
+void CL_TrySaveConfig_f( void )
+{
+	if( cls.state <= ca_disconnected )
+		Cbuf_AddText( "host_writeconfig\n" );
+	else
+		cls.need_save_config = true;
 }
 
 /*
@@ -1001,7 +1023,7 @@ void CL_LocalServers_f( void )
 	Netchan_OutOfBandPrint( NS_CLIENT, adr, "info %i", PROTOCOL_VERSION );
 }
 
-#define MS_SCAN_REQUEST "1\xFF" "0.0.0.0:0\0" "\\gamedir\\"
+#define MS_SCAN_REQUEST "1\xFF" "0.0.0.0:0\0"
 
 /*
 =================
@@ -1012,6 +1034,10 @@ void CL_InternetServers_f( void )
 {
 	netadr_t	adr;
 	char	fullquery[512] = MS_SCAN_REQUEST;
+	char info[256] = "";
+
+	Info_SetValueForKey( info, "nat", cl_nat->string, 256 );
+	Info_SetValueForKey( info, "gamedir", GI->gamedir, 256 );
 
 	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
 	NET_Config( true ); // allow remote
@@ -1022,7 +1048,7 @@ void CL_InternetServers_f( void )
 		return;
 	}
 
-	NET_SendPacket( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strcpy( fullquery + sizeof( MS_SCAN_REQUEST ) - 1, GI->gamedir ), fullquery, adr );
+	NET_SendPacket( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strcpy( fullquery + sizeof( MS_SCAN_REQUEST ) - 1, info ), fullquery, adr );
 }
 
 /*
@@ -1799,6 +1825,7 @@ void CL_InitLocal( void )
 	cl_nosmooth = Cvar_Get( "cl_nosmooth", "0", CVAR_ARCHIVE, "smooth up stair climbing and interpolate position in multiplayer" );
 	cl_smoothtime = Cvar_Get( "cl_smoothtime", "0.1", CVAR_ARCHIVE, "time to smooth up" );
 	r_bmodelinterp = Cvar_Get( "r_bmodelinterp", "1", 0, "enable bmodel interpolation" );
+	cl_nat = Cvar_Get( "cl_nat", "0", 0, "Show servers running under nat" );
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
 	hud_utf8 = Cvar_Get( "hud_utf8", "0", CVAR_ARCHIVE, "Use utf-8 encoding for hud text" );
@@ -1876,6 +1903,7 @@ void CL_InitLocal( void )
 // 	Cmd_AddCommand ("packet", CL_Packet_f, "send a packet with custom contents" );
 
 	Cmd_AddCommand ("precache", CL_Precache_f, "precache specified resource (by index)" );
+	Cmd_AddCommand( "trysaveconfig", CL_TrySaveConfig_f, "schedule config save on disconnected state" );
 }
 
 //============================================================================

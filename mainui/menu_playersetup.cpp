@@ -306,6 +306,7 @@ static void UI_PlayerSetup_Callback( void *self, int event )
 	{
 	case ID_DONE:
 		UI_PlayerSetup_SetConfig();
+		CLIENT_COMMAND( FALSE, "trysaveconfig\n" );
 		UI_PopMenu();
 		break;
 	case ID_ADVOPTIONS:

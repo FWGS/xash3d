@@ -19,7 +19,7 @@ GNU General Public License for more details.
 
 #include "errno.h"
 #include "Sequence.h"
-#define HEARTBEAT_SECONDS	300.0f 		// 300 seconds
+#define HEARTBEAT_SECONDS	(sv_nat->integer?60.0f:300.0f) 		// 1 or 5 minutes
 
 convar_t	*sv_zmax;
 convar_t	*sv_novis;			// disable server culling entities by vis
@@ -95,6 +95,7 @@ convar_t	*sv_allow_split;
 convar_t	*sv_allow_compress;
 convar_t	*sv_maxpacket;
 convar_t	*sv_forcesimulating;
+convar_t	*sv_nat;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -798,7 +799,8 @@ void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 	Info_SetValueForKey(s, "version",   XASH_VERSION, sizeof( s ) ); // server region. 255 -- all regions
 	Info_SetValueForKey(s, "region",    "255", sizeof( s ) ); // server region. 255 -- all regions
 	Info_SetValueForKey(s, "product",   GI->gamefolder, sizeof( s ) ); // product? Where is the difference with gamedir?
-  
+	Info_SetValueForKey(s, "nat",       sv_nat->string, sizeof( s ) ); // Server running under NAT, use reverse connection
+
 	NET_SendPacket( NS_SERVER, Q_strlen( s ), s, from );
 }
 
@@ -924,6 +926,7 @@ void SV_Init( void )
 	sv_allow_split= Cvar_Get( "sv_allow_split", "1", CVAR_ARCHIVE, "allow splitting packets on server" );
 	sv_maxpacket = Cvar_Get( "sv_maxpacket", "2000", CVAR_ARCHIVE, "limit cl_maxpacket for all clients" );
 	sv_forcesimulating = Cvar_Get( "sv_forcesimulating", "0", CVAR_ARCHIVE, "forcing world simulating when server don't have active players" );
+	sv_nat = Cvar_Get( "sv_nat", "0", 0, "enable NAT bypass for this server" );
 
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
