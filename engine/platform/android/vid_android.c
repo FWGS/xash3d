@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "input.h"
 #include <GL/nanogl.h>
 #include "gl_vidnt.h"
+#include "filesystem.h"
 
 
 
@@ -669,9 +670,16 @@ R_Init_OpenGL
 */
 qboolean R_Init_OpenGL( void )
 {
+	searchpath_t	*search = FS_FindFile( GI->iconpath, NULL, true );
+
+	if( search )
+		Android_SetIcon( va( "%s/%s%s", host.rootdir, search->filename, GI->iconpath ) );
+
+	Android_SetTitle( GI->title );
 	VID_StartupGamma();
 	MsgDev( D_NOTE, "R_Init_OpenGL()\n");
 	Android_InitGL();
+
 	return VID_SetMode();
 }
 

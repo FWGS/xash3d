@@ -174,6 +174,8 @@ static struct jnimethods_s
 	jmethodID createGLContext;
 	jmethodID deleteGLContext;
 	jmethodID notify;
+	jmethodID setTitle;
+	jmethodID setIcon;
 	int width, height;
 } jni;
 
@@ -456,6 +458,8 @@ DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 	jni.createGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "createGLContext", "()Z");
 	jni.deleteGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "deleteGLContext", "()Z");
 	jni.notify = (*env)->GetStaticMethodID(env, jni.actcls, "engineThreadNotify", "()V");
+	jni.setTitle = (*env)->GetStaticMethodID(env, jni.actcls, "setTitle", "(Ljava/lang/String;)V");
+	jni.setIcon = (*env)->GetStaticMethodID(env, jni.actcls, "setIcon", "(Ljava/lang/String;)V");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -934,6 +938,15 @@ void Android_SwapInterval( int interval )
 		eglSwapInterval( negl.dpy, interval );
 }
 
+void Android_SetTitle( char *title )
+{
+	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.setTitle, (*jni.env)->NewStringUTF( jni.env, title ) );
+}
 
+void Android_SetIcon( char *path )
+{
+	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.setIcon, (*jni.env)->NewStringUTF( jni.env, path ) );
+
+}
 
 #endif
