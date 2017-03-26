@@ -23,6 +23,8 @@ typedef enum
 	event_motion
 } touchEventType;
 
+extern convar_t *touch_enable;
+
 // touch.c
 void IN_TouchDraw( void );
 void IN_TouchEditClear( void );
