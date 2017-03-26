@@ -71,7 +71,7 @@ static const char *usage_str = "Usage:\n"
 #endif
 " [options] [+command1] [+command2 arg]\n"
 "Availiable options:\n"
-#define O(x,y) "\t    "x"\t\t    "y"\n"
+#define O(x,y) "    "x"    "y"\n"
 O("-dev <level>  ","set developer level")
 O("-log          ","write log to \"engine.log")
 O("-toconsole    ","start witn console open")
