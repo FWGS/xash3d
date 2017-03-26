@@ -965,7 +965,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	{
 	    if( Sys_CheckParm( "-help" ) || Sys_CheckParm( "-h" ) || Sys_CheckParm( "--help" ) )
 	    {
-		Sys_Error( usage_str );
+		Sys_Error( "%s", usage_str );
 	    }
 	}
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
