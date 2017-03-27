@@ -1167,6 +1167,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	HTTP_Init();
 
+	ID_Init();
+
 	// post initializations
 	switch( host.type )
 	{

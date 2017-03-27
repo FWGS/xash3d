@@ -831,6 +831,11 @@ void HPAK_CheckSize( const char *filename );
 void HPAK_FlushHostQueue( void );
 
 //
+// identification.c
+//
+void ID_Init( void );
+
+//
 // keys.c
 //
 qboolean Key_IsDown( int keynum );
