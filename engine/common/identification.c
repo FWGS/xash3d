@@ -70,7 +70,7 @@ qboolean BloomFilter_ContainsString( bloomfilter_t filter, const char *str )
 	return (filter & value) == value;
 }
 
-void BloomFilter_BloomFilter_f( void )
+void ID_BloomFilter_f( void )
 {
 	bloomfilter_t value = 0;
 	int i;
@@ -85,7 +85,58 @@ void BloomFilter_BloomFilter_f( void )
 	//	Msg( "%s: %d\n", Cmd_Argv( i ), BloomFilter_ContainsString( value, Cmd_Argv( i ) ) );
 }
 
+qboolean ID_VerifyHEX( const char *hex )
+{
+	uint chars = 0;
+	char prev = 0;
+	qboolean monotonic = true; // detect 11:22...
+	int weight = 0;
+
+	while( *hex++ )
+	{
+		char ch = Q_tolower( *hex );
+
+		if( ch >= 'a' && ch <= 'f' || ch >= '0' && ch <= '9' )
+		{
+			if( prev && ( ch - prev < -1 || ch - prev > 1 ) )
+				monotonic = false;
+
+			if( ch >= 'a' )
+				chars |= 1 << (ch - 'a' + 10);
+			else
+				chars |= 1 << (ch - '0');
+
+			prev = ch;
+		}
+	}
+
+	if( monotonic )
+		return false;
+
+	while( chars )
+	{
+		if( chars & 1 )
+			weight++;
+
+		chars = chars >> 1;
+
+		if( weight > 2 )
+			return true;
+	}
+
+	return false;
+}
+
+void ID_VerifyHEX_f( void )
+{
+	if( ID_VerifyHEX( Cmd_Argv( 1 ) ) )
+		Msg( "Good\n" );
+	else
+		Msg( "Bad\n" );
+}
+
 void ID_Init( void )
 {
-	Cmd_AddCommand( "bloomfilter", BloomFilter_BloomFilter_f, "print bloomfilter raw value of arguments set");
+	Cmd_AddCommand( "bloomfilter", ID_BloomFilter_f, "print bloomfilter raw value of arguments set");
+	Cmd_AddCommand( "verifyhex", ID_VerifyHEX_f, "check if id source seems to be fake" );
 }
