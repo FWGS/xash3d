@@ -672,11 +672,6 @@ void CL_Drop( void )
 		Cbuf_AddText( "host_writeconfig\n" );
 		cls.need_save_config = false;
 	}
-
-	// reset to writable state
-	Cvar_FullSet( "touch_enable", va( "%s", touch_enable->string ), touch_enable->flags & ~CVAR_READ_ONLY );
-	Cvar_FullSet( "m_ignore", va( "%s", m_ignore->string ), m_ignore->flags & ~CVAR_READ_ONLY );
-	Cvar_FullSet( "joy_enable", va( "%s", Cvar_VariableString( "joy_enable" ) ), CVAR_ARCHIVE );
 }
 
 /*
@@ -1012,6 +1007,11 @@ void CL_Disconnect( void )
 
 	// restore gamefolder here (in case client was connected to another game)
 	CL_ChangeGame( GI->gamefolder, true );
+
+	// reset to writable state
+	Cvar_FullSet( "touch_enable", va( "%s", touch_enable->string ), touch_enable->flags & ~CVAR_READ_ONLY );
+	Cvar_FullSet( "m_ignore", va( "%s", m_ignore->string ), m_ignore->flags & ~CVAR_READ_ONLY );
+	Cvar_FullSet( "joy_enable", va( "%s", Cvar_VariableString( "joy_enable" ) ), CVAR_ARCHIVE );
 
 	// back to menu if developer mode set to "player" or "mapper"
 	if( host.developer > 2 ) return;
