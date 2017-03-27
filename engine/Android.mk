@@ -107,6 +107,7 @@ LOCAL_SRC_FILES := \
            common/host.c \
            common/hpak.c \
            common/infostring.c \
+           common/identification.c \
            common/library.c \
            common/mathlib.c \
            common/matrixlib.c \
