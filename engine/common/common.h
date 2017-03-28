@@ -834,6 +834,7 @@ void HPAK_FlushHostQueue( void );
 // identification.c
 //
 void ID_Init( void );
+const char *ID_GetMD5( void );
 
 //
 // keys.c

@@ -17,6 +17,8 @@ GNU General Public License for more details.
 #include <fcntl.h>
 #include <dirent.h>
 
+static char id_md5[33];
+
 /*
 ==========================================================
 
@@ -26,6 +28,8 @@ should be enough to determine if device exist in identifier
 ==========================================================
 */
 typedef integer64 bloomfilter_t;
+
+static bloomfilter_t id;
 
 #define bf64_mask ((1U<<6)-1)
 
@@ -98,7 +102,7 @@ qboolean ID_VerifyHEX( const char *hex )
 	{
 		char ch = Q_tolower( *hex );
 
-		if( ch >= 'a' && ch <= 'f' || ch >= '0' && ch <= '9' )
+		if( ( ch >= 'a' && ch <= 'f') || ( ch >= '0' && ch <= '9' ) )
 		{
 			if( prev && ( ch - prev < -1 || ch - prev > 1 ) )
 				monotonic = false;
@@ -137,6 +141,8 @@ void ID_VerifyHEX_f( void )
 		Msg( "Bad\n" );
 }
 
+#ifdef __linux__
+
 qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
 {
 	int cpuinfofd = open( "/proc/cpuinfo", O_RDONLY );
@@ -149,6 +155,8 @@ qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
 	if( (ret = read( cpuinfofd, buffer, 1024 ) ) <= 0 )
 		return false;
 
+	close( cpuinfofd );
+
 	buffer[ret] = 0;
 
 	pbuf = Q_strstr( buffer, "Serial" );
@@ -156,7 +164,7 @@ qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
 		return false;
 	pbuf += 6;
 
-	if( pbuf2 = Q_strchr( pbuf, '\n' ) )
+	if( ( pbuf2 = Q_strchr( pbuf, '\n' ) ) )
 	    *pbuf2 = 0;
 
 	if( !ID_VerifyHEX( pbuf ) )
@@ -166,17 +174,32 @@ qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
 	return true;
 }
 
+
+void ID_TestCPUInfo_f( void )
+{
+	bloomfilter_t value = 0;
+
+	if( ID_ProcessCPUInfo( &value ) )
+		Msg( "Got %016llX\n", value );
+	else
+		Msg( "Could not get serial\n" );
+}
+
+#endif
+
 qboolean ID_ProcessFile( bloomfilter_t *value, const char *path )
 {
-	int cpuinfofd = open( path, O_RDONLY );
-	char buffer[256], *pbuf, *pbuf2;
+	int fd = open( path, O_RDONLY );
+	char buffer[256];
 	int ret;
 
-	if( cpuinfofd < 0 )
+	if( fd < 0 )
 		return false;
 
-	if( (ret = read( cpuinfofd, buffer, 256 ) ) <= 0 )
+	if( (ret = read( fd, buffer, 256 ) ) <= 0 )
 		return false;
+
+	close( fd );
 
 	buffer[ret] = 0;
 
@@ -187,6 +210,9 @@ qboolean ID_ProcessFile( bloomfilter_t *value, const char *path )
 	return true;
 }
 
+#define MAXBITS_GEN 30
+#define MAXBITS_CHECK MAXBITS_GEN + 6
+
 int ID_ProcessFiles( bloomfilter_t *value, const char *prefix, const char *postfix )
 {
 	DIR *dir;
@@ -196,7 +222,7 @@ int ID_ProcessFiles( bloomfilter_t *value, const char *prefix, const char *postf
 	if( !( dir = opendir( prefix ) ) )
 	    return 0;
 
-	while( ( entry = readdir( dir ) ) )
+	while( ( entry = readdir( dir ) ) && BloomFilter_Weight( *value ) < MAXBITS_GEN )
 		count += ID_ProcessFile( value, va( "%s/%s/%s", prefix, entry->d_name, postfix ) );
 	closedir( dir );
 	return count;
@@ -221,51 +247,165 @@ int ID_CheckFiles( bloomfilter_t value, const char *prefix, const char *postfix 
 }
 
 
-void ID_GenerateRawId_f( void )
+bloomfilter_t ID_GenerateRawId( void )
 {
 	bloomfilter_t value = 0;
 	int count = 0;
-	char id[17];
-	count += ID_ProcessFiles( &value, "/sys/class/net", "address" );
-	count += ID_ProcessFiles( &value, "/sys/block", "device/cid" );
+
+#ifdef __linux__
+#ifdef __ANDROID__
+	/*{
+		char *androidid = Android_GetAndroidID();
+		if( androidid )
+		{
+			value |= BloomFilter_ProcessStr( androidid );
+			count ++;
+		}
+	}*/
+#endif
 	count += ID_ProcessCPUInfo( &value );
-	Q_snprintf( id, 17, "%016llX\n", value );
-	Msg( "%d %s\n", count, id );
-	Cvar_Set( "rawid", id );
+	count += ID_ProcessFiles( &value, "/sys/block", "device/cid" );
+	count += ID_ProcessFiles( &value, "/sys/class/net", "address" );
+#endif
+
+	return value;
 }
 
-void ID_CheckRawId_f( void )
+uint ID_CheckRawId( bloomfilter_t filter )
 {
-	bloomfilter_t filter = 0, value = 0;
+	bloomfilter_t value = 0;
 	int count = 0;
 
-	sscanf( Cmd_Argv( 1 ), "%llX", &filter );
-
+#ifdef __linux__
+#ifdef __ANDROID__
+	/*{
+		char *androidid = Android_GetAndroidID();
+		if( androidid )
+		{
+			value = BloomFilter_ProcessStr( androidid );
+			count += (filter & value) == value;
+			value = 0;
+		}
+	}*/
+#endif
 	count += ID_CheckFiles( filter, "/sys/class/net", "address" );
 	count += ID_CheckFiles( filter, "/sys/block", "device/cid" );
 	if( ID_ProcessCPUInfo( &value ) )
 		count += (filter & value) == value;
+#endif
 
-	Msg( "%d known devices in %016llX\n", count, filter );
+	return count;
 }
 
-void ID_TestCPUInfo_f( void )
+#define SYSTEM_XOR_MASK 0x10331c2dce4c91db
+#define GAME_XOR_MASK 0x7ffc48fbac1711f1
+
+void ID_Check()
 {
-	bloomfilter_t value = 0;
+	uint weight = BloomFilter_Weight( id );
+	uint mincount = weight >> 2;
 
-	if( ID_ProcessCPUInfo( &value ) )
-		Msg( "Got %016llX\n", value );
-	else
-		Msg( "Could not get serial\n" );
+	if( mincount < 1 )
+		mincount = 1;
+
+	if( weight > MAXBITS_CHECK )
+	{
+		id = 0;
+		Msg( "ID_Check(): fail %d\n", weight );
+		return;
+	}
+
+	if( ID_CheckRawId( id ) < mincount )
+		id = 0;
+
+	Msg( "ID_Check(): success %d\n", weight );
 }
 
-
+const char *ID_GetMD5()
+{
+	return id_md5;
+}
 
 void ID_Init( void )
 {
+	MD5Context_t hash = {0};
+	byte md5[16];
+	int i;
+
 	Cmd_AddCommand( "bloomfilter", ID_BloomFilter_f, "print bloomfilter raw value of arguments set");
 	Cmd_AddCommand( "verifyhex", ID_VerifyHEX_f, "check if id source seems to be fake" );
+#ifdef __linux__
 	Cmd_AddCommand( "testcpuinfo", ID_TestCPUInfo_f, "try read cpu serial" );
-	Cmd_AddCommand( "generaterawid", ID_GenerateRawId_f, "generate id from hardware" );
-	Cmd_AddCommand( "checkrawid", ID_CheckRawId_f, "count devices that kown to given id" );
+#endif
+
+#ifdef __ANDROID__
+	// android code here
+#elif defined _WIN32
+	// windows registry read
+#else
+	{
+		const char *home = getenv( "HOME" );
+		if( home )
+		{
+			FILE *cfg = fopen( va( "%s/.config/.xash_id", home ), "r" );
+			if( !cfg )
+				cfg = fopen( va( "%s/.local/.xash_id", home ), "r" );
+			if( !cfg )
+				cfg = fopen( va( "%s/.xash_id", home ), "r" );
+			if( cfg )
+			{
+				if( fscanf( cfg, "%016llX", &id ) > 0 )
+				{
+					id ^= SYSTEM_XOR_MASK;
+					ID_Check();
+				}
+				fclose( cfg );
+			}
+		}
+	}
+#endif
+	if( !id )
+	{
+		const char *buf = (const char*) FS_LoadFile( ".xash_id", NULL, false );
+		if( buf )
+		{
+			sscanf( buf, "%016llX", &id );
+			id ^= GAME_XOR_MASK;
+			ID_Check();
+		}
+	}
+	if( !id )
+		id = ID_GenerateRawId();
+
+	MD5Init( &hash );
+	MD5Update( &hash, (byte *)&id, sizeof( id ) );
+	MD5Final( (byte*)md5, &hash );
+
+	for( i = 0; i < 16; i++ )
+		Q_sprintf( &id_md5[i*2], "%hhx", md5[i] );
+
+#ifdef __ANDROID__
+	// android code here
+#elif defined _WIN32
+	// windows registry write
+#else
+	{
+		const char *home = getenv( "HOME" );
+		if( home )
+		{
+			FILE *cfg = fopen( va( "%s/.config/.xash_id", home ), "w" );
+			if( !cfg )
+				cfg = fopen( va( "%s/.local/.xash_id", home ), "w" );
+			if( !cfg )
+				cfg = fopen( va( "%s/.xash_id", home ), "w" );
+			if( cfg )
+			{
+				fprintf( cfg, "%016llX", id^SYSTEM_XOR_MASK );
+				fclose( cfg );
+			}
+		}
+	}
+#endif
+	FS_WriteFile( ".xash_id", va("%016llX", id^GAME_XOR_MASK), 16 );
+	Msg("MD5 id: %s\nRAW id:%016llX\n", id_md5, id );
 }

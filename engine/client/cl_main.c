@@ -753,6 +753,7 @@ void CL_SendConnectPacket( void )
 		Info_SetValueForKey( useragent, "b", va( "%d", Q_buildnum() ), 256 );
 		Info_SetValueForKey( useragent, "o", Q_buildos(), 256 );
 		Info_SetValueForKey( useragent, "a", Q_buildarch(), 256 );
+		Info_SetValueForKey( useragent, "i", ID_GetMD5(), 256 );
 	}
 	else
 	{
