@@ -14,7 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "common.h"
-
+#include "fcntl.h"
 /*
 ==========================================================
 
@@ -27,7 +27,7 @@ typedef integer64 bloomfilter_t;
 
 #define bf64_mask ((1U<<6)-1)
 
-bloomfilter_t BloomFiler_Process( const char *buffer, int size )
+bloomfilter_t BloomFilter_Process( const char *buffer, int size )
 {
 	dword crc32;
 	bloomfilter_t value = 0;
@@ -44,9 +44,9 @@ bloomfilter_t BloomFiler_Process( const char *buffer, int size )
 	return value;
 }
 
-bloomfilter_t BloomFiler_ProcessStr( const char *buffer )
+bloomfilter_t BloomFilter_ProcessStr( const char *buffer )
 {
-	return BloomFiler_Process( buffer, Q_strlen( buffer ) );
+	return BloomFilter_Process( buffer, Q_strlen( buffer ) );
 }
 
 uint BloomFilter_Weight( bloomfilter_t value )
@@ -65,7 +65,7 @@ uint BloomFilter_Weight( bloomfilter_t value )
 
 qboolean BloomFilter_ContainsString( bloomfilter_t filter, const char *str )
 {
-	bloomfilter_t value = BloomFiler_ProcessStr( str );
+	bloomfilter_t value = BloomFilter_ProcessStr( str );
 
 	return (filter & value) == value;
 }
@@ -76,9 +76,9 @@ void ID_BloomFilter_f( void )
 	int i;
 
 	for( i = 1; i < Cmd_Argc(); i++ )
-		value |= BloomFiler_ProcessStr( Cmd_Argv( i ) );
+		value |= BloomFilter_ProcessStr( Cmd_Argv( i ) );
 
-	Msg( "%d %llX\n", BloomFilter_Weight( value ), value );
+	Msg( "%d %016llX\n", BloomFilter_Weight( value ), value );
 
 	// test
 	// for( i = 1; i < Cmd_Argc(); i++ )
@@ -135,8 +135,47 @@ void ID_VerifyHEX_f( void )
 		Msg( "Bad\n" );
 }
 
+qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
+{
+	int cpuinfofd = open( "/proc/cpuinfo", O_RDONLY );
+	char buffer[1024], *pbuf, *pbuf2;
+	int ret;
+
+	if( cpuinfofd < 0 )
+		return false;
+
+	if( (ret = read( cpuinfofd, buffer, 1024 ) ) <= 0 )
+		return false;
+
+	buffer[ret] = 0;
+
+	pbuf = Q_strstr( buffer, "Serial" );
+	if( !pbuf )
+		return false;
+	pbuf += 6;
+
+	if( pbuf2 = Q_strchr( pbuf, '\n' ) )
+	    *pbuf2 = 0;
+
+	if( !ID_VerifyHEX( pbuf ) )
+		return false;
+
+	*value |= BloomFilter_Process( pbuf, pbuf2 - pbuf );
+	return true;
+}
+
+void ID_TestCPUInfo_f( void )
+{
+	bloomfilter_t value = 0;
+
+	if( ID_ProcessCPUInfo( &value ) )
+		Msg( "Got %016llX\n", value );
+	else
+		Msg( "Could not get serial" );
+}
 void ID_Init( void )
 {
 	Cmd_AddCommand( "bloomfilter", ID_BloomFilter_f, "print bloomfilter raw value of arguments set");
 	Cmd_AddCommand( "verifyhex", ID_VerifyHEX_f, "check if id source seems to be fake" );
+	Cmd_AddCommand( "testcpuinfo", ID_TestCPUInfo_f, "try read cpu serial" );
 }
