@@ -176,6 +176,9 @@ static struct jnimethods_s
 	jmethodID notify;
 	jmethodID setTitle;
 	jmethodID setIcon;
+	jmethodID getAndroidId;
+	jmethodID saveID;
+	jmethodID loadID;
 	int width, height;
 } jni;
 
@@ -460,6 +463,9 @@ DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 	jni.notify = (*env)->GetStaticMethodID(env, jni.actcls, "engineThreadNotify", "()V");
 	jni.setTitle = (*env)->GetStaticMethodID(env, jni.actcls, "setTitle", "(Ljava/lang/String;)V");
 	jni.setIcon = (*env)->GetStaticMethodID(env, jni.actcls, "setIcon", "(Ljava/lang/String;)V");
+	jni.getAndroidId = (*env)->GetStaticMethodID(env, jni.actcls, "getAndroidID", "()Ljava/lang/String;");
+	jni.saveID = (*env)->GetStaticMethodID(env, jni.actcls, "saveID", "(Ljava/lang/String;)V");
+	jni.loadID = (*env)->GetStaticMethodID(env, jni.actcls, "loadID", "()Ljava/lang/String;");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -947,6 +953,39 @@ void Android_SetIcon( char *path )
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.setIcon, (*jni.env)->NewStringUTF( jni.env, path ) );
 
+}
+
+const char *Android_GetAndroidID( void )
+{
+	static char id[65];
+
+	if( id[0] )
+		return id;
+
+	jstring resultJNIStr = (jstring)(*jni.env)->CallStaticObjectMethod( jni.env, jni.actcls, jni.getAndroidId );
+	const char *resultCStr = (*jni.env)->GetStringUTFChars( jni.env, resultJNIStr, NULL );
+	Q_strncpy( id, resultCStr, 64 );
+	(*jni.env)->ReleaseStringUTFChars( jni.env, resultJNIStr, resultCStr );
+
+	if( !id[0] )
+		return NULL;
+
+	return id;
+}
+
+const char *Android_LoadID( void )
+{
+	static char id[65];
+	jstring resultJNIStr = (jstring)(*jni.env)->CallStaticObjectMethod( jni.env, jni.actcls, jni.loadID );
+	const char *resultCStr = (*jni.env)->GetStringUTFChars( jni.env, resultJNIStr, NULL );
+	Q_strncpy( id, resultCStr, 64 );
+	(*jni.env)->ReleaseStringUTFChars( jni.env, resultJNIStr, resultCStr );
+	return id;
+}
+
+void Android_SaveID( char *id )
+{
+	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.saveID, (*jni.env)->NewStringUTF( jni.env, id ) );
 }
 
 #endif

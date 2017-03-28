@@ -254,14 +254,14 @@ bloomfilter_t ID_GenerateRawId( void )
 
 #ifdef __linux__
 #ifdef __ANDROID__
-	/*{
+	{
 		char *androidid = Android_GetAndroidID();
 		if( androidid )
 		{
 			value |= BloomFilter_ProcessStr( androidid );
 			count ++;
 		}
-	}*/
+	}
 #endif
 	count += ID_ProcessCPUInfo( &value );
 	count += ID_ProcessFiles( &value, "/sys/block", "device/cid" );
@@ -278,7 +278,7 @@ uint ID_CheckRawId( bloomfilter_t filter )
 
 #ifdef __linux__
 #ifdef __ANDROID__
-	/*{
+	{
 		char *androidid = Android_GetAndroidID();
 		if( androidid )
 		{
@@ -286,7 +286,7 @@ uint ID_CheckRawId( bloomfilter_t filter )
 			count += (filter & value) == value;
 			value = 0;
 		}
-	}*/
+	}
 #endif
 	count += ID_CheckFiles( filter, "/sys/class/net", "address" );
 	count += ID_CheckFiles( filter, "/sys/block", "device/cid" );
@@ -339,7 +339,9 @@ void ID_Init( void )
 #endif
 
 #ifdef __ANDROID__
-	// android code here
+	sscanf( Android_LoadID(), "%016llX", &id );
+	if( id )
+		id ^= SYSTEM_XOR_MASK;
 #elif defined _WIN32
 	// windows registry read
 #else
@@ -385,7 +387,7 @@ void ID_Init( void )
 		Q_sprintf( &id_md5[i*2], "%hhx", md5[i] );
 
 #ifdef __ANDROID__
-	// android code here
+	Android_SaveID( va("%016llX", id^SYSTEM_XOR_MASK ) );
 #elif defined _WIN32
 	// windows registry write
 #else
