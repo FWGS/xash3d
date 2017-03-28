@@ -14,7 +14,9 @@ GNU General Public License for more details.
 */
 
 #include "common.h"
-#include "fcntl.h"
+#include <fcntl.h>
+#include <dirent.h>
+
 /*
 ==========================================================
 
@@ -164,6 +166,89 @@ qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
 	return true;
 }
 
+qboolean ID_ProcessFile( bloomfilter_t *value, const char *path )
+{
+	int cpuinfofd = open( path, O_RDONLY );
+	char buffer[256], *pbuf, *pbuf2;
+	int ret;
+
+	if( cpuinfofd < 0 )
+		return false;
+
+	if( (ret = read( cpuinfofd, buffer, 256 ) ) <= 0 )
+		return false;
+
+	buffer[ret] = 0;
+
+	if( !ID_VerifyHEX( buffer ) )
+		return false;
+
+	*value |= BloomFilter_Process( buffer, ret );
+	return true;
+}
+
+int ID_ProcessFiles( bloomfilter_t *value, const char *prefix, const char *postfix )
+{
+	DIR *dir;
+	struct dirent *entry;
+	int count = 0;
+
+	if( !( dir = opendir( prefix ) ) )
+	    return 0;
+
+	while( ( entry = readdir( dir ) ) )
+		count += ID_ProcessFile( value, va( "%s/%s/%s", prefix, entry->d_name, postfix ) );
+	closedir( dir );
+	return count;
+}
+
+int ID_CheckFiles( bloomfilter_t value, const char *prefix, const char *postfix )
+{
+	DIR *dir;
+	struct dirent *entry;
+	int count = 0;
+	bloomfilter_t filter = 0;
+
+	if( !( dir = opendir( prefix ) ) )
+	    return 0;
+
+	while( ( entry = readdir( dir ) ) )
+		if( ID_ProcessFile( &filter, va( "%s/%s/%s", prefix, entry->d_name, postfix ) ) )
+			count += ( value & filter ) == filter, filter = 0;
+
+	closedir( dir );
+	return count;
+}
+
+
+void ID_GenerateRawId_f( void )
+{
+	bloomfilter_t value = 0;
+	int count = 0;
+	char id[17];
+	count += ID_ProcessFiles( &value, "/sys/class/net", "address" );
+	count += ID_ProcessFiles( &value, "/sys/block", "device/cid" );
+	count += ID_ProcessCPUInfo( &value );
+	Q_snprintf( id, 17, "%016llX\n", value );
+	Msg( "%d %s\n", count, id );
+	Cvar_Set( "rawid", id );
+}
+
+void ID_CheckRawId_f( void )
+{
+	bloomfilter_t filter = 0, value = 0;
+	int count = 0;
+
+	sscanf( Cmd_Argv( 1 ), "%llX", &filter );
+
+	count += ID_CheckFiles( filter, "/sys/class/net", "address" );
+	count += ID_CheckFiles( filter, "/sys/block", "device/cid" );
+	if( ID_ProcessCPUInfo( &value ) )
+		count += (filter & value) == value;
+
+	Msg( "%d known devices in %016llX\n", count, filter );
+}
+
 void ID_TestCPUInfo_f( void )
 {
 	bloomfilter_t value = 0;
@@ -171,11 +256,16 @@ void ID_TestCPUInfo_f( void )
 	if( ID_ProcessCPUInfo( &value ) )
 		Msg( "Got %016llX\n", value );
 	else
-		Msg( "Could not get serial" );
+		Msg( "Could not get serial\n" );
 }
+
+
+
 void ID_Init( void )
 {
 	Cmd_AddCommand( "bloomfilter", ID_BloomFilter_f, "print bloomfilter raw value of arguments set");
 	Cmd_AddCommand( "verifyhex", ID_VerifyHEX_f, "check if id source seems to be fake" );
 	Cmd_AddCommand( "testcpuinfo", ID_TestCPUInfo_f, "try read cpu serial" );
+	Cmd_AddCommand( "generaterawid", ID_GenerateRawId_f, "generate id from hardware" );
+	Cmd_AddCommand( "checkrawid", ID_CheckRawId_f, "count devices that kown to given id" );
 }
