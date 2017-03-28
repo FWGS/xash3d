@@ -498,7 +498,7 @@ void FS_MD5_f( void )
 		int i;
 
 		for( i = 0; i < 16; i++ )
-			phex += Q_sprintf( phex, "%hhx", hash[i] );
+			phex += Q_sprintf( phex, "%02hhx", hash[i] );
 		Msg( "%s\n", hex );
 	}
 }

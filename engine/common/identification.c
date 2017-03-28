@@ -294,6 +294,8 @@ uint ID_CheckRawId( bloomfilter_t filter )
 		count += (filter & value) == value;
 #endif
 
+	Msg( "CheckRawId: %d\n", count );
+
 	return count;
 }
 
@@ -341,7 +343,11 @@ void ID_Init( void )
 #ifdef __ANDROID__
 	sscanf( Android_LoadID(), "%016llX", &id );
 	if( id )
+	{
 		id ^= SYSTEM_XOR_MASK;
+		ID_Check();
+	}
+	
 #elif defined _WIN32
 	// windows registry read
 #else
@@ -384,7 +390,7 @@ void ID_Init( void )
 	MD5Final( (byte*)md5, &hash );
 
 	for( i = 0; i < 16; i++ )
-		Q_sprintf( &id_md5[i*2], "%hhx", md5[i] );
+		Q_sprintf( &id_md5[i*2], "%02hhx", md5[i] );
 
 #ifdef __ANDROID__
 	Android_SaveID( va("%016llX", id^SYSTEM_XOR_MASK ) );
