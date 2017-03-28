@@ -831,6 +831,12 @@ void HPAK_CheckSize( const char *filename );
 void HPAK_FlushHostQueue( void );
 
 //
+// identification.c
+//
+void ID_Init( void );
+const char *ID_GetMD5( void );
+
+//
 // keys.c
 //
 qboolean Key_IsDown( int keynum );
@@ -881,6 +887,11 @@ struct pmtrace_s;
 //
 // input.c
 //
+
+#define INPUT_DEVICE_MOUSE (1<<0)
+#define INPUT_DEVICE_TOUCH (1<<1)
+#define INPUT_DEVICE_JOYSTICK (1<<2)
+#define INPUT_DEVICE_VR (1<<3)
 
 void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active );
 //void IN_JoyAppendMove( usercmd_t *cmd, float forwardmove, float sidemove );

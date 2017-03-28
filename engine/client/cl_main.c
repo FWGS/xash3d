@@ -702,6 +702,8 @@ void CL_SendConnectPacket( void )
 	netadr_t	adr;
 	int	port;
 	unsigned int extensions = 0;
+	char useragent[256] = "";
+	unsigned int input_devices = 0;
 
 	if( !NET_StringToAdr( cls.servername, &adr ))
 	{
@@ -727,9 +729,41 @@ void CL_SendConnectPacket( void )
 			if( !huff && Cvar_VariableInteger( "cl_enable_splitcompress" ) )
 				extensions |= NET_EXT_SPLITHUFF;
 		}
+
+
+#ifdef XASH_SDL
+		if( !m_ignore->integer )
+			input_devices |= INPUT_DEVICE_MOUSE;
+#endif
+
+		if( touch_enable->integer )
+			input_devices |= INPUT_DEVICE_TOUCH;
+
+		if(  Cvar_VariableInteger( "joy_enable" ) && Cvar_VariableInteger( "joy_found" ) )
+			input_devices |= INPUT_DEVICE_JOYSTICK;
+
+		// lock input devices change
+		Cvar_FullSet( "touch_enable", va( "%s", touch_enable->string ), touch_enable->flags | CVAR_READ_ONLY );
+		Cvar_FullSet( "m_ignore", va( "%s", m_ignore->string ), m_ignore->flags | CVAR_READ_ONLY );
+		Cvar_FullSet( "joy_enable", va( "%s", Cvar_VariableString( "joy_enable" ) ), CVAR_ARCHIVE | CVAR_READ_ONLY );
+
+
+		Info_SetValueForKey( useragent, "d", va( "%d", input_devices ), 256 );
+		Info_SetValueForKey( useragent, "v", XASH_VERSION, 256 );
+		Info_SetValueForKey( useragent, "b", va( "%d", Q_buildnum() ), 256 );
+		Info_SetValueForKey( useragent, "o", Q_buildos(), 256 );
+		Info_SetValueForKey( useragent, "a", Q_buildarch(), 256 );
+		Info_SetValueForKey( useragent, "i", ID_GetMD5(), 256 );
+	}
+	else
+	{
+		// reset to writable state
+		Cvar_FullSet( "touch_enable", va( "%s", touch_enable->string ), touch_enable->flags & ~CVAR_READ_ONLY );
+		Cvar_FullSet( "m_ignore", va( "%s", m_ignore->string ), m_ignore->flags & ~CVAR_READ_ONLY );
+		Cvar_FullSet( "joy_enable", va( "%s", Cvar_VariableString( "joy_enable" ) ), CVAR_ARCHIVE );
 	}
 
-	Netchan_OutOfBandPrint( NS_CLIENT, adr, "connect %i %i %i \"%s\" %d\n", PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo( ), extensions );
+	Netchan_OutOfBandPrint( NS_CLIENT, adr, "connect %i %i %i \"%s\" %d %s\n", PROTOCOL_VERSION, port, cls.challenge, Cvar_Userinfo( ), extensions, useragent );
 }
 
 /*
@@ -974,6 +1008,11 @@ void CL_Disconnect( void )
 
 	// restore gamefolder here (in case client was connected to another game)
 	CL_ChangeGame( GI->gamefolder, true );
+
+	// reset to writable state
+	Cvar_FullSet( "touch_enable", va( "%s", touch_enable->string ), touch_enable->flags & ~CVAR_READ_ONLY );
+	Cvar_FullSet( "m_ignore", va( "%s", m_ignore->string ), m_ignore->flags & ~CVAR_READ_ONLY );
+	Cvar_FullSet( "joy_enable", va( "%s", Cvar_VariableString( "joy_enable" ) ), CVAR_ARCHIVE );
 
 	// back to menu if developer mode set to "player" or "mapper"
 	if( host.developer > 2 ) return;

@@ -62,6 +62,7 @@ static struct joy_axis_s
 	short prevval;
 } joyaxis[MAX_AXES] = { 0 };
 static qboolean initialized = false, forcedisable = false;
+static convar_t *joy_enable;
 static byte currentbinding; // add posibility to remap keys, to place it in joykeys[]
 
 /* On-screen keyboard:
@@ -396,7 +397,7 @@ Append movement from axis. Called everyframe
 */
 void Joy_FinalizeMove( float *fw, float *side, float *dpitch, float *dyaw )
 {
-	if( !initialized )
+	if( !initialized || !joy_enable->integer )
 		return;
 
 	if( joy_axis_binding->modified )
@@ -442,11 +443,7 @@ Main init procedure
 */
 void Joy_Init( void )
 {
-	if( Sys_CheckParm("-nojoy" ) )
-	{
-		forcedisable = true;
-		return;
-	}
+
 
 	joy_pitch   = Cvar_Get( "joy_pitch",   "100.0", CVAR_ARCHIVE, "joystick pitch sensitivity" );
 	joy_yaw     = Cvar_Get( "joy_yaw",     "100.0", CVAR_ARCHIVE, "joystick yaw sensitivity" );
@@ -462,6 +459,14 @@ void Joy_Init( void )
 	// we doesn't loaded config.cfg yet, so this cvar is not archive.
 	// change by +set joy_index in cmdline
 	joy_index   = Cvar_Get( "joy_index", "0", CVAR_READ_ONLY, "current active joystick" );
+
+	joy_enable = Cvar_Get( "joy_enable", "1", CVAR_ARCHIVE, "enable joystick" );
+
+	if( Sys_CheckParm("-nojoy" ) )
+	{
+		forcedisable = true;
+		return;
+	}
 
 #if defined(XASH_SDL)
 	// SDL can tell us about connected joysticks
