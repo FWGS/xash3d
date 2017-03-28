@@ -1301,6 +1301,12 @@ void Cmd_WriteRenderVariables( file_t *f )
 	Cvar_LookupVars( CVAR_RENDERINFO, NULL, f, (void*)Cmd_WriteRenderCvar );
 }
 
+#define REPLACE_CONFIG(x) \
+FS_Delete( x ".bak" ); \
+FS_Rename( x, x ".bak" ); \
+FS_Delete( x ); \
+FS_Rename( x ".new", x );
+
 /*
 ===============
 Host_WriteConfig
@@ -1335,9 +1341,7 @@ void Host_WriteConfig( void )
 		FS_Printf( f, "exec userconfig.cfg\n" );
 
 		FS_Close( f );
-		FS_Rename( "config.cfg", "config.cfg.bak" );
-		FS_Rename( "config.cfg.new", "config.cfg" );
-		FS_Delete( "config.cfg.bak" );
+		REPLACE_CONFIG( "config.cfg" );
 	}
 	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
 
@@ -1362,9 +1366,7 @@ void Host_WriteConfig( void )
 				FS_Printf( f, "+jlook\n" );
 
 			FS_Close( f );
-			FS_Rename( "keyboard.cfg", "keyboard.cfg.bak" );
-			FS_Rename( "keyboard.cfg.new", "keyboard.cfg" );
-			FS_Delete( "keyboard.cfg.bak" );
+			REPLACE_CONFIG( "keyboard.cfg" );
 		}
 		else MsgDev( D_ERROR, "Couldn't write keyboard.cfg.\n" );
 	}
@@ -1432,9 +1434,7 @@ void Host_WriteOpenGLConfig( void )
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteOpenGLVariables( f );
 		FS_Close( f );
-		FS_Rename( "opengl.cfg", "opengl.cfg.bak" );
-		FS_Rename( "opengl.cfg.new", "opengl.cfg" );
-		FS_Delete( "opengl.cfg.bak" );
+		REPLACE_CONFIG( "opengl.cfg" );
 	}                                                
 	else MsgDev( D_ERROR, "Can't update opengl.cfg.\n" );
 }
@@ -1468,9 +1468,7 @@ void Host_WriteVideoConfig( void )
 		FS_Printf( f, "//=======================================================================\n" );
 		Cmd_WriteRenderVariables( f );
 		FS_Close( f );
-		FS_Rename( "video.cfg", "video.cfg.bak" );
-		FS_Rename( "video.cfg.new", "video.cfg" );
-		FS_Delete( "video.cfg.bak" );
+		REPLACE_CONFIG( "video.cfg" );
 	}                                                
 	else MsgDev( D_ERROR, "Can't update video.cfg.\n" );
 }

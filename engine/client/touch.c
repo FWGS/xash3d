@@ -222,7 +222,9 @@ void IN_TouchWriteConfig( void )
 		}
 
 		FS_Close( f );
+		FS_Delete( oldconfigfile );
 		FS_Rename( touch_config_file->string, oldconfigfile );
+		FS_Delete( touch_config_file->string );
 		FS_Rename( newconfigfile, touch_config_file->string );
 	}
 	else MsgDev( D_ERROR, "Couldn't write %s.\n", touch_config_file->string );
