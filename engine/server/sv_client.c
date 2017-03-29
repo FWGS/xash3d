@@ -2694,6 +2694,12 @@ void SV_EntFire_f( sv_client_t *cl )
 		{
 			ent->v.rendermode = Q_atoi( Cmd_Argv( 3 ) );
 		}
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "angles" ) )
+		{
+			ent->v.angles[0] = Q_atof( Cmd_Argv( 3 ) );
+			ent->v.angles[1] = Q_atof( Cmd_Argv( 4 ) );
+			ent->v.angles[2] = Q_atof( Cmd_Argv( 5 ) );
+		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "setmodel" ) )
 		{
 			ent->v.model = ALLOC_STRING( Cmd_Argv( 3 ) );
