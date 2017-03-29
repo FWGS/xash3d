@@ -1090,7 +1090,7 @@ sentenceEntry_s *Sequence_GetSentenceByIndex( unsigned int index )
 {
 	sentenceEntry_s *sentenceEntry;
 	sentenceGroupEntry_s *groupEntry;
-	unsigned int sentenceCount;
+	unsigned int sentenceCount=0;
 
 	for( groupEntry = g_sentenceGroupList; groupEntry; groupEntry = groupEntry->nextEntry )
 	{
