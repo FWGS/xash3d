@@ -2771,22 +2771,6 @@ void GAME_EXPORT pfnSPR_DrawGeneric( int frame, int x, int y, const wrect_t *prc
 
 /*
 =============
-pfnDrawStringReverse
-
-=============
-*/
-int GAME_EXPORT pfnDrawStringReverse( int x, int y, const char *str, int r, int g, int b )
-{
-	// find the end of the string
-	char *szIt;
-	for( szIt = (char*)str; *szIt != 0; szIt++ )
-		x -= clgame.scrInfo.charWidths[ (unsigned char) *szIt ];
-	pfnDrawString( x, y, str, r, g, b );
-	return x;
-}
-
-/*
-=============
 LocalPlayerInfo_ValueForKey
 
 =============
@@ -2800,7 +2784,6 @@ const char *GAME_EXPORT LocalPlayerInfo_ValueForKey( const char* key )
 =============
 pfnVGUI2DrawCharacter
 
-TODO: implement
 =============
 */
 int GAME_EXPORT pfnVGUI2DrawCharacter( int x, int y, int number, unsigned int font )
@@ -2824,12 +2807,10 @@ int GAME_EXPORT pfnVGUI2DrawCharacter( int x, int y, int number, unsigned int fo
 	return clgame.scrInfo.charWidths[number];
 }
 
-
 /*
 =============
 pfnVGUI2DrawCharacterAdditive
 
-TODO: implement
 =============
 */
 int GAME_EXPORT pfnVGUI2DrawCharacterAdditive( int x, int y, int ch, int r, int g, int b, unsigned int font )
@@ -2839,7 +2820,6 @@ int GAME_EXPORT pfnVGUI2DrawCharacterAdditive( int x, int y, int ch, int r, int 
 
 	return pfnDrawCharacter( x, y, ch, r, g, b );
 }
-
 
 /*
 =============
@@ -2857,6 +2837,22 @@ int GAME_EXPORT pfnDrawString( int x, int y, const char *str, int r, int g, int 
 		x += pfnVGUI2DrawCharacterAdditive( x, y, (unsigned char)*str, r, g, b, 0 );
 	}
 
+	return x;
+}
+
+/*
+=============
+pfnDrawStringReverse
+
+=============
+*/
+int GAME_EXPORT pfnDrawStringReverse( int x, int y, const char *str, int r, int g, int b )
+{
+	// find the end of the string
+	char *szIt;
+	for( szIt = (char*)str; *szIt != 0; szIt++ )
+		x -= clgame.scrInfo.charWidths[ (unsigned char) *szIt ];
+	pfnDrawString( x, y, str, r, g, b );
 	return x;
 }
 
