@@ -187,7 +187,7 @@ void Evdev_CloseMouse_f ( void )
 
 void IN_EvdevFrame ()
 {
-	if ( evdev_open )
+	if( evdev_open && !m_ignore->value )
 	{
 		struct input_event ev;
 		evdev_dx = evdev_dy = 0;
