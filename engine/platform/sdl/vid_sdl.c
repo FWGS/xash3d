@@ -1179,8 +1179,6 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		{
 			// info.info.info.info.info... Holy shit, SDL?
 			SetClassLong( info.info.win.window, GCL_HICON, (LONG)ico );
-
-
 		}
 	}
 #endif

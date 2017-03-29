@@ -1492,7 +1492,7 @@ CL_ParseServerMessage
 */
 void CL_ParseServerMessage( sizebuf_t *msg )
 {
-	char	*s;
+	//char	*s;
 	int	i, j, cmd;
 	int	param1, param2;
 	int	bufStart, playerbytes;

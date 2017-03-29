@@ -578,7 +578,7 @@ void RVB_CheckNewReverbVal( )
 	float delay = sxrvb_size->value;
 	dly_t *const dly1 = &rgsxdly[REVERBPOS],
 			  *const dly2 = &rgsxdly[REVERBPOS + 1];
-	int samples;
+//	int samples;
 
 	if( !sxrvb_size->modified )
 		return;

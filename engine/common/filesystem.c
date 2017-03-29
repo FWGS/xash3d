@@ -3846,3 +3846,4 @@ static byte *W_LoadFile( const char *path, fs_offset_t *lumpsizeptr, qboolean ga
 		return W_ReadLump( search->wad, &search->wad->lumps[index], lumpsizeptr ); 
 	return NULL;
 }
+
