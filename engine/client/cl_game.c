@@ -2771,25 +2771,6 @@ void GAME_EXPORT pfnSPR_DrawGeneric( int frame, int x, int y, const wrect_t *prc
 
 /*
 =============
-pfnDrawString
-
-=============
-*/
-int GAME_EXPORT pfnDrawString( int x, int y, const char *str, int r, int g, int b )
-{
-	Con_UtfProcessChar(0);
-
-	// draw the string until we hit the null character or a newline character
-	for ( ; *str != 0 && *str != '\n'; str++ )
-	{
-		x += pfnDrawCharacter( x, y, (unsigned char)*str, r, g, b );
-	}
-
-	return x;
-}
-
-/*
-=============
 pfnDrawStringReverse
 
 =============
@@ -2822,10 +2803,27 @@ pfnVGUI2DrawCharacter
 TODO: implement
 =============
 */
-int GAME_EXPORT pfnVGUI2DrawCharacter( int x, int y, int ch, unsigned int font )
+int GAME_EXPORT pfnVGUI2DrawCharacter( int x, int y, int number, unsigned int font )
 {
-	return 0;
+	if( !cls.creditsFont.valid )
+		return 0;
+
+	number &= 255;
+
+	number = Con_UtfProcessChar( number );
+
+	if( number < 32 ) return 0;
+	if( y < -clgame.scrInfo.iCharHeight )
+		return 0;
+
+	clgame.ds.adjust_size = true;
+	menu.ds.gl_texturenum = cls.creditsFont.hFontTexture;
+	pfnPIC_DrawAdditive( x, y, -1, -1, &cls.creditsFont.fontRc[number] );
+	clgame.ds.adjust_size = false;
+
+	return clgame.scrInfo.charWidths[number];
 }
+
 
 /*
 =============
@@ -2836,7 +2834,30 @@ TODO: implement
 */
 int GAME_EXPORT pfnVGUI2DrawCharacterAdditive( int x, int y, int ch, int r, int g, int b, unsigned int font )
 {
-	return 0;
+	if( !hud_utf8->integer )
+		ch = Con_UtfProcessChar( ch );
+
+	return pfnDrawCharacter( x, y, ch, r, g, b );
+}
+
+
+/*
+=============
+pfnDrawString
+
+=============
+*/
+int GAME_EXPORT pfnDrawString( int x, int y, const char *str, int r, int g, int b )
+{
+	Con_UtfProcessChar(0);
+
+	// draw the string until we hit the null character or a newline character
+	for ( ; *str != 0 && *str != '\n'; str++ )
+	{
+		x += pfnVGUI2DrawCharacterAdditive( x, y, (unsigned char)*str, r, g, b, 0 );
+	}
+
+	return x;
 }
 
 /*
