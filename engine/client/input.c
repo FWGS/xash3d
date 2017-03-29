@@ -293,7 +293,10 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 #ifdef XASH_SDL
 		SDL_SetWindowGrab(host.hWnd, SDL_FALSE);
 #endif
+		Android_ShowMouse( true );
 	}
+	else
+		Android_ShowMouse( false );
 }
 
 /*
@@ -334,9 +337,6 @@ void IN_ActivateMouse( qboolean force )
 #ifdef XASH_SDL
 				SDL_ShowCursor( false );
 #endif
-#ifdef __ANDROID__
-				Android_ShowMouse( false );
-#endif
 				UI_ShowCursor( false );
 			}
 		}
@@ -348,9 +348,6 @@ void IN_ActivateMouse( qboolean force )
 			in_mouse_suspended = false;
 			in_mouseactive = false; // re-initialize mouse
 			UI_ShowCursor( true );
-#ifdef __ANDROID__
-				Android_ShowMouse( false );
-#endif
 		}
 	}
 
@@ -418,9 +415,6 @@ void IN_MouseMove( void )
 #ifdef XASH_SDL
 	if( UI_IsVisible() ) SDL_ShowCursor( SDL_TRUE );
 #endif
-#ifdef __ANDROID__
-	if( UI_IsVisible() ) Android_ShowMouse( true );
-#endif
 	// find mouse movement
 #ifdef XASH_SDL
 	SDL_GetMouseState( &current_pos.x, &current_pos.y );
@@ -445,9 +439,6 @@ void IN_MouseEvent( int mstate )
 		return;
 	if( cls.key_dest == key_game )
 	{
-#ifdef __ANDROID__
-		Android_ShowMouse( false );
-#endif
 #if defined(XASH_SDL)
 		static qboolean ignore; // igonre mouse warp event
 		int x, y;
@@ -480,9 +471,6 @@ void IN_MouseEvent( int mstate )
 #if defined(XASH_SDL) && !defined(_WIN32)
 		SDL_SetRelativeMouseMode( SDL_FALSE );
 		SDL_ShowCursor( SDL_TRUE );
-#endif
-#ifdef __ANDROID__
-		Android_ShowMouse( true );
 #endif
 		IN_MouseMove();
 	}
