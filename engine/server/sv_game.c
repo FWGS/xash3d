@@ -932,8 +932,8 @@ edict_t *GAME_EXPORT SV_AllocEdict( void )
 
 edict_t* SV_AllocPrivateData( edict_t *ent, string_t className )
 {
-	const char	*pszClassName;
-	LINK_ENTITY_FUNC	SpawnEdict;
+	const char	*pszClassName = NULL;
+	LINK_ENTITY_FUNC	SpawnEdict = NULL;
 
 	pszClassName = STRING( className );
 
@@ -952,8 +952,8 @@ edict_t* SV_AllocPrivateData( edict_t *ent, string_t className )
 	ent->v.pContainingEntity = ent; // re-link
 	
 	// allocate edict private memory (passed by dlls)
-
-	SpawnEdict = (LINK_ENTITY_FUNC)Com_GetProcAddress( svgame.hInstance, pszClassName );
+	if( pszClassName )
+		SpawnEdict = (LINK_ENTITY_FUNC)Com_GetProcAddress( svgame.hInstance, pszClassName );
 
 	if( !SpawnEdict )
 	{
