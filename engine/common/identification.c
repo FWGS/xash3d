@@ -255,8 +255,8 @@ bloomfilter_t ID_GenerateRawId( void )
 #ifdef __linux__
 #ifdef __ANDROID__
 	{
-		char *androidid = Android_GetAndroidID();
-		if( androidid )
+		const char *androidid = Android_GetAndroidID();
+		if( androidid && ID_VerifyHEX( androidid ) )
 		{
 			value |= BloomFilter_ProcessStr( androidid );
 			count ++;
@@ -279,8 +279,8 @@ uint ID_CheckRawId( bloomfilter_t filter )
 #ifdef __linux__
 #ifdef __ANDROID__
 	{
-		char *androidid = Android_GetAndroidID();
-		if( androidid )
+		const char *androidid = Android_GetAndroidID();
+		if( androidid && ID_VerifyHEX( androidid ) )
 		{
 			value = BloomFilter_ProcessStr( androidid );
 			count += (filter & value) == value;

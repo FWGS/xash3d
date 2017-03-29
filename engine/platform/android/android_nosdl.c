@@ -944,12 +944,12 @@ void Android_SwapInterval( int interval )
 		eglSwapInterval( negl.dpy, interval );
 }
 
-void Android_SetTitle( char *title )
+void Android_SetTitle( const char *title )
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.setTitle, (*jni.env)->NewStringUTF( jni.env, title ) );
 }
 
-void Android_SetIcon( char *path )
+void Android_SetIcon( const char *path )
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.setIcon, (*jni.env)->NewStringUTF( jni.env, path ) );
 
@@ -983,7 +983,7 @@ const char *Android_LoadID( void )
 	return id;
 }
 
-void Android_SaveID( char *id )
+void Android_SaveID( const char *id )
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.saveID, (*jni.env)->NewStringUTF( jni.env, id ) );
 }

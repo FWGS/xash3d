@@ -21,6 +21,11 @@ void Android_MessageBox( const char *title, const char *text );
 void Android_SwapInterval( int interval );
 qboolean Android_InitGL();
 void Android_ShutdownGL();
+const char *Android_GetAndroidID( void );
+const char *Android_LoadID( void );
+void Android_SaveID( const char *id );
+void Android_SetTitle( const char *title );
+void Android_SetIcon( const char *path );
 #endif
 
 #endif // ANDROID_MAIN_H
