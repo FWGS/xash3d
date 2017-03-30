@@ -293,7 +293,10 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 #ifdef XASH_SDL
 		SDL_SetWindowGrab(host.hWnd, SDL_FALSE);
 #endif
+		Android_ShowMouse( true );
 	}
+	else
+		Android_ShowMouse( false );
 }
 
 /*
@@ -410,7 +413,7 @@ void IN_MouseMove( void )
 
 	// Show cursor in UI
 #ifdef XASH_SDL
-	if( UI_IsVisible() ) SDL_ShowCursor( true );
+	if( UI_IsVisible() ) SDL_ShowCursor( SDL_TRUE );
 #endif
 	// find mouse movement
 #ifdef XASH_SDL
@@ -633,8 +636,17 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		{
 			int mouse_x, mouse_y;
 			SDL_GetRelativeMouseState( &mouse_x, &mouse_y );
-			cl.refdef.cl_viewangles[PITCH] += mouse_y * sensitivity;
-			cl.refdef.cl_viewangles[YAW] -= mouse_x * sensitivity;
+			cl.refdef.cl_viewangles[PITCH] += mouse_y * m_pitch->value * sensitivity;
+			cl.refdef.cl_viewangles[YAW] -= mouse_x * m_yaw->value * sensitivity;
+		}
+#endif
+#ifdef __ANDROID__
+		if( !m_ignore->integer )
+		{
+			float  mouse_x, mouse_y;
+			Android_MouseMove( &mouse_x, &mouse_y );
+			cl.refdef.cl_viewangles[PITCH] += mouse_y * m_pitch->value * sensitivity;
+			cl.refdef.cl_viewangles[YAW] -= mouse_x * m_yaw->value * sensitivity;
 		}
 #endif
 		Joy_FinalizeMove( &forward, &side, &dyaw, &dpitch );
@@ -672,6 +684,15 @@ void Host_InputFrame( void )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );
 			pitch += dy * m_pitch->value, yaw -= dx * m_yaw->value; //mouse speed
+		}
+#endif
+
+#ifdef __ANDROID__
+		if( !m_ignore->integer )
+		{
+			float  mouse_x, mouse_y;
+			Android_MouseMove( &mouse_x, &mouse_y );
+			pitch += mouse_y * m_pitch->value, yaw -= mouse_x * m_yaw->value; //mouse speed
 		}
 #endif
 

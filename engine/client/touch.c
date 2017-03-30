@@ -1326,7 +1326,16 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	}
 	
 	if( !touch.initialized || !touch_enable->integer )
+	{
+#if 0
+		if( type == event_down )
+			Key_Event( K_MOUSE1, true );
+		if( type == event_up )
+			Key_Event( K_MOUSE1, false );
+		Android_AddMove( dx * scr_width->value, dy * scr_height->value );
+#endif
 		return 0;
+	}
 
 	if( touch.state == state_edit_move )
 	{
