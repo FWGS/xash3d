@@ -702,7 +702,7 @@ void CL_SendConnectPacket( void )
 	netadr_t	adr;
 	int	port;
 	unsigned int extensions = 0;
-	char useragent[256] = "";
+	char useragent[MAX_INFO_STRING] = "";
 	unsigned int input_devices = 0;
 
 	if( !NET_StringToAdr( cls.servername, &adr ))
@@ -745,12 +745,12 @@ void CL_SendConnectPacket( void )
 		Cvar_FullSet( "joy_enable", va( "%s", Cvar_VariableString( "joy_enable" ) ), CVAR_ARCHIVE | CVAR_READ_ONLY );
 
 
-		Info_SetValueForKey( useragent, "d", va( "%d", input_devices ), 256 );
-		Info_SetValueForKey( useragent, "v", XASH_VERSION, 256 );
-		Info_SetValueForKey( useragent, "b", va( "%d", Q_buildnum() ), 256 );
-		Info_SetValueForKey( useragent, "o", Q_buildos(), 256 );
-		Info_SetValueForKey( useragent, "a", Q_buildarch(), 256 );
-		Info_SetValueForKey( useragent, "i", ID_GetMD5(), 256 );
+		Info_SetValueForKey( useragent, "d", va( "%d", input_devices ), sizeof( useragent ) );
+		Info_SetValueForKey( useragent, "v", XASH_VERSION, sizeof( useragent ) );
+		Info_SetValueForKey( useragent, "b", va( "%d", Q_buildnum() ), sizeof( useragent ) );
+		Info_SetValueForKey( useragent, "o", Q_buildos(), sizeof( useragent ) );
+		Info_SetValueForKey( useragent, "a", Q_buildarch(), sizeof( useragent ) );
+		Info_SetValueForKey( useragent, "i", ID_GetMD5(), sizeof( useragent ) );
 	}
 	else
 	{
