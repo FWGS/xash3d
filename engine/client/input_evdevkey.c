@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #ifdef USE_EVDEV
 #include <fcntl.h>
 #include <linux/input.h>
-#include "common.h"
+#include "keydefs.h"
 #ifdef XASH_SDL
 #include <SDL_keyboard.h>
 
@@ -273,6 +273,8 @@ static SDL_Scancode EVDEV_Keycodes[] = {
     SDL_SCANCODE_UNKNOWN,       /*  KEY_RFKILL      247 Key that controls all radios */
     SDL_SCANCODE_UNKNOWN,       /*  KEY_MICMUTE     248 Mute / unmute the microphone */
 };
+#else
+
 #endif
 int KeycodeFromEvdev(int keycode, int value)
 {
@@ -355,6 +357,84 @@ int KeycodeFromEvdev(int keycode, int value)
 	}
 	return keynum;
 #else
+	switch (keycode) {
+
+	case KEY_0:          return '0';
+	case KEY_1:          return '1';
+	case KEY_2:          return '2';
+	case KEY_3:          return '3';
+	case KEY_4:          return '4';
+	case KEY_5:          return '5';
+	case KEY_6:          return '6';
+	case KEY_7:          return '7';
+	case KEY_8:          return '8';
+	case KEY_9:          return '9';
+	case KEY_BACKSPACE:  return K_BACKSPACE;
+	case KEY_ENTER:      return K_ENTER;
+	case KEY_ESC:        return K_ESCAPE;
+	case KEY_KP0:        return K_KP_INS;
+	case KEY_KP1:        return K_KP_END;
+	case KEY_KP2:        return K_KP_DOWNARROW;
+	case KEY_KP3:        return K_KP_PGDN;
+	case KEY_KP4:        return K_KP_LEFTARROW;
+	case KEY_KP5:        return K_KP_5;
+	case KEY_KP6:        return K_KP_RIGHTARROW;
+	case KEY_KP7:        return K_KP_HOME;
+	case KEY_KP8:        return K_KP_UPARROW;
+	case KEY_KP9:        return K_KP_PGUP;
+	case KEY_KPDOT:      return K_KP_DEL;
+	case KEY_KPENTER:    return K_KP_ENTER;
+	case KEY_Q: return 'Q';
+	case KEY_W: return 'W';
+	case KEY_E: return 'E';
+	case KEY_R: return 'R';
+	case KEY_T: return 'T';
+	case KEY_Y: return 'Y';
+	case KEY_U: return 'U';
+	case KEY_I: return 'I';
+	case KEY_O: return 'O';
+	case KEY_P: return 'P';
+	case KEY_A: return 'A';
+	case KEY_S: return 'S';
+	case KEY_D: return 'D';
+	case KEY_F: return 'F';
+	case KEY_G: return 'G';
+	case KEY_H: return 'H';
+	case KEY_J: return 'J';
+	case KEY_K: return 'K';
+	case KEY_L: return 'L';
+	case KEY_Z: return 'Z';
+	case KEY_X: return 'X';
+	case KEY_C: return 'C';
+	case KEY_V: return 'V';
+	case KEY_B: return 'B';
+	case KEY_N: return 'N';
+	case KEY_M: return 'M';
+	case KEY_LEFTBRACE: return '[';
+	case KEY_RIGHTBRACE: return ']';
+	case KEY_MINUS: return '-';
+	case KEY_EQUAL: return '=';
+	case KEY_TAB: return K_TAB;
+	case KEY_SEMICOLON: return ';';
+	case KEY_APOSTROPHE: return '\'';
+	case KEY_GRAVE: return '`';
+	case KEY_BACKSLASH: return '\\';
+	case KEY_COMMA: return ',';
+	case KEY_DOT: return '.';
+	case KEY_SLASH: return '/';
+	case KEY_SPACE: return K_SPACE;
+	case KEY_KPASTERISK: return '*';
+	case KEY_RIGHTCTRL:
+	case KEY_LEFTCTRL:
+		return K_CTRL;
+	case KEY_RIGHTSHIFT:
+	case KEY_LEFTSHIFT:
+		return K_SHIFT;
+
+	default:
+		break;
+	}
+
 	return 0;	
 #endif
 }
