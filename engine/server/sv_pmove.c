@@ -509,8 +509,10 @@ static void GAME_EXPORT pfnPlaySound( int channel, const char *sample, float vol
 	ent = EDICT_NUM( svgame.pmove->player_index + 1 );
 	if( !SV_IsValidEdict( ent )) return;
 
+	exclude = cl->local_weapons; // && !cl->nopred
+
 	// exclude current player, because he played this sound locally during prediction
-	SV_StartSoundEx( ent, channel, sample, volume, attenuation, fFlags, pitch, true );
+	SV_StartSoundEx( ent, channel, sample, volume, attenuation, fFlags, pitch, exclude );
 }
 
 static void GAME_EXPORT pfnPlaybackEventFull( int flags, int clientindex, word eventindex, float delay, float *origin,
