@@ -771,29 +771,79 @@ Kick a user off of the server
 */
 void SV_Kick_f( void )
 {
-	if( Cmd_Argc() != 2 )
-	{
-		Msg( "Usage: kick <userid> | <name>\n" );
-		return;
-	}
+        sv_client_t *cl, save;
+        const char *param = Cmd_Argv( 1 );
+        char message[256];
+        size_t data_len;
+        const char *args;
 
-	if( !SV_SetPlayer( )) return;
+        if ( Cmd_Argc( ) < 2 )
+        {
+                Msg( "Usage: kick <#id|name> [message]\n" );
+                return;
+        }
 
-	if( NET_IsLocalAddress( svs.currentPlayer->netchan.remote_address ))
-	{
-		Msg( "The local player cannot be kicked!\n" );
-		return;
-	}
+        if ( *param == '#' && param[1] && Q_isdigit( &param[1] ) )
+        {
+                cl = SV_ClientById( Q_atoi( &param[1] ) );
+        }
+        else
+        {
+                cl = SV_ClientByName( param );
+        }
 
-	SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked\n", svs.currentPlayer->name );
-	SV_ClientPrintf( svs.currentPlayer, PRINT_HIGH, "You were kicked from the game\n" );
-	SV_DropClient( svs.currentPlayer );
+        if ( !cl )
+        {
+                Msg( "Client is not on the server\n" );
+                return;
+        }
 
-	Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\"\n", svs.currentPlayer->name,
-				svs.currentPlayer->userid, SV_GetClientIDString ( svs.currentPlayer ) );
+        if ( NET_IsLocalAddress( cl->netchan.remote_address ) )
+        {
+                Msg( "The local player cannot be kicked!\n" );
+                return;
+        }
 
-	// min case there is a funny zombie
-	svs.currentPlayer->lastmessage = host.realtime;
+        *message = '\0';
+
+        if ( Cmd_Argc( ) > 2 )
+        {
+                data_len = Q_strlen( param ) + 1; // 1 - space
+                args     = Cmd_Args( );
+
+                if ( Q_strlen( args ) >= data_len )
+                {
+                        Q_strncpy( message, args + data_len, sizeof( message ) - 1 );
+                        message[sizeof( message ) - 1] = '\0';
+                }
+        }
+
+        if ( *message )
+        {
+                SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from server with message: %s\n", message );
+        }
+        else
+        {
+                SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from server\n" );
+        }
+
+        Q_memcpy( &save, cl, sizeof( save ) );
+
+        SV_DropClient( cl );
+
+        if ( *message )
+        {
+                SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked with message: %s\n", save.name, message );
+                Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\" (message: %s)\n", save.name, save.userid, SV_GetClientIDString( &save ), message );
+        }
+        else
+        {
+                SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked\n", save.name );
+                Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\"\n", save.name, save.userid, SV_GetClientIDString( &save ) );
+        }
+
+        // min case there is a funny zombie
+        cl->lastmessage = host.realtime;
 }
 
 /*

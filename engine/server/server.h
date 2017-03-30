@@ -686,4 +686,12 @@ void Log_InitCvars( void );
 void SV_SetLogAddress_f( void );
 void SV_ServerLog_f( void );
 
-#endif//SERVER_H
+//
+// sv_utils.c
+//
+sv_client_t *SV_ClientBySlotNum( int num );
+sv_client_t *SV_ClientById( int id );
+sv_client_t *SV_ClientByName( const char *name );
+qboolean SV_SetCurrentClient( sv_client_t *cl );
+
+#endif //SERVER_H
