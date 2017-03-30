@@ -46,7 +46,9 @@ enum
 	ID_AXIS_BIND3,
 	ID_AXIS_BIND4,
 	ID_AXIS_BIND5,
-	ID_AXIS_BIND6
+	ID_AXIS_BIND6,
+	ID_JOY_ENABLE,
+	ID_CONTROLS
 };
 
 enum engineAxis_t
@@ -79,8 +81,10 @@ typedef struct
 	menuBitmap_s	banner;
 
 	menuPicButton_s	done;
+	menuPicButton_s controls;
 	menuSlider_s side, forward, pitch, yaw;
 	menuCheckBox_s invSide, invFwd, invPitch, invYaw;
+	menuCheckBox_s joyEnable;
 
 	menuSpinControl_s axisBind[6];
 
@@ -116,6 +120,8 @@ static void UI_GamePad_GetConfig( void )
 	uiGamePad.invFwd.enabled = forward < 0.0f ? true: false;
 	uiGamePad.invPitch.enabled = pitch < 0.0f ? true: false;
 	uiGamePad.invYaw.enabled = yaw < 0.0f ? true: false;
+
+	uiGamePad.joyEnable.enabled = (int)CVAR_GET_FLOAT( "joy_enable" );
 
 	// I made a monster...
 	for( int i = 0; i < sizeof( binding ) - 1; i++ )
@@ -197,6 +203,7 @@ static void UI_GamePad_SetConfig( void )
 	CVAR_SET_FLOAT( "joy_forward", forward );
 	CVAR_SET_FLOAT( "joy_pitch", pitch );
 	CVAR_SET_FLOAT( "joy_yaw", yaw );
+	CVAR_SET_FLOAT( "joy_enable", uiGamePad.joyEnable.enabled );
 	CVAR_SET_STRING( "joy_axis_binding", binding );
 	CLIENT_COMMAND( FALSE, "trysaveconfig\n" );
 }
@@ -227,6 +234,7 @@ static void UI_GamePad_Callback( void *self, int event )
 	case ID_INVERT_FORWARD:
 	case ID_INVERT_PITCH:
 	case ID_INVERT_YAW:
+	case ID_JOY_ENABLE:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -244,6 +252,9 @@ static void UI_GamePad_Callback( void *self, int event )
 
 	switch( item->id )
 	{
+	case ID_CONTROLS:
+		UI_Controls_Menu();
+		break;
 	case ID_DONE:
 		UI_PopMenu();
 		break;
@@ -292,7 +303,7 @@ static void UI_GamePad_Init( void )
 
 	uiGamePad.axisBind_label.generic.type = QMTYPE_ACTION;
 	uiGamePad.axisBind_label.generic.flags = QMF_CENTER_JUSTIFY|QMF_INACTIVE|QMF_DROPSHADOW;
-	uiGamePad.axisBind_label.generic.x = 52;
+	uiGamePad.axisBind_label.generic.x = 72;
 	uiGamePad.axisBind_label.generic.y = 180;
 	uiGamePad.axisBind_label.generic.color = uiColorHelp;
 	uiGamePad.axisBind_label.generic.height = 26;
@@ -308,7 +319,7 @@ static void UI_GamePad_Init( void )
 		uiGamePad.axisBind[i].generic.id = ID_AXIS_BIND1 + i;
 		uiGamePad.axisBind[i].generic.type = QMTYPE_SPINCONTROL;
 		uiGamePad.axisBind[i].generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-		uiGamePad.axisBind[i].generic.x = 72;
+		uiGamePad.axisBind[i].generic.x = 104;
 		uiGamePad.axisBind[i].generic.y = y;
 		uiGamePad.axisBind[i].generic.height = 26;
 		uiGamePad.axisBind[i].generic.width = 256;
@@ -324,7 +335,7 @@ static void UI_GamePad_Init( void )
 	uiGamePad.side.generic.id = ID_SIDE;
 	uiGamePad.side.generic.type = QMTYPE_SLIDER;
 	uiGamePad.side.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiGamePad.side.generic.x = 400;
+	uiGamePad.side.generic.x = 432;
 	uiGamePad.side.generic.y = 250;
 	uiGamePad.side.generic.callback = UI_GamePad_Callback;
 	uiGamePad.side.generic.name = "Side";
@@ -337,7 +348,7 @@ static void UI_GamePad_Init( void )
 	uiGamePad.invSide.generic.type = QMTYPE_CHECKBOX;
 	uiGamePad.invSide.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiGamePad.invSide.generic.name = "Invert";
-	uiGamePad.invSide.generic.x = 620;
+	uiGamePad.invSide.generic.x = 652;
 	uiGamePad.invSide.generic.y = 230;
 	uiGamePad.invSide.generic.callback = UI_GamePad_Callback;
 	uiGamePad.invSide.generic.statusText = "Invert side movement axis";
@@ -345,7 +356,7 @@ static void UI_GamePad_Init( void )
 	uiGamePad.forward.generic.id = ID_FORWARD;
 	uiGamePad.forward.generic.type = QMTYPE_SLIDER;
 	uiGamePad.forward.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiGamePad.forward.generic.x = 400;
+	uiGamePad.forward.generic.x = 432;
 	uiGamePad.forward.generic.y = 300;
 	uiGamePad.forward.generic.callback = UI_GamePad_Callback;
 	uiGamePad.forward.generic.name = "Forward";
@@ -358,7 +369,7 @@ static void UI_GamePad_Init( void )
 	uiGamePad.invFwd.generic.type = QMTYPE_CHECKBOX;
 	uiGamePad.invFwd.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiGamePad.invFwd.generic.name = "Invert";
-	uiGamePad.invFwd.generic.x = 620;
+	uiGamePad.invFwd.generic.x = 652;
 	uiGamePad.invFwd.generic.y = 280;
 	uiGamePad.invFwd.generic.callback = UI_GamePad_Callback;
 	uiGamePad.invFwd.generic.statusText = "Invert forward movement axis";
@@ -366,7 +377,7 @@ static void UI_GamePad_Init( void )
 	uiGamePad.pitch.generic.id = ID_PITCH;
 	uiGamePad.pitch.generic.type = QMTYPE_SLIDER;
 	uiGamePad.pitch.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiGamePad.pitch.generic.x = 400;
+	uiGamePad.pitch.generic.x = 432;
 	uiGamePad.pitch.generic.y = 350;
 	uiGamePad.pitch.generic.callback = UI_GamePad_Callback;
 	uiGamePad.pitch.generic.name = "Pitch";
@@ -379,7 +390,7 @@ static void UI_GamePad_Init( void )
 	uiGamePad.invPitch.generic.type = QMTYPE_CHECKBOX;
 	uiGamePad.invPitch.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiGamePad.invPitch.generic.name = "Invert";
-	uiGamePad.invPitch.generic.x = 620;
+	uiGamePad.invPitch.generic.x = 652;
 	uiGamePad.invPitch.generic.y = 330;
 	uiGamePad.invPitch.generic.callback = UI_GamePad_Callback;
 	uiGamePad.invPitch.generic.statusText = "Invert pitch axis";
@@ -387,7 +398,7 @@ static void UI_GamePad_Init( void )
 	uiGamePad.yaw.generic.id = ID_YAW;
 	uiGamePad.yaw.generic.type = QMTYPE_SLIDER;
 	uiGamePad.yaw.generic.flags = QMF_CENTER_JUSTIFY|QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
-	uiGamePad.yaw.generic.x = 400;
+	uiGamePad.yaw.generic.x = 432;
 	uiGamePad.yaw.generic.y = 400;
 	uiGamePad.yaw.generic.callback = UI_GamePad_Callback;
 	uiGamePad.yaw.generic.name = "Yaw";
@@ -400,10 +411,29 @@ static void UI_GamePad_Init( void )
 	uiGamePad.invYaw.generic.type = QMTYPE_CHECKBOX;
 	uiGamePad.invYaw.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiGamePad.invYaw.generic.name = "Invert";
-	uiGamePad.invYaw.generic.x = 620;
+	uiGamePad.invYaw.generic.x = 652;
 	uiGamePad.invYaw.generic.y = 380;
 	uiGamePad.invYaw.generic.callback = UI_GamePad_Callback;
 	uiGamePad.invYaw.generic.statusText = "Invert yaw axis";
+
+	uiGamePad.joyEnable.generic.id = ID_JOY_ENABLE;
+	uiGamePad.joyEnable.generic.type = QMTYPE_CHECKBOX;
+	uiGamePad.joyEnable.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
+	uiGamePad.joyEnable.generic.name = "Enable gamepad";
+	uiGamePad.joyEnable.generic.x = 72;
+	uiGamePad.joyEnable.generic.y = 530;
+	uiGamePad.joyEnable.generic.callback = UI_GamePad_Callback;
+	uiGamePad.joyEnable.generic.statusText = "Enable gamepad input in game";
+
+	uiGamePad.controls.generic.id = ID_CONTROLS;
+	uiGamePad.controls.generic.type = QMTYPE_BM_BUTTON;
+	uiGamePad.controls.generic.flags= QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY;
+	uiGamePad.controls.generic.x = 72;
+	uiGamePad.controls.generic.y = 580;
+	uiGamePad.controls.generic.name = "Controls";
+	uiGamePad.controls.generic.callback = UI_GamePad_Callback;
+	uiGamePad.controls.generic.statusText = "Set gamepad key bindings";
+	UI_UtilSetupPicButton( &uiGamePad.controls, PC_CONTROLS );
 
 	UI_GamePad_GetConfig();
 
@@ -423,6 +453,8 @@ static void UI_GamePad_Init( void )
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.yaw );
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.invYaw );
 	UI_AddItem( &uiGamePad.menu, &uiGamePad.axisBind_label );
+	UI_AddItem( &uiGamePad.menu, &uiGamePad.joyEnable );
+	UI_AddItem( &uiGamePad.menu, &uiGamePad.controls );
 }
 
 /*
