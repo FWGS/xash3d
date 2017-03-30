@@ -812,26 +812,57 @@ Kick a user off of the server
 */
 void SV_Kick_f( void )
 {
-	if( Cmd_Argc() != 2 )
+	sv_client_t *cl;
+	const char *param, *clientId;
+	char name[32];
+	int userid;
+
+	if( Cmd_Argc() < 2 )
 	{
-		Msg( "Usage: kick <userid> | <name>\n" );
+		Msg( "Usage: kick <#id|name> [reason]\n" );
 		return;
 	}
 
-	if( !SV_SetPlayer( )) return;
+	param = Cmd_Argv( 1 );
 
-	if( NET_IsLocalAddress( svs.currentPlayer->netchan.remote_address ))
+	if( *param == '#' && Q_isdigit( param + 1 ) )
+		cl = SV_ClientById( Q_atoi( param + 1 ) );
+	else cl = SV_ClientByName( param );
+
+	if( !cl )
+	{
+		Msg( "Client is not on the server\n" );
+		return;
+	}
+
+	if( NET_IsLocalAddress( cl->netchan.remote_address ))
 	{
 		Msg( "The local player cannot be kicked!\n" );
 		return;
 	}
 
-	SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked\n", svs.currentPlayer->name );
-	SV_ClientPrintf( svs.currentPlayer, PRINT_HIGH, "You were kicked from the game\n" );
-	SV_DropClient( svs.currentPlayer );
+	param = Cmd_Argv( 2 );
+	if( *param )
+		SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from the game with message: \"%s\"\n", param );
+	else
+		SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from the game\n" );
 
-	Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\"\n", svs.currentPlayer->name,
-				svs.currentPlayer->userid, SV_GetClientIDString ( svs.currentPlayer ) );
+	Q_strcpy( name, cl->name );
+	userid = cl->userid;
+	clientId = SV_GetClientIDString( cl );
+
+	SV_DropClient( cl );
+
+	if ( *param )
+	{
+		SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked with message: \"%s\"\n", name, param );
+		Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\" (message \"%s\")\n", name, userid, clientId, param );
+	}
+	else
+	{
+		SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked\n", name );
+		Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\"\n", name, userid, clientId );
+	}
 
 	// min case there is a funny zombie
 	svs.currentPlayer->lastmessage = host.realtime;

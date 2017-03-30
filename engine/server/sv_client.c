@@ -694,6 +694,54 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 	return result;
 }
 
+sv_client_t *SV_ClientById( int id )
+{
+	sv_client_t *cl;
+	int i;
+
+	ASSERT( id >= 0 );
+
+	for( i = 0, cl = svs.clients; i < svgame.globals->maxClients; i++, cl++ )
+	{
+		if( !cl->state )
+			continue;
+
+		if( cl->userid == id )
+			return cl;
+	}
+
+	return NULL;
+}
+
+sv_client_t *SV_ClientByName( const char *name )
+{
+	sv_client_t *cl;
+	int i;
+
+	ASSERT( name && *name );
+
+	for( i = 0, cl = svs.clients; i < svgame.globals->maxClients; i++, cl++ )
+	{
+		if( !cl->state )
+			continue;
+
+		if( !Q_strcmp( cl->name, name ) )
+			return cl;
+	}
+
+	return NULL;
+}
+
+qboolean SV_SetCurrentClient( sv_client_t *cl )
+{
+	ASSERT( cl && cl >= svs.clients && cl < ( svs.clients + svgame.globals->maxClients ) );
+
+	svs.currentPlayer = cl;
+	svs.currentPlayerNum = cl - svs.clients;
+
+	return true;
+}
+
 /*
 ================
 SV_Status
