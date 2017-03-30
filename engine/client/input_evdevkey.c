@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #ifdef USE_EVDEV
 #include <fcntl.h>
 #include <linux/input.h>
-#include "keydefs.h"
+#include "common.h"
 #ifdef XASH_SDL
 #include <SDL_keyboard.h>
 
@@ -274,15 +274,8 @@ static SDL_Scancode EVDEV_Keycodes[] = {
     SDL_SCANCODE_UNKNOWN,       /*  KEY_MICMUTE     248 Mute / unmute the microphone */
 };
 #endif
-int KeycodeFromEvdev(int keycode)
+int KeycodeFromEvdev(int keycode, int value)
 {
-    
-	if (keycode >= BTN_MOUSE && keycode < BTN_MOUSE + 5 )
-	{
-		if(keycode == BTN_MOUSE + 2) keycode--;
-		if(keycode == BTN_MOUSE + 1) keycode++;
-		return K_MOUSE1 + keycode - BTN_MOUSE;
-	}
 #ifdef XASH_SDL
 	SDL_Scancode scancode = SDL_SCANCODE_UNKNOWN;
 	

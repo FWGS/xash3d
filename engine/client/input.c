@@ -130,7 +130,7 @@ convar_t	*evdev_mousepath;
 convar_t	*evdev_grab;
 
 
-int KeycodeFromEvdev(int keycode);
+int KeycodeFromEvdev(int keycode, int value);
 
 /*
 ===========
@@ -187,7 +187,7 @@ void Evdev_CloseMouse_f ( void )
 
 void IN_EvdevFrame ()
 {
-	if( evdev_open && !m_ignore->value )
+	if( evdev_open && !m_ignore->integer )
 	{
 		struct input_event ev;
 		evdev_dx = evdev_dy = 0;
@@ -201,17 +201,36 @@ void IN_EvdevFrame ()
 					break;
 					case REL_Y: evdev_dy += ev.value;
 					break;
+					case REL_WHEEL:
+					if( ev.value > 0)
+					{
+						Key_Event( K_MWHEELDOWN, 1 );
+						Key_Event( K_MWHEELDOWN, 0 );
+					}
+					else
+					{
+						Key_Event( K_MWHEELUP, 1 );
+						Key_Event( K_MWHEELUP, 0 );
+					}
+					break;
 				}
 			}
 			else if ( ( ev.type == EV_KEY ) && (evdev_grab->value == 1.0 ) )
 			{
-				Key_Event ( KeycodeFromEvdev( ev.code ) , ev.value);
+				switch (ev.code) {
+				case BTN_LEFT:
+					Key_Event( K_MOUSE1, ev.value );
+					break;
+				case BTN_MIDDLE:
+					Key_Event( K_MOUSE3, ev.value );
+					break;
+				case BTN_RIGHT:
+					Key_Event( K_MOUSE2, ev.value );
+					break;
+				default:
+					Key_Event ( KeycodeFromEvdev( ev.code, ev.value ) , ev.value);
+				}
 			}
-		}
-		if( ( evdev_grab->value == 1 ) && ( cls.key_dest != key_game ) )
-		{
-			ioctl( mouse_fd, EVIOCGRAB, (void*) 0);
-			Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
 		}
 		if(clgame.dllFuncs.pfnLookEvent)
 			clgame.dllFuncs.pfnLookEvent( -evdev_dx * m_yaw->value, evdev_dy * m_pitch->value );
@@ -224,6 +243,16 @@ void IN_EvdevFrame ()
 	}
 	
 }
+
+void Evdev_SetGrab( qboolean grab )
+{
+	if( !evdev_open || !evdev_grab->integer )
+		return;
+	ioctl( mouse_fd, EVIOCGRAB, (void*) grab );
+	if( grab )
+		Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
+}
+
 #endif
 
 void IN_StartupMouse( void )
@@ -293,10 +322,22 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 #ifdef XASH_SDL
 		SDL_SetWindowGrab(host.hWnd, SDL_FALSE);
 #endif
+#ifdef __ANDROID__
 		Android_ShowMouse( true );
+#endif
+#ifdef USE_EVDEV
+		Evdev_SetGrab( false );
+#endif
 	}
 	else
+	{
+#ifdef __ANDROID__
 		Android_ShowMouse( false );
+#endif
+#ifdef USE_EVDEV
+		Evdev_SetGrab( true );
+#endif
+	}
 }
 
 /*
@@ -315,14 +356,6 @@ void IN_ActivateMouse( qboolean force )
 
 	if( CL_Active() && host.mouse_visible && !force )
 		return;	// VGUI controls
-#ifdef USE_EVDEV
-		if( evdev_open && ( evdev_grab->value == 1 ) && cls.key_dest == key_game )
-		{
-			ioctl( mouse_fd, EVIOCGRAB, (void*) 1);
-			Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
-		}
-		else
-#endif
 
 	if( cls.key_dest == key_menu && vid_fullscreen && !vid_fullscreen->integer)
 	{
