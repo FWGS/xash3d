@@ -105,10 +105,15 @@ void SV_DirectConnect( netadr_t from )
 	int		challenge;
 	unsigned int requested_extensions, extensions = 0;
 	edict_t		*ent;
+	char *errorpacket = "print";
+
+	if( Cmd_Argc() > 6 )
+		errorpacket = "errormsg";
 
 	if( !svs.initialized )
 	{
-		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nServer not running any map!\n" );
+		Netchan_OutOfBandPrint( NS_SERVER, from, "%s\nServer not running any map!\n", errorpacket );
+		Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
 		return;
 	}
 
@@ -117,6 +122,8 @@ void SV_DirectConnect( netadr_t from )
 	if( version != PROTOCOL_VERSION )
 	{
 		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nServer uses protocol version %i.\n", PROTOCOL_VERSION );
+		Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nServer uses protocol version %i.\n", PROTOCOL_VERSION );
+
 		MsgDev( D_ERROR, "SV_DirectConnect: rejected connect from version %i\n", version );
 		Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
 		return;
@@ -166,7 +173,7 @@ void SV_DirectConnect( netadr_t from )
 
 		if( i == MAX_CHALLENGES )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "print\nNo or bad challenge for address.\n" );
+			Netchan_OutOfBandPrint( NS_SERVER, from, "%s\nNo or bad challenge for address.\n", errorpacket );
 			Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
 			return;
 		}
@@ -209,7 +216,7 @@ void SV_DirectConnect( netadr_t from )
 
 	if( !newcl )
 	{
-		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nServer is full.\n" );
+		Netchan_OutOfBandPrint( NS_SERVER, from, "%s\nServer is full.\n", errorpacket );
 		MsgDev( D_INFO, "SV_DirectConnect: rejected a connection.\n" );
 		Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
 		return;
@@ -217,7 +224,7 @@ void SV_DirectConnect( netadr_t from )
 
 	// build a new connection
 	// accept the new client
-gotnewcl:	
+gotnewcl:
 	// this is the only place a sv_client_t is ever initialized
 
 	if( sv_maxclients->integer == 1 ) // save physinfo for singleplayer
@@ -271,9 +278,9 @@ gotnewcl:
 	// get the game a chance to reject this connection or modify the userinfo
 	if( !( SV_ClientConnect( ent, userinfo )))
 	{
-		if( *Info_ValueForKey( userinfo, "rejmsg" )) 
-			Netchan_OutOfBandPrint( NS_SERVER, from, "print\n%s\nConnection refused.\n", Info_ValueForKey( userinfo, "rejmsg" ));
-		else Netchan_OutOfBandPrint( NS_SERVER, from, "print\nConnection refused.\n" );
+		if( *Info_ValueForKey( userinfo, "rejmsg" ))
+			Netchan_OutOfBandPrint( NS_SERVER, from, "%s\n%s\nConnection refused.\n", errorpacket, Info_ValueForKey( userinfo, "rejmsg" ));
+		else Netchan_OutOfBandPrint( NS_SERVER, from, "%s\nConnection refused.\n", errorpacket );
 
 		MsgDev( D_ERROR, "SV_DirectConnect: game rejected a connection.\n");
 		Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
@@ -593,7 +600,7 @@ void Rcon_Print( const char *pMsg )
 	if( host.rd.target && host.rd.lines && host.rd.flush )
 	{
 		int len = Q_strncat( host.rd.buffer, pMsg, host.rd.buffersize );
-		
+
 		if( len && host.rd.buffer[len-1] == '\n' )
 		{
 			host.rd.flush( host.rd.address, host.rd.target, host.rd.buffer );
@@ -601,7 +608,7 @@ void Rcon_Print( const char *pMsg )
 				host.rd.lines--;
 			host.rd.buffer[0] = 0;
 			if( !host.rd.lines )
-				Msg( "End of redirection!\n" ); 
+				Msg( "End of redirection!\n" );
 		}
 	}
 }
@@ -935,7 +942,7 @@ int SV_CalcPing( sv_client_t *cl )
 ===================
 SV_EstablishTimeBase
 
-Finangles latency and the like. 
+Finangles latency and the like.
 ===================
 */
 void SV_EstablishTimeBase( sv_client_t *cl, usercmd_t *cmds, int dropped, int numbackup, int numcmds )
@@ -950,7 +957,7 @@ void SV_EstablishTimeBase( sv_client_t *cl, usercmd_t *cmds, int dropped, int nu
 			cmdnum = dropped - (dropped - numbackup);
 			runcmd_time = (double)cl->lastcmd.msec * (dropped - numbackup) / 1000.0;
 		}
-		
+
 		for( ; cmdnum > 0; cmdnum-- )
 			runcmd_time += cmds[cmdnum - 1 + numcmds].msec / 1000.0;
 	}
@@ -1001,7 +1008,7 @@ float SV_CalcClientTime( sv_client_t *cl )
 	minping =  9999.0f;
 	maxping = -9999.0f;
 	ping /= count;
-	
+
 	for( i = 0; i < min( SV_UPDATE_BACKUP, 4 ); i++ )
 	{
 		client_frame_t	*frame = &cl->frames[SV_UPDATE_MASK & (cl->netchan.incoming_acknowledged - i)];
@@ -1031,7 +1038,7 @@ Writes all update values to a bitbuf
 void SV_FullClientUpdate( sv_client_t *cl, sizebuf_t *msg )
 {
 	char	info[MAX_INFO_STRING];
-	int	i;	
+	int	i;
 
 	i = cl - svs.clients;
 
@@ -1140,7 +1147,7 @@ void SV_PutClientInServer( edict_t *ent )
 	}
 
 	if( !sv.loadgame )
-	{	
+	{
 		//client->hltv_proxy = Q_atoi( Info_ValueForKey( client->userinfo, "hltv" )) ? true : false;
 
 		if( ent->pvPrivateData != NULL )
@@ -1927,7 +1934,7 @@ The client is going to disconnect, so remove the connection immediately
 */
 void SV_Disconnect_f( sv_client_t *cl )
 {
-	SV_DropClient( cl );	
+	SV_DropClient( cl );
 }
 
 /*
@@ -1983,7 +1990,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 {
 	int		i, dupc = 1;
 	edict_t		*ent = cl->edict;
-	string		temp1, temp2;	
+	string		temp1, temp2;
 	sv_client_t	*current;
 	char		*val;
 
@@ -2106,7 +2113,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	// call prog code to allow overrides
 	svgame.dllFuncs.pfnClientUserInfoChanged( cl->edict, cl->userinfo );
 	ent->v.netname = MAKE_STRING( cl->name );
-	if( cl->state >= cs_connected ) cl->sendinfo = true; // needs for update client info 
+	if( cl->state >= cs_connected ) cl->sendinfo = true; // needs for update client info
 }
 
 /*
@@ -2162,7 +2169,7 @@ void SV_Kill_f( sv_client_t *cl )
 		return;
 	}
 
-	svgame.dllFuncs.pfnClientKill( cl->edict );	
+	svgame.dllFuncs.pfnClientKill( cl->edict );
 }
 
 /*
@@ -3097,7 +3104,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 ==================
 SV_ParseClientMove
 
-The message usually contains all the movement commands 
+The message usually contains all the movement commands
 that were in the last three packets, so that the information
 in dropped packets can be recovered.
 
@@ -3250,7 +3257,7 @@ void SV_ParseResourceList( sv_client_t *cl, sizebuf_t *msg )
 ===================
 SV_ParseCvarValue
 
-Parse a requested value from client cvar 
+Parse a requested value from client cvar
 ===================
 */
 void SV_ParseCvarValue( sv_client_t *cl, sizebuf_t *msg )
@@ -3266,7 +3273,7 @@ void SV_ParseCvarValue( sv_client_t *cl, sizebuf_t *msg )
 ===================
 SV_ParseCvarValue2
 
-Parse a requested value from client cvar 
+Parse a requested value from client cvar
 ===================
 */
 void SV_ParseCvarValue2( sv_client_t *cl, sizebuf_t *msg )
@@ -3353,7 +3360,7 @@ void SV_ExecuteClientMessage( sv_client_t *cl, sizebuf_t *msg )
 			move_issued = true;
 			SV_ParseClientMove( cl, msg );
 			break;
-		case clc_stringcmd:	
+		case clc_stringcmd:
 			s = BF_ReadString( msg );
 			// malicious users may try using too many string commands
 			if( ++stringCmdCount < 8 ) SV_ExecuteClientCommand( cl, s );

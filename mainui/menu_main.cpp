@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_DISCONNECT	15
 #define ID_YES	 	130
 #define ID_NO	 	131
+#define ID_OK       132
 
 typedef struct
 {
@@ -77,7 +78,9 @@ typedef struct
 	menuAction_s	dlgMessage1;
 	menuPicButton_s	yes;
 	menuPicButton_s	no;
+	menuPicButton_s	ok;
 	void ( *promptAction )( void );
+	int promptAlert; // no cancel button
 } uiMain_t;
 
 static uiMain_t		uiMain;
@@ -171,15 +174,34 @@ static void UI_PromptDialog( void )
 
 	uiMain.msgBox.generic.flags ^= QMF_HIDDEN;
 	uiMain.dlgMessage1.generic.flags ^= QMF_HIDDEN;
-	uiMain.no.generic.flags ^= QMF_HIDDEN;
-	uiMain.yes.generic.flags ^= QMF_HIDDEN;
-
+	if( uiMain.promptAlert )
+		uiMain.ok.generic.flags ^= QMF_HIDDEN;
+	else
+	{
+		uiMain.no.generic.flags ^= QMF_HIDDEN;
+		uiMain.yes.generic.flags ^= QMF_HIDDEN;
+	}
 }
 
 static void UI_ShowPrompt( void ( *action )( void ), const char *message )
 {
 	uiMain.promptAction = action;
 	uiMain.dlgMessage1.generic.name = message;
+	UI_PromptDialog();
+}
+
+void UI_ShowMessageBox( void )
+{
+	static char msg[1024];
+
+	strncpy( msg, CMD_ARGV(1), 1023 );
+	msg[1023] = 0;
+
+	UI_SetActiveMenu( TRUE );
+
+	UI_Main_Menu();
+	uiMain.dlgMessage1.generic.name = msg;
+	uiMain.promptAlert = 1;
 	UI_PromptDialog();
 }
 
@@ -331,6 +353,10 @@ static void UI_Main_Callback( void *self, int event )
 			CLIENT_COMMAND( FALSE, "quit\n" );
 		else
 			uiMain.promptAction();
+		break;
+	case ID_OK:
+		UI_PromptDialog();
+		uiMain.promptAlert = 0;
 		break;
 	case ID_NO:
 		if( !( uiMain.quitMessage.generic.flags & QMF_HIDDEN ))
@@ -594,6 +620,16 @@ static void UI_Main_Init( void )
 
 	UI_UtilSetupPicButton( &uiMain.yes, PC_OK );
 
+	uiMain.ok.generic.id = ID_OK;
+	uiMain.ok.generic.type = QMTYPE_BM_BUTTON;
+	uiMain.ok.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
+	uiMain.ok.generic.name = "Ok";
+	uiMain.ok.generic.x = DLG_X + 490;
+	uiMain.ok.generic.y = 460;
+	uiMain.ok.generic.callback = UI_Main_Callback;
+
+	UI_UtilSetupPicButton( &uiMain.ok, PC_OK );
+
 	uiMain.no.generic.id = ID_NO;
 	uiMain.no.generic.type = QMTYPE_BM_BUTTON;
 	uiMain.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
@@ -632,6 +668,7 @@ static void UI_Main_Init( void )
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.dlgMessage1 );
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.no );
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.yes );
+	UI_AddItem( &uiMain.menu, (void *)&uiMain.ok );
 }
 
 /*

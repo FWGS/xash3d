@@ -1531,6 +1531,16 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		if( str[0] == 0 || str[ Q_strlen( str ) - 1 ] != '\n' )
 			Msg( "\n" );
 	}
+	else if( !Q_strcmp( c, "errormsg" ))
+	{
+		char *str = BF_ReadString( msg );
+		if( UI_IsVisible() )
+			Cmd_ExecuteString( va("menu_showmessagebox \"^3Server message^7\n%s\"", str ), src_command );
+		else
+		{
+			Msg( "%s", str );
+		}
+	}
 	else if( !Q_strcmp( c, "ping" ))
 	{
 		// ping from somewhere

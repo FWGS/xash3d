@@ -278,7 +278,7 @@ void SV_UpdateServerInfo( void )
 {
 	if( !serverinfo->modified ) return;
 
-	Cvar_LookupVars( CVAR_SERVERINFO, NULL, NULL, (setpair_t)pfnUpdateServerInfo ); 
+	Cvar_LookupVars( CVAR_SERVERINFO, NULL, NULL, (setpair_t)pfnUpdateServerInfo );
 
 	serverinfo->modified = false;
 }
@@ -425,7 +425,7 @@ void SV_ReadPackets( void )
 			}
 
 			if( Netchan_Process( &cl->netchan, &net_message ))
-			{	
+			{
 				if( sv_maxclients->integer == 1 || cl->state != cs_spawned )
 					cl->send_message = true; // reply at end of frame
 
@@ -489,7 +489,7 @@ void SV_CheckTimeouts( void )
 		{
 			if( cl->edict && !( cl->edict->v.flags & (FL_SPECTATOR|FL_FAKECLIENT)))
 				numclients++;
-                    }
+					}
 
 		// fake clients do not timeout
 		if( cl->fakeclient ) cl->lastmessage = host.realtime;
@@ -522,7 +522,7 @@ void SV_CheckTimeouts( void )
 		if(( cl->state == cs_connected || cl->state == cs_spawned ) && cl->lastmessage < droppoint && !NET_IsLocalAddress( cl->netchan.remote_address ))
 		{
 			SV_BroadcastPrintf( PRINT_HIGH, "%s timed out\n", cl->name );
-			SV_DropClient( cl ); 
+			SV_DropClient( cl );
 			cl->state = cs_free; // don't bother with zombie state
 		}
 	}
@@ -676,7 +676,7 @@ void Host_ServerFrame( void )
 
 	// let everything in the world think and move
 	SV_RunGameFrame ();
-		
+
 	// send messages back to the clients that had packets read this frame
 	SV_SendClientMessages ();
 
@@ -822,7 +822,7 @@ qboolean SV_ProcessUserAgent( netadr_t from, char *useragent )
 
 	if( !sv_allow_noinputdevices->integer && ( !input_devices_str || !input_devices_str[0] ) )
 	{
-		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow connect without input devices list.\nPlease update your engine.\n");
+		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow\nconnect without input devices list.\nPlease update your engine.\n");
 		return false;
 	}
 
@@ -832,22 +832,22 @@ qboolean SV_ProcessUserAgent( netadr_t from, char *useragent )
 
 		if( !sv_allow_touch->integer && ( input_devices & INPUT_DEVICE_TOUCH ) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow touch controls\nDisable it (touch_enable 0) to play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow touch\nDisable it (touch_enable 0)\nto play on this server\n");
 			return false;
 		}
 		if( !sv_allow_mouse->integer && ( input_devices & INPUT_DEVICE_MOUSE) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow mouse\nDisable it(m_ignore 1) to play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow mouse\nDisable it(m_ignore 1)\nto play on this server\n");
 			return false;
 		}
 		if( !sv_allow_joystick->integer && ( input_devices & INPUT_DEVICE_JOYSTICK) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow joystick\nDisable it(joy_enable 0) to play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow joystick\nDisable it(joy_enable 0)\nto play on this server\n");
 			return false;
 		}
 		if( !sv_allow_vr->integer && ( input_devices & INPUT_DEVICE_VR) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow VR\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow VR\n");
 			return false;
 		}
 	}

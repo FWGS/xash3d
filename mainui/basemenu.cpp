@@ -1748,6 +1748,8 @@ int UI_VidInit( void )
 	return 1;
 }
 
+void UI_ShowMessageBox( void );
+
 /*
 =================
 UI_Init
@@ -1788,6 +1790,7 @@ void UI_Init( void )
 	Cmd_AddCommand( "menu_filedialog", UI_FileDialog_Menu );
 	Cmd_AddCommand( "menu_gamepad", UI_GamePad_Menu );
 	Cmd_AddCommand( "menu_resetping", UI_MenuResetPing_f );
+	Cmd_AddCommand( "menu_showmessagebox", UI_ShowMessageBox );
 
 	CHECK_MAP_LIST( TRUE );
 
