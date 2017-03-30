@@ -159,6 +159,7 @@ static struct {
 	volatile int count;
 	finger_t fingers[MAX_FINGERS];
 	char inputtext[256];
+	float mousex, mousey;
 } events = { PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER };
 
 static struct jnimethods_s
@@ -179,6 +180,7 @@ static struct jnimethods_s
 	jmethodID getAndroidId;
 	jmethodID saveID;
 	jmethodID loadID;
+	jmethodID showMouse;
 	int width, height;
 } jni;
 
@@ -188,6 +190,11 @@ static struct nativeegl_s
 	EGLDisplay dpy;
 	EGLSurface surface;
 } negl;
+
+static struct jnimouse_s
+{
+	float x, y;
+} jnimouse;
 
 #define Android_Lock() pthread_mutex_lock(&events.mutex);
 #define Android_Unlock() pthread_mutex_unlock(&events.mutex);
@@ -394,6 +401,11 @@ void Android_RunEvents()
 	}
 	events.inputtext[0] = 0; // no more text
 
+	jnimouse.x += events.mousex;
+	events.mousex = 0;
+	jnimouse.y += events.mousey;
+	events.mousey = 0;
+
 	//end events read
 	Android_Unlock();
 	pthread_mutex_lock( &events.framemutex );
@@ -466,6 +478,7 @@ DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 	jni.getAndroidId = (*env)->GetStaticMethodID(env, jni.actcls, "getAndroidID", "()Ljava/lang/String;");
 	jni.saveID = (*env)->GetStaticMethodID(env, jni.actcls, "saveID", "(Ljava/lang/String;)V");
 	jni.loadID = (*env)->GetStaticMethodID(env, jni.actcls, "loadID", "()Ljava/lang/String;");
+	jni.showMouse = (*env)->GetStaticMethodID(env, jni.actcls, "showMouse", "(I)V");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -715,6 +728,15 @@ DECLARE_JNI_INTERFACE( int, setenv, jstring key, jstring value, jboolean overwri
 	(*env)->ReleaseStringUTFChars(env, key, k);
 	(*env)->ReleaseStringUTFChars(env, value, v);
 	return err;
+}
+
+
+DECLARE_JNI_INTERFACE( void, nativeMouseMove, jfloat x, jfloat y )
+{
+	Android_Lock();
+	events.mousex += x;
+	events.mousey += y;
+	Android_Unlock();
 }
 
 DECLARE_JNI_INTERFACE( int, nativeTestWritePermission, jstring jPath )
@@ -986,6 +1008,26 @@ const char *Android_LoadID( void )
 void Android_SaveID( const char *id )
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.saveID, (*jni.env)->NewStringUTF( jni.env, id ) );
+}
+
+void Android_MouseMove( float *x, float *y )
+{
+	*x = jnimouse.x;
+	*y = jnimouse.y;
+	jnimouse.x = 0;
+	jnimouse.y = 0;
+	//MsgDev( D_INFO, "Android_MouseMove: %f %f\n", *x, *y );
+}
+
+void Android_AddMove( float x, float y)
+{
+	jnimouse.x += x;
+	jnimouse.y += y;
+}
+
+void Android_ShowMouse( qboolean show )
+{
+	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.showMouse, show );
 }
 
 #endif

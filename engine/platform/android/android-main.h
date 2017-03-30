@@ -26,6 +26,9 @@ const char *Android_LoadID( void );
 void Android_SaveID( const char *id );
 void Android_SetTitle( const char *title );
 void Android_SetIcon( const char *path );
+void Android_MouseMove( float *x, float *y );
+void Android_ShowMouse( qboolean show );
+void Android_AddMove( float x, float y);
 #endif
 
 #endif // ANDROID_MAIN_H
