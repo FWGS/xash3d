@@ -1327,7 +1327,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	
 	if( !touch.initialized || !touch_enable->integer )
 	{
-#ifdef __ANDROID__
+#if 0
 		if( type == event_down )
 			Key_Event( K_MOUSE1, true );
 		if( type == event_up )

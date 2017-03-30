@@ -541,19 +541,23 @@ DECLARE_JNI_INTERFACE( void, nativeKey, jint down, jint code )
 {
 	event_t *event;
 
-	if( code >= ( sizeof( s_android_scantokey ) / sizeof( s_android_scantokey[0] ) ) )
-		return;
-
-	event = Android_AllocEvent();
-
-	if( down )
-		event->type = event_key_down;
+	if( code < 0 )
+	{
+		event = Android_AllocEvent();
+		event->arg = (-code) & 255;
+		event->type = down?event_key_down:event_key_up;
+		Android_PushEvent();
+	}
 	else
-		event->type = event_key_up;
+	{
+		if( code >= ( sizeof( s_android_scantokey ) / sizeof( s_android_scantokey[0] ) ) )
+			return;
 
-	event->arg = s_android_scantokey[code];
-
-	Android_PushEvent();
+		event = Android_AllocEvent();
+		event->type = down?event_key_down:event_key_up;
+		event->arg = s_android_scantokey[code];
+		Android_PushEvent();
+	}
 }
 
 DECLARE_JNI_INTERFACE( void, nativeString, jobject string )
@@ -1027,6 +1031,8 @@ void Android_AddMove( float x, float y)
 
 void Android_ShowMouse( qboolean show )
 {
+	if( m_ignore->integer )
+		show = true;
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.showMouse, show );
 }
 
