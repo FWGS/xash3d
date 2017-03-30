@@ -744,7 +744,7 @@ void SV_Info( netadr_t from, int version )
 	else
 	{
 		for( i = 0; i < sv_maxclients->integer; i++ )
-			if( svs.clients[i].state >= cs_connected )
+			if( svs.clients[i].state >= cs_connected && !svs.clients[i].fakeclient )
 				count++;
 
 		Info_SetValueForKey( string, "host", hostname->string, sizeof( string ) );
