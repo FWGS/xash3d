@@ -763,7 +763,7 @@ void GAME_EXPORT CL_MuzzleFlash( const vec3_t pos, int type )
 	float		scale;
 
 	index = bound( 0, type % 5, MAX_MUZZLEFLASH - 1 );
-	scale = (type / 5) * 0.1f;
+	scale = (type / 10) * 0.1f;
 	if( scale == 0.0f ) scale = 0.5f;
 
 	modelIndex = cl_muzzleflash[index];
