@@ -730,11 +730,8 @@ void CL_SendConnectPacket( void )
 				extensions |= NET_EXT_SPLITHUFF;
 		}
 
-
-#ifdef XASH_SDL
 		if( !m_ignore->integer )
 			input_devices |= INPUT_DEVICE_MOUSE;
-#endif
 
 		if( touch_enable->integer )
 			input_devices |= INPUT_DEVICE_TOUCH;
