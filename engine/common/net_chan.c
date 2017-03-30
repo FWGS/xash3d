@@ -198,7 +198,7 @@ NetSplit_SendLong
 Send parts that are less or equal maxpacket
 ======================
 */
-void NetSplit_SendLong( netsrc_t sock, size_t length, const void *data, netadr_t to, unsigned int maxpacket, unsigned int id, qboolean compress )
+void NetSplit_SendLong( netsrc_t sock, size_t length, void *data, netadr_t to, unsigned int maxpacket, unsigned int id, qboolean compress )
 {
 	netsplit_packet_t packet = {0};
 	unsigned int part = maxpacket - NETSPLIT_HEADER_SIZE;
