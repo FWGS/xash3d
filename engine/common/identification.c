@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include <dirent.h>
 
 static char id_md5[33];
+static char id_customid[MAX_STRING];
 
 /*
 ==========================================================
@@ -325,7 +326,23 @@ void ID_Check()
 
 const char *ID_GetMD5()
 {
+	if( id_customid[0] )
+		return id_customid;
 	return id_md5;
+}
+
+/*
+===============
+ID_SetCustomClientID
+
+===============
+*/
+void GAME_EXPORT ID_SetCustomClientID( const char *id )
+{
+	if( !id )
+		return;
+
+	Q_strncpy( id_customid, id, sizeof( id_customid  ) );
 }
 
 void ID_Init( void )

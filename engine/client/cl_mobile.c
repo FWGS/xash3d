@@ -97,6 +97,9 @@ static int pfnDrawScaledCharacter( int x, int y, int number, int r, int g, int b
 
 static void *pfnGetNativeObject( const char *obj )
 {
+	if( !obj )
+		return NULL;
+
 	// Backend should handle NULL
 	// Backend should consider that obj is case-sensitive
 #ifdef __ANDROID__
@@ -119,7 +122,8 @@ static mobile_engfuncs_t gpMobileEngfuncs =
 	IN_TouchResetDefaultButtons,
 	pfnDrawScaledCharacter,
 	Sys_Warn,
-	pfnGetNativeObject
+	pfnGetNativeObject,
+	ID_SetCustomClientID
 };
 
 void Mobile_Init( void )

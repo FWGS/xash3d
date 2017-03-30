@@ -75,6 +75,8 @@ typedef struct mobile_engfuncs_s
 	// Get native object for current platform.
 	// Pass NULL to arguments to receive an array of available objects or NULL if nothing
 	void *(*pfnGetNativeObject)( const char *obj );
+
+	void (*pfnSetCustomClientID)( const char *id );
 	// To be continued...
 } mobile_engfuncs_t;
 

@@ -835,6 +835,7 @@ void HPAK_FlushHostQueue( void );
 //
 void ID_Init( void );
 const char *ID_GetMD5( void );
+void GAME_EXPORT ID_SetCustomClientID( const char *id );
 
 //
 // keys.c
