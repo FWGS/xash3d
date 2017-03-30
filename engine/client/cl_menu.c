@@ -23,10 +23,6 @@ GNU General Public License for more details.
 #include "input.h"
 #include "server.h" // !!svgame.hInstance
 
-#if defined(_WIN32)
-#define USE_VFW
-#endif
-
 static MENUAPI	GetMenuAPI;
 static ADDTOUCHBUTTONTOLIST pfnAddTouchButtonToList;
 static void UI_UpdateUserinfo( void );
@@ -134,7 +130,6 @@ qboolean UI_IsVisible( void )
 
 static void UI_DrawLogo( const char *filename, float x, float y, float width, float height )
 {
-#ifdef USE_VFW
 	static float	cin_time;
 	static int	last_frame = -1;
 	byte		*cin_data = NULL;
@@ -200,7 +195,6 @@ static void UI_DrawLogo( const char *filename, float x, float y, float width, fl
 	}
 
 	R_DrawStretchRaw( x, y, width, height, menu.logo_xres, menu.logo_yres, cin_data, redraw );
-#endif
 }
 
 static int UI_GetLogoWidth( void )
