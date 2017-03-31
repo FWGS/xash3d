@@ -140,6 +140,10 @@ Default build-depended cvar and constant values
 #define DEFAULT_FULLSCREEN 1
 #endif
 
-
+#if TARGET_OS_IPHONE
+    #define DEFAULT_CON_MAXFRAC "0.5"
+#else
+	#define DEFAULT_CON_MAXFRAC "1"
+#endif
 
 #endif // DEFAULTS_H

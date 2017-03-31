@@ -824,7 +824,7 @@ void Con_Init( void )
 	scr_conspeed = Cvar_Get( "scr_conspeed", "600", 0, "console moving speed" );
 	con_notifytime = Cvar_Get( "con_notifytime", "3", 0, "notify time to live" );
 	con_fontsize = Cvar_Get( "con_fontsize", "1", CVAR_ARCHIVE, "chat or client font number (0, 1 or 2)" );
-	con_maxfrac = Cvar_Get( "con_maxfrac", "1.0", CVAR_ARCHIVE, "console max height" );
+	con_maxfrac = Cvar_Get( "con_maxfrac", DEFAULT_CON_MAXFRAC, CVAR_ARCHIVE, "console max height" );
 	con_halffrac = Cvar_Get( "con_halffrac", "0.5", CVAR_ARCHIVE, "console half height" );
 	con_charset = Cvar_Get( "con_charset", "cp1251", CVAR_ARCHIVE, "console font charset (only cp1251 supported now)" );
 	con_alpha = Cvar_Get( "con_alpha", "1.0", CVAR_ARCHIVE, "console alpha value" );
