@@ -446,8 +446,9 @@ uint ID_CheckRawId( bloomfilter_t filter )
 		value = 0;
 	}
 #endif
-	Msg( "CheckRawId: %d\n", count );
-
+#if 0
+	Msg( "ID_CheckRawId: %d\n", count );
+#endif
 	return count;
 }
 
@@ -465,14 +466,17 @@ void ID_Check()
 	if( weight > MAXBITS_CHECK )
 	{
 		id = 0;
+#if 0
 		Msg( "ID_Check(): fail %d\n", weight );
+#endif
 		return;
 	}
 
 	if( ID_CheckRawId( id ) < mincount )
 		id = 0;
-
+#if 0
 	Msg( "ID_Check(): success %d\n", weight );
+#endif
 }
 
 const char *ID_GetMD5()
@@ -594,5 +598,7 @@ void ID_Init( void )
 	}
 #endif
 	FS_WriteFile( ".xash_id", va("%016llX", id^GAME_XOR_MASK), 16 );
+#if 0
 	Msg("MD5 id: %s\nRAW id:%016llX\n", id_md5, id );
+#endif
 }
