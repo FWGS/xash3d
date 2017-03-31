@@ -869,7 +869,7 @@ void SV_Kick_f( void )
 	}
 
 	// min case there is a funny zombie
-	svs.currentPlayer->lastmessage = host.realtime;
+	cl->lastmessage = host.realtime;
 }
 
 /*
