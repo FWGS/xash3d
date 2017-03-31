@@ -122,6 +122,7 @@ vec3_t			studio_mins, studio_maxs;
 float			studio_radius;
 
 // global variables
+qboolean	g_bCustomStudioRenderer;
 qboolean			m_fDoInterp;
 qboolean			m_fDoRemap;
 mstudiomodel_t		*m_pSubModel;
@@ -172,6 +173,17 @@ void R_StudioInit( void )
 
 	g_nStudioCount = 0;
 	m_fDoRemap = false;
+}
+
+/*
+===============
+R_LeftHand
+
+===============
+*/
+_inline qboolean R_LeftHand( void )
+{
+	return r_lefthand->integer == 1 && !g_bCustomStudioRenderer;
 }
 
 /*
@@ -562,7 +574,7 @@ void R_StudioSetUpTransform( cl_entity_t *e )
 
 	Matrix3x4_CreateFromEntity( g_rotationmatrix, angles, origin, 1.0f );
 
-	if( e == &clgame.viewent && r_lefthand->integer == 1 )
+	if( e == &clgame.viewent && R_LeftHand() )
 	{
 		// inverse the right vector (should work in Opposing Force)
 		g_rotationmatrix[0][1] = -g_rotationmatrix[0][1];
@@ -2939,6 +2951,7 @@ static void GAME_EXPORT R_StudioSetupRenderer( int rendermode )
 
 	pglAlphaFunc( GL_GREATER, 0.0f );
 
+	// was done before, in R_DrawViewModel
 	if( g_iBackFaceCull )
 		GL_FrontFace( true );
 }
@@ -2959,6 +2972,7 @@ static void GAME_EXPORT R_StudioRestoreRenderer( void )
 		pglDepthMask( GL_FALSE );
 	else pglDepthMask( GL_TRUE );
 
+	// was done before, in R_DrawViewModel
 	if( g_iBackFaceCull )
 		GL_FrontFace( false );
 
@@ -3723,8 +3737,7 @@ void R_DrawViewModel( void )
 	pglDepthRange( gldepthmin, gldepthmin + 0.3f * ( gldepthmax - gldepthmin ));
 
 	// backface culling for left-handed weapons
-	if( r_lefthand->integer == 1 || g_iBackFaceCull )
-		GL_FrontFace( !glState.frontFace );
+	g_iBackFaceCull = R_LeftHand(); // GL_FrontFace is called in SetupStudioRenderer
 	RI.currententity->curstate.scale = 1.0f;
 	RI.currententity->curstate.frame = 0;
 	RI.currententity->curstate.framerate = 1.0f;
@@ -3738,8 +3751,7 @@ void R_DrawViewModel( void )
 	pglDepthRange( gldepthmin, gldepthmax );
 
 	// backface culling for left-handed weapons
-	if( r_lefthand->integer == 1 || g_iBackFaceCull )
-		GL_FrontFace( !glState.frontFace );
+	g_iBackFaceCull = false; // GL_FrontFace is called in RestoreStudioRenderer
 
 	RI.currententity = NULL;
 	RI.currentmodel = NULL;
@@ -4105,16 +4117,21 @@ void CL_InitStudioAPI( void )
 
 	// Xash will be used internal StudioModelRenderer
 	if( !clgame.dllFuncs.pfnGetStudioModelInterface )
+	{
+		g_bCustomStudioRenderer = false;
 		return;
+	}
 
 	MsgDev( D_NOTE, "InitStudioAPI " );
 
 	if( clgame.dllFuncs.pfnGetStudioModelInterface( STUDIO_INTERFACE_VERSION, &pStudioDraw, &gStudioAPI ))
 	{
+		g_bCustomStudioRenderer = true;
 		MsgDev( D_NOTE, "- ok\n" );
 		return;
 	}
 
+	g_bCustomStudioRenderer = false;
 	MsgDev( D_NOTE, "- failed\n" );
 
 	// NOTE: we always return true even if game interface was not correct
