@@ -821,6 +821,12 @@ void SV_Kick_f( void )
 	char name[32];
 	int userid;
 
+	if( !SV_Active() )
+	{
+		Msg( "Can't kick when not running local server.");
+		return;
+	}
+
 	if( Cmd_Argc() < 2 )
 	{
 		Msg( "Usage: kick <#id|name> [reason]\n" );
