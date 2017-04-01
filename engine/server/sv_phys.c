@@ -1842,6 +1842,7 @@ Called from renderer for debug purposes
 */
 void SV_DrawDebugTriangles( void )
 {
+#ifndef XASH_DEDICATED
 	if( Host_IsDedicated() )
 		return;
 
@@ -1865,6 +1866,7 @@ void SV_DrawDebugTriangles( void )
 		pglDepthMask( GL_TRUE );
 		pglEnable( GL_BLEND );
 	}
+#endif
 }
 
 /*

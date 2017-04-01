@@ -1278,6 +1278,7 @@ void EXPORT Host_Shutdown( void )
 			host.state = HOST_SHUTDOWN;
 		break;
 	default:
+#ifndef XASH_DEDICATED
 		if( !Host_IsDedicated() && !host.skip_configs )
 		{
 			// restore all latched cheat cvars
@@ -1286,6 +1287,7 @@ void EXPORT Host_Shutdown( void )
 			IN_TouchWriteConfig();
 			host.skip_configs = false;
 		}
+#endif
 		host.state = HOST_SHUTDOWN; // prepare host to normal shutdown
 	}
 
