@@ -318,8 +318,9 @@ int ID_RunWMIC(char *buffer, const char *cmdline)
 	CreateProcess( NULL, (char*)cmdline, NULL, NULL, true, CREATE_NO_WINDOW , NULL, NULL, &si, &pi );
 	
 	CloseHandle( g_OUT_Wr );
+	CloseHandle( g_IN_Wr );
 	
-	WaitForSingleObject( pi.hProcess, INFINITE );
+	WaitForSingleObject( pi.hProcess, 500 );
 	
 	bSuccess = ReadFile( g_OUT_Rd, buffer, BUFSIZE, &dwRead, NULL );
 	buffer[BUFSIZE-1] = 0;
