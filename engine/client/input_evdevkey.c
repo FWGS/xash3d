@@ -384,32 +384,32 @@ int KeycodeFromEvdev(int keycode, int value)
 	case KEY_KP9:        return K_KP_PGUP;
 	case KEY_KPDOT:      return K_KP_DEL;
 	case KEY_KPENTER:    return K_KP_ENTER;
-	case KEY_Q: return 'Q';
-	case KEY_W: return 'W';
-	case KEY_E: return 'E';
-	case KEY_R: return 'R';
-	case KEY_T: return 'T';
-	case KEY_Y: return 'Y';
-	case KEY_U: return 'U';
-	case KEY_I: return 'I';
-	case KEY_O: return 'O';
-	case KEY_P: return 'P';
-	case KEY_A: return 'A';
-	case KEY_S: return 'S';
-	case KEY_D: return 'D';
-	case KEY_F: return 'F';
-	case KEY_G: return 'G';
-	case KEY_H: return 'H';
-	case KEY_J: return 'J';
-	case KEY_K: return 'K';
-	case KEY_L: return 'L';
-	case KEY_Z: return 'Z';
-	case KEY_X: return 'X';
-	case KEY_C: return 'C';
-	case KEY_V: return 'V';
-	case KEY_B: return 'B';
-	case KEY_N: return 'N';
-	case KEY_M: return 'M';
+	case KEY_Q: return 'q';
+	case KEY_W: return 'w';
+	case KEY_E: return 'e';
+	case KEY_R: return 'r';
+	case KEY_T: return 't';
+	case KEY_Y: return 'y';
+	case KEY_U: return 'u';
+	case KEY_I: return 'i';
+	case KEY_O: return 'o';
+	case KEY_P: return 'p';
+	case KEY_A: return 'a';
+	case KEY_S: return 's';
+	case KEY_D: return 'd';
+	case KEY_F: return 'f';
+	case KEY_G: return 'g';
+	case KEY_H: return 'h';
+	case KEY_J: return 'j';
+	case KEY_K: return 'k';
+	case KEY_L: return 'l';
+	case KEY_Z: return 'z';
+	case KEY_X: return 'x';
+	case KEY_C: return 'c';
+	case KEY_V: return 'v';
+	case KEY_B: return 'b';
+	case KEY_N: return 'n';
+	case KEY_M: return 'm';
 	case KEY_LEFTBRACE: return '[';
 	case KEY_RIGHTBRACE: return ']';
 	case KEY_MINUS: return '-';
@@ -430,7 +430,10 @@ int KeycodeFromEvdev(int keycode, int value)
 	case KEY_RIGHTSHIFT:
 	case KEY_LEFTSHIFT:
 		return K_SHIFT;
-
+	case KEY_LEFT: return K_LEFTARROW;
+	case KEY_RIGHT: return K_RIGHTARROW;
+	case KEY_UP: return K_UPARROW;
+	case KEY_DOWN: return K_DOWNARROW;
 	default:
 		break;
 	}
