@@ -19,6 +19,9 @@ GNU General Public License for more details.
 #include "cvardef.h"
 #include "gameinfo.h"
 #include "wrect.h"
+#include "netadr.h"
+
+#include <stddef.h>
 
 typedef int		HIMAGE;		// handle to a graphic
 
@@ -29,7 +32,7 @@ typedef int		HIMAGE;		// handle to a graphic
 #define PIC_KEEP_8BIT	(1U << 3)		// keep original 8-bit image (if present)
 
 typedef struct ui_globalvars_s
-{	
+{
 	float		time;		// unclamped host.realtime
 	float		frametime;
 
@@ -47,7 +50,7 @@ typedef struct ui_globalvars_s
 typedef struct ui_enginefuncs_s
 {
 	// image handlers
-	HIMAGE	(*pfnPIC_Load)( const char *szPicName, const byte *ucRawImage, long ulRawImageSize, long flags );
+	HIMAGE	(*pfnPIC_Load)( const char *szPicName, const unsigned char *ucRawImage, long ulRawImageSize, long flags );
 	void	(*pfnPIC_Free)( const char *szPicName );
 	int	(*pfnPIC_Width)( HIMAGE hPic );
 	int	(*pfnPIC_Height)( HIMAGE hPic );
@@ -73,11 +76,11 @@ typedef struct ui_enginefuncs_s
 	int	(*pfnAddCommand)( const char *cmd_name, void (*function)(void) );
 	void	(*pfnClientCmd)( int execute_now, const char *szCmdString );
 	void	(*pfnDelCommand)( const char *cmd_name );
-	int       (*pfnCmdArgc)( void );	
+	int       (*pfnCmdArgc)( void );
 	char*	(*pfnCmdArgv)( int argc );
 	char*	(*pfnCmd_Args)( void );
 
-	// debug messages (in-menu shows only notify)	
+	// debug messages (in-menu shows only notify)
 	void	(*Con_Printf)( const char *fmt, ... );
 	void	(*Con_DPrintf)( const char *fmt, ... );
 	void	(*Con_NPrintf)( int pos, const char *fmt, ... );
@@ -115,9 +118,9 @@ typedef struct ui_enginefuncs_s
 	int	(*pfnCreateMapsList)( int fRefresh );
 	int	(*pfnClientInGame)( void );
 	void	(*pfnClientJoin)( const struct netadr_s adr );
-	
+
 	// parse txt files
-	byte*	(*COM_LoadFile)( const char *filename, int *pLength );
+	unsigned char*	(*COM_LoadFile)( const char *filename, int *pLength );
 	char*	(*COM_ParseFile)( char *data, char *token );
 	void	(*COM_FreeFile)( void *buffer );
 
@@ -153,8 +156,8 @@ typedef struct ui_enginefuncs_s
 	void	(*pfnHostEndGame)( const char *szFinalMessage );
 
 	// menu interface is freezed at version 0.75
-	// new functions starts here 
-	float	(*pfnRandomFloat)( float flLow, float flHigh );	
+	// new functions starts here
+	float	(*pfnRandomFloat)( float flLow, float flHigh );
 	long	(*pfnRandomLong)( long lLow, long lHigh );
 
 	void	(*pfnSetCursor)( void *hCursor );			// change cursor
