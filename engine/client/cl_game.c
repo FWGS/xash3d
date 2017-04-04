@@ -3245,12 +3245,12 @@ void GAME_EXPORT TriFog( float flFogColor[3], float flStart, float flEnd, int bO
 		return;	
 	}
 
-	pglEnable( GL_FOG );
 	pglFogi( GL_FOG_MODE, GL_LINEAR );
 	pglFogf( GL_FOG_START, RI.fogStart );
 	pglFogf( GL_FOG_END, RI.fogEnd );
 	pglFogfv( GL_FOG_COLOR, RI.fogColor );
 	pglHint( GL_FOG_HINT, GL_NICEST );
+	pglEnable( GL_FOG );
 }
 
 /*
