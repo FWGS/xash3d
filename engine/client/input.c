@@ -123,7 +123,7 @@ IN_StartupMouse
 #include <fcntl.h>
 #include <errno.h>
 #include <linux/input.h>
-
+#include <dirent.h>
 #define MAX_EVDEV_DEVICES 5
 
 struct evdev_s
@@ -138,53 +138,159 @@ int KeycodeFromEvdev(int keycode, int value);
 
 void Evdev_Setup( void )
 {
+	if( evdev.initialized )
+		return;
 #ifdef __ANDROID__
 	system( "su 0 supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }\" \"allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"" );
 	system( "su 0 setenforce permissive" );
 #endif
+	evdev.initialized = true;
+}
+
+#define EV_HASBIT( x, y ) ( x[y / 32] & (1 << y % 32) )
+
+void Evdev_Autodetect_f( void )
+{
+	int i;
+	DIR *dir;
+	struct dirent *entry;
+
+	Evdev_Setup();
+
+	if( !( dir = opendir( "/dev/input" ) ) )
+	    return;
+
+	while( ( entry = readdir( dir ) ) )
+	{
+		int fd;
+		string path;
+		uint types[EV_MAX] = {0};
+		uint codes[( KEY_MAX - 1 ) / 32 + 1] = {0};
+		qboolean hasbtnmouse;
+
+		if( evdev.devices >= MAX_EVDEV_DEVICES )
+			continue;
+
+		Q_snprintf( path, MAX_STRING, "/dev/input/%s", entry->d_name );
+
+		for( i = 0; i < evdev.devices; i++ )
+			if( !Q_strncmp( evdev.paths[i], path, MAX_STRING ) )
+				goto next;
+
+		if( Q_strncmp( entry->d_name, "event", 5 ) )
+			continue;
+
+#ifdef __ANDROID__ // use root to grant access to evdev
+		system( va( "su 0 chmod 777 %s", path ) );
+#endif
+
+		fd = open( path, O_RDONLY | O_NONBLOCK );
+
+		if( fd == -1 )
+			continue;
+
+		ioctl( fd, EVIOCGBIT( 0, EV_MAX ), types );
+
+		if( !EV_HASBIT( types, EV_KEY ) )
+			goto close;
+
+		ioctl( fd, EVIOCGBIT( EV_KEY, KEY_MAX ), codes );
+
+		if( EV_HASBIT( codes, KEY_LEFTCTRL ) && EV_HASBIT( codes, KEY_SPACE ) )
+			goto open;
+
+		if( !EV_HASBIT( codes, BTN_MOUSE ) )
+			goto close;
+
+		if( EV_HASBIT( types, EV_REL ) )
+		{
+			Q_memset( codes, 0, sizeof( codes ) );
+			ioctl( fd, EVIOCGBIT( EV_REL, KEY_MAX ), codes );
+
+			if( !EV_HASBIT( codes, REL_X ) )
+				goto close;
+
+			if( !EV_HASBIT( codes, REL_Y ) )
+				goto close;
+
+			if( !EV_HASBIT( codes, REL_WHEEL ) )
+				goto close;
+
+			goto open;
+		}
+		goto close;
+open:
+		Q_strncpy( evdev.paths[evdev.devices], path, MAX_STRING );
+		evdev.fds[evdev.devices++] = fd;
+		Msg( "Opened device %s\n", path );
+		goto next;
+close:
+		close( fd );
+next:
+		continue;
+	}
+	closedir( dir );
+
 }
 
 /*
 ===========
-Evdev_OpenMouse_f
-===========
+Evdev_OpenDevice
+
 For shitty systems that cannot provide relative mouse axes
+===========
 */
-void Evdev_OpenDevice_f ( void )
+void Evdev_OpenDevice ( const char *path )
 {
-	int ret;
-	if( Cmd_Argc() < 2 )
-		Msg( "Usage: evdev_opendevice <path>\n" );
+	int ret, i;
 
 	if ( evdev.devices >= MAX_EVDEV_DEVICES )
+	{
+		Msg( "Only %d devices supported!\n", MAX_EVDEV_DEVICES );
 		return;
+	}
 
-	if( !evdev.initialized )
-		Evdev_Setup();
-	
+	Evdev_Setup();
+
 #ifdef __ANDROID__ // use root to grant access to evdev
 	system( va( "su 0 chmod 777 %s", Cmd_Argv( 1 ) ) );
 #endif
-
-	ret = open ( Cmd_Argv( 1 ), O_RDONLY | O_NONBLOCK );
-	if ( ret < 0 )
+	for( i = 0; i < evdev.devices; i++ )
 	{
-		MsgDev( D_ERROR, "Could not open input device %s: %s\n", Cmd_Argv( 1 ), strerror( errno ) );
+		if( !Q_strncmp( evdev.paths[i], path, MAX_STRING ) )
+		{
+			Msg( "device %s already open!\n", path );
+			return;
+		}
+	}
+
+	ret = open( path, O_RDONLY | O_NONBLOCK );
+	if( ret < 0 )
+	{
+		MsgDev( D_ERROR, "Could not open input device %s: %s\n", path, strerror( errno ) );
 		return;
 	}
-	Msg( "Input device %s opened sucessfully\n", Cmd_Argv( 1 ) );
+	Msg( "Input device #%d: %s opened sucessfully\n", evdev.devices, path );
 	evdev.fds[evdev.devices] = ret;
-	Q_strncpy( evdev.paths[evdev.devices++], Cmd_Argv( 1 ), MAX_STRING );
+	Q_strncpy( evdev.paths[evdev.devices++], path, MAX_STRING );
 }
+
+void Evdev_OpenDevice_f( void )
+{
+	if( Cmd_Argc() < 2 )
+		Msg( "Usage: evdev_opendevice <path>\n" );
+
+	Evdev_OpenDevice( Cmd_Argv( 1 ) );
+}
+
 /*
 ===========
 Evdev_CloseDevice_f
 ===========
-Allow open other mouse
 */
 void Evdev_CloseDevice_f ( void )
 {
-	int i;
+	uint i;
 	char *arg;
 
 	if( Cmd_Argc() < 2 )
@@ -192,15 +298,21 @@ void Evdev_CloseDevice_f ( void )
 
 	arg = Cmd_Argv( 1 );
 
-	for( i = 0; i < evdev.devices; i++ )
+	if( Q_isdigit( arg ) )
+		i = Q_atoi( arg );
+	else for( i = 0; i < evdev.devices; i++ )
 		if( !Q_strncmp( evdev.paths[i], arg, MAX_STRING ) )
 			break;
 
-	if( i == evdev.devices )
+	if( i >= evdev.devices )
+	{
+		Msg( "Device %s is not open\n", arg );
 		return;
+	}
 
 	close( evdev.fds[i] );
 	evdev.devices--;
+	Msg( "Device %s closed successfully\n", evdev.paths[i] );
 
 	for( ; i < evdev.devices; i++ )
 	{
@@ -568,6 +680,7 @@ void IN_Shutdown( void )
 #ifdef USE_EVDEV
 	Cmd_RemoveCommand( "evdev_open" );
 	Cmd_RemoveCommand( "evdev_close" );
+	Cmd_RemoveCommand( "evdev_autodetect" );
 #endif
 }
 
@@ -591,6 +704,7 @@ void IN_Init( void )
 #ifdef USE_EVDEV
 	Cmd_AddCommand ("evdev_open", Evdev_OpenDevice_f, "Open event device");
 	Cmd_AddCommand ("evdev_close", Evdev_CloseDevice_f, "Close event device");
+	Cmd_AddCommand ("evdev_autodetect", Evdev_Autodetect_f, "Automaticly open mouses and keyboards");
 #endif
 }
 
