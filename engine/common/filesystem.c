@@ -3306,11 +3306,11 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 			// get a directory listing and look at each name
 			Q_sprintf( netpath, "%s%s", searchpath->filename, basepath );
 			stringlistinit( &dirlist );
-			listdirectory( &dirlist, netpath, true );
+			listdirectory( &dirlist, netpath, caseinsensitive );
 			for( dirlistindex = 0; dirlistindex < dirlist.numstrings; dirlistindex++ )
 			{
 				Q_sprintf( temp, "%s%s", basepath, dirlist.strings[dirlistindex] );
-				if( matchpattern( temp, (char *)pattern, true ))
+				if( matchpattern( temp, (char *)pattern, caseinsensitive ))
 				{
 					for( resultlistindex = 0; resultlistindex < resultlist.numstrings; resultlistindex++ )
 					{
