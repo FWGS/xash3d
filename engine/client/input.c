@@ -132,6 +132,7 @@ int initialized, devices;
 int fds[MAX_EVDEV_DEVICES];
 string paths[MAX_EVDEV_DEVICES];
 qboolean grab;
+float grabtime;
 } evdev;
 
 int KeycodeFromEvdev(int keycode, int value);
@@ -374,7 +375,7 @@ void IN_EvdevFrame ()
 			}
 		}
 
-		if( evdev.grab )
+		if( evdev.grab && evdev.grabtime <= host.realtime )
 			ioctl( evdev.fds[i], EVIOCGRAB, (void*) 1 );
 
 		if( m_ignore->integer )
@@ -389,7 +390,8 @@ void IN_EvdevFrame ()
 			cl.refdef.cl_viewangles[YAW] -= dx * m_enginesens->value;
 		}
 	}
-	evdev.grab = false;
+	if( evdev.grabtime <= host.realtime )
+		evdev.grab = false;
 }
 
 void Evdev_SetGrab( qboolean grab )
@@ -397,7 +399,10 @@ void Evdev_SetGrab( qboolean grab )
 	int i;
 
 	if( grab )
+	{
 		Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
+		evdev.grabtime = host.realtime + 1;
+	}
 	else for( i = 0; i < evdev.devices; i++ )
 		ioctl( evdev.fds[i], EVIOCGRAB, (void*) 0 );
 	evdev.grab = grab;
