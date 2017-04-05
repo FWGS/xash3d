@@ -158,6 +158,10 @@ void Evdev_Autodetect_f( void )
 
 	Evdev_Setup();
 
+#ifdef __ANDROID__
+	system( "su 0 chmod 777 /dev/input/event*" );
+#endif
+
 	if( !( dir = opendir( "/dev/input" ) ) )
 	    return;
 
@@ -180,10 +184,6 @@ void Evdev_Autodetect_f( void )
 
 		if( Q_strncmp( entry->d_name, "event", 5 ) )
 			continue;
-
-#ifdef __ANDROID__ // use root to grant access to evdev
-		system( va( "su 0 chmod 777 %s", path ) );
-#endif
 
 		fd = open( path, O_RDONLY | O_NONBLOCK );
 
