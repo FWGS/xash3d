@@ -40,6 +40,9 @@ bloomfilter_t BloomFilter_Process( const char *buffer, int size )
 	dword crc32;
 	bloomfilter_t value = 0;
 
+	if( size <= 0 || size > 512 )
+		return 0;
+
 	CRC32_Init( &crc32 );
 	CRC32_ProcessBuffer( &crc32, buffer, size );
 
@@ -157,12 +160,15 @@ qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
 	if( cpuinfofd < 0 )
 		return false;
 
-	if( (ret = read( cpuinfofd, buffer, 1024 ) ) <= 0 )
+	if( (ret = read( cpuinfofd, buffer, 1023 ) ) < 0 )
 		return false;
 
 	close( cpuinfofd );
 
 	buffer[ret] = 0;
+
+	if( !ret )
+		return false;
 
 	pbuf = Q_strstr( buffer, "Serial" );
 	if( !pbuf )
@@ -170,7 +176,9 @@ qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
 	pbuf += 6;
 
 	if( ( pbuf2 = Q_strchr( pbuf, '\n' ) ) )
-	    *pbuf2 = 0;
+		*pbuf2 = 0;
+	else
+		pbuf2 = pbuf + Q_strlen( pbuf );
 
 	if( !ID_VerifyHEX( pbuf ) )
 		return false;
@@ -201,10 +209,13 @@ qboolean ID_ProcessFile( bloomfilter_t *value, const char *path )
 	if( fd < 0 )
 		return false;
 
-	if( (ret = read( fd, buffer, 256 ) ) <= 0 )
+	if( (ret = read( fd, buffer, 255 ) ) < 0 )
 		return false;
 
 	close( fd );
+
+	if( !ret )
+		return false;
 
 	buffer[ret] = 0;
 
