@@ -949,7 +949,8 @@ void S_StartSound( const vec3_t pos, int ent, int chan, sound_t handle, float fv
 		VOX_LoadSound( target_chan, S_SkipSoundChar( sfx->name ));
 		Q_strncpy( target_chan->name, sfx->name, sizeof( target_chan->name ));
 		sfx = target_chan->sfx;
-		pSource = sfx->cache;
+		if( sfx )
+			pSource = sfx->cache;
 	}
 	else
 	{
