@@ -1668,13 +1668,30 @@ void S_PlayVol_f( void )
 
 void S_Say_f( void )
 {
+	sound_t	sfxHandle;
+	char *name;
+
 	if( Cmd_Argc() == 1 )
 	{
 		Msg( "Usage: speak <soundfile>\n" );
 		return;
 	}
 
-	S_StartLocalSound( Cmd_Argv( 1 ), 1.0f, false );
+	name = Cmd_Argv( 1 );
+
+	if( !dma.initialized ) return;
+	if( name[0] == '!' || Q_strchr( name, '/' ) )
+		sfxHandle = S_RegisterSound( name );
+	else
+	{
+		static char tmp[1024];
+		sfxHandle = SENTENCE_INDEX;
+		Q_snprintf( tmp, 1024, "!#%s", name );
+		name = tmp;
+		sfxHandle = S_RegisterSound( name );
+	}
+
+	S_StartSound( NULL, s_listener.entnum, CHAN_AUTO, sfxHandle, 1.0f, ATTN_NONE, PITCH_NORM, SND_LOCALSOUND|SND_STOP_LOOPING );
 }
 
 void S_SayReliable_f( void )
