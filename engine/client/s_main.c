@@ -1669,58 +1669,50 @@ void S_PlayVol_f( void )
 
 void S_Say_f( void )
 {
-	sound_t	sfxHandle;
-	char *name;
+
+	static char buf[1024];
+	char *text;
 
 	if( Cmd_Argc() == 1 )
 	{
-		Msg( "Usage: speak <soundfile>\n" );
+		Msg( "Usage: speak !<sentencenum> | \"<word1> <word2>\"\n" );
 		return;
 	}
 
-	name = Cmd_Argv( 1 );
-
 	if( !dma.initialized ) return;
-	if( name[0] == '!' || Q_strchr( name, '/' ) )
-		sfxHandle = S_RegisterSound( name );
-	else
+
+	text = Cmd_Argv( 1 );
+
+	if( text[0] != '!' )
 	{
-		static char tmp[1024];
-		sfxHandle = SENTENCE_INDEX;
-		Q_snprintf( tmp, 1024, "!#%s", name );
-		name = tmp;
-		sfxHandle = S_RegisterSound( name );
+		Q_snprintf( buf, 1024, "!#%s", text );
+		text = buf;
 	}
 
-	S_StartSound( NULL, s_listener.entnum, CHAN_AUTO, sfxHandle, 1.0f, ATTN_NONE, PITCH_NORM, SND_LOCALSOUND|SND_STOP_LOOPING );
-}
+	S_StartSound( NULL, s_listener.entnum, CHAN_AUTO, S_RegisterSound( text ), 1.0f, ATTN_NONE, PITCH_NORM, SND_LOCALSOUND|SND_STOP_LOOPING );}
 
 void S_SayReliable_f( void )
 {
-	sound_t	sfxHandle;
-	char *name;
+	static char buf[1024];
+	char *text;
 
 	if( Cmd_Argc() == 1 )
 	{
-		Msg( "Usage: spk <soundfile>\n" );
+		Msg( "Usage: spk !<sentencenum> | \"<word1> <word2>\"\n" );
 		return;
 	}
 
-	name = Cmd_Argv( 1 );
-
 	if( !dma.initialized ) return;
-	if( name[0] == '!' || Q_strchr( name, '/' ) )
-		sfxHandle = S_RegisterSound( name );
-	else
+
+	text = Cmd_Argv( 1 );
+
+	if( text[0] != '!' )
 	{
-		static char tmp[1024];
-		sfxHandle = SENTENCE_INDEX;
-		Q_snprintf( tmp, 1024, "!#%s", name );
-		name = tmp;
-		sfxHandle = S_RegisterSound( name );
+		Q_snprintf( buf, 1024, "!#%s", text );
+		text = buf;
 	}
 
-	S_StartSound( NULL, s_listener.entnum, CHAN_STATIC, sfxHandle, 1.0f, ATTN_NONE, PITCH_NORM, SND_LOCALSOUND|SND_STOP_LOOPING );
+	S_StartSound( NULL, s_listener.entnum, CHAN_STATIC, S_RegisterSound( text ), 1.0f, ATTN_NONE, PITCH_NORM, SND_LOCALSOUND|SND_STOP_LOOPING );
 }
 
 /*
