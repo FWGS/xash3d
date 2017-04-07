@@ -477,7 +477,10 @@ void VOX_LoadSound( channel_t *pchan, const char *pszin )
 
 	// lookup actual string in g_Sentences, 
 	// set pointer to string data
-	psz = VOX_LookupString( pszin, NULL );
+	if( pszin[0] == '#' )
+	    psz = (char *)( pszin + 1 );
+	else
+	    psz = VOX_LookupString( pszin, NULL );
 
 	if( !psz )
 	{

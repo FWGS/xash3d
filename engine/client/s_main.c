@@ -949,7 +949,8 @@ void S_StartSound( const vec3_t pos, int ent, int chan, sound_t handle, float fv
 		VOX_LoadSound( target_chan, S_SkipSoundChar( sfx->name ));
 		Q_strncpy( target_chan->name, sfx->name, sizeof( target_chan->name ));
 		sfx = target_chan->sfx;
-		pSource = sfx->cache;
+		if( sfx )
+			pSource = sfx->cache;
 	}
 	else
 	{
@@ -1668,24 +1669,50 @@ void S_PlayVol_f( void )
 
 void S_Say_f( void )
 {
+
+	static char buf[1024];
+	char *text;
+
 	if( Cmd_Argc() == 1 )
 	{
-		Msg( "Usage: speak <soundfile>\n" );
+		Msg( "Usage: speak !<sentencenum> | \"<word1> <word2>\"\n" );
 		return;
 	}
 
-	S_StartLocalSound( Cmd_Argv( 1 ), 1.0f, false );
-}
+	if( !dma.initialized ) return;
+
+	text = Cmd_Argv( 1 );
+
+	if( text[0] != '!' )
+	{
+		Q_snprintf( buf, 1024, "!#%s", text );
+		text = buf;
+	}
+
+	S_StartSound( NULL, s_listener.entnum, CHAN_AUTO, S_RegisterSound( text ), 1.0f, ATTN_NONE, PITCH_NORM, SND_LOCALSOUND|SND_STOP_LOOPING );}
 
 void S_SayReliable_f( void )
 {
+	static char buf[1024];
+	char *text;
+
 	if( Cmd_Argc() == 1 )
 	{
-		Msg( "Usage: spk <soundfile>\n" );
+		Msg( "Usage: spk !<sentencenum> | \"<word1> <word2>\"\n" );
 		return;
 	}
 
-	S_StartLocalSound( Cmd_Argv( 1 ), 1.0f, true );
+	if( !dma.initialized ) return;
+
+	text = Cmd_Argv( 1 );
+
+	if( text[0] != '!' )
+	{
+		Q_snprintf( buf, 1024, "!#%s", text );
+		text = buf;
+	}
+
+	S_StartSound( NULL, s_listener.entnum, CHAN_STATIC, S_RegisterSound( text ), 1.0f, ATTN_NONE, PITCH_NORM, SND_LOCALSOUND|SND_STOP_LOOPING );
 }
 
 /*
