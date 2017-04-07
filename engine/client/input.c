@@ -123,84 +123,225 @@ IN_StartupMouse
 #include <fcntl.h>
 #include <errno.h>
 #include <linux/input.h>
+#include <dirent.h>
+#define MAX_EVDEV_DEVICES 5
 
-int evdev_open, mouse_fd, evdev_dx, evdev_dy;
-
-convar_t	*evdev_mousepath;
-convar_t	*evdev_grab;
-
+struct evdev_s
+{
+int initialized, devices;
+int fds[MAX_EVDEV_DEVICES];
+string paths[MAX_EVDEV_DEVICES];
+qboolean grab;
+float grabtime;
+} evdev;
 
 int KeycodeFromEvdev(int keycode, int value);
 
+void Evdev_Setup( void )
+{
+	if( evdev.initialized )
+		return;
+#ifdef __ANDROID__
+	system( "su 0 supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }\" \"allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"" );
+	system( "su 0 setenforce permissive" );
+#endif
+	evdev.initialized = true;
+}
+
+#define EV_HASBIT( x, y ) ( x[y / 32] & (1 << y % 32) )
+
+void Evdev_Autodetect_f( void )
+{
+	int i;
+	DIR *dir;
+	struct dirent *entry;
+
+	Evdev_Setup();
+
+#ifdef __ANDROID__
+	system( "su 0 chmod 777 /dev/input/event*" );
+#endif
+
+	if( !( dir = opendir( "/dev/input" ) ) )
+	    return;
+
+	while( ( entry = readdir( dir ) ) )
+	{
+		int fd;
+		string path;
+		uint types[EV_MAX] = {0};
+		uint codes[( KEY_MAX - 1 ) / 32 + 1] = {0};
+		qboolean hasbtnmouse;
+
+		if( evdev.devices >= MAX_EVDEV_DEVICES )
+			continue;
+
+		Q_snprintf( path, MAX_STRING, "/dev/input/%s", entry->d_name );
+
+		for( i = 0; i < evdev.devices; i++ )
+			if( !Q_strncmp( evdev.paths[i], path, MAX_STRING ) )
+				goto next;
+
+		if( Q_strncmp( entry->d_name, "event", 5 ) )
+			continue;
+
+		fd = open( path, O_RDONLY | O_NONBLOCK );
+
+		if( fd == -1 )
+			continue;
+
+		ioctl( fd, EVIOCGBIT( 0, EV_MAX ), types );
+
+		if( !EV_HASBIT( types, EV_KEY ) )
+			goto close;
+
+		ioctl( fd, EVIOCGBIT( EV_KEY, KEY_MAX ), codes );
+
+		if( EV_HASBIT( codes, KEY_LEFTCTRL ) && EV_HASBIT( codes, KEY_SPACE ) )
+			goto open;
+
+		if( !EV_HASBIT( codes, BTN_MOUSE ) )
+			goto close;
+
+		if( EV_HASBIT( types, EV_REL ) )
+		{
+			Q_memset( codes, 0, sizeof( codes ) );
+			ioctl( fd, EVIOCGBIT( EV_REL, KEY_MAX ), codes );
+
+			if( !EV_HASBIT( codes, REL_X ) )
+				goto close;
+
+			if( !EV_HASBIT( codes, REL_Y ) )
+				goto close;
+
+			if( !EV_HASBIT( codes, REL_WHEEL ) )
+				goto close;
+
+			goto open;
+		}
+		goto close;
+open:
+		Q_strncpy( evdev.paths[evdev.devices], path, MAX_STRING );
+		evdev.fds[evdev.devices++] = fd;
+		Msg( "Opened device %s\n", path );
+		goto next;
+close:
+		close( fd );
+next:
+		continue;
+	}
+	closedir( dir );
+
+}
+
 /*
 ===========
-Evdev_OpenMouse_f
-===========
+Evdev_OpenDevice
+
 For shitty systems that cannot provide relative mouse axes
+===========
 */
-void Evdev_OpenMouse_f ( void )
+void Evdev_OpenDevice ( const char *path )
 {
-	/* Android users can try open all devices starting from last
-	by listing all of them in script as they cannot write udev rules
-	for example:
-		evdev_mousepath /dev/input/event10
-		evdev_mouseopen
-		evdev_mousepath /dev/input/event9
-		evdev_mouseopen
-		evdev_mousepath /dev/input/event8
-		evdev_mouseopen
-		etc
-	So we will not print annoying messages that it is already open
-	*/
-	if ( evdev_open ) return;
-#ifdef __ANDROID__ // use root to grant access to evdev
-	char chmodstr[ 255 ] = "su 0 chmod 777 ";
-	strcat( chmodstr, evdev_mousepath->string );
-	system( chmodstr );
-	// allow write input via selinux, need for some lollipop devices
-	system( "su 0 supolicy --live \"allow appdomain input_device dir { ioctl read getattr search open }\" \"allow appdomain input_device chr_file { ioctl read write getattr lock append open }\"" );
-	system( chmodstr );
-	system( "su 0 setenforce permissive" );
-	system( chmodstr );
-#endif
-	mouse_fd = open ( evdev_mousepath->string, O_RDONLY | O_NONBLOCK );
-	if ( mouse_fd < 0 )
+	int ret, i;
+
+	if ( evdev.devices >= MAX_EVDEV_DEVICES )
 	{
-		MsgDev( D_ERROR, "Could not open input device %s: %s\n", evdev_mousepath->string, strerror( errno ) );
+		Msg( "Only %d devices supported!\n", MAX_EVDEV_DEVICES );
 		return;
 	}
-	MsgDev( D_INFO, "Input device %s opened sucessfully\n", evdev_mousepath->string );
-	evdev_open = 1;
+
+	Evdev_Setup();
+
+#ifdef __ANDROID__ // use root to grant access to evdev
+	system( va( "su 0 chmod 777 %s", Cmd_Argv( 1 ) ) );
+#endif
+	for( i = 0; i < evdev.devices; i++ )
+	{
+		if( !Q_strncmp( evdev.paths[i], path, MAX_STRING ) )
+		{
+			Msg( "device %s already open!\n", path );
+			return;
+		}
+	}
+
+	ret = open( path, O_RDONLY | O_NONBLOCK );
+	if( ret < 0 )
+	{
+		MsgDev( D_ERROR, "Could not open input device %s: %s\n", path, strerror( errno ) );
+		return;
+	}
+	Msg( "Input device #%d: %s opened sucessfully\n", evdev.devices, path );
+	evdev.fds[evdev.devices] = ret;
+	Q_strncpy( evdev.paths[evdev.devices++], path, MAX_STRING );
 }
+
+void Evdev_OpenDevice_f( void )
+{
+	if( Cmd_Argc() < 2 )
+		Msg( "Usage: evdev_opendevice <path>\n" );
+
+	Evdev_OpenDevice( Cmd_Argv( 1 ) );
+}
+
 /*
 ===========
-Evdev_OpenClose_f
+Evdev_CloseDevice_f
 ===========
-Allow open other mouse
 */
-void Evdev_CloseMouse_f ( void )
+void Evdev_CloseDevice_f ( void )
 {
-	if ( !evdev_open ) return;
-	evdev_open = 0;
-	close( mouse_fd );
+	uint i;
+	char *arg;
+
+	if( Cmd_Argc() < 2 )
+		return;
+
+	arg = Cmd_Argv( 1 );
+
+	if( Q_isdigit( arg ) )
+		i = Q_atoi( arg );
+	else for( i = 0; i < evdev.devices; i++ )
+		if( !Q_strncmp( evdev.paths[i], arg, MAX_STRING ) )
+			break;
+
+	if( i >= evdev.devices )
+	{
+		Msg( "Device %s is not open\n", arg );
+		return;
+	}
+
+	close( evdev.fds[i] );
+	evdev.devices--;
+	Msg( "Device %s closed successfully\n", evdev.paths[i] );
+
+	for( ; i < evdev.devices; i++ )
+	{
+		Q_strncpy( evdev.paths[i], evdev.paths[i+1], MAX_STRING );
+		evdev.fds[i] = evdev.fds[i+1];
+	}
 }
 
 void IN_EvdevFrame ()
 {
-	if( evdev_open && !m_ignore->integer )
+	int dx = 0, dy = 0, i;
+
+	for( i = 0; i < evdev.devices; i++ )
 	{
 		struct input_event ev;
-		evdev_dx = evdev_dy = 0;
-		while ( read( mouse_fd, &ev, 16) == 16 )
+
+		while ( read( evdev.fds[i], &ev, 16) == 16 )
 		{
 			if ( ev.type == EV_REL )
 			{
 				switch ( ev.code )
 				{
-					case REL_X: evdev_dx += ev.value;
+					case REL_X: dx += ev.value;
 					break;
-					case REL_Y: evdev_dy += ev.value;
+
+					case REL_Y: dy += ev.value;
 					break;
+
 					case REL_WHEEL:
 					if( ev.value > 0)
 					{
@@ -215,9 +356,10 @@ void IN_EvdevFrame ()
 					break;
 				}
 			}
-			else if ( ( ev.type == EV_KEY ) && (evdev_grab->value == 1.0 ) )
+			else if ( ( ev.type == EV_KEY ) && cls.key_dest == key_game )
 			{
-				switch (ev.code) {
+				switch( ev.code )
+				{
 				case BTN_LEFT:
 					Key_Event( K_MOUSE1, ev.value );
 					break;
@@ -232,25 +374,38 @@ void IN_EvdevFrame ()
 				}
 			}
 		}
-		if(clgame.dllFuncs.pfnLookEvent)
-			clgame.dllFuncs.pfnLookEvent( -evdev_dx * m_yaw->value, evdev_dy * m_pitch->value );
+
+		if( evdev.grab && evdev.grabtime <= host.realtime )
+			ioctl( evdev.fds[i], EVIOCGRAB, (void*) 1 );
+
+		if( m_ignore->integer )
+			continue;
+
+		if( clgame.dllFuncs.pfnLookEvent )
+			clgame.dllFuncs.pfnLookEvent( -dx * m_yaw->value, dy * m_pitch->value );
 		else
 		{
-			cl.refdef.cl_viewangles[PITCH] += evdev_dy * m_enginesens->value;
+			cl.refdef.cl_viewangles[PITCH] += dy * m_enginesens->value;
 			cl.refdef.cl_viewangles[PITCH] = bound( -90, cl.refdef.cl_viewangles[PITCH], 90 );
-			cl.refdef.cl_viewangles[YAW] -= evdev_dx * m_enginesens->value;
+			cl.refdef.cl_viewangles[YAW] -= dx * m_enginesens->value;
 		}
 	}
-	
+	if( evdev.grabtime <= host.realtime )
+		evdev.grab = false;
 }
 
 void Evdev_SetGrab( qboolean grab )
 {
-	if( !evdev_open || !evdev_grab->integer )
-		return;
-	ioctl( mouse_fd, EVIOCGRAB, (void*) grab );
+	int i;
+
 	if( grab )
+	{
 		Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
+		evdev.grabtime = host.realtime + 1;
+	}
+	else for( i = 0; i < evdev.devices; i++ )
+		ioctl( evdev.fds[i], EVIOCGRAB, (void*) 0 );
+	evdev.grab = grab;
 }
 
 #endif
@@ -317,7 +472,7 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 			clgame.dllFuncs.IN_ActivateMouse();
 	}
 
-	if( ( newstate == key_menu || newstate == key_console ) && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
+	if( ( newstate == key_menu || newstate == key_console || newstate == key_message ) && ( !CL_IsBackgroundMap() || CL_IsBackgroundDemo()))
 	{
 #ifdef XASH_SDL
 		SDL_SetWindowGrab(host.hWnd, SDL_FALSE);
@@ -409,13 +564,6 @@ Called when the window loses focus
 */
 void IN_DeactivateMouse( void )
 {
-#ifdef USE_EVDEV
-	if( evdev_open && ( evdev_grab->value == 1 ) )
-	{
-		ioctl( mouse_fd, EVIOCGRAB, (void*) 0);
-		Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
-	}
-#endif
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
 
@@ -535,8 +683,9 @@ void IN_Shutdown( void )
 	IN_DeactivateMouse( );
 
 #ifdef USE_EVDEV
-	Cmd_RemoveCommand( "evdev_mouseopen" );
-	Cmd_RemoveCommand( "evdev_mouseclose" );
+	Cmd_RemoveCommand( "evdev_open" );
+	Cmd_RemoveCommand( "evdev_close" );
+	Cmd_RemoveCommand( "evdev_autodetect" );
 #endif
 }
 
@@ -558,11 +707,9 @@ void IN_Init( void )
 		Joy_Init(); // common joystick support init
 
 #ifdef USE_EVDEV
-	evdev_mousepath	= Cvar_Get( "evdev_mousepath", "", 0, "Path for evdev device node");
-	evdev_grab = Cvar_Get( "evdev_grab", "0", CVAR_ARCHIVE, "Enable event device grab" );
-	Cmd_AddCommand ("evdev_mouseopen", Evdev_OpenMouse_f, "Open device selected by evdev_mousepath");
-	Cmd_AddCommand ("evdev_mouseclose", Evdev_CloseMouse_f, "Close current evdev device");
-	evdev_open = 0;
+	Cmd_AddCommand ("evdev_open", Evdev_OpenDevice_f, "Open event device");
+	Cmd_AddCommand ("evdev_close", Evdev_CloseDevice_f, "Close event device");
+	Cmd_AddCommand ("evdev_autodetect", Evdev_Autodetect_f, "Automaticly open mouses and keyboards");
 #endif
 }
 
