@@ -738,7 +738,12 @@ void SCR_NetSpeeds( void );
 void SCR_RSpeeds( void );
 void SCR_DrawFPS( void );
 void SCR_DrawPos( void );
+
+//
+// cl_netgraph.c
+//
 void SCR_DrawNetGraph( void );
+void CL_InitNetgraph( void );
 
 //
 // cl_view.c
