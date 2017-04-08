@@ -59,6 +59,7 @@ LOCAL_SRC_FILES := \
            client/cl_tent.c \
            client/cl_video.c \
            client/cl_view.c \
+           client/cl_netgraph.c \
            client/gl_backend.c \
            client/gl_beams.c \
            client/gl_cull.c \
