@@ -204,7 +204,7 @@ sfx_t *S_FindName( const char *pname, int *pfInCache )
 	// find a free sfx slot spot
 	for( i = 0, sfx = s_knownSfx; i < s_numSfx; i++, sfx++)
 	{
-		if( !sfx->name[0] ) break; // free spot
+		if( !sfx->name ) break; // free spot
 	}
 
 	if( i == s_numSfx )
