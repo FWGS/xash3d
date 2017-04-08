@@ -306,6 +306,9 @@ adjust text by x pos
 static int CL_AdjustXPos( float x, int width, int totalWidth )
 {
 	int	xPos;
+	float scale;
+
+	scale = scr_width->value / (float)clgame.scrInfo.iWidth;
 
 	if( x == -1 )
 	{
@@ -324,7 +327,7 @@ static int CL_AdjustXPos( float x, int width, int totalWidth )
 	else if( xPos < 0 )
 		xPos = 0;
 
-	return xPos;
+	return xPos * scale;
 }
 
 /*
@@ -337,6 +340,9 @@ adjust text by y pos
 static int CL_AdjustYPos( float y, int height )
 {
 	int	yPos;
+	float scale;
+
+	scale = scr_height->value / (float)clgame.scrInfo.iHeight;
 
 	if( y == -1 ) // centered?
 	{
@@ -356,7 +362,18 @@ static int CL_AdjustYPos( float y, int height )
 	else if( yPos < 0 )
 		yPos = 0;
 
-	return yPos;
+	return yPos * scale;
+}
+
+void CL_CenterPrint_f( void )
+{
+	if( Cmd_Argc() < 3 )
+	{
+		Msg( "centerprint: <text> <y>" );
+		return;
+	}
+
+	CL_CenterPrint( Cmd_Argv(1), Q_atof(Cmd_Argv(2)) );
 }
 
 /*
@@ -371,6 +388,7 @@ void CL_CenterPrint( const char *text, float y )
 	byte	*s;
 	int	width = 0;
 	int	length = 0;
+	float yscale;
 
 	clgame.centerPrint.lines = 1;
 	clgame.centerPrint.totalWidth = 0;
@@ -388,7 +406,7 @@ void CL_CenterPrint( const char *text, float y )
 				clgame.centerPrint.totalWidth = width;
 			width = 0;
 		}
-		else width += clgame.scrInfo.charWidths[*s];
+		else width += clgame.scrInfo.charWidths[*s] * yscale;
 		s++;
 		length++;
 	}
@@ -4124,6 +4142,8 @@ qboolean CL_LoadProgs( const char *name )
 	clgame.dllFuncs.pfnInit();
 
 	CL_InitStudioAPI( );
+
+	Cmd_AddCommand( "centerprint", CL_CenterPrint_f, "centerprint test function");
 
 	return true;
 }
