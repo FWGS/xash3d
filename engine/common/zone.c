@@ -64,7 +64,7 @@ typedef struct mempool_s
 	uint		sentinel2;	// should always be MEMHEADER_SENTINEL1
 } mempool_t;
 
-mempool_t *poolchain = NULL; // critical stuff
+mempool_t *poolchain; // critical stuff
 
 void *_Mem_Alloc( byte *poolptr, size_t size, const char *filename, int fileline )
 {
@@ -94,11 +94,11 @@ void *_Mem_Alloc( byte *poolptr, size_t size, const char *filename, int fileline
 				largest = 0;
 				for( i = 0; i < endbit; i++ )
 				{
-					if( clump->bits[i>>5] & (1 << (i & 31)))
+					if( clump->bits[i>>5] & (1U << (i & 31)))
 						continue;
 					k = i + needed;
 					for( j = i; i < k; i++ )
-						if( clump->bits[i>>5] & (1 << (i & 31)))
+						if( clump->bits[i>>5] & (1U << (i & 31)))
 							goto loopcontinue;
 					goto choseclump;
 loopcontinue:;
@@ -129,7 +129,7 @@ choseclump:
 		clump->blocksinuse += needed;
 
 		for( i = j + needed; j < i; j++ )
-			clump->bits[j >> 5] |= (1 << (j & 31));
+			clump->bits[j >> 5] |= (1U << (j & 31));
 	}
 	else
 	{
@@ -166,7 +166,7 @@ static const char *Mem_CheckFilename( const char *filename )
 
 	if( !out ) return dummy;
 	for( i = 0; i < 128; i++, out++ )
-		if( out == '\0' ) break; // valid name
+		if( *out == '\0' ) break; // valid name
 	if( i == 128 ) return dummy;
 	return filename;
 }
@@ -218,7 +218,7 @@ static void Mem_FreeBlock( memheader_t *mem, const char *filename, int fileline 
 
 		// could use &, but we know the bit is set
 		for( i = firstblock; i < endblock; i++ )
-			clump->bits[i >> 5] -= (1 << (i & 31));
+			clump->bits[i >> 5] -= (1U << (i & 31));
 		if( clump->blocksinuse <= 0 )
 		{
 			// unlink from chain
@@ -377,19 +377,23 @@ qboolean Mem_IsAllocatedExt( byte *poolptr, void *data )
 
 void Mem_CheckHeaderSentinels( void *data, const char *filename, int fileline )
 {
-	memheader_t *mem;
-
-	if (data == NULL) Sys_Error( "Mem_CheckSentinels: data == NULL (sentinel check at %s:%i)\n", filename, fileline );
-	mem = (memheader_t *)((byte *) data - sizeof(memheader_t));
-	if( mem->sentinel1 != MEMHEADER_SENTINEL1 )
+	if (!data)
+		Sys_Error( "Mem_CheckSentinels: data == NULL (sentinel check at %s:%i)\n", filename, fileline );
+	else
 	{
-		mem->filename = Mem_CheckFilename( mem->filename ); // make sure what we don't crash var_args
-		Sys_Error( "Mem_CheckSentinels: trashed header sentinel 1 (block allocated at %s:%i, sentinel check at %s:%i)\n", mem->filename, mem->fileline, filename, fileline );
-	}
-	if( *((byte *) mem + sizeof(memheader_t) + mem->size) != MEMHEADER_SENTINEL2 )
-	{	
-		mem->filename = Mem_CheckFilename( mem->filename ); // make sure what we don't crash var_args
-		Sys_Error( "Mem_CheckSentinels: trashed header sentinel 2 (block allocated at %s:%i, sentinel check at %s:%i)\n", mem->filename, mem->fileline, filename, fileline );
+		memheader_t *mem = (memheader_t *)((byte *) data - sizeof(memheader_t));
+
+		if( mem->sentinel1 != MEMHEADER_SENTINEL1 )
+		{
+			mem->filename = Mem_CheckFilename( mem->filename ); // make sure what we don't crash var_args
+			Sys_Error( "Mem_CheckSentinels: trashed header sentinel 1 (block allocated at %s:%i, sentinel check at %s:%i)\n", mem->filename, mem->fileline, filename, fileline );
+		}
+
+		if( *((byte *) mem + sizeof(memheader_t) + mem->size) != MEMHEADER_SENTINEL2 )
+		{
+			mem->filename = Mem_CheckFilename( mem->filename ); // make sure what we don't crash var_args
+			Sys_Error( "Mem_CheckSentinels: trashed header sentinel 2 (block allocated at %s:%i, sentinel check at %s:%i)\n", mem->filename, mem->fileline, filename, fileline );
+		}
 	}
 }
 
@@ -438,7 +442,7 @@ void Mem_PrintStats( void )
 		realsize += pool->realsize;
 	}
 
-	Msg( "^3%lu^7 memory pools, totalling: ^1%s\n", (dword)count, Q_memprint( size ));
+	Msg( "^3%lu^7 memory pools, totalling: ^1%s\n", (long unsigned int)count, Q_memprint( size ));
 	Msg( "Total allocated size: ^1%s\n", Q_memprint( realsize ));
 }
 
@@ -453,22 +457,16 @@ void Mem_PrintList( size_t minallocationsize )
 	for( pool = poolchain; pool; pool = pool->next )
 	{
 		// poolnames can contain color symbols, make sure what color is reset
-		if( ((long)pool->totalsize - pool->lastchecksize ) != 0 )
-			Msg( "%5luk (%5luk actual) %s (^7%+3li byte change)\n", (dword)((pool->totalsize + 1023) / 1024), (dword)((pool->realsize + 1023) / 1024), pool->name, (long)pool->totalsize - pool->lastchecksize );
-		else Msg( "%5luk (%5luk actual) %s\n", (dword)((pool->totalsize + 1023) / 1024), (dword)((pool->realsize + 1023) / 1024), pool->name );
+		if( (pool->totalsize - pool->lastchecksize ) != 0 )
+			Msg( "%5luk (%5luk actual) %s (^7%+3li byte change)\n",
+				 (long unsigned int)((pool->totalsize + 1023) / 1024),
+				 (long unsigned int)((pool->realsize + 1023) / 1024),
+				 pool->name,
+				 pool->totalsize - pool->lastchecksize );
+		else Msg( "%5luk (%5luk actual) %s\n", (long unsigned int)((pool->totalsize + 1023) / 1024), (long unsigned int)((pool->realsize + 1023) / 1024), pool->name );
 		pool->lastchecksize = pool->totalsize;
 		for( mem = pool->chain; mem; mem = mem->next )
 			if( mem->size >= minallocationsize )
-				Msg( "%10lu bytes allocated at %s:%i\n", (dword)mem->size, mem->filename, mem->fileline );
+				Msg( "%10lu bytes allocated at %s:%i\n", (long unsigned int)mem->size, mem->filename, mem->fileline );
 	}
-}
-
-/*
-========================
-Memory_Init
-========================
-*/
-void Memory_Init( void )
-{
-	poolchain = NULL; // init mem chain
 }

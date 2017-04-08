@@ -23,22 +23,23 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (LOADER)
 
-# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -O1")
-set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
-set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
-set (CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -Os")
-set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -g -O3")
-
 set (LOADER_LIBRARY loader)
 
 file (GLOB_RECURSE LOADER_SOURCES *.c)
-INCLUDE_DIRECTORIES(. wine/)
-add_library (${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
-target_link_libraries (${LOADER_LIBRARY} -lm)
+include_directories(. wine/ ../engine/common ../engine ../engine/client ../common )
+if(XASH_STATIC)
+	add_library (${LOADER_LIBRARY} STATIC ${LOADER_SOURCES})
+else()
+	add_library (${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
+endif()
+
+IF (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD" OR CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
+       target_link_libraries (${LOADER_LIBRARY} -lm -pthread -lexecinfo)
+ELSE ()
+	   target_link_libraries (${LOADER_LIBRARY} -lm -pthread)
+ENDIF ()
 
 set_target_properties (${LOADER_SHARED} PROPERTIES
-	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
 	POSITION_INDEPENDENT_CODE 1)
 
 install( TARGETS ${LOADER_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d 

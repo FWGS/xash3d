@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "r_efx.h"
@@ -82,8 +84,13 @@ static cl_entity_t *CL_GetBeamEntityByIndex( int index )
 {
 	cl_entity_t	*ent;
 
-	if( index > 0 ) index = BEAMENT_ENTITY( index );
-	ent = CL_GetEntityByIndex( index );
+	if( index < 0 )
+	{
+		index = BEAMENT_ENTITY( -index );
+		return clgame.dllFuncs.pfnGetUserEntity( index );
+	}
+	ent = CL_GetEntityByIndex( BEAMENT_ENTITY( index ) );
+
 
 	return ent;
 }
@@ -114,7 +121,6 @@ static qboolean ComputeBeamEntPosition( int beamEnt, vec3_t pt )
 	int		nAttachment;
 
 	pEnt = CL_GetBeamEntityByIndex( beamEnt );
-	nAttachment = ( beamEnt > 0 ) ? BEAMENT_ATTACHMENT( beamEnt ) : 0;
 
 	if( !pEnt )
 	{
@@ -122,16 +128,24 @@ static qboolean ComputeBeamEntPosition( int beamEnt, vec3_t pt )
 		return false;
 	}
 
-	if(( pEnt->index - 1 ) == cl.playernum && !cl.thirdperson )
-	{
-		// if we view beam at firstperson use viewmodel instead
-		pEnt = &clgame.viewent;
-	}
+	if( beamEnt < 0 )
+		nAttachment = BEAMENT_ATTACHMENT( -beamEnt );
+	else
+		nAttachment = BEAMENT_ATTACHMENT( beamEnt );
+
 
 	// get attachment
 	if( nAttachment > 0 )
 		VectorCopy( pEnt->attachment[nAttachment - 1], pt );
-	else VectorCopy( pEnt->origin, pt );
+	else
+	{
+		if(( pEnt->index - 1 ) == cl.playernum && !cl.thirdperson )
+		{
+			// if we view beam at firstperson use viewmodel instead
+			pEnt = &clgame.viewent;
+		}
+		VectorCopy( pEnt->origin, pt );
+	}
 
 	return true;
 }
@@ -259,7 +273,7 @@ static void CL_DrawSegs( int modelIndex, float frame, int rendermode, const vec3
 	total_segs = segments;
 
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 	pglBegin( GL_TRIANGLE_STRIP );
 
 	// specify all the segments.
@@ -426,7 +440,7 @@ static void CL_DrawDisk( int modelIndex, float frame, int rendermode, const vec3
 	w = freq * delta[2];
 
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 
 	pglBegin( GL_TRIANGLE_STRIP );
 
@@ -493,7 +507,7 @@ static void CL_DrawCylinder( int modelIndex, float frame, int rendermode, const 
 	
 	GL_Cull( GL_NONE );	// draw both sides
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 
 	pglBegin( GL_TRIANGLE_STRIP );
 
@@ -606,7 +620,7 @@ void CL_DrawRing( int modelIndex, float frame, int rendermode, const vec3_t sour
 	j = segments / 8;
 
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 
 	pglBegin( GL_TRIANGLE_STRIP );
 
@@ -743,9 +757,9 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 	float	div;
 	float	vLast = 0.0;
 	float	vStep = 1.0;
-	vec3_t	last1, last2, tmp, normal, scaledColor;
+	vec3_t	last1, last2, tmp, normal, scaledColor, saved_last2;
 	HSPRITE	m_hSprite;
-	rgb_t	nColor;
+	rgb_t	nColor, saved_nColor;
 
 	m_hSprite = R_GetSpriteTexture( Mod_Handle( modelIndex ), frame );
 	if( !m_hSprite ) return;
@@ -776,9 +790,9 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 	nColor[2] = (byte)bound( 0, (int)(scaledColor[2] * 255.0f), 255 );
 
 	SetBeamRenderMode( rendermode );
-	GL_Bind( GL_TEXTURE0, m_hSprite );
+	GL_Bind( XASH_TEXTURE0, m_hSprite );
 
-	pglBegin( GL_QUADS );
+	pglBegin( GL_TRIANGLES );
 
 	while( pHead )
 	{
@@ -789,6 +803,11 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
 		pglTexCoord2f( 0.0f, 1.0f );
 		pglVertex3fv( last1 );
+
+		VectorCopy( last2, saved_last2 );
+		saved_nColor[0] = nColor[0];
+		saved_nColor[1] = nColor[1];
+		saved_nColor[2] = nColor[2];
 
 		// Transform point into screen space
 		TriWorldToScreen( pHead->org, screen );
@@ -826,6 +845,14 @@ static void DrawBeamFollow( int modelIndex, particle_t *pHead, int frame, int re
 		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
 		pglTexCoord2f( 0.0f, 0.0f );
 		pglVertex3fv( last1 );
+		
+        pglColor4ub( saved_nColor[0], saved_nColor[1], saved_nColor[2], 255 );
+        pglTexCoord2f( 1.0f, 1.0f );
+        pglVertex3fv( saved_last2 );
+       
+        pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
+        pglTexCoord2f( 0.0f, 0.0f );
+        pglVertex3fv( last1 );
 
 		pglColor4ub( nColor[0], nColor[1], nColor[2], 255 );
 		pglTexCoord2f( 1.0f, 0.0f );
@@ -1625,7 +1652,7 @@ Remove beam attached to specified entity
 and all particle trails (if this is a beamfollow)
 ==============
 */
-void CL_BeamKill( int deadEntity )
+void GAME_EXPORT CL_BeamKill( int deadEntity )
 {
 	cl_entity_t	*pDeadEntity;
 
@@ -1642,7 +1669,7 @@ CL_BeamEnts
 Create beam between two ents
 ==============
 */
-BEAM *CL_BeamEnts( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness,
+BEAM *GAME_EXPORT CL_BeamEnts( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness,
 	float speed, int startFrame, float framerate, float r, float g, float b )
 {
 	cl_entity_t	*pStart, *pEnd;
@@ -1690,7 +1717,7 @@ CL_BeamPoints
 Create beam between two points
 ==============
 */
-BEAM *CL_BeamPoints( const vec3_t start, const vec3_t end, int modelIndex, float life, float width, float amplitude,
+BEAM *GAME_EXPORT CL_BeamPoints( const vec3_t start, const vec3_t end, int modelIndex, float life, float width, float amplitude,
 	float brightness, float speed, int startFrame, float framerate, float r, float g, float b )
 {
 	BEAM	*pBeam;
@@ -1739,7 +1766,7 @@ CL_BeamLighting
 Create beam between two points (simple version)
 ==============
 */
-BEAM *CL_BeamLightning( const vec3_t start, const vec3_t end, int modelIndex, float life, float width, float amplitude,
+BEAM *GAME_EXPORT CL_BeamLightning( const vec3_t start, const vec3_t end, int modelIndex, float life, float width, float amplitude,
 	float brightness, float speed )
 {
 	return CL_BeamPoints( start, end, modelIndex, life, width, amplitude, brightness, speed,
@@ -1753,7 +1780,7 @@ CL_BeamCirclePoints
 Create beam cicrle
 ==============
 */
-BEAM *CL_BeamCirclePoints( int type, const vec3_t start, const vec3_t end, int modelIndex, float life, float width,
+BEAM *GAME_EXPORT CL_BeamCirclePoints( int type, const vec3_t start, const vec3_t end, int modelIndex, float life, float width,
 	float amplitude, float brightness, float speed, int startFrame, float framerate, float r, float g, float b )
 {
 	BEAM	*pBeam;
@@ -1799,7 +1826,7 @@ CL_BeamEntPoint
 Create beam between entity and point
 ==============
 */
-BEAM *CL_BeamEntPoint( int startEnt, const vec3_t end, int modelIndex, float life, float width, float amplitude,
+BEAM *GAME_EXPORT CL_BeamEntPoint( int startEnt, const vec3_t end, int modelIndex, float life, float width, float amplitude,
 	float brightness, float speed, int startFrame, float framerate, float r, float g, float b )
 {
 	cl_entity_t	*pStart;
@@ -1853,7 +1880,7 @@ CL_BeamRing
 Create beam between two ents
 ==============
 */
-BEAM *CL_BeamRing( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness,
+BEAM *GAME_EXPORT CL_BeamRing( int startEnt, int endEnt, int modelIndex, float life, float width, float amplitude, float brightness,
 	float speed, int startFrame, float framerate, float r, float g, float b )
 {
 	cl_entity_t	*pStart, *pEnd;
@@ -1901,7 +1928,7 @@ CL_BeamFollow
 Create beam following with entity
 ==============
 */
-BEAM *CL_BeamFollow( int startEnt, int modelIndex, float life, float width, float r, float g, float b, float bright )
+BEAM *GAME_EXPORT CL_BeamFollow( int startEnt, int modelIndex, float life, float width, float r, float g, float b, float bright )
 {
 	cl_entity_t	*pStart;
 	BEAM		*pBeam;
@@ -2133,7 +2160,7 @@ void CL_ReadLineFile_f( void )
 	string		token;
 	
 	Q_snprintf( filename, sizeof( filename ), "maps/%s.lin", clgame.mapname );
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 
 	if( !afile )
 	{
@@ -2166,7 +2193,7 @@ void CL_ReadLineFile_f( void )
 
 		if( token[0] != '-' )
 		{
-			MsgDev( D_ERROR, "%s is corrupted\n" );
+			MsgDev( D_ERROR, "%s is corrupted\n", filename );
 			break;
 		}
 
@@ -2198,3 +2225,4 @@ void CL_ReadLineFile_f( void )
 	if( count ) Msg( "%i lines read\n", count );
 	else Msg( "map %s has no leaks!\n", clgame.mapname );
 }
+#endif // XASH_DEDICATED

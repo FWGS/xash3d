@@ -13,6 +13,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#if defined (__linux__) && !defined (__ANDROID__)
+//sincosf
+#define _GNU_SOURCE
+#include <math.h>
+#endif
 #include "common.h"
 #include "mathlib.h"
 
@@ -43,6 +48,53 @@ anglemod
 float anglemod( const float a )
 {
 	return (360.0f/65536) * ((int)(a*(65536/360.0f)) & 65535);
+}
+
+word FloatToHalf( float v )
+{
+	unsigned int	i = *((unsigned int *)&v);
+	unsigned int	e = (i >> 23) & 0x00ff;
+	unsigned int	m = i & 0x007fffff;
+	unsigned short	h;
+
+	if( e <= 127 - 15 )
+		h = ((m | 0x00800000) >> (127 - 14 - e)) >> 13;
+	else h = (i >> 13) & 0x3fff;
+
+	h |= (i >> 16) & 0xc000;
+
+	return h;
+}
+
+float HalfToFloat( word h )
+{
+	unsigned int	f = (h << 16) & 0x80000000;
+	unsigned int	em = h & 0x7fff;
+
+	if( em > 0x03ff )
+	{
+		f |= (em << 13) + ((127 - 15) << 23);
+	}
+	else
+	{
+		unsigned int m = em & 0x03ff;
+
+		if( m != 0 )
+		{
+			unsigned int e = (em >> 10) & 0x1f;
+
+			while(( m & 0x0400 ) == 0 )
+			{
+				m <<= 1;
+				e--;
+			}
+
+			m &= 0x3ff;
+			f |= ((e + (127 - 14)) << 23) | (m << 13);
+		}
+	}
+
+	return *((float *)&f);
 }
 
 /*
@@ -128,7 +180,7 @@ SinCos
 */
 void SinCos( float radians, float *sine, float *cosine )
 {
-#if 0
+#if _MSC_VER == 1200
 	_asm
 	{
 		fld	dword ptr [radians]
@@ -162,13 +214,13 @@ void SinCosFastVector(float r1, float r2, float r3, float r4,
 	sincos_ps(rad_vector, &sin_vector, &cos_vector);
 
 	*s0 = sin_vector[0];
-	if(s1) *s1 = sin_vector[1];
-	if(s2) *s2 = sin_vector[2];
+	*s1 = sin_vector[1];
+	*s2 = sin_vector[2];
 	if(s3) *s3 = sin_vector[3];
 
 	*c0 = cos_vector[0];
-	if(s1) *c1 = cos_vector[1];
-	if(s2) *c2 = cos_vector[2];
+	*c1 = cos_vector[1];
+	*c2 = cos_vector[2];
 	if(s3) *c3 = cos_vector[3];
 }
 #endif
@@ -211,7 +263,7 @@ AngleVectors
 
 =================
 */
-void AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
+void GAME_EXPORT AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up )
 {
 	static float	sr, sp, sy, cr, cp, cy;
 
@@ -314,6 +366,28 @@ void VectorsAngles( const vec3_t forward, const vec3_t right, const vec3_t up, v
 	angles[PITCH] = pitch;
 	angles[YAW] = yaw;
 	angles[ROLL] = roll;
+}
+
+/*
+=================
+InterpolateAngles
+=================
+*/
+void InterpolateAngles( vec3_t start, vec3_t end, vec3_t out, float frac )
+{
+	float	d, ang1, ang2;
+	int i;
+	for( i = 0; i < 3; i++ )
+	{
+		ang1 = start[i];
+		ang2 = end[i];
+		d = ang1 - ang2;
+
+		if( d > 180.0f ) d -= 360.0f;
+		else if( d < -180.0f ) d += 360.0f;
+
+		out[i] = ang2 + d * frac;
+	}
 }
 
 //

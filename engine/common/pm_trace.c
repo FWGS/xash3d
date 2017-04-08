@@ -51,18 +51,17 @@ void PM_InitBoxHull( void )
 	for( i = 0; i < 6; i++ )
 	{
 		pm_boxclipnodes[i].planenum = i;
-		
+
 		side = i & 1;
-		
+
 		pm_boxclipnodes[i].children[side] = CONTENTS_EMPTY;
 		if( i != 5 ) pm_boxclipnodes[i].children[side^1] = i + 1;
 		else pm_boxclipnodes[i].children[side^1] = CONTENTS_SOLID;
-		
+
 		pm_boxplanes[i].type = i>>1;
 		pm_boxplanes[i].normal[i>>1] = 1.0f;
 		pm_boxplanes[i].signbits = 0;
 	}
-	
 }
 
 /*
@@ -162,9 +161,22 @@ hull_t *PM_HullForStudio( physent_t *pe, playermove_t *pmove, int *numhitboxes )
 	VectorSubtract( pmove->player_maxs[pmove->usehull], pmove->player_mins[pmove->usehull], size );
 	VectorScale( size, 0.5f, size );
 
+	if( pe->player )
+		 return PM_HullForBox( pe->mins, pe->maxs );
+
 	return Mod_HullForStudio( pe->studiomodel, pe->frame, pe->sequence, pe->angles, pe->origin, size, pe->controller, pe->blending, numhitboxes, NULL );
 }
-
+/* "Not a number" possible here.
+ * Enable this macro to debug it */
+#ifdef DEBUGNAN
+static void _assertNAN(const char *f, int l, const char *x)
+{
+	MsgDev( D_WARN, "NAN detected at %s:%i (%s)\n", f, l, x );
+}
+#define ASSERTNAN(x) if( !finitef(x) ) _assertNAN( __FILE__, __LINE__, #x );
+#else
+#define ASSERTNAN(x)
+#endif
 /*
 ==================
 PM_RecursiveHullCheck
@@ -203,7 +215,7 @@ qboolean PM_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 
 	if( num < hull->firstclipnode || num > hull->lastclipnode )
 		Sys_Error( "PM_RecursiveHullCheck: bad node number\n" );
-		
+
 	// find the point distances
 	node = hull->clipnodes + num;
 	plane = hull->planes + node->planenum;
@@ -219,10 +231,16 @@ qboolean PM_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 		t2 = DotProduct( plane->normal, p2 ) - plane->dist;
 	}
 
+	ASSERTNAN( t1 )
+	ASSERTNAN( t2 )
+
 	if( t1 >= 0.0f && t2 >= 0.0f )
 		return PM_RecursiveHullCheck( hull, node->children[0], p1f, p2f, p1, p2, trace );
 	if( t1 < 0.0f && t2 < 0.0f )
 		return PM_RecursiveHullCheck( hull, node->children[1], p1f, p2f, p1, p2, trace );
+
+	ASSERTNAN( t1 )
+	ASSERTNAN( t2 )
 
 	// put the crosspoint DIST_EPSILON pixels on the near side
 	side = (t1 < 0.0f);
@@ -230,9 +248,11 @@ qboolean PM_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 	if( side ) frac = ( t1 + DIST_EPSILON ) / ( t1 - t2 );
 	else frac = ( t1 - DIST_EPSILON ) / ( t1 - t2 );
 
+	ASSERTNAN( frac )
+
 	if( frac < 0.0f ) frac = 0.0f;
 	if( frac > 1.0f ) frac = 1.0f;
-		
+
 	midf = p1f + ( p2f - p1f ) * frac;
 	VectorLerp( p1, frac, p2, mid );
 
@@ -250,7 +270,7 @@ qboolean PM_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 	// never got out of the solid area
 	if( trace->allsolid )
 		return false;
-		
+
 	// the other side of the node is solid, this is the impact point
 	if( !side )
 	{
@@ -265,10 +285,11 @@ qboolean PM_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 
 	while( PM_HullPointContents( hull, hull->firstclipnode, mid ) == CONTENTS_SOLID )
 	{
+		ASSERTNAN( frac )
 		// shouldn't really happen, but does occasionally
 		frac -= 0.1f;
 
-		if( frac < 0.0f )
+		if( ( frac < 0.0f )  || IS_NAN( frac ) )
 		{
 			trace->fraction = midf;
 			VectorCopy( mid, trace->endpos );
@@ -297,7 +318,7 @@ pmtrace_t PM_PlayerTraceExt( playermove_t *pmove, vec3_t start, vec3_t end, int 
 	vec3_t	temp, mins, maxs;
 	int	i, j, hullcount;
 	qboolean	rotated, transform_bbox;
-	hull_t	*hull = 0;
+	hull_t	*hull = NULL;
 
 	Q_memset( &trace_total, 0, sizeof( trace_total ));
 	VectorCopy( end, trace_total.endpos );
@@ -395,11 +416,11 @@ pmtrace_t PM_PlayerTraceExt( playermove_t *pmove, vec3_t start, vec3_t end, int 
 
 			Matrix4x4_VectorITransform( matrix, start, start_l );
 			Matrix4x4_VectorITransform( matrix, end, end_l );
-                              
+
 			if( transform_bbox )
 			{
 				World_TransformAABB( matrix, pmove->player_mins[pmove->usehull], pmove->player_maxs[pmove->usehull], mins, maxs );
-				VectorSubtract( hull->clip_mins, mins, offset );	// calc new local offset
+				VectorSubtract( hull[0].clip_mins, mins, offset );	// calc new local offset
 
 				for( j = 0; j < 3; j++ )
 				{
@@ -431,13 +452,15 @@ pmtrace_t PM_PlayerTraceExt( playermove_t *pmove, vec3_t start, vec3_t end, int 
 		else if( pe->solid == SOLID_CUSTOM )
 		{
 			// run custom sweep callback
-			if( pmove->server || Host_IsLocalClient( ))
+			if( pmove->server || Host_IsLocalClient( ) || Host_IsDedicated() )
 				SV_ClipPMoveToEntity( pe, start, mins, maxs, end, &trace_bbox );
+#ifndef XASH_DEDICATED
 			else CL_ClipPMoveToEntity( pe, start, mins, maxs, end, &trace_bbox );
+#endif
 		}
 		else if( hullcount == 1 )
 		{
-			PM_RecursiveHullCheck( hull, hull->firstclipnode, 0, 1, start_l, end_l, &trace_bbox );
+			PM_RecursiveHullCheck( hull, hull[0].firstclipnode, 0, 1, start_l, end_l, &trace_bbox );
 		}
 		else
 		{
@@ -505,7 +528,7 @@ int PM_TestPlayerPosition( playermove_t *pmove, vec3_t pos, pmtrace_t *ptrace, p
 	vec3_t	pos_l, offset;
 	vec3_t	mins, maxs;
 	pmtrace_t trace;
-	hull_t	*hull = 0;
+	hull_t	*hull = NULL;
 	physent_t *pe;
 
 	trace = PM_PlayerTraceExt( pmove, pmove->origin, pmove->origin, 0, pmove->numphysent, pmove->physents, -1, pmFilter );
@@ -568,11 +591,11 @@ int PM_TestPlayerPosition( playermove_t *pmove, vec3_t pos, pmtrace_t *ptrace, p
 			else Matrix4x4_CreateFromEntity( matrix, pe->angles, offset, 1.0f );
 
 			Matrix4x4_VectorITransform( matrix, pos, pos_l );
-                              
+
 			if( transform_bbox )
 			{
 				World_TransformAABB( matrix, pmove->player_mins[pmove->usehull], pmove->player_maxs[pmove->usehull], mins, maxs );
-				VectorSubtract( hull->clip_mins, mins, offset );	// calc new local offset
+				VectorSubtract( hull[0].clip_mins, mins, offset );	// calc new local offset
 
 				for( j = 0; j < 3; j++ )
 				{
@@ -590,25 +613,24 @@ int PM_TestPlayerPosition( playermove_t *pmove, vec3_t pos, pmtrace_t *ptrace, p
 
 		if( pe->solid == SOLID_CUSTOM )
 		{
-			pmtrace_t	trace;
-
 			Q_memset( &trace, 0, sizeof( trace ));
 			VectorCopy( pos, trace.endpos );
 			trace.allsolid = true;
 			trace.fraction = 1.0f;
 
 			// run custom sweep callback
-			if( pmove->server || Host_IsLocalClient( ))
+			if( pmove->server || Host_IsLocalClient( ) || Host_IsDedicated() )
 				SV_ClipPMoveToEntity( pe, pos, mins, maxs, pos, &trace );
+#ifndef XASH_DEDICATED
 			else CL_ClipPMoveToEntity( pe, pos, mins, maxs, pos, &trace );
-
+#endif
 			// if we inside the custom hull
 			if( trace.allsolid )
 				return i;
 		}
 		else if( hullcount == 1 )
 		{
-			if( PM_HullPointContents( hull, hull->firstclipnode, pos_l ) == CONTENTS_SOLID )
+			if( PM_HullPointContents( hull, hull[0].firstclipnode, pos_l ) == CONTENTS_SOLID )
 				return i;
 		}
 		else

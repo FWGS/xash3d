@@ -104,14 +104,6 @@ void Image_DXTGetPixelFormat( dds_t *hdr )
 	if( !( hdr->dsCaps.dwCaps2 & DDS_VOLUME ))
 		hdr->dwDepth = 1;
 
-	image.flags |= IMAGE_HAS_COLOR; // predict state
-
-	if( hdr->dsPixelFormat.dwFlags & DDS_ALPHA )
-		image.flags |= IMAGE_HAS_ALPHA;
-
-	if( hdr->dsPixelFormat.dwFlags & DDS_LUMINANCE )
-		image.flags &= ~IMAGE_HAS_COLOR;
-
 	if( hdr->dsPixelFormat.dwFlags & DDS_FOURCC )
 	{
 		switch( hdr->dsPixelFormat.dwFourCC )
@@ -159,9 +151,6 @@ void Image_DXTGetPixelFormat( dds_t *hdr )
 	if( hdr->dsCaps.dwCaps1 & DDS_COMPLEX && hdr->dsCaps.dwCaps2 & DDS_CUBEMAP )
 		image.flags |= IMAGE_CUBEMAP;
 
-	if( hdr->dsPixelFormat.dwFlags & DDS_ALPHAPIXELS )
-		image.flags |= IMAGE_HAS_ALPHA;
-
 	if( hdr->dwFlags & DDS_MIPMAPCOUNT )
 		image.num_mips = hdr->dwMipMapCount; // get actual mip count
 }
@@ -182,18 +171,17 @@ size_t Image_DXTGetLinearSize( int type, int width, int height, int depth )
 	return 0;
 }
 
-uint Image_DXTCalcMipmapSize( dds_t *hdr ) 
+size_t Image_DXTCalcMipmapSize( dds_t *hdr ) 
 {
-	uint buffsize = 0;
-	int w = hdr->dwWidth;
-	int h = hdr->dwHeight;
-	int i, mipsize = 0;
+	size_t	buffsize = 0;
+	int	i, width, height;
 		
 	// now correct buffer size
-	for( i = 0; i < max( 1, image.num_mips ); i++, buffsize += mipsize )
+	for( i = 0; i < hdr->dwMipMapCount; i++ )
 	{
-		mipsize = Image_DXTGetLinearSize( image.type, w, h, image.depth );
-		w = (w+1)>>1, h = (h+1)>>1;
+		width = max( 1, ( hdr->dwWidth >> i ));
+		height = max( 1, ( hdr->dwHeight >> i ));
+		buffsize += Image_DXTGetLinearSize( image.type, width, height, image.depth );
 	}
 
 	return buffsize;
@@ -303,14 +291,28 @@ qboolean Image_LoadDDS( const char *name, const byte *buffer, size_t filesize )
 	if( image.size == 0 ) return false; // just in case
 	fin = (byte *)(buffer + sizeof( dds_t ));
 
-	// check for real alpha-pixels
-	if( image.type == PF_DXT3 && Image_CheckDXT3Alpha( &header, fin ))
+	// copy an encode method
+	image.encode = (word)header.dwReserved1[0];
+
+	switch( image.encode )
 	{
-		image.flags |= IMAGE_HAS_ALPHA;
-	}
-	else if( image.type == PF_DXT5 && Image_CheckDXT5Alpha( &header, fin ))
-	{
-		image.flags |= IMAGE_HAS_ALPHA;
+	case DXT_ENCODE_COLOR_YCoCg:
+		image.flags |= IMAGE_HAS_COLOR;
+		break;
+	case DXT_ENCODE_NORMAL_AG_ORTHO:
+	case DXT_ENCODE_NORMAL_AG_STEREO:
+	case DXT_ENCODE_NORMAL_AG_PARABOLOID:
+	case DXT_ENCODE_NORMAL_AG_QUARTIC:
+	case DXT_ENCODE_NORMAL_AG_AZIMUTHAL:
+		image.flags |= IMAGE_HAS_COLOR;
+		break;
+	default:	// check for real alpha-pixels
+		if( image.type == PF_DXT3 && Image_CheckDXT3Alpha( &header, fin ))
+			image.flags |= IMAGE_HAS_ALPHA;
+		else if( image.type == PF_DXT5 && Image_CheckDXT5Alpha( &header, fin ))
+			image.flags |= IMAGE_HAS_ALPHA;
+		image.flags |= IMAGE_HAS_COLOR;
+		break;
 	}
 
 	// dds files will be uncompressed on a render. requires minimal of info for set this

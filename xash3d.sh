@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 SCRIPT_DIR=${PWD##*/}
 IS64BIT=$(getconf LONG_BIT)
@@ -28,12 +28,16 @@ if [ "$UNAME" == "Darwin" ]; then
 elif [ "$UNAME" == "Linux" ]; then
 	# prepend our lib path to LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH=${GAMEROOT}:$LD_LIBRARY_PATH
+elif [ "$UNAME" == "FreeBSD" ]; then
+	export LD_LIBRARY_PATH=${GAMEROOT}:$LD_LIBRARY_PATH
 fi
 
 if [ -z $GAMEEXE ]; then
 	if [ "$UNAME" == "Darwin" ]; then
 		GAMEEXE=xash3d
 	elif [ "$UNAME" == "Linux" ]; then
+		GAMEEXE=xash3d
+	elif [ "$UNAME" == "FreeBSD" ]; then
 		GAMEEXE=xash3d
 	fi
 fi

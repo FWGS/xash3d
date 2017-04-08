@@ -3,17 +3,12 @@ android.cpp -- Run Xash Engine on Android
 nicknekit
 */
 
-#ifdef __ANDROID__
-#define GAME_PATH	"valve"	// default dir to start from
+#if defined(__ANDROID__) && defined(XASH_SDL)
 
+#define GAME_PATH	"valve"	// default dir to start from
 #include "common.h"
 #include <android/log.h>
 #include <jni.h>
-
-
-
-
-#ifdef XASH_SDL
 /* Include the SDL main definition header */
 #include "SDL_main.h"
 
@@ -98,97 +93,33 @@ int Java_org_libsdl_app_SDLActivity_setenv
     (*env)->ReleaseStringUTFChars(env, value, v);
     return err;
 }
-#else
 
-#include "nanogl.h" //use NanoGL
+void *SDL_AndroidGetJNIEnv();
+void *SDL_AndroidGetActivity();
 
-jclass gClass;
-JNIEnv *gEnv;
-jmethodID gSwapBuffers;
-JavaVM *gVM;
-int gWidth, gHeight;
-/*JNIEXPORT jint JNICALL JNIOnLoad(JavaVM * vm, void*)
+JNIEnv *env = NULL;
+jmethodID vibrmid;
+jclass actcls;
+jobject activity;
+void Android_GetMethods()
 {
-	gVM = vm;
-	
-	return JNI_VERSION_1_6;
-}*/
-int Java_in_celest_xash3d_XashActivity_nativeInit(JNIEnv* env, jclass cls, jobject array)
-{
-    int i;
-    int argc;
-    int status;
-    /* Prepare the arguments. */
-
-    int len = (*env)->GetArrayLength(env, array);
-    char* argv[1 + len + 1];
-    argc = 0;
-    argv[argc++] = strdup("app_process");
-    for (i = 0; i < len; ++i) {
-        const char* utf;
-        char* arg = NULL;
-        jstring string = (*env)->GetObjectArrayElement(env, array, i);
-        if (string) {
-            utf = (*env)->GetStringUTFChars(env, string, 0);
-            if (utf) {
-                arg = strdup(utf);
-                (*env)->ReleaseStringUTFChars(env, string, utf);
-            }
-            (*env)->DeleteLocalRef(env, string);
-        }
-        if (!arg) {
-            arg = strdup("");
-        }
-        argv[argc++] = arg;
-    }
-    argv[argc] = NULL;
-
-    /* Init callbacks. */
-
-    gEnv = env;
-    gClass = (*env)->FindClass(env, "in/celest/xash3d/XashActivity");
-    gSwapBuffers = (*env)->GetStaticMethodID(env, gClass, "swapBuffers", "()V");
-
-    nanoGL_Init();
-    /* Run the application. */
-
-    status = Host_Main(argc, argv, GAME_PATH, false, NULL);
-
-    /* Release the arguments. */
-
-    for (i = 0; i < argc; ++i) {
-        free(argv[i]);
-    }
-
-    return status;
+	env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+	activity = (jobject)SDL_AndroidGetActivity();
+	actcls = (*env)->GetObjectClass(env, activity);
+	vibrmid = (*env)->GetMethodID(env, actcls, "vibrate", "(S)V");
 }
 
-void Java_in_celest_xash3d_XashActivity_onNativeResize(JNIEnv* env, jclass cls, jint width, jint height)
+void Android_Vibrate( float life, char flags )
 {
-	gWidth=width, gHeight=height;
+	int time = (int)life;
+
+	if( !env )
+		 Android_GetMethods();
+
+	if (vibrmid == 0)
+		return;
+
+	(*env)->CallVoidMethod(env, activity, vibrmid, time);
 }
 
-void Java_in_celest_xash3d_XashActivity_nativeQuit(JNIEnv* env, jclass cls)
-{
-}
-
-void Java_in_celest_xash3d_XashActivity_nativeKey(JNIEnv* env, jclass cls, jint code)
-{
-}
-
-void Java_in_celest_xash3d_XashActivity_nativeTouch(JNIEnv* env, jclass cls, jint x, jint y)
-{
-}
-
-void Android_SwapBuffers()
-{
-	nanoGL_Flush();
-	(*gEnv)->CallStaticVoidMethod(gEnv, gClass, gSwapBuffers);
-}
-void Android_GetScreenRes(int *width, int *height)
-{
-	*width=gWidth, *height=gHeight;
-}
-#endif
-#endif
-
+#endif // __ANDROID__ && XASH_SDL

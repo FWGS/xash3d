@@ -41,11 +41,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_YES	 	130
 #define ID_NO	 	131
 
-#define GAME_LENGTH		18
-#define MAPNAME_LENGTH	20+GAME_LENGTH
-#define TYPE_LENGTH		16+MAPNAME_LENGTH
-#define MAXCL_LENGTH	15+TYPE_LENGTH
-
 typedef struct
 {
 	char		gameDescription[UI_MAX_SERVERS][256];
@@ -124,27 +119,24 @@ static void UI_LanGame_GetGamesList( void )
 	{
 		if( i >= UI_MAX_SERVERS ) break;
 		info = uiStatic.serverNames[i];
-#if 1
-		// NOTE: Xash3D is support hot switching between games in multiplayer
-		// but this feature not detail tested and may be bugly
-		if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )))
-			continue;	// filter by game
-#endif 
-		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "host" ), GAME_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], uiEmptyString, GAME_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "map" ), MAPNAME_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], uiEmptyString, MAPNAME_LENGTH );
-		if( !strcmp( Info_ValueForKey( info, "dm" ), "1" ))
-			StringConcat( uiLanGame.gameDescription[i], "deathmatch", TYPE_LENGTH );
-		else if( !strcmp( Info_ValueForKey( info, "coop" ), "1" ))
-			StringConcat( uiLanGame.gameDescription[i], "coop", TYPE_LENGTH );
-		else if( !strcmp( Info_ValueForKey( info, "team" ), "1" ))
-			StringConcat( uiLanGame.gameDescription[i], "teamplay", TYPE_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], uiEmptyString, TYPE_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "numcl" ), MAXCL_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], "\\", MAXCL_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "maxcl" ), MAXCL_LENGTH );
-		StringConcat( uiLanGame.gameDescription[i], uiEmptyString, MAXCL_LENGTH );
+		uiLanGame.gameDescription[i][0] = 0; // mark this string as empty
+
+		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "host" ), QMSB_GAME_LENGTH );
+		AddSpaces( uiLanGame.gameDescription[i], QMSB_GAME_LENGTH );
+
+		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "map" ), QMSB_MAPNAME_LENGTH );
+		AddSpaces( uiLanGame.gameDescription[i], QMSB_MAPNAME_LENGTH );
+
+		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "numcl" ), QMSB_MAXCL_LENGTH );
+		StringConcat( uiLanGame.gameDescription[i], "\\", QMSB_MAXCL_LENGTH );
+		StringConcat( uiLanGame.gameDescription[i], Info_ValueForKey( info, "maxcl" ), QMSB_MAXCL_LENGTH );
+		AddSpaces( uiLanGame.gameDescription[i], QMSB_MAXCL_LENGTH );
+
+		char ping[10];
+		snprintf( ping, 10, "%.f ms", uiStatic.serverPings[i] * 1000 );
+		StringConcat( uiLanGame.gameDescription[i], ping, QMSB_PING_LENGTH );
+		AddSpaces( uiLanGame.gameDescription[i], QMSB_PING_LENGTH );
+
 		uiLanGame.gameDescriptionPtr[i] = uiLanGame.gameDescription[i];
 	}
 
@@ -189,8 +181,6 @@ UI_Background_Ownerdraw
 */
 static void UI_Background_Ownerdraw( void *self )
 {
-	menuCommon_s	*item = (menuCommon_s *)self;
-
 	if( !CVAR_GET_FLOAT( "cl_background" ))
 		UI_DrawBackground_Callback( self );
 
@@ -273,14 +263,14 @@ static void UI_LanGame_Init( void )
 	uiLanGame.menu.vidInitFunc = UI_LanGame_Init;
 	uiLanGame.menu.keyFunc = UI_LanGame_KeyFunc;
 
-	StringConcat( uiLanGame.hintText, "Game", GAME_LENGTH );
-	StringConcat( uiLanGame.hintText, uiEmptyString, GAME_LENGTH );
-	StringConcat( uiLanGame.hintText, "Map", MAPNAME_LENGTH );
-	StringConcat( uiLanGame.hintText, uiEmptyString, MAPNAME_LENGTH );
-	StringConcat( uiLanGame.hintText, "Type", TYPE_LENGTH );
-	StringConcat( uiLanGame.hintText, uiEmptyString, TYPE_LENGTH );
-	StringConcat( uiLanGame.hintText, "Num/Max Clients", MAXCL_LENGTH );
-	StringConcat( uiLanGame.hintText, uiEmptyString, MAXCL_LENGTH );
+	StringConcat( uiLanGame.hintText, "Name", QMSB_GAME_LENGTH );
+	AddSpaces( uiLanGame.hintText, QMSB_GAME_LENGTH );
+	StringConcat( uiLanGame.hintText, "Map", QMSB_MAPNAME_LENGTH );
+	AddSpaces( uiLanGame.hintText, QMSB_MAPNAME_LENGTH );
+	StringConcat( uiLanGame.hintText, "Players", QMSB_MAXCL_LENGTH );
+	AddSpaces( uiLanGame.hintText, QMSB_MAXCL_LENGTH );
+	StringConcat( uiLanGame.hintText, "Ping", QMSB_PING_LENGTH );
+	AddSpaces( uiLanGame.hintText, QMSB_PING_LENGTH );
 
 	uiLanGame.background.generic.id = ID_BACKGROUND;
 	uiLanGame.background.generic.type = QMTYPE_BITMAP;
@@ -410,9 +400,9 @@ static void UI_LanGame_Init( void )
 	uiLanGame.gameList.generic.id = ID_SERVERSLIST;
 	uiLanGame.gameList.generic.type = QMTYPE_SCROLLLIST;
 	uiLanGame.gameList.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_SMALLFONT;
-	uiLanGame.gameList.generic.x = 360;
+	uiLanGame.gameList.generic.x = 340;
 	uiLanGame.gameList.generic.y = 255;
-	uiLanGame.gameList.generic.width = 640;
+	uiLanGame.gameList.generic.width = 660;
 	uiLanGame.gameList.generic.height = 440;
 	uiLanGame.gameList.generic.callback = UI_LanGame_Callback;
 	uiLanGame.gameList.itemNames = (const char **)uiLanGame.gameDescriptionPtr;
@@ -460,7 +450,7 @@ void UI_LanGame_Menu( void )
 	if ( gMenu.m_gameinfo.gamemode == GAME_SINGLEPLAYER_ONLY )
 		return;
 
-	// stop demos to allow open network sockets
+	// stop demos to allow network sockets to open
 	if ( gpGlobals->demoplayback && CVAR_GET_FLOAT( "cl_background" ))
 	{
 		uiStatic.m_iOldMenuDepth = uiStatic.menuDepth;
@@ -470,6 +460,9 @@ void UI_LanGame_Menu( void )
 
 	UI_LanGame_Precache();
 	UI_LanGame_Init();
+
+	uiLanGame.refreshTime = uiStatic.realTime + 10000; // refresh every 10 secs
+	UI_RefreshServerList();
 
 	UI_PushMenu( &uiLanGame.menu );
 }

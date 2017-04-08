@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -126,6 +128,8 @@ void DrawSkyPolygon( int nump, vec3_t vecs )
 	{
 		j = vec_to_st[axis][2];
 		dv = (j > 0) ? vecs[j-1] : -vecs[-j-1];
+
+		if( dv == 0 ) continue;
 
 		j = vec_to_st[axis][0];
 		s = (j < 0) ? -vecs[-j-1] / dv : vecs[j-1] / dv;
@@ -303,6 +307,7 @@ void R_AddSkyBoxSurface( msurface_t *fa )
 	vec3_t	verts[MAX_CLIP_VERTS];
 	glpoly_t	*p;
 	int	i;
+	float *verts_p;
 
 	if( r_fastsky->integer )
 		return;
@@ -318,10 +323,10 @@ void R_AddSkyBoxSurface( msurface_t *fa )
 	}
 
 	// calculate vertex values for sky box
-	for( p = fa->polys; p; p = p->next )
+	for( p = fa->polys, verts_p = (float *)p + ( ( sizeof( void* ) + sizeof( int ) ) >> 1 ); p; p = p->next )
 	{
 		for( i = 0; i < p->numverts; i++ )
-			VectorSubtract( p->verts[i], RI.cullorigin, verts[i] );
+			VectorSubtract( &verts_p[VERTEXSIZE * i], RI.cullorigin, verts[i] );
 		ClipSkyPolygon( p->numverts, verts[0], 0 );
 	}
 }
@@ -394,7 +399,7 @@ void R_DrawSkyBox( void )
 		if( RI.skyMins[0][i] >= RI.skyMaxs[0][i] || RI.skyMins[1][i] >= RI.skyMaxs[1][i] )
 			continue;
 
-		GL_Bind( GL_TEXTURE0, tr.skyboxTextures[r_skyTexOrder[i]] );
+		GL_Bind( XASH_TEXTURE0, tr.skyboxTextures[r_skyTexOrder[i]] );
 
 		pglBegin( GL_QUADS );
 		MakeSkyVec( RI.skyMins[0][i], RI.skyMins[1][i], i );
@@ -475,7 +480,7 @@ R_InitSky
 A sky texture is 256*128, with the right side being a masked overlay
 ==============
 */
-void R_InitSky( mip_t *mt, texture_t *tx )
+void R_InitSky( mip_t *mt, byte *buf, texture_t *tx )
 {
 	rgbdata_t	r_temp, *r_sky;
 	uint	*trans, *rgba;
@@ -493,7 +498,7 @@ void R_InitSky( mip_t *mt, texture_t *tx )
 		int size = (int)sizeof( mip_t ) + ((mt->width * mt->height * 85)>>6);
 		if( world.version >= HLBSP_VERSION ) size += sizeof( short ) + 768;
 
-		r_sky = FS_LoadImage( texname, (byte *)mt, size );
+		r_sky = FS_LoadImage( texname, buf, size );
 	}
 	else
 	{
@@ -502,7 +507,7 @@ void R_InitSky( mip_t *mt, texture_t *tx )
 	}
 
 	// make sure what sky image is valid
-	if( !r_sky || !r_sky->palette || r_sky->type != PF_INDEXED_32 )
+	if( !r_sky || !r_sky->palette || r_sky->type != PF_INDEXED_32 || r_sky->height == 0 )
 	{
 		MsgDev( D_ERROR, "R_InitSky: unable to load sky texture %s\n", tx->name );
 		FS_FreeImage( r_sky );
@@ -683,7 +688,7 @@ void R_DrawSkyChain( msurface_t *s )
 	msurface_t	*fa;
 
 	GL_SetRenderMode( kRenderNormal );
-	GL_Bind( GL_TEXTURE0, tr.solidskyTexture );
+	GL_Bind( XASH_TEXTURE0, tr.solidskyTexture );
 
 	speedscale = cl.time * 8.0f;
 	speedscale -= (int)speedscale & ~127;
@@ -692,7 +697,7 @@ void R_DrawSkyChain( msurface_t *s )
 		EmitSkyPolys( fa );
 
 	GL_SetRenderMode( kRenderTransTexture );
-	GL_Bind( GL_TEXTURE0, tr.alphaskyTexture );
+	GL_Bind( XASH_TEXTURE0, tr.alphaskyTexture );
 
 	speedscale = cl.time * 16.0f;
 	speedscale -= (int)speedscale & ~127;
@@ -715,7 +720,7 @@ will have them chained together.
 void EmitSkyLayers( msurface_t *fa )
 {
 	GL_SetRenderMode( kRenderNormal );
-	GL_Bind( GL_TEXTURE0, tr.solidskyTexture );
+	GL_Bind( XASH_TEXTURE0, tr.solidskyTexture );
 
 	speedscale = cl.time * 8.0f;
 	speedscale -= (int)speedscale & ~127;
@@ -723,7 +728,7 @@ void EmitSkyLayers( msurface_t *fa )
 	EmitSkyPolys( fa );
 
 	GL_SetRenderMode( kRenderTransTexture );
-	GL_Bind( GL_TEXTURE0, tr.alphaskyTexture );
+	GL_Bind( XASH_TEXTURE0, tr.alphaskyTexture );
 
 	speedscale = cl.time * 16.0f;
 	speedscale -= (int)speedscale & ~127;
@@ -732,3 +737,4 @@ void EmitSkyLayers( msurface_t *fa )
 
 	pglDisable( GL_BLEND );
 }
+#endif // XASH_DEDICATED

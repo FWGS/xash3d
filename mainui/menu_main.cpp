@@ -47,8 +47,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_MINIMIZE		12
 #define ID_MSGBOX	 	13
 #define ID_MSGTEXT	 	14
+#define ID_DISCONNECT	15
 #define ID_YES	 	130
 #define ID_NO	 	131
+#define ID_OK       132
 
 typedef struct
 {
@@ -57,6 +59,7 @@ typedef struct
 	menuBitmap_s	background;
 	menuPicButton_s	console;
 	menuPicButton_s	resumeGame;
+	menuPicButton_s	disconnect;
 	menuPicButton_s	newGame;
 	menuPicButton_s	hazardCourse;
 	menuPicButton_s	configuration;
@@ -75,6 +78,9 @@ typedef struct
 	menuAction_s	dlgMessage1;
 	menuPicButton_s	yes;
 	menuPicButton_s	no;
+	menuPicButton_s	ok;
+	void ( *promptAction )( void );
+	int promptAlert; // no cancel button
 } uiMain_t;
 
 static uiMain_t		uiMain;
@@ -98,8 +104,6 @@ UI_Background_Ownerdraw
 */
 static void UI_Background_Ownerdraw( void *self )
 {
-	menuCommon_s	*item = (menuCommon_s *)self;
-
 	// map has background
 	if( CVAR_GET_FLOAT( "cl_background" ))
 		return;
@@ -131,6 +135,7 @@ static void UI_QuitDialog( void )
 	// show\hide quit dialog
 	uiMain.console.generic.flags ^= QMF_INACTIVE; 
 	uiMain.resumeGame.generic.flags ^= QMF_INACTIVE;
+	uiMain.disconnect.generic.flags ^= QMF_INACTIVE;
 	uiMain.newGame.generic.flags ^= QMF_INACTIVE;
 	uiMain.hazardCourse.generic.flags ^= QMF_INACTIVE;
 	uiMain.saveRestore.generic.flags ^= QMF_INACTIVE;
@@ -155,6 +160,7 @@ static void UI_PromptDialog( void )
 	// show\hide quit dialog
 	uiMain.console.generic.flags ^= QMF_INACTIVE; 
 	uiMain.resumeGame.generic.flags ^= QMF_INACTIVE;
+	uiMain.disconnect.generic.flags ^= QMF_INACTIVE;
 	uiMain.newGame.generic.flags ^= QMF_INACTIVE;
 	uiMain.hazardCourse.generic.flags ^= QMF_INACTIVE;
 	uiMain.saveRestore.generic.flags ^= QMF_INACTIVE;
@@ -168,9 +174,35 @@ static void UI_PromptDialog( void )
 
 	uiMain.msgBox.generic.flags ^= QMF_HIDDEN;
 	uiMain.dlgMessage1.generic.flags ^= QMF_HIDDEN;
-	uiMain.no.generic.flags ^= QMF_HIDDEN;
-	uiMain.yes.generic.flags ^= QMF_HIDDEN;
+	if( uiMain.promptAlert )
+		uiMain.ok.generic.flags ^= QMF_HIDDEN;
+	else
+	{
+		uiMain.no.generic.flags ^= QMF_HIDDEN;
+		uiMain.yes.generic.flags ^= QMF_HIDDEN;
+	}
+}
 
+static void UI_ShowPrompt( void ( *action )( void ), const char *message )
+{
+	uiMain.promptAction = action;
+	uiMain.dlgMessage1.generic.name = message;
+	UI_PromptDialog();
+}
+
+void UI_ShowMessageBox( void )
+{
+	static char msg[1024];
+
+	strncpy( msg, CMD_ARGV(1), 1023 );
+	msg[1023] = 0;
+
+	UI_SetActiveMenu( TRUE );
+
+	UI_Main_Menu();
+	uiMain.dlgMessage1.generic.name = msg;
+	uiMain.promptAlert = 1;
+	UI_PromptDialog();
 }
 
 /*
@@ -204,11 +236,14 @@ UI_Main_ActivateFunc
 static void UI_Main_ActivateFunc( void )
 {
 	if ( !CL_IsActive( ))
+	{
 		uiMain.resumeGame.generic.flags |= QMF_HIDDEN;
+		uiMain.disconnect.generic.flags |= QMF_HIDDEN;
+	}
 
 	if( gpGlobals->developer )
 	{
-		uiMain.console.generic.y = CL_IsActive() ? 180 : 230;
+		uiMain.console.generic.y = CL_IsActive() ? 130 : 230;
 		UI_ScaleCoords( NULL, &uiMain.console.generic.y, NULL, NULL );
 	}
 }
@@ -232,6 +267,15 @@ static void UI_Main_HazardCourse( void )
 	BACKGROUND_TRACK( NULL, NULL );
 
 	CLIENT_COMMAND( FALSE, "hazardcourse\n" );
+}
+
+static void UI_Main_Disconnect( void )
+{
+	if( CVAR_GET_FLOAT( "host_serverstate" ) )
+		CLIENT_COMMAND( TRUE, "endgame;wait;wait;wait;menu_options;menu_main\n");
+	else
+		CLIENT_COMMAND( TRUE, "cmd disconnect;wait;wait;wait;menu_options;menu_main\n");
+	UI_Main_Menu();
 }
 
 /*
@@ -269,12 +313,15 @@ static void UI_Main_Callback( void *self, int event )
 	case ID_RESUME:
 		UI_CloseMenu();
 		break;
+	case ID_DISCONNECT:
+		UI_ShowPrompt( UI_Main_Disconnect, "Really disconnect?" );
+		break;
 	case ID_NEWGAME:
 		UI_NewGame_Menu();
 		break;
 	case ID_HAZARDCOURSE:
 		if( CL_IsActive( ))
-			UI_PromptDialog();
+			UI_ShowPrompt( UI_Main_HazardCourse, MenuStrings[HINT_RESTART_HZ] );
 		else UI_Main_HazardCourse();
 		break;
 	case ID_MULTIPLAYER:
@@ -304,7 +351,12 @@ static void UI_Main_Callback( void *self, int event )
 	case ID_YES:
 		if( !( uiMain.quitMessage.generic.flags & QMF_HIDDEN ))
 			CLIENT_COMMAND( FALSE, "quit\n" );
-		else UI_Main_HazardCourse();
+		else
+			uiMain.promptAction();
+		break;
+	case ID_OK:
+		UI_PromptDialog();
+		uiMain.promptAlert = 0;
 		break;
 	case ID_NO:
 		if( !( uiMain.quitMessage.generic.flags & QMF_HIDDEN ))
@@ -327,7 +379,7 @@ static void UI_Main_Init( void )
 	memset( &uiMain, 0, sizeof( uiMain_t ));
 
 	// training map is present and not equal to startmap
-	if( strlen( gMenu.m_gameinfo.trainmap ) && stricmp( gMenu.m_gameinfo.trainmap, gMenu.m_gameinfo.startmap ))
+	if( gMenu.m_gameinfo.trainmap[0] && stricmp( gMenu.m_gameinfo.trainmap, gMenu.m_gameinfo.startmap ) != 0 )
 		bTrainMap = true;
 	else bTrainMap = false;
 
@@ -357,7 +409,7 @@ static void UI_Main_Init( void )
 	uiMain.console.generic.name = "Console";
 	uiMain.console.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
 	uiMain.console.generic.x = 72;
-	uiMain.console.generic.y = CL_IsActive() ? 180 : 230;
+	uiMain.console.generic.y = CL_IsActive() ? 130 : 230;
 	uiMain.console.generic.callback = UI_Main_Callback;
 
 	UI_UtilSetupPicButton( &uiMain.console, PC_CONSOLE );
@@ -372,6 +424,18 @@ static void UI_Main_Init( void )
 	uiMain.resumeGame.generic.callback = UI_Main_Callback;
 
 	UI_UtilSetupPicButton( &uiMain.resumeGame, PC_RESUME_GAME );
+
+	uiMain.disconnect.generic.id = ID_DISCONNECT;
+	uiMain.disconnect.generic.type = QMTYPE_BM_BUTTON;
+	uiMain.disconnect.generic.name = "Disconnect";
+	uiMain.disconnect.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_NOTIFY;
+	uiMain.disconnect.generic.statusText = "Disconnect from server";
+	uiMain.disconnect.generic.x = 72;
+	uiMain.disconnect.generic.y = 180;
+	uiMain.disconnect.generic.callback = UI_Main_Callback;
+
+	UI_UtilSetupPicButton( &uiMain.disconnect, PC_DISCONNECT );
+
 
 	uiMain.newGame.generic.id = ID_NEWGAME;
 	uiMain.newGame.generic.type = QMTYPE_BM_BUTTON;
@@ -421,6 +485,7 @@ static void UI_Main_Init( void )
 		uiMain.saveRestore.generic.name = "Load Game";
 		uiMain.saveRestore.generic.statusText = MenuStrings[HINT_LOADGAME];
 		uiMain.resumeGame.generic.flags |= QMF_HIDDEN;
+		uiMain.disconnect.generic.flags |= QMF_HIDDEN;
 		UI_UtilSetupPicButton( &uiMain.saveRestore, PC_LOAD_GAME );
 	}
 
@@ -555,6 +620,16 @@ static void UI_Main_Init( void )
 
 	UI_UtilSetupPicButton( &uiMain.yes, PC_OK );
 
+	uiMain.ok.generic.id = ID_OK;
+	uiMain.ok.generic.type = QMTYPE_BM_BUTTON;
+	uiMain.ok.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
+	uiMain.ok.generic.name = "Ok";
+	uiMain.ok.generic.x = DLG_X + 490;
+	uiMain.ok.generic.y = 460;
+	uiMain.ok.generic.callback = UI_Main_Callback;
+
+	UI_UtilSetupPicButton( &uiMain.ok, PC_OK );
+
 	uiMain.no.generic.id = ID_NO;
 	uiMain.no.generic.type = QMTYPE_BM_BUTTON;
 	uiMain.no.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_HIDDEN;
@@ -570,6 +645,7 @@ static void UI_Main_Init( void )
 	if ( gpGlobals->developer )
 		UI_AddItem( &uiMain.menu, (void *)&uiMain.console );
 
+	UI_AddItem( &uiMain.menu, (void *)&uiMain.disconnect );
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.resumeGame );
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.newGame );
 
@@ -592,6 +668,7 @@ static void UI_Main_Init( void )
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.dlgMessage1 );
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.no );
 	UI_AddItem( &uiMain.menu, (void *)&uiMain.yes );
+	UI_AddItem( &uiMain.menu, (void *)&uiMain.ok );
 }
 
 /*

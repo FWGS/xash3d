@@ -101,17 +101,26 @@ GNU General Public License for more details.
 #define MakeRGBA( out, x, y, z, w ) Vector4Set( out, x, y, z, w )
 #define PlaneDist(point,plane) ((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal))
 #define PlaneDiff(point,plane) (((plane)->type < 3 ? (point)[(plane)->type] : DotProduct((point), (plane)->normal)) - (plane)->dist)
-#define bound( min, num, max ) ((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
+#define boundmax( num, high ) ( (num) < (high) ? (num) : (high) )
+#define boundmin( num, low )  ( (num) >= (low) ? (num) : (low)  )
+#define bound( low, num, high ) ( boundmin( boundmax(num, high), low ))
+//#define bound( min, num, max ) ((num) >= (min) ? ((num) < (max) ? (num) : (max)) : (min))
 
 float rsqrt( float number );
 float anglemod( const float a );
+word FloatToHalf( float v );
+float HalfToFloat( word h );
 int SignbitsForPlane( const vec3_t normal );
 int NearestPOW( int value, qboolean roundDown );
 void SinCos( float radians, float *sine, float *cosine );
 #ifdef VECTORIZE_SINCOS
 void SinCosFastVector(float r1, float r2, float r3, float r4,
 					  float *s0, float *s1, float *s2, float *s3,
-					  float *c0, float *c1, float *c2, float *c3);
+					  float *c0, float *c1, float *c2, float *c3)
+#if defined(__GNUC__)
+	__attribute__((nonnull(5, 6, 7, 9, 10, 11)))
+#endif
+;
 #endif
 float VectorNormalizeLength2( const vec3_t v, vec3_t out );
 void VectorVectors( const vec3_t forward, vec3_t right, vec3_t up );
@@ -130,6 +139,7 @@ void AngleQuaternion( const vec3_t angles, vec4_t q );
 void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt );
 float RemapVal( float val, float A, float B, float C, float D );
 float ApproachVal( float target, float value, float speed );
+void InterpolateAngles( vec3_t start, vec3_t end, vec3_t output, float frac );
 
 //
 // matrixlib.c
@@ -137,36 +147,39 @@ float ApproachVal( float target, float value, float speed );
 #define Matrix3x4_LoadIdentity( mat )		Matrix3x4_Copy( mat, matrix3x4_identity )
 #define Matrix3x4_Copy( out, in )		Q_memcpy( out, in, sizeof( matrix3x4 ))
 
-void Matrix3x4_VectorTransform( const matrix3x4 in, const float v[3], float out[3] );
-void Matrix3x4_VectorITransform( const matrix3x4 in, const float v[3], float out[3] );
-void Matrix3x4_VectorRotate( const matrix3x4 in, const float v[3], float out[3] );
-void Matrix3x4_VectorIRotate( const matrix3x4 in, const float v[3], float out[3] );
-void Matrix3x4_ConcatTransforms( matrix3x4 out, const matrix3x4 in1, const matrix3x4 in2 );
+#define cmatrix3x4 vec4_t *const
+#define cmatrix4x4 vec4_t *const
+
+void Matrix3x4_VectorTransform( cmatrix3x4 in, const float v[3], float out[3] );
+void Matrix3x4_VectorITransform( cmatrix3x4 in, const float v[3], float out[3] );
+void Matrix3x4_VectorRotate( cmatrix3x4 in, const float v[3], float out[3] );
+void Matrix3x4_VectorIRotate( cmatrix3x4 in, const float v[3], float out[3] );
+void Matrix3x4_ConcatTransforms( matrix3x4 out, cmatrix3x4 in1, cmatrix3x4 in2 );
 void Matrix3x4_FromOriginQuat( matrix3x4 out, const vec4_t quaternion, const vec3_t origin );
 void Matrix3x4_CreateFromEntity( matrix3x4 out, const vec3_t angles, const vec3_t origin, float scale );
-void Matrix3x4_TransformPositivePlane( const matrix3x4 in, const vec3_t normal, float d, vec3_t out, float *dist );
+void Matrix3x4_TransformPositivePlane( cmatrix3x4 in, const vec3_t normal, float d, vec3_t out, float *dist );
 void Matrix3x4_SetOrigin( matrix3x4 out, float x, float y, float z );
-void Matrix3x4_Invert_Simple( matrix3x4 out, const matrix3x4 in1 );
-void Matrix3x4_OriginFromMatrix( const matrix3x4 in, float *out );
+void Matrix3x4_Invert_Simple( matrix3x4 out, cmatrix3x4 in1 );
+void Matrix3x4_OriginFromMatrix( cmatrix3x4 in, float *out );
 
 #define Matrix4x4_LoadIdentity( mat )	Matrix4x4_Copy( mat, matrix4x4_identity )
 #define Matrix4x4_Copy( out, in )	Q_memcpy( out, in, sizeof( matrix4x4 ))
 
-void Matrix4x4_VectorTransform( const matrix4x4 in, const float v[3], float out[3] );
-void Matrix4x4_VectorITransform( const matrix4x4 in, const float v[3], float out[3] );
-void Matrix4x4_VectorRotate( const matrix4x4 in, const float v[3], float out[3] );
-void Matrix4x4_VectorIRotate( const matrix4x4 in, const float v[3], float out[3] );
-void Matrix4x4_ConcatTransforms( matrix4x4 out, const matrix4x4 in1, const matrix4x4 in2 );
+void Matrix4x4_VectorTransform( cmatrix4x4 in, const float v[3], float out[3] );
+void Matrix4x4_VectorITransform( cmatrix4x4 in, const float v[3], float out[3] );
+void Matrix4x4_VectorRotate( cmatrix4x4 in, const float v[3], float out[3] );
+void Matrix4x4_VectorIRotate( cmatrix4x4 in, const float v[3], float out[3] );
+void Matrix4x4_ConcatTransforms( matrix4x4 out, cmatrix4x4 in1, cmatrix4x4 in2 );
 void Matrix4x4_FromOriginQuat( matrix4x4 out, const vec4_t quaternion, const vec3_t origin );
 void Matrix4x4_CreateFromEntity( matrix4x4 out, const vec3_t angles, const vec3_t origin, float scale );
-void Matrix4x4_TransformPositivePlane( const matrix4x4 in, const vec3_t normal, float d, vec3_t out, float *dist );
-void Matrix4x4_TransformStandardPlane( const matrix4x4 in, const vec3_t normal, float d, vec3_t out, float *dist );
-void Matrix4x4_ConvertToEntity( const matrix4x4 in, vec3_t angles, vec3_t origin );
+void Matrix4x4_TransformPositivePlane( cmatrix4x4 in, const vec3_t normal, float d, vec3_t out, float *dist );
+void Matrix4x4_TransformStandardPlane( cmatrix4x4 in, const vec3_t normal, float d, vec3_t out, float *dist );
+void Matrix4x4_ConvertToEntity( cmatrix4x4 in, vec3_t angles, vec3_t origin );
 void Matrix4x4_SetOrigin( matrix4x4 out, float x, float y, float z );
-void Matrix4x4_Invert_Simple( matrix4x4 out, const matrix4x4 in1 );
-void Matrix4x4_OriginFromMatrix( const matrix4x4 in, float *out );
-void Matrix4x4_Transpose( matrix4x4 out, const matrix4x4 in1 );
-qboolean Matrix4x4_Invert_Full( matrix4x4 out, const matrix4x4 in1 );
+void Matrix4x4_Invert_Simple( matrix4x4 out, cmatrix4x4 in1 );
+void Matrix4x4_OriginFromMatrix( cmatrix4x4 in, float *out );
+void Matrix4x4_Transpose( matrix4x4 out, cmatrix4x4 in1 );
+qboolean Matrix4x4_Invert_Full( matrix4x4 out, cmatrix4x4 in1 );
 
 extern vec3_t		vec3_origin;
 extern const matrix3x4	matrix3x4_identity;

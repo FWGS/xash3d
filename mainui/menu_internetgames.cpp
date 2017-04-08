@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -35,16 +35,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_DONE		6
 #define ID_SERVERSLIST	7
 #define ID_TABLEHINT	8
+#define ID_NAT			11
+#define ID_DIRECT		12
 
 #define ID_MSGBOX	 	9
 #define ID_MSGTEXT	 	10
 #define ID_YES	 	130
 #define ID_NO	 	131
-
-#define GAME_LENGTH		18
-#define MAPNAME_LENGTH	20+GAME_LENGTH
-#define TYPE_LENGTH		16+MAPNAME_LENGTH
-#define MAXCL_LENGTH	15+TYPE_LENGTH
 
 typedef struct
 {
@@ -60,6 +57,8 @@ typedef struct
 	menuPicButton_s	gameInfo;
 	menuPicButton_s	refresh;
 	menuPicButton_s	done;
+	menuPicButton_s	direct;
+	menuPicButton_s	nat;
 
 	// joingame prompt dialog
 	menuAction_s	msgBox;
@@ -72,6 +71,7 @@ typedef struct
 	menuAction_s	hintMessage;
 	char		hintText[MAX_HINT_TEXT];
 	int		refreshTime;
+	int		refreshTime2;
 } uiInternetGames_t;
 
 static uiInternetGames_t	uiInternetGames;
@@ -80,12 +80,14 @@ static void UI_PromptDialog( void )
 {
 	// toggle main menu between active\inactive
 	// show\hide quit dialog
-	uiInternetGames.joinGame.generic.flags ^= QMF_INACTIVE; 
+	uiInternetGames.joinGame.generic.flags ^= QMF_INACTIVE;
 	uiInternetGames.createGame.generic.flags ^= QMF_INACTIVE;
 	uiInternetGames.gameInfo.generic.flags ^= QMF_INACTIVE;
 	uiInternetGames.refresh.generic.flags ^= QMF_INACTIVE;
 	uiInternetGames.done.generic.flags ^= QMF_INACTIVE;
 	uiInternetGames.gameList.generic.flags ^= QMF_INACTIVE;
+	uiInternetGames.nat.generic.flags ^= QMF_INACTIVE;
+	uiInternetGames.direct.generic.flags ^= QMF_INACTIVE;
 
 	uiInternetGames.msgBox.generic.flags ^= QMF_HIDDEN;
 	uiInternetGames.dlgMessage1.generic.flags ^= QMF_HIDDEN;
@@ -122,29 +124,28 @@ static void UI_InternetGames_GetGamesList( void )
 
 	for( i = 0; i < uiStatic.numServers; i++ )
 	{
-		if( i >= UI_MAX_SERVERS ) break;
+		if( i >= UI_MAX_SERVERS )
+			break;
 		info = uiStatic.serverNames[i];
-#if 1
-		// NOTE: Xash3D is support hot switching between games in multiplayer
-		// but this feature not detail tested and may be bugly
-		if( stricmp( gMenu.m_gameinfo.gamefolder, Info_ValueForKey( info, "gamedir" )))
-			continue;	// filter by game
-#endif 
-		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "host" ), GAME_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, GAME_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "map" ), MAPNAME_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, MAPNAME_LENGTH );
-		if( !strcmp( Info_ValueForKey( info, "dm" ), "1" ))
-			StringConcat( uiInternetGames.gameDescription[i], "deathmatch", TYPE_LENGTH );
-		else if( !strcmp( Info_ValueForKey( info, "coop" ), "1" ))
-			StringConcat( uiInternetGames.gameDescription[i], "coop", TYPE_LENGTH );
-		else if( !strcmp( Info_ValueForKey( info, "team" ), "1" ))
-			StringConcat( uiInternetGames.gameDescription[i], "teamplay", TYPE_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, TYPE_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "numcl" ), MAXCL_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], "\\", MAXCL_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "maxcl" ), MAXCL_LENGTH );
-		StringConcat( uiInternetGames.gameDescription[i], uiEmptyString, MAXCL_LENGTH );
+
+		uiInternetGames.gameDescription[i][0] = 0; // mark this string as empty
+
+		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "host" ), QMSB_GAME_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], QMSB_GAME_LENGTH );
+
+		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "map" ), QMSB_MAPNAME_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], QMSB_MAPNAME_LENGTH );
+
+		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "numcl" ), QMSB_MAXCL_LENGTH );
+		StringConcat( uiInternetGames.gameDescription[i], "\\", QMSB_MAXCL_LENGTH );
+		StringConcat( uiInternetGames.gameDescription[i], Info_ValueForKey( info, "maxcl" ), QMSB_MAXCL_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], QMSB_MAXCL_LENGTH );
+
+		char ping[10];
+		snprintf( ping, 10, "%.f ms", uiStatic.serverPings[i] * 1000 );
+		StringConcat( uiInternetGames.gameDescription[i], ping, QMSB_PING_LENGTH );
+		AddSpaces( uiInternetGames.gameDescription[i], QMSB_PING_LENGTH );
+
 		uiInternetGames.gameDescriptionPtr[i] = uiInternetGames.gameDescription[i];
 	}
 
@@ -153,6 +154,7 @@ static void UI_InternetGames_GetGamesList( void )
 
 	uiInternetGames.gameList.itemNames = (const char **)uiInternetGames.gameDescriptionPtr;
 	uiInternetGames.gameList.numItems = 0; // reset it
+	uiInternetGames.gameList.curItem = 0; // reset it
 
 	if( !uiInternetGames.gameList.generic.charHeight )
 		return; // to avoid divide integer by zero
@@ -176,10 +178,26 @@ UI_InternetGames_JoinGame
 */
 static void UI_InternetGames_JoinGame( void )
 {
+	// close dialog
+	if( !(uiInternetGames.yes.generic.flags & QMF_HIDDEN ) )
+		UI_PromptDialog();
+
 	if( !strlen( uiInternetGames.gameDescription[uiInternetGames.gameList.curItem] ))
 		return;
 
 	CLIENT_JOIN( uiStatic.serverAddresses[uiInternetGames.gameList.curItem] );
+	// prevent refresh durning connect
+	uiInternetGames.refreshTime = uiStatic.realTime + 999999;
+}
+
+#define REFRESH_LIST() \
+if( uiStatic.realTime > uiInternetGames.refreshTime2 ) \
+{ \
+UI_RefreshInternetServerList(); \
+uiInternetGames.refreshTime2 = uiStatic.realTime + (CVAR_GET_FLOAT("cl_nat")?4000:1000); \
+uiInternetGames.refresh.generic.flags |= QMF_GRAYED; \
+if( uiStatic.realTime + 20000 < uiInternetGames.refreshTime ) \
+	uiInternetGames.refreshTime = uiStatic.realTime + 20000; \
 }
 
 /*
@@ -189,15 +207,17 @@ UI_Background_Ownerdraw
 */
 static void UI_Background_Ownerdraw( void *self )
 {
-	menuCommon_s	*item = (menuCommon_s *)self;
-
 	if( !CVAR_GET_FLOAT( "cl_background" ))
 		UI_DrawBackground_Callback( self );
 
-	if( uiStatic.realTime > uiInternetGames.refreshTime )
+	if( !CVAR_GET_FLOAT( "cl_nat" ) && uiStatic.realTime > uiInternetGames.refreshTime )
 	{
-		uiInternetGames.refreshTime = uiStatic.realTime + 10000; // refresh every 10 secs
-		UI_RefreshInternetServerList();
+		REFRESH_LIST();
+		uiInternetGames.refreshTime = uiStatic.realTime + 20000;
+	}
+	if( uiStatic.realTime > uiInternetGames.refreshTime2 )
+	{
+		uiInternetGames.refresh.generic.flags &= ~QMF_GRAYED;
 	}
 
 	// serverinfo has been changed update display
@@ -206,6 +226,31 @@ static void UI_Background_Ownerdraw( void *self )
 		UI_InternetGames_GetGamesList ();
 		uiStatic.updateServers = false;
 	}
+	UI_FillRect( 780 * uiStatic.scaleX, 184 * uiStatic.scaleY, (1000-780) * uiStatic.scaleX, 38 * uiStatic.scaleY, 0x80000000 );
+	UI_FillRect( 777 * uiStatic.scaleX, 180 * uiStatic.scaleY, (1000-780+6) * uiStatic.scaleX, 4 * uiStatic.scaleY, 0xFF555555 );
+	UI_FillRect( 777 * uiStatic.scaleX, 184 * uiStatic.scaleY, 4 * uiStatic.scaleX, 38 * uiStatic.scaleY, 0xFF555555 );
+	if( !CVAR_GET_FLOAT( "cl_nat") )
+	{
+		uiInternetGames.nat.generic.flags &= ~QMF_GRAYED;
+		uiInternetGames.direct.generic.flags |= QMF_GRAYED;
+		UI_FillRect( 780 * uiStatic.scaleX, 184 * uiStatic.scaleY, 120 * uiStatic.scaleX, 38 * uiStatic.scaleY, 0xFF555555 );
+	}
+	else
+	{
+		uiInternetGames.direct.generic.flags &= ~QMF_GRAYED;
+		uiInternetGames.nat.generic.flags |= QMF_GRAYED;
+		UI_FillRect( 900 * uiStatic.scaleX, 184 * uiStatic.scaleY, 102 * uiStatic.scaleX, 38 * uiStatic.scaleY, 0xFF555555 );
+	}
+
+	UI_FillRect( 338 * uiStatic.scaleX, 223 * uiStatic.scaleY, 662 * uiStatic.scaleX, 34 * uiStatic.scaleY, 0x80000000 );
+	UI_FillRect( 340 * uiStatic.scaleX, 221 * uiStatic.scaleY, 662 * uiStatic.scaleX, 4 * uiStatic.scaleY, 0xFF555555 );
+	UI_FillRect( 336 * uiStatic.scaleX, 221 * uiStatic.scaleY, 4 * uiStatic.scaleX, 36 * uiStatic.scaleY, 0xFF555555);
+	UI_FillRect( (339+660) * uiStatic.scaleX, 184 * uiStatic.scaleY, 4 * uiStatic.scaleX, 72 * uiStatic.scaleY, 0xFF555555);
+
+
+
+	//UI_FillRect( 340, 225, 660, 30, 0x80404040 );
+
 }
 
 /*
@@ -247,9 +292,12 @@ static void UI_InternetGames_Callback( void *self, int event )
 		// UNDONE: not implemented
 		break;
 	case ID_REFRESH:
-		UI_RefreshInternetServerList();
+		if( uiStatic.realTime > uiInternetGames.refreshTime2 )
+		REFRESH_LIST();
+		uiInternetGames.refresh.generic.flags |= QMF_GRAYED;
 		break;
 	case ID_DONE:
+		CVAR_SET_FLOAT( "cl_nat", 0 );
 		UI_PopMenu();
 		break;
 	case ID_YES:
@@ -257,6 +305,34 @@ static void UI_InternetGames_Callback( void *self, int event )
 		break;
 	case ID_NO:
 		UI_PromptDialog();
+		break;
+	case ID_DIRECT:
+		CVAR_SET_FLOAT( "cl_nat", 0 );
+		uiInternetGames.nat.generic.flags &= ~QMF_GRAYED;
+		uiInternetGames.direct.generic.flags |= QMF_GRAYED;
+		UI_RefreshInternetServerList();
+		uiInternetGames.refreshTime2 = uiStatic.realTime + 1000;
+		uiStatic.numServers = 0;
+		uiInternetGames.gameList.numItems = 0; // reset it
+		uiInternetGames.gameList.curItem = 0; // reset it
+		uiInternetGames.gameList.numRows = 0;
+		for( int i = 0 ; i < UI_MAX_SERVERS; i++ )
+			uiInternetGames.gameDescriptionPtr[i] = NULL;
+		break;
+	case ID_NAT:
+		if( uiInternetGames.refreshTime2 > uiStatic.realTime )
+		    break;
+		CVAR_SET_FLOAT( "cl_nat", 1 );
+		uiInternetGames.direct.generic.flags &= ~QMF_GRAYED;
+		uiInternetGames.nat.generic.flags |= QMF_GRAYED;
+		UI_RefreshInternetServerList();
+		uiInternetGames.refreshTime2 = uiStatic.realTime + 4000;
+		uiStatic.numServers = 0;
+		uiInternetGames.gameList.numItems = 0; // reset it
+		uiInternetGames.gameList.curItem = 0; // reset it
+		uiInternetGames.gameList.numRows = 0;
+		for( int i = 0 ; i < UI_MAX_SERVERS; i++ )
+			uiInternetGames.gameDescriptionPtr[i] = NULL;
 		break;
 	}
 }
@@ -273,14 +349,14 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.menu.vidInitFunc = UI_InternetGames_Init;
 	uiInternetGames.menu.keyFunc = UI_InternetGames_KeyFunc;
 
-	StringConcat( uiInternetGames.hintText, "Game", GAME_LENGTH );
-	StringConcat( uiInternetGames.hintText, uiEmptyString, GAME_LENGTH );
-	StringConcat( uiInternetGames.hintText, "Map", MAPNAME_LENGTH );
-	StringConcat( uiInternetGames.hintText, uiEmptyString, MAPNAME_LENGTH );
-	StringConcat( uiInternetGames.hintText, "Type", TYPE_LENGTH );
-	StringConcat( uiInternetGames.hintText, uiEmptyString, TYPE_LENGTH );
-	StringConcat( uiInternetGames.hintText, "Num/Max Clients", MAXCL_LENGTH );
-	StringConcat( uiInternetGames.hintText, uiEmptyString, MAXCL_LENGTH );
+	StringConcat( uiInternetGames.hintText, "Name", QMSB_GAME_LENGTH );
+	AddSpaces( uiInternetGames.hintText, QMSB_GAME_LENGTH );
+	StringConcat( uiInternetGames.hintText, "Map", QMSB_MAPNAME_LENGTH );
+	AddSpaces( uiInternetGames.hintText, QMSB_MAPNAME_LENGTH );
+	StringConcat( uiInternetGames.hintText, "Players", QMSB_MAXCL_LENGTH );
+	AddSpaces( uiInternetGames.hintText, QMSB_MAXCL_LENGTH );
+	StringConcat( uiInternetGames.hintText, "Ping", QMSB_PING_LENGTH );
+	AddSpaces( uiInternetGames.hintText, QMSB_PING_LENGTH );
 
 	uiInternetGames.background.generic.id = ID_BACKGROUND;
 	uiInternetGames.background.generic.type = QMTYPE_BITMAP;
@@ -345,6 +421,24 @@ static void UI_InternetGames_Init( void )
 
 	UI_UtilSetupPicButton( &uiInternetGames.refresh, PC_REFRESH );
 
+	uiInternetGames.nat.generic.id = ID_NAT;
+	uiInternetGames.nat.generic.type = QMTYPE_BM_BUTTON;
+	uiInternetGames.nat.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
+	uiInternetGames.nat.generic.x = 920;
+	uiInternetGames.nat.generic.y = 190;
+	uiInternetGames.nat.generic.name = "NAT";
+	uiInternetGames.nat.generic.statusText = "NAT-bypassed servers";
+	uiInternetGames.nat.generic.callback = UI_InternetGames_Callback;
+
+	uiInternetGames.direct.generic.id = ID_DIRECT;
+	uiInternetGames.direct.generic.type = QMTYPE_BM_BUTTON;
+	uiInternetGames.direct.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW|QMF_GRAYED;
+	uiInternetGames.direct.generic.x = 785;
+	uiInternetGames.direct.generic.y = 190;
+	uiInternetGames.direct.generic.name = "Direct";
+	uiInternetGames.direct.generic.statusText = "Main servers";
+	uiInternetGames.direct.generic.callback = UI_InternetGames_Callback;
+
 	uiInternetGames.done.generic.id = ID_DONE;
 	uiInternetGames.done.generic.type = QMTYPE_BM_BUTTON;
 	uiInternetGames.done.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_DROPSHADOW;
@@ -404,15 +498,15 @@ static void UI_InternetGames_Init( void )
 	uiInternetGames.hintMessage.generic.flags = QMF_INACTIVE|QMF_SMALLFONT;
 	uiInternetGames.hintMessage.generic.color = uiColorHelp;
 	uiInternetGames.hintMessage.generic.name = uiInternetGames.hintText;
-	uiInternetGames.hintMessage.generic.x = 360;
+	uiInternetGames.hintMessage.generic.x = 340;
 	uiInternetGames.hintMessage.generic.y = 225;
 
 	uiInternetGames.gameList.generic.id = ID_SERVERSLIST;
 	uiInternetGames.gameList.generic.type = QMTYPE_SCROLLLIST;
 	uiInternetGames.gameList.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_SMALLFONT;
-	uiInternetGames.gameList.generic.x = 360;
+	uiInternetGames.gameList.generic.x = 340;
 	uiInternetGames.gameList.generic.y = 255;
-	uiInternetGames.gameList.generic.width = 640;
+	uiInternetGames.gameList.generic.width = 660;
 	uiInternetGames.gameList.generic.height = 440;
 	uiInternetGames.gameList.generic.callback = UI_InternetGames_Callback;
 	uiInternetGames.gameList.itemNames = (const char **)uiInternetGames.gameDescriptionPtr;
@@ -422,19 +516,21 @@ static void UI_InternetGames_Init( void )
 		uiInternetGames.createGame.generic.flags |= QMF_GRAYED;	// server.dll is missed - remote servers only
 
 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.background );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.banner );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.joinGame );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.createGame );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.gameInfo );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.refresh );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.done );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.hintMessage );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.gameList );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.msgBox );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.dlgMessage1 );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.dlgMessage2 );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.no );
- 	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.yes );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.banner );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.joinGame );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.createGame );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.gameInfo );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.refresh );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.done );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.direct );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.nat );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.hintMessage );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.gameList );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.msgBox );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.dlgMessage1 );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.dlgMessage2 );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.no );
+	UI_AddItem( &uiInternetGames.menu, (void *)&uiInternetGames.yes );
 
 	uiInternetGames.refreshTime = uiStatic.realTime + 500; // delay before update 0.5 sec
 }
@@ -460,7 +556,7 @@ void UI_InternetGames_Menu( void )
 	if ( gMenu.m_gameinfo.gamemode == GAME_SINGLEPLAYER_ONLY )
 		return;
 
-	// stop demos to allow open network sockets
+	// stop demos to allow network sockets to open
 	if ( gpGlobals->demoplayback && CVAR_GET_FLOAT( "cl_background" ))
 	{
 		uiStatic.m_iOldMenuDepth = uiStatic.menuDepth;

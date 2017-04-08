@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -103,7 +105,7 @@ void GL_BackendEndFrame( void )
 GL_LoadTexMatrix
 =================
 */
-void GL_LoadTexMatrix( const matrix4x4 m )
+void GL_LoadTexMatrix( cmatrix4x4 m )
 {
 	pglMatrixMode( GL_TEXTURE );
 	GL_LoadMatrix( m );
@@ -128,7 +130,7 @@ void GL_LoadTexMatrixExt( const float *glmatrix )
 GL_LoadMatrix
 =================
 */
-void GL_LoadMatrix( const matrix4x4 source )
+void GL_LoadMatrix( cmatrix4x4 source )
 {
 	GLfloat	dest[16];
 
@@ -182,7 +184,7 @@ void GL_SelectTexture( GLint tmu )
 		if( tmu < glConfig.max_texture_coords )
 			pglClientActiveTextureARB( tmu + GL_TEXTURE0_ARB );
 	}
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 	else if( pglSelectTextureSGIS )
 	{
 		pglSelectTextureSGIS( tmu + GL_TEXTURE0_SGIS );
@@ -236,7 +238,7 @@ GL_MultiTexCoord2f
 */
 void GL_MultiTexCoord2f( GLenum texture, GLfloat s, GLfloat t )
 {
-#ifndef __ANDROID__
+#ifndef XASH_NANOGL
 	if( pglMultiTexCoord2f )
 	{
 		pglMultiTexCoord2f( texture + GL_TEXTURE0_ARB, s, t );
@@ -381,7 +383,7 @@ void GL_FrontFace( GLenum front )
 	glState.frontFace = front;
 }
 
-void GL_SetRenderMode( int mode )
+void GAME_EXPORT GL_SetRenderMode( int mode )
 {
 	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
@@ -406,7 +408,7 @@ void GL_SetRenderMode( int mode )
 	case kRenderTransAdd:
 		pglEnable( GL_BLEND );
 		pglDisable( GL_ALPHA_TEST );
-#if defined(XASH_GLES) || defined(PANDORA) // Problem with blending exists on every GLES configuration, not only on Android
+#if defined(XASH_BLEND_ES_WORKAROUND) // Problem with blending exists on every GLES configuration, not only on Android
 		pglBlendFunc( GL_ONE, GL_ONE );
 #else
 		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
@@ -490,15 +492,15 @@ qboolean VID_ScreenShot( const char *filename, int shot_type )
 	r_shot = Mem_Alloc( r_temppool, sizeof( rgbdata_t ));
 	r_shot->width = (glState.width + 3) & ~3;
 	r_shot->height = (glState.height + 3) & ~3;
-	r_shot->flags = IMAGE_HAS_COLOR;
-	r_shot->type = PF_RGB_24;
+	r_shot->flags = IMAGE_HAS_COLOR | IMAGE_HAS_ALPHA;
+	r_shot->type = PF_RGBA_32;
 	r_shot->size = r_shot->width * r_shot->height * PFDesc[r_shot->type].bpp;
 	r_shot->palette = NULL;
 	r_shot->buffer = Mem_Alloc( r_temppool, r_shot->size );
 
 	// get screen frame
 	pglPixelStorei(GL_PACK_ALIGNMENT, 1);	// PANDORA, just in case
-	pglReadPixels( 0, 0, r_shot->width, r_shot->height, GL_RGB, GL_UNSIGNED_BYTE, r_shot->buffer );
+	pglReadPixels( 0, 0, r_shot->width, r_shot->height, GL_RGBA, GL_UNSIGNED_BYTE, r_shot->buffer );
 	switch( shot_type )
 	{
 	case VID_SCREENSHOT:
@@ -659,7 +661,7 @@ void R_ShowTextures( void )
 
 	if( showHelp )
 	{
-		CL_CenterPrint( "use '<-' and '->' keys for view all the textures", 0.25f );
+		CL_CenterPrint( "use '<-' and '->' keys to view all the textures", 0.25f );
 		showHelp = false;
 	}
 
@@ -675,8 +677,8 @@ rebuild_page:
 	end = total * gl_showtextures->integer;
 	if( end > MAX_TEXTURES ) end = MAX_TEXTURES;
 
-	w = glState.width / base_w;
-	h = glState.height / base_h;
+	w = glState.width / (float)base_w;
+	h = glState.height / (float)base_h;
 
 	Con_DrawStringLen( NULL, NULL, &charHeight );
 
@@ -703,10 +705,10 @@ rebuild_page:
 			continue;
 
 		x = k % base_w * w;
-		y = k / base_w * h;
+		y = k / (float)base_w * h;
 
 		pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-		GL_Bind( GL_TEXTURE0, i ); // NOTE: don't use image->texnum here, because skybox has a 'wrong' indexes
+		GL_Bind( XASH_TEXTURE0, i ); // NOTE: don't use image->texnum here, because skybox has a 'wrong' indexes
 
 		if(( image->flags & TF_DEPTHMAP ) && !( image->flags & TF_NOCOMPARE ))
 			pglTexParameteri( image->target, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE );
@@ -748,3 +750,4 @@ rebuild_page:
 }
 
 //=======================================================
+#endif // XASH_DEDICATED

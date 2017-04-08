@@ -18,6 +18,7 @@
  */
 
 #define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 
 #include "config.h"
 #include "ldt_keeper.h"

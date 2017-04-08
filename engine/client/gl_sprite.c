@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -52,21 +54,20 @@ R_SpriteLoadFrame
 upload a single frame
 ====================
 */
-static dframetype_t *R_SpriteLoadFrame( model_t *mod, void *pin, mspriteframe_t **ppframe, int num )
+static byte *R_SpriteLoadFrame( model_t *mod, byte *pin, mspriteframe_t **ppframe, int num )
 {
-	dspriteframe_t	*pinframe;
+	dspriteframe_t	pinframe;
 	mspriteframe_t	*pspriteframe;
 	char		texname[128], sprname[128];
 	qboolean		load_external = false;
 	int		gl_texturenum = 0;
 
-	pinframe = (dspriteframe_t *)pin;
-
-	// build uinque frame name
+	Q_memcpy( &pinframe, pin, sizeof(dspriteframe_t));
+	// build unique frame name
 	if( mod->flags & 256 ) // it's a HUD sprite
 	{
 		Q_snprintf( texname, sizeof( texname ), "#HUD/%s_%s_%i%i.spr", mod->name, group_suffix, num / 10, num % 10 );
-		gl_texturenum = GL_LoadTexture( texname, pin, pinframe->width * pinframe->height, r_texFlags, NULL );
+		gl_texturenum = GL_LoadTexture( texname, pin, pinframe.width * pinframe.height, r_texFlags, NULL );
 	}
 	else
 	{
@@ -88,37 +89,37 @@ static dframetype_t *R_SpriteLoadFrame( model_t *mod, void *pin, mspriteframe_t 
 		if( !load_external )
 		{
 			Q_snprintf( texname, sizeof( texname ), "#%s_%s_%i%i.spr", mod->name, group_suffix, num / 10, num % 10 );
-			gl_texturenum = GL_LoadTexture( texname, pin, pinframe->width * pinframe->height, r_texFlags, NULL );
+			gl_texturenum = GL_LoadTexture( texname, pin, pinframe.width * pinframe.height, r_texFlags, NULL );
 		}
 		else MsgDev( D_NOTE, "loading HQ: %s\n", texname );
 	}	
 
 	// setup frame description
 	pspriteframe = Mem_Alloc( mod->mempool, sizeof( mspriteframe_t ));
-	pspriteframe->width = pinframe->width;
-	pspriteframe->height = pinframe->height;
+	pspriteframe->width = pinframe.width;
+	pspriteframe->height = pinframe.height;
 	#ifdef __VFP_FP__
 	volatile int tmp2;                // Cannot directly load unaligned int to float register
-	tmp2 = *( pinframe->origin + 1 ); // So load it to int first. Must not be optimized out
+	tmp2 = *( pinframe.origin + 1 ); // So load it to int first. Must not be optimized out
 	pspriteframe->up = tmp2;
-	tmp2 = *( pinframe->origin );
+	tmp2 = *( pinframe.origin );
 	pspriteframe->left = tmp2;
-	tmp2 = *( pinframe->origin + 1 ) - pinframe->height;
+	tmp2 = *( pinframe.origin + 1 ) - pinframe.height;
 	pspriteframe->down = tmp2;
-	tmp2 = pinframe->width + * ( pinframe->origin );
+	tmp2 = pinframe.width + * ( pinframe.origin );
 	pspriteframe->right = tmp2;
         #else
-	pspriteframe->up = pinframe->origin[1];
-	pspriteframe->left = pinframe->origin[0];
-	pspriteframe->down = pinframe->origin[1] - pinframe->height;
-	pspriteframe->right = pinframe->width + pinframe->origin[0];
+	pspriteframe->up = pinframe.origin[1];
+	pspriteframe->left = pinframe.origin[0];
+	pspriteframe->down = pinframe.origin[1] - pinframe.height;
+	pspriteframe->right = pinframe.width + pinframe.origin[0];
 	#endif
 	pspriteframe->gl_texturenum = gl_texturenum;
 	*ppframe = pspriteframe;
 
 	GL_SetTextureType( pspriteframe->gl_texturenum, TEX_SPRITE );
 
-	return (dframetype_t *)((byte *)(pinframe + 1) + pinframe->width * pinframe->height );
+	return ( pin + sizeof(dspriteframe_t) + pinframe.width * pinframe.height );
 }
 
 /*
@@ -128,43 +129,43 @@ R_SpriteLoadGroup
 upload a group frames
 ====================
 */
-static dframetype_t *R_SpriteLoadGroup( model_t *mod, void *pin, mspriteframe_t **ppframe, int framenum )
+static byte *R_SpriteLoadGroup( model_t *mod, byte *pin, mspriteframe_t **ppframe, int framenum )
 {
-	dspritegroup_t	*pingroup;
+	dspritegroup_t	pingroup;
 	mspritegroup_t	*pspritegroup;
-	dspriteinterval_t	*pin_intervals;
+	dspriteinterval_t	pin_intervals;
 	float		*poutintervals;
 	int		i, groupsize, numframes;
-	void		*ptemp;
 
-	pingroup = (dspritegroup_t *)pin;
-	numframes = pingroup->numframes;
+	Q_memcpy( &pingroup, pin, sizeof(dspritegroup_t));
+	numframes = pingroup.numframes;
 
 	groupsize = sizeof( mspritegroup_t ) + (numframes - 1) * sizeof( pspritegroup->frames[0] );
 	pspritegroup = Mem_Alloc( mod->mempool, groupsize );
 	pspritegroup->numframes = numframes;
 
-	*ppframe = (mspriteframe_t *)pspritegroup;
-	pin_intervals = (dspriteinterval_t *)(pingroup + 1);
+	Q_memcpy( ppframe, pspritegroup, sizeof(mspriteframe_t));
+	pin += sizeof(dspritegroup_t);
+	Q_memcpy( &pin_intervals, pin, sizeof(dspriteinterval_t));
+
 	poutintervals = Mem_Alloc( mod->mempool, numframes * sizeof( float ));
 	pspritegroup->intervals = poutintervals;
 
 	for( i = 0; i < numframes; i++ )
 	{
-		*poutintervals = pin_intervals->interval;
+		*poutintervals = pin_intervals.interval;
 		if( *poutintervals <= 0.0f )
 			*poutintervals = 1.0f; // set error value
 		poutintervals++;
-		pin_intervals++;
+		pin += sizeof(dspriteinterval_t);
 	}
 
-	ptemp = (void *)pin_intervals;
 	for( i = 0; i < numframes; i++ )
 	{
-		ptemp = R_SpriteLoadFrame( mod, ptemp, &pspritegroup->frames[i], framenum * 10 + i );
+		pin = R_SpriteLoadFrame( mod, pin, &pspritegroup->frames[i], framenum * 10 + i );
 	}
 
-	return (dframetype_t *)ptemp;
+	return pin;
 }
 
 /*
@@ -174,23 +175,22 @@ Mod_LoadSpriteModel
 load sprite model
 ====================
 */
-void Mod_LoadSpriteModel( model_t *mod, const void *buffer, qboolean *loaded, uint texFlags )
+void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint texFlags )
 {
-	dsprite_t		*pin;
-	short		*numi;
+	dsprite_t		pin;
+	short		numi;
 	msprite_t		*psprite;
-	dframetype_t	*pframetype;
 	int		i, size;
 
 	if( loaded ) *loaded = false;
-	pin = (dsprite_t *)buffer;
+	Q_memcpy(&pin, buffer, sizeof(dsprite_t));
 	mod->type = mod_sprite;
 	r_texFlags = texFlags;
-	i = pin->version;
+	i = pin.version;
 
-	if( pin->ident != IDSPRITEHEADER )
+	if( pin.ident != IDSPRITEHEADER )
 	{
-		MsgDev( D_ERROR, "%s has wrong id (%x should be %x)\n", mod->name, pin->ident, IDSPRITEHEADER );
+		MsgDev( D_ERROR, "%s has wrong id (%x should be %x)\n", mod->name, pin.ident, IDSPRITEHEADER );
 		return;
 	}
 		
@@ -201,24 +201,25 @@ void Mod_LoadSpriteModel( model_t *mod, const void *buffer, qboolean *loaded, ui
 	}
 
 	mod->mempool = Mem_AllocPool( va( "^2%s^7", mod->name ));
-	size = sizeof( msprite_t ) + ( pin->numframes - 1 ) * sizeof( psprite->frames );
+	size = sizeof( msprite_t ) + ( pin.numframes - 1 ) * sizeof( psprite->frames );
 	psprite = Mem_Alloc( mod->mempool, size );
 	mod->cache.data = psprite;	// make link to extradata
 	
-	psprite->type = pin->type;
-	psprite->texFormat = pin->texFormat;
-	psprite->numframes = mod->numframes = pin->numframes;
-	psprite->facecull = pin->facetype;
-	psprite->radius = pin->boundingradius;
-	psprite->synctype = pin->synctype;
+	psprite->type = pin.type;
+	psprite->texFormat = pin.texFormat;
+	psprite->numframes = mod->numframes = pin.numframes;
+	psprite->facecull = pin.facetype;
+	psprite->radius = pin.boundingradius;
+	psprite->synctype = pin.synctype;
 
-	mod->mins[0] = mod->mins[1] = -pin->bounds[0] / 2;
-	mod->maxs[0] = mod->maxs[1] = pin->bounds[0] / 2;
-	mod->mins[2] = -pin->bounds[1] / 2;
-	mod->maxs[2] = pin->bounds[1] / 2;
-	numi = (short *)(pin + 1);
+	mod->mins[0] = mod->mins[1] = -pin.bounds[0] / 2.0f;
+	mod->maxs[0] = mod->maxs[1] = pin.bounds[0] / 2.0f;
+	mod->mins[2] = -pin.bounds[1] / 2.0f;
+	mod->maxs[2] = pin.bounds[1] / 2.0f;
+	buffer += sizeof(dsprite_t);
+	Q_memcpy(&numi, buffer, sizeof(short));
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 	{
 		// skip frames loading
 		if( loaded ) *loaded = true;	// done
@@ -226,30 +227,31 @@ void Mod_LoadSpriteModel( model_t *mod, const void *buffer, qboolean *loaded, ui
 		return;
 	}
 
-	if( *numi == 256 )
+	if( numi == 256 )
 	{	
-		byte	*src = (byte *)(numi+1);
 		rgbdata_t	*pal;
-	
+
+		buffer += sizeof(short);
+
 		// install palette
 		switch( psprite->texFormat )
 		{
 		case SPR_ADDITIVE:
-			pal = FS_LoadImage( "#normal.pal", src, 768 );
+			pal = FS_LoadImage( "#normal.pal", buffer, 768 );
 			break;
                     case SPR_INDEXALPHA:
-			pal = FS_LoadImage( "#decal.pal", src, 768 ); 
+			pal = FS_LoadImage( "#decal.pal", buffer, 768 ); 
 			break;
 		case SPR_ALPHTEST:		
-			pal = FS_LoadImage( "#transparent.pal", src, 768 );
+			pal = FS_LoadImage( "#transparent.pal", buffer, 768 );
                               break;
 		case SPR_NORMAL:
 		default:
-			pal = FS_LoadImage( "#normal.pal", src, 768 );
+			pal = FS_LoadImage( "#normal.pal", buffer, 768 );
 			break;
 		}
 
-		pframetype = (dframetype_t *)(src + 768);
+		buffer += 768;
 		FS_FreeImage( pal ); // palette installed, no reason to keep this data
 	}
 	else 
@@ -258,33 +260,33 @@ void Mod_LoadSpriteModel( model_t *mod, const void *buffer, qboolean *loaded, ui
 		return;
 	}
 
-	if( pin->numframes < 1 )
+	if( pin.numframes < 1 )
 	{
-		MsgDev( D_ERROR, "%s has invalid # of frames: %d\n", mod->name, pin->numframes );
+		MsgDev( D_ERROR, "%s has invalid # of frames: %d\n", mod->name, pin.numframes );
 		return;
 	}
 
-	for( i = 0; i < pin->numframes; i++ )
+	for( i = 0; i < pin.numframes; i++ )
 	{
-		frametype_t frametype = pframetype->type;
+		frametype_t frametype = *buffer;
 		psprite->frames[i].type = frametype;
 
 		switch( frametype )
 		{
 		case FRAME_SINGLE:
 			Q_strncpy( group_suffix, "one", sizeof( group_suffix ));
-			pframetype = R_SpriteLoadFrame( mod, pframetype + 1, &psprite->frames[i].frameptr, i );
+			buffer = R_SpriteLoadFrame( mod, buffer + sizeof(int), &psprite->frames[i].frameptr, i );
 			break;
 		case FRAME_GROUP:
 			Q_strncpy( group_suffix, "grp", sizeof( group_suffix ));
-			pframetype = R_SpriteLoadGroup( mod, pframetype + 1, &psprite->frames[i].frameptr, i );
+			buffer = R_SpriteLoadGroup( mod, buffer + sizeof(int), &psprite->frames[i].frameptr, i );
 			break;
 		case FRAME_ANGLED:
 			Q_strncpy( group_suffix, "ang", sizeof( group_suffix ));
-			pframetype = R_SpriteLoadGroup( mod, pframetype + 1, &psprite->frames[i].frameptr, i );
+			buffer = R_SpriteLoadGroup( mod, buffer + sizeof(int), &psprite->frames[i].frameptr, i );
 			break;
 		}
-		if( pframetype == NULL ) break; // technically an error
+		if( !buffer ) break; // technically an error
 	}
 
 	if( loaded ) *loaded = true;	// done
@@ -308,6 +310,10 @@ void Mod_LoadMapSprite( model_t *mod, const void *buffer, size_t size, qboolean 
 	int		linedelta, numframes;
 	mspriteframe_t	*pspriteframe;
 	msprite_t		*psprite;
+	int texFlags = TF_IMAGE;
+
+	if( cl_sprite_nearest->integer )
+		texFlags |= TF_NEAREST;
 
 	if( loaded ) *loaded = false;
 	Q_snprintf( texname, sizeof( texname ), "#%s", mod->name );
@@ -395,7 +401,7 @@ void Mod_LoadMapSprite( model_t *mod, const void *buffer, size_t size, qboolean 
 		pspriteframe->left = -( w >> 1 );
 		pspriteframe->down = ( h >> 1 ) - h;
 		pspriteframe->right = w + -( w >> 1 );
-		pspriteframe->gl_texturenum = GL_LoadTextureInternal( texname, &temp, TF_IMAGE, false );
+		pspriteframe->gl_texturenum = GL_LoadTextureInternal( texname, &temp, texFlags, false );
 		GL_SetTextureType( pspriteframe->gl_texturenum, TEX_NOMIP );
 			
 		xl += w;
@@ -437,7 +443,7 @@ void Mod_UnloadSpriteModel( model_t *mod )
 	// release all textures
 	for( i = 0; i < psprite->numframes; i++ )
 	{
-		if( host.type == HOST_DEDICATED )
+		if( Host_IsDedicated() )
 			break; // nothing to release
 
 		if( psprite->frames[i].type == SPR_SINGLE )
@@ -510,7 +516,7 @@ mspriteframe_t *R_GetSpriteFrame( const model_t *pModel, int frame, float yaw )
 		}
 		pspriteframe = pspritegroup->frames[i];
 	}
-	else if( psprite->frames[frame].type == FRAME_ANGLED )
+	else if( psprite->frames[frame].type == FRAME_ANGLED ) //-V556
 	{
 		int	angleframe = (int)(Q_rint(( RI.refdef.viewangles[1] - yaw + 45.0f ) / 360 * 8) - 4) & 7;
 
@@ -558,11 +564,11 @@ float R_GetSpriteFrameInterpolant( cl_entity_t *ent, mspriteframe_t **oldframe, 
 		frame = psprite->numframes - 1;
 	}
 
-	if( psprite->frames[frame].type == FRAME_SINGLE )
+	if( psprite->frames[frame].type == FRAME_SINGLE ) //-V556
 	{
 		if( m_fDoInterp )
 		{
-			if( ent->latched.prevblending[0] >= psprite->numframes || psprite->frames[ent->latched.prevblending[0]].type != FRAME_SINGLE )
+			if( ent->latched.prevblending[0] >= psprite->numframes || psprite->frames[ent->latched.prevblending[0]].type != FRAME_SINGLE ) //-V556
 			{
 				// this can be happens when rendering switched between single and angled frames
 				// or change model on replace delta-entity
@@ -607,7 +613,7 @@ float R_GetSpriteFrameInterpolant( cl_entity_t *ent, mspriteframe_t **oldframe, 
 		if( oldframe ) *oldframe = psprite->frames[ent->latched.prevblending[0]].frameptr;
 		if( curframe ) *curframe = psprite->frames[frame].frameptr;
 	}
-	else if( psprite->frames[frame].type == FRAME_GROUP ) 
+	else if( psprite->frames[frame].type == FRAME_GROUP )  //-V556
 	{
 		pspritegroup = (mspritegroup_t *)psprite->frames[frame].frameptr;
 		pintervals = pspritegroup->intervals;
@@ -640,7 +646,7 @@ float R_GetSpriteFrameInterpolant( cl_entity_t *ent, mspriteframe_t **oldframe, 
 		if( oldframe ) *oldframe = pspritegroup->frames[j];
 		if( curframe ) *curframe = pspritegroup->frames[i];
 	}
-	else if( psprite->frames[frame].type == FRAME_ANGLED )
+	else if( psprite->frames[frame].type == FRAME_ANGLED ) //-V556
 	{
 		// e.g. doom-style sprite monsters
 		float	yaw = ent->angles[YAW];
@@ -648,7 +654,7 @@ float R_GetSpriteFrameInterpolant( cl_entity_t *ent, mspriteframe_t **oldframe, 
 
 		if( m_fDoInterp )
 		{
-			if( ent->latched.prevblending[0] >= psprite->numframes || psprite->frames[ent->latched.prevblending[0]].type != FRAME_ANGLED )
+			if( ent->latched.prevblending[0] >= psprite->numframes || psprite->frames[ent->latched.prevblending[0]].type != FRAME_ANGLED ) //-V556
 			{
 				// this can be happens when rendering switched between single and angled frames
 				// or change model on replace delta-entity
@@ -920,7 +926,7 @@ void R_DrawSpriteModel( cl_entity_t *e )
 	float		angle, dot, sr, cr, flAlpha;
 	float		lerp = 1.0f, ilerp, scale;
 	vec3_t		v_forward, v_right, v_up;
-	vec3_t		origin, color, color2;
+	vec3_t		origin, color, color2 = {0.0f};
 
 	if( RI.params & RP_ENVVIEW )
 		return;
@@ -1072,7 +1078,7 @@ void R_DrawSpriteModel( cl_entity_t *e )
 	{
 		// draw the single non-lerped frame
 		pglColor4f( color[0], color[1], color[2], flAlpha );
-		GL_Bind( GL_TEXTURE0, frame->gl_texturenum );
+		GL_Bind( XASH_TEXTURE0, frame->gl_texturenum );
 		R_DrawSpriteQuad( frame, origin, v_right, v_up, scale );
 	}
 	else
@@ -1084,14 +1090,14 @@ void R_DrawSpriteModel( cl_entity_t *e )
 		if( ilerp != 0.0f )
 		{
 			pglColor4f( color[0], color[1], color[2], flAlpha * ilerp );
-			GL_Bind( GL_TEXTURE0, oldframe->gl_texturenum );
+			GL_Bind( XASH_TEXTURE0, oldframe->gl_texturenum );
 			R_DrawSpriteQuad( oldframe, origin, v_right, v_up, scale );
 		}
 
 		if( lerp != 0.0f )
 		{
 			pglColor4f( color[0], color[1], color[2], flAlpha * lerp );
-			GL_Bind( GL_TEXTURE0, frame->gl_texturenum );
+			GL_Bind( XASH_TEXTURE0, frame->gl_texturenum );
 			R_DrawSpriteQuad( frame, origin, v_right, v_up, scale );
 		}
 	}
@@ -1106,7 +1112,7 @@ void R_DrawSpriteModel( cl_entity_t *e )
 		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
 		pglColor4f( color2[0], color2[1], color2[2], flAlpha );
-		GL_Bind( GL_TEXTURE0, tr.whiteTexture );
+		GL_Bind( XASH_TEXTURE0, tr.whiteTexture );
 		R_DrawSpriteQuad( frame, origin, v_right, v_up, scale );
 
 		if( glState.drawTrans ) 
@@ -1130,3 +1136,4 @@ void R_DrawSpriteModel( cl_entity_t *e )
 	if( RI.fogCustom || ( RI.fogEnabled && !glState.drawTrans ))
 		pglEnable( GL_FOG );
 }
+#endif // XASH_DEDICATED

@@ -122,6 +122,18 @@ qboolean Image_LoadFNT( const char *name, const byte *buffer, size_t filesize )
 
 	return Image_AddIndexedImageToPack( fin, image.width, image.height );
 }
+/*
+======================
+Image_SetMDLPointer
+
+Transfer buffer pointer before Image_LoadMDL
+======================
+*/
+void *g_mdltexdata;
+void Image_SetMDLPointer(byte *p)
+{
+	g_mdltexdata = p;
+}
 
 /*
 ============
@@ -141,7 +153,10 @@ qboolean Image_LoadMDL( const char *name, const byte *buffer, size_t filesize )
 	image.width = pin->width;
 	image.height = pin->height;
 	pixels = image.width * image.height;
-	fin = (byte *)pin->index;	// setup buffer
+
+	fin = (byte *)g_mdltexdata;
+	ASSERT(fin);
+	g_mdltexdata = NULL;
 
 	if( !Image_ValidSize( name )) return false;
 
@@ -181,7 +196,7 @@ Image_LoadSPR
 */
 qboolean Image_LoadSPR( const char *name, const byte *buffer, size_t filesize )
 {
-	dspriteframe_t	*pin;	// identical for q1\hl sprites
+	dspriteframe_t	pin;	// identical for q1\hl sprites
 
 	if( image.hint == IL_HINT_HL )
 	{
@@ -201,9 +216,9 @@ qboolean Image_LoadSPR( const char *name, const byte *buffer, size_t filesize )
 		return false;
 	}
 
-	pin = (dspriteframe_t *)buffer;
-	image.width = pin->width;
-	image.height = pin->height;
+	Q_memcpy( &pin, buffer, sizeof(dspriteframe_t) );
+	image.width = pin.width;
+	image.height = pin.height;
 
 	if( filesize < image.width * image.height )
 	{
@@ -228,7 +243,7 @@ qboolean Image_LoadSPR( const char *name, const byte *buffer, size_t filesize )
 	if( image.d_rendermode == LUMP_TRANSPARENT )
 		image.d_currentpal[255] = 0;
 
-	return Image_AddIndexedImageToPack( (byte *)(pin + 1), image.width, image.height );
+	return Image_AddIndexedImageToPack( (byte *)(buffer + sizeof(dspriteframe_t)), image.width, image.height );
 }
 
 /*

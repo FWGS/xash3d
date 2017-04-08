@@ -89,7 +89,7 @@ static const dword crc32table[NUM_BYTES] =
 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-void CRC32_Init( dword *pulCRC )
+void GAME_EXPORT CRC32_Init( dword *pulCRC )
 {
 	*pulCRC = CRC32_INIT_VALUE;
 }
@@ -99,7 +99,7 @@ void CRC32_Final( dword *pulCRC )
 	*pulCRC ^= CRC32_XOR_VALUE;
 }
 
-void CRC32_ProcessByte( dword *pulCRC, byte ch )
+void GAME_EXPORT CRC32_ProcessByte( dword *pulCRC, byte ch )
 {
 	dword	ulCrc = *pulCRC;
 
@@ -108,9 +108,9 @@ void CRC32_ProcessByte( dword *pulCRC, byte ch )
 	*pulCRC = ulCrc;
 }
 
-void CRC32_ProcessBuffer( dword *pulCRC, const void *pBuffer, int nBuffer )
+void GAME_EXPORT CRC32_ProcessBuffer( dword *pulCRC, const void *pBuffer, int nBuffer )
 {
-	dword	ulCrc = *pulCRC;
+	dword	poolpb, ulCrc = *pulCRC;
 	byte	*pb = (byte *)pBuffer;
 	uint	nFront;
 	int	nMain;
@@ -121,7 +121,8 @@ JustAfew:
 	case 6: ulCrc  = crc32table[*pb++ ^ (byte)ulCrc] ^ (ulCrc >> 8);
 	case 5: ulCrc  = crc32table[*pb++ ^ (byte)ulCrc] ^ (ulCrc >> 8);
 	case 4:
-		ulCrc ^= *(dword *)pb;	// warning, this only works on little-endian.
+		Q_memcpy( &poolpb, pb, sizeof(dword));
+		ulCrc ^= poolpb;	// warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
@@ -139,7 +140,7 @@ JustAfew:
 	// the main loop is aligned and only has to worry about 8 byte at a time.
 	// The low-order two bits of pb and nBuffer in total control the
 	// upfront work.
-	nFront = ((uint)pb) & 3;
+	nFront = ((size_t)pb) & 3;
 	nBuffer -= nFront;
 
 	switch( nFront )
@@ -220,15 +221,16 @@ qboolean CRC32_File( dword *crcvalue, const char *filename )
 
 		if( num_bytes > 0 )
 			CRC32_ProcessBuffer( crcvalue, buffer, num_bytes );
+		else break;
 
-		if( FS_Eof( f )) break;
+		if( FS_Eof( f ) ) break;
 	}
 
 	FS_Close( f );
 	return true;
 }
 
-qboolean CRC32_MapFile( dword *crcvalue, const char *filename )
+qboolean CRC32_MapFile( dword *crcvalue, const char *filename, qboolean multiplayer )
 {
 	file_t	*f;
 	dheader_t	*header;
@@ -240,12 +242,14 @@ qboolean CRC32_MapFile( dword *crcvalue, const char *filename )
 
 	if( !crcvalue ) return false;
 
+#ifndef XASH_DEDICATED
 	// always calc same checksum for singleplayer
-	if( cls.state >= ca_connected && SV_Active() && CL_GetMaxClients() == 1 )
+	if( multiplayer == false )
 	{
 		*crcvalue = (('H'<<24)+('S'<<16)+('A'<<8)+'X');
 		return true;
 	}
+#endif
 
 	f = FS_Open( filename, "rb", false );
 	if( !f ) return false;
@@ -432,7 +436,7 @@ void MD5Final( byte digest[16], MD5Context_t *ctx )
 
 	MD5Transform( ctx->buf, (uint *)ctx->in );
 	Q_memcpy( digest, ctx->buf, 16 );
-	Q_memset( ctx, 0, sizeof( ctx ));	// in case it's sensitive
+	Q_memset( ctx, 0, sizeof( *ctx ));	// in case it's sensitive
 }
 
 // The four core functions
@@ -560,7 +564,8 @@ qboolean MD5_HashFile( byte digest[16], const char *pszFileName, uint seed[4] )
 		bytes = FS_Read( file, buffer, sizeof( buffer ));
 
 		if( bytes > 0 )
-			MD5Update( &MD5_Hash, buffer, bytes );
+			MD5Update( &MD5_Hash, (byte *)buffer, bytes );
+		else break;
 
 		if( FS_Eof( file ))
 			break;

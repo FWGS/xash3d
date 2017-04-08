@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "pm_local.h"
 #include "event_flags.h"
 #include "studio.h"
+#include "library.h" // Loader_GetDllHandle( )
 
 static qboolean has_update = false;
 
@@ -64,17 +65,24 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 	VectorCopy( ed->v.origin, pe->origin );
 	VectorCopy( ed->v.angles, pe->angles );
 
-	if( ed->v.flags & ( FL_CLIENT|FL_FAKECLIENT ))
+	if( ed->v.flags & FL_CLIENT )
 	{
-		// client or bot
-		SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
+		// client
+		if ( svs.currentPlayer )
+			SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
 		Q_strncpy( pe->name, "player", sizeof( pe->name ));
+		pe->player = pe->info;
+	}
+	else if( ed->v.flags & FL_FAKECLIENT )
+	{
+		// bot
+		Q_strncpy( pe->name, "bot", sizeof( pe->name ));
 		pe->player = pe->info;
 	}
 	else
 	{
-		// otherwise copy the modelname
-		Q_strncpy( pe->name, mod->name, sizeof( pe->name ));
+		// otherwise copy the classname
+		Q_strncpy( pe->name, STRING( ed->v.classname ), sizeof( pe->name ));
 	}
 
 	pe->model = pe->studiomodel = NULL;
@@ -141,11 +149,15 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 
 void SV_GetTrueOrigin( sv_client_t *cl, int edictnum, vec3_t origin )
 {
-	if( !cl->local_weapons || !cl->lag_compensation || !sv_unlag->integer )
+	if( !cl->local_weapons || !cl->lag_compensation )
+		return;
+
+	if( !sv_unlag->integer )
 		return;
 
 	// don't allow unlag in singleplayer
-	if( sv_maxclients->integer <= 1 ) return;
+	if( sv_maxclients->integer <= 1 )
+		return;
 
 	if( cl->state < cs_connected || edictnum < 0 || edictnum >= sv_maxclients->integer )
 		return;
@@ -158,7 +170,10 @@ void SV_GetTrueOrigin( sv_client_t *cl, int edictnum, vec3_t origin )
 
 void SV_GetTrueMinMax( sv_client_t *cl, int edictnum, vec3_t mins, vec3_t maxs )
 {
-	if( !cl->local_weapons || !cl->lag_compensation || !sv_unlag->integer )
+	if( !cl->local_weapons || !cl->lag_compensation )
+		return;
+
+	if( !sv_unlag->integer )
 		return;
 
 	// don't allow unlag in singleplayer
@@ -189,13 +204,18 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 	physent_t	*pe;
 
 	pl = EDICT_NUM( svgame.pmove->player_index + 1 );
-	ASSERT( SV_IsValidEdict( pl ));
+	//ASSERT( SV_IsValidEdict( pl ));
+	if( !SV_IsValidEdict( pl ) )
+	{
+		MsgDev( D_ERROR, "SV_AddLinksToPmove: you have broken clients!\n");
+		return;
+	}
 
 	// touch linked edicts
 	for( l = node->solid_edicts.next; l != &node->solid_edicts; l = next )
 	{
 		next = l->next;
-		check = EDICT_FROM_AREA( l );
+		check = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
 		if( check->v.groupinfo != 0 )
 		{
@@ -204,7 +224,7 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 				continue;
 		}
 
-		if( check->v.owner == pl || check->v.solid == SOLID_TRIGGER )
+		if( ( ( check->v.owner != 0) && check->v.owner == pl ) || check->v.solid == SOLID_TRIGGER )
 			continue; // player or player's own missile
 
 		if( svgame.pmove->numvisent < MAX_PHYSENTS )
@@ -223,8 +243,11 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 
 		if( check == pl ) continue;	// himself
 
-		if((( check->v.flags & FL_CLIENT ) && check->v.health <= 0 ) || check->v.deadflag == DEAD_DEAD )
-			continue;	// dead body
+		if( !sv_corpse_solid->integer )
+		{
+			if((( check->v.flags & FL_CLIENT ) && check->v.health <= 0 ) || check->v.deadflag == DEAD_DEAD )
+				continue;	// dead body
+		}
 
 		if( VectorIsNull( check->v.size ))
 			continue;
@@ -235,7 +258,8 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 		if( check->v.flags & FL_CLIENT )
 		{
 			// trying to get interpolated values
-			SV_GetTrueMinMax( svs.currentPlayer, ( NUM_FOR_EDICT( check ) - 1), mins, maxs );
+			if( svs.currentPlayer )
+				SV_GetTrueMinMax( svs.currentPlayer, ( NUM_FOR_EDICT( check ) - 1), mins, maxs );
 		}
 
 		if( !BoundsIntersect( pmove_mins, pmove_maxs, mins, maxs ))
@@ -274,7 +298,7 @@ void SV_AddLaddersToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3
 	for( l = node->water_edicts.next; l != &node->water_edicts; l = next )
 	{
 		next = l->next;
-		check = EDICT_FROM_AREA( l );
+		check = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
 		if( check->v.solid != SOLID_NOT ) // disabled ?
 			continue;
@@ -324,12 +348,12 @@ static void pfnParticle( float *origin, int color, float life, int zpos, int zve
 	BF_WriteByte( &sv.reliable_datagram, bound( 0, life * 8, 255 ));
 }
 
-static int pfnTestPlayerPosition( float *pos, pmtrace_t *ptrace )
+static int GAME_EXPORT pfnTestPlayerPosition( float *pos, pmtrace_t *ptrace )
 {
 	return PM_TestPlayerPosition( svgame.pmove, pos, ptrace, NULL );
 }
 
-static void pfnStuckTouch( int hitent, pmtrace_t *tr )
+static void GAME_EXPORT pfnStuckTouch( int hitent, pmtrace_t *tr )
 {
 	int	i;
 
@@ -351,7 +375,7 @@ static void pfnStuckTouch( int hitent, pmtrace_t *tr )
 	svgame.pmove->touchindex[svgame.pmove->numtouch++] = *tr;
 }
 
-static int pfnPointContents( float *p, int *truecontents )
+static int GAME_EXPORT pfnPointContents( float *p, int *truecontents )
 {
 	int	cont, truecont;
 
@@ -363,33 +387,35 @@ static int pfnPointContents( float *p, int *truecontents )
 	return cont;
 }
 
-static int pfnTruePointContents( float *p )
+static int GAME_EXPORT pfnTruePointContents( float *p )
 {
 	return SV_TruePointContents( p );
 }
 
-static int pfnHullPointContents( struct hull_s *hull, int num, float *p )
+static int GAME_EXPORT pfnHullPointContents( struct hull_s *hull, int num, float *p )
 {
 	return PM_HullPointContents( hull, num, p );
 }
 /*
- * MVSC has special mangling for functions that return agregate values.
+ * MVSC has different calling conversion for functions that return agregate values.
  * 
 */
 
-#ifdef DLL_LOADER
-static pmtrace_t *pfnPlayerTrace_w32(pmtrace_t *trace, float *start, float *end, int traceFlags, int ignore_pe)
+#if defined(DLL_LOADER) || defined(__MINGW32__)
+static pmtrace_t *GAME_EXPORT pfnPlayerTrace_w32(pmtrace_t * retvalue, float *start, float *end, int traceFlags, int ignore_pe)
 {
-	*trace = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
-	return trace;
+	pmtrace_t tmp;
+	tmp = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
+	*retvalue = tmp;
+	return retvalue;
 }
 #endif
-static pmtrace_t pfnPlayerTrace(float *start, float *end, int traceFlags, int ignore_pe)
+static pmtrace_t GAME_EXPORT pfnPlayerTrace(float *start, float *end, int traceFlags, int ignore_pe)
 {
 	return PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, ignore_pe, NULL );
 }
 
-static pmtrace_t *pfnTraceLine( float *start, float *end, int flags, int usehull, int ignore_pe )
+static pmtrace_t *GAME_EXPORT pfnTraceLine( float *start, float *end, int flags, int usehull, int ignore_pe )
 {
 	static pmtrace_t	tr;
 	int		old_usehull;
@@ -412,12 +438,12 @@ static pmtrace_t *pfnTraceLine( float *start, float *end, int flags, int usehull
 	return &tr;
 }
 
-static hull_t *pfnHullForBsp( physent_t *pe, float *offset )
+static hull_t *GAME_EXPORT pfnHullForBsp( physent_t *pe, float *offset )
 {
 	return PM_HullForBsp( pe, svgame.pmove, offset );
 }
 
-static float pfnTraceModel( physent_t *pe, float *start, float *end, trace_t *trace )
+static float GAME_EXPORT pfnTraceModel( physent_t *pe, float *start, float *end, trace_t *trace )
 {
 	int	old_usehull;
 	vec3_t	start_l, end_l;
@@ -463,7 +489,7 @@ static float pfnTraceModel( physent_t *pe, float *start, float *end, trace_t *tr
 	return trace->fraction;
 }
 
-static const char *pfnTraceTexture( int ground, float *vstart, float *vend )
+static const char *GAME_EXPORT pfnTraceTexture( int ground, float *vstart, float *vend )
 {
 	physent_t *pe;
 
@@ -474,17 +500,22 @@ static const char *pfnTraceTexture( int ground, float *vstart, float *vend )
 	return PM_TraceTexture( pe, vstart, vend );
 }			
 
-static void pfnPlaySound( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
+static void GAME_EXPORT pfnPlaySound( int channel, const char *sample, float volume, float attenuation, int fFlags, int pitch )
 {
 	edict_t	*ent;
+	sv_client_t *cl = svs.clients + svgame.pmove->player_index;
+	qboolean exclude;
 
 	ent = EDICT_NUM( svgame.pmove->player_index + 1 );
 	if( !SV_IsValidEdict( ent )) return;
 
-	SV_StartSound( ent, channel, sample, volume, attenuation, fFlags, pitch );
+	exclude = cl->local_weapons; // && !cl->nopred
+
+	// exclude current player, because he played this sound locally during prediction
+	SV_StartSoundEx( ent, channel, sample, volume, attenuation, fFlags, pitch, exclude );
 }
 
-static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, float delay, float *origin,
+static void GAME_EXPORT pfnPlaybackEventFull( int flags, int clientindex, word eventindex, float delay, float *origin,
 	float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 )
 {
 	edict_t	*ent;
@@ -492,7 +523,7 @@ static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, f
 	ent = EDICT_NUM( clientindex + 1 );
 	if( !SV_IsValidEdict( ent )) return;
 
-	if( host.type == HOST_DEDICATED )
+	if( Host_IsDedicated() )
 		flags |= FEV_NOTHOST; // no local clients for dedicated server
 
 	SV_PlaybackEventFull( flags, ent, eventindex,
@@ -501,25 +532,27 @@ static void pfnPlaybackEventFull( int flags, int clientindex, word eventindex, f
 		iparam1, iparam2,
 		bparam1, bparam2 );
 }
-#ifdef DLL_LOADER
-static pmtrace_t *pfnPlayerTraceEx_w32( pmtrace_t* trace, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
+#if defined(DLL_LOADER) || defined(__MINGW32__)
+static pmtrace_t *GAME_EXPORT pfnPlayerTraceEx_w32( pmtrace_t * retvalue, float *start, float *end, int traceFlags, pfnIgnore pmFilter )
 {
-	*trace = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, -1, pmFilter );
-	return trace;
+	pmtrace_t tmp;
+	tmp = PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, -1, pmFilter );
+	*retvalue = tmp;
+	return retvalue;
 }
 #endif
 
-static pmtrace_t pfnPlayerTraceEx( float *start, float *end, int traceFlags, pfnIgnore pmFilter )
+static pmtrace_t GAME_EXPORT pfnPlayerTraceEx( float *start, float *end, int traceFlags, pfnIgnore pmFilter )
 {
 	return PM_PlayerTraceExt( svgame.pmove, start, end, traceFlags, svgame.pmove->numphysent, svgame.pmove->physents, -1, pmFilter );
 }
 
-static int pfnTestPlayerPositionEx( float *pos, pmtrace_t *ptrace, pfnIgnore pmFilter )
+static int GAME_EXPORT pfnTestPlayerPositionEx( float *pos, pmtrace_t *ptrace, pfnIgnore pmFilter )
 {
 	return PM_TestPlayerPosition( svgame.pmove, pos, ptrace, pmFilter );
 }
 
-static pmtrace_t *pfnTraceLineEx( float *start, float *end, int flags, int usehull, pfnIgnore pmFilter )
+static pmtrace_t *GAME_EXPORT pfnTraceLineEx( float *start, float *end, int flags, int usehull, pfnIgnore pmFilter )
 {
 	static pmtrace_t	tr;
 	int		old_usehull;
@@ -542,7 +575,7 @@ static pmtrace_t *pfnTraceLineEx( float *start, float *end, int flags, int usehu
 	return &tr;
 }
 
-static struct msurface_s *pfnTraceSurface( int ground, float *vstart, float *vend )
+static struct msurface_s *GAME_EXPORT pfnTraceSurface( int ground, float *vstart, float *vend )
 {
 	physent_t *pe;
 
@@ -584,7 +617,7 @@ void SV_InitClientMove( void )
 	Q_memcpy( svgame.pmove->player_maxs, svgame.player_maxs, sizeof( svgame.player_maxs ));
 
 	// common utilities
-	svgame.pmove->PM_Info_ValueForKey = Info_ValueForKey;
+	svgame.pmove->PM_Info_ValueForKey = (void*)Info_ValueForKey;
 	svgame.pmove->PM_Particle = pfnParticle;
 	svgame.pmove->PM_TestPlayerPosition = pfnTestPlayerPosition;
 	svgame.pmove->Con_NPrintf = Con_NPrintf;
@@ -594,17 +627,17 @@ void SV_InitClientMove( void )
 	svgame.pmove->PM_StuckTouch = pfnStuckTouch;
 	svgame.pmove->PM_PointContents = pfnPointContents;
 	svgame.pmove->PM_TruePointContents = pfnTruePointContents;
-	svgame.pmove->PM_HullPointContents = pfnHullPointContents; 
+	svgame.pmove->PM_HullPointContents = pfnHullPointContents;
 	svgame.pmove->PM_PlayerTrace = pfnPlayerTrace;
 	svgame.pmove->PM_TraceLine = pfnTraceLine;
-	svgame.pmove->RandomLong = Com_RandomLong;
+	svgame.pmove->RandomLong = (void*)Com_RandomLong;
 	svgame.pmove->RandomFloat = Com_RandomFloat;
 	svgame.pmove->PM_GetModelType = pfnGetModelType;
-	svgame.pmove->PM_GetModelBounds = pfnGetModelBounds;	
-	svgame.pmove->PM_HullForBsp = pfnHullForBsp;
+	svgame.pmove->PM_GetModelBounds = pfnGetModelBounds;
+	svgame.pmove->PM_HullForBsp = (void*)pfnHullForBsp;
 	svgame.pmove->PM_TraceModel = pfnTraceModel;
-	svgame.pmove->COM_FileSize = COM_FileSize;
-	svgame.pmove->COM_LoadFile = COM_LoadFile;
+	svgame.pmove->COM_FileSize = (void*)COM_FileSize;
+	svgame.pmove->COM_LoadFile =(void*)COM_LoadFile;
 	svgame.pmove->COM_FreeFile = COM_FreeFile;
 	svgame.pmove->memfgets = COM_MemFgets;
 	svgame.pmove->PM_PlaySound = pfnPlaySound;
@@ -617,10 +650,15 @@ void SV_InitClientMove( void )
 #ifdef DLL_LOADER // w32-compatible ABI
 	if( host.enabledll && Loader_GetDllHandle( svgame.hInstance ) )
 	{
-		svgame.pmove->PM_PlayerTrace = pfnPlayerTrace_w32;
-		svgame.pmove->PM_PlayerTraceEx = pfnPlayerTraceEx_w32;
+		svgame.pmove->PM_PlayerTrace = (void*)pfnPlayerTrace_w32;
+		svgame.pmove->PM_PlayerTraceEx = (void*)pfnPlayerTraceEx_w32;
 	}
 #endif
+#if defined(__MINGW32__)
+	svgame.pmove->PM_PlayerTrace = (void*)pfnPlayerTrace_w32;
+	svgame.pmove->PM_PlayerTraceEx = (void*)pfnPlayerTraceEx_w32;
+#endif
+
 
 	// initalize pmove
 	svgame.dllFuncs.pfnPM_Init( svgame.pmove );
@@ -657,7 +695,7 @@ static void SV_SetupPMove( playermove_t *pmove, sv_client_t *cl, usercmd_t *ucmd
 
 	pmove->player_index = NUM_FOR_EDICT( clent ) - 1;
 	pmove->multiplayer = (sv_maxclients->integer > 1) ? true : false;
-	pmove->time = cl->timebase; // probably never used
+	pmove->time = cl->timebase * 1000; // probably never used
 	VectorCopy( clent->v.origin, pmove->origin );
 	VectorCopy( clent->v.v_angle, pmove->angles );
 	VectorCopy( clent->v.v_angle, pmove->oldangles );
@@ -815,7 +853,7 @@ qboolean SV_UnlagCheckTeleport( vec3_t old_pos, vec3_t new_pos )
 
 	for( i = 0; i < 3; i++ )
 	{
-		if( fabs( old_pos[i] - new_pos[i] ) > 64.0f )
+		if( fabs( old_pos[i] - new_pos[i] ) > 128.0f )
 			return true;
 	}
 	return false;
@@ -825,7 +863,7 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 {
 	int		i, j, clientnum;
 	float		finalpush, lerp_msec;
-	float		latency, temp, lerpFrac;
+	float		latency, lerpFrac;
 	client_frame_t	*frame, *frame2;
 	entity_state_t	*state, *lerpstate;
 	vec3_t		curpos, newpos;
@@ -862,25 +900,25 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 		lerp->active = true;
 	}
 
-	if( cl->latency > 1.5f )
-		latency = 1.5f;
-	else latency = cl->latency;
+	latency = max( cl->latency, 1.5f );
 
-	temp = sv_maxunlag->value;
+	if( sv_maxunlag->value != 0.0f )
+	{
+		if (sv_maxunlag->value < 0.0f )
+			Cvar_SetFloat( "sv_maxunlag", 0.0f );
 
-	if( temp > 0 && latency > temp )
-		latency = temp;
+		if( latency >= sv_maxunlag->value )
+			latency = sv_maxunlag->value;
+	}
 
 	lerp_msec = cl->lastcmd.lerp_msec * 0.001f;
-	if( lerp_msec > 0.1f ) lerp_msec = 0.1f;
-
-	if( lerp_msec < cl->cl_updaterate )
+	if( lerp_msec > 0.1f )
+		lerp_msec = 0.1f;
+	else if( lerp_msec < cl->cl_updaterate )
 		lerp_msec = cl->cl_updaterate;
 
-	finalpush = sv_unlagpush->value + (( host.realtime - latency ) - lerp_msec );
-
-	if( finalpush > host.realtime )
-		finalpush = host.realtime;
+	finalpush = ( host.realtime - latency - lerp_msec ) + sv_unlagpush->value;
+	if( finalpush > host.realtime ) finalpush = host.realtime; // pushed too much ?
 
 	frame = NULL;
 

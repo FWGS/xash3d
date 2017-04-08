@@ -36,6 +36,7 @@ LOCAL_SRC_FILES := basemenu.cpp \
            menu_credits.cpp \
            menu_customgame.cpp \
            menu_gameoptions.cpp \
+	   menu_gamepad.cpp \
            menu_internetgames.cpp \
            menu_langame.cpp \
            menu_loadgame.cpp \
@@ -49,6 +50,11 @@ LOCAL_SRC_FILES := basemenu.cpp \
            menu_video.cpp \
            menu_vidmodes.cpp \
            menu_vidoptions.cpp \
+	   menu_touchoptions.cpp \
+           menu_touchbuttons.cpp \
+	   menu_filedialog.cpp \
+	   menu_touch.cpp \
+	   menu_touchedit.cpp \
            udll_int.cpp \
            ui_title_anim.cpp \
 	   utils.cpp

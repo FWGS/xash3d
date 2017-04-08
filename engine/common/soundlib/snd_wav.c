@@ -30,8 +30,8 @@ static short GetLittleShort( void )
 {
 	short	val = 0;
 
-	val += (*(iff_dataPtr+0) << 0);
-	val += (*(iff_dataPtr+1) << 8);
+	val += ((uint) *(iff_dataPtr+0) << 0);
+	val += ((uint) *(iff_dataPtr+1) << 8);
 	iff_dataPtr += 2;
 
 	return val;
@@ -46,10 +46,10 @@ static int GetLittleLong( void )
 {
 	int	val = 0;
 
-	val += (*(iff_dataPtr+0) << 0);
-	val += (*(iff_dataPtr+1) << 8);
-	val += (*(iff_dataPtr+2) <<16);
-	val += (*(iff_dataPtr+3) <<24);
+	val += ((uint) *(iff_dataPtr+0) << 0);
+	val += ((uint) *(iff_dataPtr+1) << 8);
+	val += ((uint) *(iff_dataPtr+2) <<16);
+	val += ((uint) *(iff_dataPtr+3) <<24);
 	iff_dataPtr += 4;
 
 	return val;
@@ -76,7 +76,8 @@ static void FindNextChunk( const char *name )
 		iff_dataPtr += 4;
 		iff_chunkLen = GetLittleLong();
 
-		if( iff_chunkLen < 0 )
+		// limit chunk size to 100 mb
+		if( iff_chunkLen < 0 || !Q_strcmp(name, "LIST") && iff_end < iff_dataPtr + 4 || iff_chunkLen > 1024 * 1024 * 100 )
 		{
 			iff_dataPtr = NULL;
 			return;
@@ -85,7 +86,7 @@ static void FindNextChunk( const char *name )
 		iff_dataPtr -= 8;
 		iff_lastChunk = iff_dataPtr + 8 + ((iff_chunkLen + 1) & ~1);
 
-		if( !Q_strncmp( iff_dataPtr, name, 4 ))
+		if( !Q_strncmp( (char *)iff_dataPtr, name, 4 ))
 			return;
 	}
 }
@@ -147,13 +148,15 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	if( !buffer || filesize <= 0 )
 		return false;
 
+	//MsgDev( D_NOTE, "Sound_LoadWAV: ( %s, %p, %u )\n", name, buffer, filesize );
+
 	iff_data = buffer;
 	iff_end = buffer + filesize;
 
 	// find "RIFF" chunk
 	FindChunk( "RIFF" );
 
-	if( !( iff_dataPtr && !Q_strncmp( iff_dataPtr + 8, "WAVE", 4 )))
+	if( !( iff_dataPtr && !Q_strncmp( (char *)iff_dataPtr + 8, "WAVE", 4 )))
 	{
 		MsgDev( D_ERROR, "Sound_LoadWAV: %s missing 'RIFF/WAVE' chunks\n", name );
 		return false;
@@ -216,7 +219,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 
 		if( iff_dataPtr )
 		{
-			if( !Q_strncmp( iff_dataPtr + 28, "mark", 4 ))
+			if( !Q_strncmp( (char *)iff_dataPtr + 28, "mark", 4 ))
 			{	
 				// this is not a proper parse, but it works with CoolEdit...
 				iff_dataPtr += 24;
@@ -287,7 +290,7 @@ qboolean Sound_LoadWAV( const char *name, const byte *buffer, size_t filesize )
 	if( sound.width == 1 )
 	{
 		int	i, j;
-		char	*pData = sound.wav;
+		signed char	*pData = (signed char *)sound.wav;
 
 		for( i = 0; i < sound.samples; i++ )
 		{
@@ -312,7 +315,7 @@ stream_t *Stream_OpenWAV( const char *filename )
 	stream_t	*stream;
 	int 	last_chunk = 0;
 	char	chunkName[4];
-	int	iff_data;
+	int	iff_data_i;
 	file_t	*file;
 	short	t;
 
@@ -340,8 +343,8 @@ stream_t *Stream_OpenWAV( const char *filename )
 	}
 
 	// get "fmt " chunk
-	iff_data = FS_Tell( file ) + 4;
-	last_chunk = iff_data;
+	iff_data_i = FS_Tell( file ) + 4;
+	last_chunk = iff_data_i;
 	if( !StreamFindNextChunk( file, "fmt ", &last_chunk ))
 	{
 		MsgDev( D_ERROR, "Stream_OpenWAV: %s missing 'fmt ' chunk\n", filename );
@@ -372,7 +375,7 @@ stream_t *Stream_OpenWAV( const char *filename )
 	sound.loopstart = 0;
 
 	// find data chunk
-	last_chunk = iff_data;
+	last_chunk = iff_data_i;
 	if( !StreamFindNextChunk( file, "data", &last_chunk ))
 	{
 		MsgDev( D_ERROR, "Stream_OpenWAV: %s missing 'data' chunk\n", filename );
@@ -403,7 +406,7 @@ Stream_ReadWAV
 assume stream is valid
 =================
 */
-long Stream_ReadWAV( stream_t *stream, long bytes, void *buffer )
+int Stream_ReadWAV( stream_t *stream, int bytes, void *buffer )
 {
 	int	samples, remaining;
 
@@ -427,7 +430,7 @@ Stream_SetPosWAV
 assume stream is valid
 =================
 */
-long Stream_SetPosWAV( stream_t *stream, long newpos )
+int Stream_SetPosWAV( stream_t *stream, int newpos )
 {
 	// NOTE: stream->pos it's real file position without header size
 	if( FS_Seek( stream->file, stream->buffsize + newpos, SEEK_SET ) != -1 )
@@ -446,7 +449,7 @@ Stream_GetPosWAV
 assume stream is valid
 =================
 */
-long Stream_GetPosWAV( stream_t *stream )
+int Stream_GetPosWAV( stream_t *stream )
 {
 	return stream->pos;
 }

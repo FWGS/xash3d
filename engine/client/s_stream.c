@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "client.h"
@@ -76,7 +78,7 @@ float S_GetMusicVolume( void )
 S_StartBackgroundTrack
 =================
 */
-void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, long position )
+void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, int position )
 {
 	S_StopBackgroundTrack();
 
@@ -100,6 +102,12 @@ void S_StartBackgroundTrack( const char *introTrack, const char *mainTrack, long
 
 	// open stream
 	s_bgTrack.stream = FS_OpenStream( va( "media/%s", introTrack ));
+
+	// HACKHACK: try to open in case if mp3 file is outside from media folder
+	// e.g. mp3 play sounds/category/somefile.mp3
+	if( !s_bgTrack.stream )
+		s_bgTrack.stream = FS_OpenStream( introTrack );
+
 	Q_strncpy( s_bgTrack.current, introTrack, sizeof( s_bgTrack.current ));
 	Q_memset( &musicfade, 0, sizeof( musicfade )); // clear any soundfade
 	s_bgTrack.source = cls.key_dest;
@@ -139,7 +147,7 @@ S_StreamGetCurrentState
 save\restore code
 =================
 */
-qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position )
+qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, fs_offset_t *position )
 {
 	if( !s_bgTrack.stream )
 		return false; // not active
@@ -237,6 +245,11 @@ void S_StreamBackgroundTrack( void )
 			{
 				FS_FreeStream( s_bgTrack.stream );
 				s_bgTrack.stream = FS_OpenStream( va( "media/%s", s_bgTrack.loopName ));
+
+				// HACKHACK: see S_StartBackgroundTrack
+				if( !s_bgTrack.stream )
+					s_bgTrack.stream = FS_OpenStream( s_bgTrack.loopName );
+
 				Q_strncpy( s_bgTrack.current, s_bgTrack.loopName, sizeof( s_bgTrack.current ));
 
 				if( !s_bgTrack.stream ) return;
@@ -317,7 +330,7 @@ void S_StreamSoundTrack( void )
 		}
 
 		// read audio stream
-		r = SCR_GetAudioChunk( raw, fileBytes );
+		r = SCR_GetAudioChunk( (char *)raw, fileBytes );
 
 		if( r < fileBytes )
 		{
@@ -393,3 +406,4 @@ void S_StreamRawSamples( int samples, int rate, int width, int channels, const b
 		RESAMPLE_RAW
 	}
 }
+#endif // XASH_DEDICATED

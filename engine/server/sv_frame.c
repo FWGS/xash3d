@@ -72,7 +72,12 @@ static void SV_AddEntitiesToPacket( edict_t *pViewEnt, edict_t *pClient, client_
 
 	cl = SV_ClientFromEdict( pClient, true );
 
-	ASSERT( cl != NULL );
+	//ASSERT( cl != NULL );
+	if( cl == NULL )
+	{
+		//MsgDev( D_ERROR, "SV_AddEntitiesToPacket: you have broken clients!\n");
+		return;
+	}
 
 	if( pClient && !( sv.hostflags & SVF_PORTALPASS ))
 	{
@@ -414,7 +419,8 @@ void SV_EmitPings( sizebuf_t *msg )
 		if( cl->state != cs_spawned )
 			continue;
 
-		SV_GetPlayerStats( cl, &ping, &packet_loss );
+		ping = cl->ping;
+		packet_loss = cl->packet_loss;
 
 		// there are 25 bits for each client
 		BF_WriteOneBit( msg, 1 );
@@ -449,7 +455,7 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 	frame = &cl->frames[cl->netchan.outgoing_sequence & SV_UPDATE_MASK];
 
 	frame->senttime = host.realtime;
-	frame->raw_ping = -1.0f;
+	frame->ping_time = -1.0f;
 	frame->latency = -1.0f;
 
 	if( cl->chokecount != 0 )
@@ -508,7 +514,7 @@ void SV_WriteClientdataToMessage( sv_client_t *cl, sizebuf_t *msg )
 	{
 		Q_memset( &nullwd, 0, sizeof( nullwd ));
 
-		for( i = 0; i < 32; i++ )
+		for( i = 0; i < 64; i++ )
 		{
 			if( cl->delta_sequence == -1 ) from_wd = &nullwd;
 			else from_wd = &cl->frames[cl->delta_sequence & SV_UPDATE_MASK].weapondata[i];
@@ -538,6 +544,11 @@ void SV_WriteEntitiesToClient( sv_client_t *cl, sizebuf_t *msg )
 	int		i, send_pings;
 
 	clent = cl->edict;
+	if(	!SV_IsValidEdict( clent ) )
+	{
+		SV_DropClient ( cl );
+		return;
+	}
 	viewent = cl->pViewEntity;	// himself or trigger_camera
 
 	frame = &cl->frames[cl->netchan.outgoing_sequence & SV_UPDATE_MASK];
@@ -562,6 +573,17 @@ void SV_WriteEntitiesToClient( sv_client_t *cl, sizebuf_t *msg )
 
 	// copy the entity states out
 	frame->num_entities = 0;
+
+	// It will break all connected clients, but it takes more than one week to overflow it
+	if( ( (unsigned int) svs.next_client_entities ) + frame_ents.num_entities >= 0x7FFFFFFE )
+	{
+		// just reset counter
+		svs.next_client_entities = 0;
+
+		// delta is broken now, cannot keep connected clients
+		SV_FinalMessage( "Server is running to long, reconnecting!", true );
+	}
+
 	frame->first_entity = svs.next_client_entities;
 
 	for( i = 0; i < frame_ents.num_entities; i++ )
@@ -572,8 +594,8 @@ void SV_WriteEntitiesToClient( sv_client_t *cl, sizebuf_t *msg )
 		svs.next_client_entities++;
 
 		// this should never hit, map should always be restarted first in SV_Frame
-		if( svs.next_client_entities >= 0x7FFFFFFE )
-			Host_Error( "svs.next_client_entities wrapped\n" );
+		//if( svs.next_client_entities >= 0x7FFFFFFE )
+			//Host_Error( "svs.next_client_entities wrapped\n" );
 		frame->num_entities++;
 	}
 
@@ -602,6 +624,7 @@ void SV_SendClientDatagram( sv_client_t *cl )
 	svs.currentPlayer = cl;
 	svs.currentPlayerNum = (cl - svs.clients);
 
+	Q_memset( msg_buf, 0, NET_MAX_PAYLOAD );
 	BF_Init( &msg, "Datagram", msg_buf, sizeof( msg_buf ));
 
 	// always send servertime at new frame
@@ -656,7 +679,7 @@ void SV_UpdateToReliableMessages( void )
 		{
 			cl->sendmovevars = false;
 			SV_FullUpdateMovevars( cl, &cl->netchan.message );
-                    }
+		}
 	}
 
 	// 1% chanse for simulate random network bugs

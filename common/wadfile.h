@@ -35,18 +35,35 @@ infotable	dlumpinfo_t[dwadinfo_t->numlumps]
 
 #define IDWAD3HEADER	(('3'<<24)+('D'<<16)+('A'<<8)+'W')
 
-// dlumpinfo_t->compression
-#define CMP_NONE		0	// compression none
-#define CMP_LZSS		1	// LZSS compression
+// dlumpinfo_t->attribs
+#define ATTR_NONE		0	// allow to read-write
+#define ATTR_READONLY	BIT( 0 )	// don't overwrite this lump in anyway
+#define ATTR_COMPRESSED	BIT( 1 )	// not used for now, just reserved
+#define ATTR_HIDDEN		BIT( 2 )	// not used for now, just reserved
+#define ATTR_SYSTEM		BIT( 3 )	// not used for now, just reserved
 
 // dlumpinfo_t->type
-#define TYP_QPAL		64	// quake palette
-#define TYP_QTEX		65	// probably was never used
-#define TYP_QPIC		66	// quake1 and hl pic (lmp_t)
-#define TYP_MIPTEX		67	// half-life (mip_t) previous was TYP_SOUND but never used in quake1
-#define TYP_QMIP		68	// quake1 (mip_t) (replaced with TYPE_MIPTEX while loading)
-#define TYP_RAW		69	// raw data
+#define TYP_ANY		-1	// any type can be accepted
+#define TYP_NONE		0	// unknown lump type
+#define TYP_LABEL		1	// legacy from Doom1. Empty lump - label (like P_START, P_END etc)
+#define TYP_PALETTE		64	// quake or half-life palette (768 bytes)
+#define TYP_DDSTEX		65	// contain DDS texture
+#define TYP_GFXPIC		66	// menu or hud image (not contain mip-levels)
+#define TYP_MIPTEX		67	// quake1 and half-life in-game textures with four miplevels
+#define TYP_RAWDATA		68	// never was used but may contain any data
+#define TYP_COLORMAP2	69	// old stuff. build palette from LBM file (not used)
 #define TYP_QFONT		70	// half-life font (qfont_t)
+
+// dlumpinfo_t->img_type
+#define IMG_DIFFUSE		0	// same as default pad1 always equal 0
+#define IMG_ALPHAMASK	1	// alpha-channel that stored separate as luminance texture
+#define IMG_NORMALMAP	2	// indexed normalmap
+#define IMG_GLOSSMAP	3	// luminance or color specularity map
+#define IMG_GLOSSPOWER	4	// gloss power map (each value is a specular pow)
+#define IMG_HEIGHTMAP	5	// heightmap (for parallax occlusion mapping or source of normalmap)
+#define IMG_LUMA		6	// luma or glow texture with self-illuminated parts
+#define IMG_DECAL_ALPHA	7	// it's a decal texture (last color in palette is base color, and other colors his graduations)
+#define IMG_DECAL_COLOR	8	// decal without alpha-channel uses base, like 127 127 127 as transparent color
 
 /*
 ========================================================================

@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -78,16 +80,19 @@ static void R_DecalUnlink( decal_t *pdecal )
 		else 
 		{
 			tmp = pdecal->psurface->pdecals;
-			if( !tmp ) Host_Error( "D_DecalUnlink: bad decal list\n" );
-
-			while( tmp->pnext ) 
+			if( !tmp ) 
+				Host_Error( "D_DecalUnlink: bad decal list\n" );
+			else
 			{
-				if( tmp->pnext == pdecal ) 
+				while( tmp->pnext ) 
 				{
-					tmp->pnext = pdecal->pnext;
-					break;
+					if( tmp->pnext == pdecal ) 
+					{
+						tmp->pnext = pdecal->pnext;
+						break;
+					}
+					tmp = tmp->pnext;
 				}
-				tmp = tmp->pnext;
 			}
 		}
 	}
@@ -519,7 +524,7 @@ msurfmesh_t *R_DecalCreateMesh( decalinfo_t *decalinfo, decal_t *pdecal, msurfac
 {
 	float		*v;
 	uint		i, bufSize;
-	qboolean		createSTverts = false;
+	qboolean	createSTverts = false;
 	int		numVerts, numElems;
 	byte		*buffer;
 	msurfmesh_t	*mesh;
@@ -961,7 +966,7 @@ void DrawSingleDecal( decal_t *pDecal, msurface_t *fa )
 	v = R_DecalSetupVerts( pDecal, fa, pDecal->texture, &numVerts );
 	if( !numVerts ) return;
 
-	GL_Bind( GL_TEXTURE0, pDecal->texture );
+	GL_Bind( XASH_TEXTURE0, pDecal->texture );
 
 	pglBegin( GL_POLYGON );
 
@@ -1246,7 +1251,11 @@ void R_DecalRemoveAll( int textureIndex )
 	{
 		pdecal = &gDecalPool[i];
 
-		if( !textureIndex || pdecal->texture == textureIndex )
+		// don't remove permanent decals
+		if( pdecal->flags & FDECAL_PERMANENT )
+			continue;
+
+		if( !textureIndex || (pdecal->texture == textureIndex) )
 			R_DecalUnlink( pdecal );
 	}
 }
@@ -1300,3 +1309,5 @@ void R_ClearAllDecals( void )
 		clgame.drawFuncs.R_ClearStudioDecals();
 	}
 }
+
+#endif // XASH_DEDICATED

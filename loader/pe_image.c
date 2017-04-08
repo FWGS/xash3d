@@ -39,6 +39,7 @@
  */
 
 #define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 
 #include "config.h"
 #include "debug.h"
@@ -471,7 +472,7 @@ static void do_relocations( unsigned int load_addr, IMAGE_BASE_RELOCATION *r )
 	{
 		char *page = (char*) RVA(r->VirtualAddress);
 		int count = (r->SizeOfBlock - 8)/2;
-		int i;
+		int i, page_i;
 		TRACE_(fixup)("%x relocations for page %lx\n",
 			count, r->VirtualAddress);
 
@@ -490,8 +491,9 @@ static void do_relocations( unsigned int load_addr, IMAGE_BASE_RELOCATION *r )
 				*(short*)(page+offset) += ldelta;
 				break;
 			case IMAGE_REL_BASED_HIGHLOW:
-				*(int*)(page+offset) += delta;
-
+				memcpy( &page_i, page + offset, sizeof(int) );
+				page_i += delta;
+				memcpy( page + offset, &page_i, sizeof(int) );
 				break;
 			case IMAGE_REL_BASED_HIGHADJ:
 				FIXME("Don't know what to do with IMAGE_REL_BASED_HIGHADJ\n");
@@ -544,6 +546,17 @@ HMODULE PE_LoadImage( int handle, LPCSTR filename, WORD *version )
     lseek(handle, 0, SEEK_SET);
 
     // fix CreateFileMappingA
+#if 0
+    mapping = CreateFileMappingA( -1, NULL, PAGE_READONLY | SEC_COMMIT,
+                                    0, 0, NULL );
+    if (!mapping)
+    {
+        WARN("CreateFileMapping error %ld\n", GetLastError() );
+        return 0;
+    }
+    read( handle, mapping, file_size );
+    lseek(handle, 0, SEEK_SET);
+#else
     mapping = CreateFileMappingA( handle, NULL, PAGE_READONLY | SEC_COMMIT,
                                     0, 0, NULL );
     if (!mapping)
@@ -551,6 +564,7 @@ HMODULE PE_LoadImage( int handle, LPCSTR filename, WORD *version )
         WARN("CreateFileMapping error %ld\n", GetLastError() );
         return 0;
     }
+#endif
 //    hModule = (HMODULE)MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 0 );
     hModule=(HMODULE)mapping;
 //    CloseHandle( mapping );
@@ -710,6 +724,18 @@ HMODULE PE_LoadImage( int handle, LPCSTR filename, WORD *version )
     memcpy( load_addr, hModule, lowest_fa );
 #endif
 
+
+#ifdef NOEXEC
+    if ((void*) FILE_dommap( -1, (void *)load_addr, 0, nt->OptionalHeader.SizeOfHeaders,
+                     0, 0, PROT_EXEC | PROT_WRITE | PROT_READ,
+                     MAP_PRIVATE | MAP_FIXED ) != (void*)load_addr)
+    {
+        ERR_(win32)( "Critical Error: failed to map PE header to necessary address.\n");
+        goto error;
+    }
+    read( handle, (void*)load_addr, nt->OptionalHeader.SizeOfHeaders );
+    lseek(handle, -nt->OptionalHeader.SizeOfHeaders, SEEK_CUR);
+#else
     if ((void*)FILE_dommap( handle, (void *)load_addr, 0, nt->OptionalHeader.SizeOfHeaders,
                      0, 0, PROT_EXEC | PROT_WRITE | PROT_READ,
                      MAP_PRIVATE | MAP_FIXED ) != (void*)load_addr)
@@ -717,7 +743,7 @@ HMODULE PE_LoadImage( int handle, LPCSTR filename, WORD *version )
         ERR_(win32)( "Critical Error: failed to map PE header to necessary address.\n");
         goto error;
     }
-
+#endif
 
     pe_sec = PE_SECTIONS( hModule );
     for (i = 0; i < nt->FileHeader.NumberOfSections; i++, pe_sec++)
@@ -726,15 +752,33 @@ HMODULE PE_LoadImage( int handle, LPCSTR filename, WORD *version )
         TRACE("%s: mmaping section %s at %p off %lx size %lx/%lx\n",
               filename, pe_sec->Name, (void*)RVA(pe_sec->VirtualAddress),
               pe_sec->PointerToRawData, pe_sec->SizeOfRawData, pe_sec->Misc.VirtualSize );
-        if ((void*)FILE_dommap( unix_handle, (void*)RVA(pe_sec->VirtualAddress),
+#ifdef NOEXEC
+	void *addr = (void*)FILE_dommap( -1, (void*)RVA(pe_sec->VirtualAddress),
                          0, pe_sec->SizeOfRawData, 0, pe_sec->PointerToRawData,
                          PROT_EXEC | PROT_WRITE | PROT_READ,
-                         MAP_PRIVATE | MAP_FIXED ) != (void*)RVA(pe_sec->VirtualAddress))
+                         MAP_PRIVATE | MAP_FIXED );
+	if (addr != (void*)RVA(pe_sec->VirtualAddress))
         {
 
             ERR_(win32)( "Critical Error: failed to map PE section to necessary address.\n");
             goto error;
         }
+	lseek(unix_handle, pe_sec->PointerToRawData, SEEK_SET);
+	read(unix_handle, addr, pe_sec->SizeOfRawData);
+	//lseek(unix_handle, -pe_sec->SizeOfRawData, SEEK_CUR);
+#else
+	void *addr = (void*)FILE_dommap( unix_handle, (void*)RVA(pe_sec->VirtualAddress),
+                         0, pe_sec->SizeOfRawData, 0, pe_sec->PointerToRawData,
+                         PROT_EXEC | PROT_WRITE | PROT_READ,
+                         MAP_PRIVATE | MAP_FIXED );
+	if (addr != (void*)RVA(pe_sec->VirtualAddress))
+        {
+
+            ERR_(win32)( "Critical Error: failed to map PE section to necessary address.\n");
+            goto error;
+        }
+#endif
+
         if ((pe_sec->SizeOfRawData < pe_sec->Misc.VirtualSize) &&
             (pe_sec->SizeOfRawData & (page_size-1)))
         {
@@ -1039,6 +1083,7 @@ WIN_BOOL PE_InitDLL( WINE_MODREF *wm, DWORD type, LPVOID lpReserved )
 	extend_stack_for_dll_alloca();
         retv = entry( wm->module, type, lpReserved );
     }
+    TRACE("Exited DllMain()\n");
 
     return retv;
 }

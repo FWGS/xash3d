@@ -11,6 +11,16 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
+
+In addition, as a special exception, the author gives permission
+to link the code of this program with VGUI library developed by
+Valve, L.L.C ("Valve"). You must obey the GNU General Public License
+in all respects for all of the code used other than VGUI library.
+If you modify this file, you may extend this exception to your
+version of the file, but you are not obligated to do so. If
+you do not wish to do so, delete this exception statement
+from your version.
+
 */
 #ifdef XASH_VGUI
 #include <ctype.h>
@@ -30,6 +40,8 @@ CEngineSurface :: CEngineSurface( Panel *embeddedPanel ):SurfaceBase( embeddedPa
 	embeddedPanel->getSize(_surfaceExtents[2], _surfaceExtents[3]);
 	_drawTextPos[0] = _drawTextPos[1] = 0;
 	_hCurrentFont = null;
+	_hCurrentCursor = null;
+	_translateX = _translateY = 0;
 }
 
 CEngineSurface :: ~CEngineSurface( void )
@@ -180,7 +192,11 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 	}
 	for( int i = 0; i < textLen; i++ )
 	{
-		char ch = text[i];
+		char ch = g_api->ProcessUtfChar( (unsigned char)text[i] );
+		if( !ch )
+		{
+			continue;
+		}
 
 		int abcA,abcB,abcC;
 		_hCurrentFont->getCharABCwide( ch, abcA, abcB, abcC );
@@ -188,14 +204,16 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 		iTotalWidth += abcA;
 		int iWide = abcB;
 
-		if( !isspace( ch ))
+		//if( !iswspace( ch ))
 		{
 			// get the character texture from the cache
 			int iTexId = 0;
 			float *texCoords = NULL;
 
 			if( !g_FontCache->GetTextureForChar( _hCurrentFont, ch, &iTexId, &texCoords ))
+			{
 				continue;
+			}
 
 			Assert( texCoords != NULL );
 

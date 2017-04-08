@@ -13,11 +13,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
 #include "vgui_draw.h"
 #include "qfont.h"
+#include "library.h"
 
 convar_t *scr_centertime;
 convar_t *scr_loading;
@@ -30,6 +33,12 @@ convar_t *cl_allow_levelshots;
 convar_t *cl_levelshot_name;
 convar_t *cl_envshot_size;
 convar_t *scr_dark;
+convar_t *net_graph;
+convar_t *net_graphpos;
+convar_t *net_graphwidth;
+convar_t *net_graphheight;
+convar_t *net_scale;
+convar_t *net_graphfillsegments;
 
 typedef struct
 {
@@ -38,6 +47,37 @@ typedef struct
 
 static dirty_t	scr_dirty, scr_old_dirty[2];
 static qboolean	scr_init = false;
+
+#define TIMINGS 1024
+#define TIMINGS_MASK (TIMINGS - 1)
+#define LATENCY_AVG_FRAC 0.5
+#define PACKETLOSS_AVG_FRAC 0.5
+#define PACKETCHOKE_AVG_FRAC 0.5
+#define LERP_HEIGHT 24
+#define NUM_LATENCY_SAMPLES 8
+static struct packet_latency_t
+{
+	int latency, choked;
+} packet_latency[ TIMINGS ];
+static struct cmdinfo_t
+{
+	float	cmd_lerp;
+	int		size;
+	qboolean sent;
+} cmdinfo[ TIMINGS ];
+static netbandwidthgraph_t	graph[ TIMINGS ];
+static float				packet_loss;
+static float				packet_choke;
+static byte					netcolors[ LERP_HEIGHT + 5 ][4] =
+{
+	{ 255, 0,   0,   255 },
+	{ 0,   0,   255, 255 },
+	{ 240, 127, 63,  255 },
+	{ 255, 255, 0,   255 },
+	{ 63,  255, 63,  150 }
+	// other will be generated through NetGraph_InitColors()
+};
+
 
 /*
 ==============
@@ -49,7 +89,7 @@ void SCR_DrawFPS( void )
 	float		calc;
 	rgba_t		color;
 	static double	nexttime = 0, lasttime = 0;
-	static double	framerate = 0;
+	static double	framerate = 0, avgrate = 0;
 	static int	framecount = 0;
 	static int	minfps = 9999;
 	static int	maxfps = 0;
@@ -81,6 +121,8 @@ void SCR_DrawFPS( void )
 	framecount++;
 	calc = framerate;
 
+	if( calc == 0 ) return;
+
 	if( calc < 1.0f )
 	{
 		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i spf", (int)(1.0f / calc + 0.5f));
@@ -93,14 +135,60 @@ void SCR_DrawFPS( void )
 		if( curfps < minfps ) minfps = curfps;
 		if( curfps > maxfps ) maxfps = curfps;
 
-		if( cl_showfps->integer == 2 )
+		/*if( !avgrate ) avgrate = ( maxfps - minfps ) / 2.0f;
+		else */avgrate += ( calc - avgrate ) / host.framecount;
+
+		switch( cl_showfps->integer )
+		{
+		case 3:
+			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max | ^3%.2f avg", minfps, curfps, maxfps, avgrate );
+			break;
+		case 2:
 			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max", minfps, curfps, maxfps );
-		else Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
+			break;
+		case 1:
+		default:
+			Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
+		}
+
 		MakeRGBA( color, 255, 255, 255, 255 );
 	}
 
 	Con_DrawStringLen( fpsstring, &offset, NULL );
 	Con_DrawString( scr_width->integer - offset - 2, 4, fpsstring, color );
+}
+
+/*
+==============
+SCR_DrawPos
+
+Draw local player position, angles and velocity
+==============
+*/
+void SCR_DrawPos( void )
+{
+	static char	msg[MAX_SYSPATH];
+	float speed;
+	cl_entity_t *pPlayer;
+	rgba_t color;
+
+	if( cls.state != ca_active ) return;
+	if( !cl_showpos->integer || cl.background ) return;
+
+	pPlayer = CL_GetLocalPlayer();
+	speed = VectorLength( cl.frame.client.velocity );
+
+	Q_snprintf( msg, MAX_SYSPATH,
+	"pos: %.2f %.2f %.2f\n"
+	"ang: %.2f %.2f %.2f\n"
+	"velocity: %.2f", pPlayer->origin[0], pPlayer->origin[1], pPlayer->origin[2],
+					pPlayer->angles[0], pPlayer->angles[1], pPlayer->angles[2],
+					speed );
+
+	MakeRGBA( color, 255, 255, 255, 255 );
+
+	Con_DrawString( scr_width->integer / 2, 4, msg, color );
+
 }
 
 /*
@@ -126,13 +214,16 @@ void SCR_NetSpeeds( void )
 	case 1:
 		if( cls.netchan.compress )
 		{
-			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\n Huffman %s\nUncompressed %s\n",
-			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received ), Q_memprint( cls.netchan.total_received_uncompressed ));
+			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\n Huffman %s\nUncompressed %s\nSplit %s\n",
+			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received ), Q_memprint( cls.netchan.total_received_uncompressed ),
+						Q_memprint( cls.netchan.netsplit.total_received ) );
 		}
 		else
 		{
-			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\nUncompressed %s\n",
-			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received_uncompressed ));
+			Q_snprintf( msg, sizeof( msg ), "Game Time: %02d:%02d\nTotal received from server:\nUncompressed %s\nSplit %s/%s(%f)\n",
+			(int)(time / 60.0f ), (int)fmod( time, 60.0f ), Q_memprint( cls.netchan.total_received_uncompressed ),
+						Q_memprint( cls.netchan.netsplit.total_received ), Q_memprint( cls.netchan.netsplit.total_received_uncompressed ),
+						((float)cls.netchan.netsplit.total_received) / cls.netchan.netsplit.total_received_uncompressed );
 		}
 		break;
 	case 2:
@@ -207,6 +298,460 @@ void SCR_RSpeeds( void )
 	}
 }
 
+
+/*
+==========
+NetGraph_DrawLine
+
+CL_FillRGBA shortcut
+==========
+*/
+_inline void NetGraph_DrawRect( wrect_t *rect, byte colors[4] )
+{
+	CL_FillRGBA( rect->left, rect->top, rect->right, rect->bottom, colors[0], colors[1], colors[2], colors[3] );
+}
+
+/*
+==========
+NetGraph_InitColors
+
+init netgraph colors
+==========
+*/
+void NetGraph_InitColors( void )
+{
+	int i;
+
+	for( i = 0; i < LERP_HEIGHT; i++ )
+	{
+		if( i <= LERP_HEIGHT / 3 )
+		{
+			netcolors[i + 5][0] = i * -7.875 + 63;
+			netcolors[i + 5][1] = i *  7.875;
+			netcolors[i + 5][2] = i * 19.375 + 100;
+		}
+		else
+		{
+			netcolors[i + 5][0] = ( i - 8 ) * -0.3125 + 255;
+			netcolors[i + 5][1] = ( i - 8 ) * -7.9375 + 127;
+			netcolors[i + 5][2] = 0;
+		}
+	}
+}
+
+/*
+==========
+NetGraph_GetFrameData
+
+get frame data info, like chokes, packet losses, also update graph, packet and cmdinfo
+==========
+*/
+void NetGraph_GetFrameData( int *biggest_message, float *latency, int *latency_count )
+{
+	int i, choke_count = 0, loss_count = 0;
+	float loss, choke;
+
+	*biggest_message = *latency_count = 0;
+	*latency = 0.0f;
+
+	for( i = cls.netchan.incoming_sequence - CL_UPDATE_BACKUP + 1; i <= cls.netchan.incoming_sequence; i++ )
+	{
+		frame_t *f = cl.frames + ( i & CL_UPDATE_MASK );
+		struct packet_latency_t *p = packet_latency + ( i & TIMINGS_MASK );
+		netbandwidthgraph_t *g = graph + ( i & TIMINGS_MASK );
+
+		p->choked = f->receivedtime == -2.0f ? true : false;
+		if( p->choked )
+			choke_count++;
+
+		if( !f->valid || p->choked )
+		{
+			p->latency = 9998; // broken delta
+		}
+		else if( f->receivedtime == -1 )
+		{
+			p->latency = 9999; // dropped
+			loss_count++;
+		}
+		else
+		{
+			int frame_latency = min( 1.0f, f->latency );
+			p->latency = (( frame_latency + 0.1 ) / 1.1) * (net_graphheight->integer - LERP_HEIGHT - 2);
+
+			if( i > cls.netchan.incoming_sequence - NUM_LATENCY_SAMPLES )
+			{
+				*latency += 1000.0f * f->latency;
+				latency_count++;
+			}
+		}
+
+		Q_memcpy( g, &f->graphdata, sizeof( netbandwidthgraph_t ));
+
+		if( *biggest_message < g->msgbytes )
+			*biggest_message = g->msgbytes;
+	}
+
+	for( i = cls.netchan.outgoing_sequence - CL_UPDATE_BACKUP + 1; i <= cls.netchan.outgoing_sequence; i++ )
+	{
+		cmdinfo[ i & TIMINGS_MASK ].cmd_lerp = cl.commands[ i & CL_UPDATE_MASK ].frame_lerp;
+		cmdinfo[ i & TIMINGS_MASK ].sent = !cl.commands[ i & CL_UPDATE_MASK ].heldback;
+		cmdinfo[ i & TIMINGS_MASK ].size = cl.commands[ i & CL_UPDATE_MASK ].sendsize;
+	}
+
+	// Packet loss
+	loss = 100.0 * (float)loss_count / CL_UPDATE_BACKUP;
+	packet_loss = PACKETLOSS_AVG_FRAC * packet_loss + ( 1.0 - PACKETLOSS_AVG_FRAC ) * loss;
+
+	// Packet choke
+	choke = 100.0 * (float)choke_count / CL_UPDATE_BACKUP;
+	packet_choke = PACKETCHOKE_AVG_FRAC * packet_choke + ( 1.0 - PACKETCHOKE_AVG_FRAC ) * choke;
+}
+
+/*
+===========
+NetGraph_DrawTimes
+
+===========
+*/
+void NetGraph_DrawTimes( wrect_t rect, int x, int w )
+{
+	int i, j, extrap_point = LERP_HEIGHT / 3, a, h;
+	POINT pt = { max( x + w - 1 - 25, 1 ),
+				 max( rect.top + rect.bottom - 4 - LERP_HEIGHT + 1, 1 ) };
+	wrect_t fill;
+	rgba_t colors = { 0.9 * 255, 0.9 * 255, 0.7 * 255, 255 };
+
+	Con_DrawString( pt.x, pt.y, va("%i/s", cl_cmdrate->integer), colors );
+
+	for( a = 0; a < w; a++ )
+	{
+		i = ( cls.netchan.outgoing_sequence - a ) & TIMINGS_MASK;
+		h = ( cmdinfo[i].cmd_lerp / 3.0f ) * LERP_HEIGHT;
+
+		fill.left = x + w - a - 1;
+		fill.right = fill.bottom = 1;
+		fill.top = rect.top + rect.bottom - 4;
+
+		if( h >= extrap_point )
+		{
+			int start = 0;
+			h -= extrap_point;
+			fill.top = extrap_point;
+
+			for( j = start; j < h; j++ )
+			{
+				Q_memcpy( colors, netcolors[j + extrap_point], sizeof( byte ) * 3 );
+				NetGraph_DrawRect( &fill, colors );
+				fill.top--;
+			}
+		}
+		else
+		{
+			int oldh = h;
+			fill.top -= h;
+			h = extrap_point - h;
+
+			for( j = 0; j < h; j++ )
+			{
+				Q_memcpy( colors, netcolors[j + oldh], sizeof( byte ) * 3 );
+				NetGraph_DrawRect( &fill, colors );
+				fill.top--;
+			}
+		}
+
+		fill.top = rect.top + rect.bottom - 4 - extrap_point;
+
+		CL_FillRGBA( fill.left, fill.top, fill.right, fill.bottom, 255, 255, 255, 255 );
+
+		fill.top = rect.top + rect.bottom - 3;
+
+		if( !cmdinfo[i].sent )
+			CL_FillRGBA( fill.left, fill.top, fill.right, fill.bottom, 255, 0, 0, 255 );
+	}
+}
+
+/*
+===========
+NetGraph_DrawHatches
+
+===========
+*/
+void NetGraph_DrawHatches( int x, int y, int maxmsgbytes )
+{
+	int starty;
+	int ystep = max( (int)( 10.0 / net_scale->value ), 1 );
+
+	wrect_t hatch = { x, 4, y, 1 };
+
+
+	for( starty = hatch.top; hatch.top > 0 && ((starty - hatch.top) * net_scale->value < (maxmsgbytes + 50)); hatch.top -= ystep )
+	{
+		CL_FillRGBA( hatch.left, hatch.top, hatch.right, hatch.bottom, 63, 63, 0, 200 );
+	}
+}
+
+/*
+===========
+NetGraph_DrawTextFields
+
+===========
+*/
+void NetGraph_DrawTextFields( int x, int y, int count, float avg, int packet_loss, int packet_choke )
+{
+	static int lastout;
+
+	rgba_t colors = { 0.9 * 255, 0.9 * 255, 0.7 * 255, 255 };
+
+	float latency = count > 0 ? max( 0,  avg / count - 0.5 * host.frametime - 1000.0 / cl_updaterate->value ) : 0;
+
+	float framerate = 1 / host.realframetime;
+	int i = ( cls.netchan.outgoing_sequence - 1 ) & TIMINGS_MASK;
+
+	Con_DrawString( x, y - net_graphheight->integer, va( "%.1ffps" , framerate ), colors );
+	Con_DrawString( x + 75, y - net_graphheight->integer, va( "%i ms" , (int)latency ), colors );
+	Con_DrawString( x + 150, y - net_graphheight->integer, va( "%i/s" , cl_updaterate->integer ), colors );
+
+	if( cmdinfo[i].size )
+		lastout =  cmdinfo[i].size;
+
+	Con_DrawString( x, y - net_graphheight->integer + 15,
+		va( "in :  %i %.2f k/s",
+			graph[i].msgbytes,
+			cls.netchan.flow[FLOW_INCOMING].avgkbytespersec ),
+		colors );
+	Con_DrawString( x, y - net_graphheight->integer + 30,
+		va( "out:  %i %.2f k/s",
+			lastout,
+			cls.netchan.flow[FLOW_OUTGOING].avgkbytespersec ),
+		colors );
+	if( net_graph->integer > 2 )
+	{
+		Con_DrawString( x, y - net_graphheight->integer + 45,
+			va( "loss: %i choke: %i",
+				packet_loss,
+				packet_choke ),
+			colors );
+	}
+
+}
+/*
+===========
+NetGraph_DrawDataSegment
+
+===========
+*/
+int NetGraph_DrawDataSegment( wrect_t *fill, int bytes, byte r, byte g, byte b, byte a )
+{
+	int h = bytes / net_scale->value;
+	byte colors[4] = { r, g, b, a };
+
+	fill->top -= h;
+
+	if( net_graphfillsegments->integer )
+		fill->bottom = h;
+	else
+		fill->bottom = 1;
+
+	if( fill->top > 1 )
+	{
+		NetGraph_DrawRect( fill, colors );
+		return 1;
+	}
+	return 0;
+}
+
+void NetGraph_ColorForHeight( struct packet_latency_t *packet, byte color[4], int *ping )
+{
+	switch( packet->latency )
+	{
+	case 9999:
+		Q_memcpy( color, netcolors[0], sizeof( byte ) * 4 ); // dropped
+		*ping = 0;
+		break;
+	case 9998:
+		Q_memcpy( color, netcolors[1], sizeof( byte ) * 4 ); // invalid
+		*ping = 0;
+		break;
+	case 9997:
+		Q_memcpy( color, netcolors[2], sizeof( byte ) * 4 ); // skipped
+		*ping = 0;
+		break;
+	default:
+		*ping = 1;
+		if( packet->choked )
+		{
+			Q_memcpy( color, netcolors[3], sizeof( byte ) * 4 );
+		}
+		else
+		{
+			Q_memcpy( color, netcolors[4], sizeof( byte ) * 4 );
+		}
+	}
+}
+
+/*
+===========
+NetGraph_DrawDataUsage
+
+===========
+*/
+void NetGraph_DrawDataUsage( int x, int y, int w, int maxmsgbytes )
+{
+	int a, i, h, lastvalidh = 0, ping;
+	wrect_t fill = { 0 };
+	byte color[4];
+
+	for( a = 0; a < w; a++ )
+	{
+		i = (cls.netchan.incoming_sequence - a) & TIMINGS_MASK;
+		h = packet_latency[i].latency;
+
+		NetGraph_ColorForHeight( &packet_latency[i], color, &ping );
+
+		if( !ping )
+			h = lastvalidh;
+		else
+			lastvalidh = h;
+
+		if( h > net_graphheight->value - LERP_HEIGHT - 2 )
+			h = net_graphheight->value - LERP_HEIGHT - 2;
+
+		fill.left = x + w - a - 1;
+		fill.top = y - h;
+		fill.right = 1;
+		fill.bottom = ping ? 1: h;
+
+		NetGraph_DrawRect( &fill, color );
+
+		fill.top = y;
+		fill.bottom = 1;
+
+		color[0] = 0; color[1] = 255; color[2] = 0; color[3] = 160;
+
+		NetGraph_DrawRect( &fill, color );
+
+		if( net_graph->integer < 2 )
+			continue;
+
+		fill.top = y - net_graphheight->value - 1;
+		fill.bottom = 1;
+		color[0] = color[1] = color[2] = color[3] = 255;
+
+		NetGraph_DrawRect( &fill, color );
+
+		fill.top -= 1;
+
+		if( packet_latency[i].latency > 9995 )
+			continue; // skip invalid
+
+		if( !NetGraph_DrawDataSegment( &fill, graph[i].client, 255, 0, 0, 128 ) )
+			continue;
+
+		if( !NetGraph_DrawDataSegment( &fill, graph[i].players, 255, 255, 0, 128 ) )
+			continue;
+
+		if( !NetGraph_DrawDataSegment( &fill, graph[i].entities, 255, 0, 255, 128 ) )
+			continue;
+
+		if( !NetGraph_DrawDataSegment( &fill, graph[i].tentities, 0, 0, 255, 128 ) )
+			continue;
+
+		if( !NetGraph_DrawDataSegment( &fill, graph[i].sound, 0, 255, 0, 128 ) )
+			continue;
+
+		if( !NetGraph_DrawDataSegment( &fill, graph[i].event, 0, 255, 255, 128 ) )
+			continue;
+
+		if( !NetGraph_DrawDataSegment( &fill, graph[i].usr, 200, 200, 200, 128 ) )
+			continue;
+
+		// special case for absolute usage
+
+		h = graph[i].msgbytes / net_scale->value;
+
+		color[0] = color[1] = color[2] = 240; color[3] = 255;
+
+		fill.bottom = 1;
+
+		fill.top = y - net_graphheight->value - 1 - h;
+
+		if( fill.top < 2 )
+			continue;
+
+		NetGraph_DrawRect( &fill, color );
+	}
+
+	if( net_graph->integer >= 2 )
+		NetGraph_DrawHatches( x, y - net_graphheight->value - 1, maxmsgbytes );
+}
+
+/*
+===========
+NetGraph_GetScreenPos
+
+===========
+*/
+void NetGraph_GetScreenPos( wrect_t *rect, int *w, int *x, int *y )
+{
+	rect->left = rect->top = 0;
+	rect->right = clgame.scrInfo.iWidth;
+	rect->bottom = clgame.scrInfo.iHeight;
+
+	*w = min( TIMINGS, net_graphwidth->integer );
+	if( rect->right < *w + 10 )
+	{
+		*w = rect->right - 10;
+	}
+
+	// detect x and y position
+	switch( net_graphpos->integer )
+	{
+	case 1: // right sided
+		*x = rect->left + rect->right - 5 - *w;
+		break;
+	case 2: // center
+		*x = rect->left + ( rect->right - 10 - *w ) / 2;
+		break;
+	default: // left sided
+		*x = rect->left + 5;
+		break;
+	}
+	*y = rect->bottom + rect->top - LERP_HEIGHT - 5;
+}
+
+/*
+===========
+SCR_DrawNetGraph
+
+===========
+*/
+void SCR_DrawNetGraph( void )
+{
+	wrect_t rect;
+	float avg_ping;
+	int ping_count, maxmsgbytes;
+	int w, x, y;
+
+	if( !net_graph->integer )
+		return;
+
+	if( net_scale->value <= 0 )
+		Cvar_SetFloat( "net_scale", 0.1f );
+
+	NetGraph_GetScreenPos( &rect, &w, &x, &y );
+
+	// this will update packet_loss and packet_choke
+	NetGraph_GetFrameData( &maxmsgbytes, &avg_ping, &ping_count );
+
+	if( net_graph->integer < 3 )
+	{
+		NetGraph_DrawTimes( rect, x, w );
+		NetGraph_DrawDataUsage( x, y, w, maxmsgbytes );
+	}
+
+	NetGraph_DrawTextFields( x, y, ping_count, avg_ping, packet_loss, packet_choke );
+}
+
 void SCR_MakeLevelShot( void )
 {
 	if( cls.scrshot_request != scrshot_plaque )
@@ -277,7 +822,7 @@ void SCR_DrawPlaque( void )
 	{
 		levelshot = GL_LoadTexture( cl_levelshot_name->string, NULL, 0, TF_IMAGE, NULL );
 		GL_SetRenderMode( kRenderNormal );
-		R_DrawStretchPic( 0, 0, scr_width->integer, scr_height->integer, 0, 0, 1, 1, levelshot );
+		R_DrawStretchPic( 0, 0, scr_width->value, scr_height->value, 0, 0, 1, 1, levelshot );
 		if( !cl.background ) CL_DrawHUD( CL_LOADING );
 	}
 }
@@ -453,42 +998,50 @@ void SCR_UpdateScreen( void )
 void SCR_LoadCreditsFont( void )
 {
 	int	fontWidth;
+	dword crc = 0;
+	const char *path = "gfx/creditsfont.fnt";
+	byte	*buffer;
+	fs_offset_t	length;
+	qfont_t	*src;
 
 	if( cls.creditsFont.valid ) return; // already loaded
 
-	cls.creditsFont.hFontTexture = GL_LoadTexture( "gfx.wad/creditsfont.fnt", NULL, 0, TF_IMAGE, NULL );
+	// replace default gfx.wad textures by current charset's font
+	if( !CRC32_File( &crc, "gfx.wad" ) || crc == 0x49eb9f16 )
+	{
+		const char *path2 = va("creditsfont_%s.fnt", Cvar_VariableString( "con_charset" ) );
+		if( FS_FileExists( path2, false ) )
+			path = path2;
+	}
+
+	cls.creditsFont.hFontTexture = GL_LoadTexture( path, NULL, 0, TF_IMAGE, NULL );
 	R_GetTextureParms( &fontWidth, NULL, cls.creditsFont.hFontTexture );
 
+	if( fontWidth == 0 ) return;
+	
 	// setup creditsfont
-	if( FS_FileExists( "gfx/creditsfont.fnt", false ))
+	// half-life font with variable chars width
+	buffer = FS_LoadFile( path, &length, false );
+
+	if( buffer && length >= ( fs_offset_t )sizeof( qfont_t ))
 	{
-		byte	*buffer;
-		size_t	length;
-		qfont_t	*src;
+		int	i;
 
-		// half-life font with variable chars witdh
-		buffer = FS_LoadFile( "gfx/creditsfont.fnt", &length, false );
-	
-		if( buffer && length >= sizeof( qfont_t ))
+		src = (qfont_t *)buffer;
+		cls.creditsFont.charHeight = clgame.scrInfo.iCharHeight = src->rowheight;
+
+		// build rectangles
+		for( i = 0; i < 256; i++ )
 		{
-			int	i;
-	
-			src = (qfont_t *)buffer;
-			cls.creditsFont.charHeight = clgame.scrInfo.iCharHeight = src->rowheight;
-
-			// build rectangles
-			for( i = 0; i < 256; i++ )
-			{
-				cls.creditsFont.fontRc[i].left = (word)src->fontinfo[i].startoffset % fontWidth;
-				cls.creditsFont.fontRc[i].right = cls.creditsFont.fontRc[i].left + src->fontinfo[i].charwidth;
-				cls.creditsFont.fontRc[i].top = (word)src->fontinfo[i].startoffset / fontWidth;
-				cls.creditsFont.fontRc[i].bottom = cls.creditsFont.fontRc[i].top + src->rowheight;
-				cls.creditsFont.charWidths[i] = clgame.scrInfo.charWidths[i] = src->fontinfo[i].charwidth;
-			}
-			cls.creditsFont.valid = true;
+			cls.creditsFont.fontRc[i].left = (word)src->fontinfo[i].startoffset % fontWidth;
+			cls.creditsFont.fontRc[i].right = cls.creditsFont.fontRc[i].left + src->fontinfo[i].charwidth;
+			cls.creditsFont.fontRc[i].top = (word)src->fontinfo[i].startoffset / fontWidth;
+			cls.creditsFont.fontRc[i].bottom = cls.creditsFont.fontRc[i].top + src->rowheight;
+			cls.creditsFont.charWidths[i] = clgame.scrInfo.charWidths[i] = src->fontinfo[i].charwidth;
 		}
-		if( buffer ) Mem_Free( buffer );
+		cls.creditsFont.valid = true;
 	}
+	if( buffer ) Mem_Free( buffer );
 }
 
 void SCR_InstallParticlePalette( void )
@@ -531,6 +1084,7 @@ void SCR_RegisterTextures( void )
 	cls.particleImage = GL_LoadTexture( "*particle", NULL, 0, TF_IMAGE, NULL );
 
 	// register gfx.wad images
+	cls.oldParticleImage = GL_LoadTexture("*oldparticle", NULL, 0, TF_IMAGE, NULL);
 	cls.pauseIcon = GL_LoadTexture( "gfx.wad/paused.lmp", NULL, 0, TF_IMAGE, NULL );
 	if( cl_allow_levelshots->integer )
 		cls.loadingBar = GL_LoadTexture( "gfx.wad/lambda.lmp", NULL, 0, TF_IMAGE|TF_LUMINANCE, NULL );
@@ -575,9 +1129,12 @@ void SCR_VidInit( void )
 	Q_memset( &menu.ds, 0, sizeof( menu.ds )); // reset a draw state
 	Q_memset( &clgame.centerPrint, 0, sizeof( clgame.centerPrint ));
 
-	// update screen sizes for menu
-	menu.globals->scrWidth = scr_width->integer;
-	menu.globals->scrHeight = scr_height->integer;
+	if( menu.globals )
+	{
+		// update screen sizes for menu
+		menu.globals->scrWidth = scr_width->integer;
+		menu.globals->scrHeight = scr_height->integer;
+	}
 
 	SCR_RebuildGammaTable();
 #ifdef XASH_VGUI
@@ -613,7 +1170,12 @@ void SCR_Init( void )
 	cl_envshot_size = Cvar_Get( "cl_envshot_size", "256", CVAR_ARCHIVE, "envshot size of cube side" );
 	scr_dark = Cvar_Get( "v_dark", "0", 0, "starts level from dark screen" );
 	scr_viewsize = Cvar_Get( "viewsize", "120", CVAR_ARCHIVE, "screen size" );
-	
+	net_graph = Cvar_Get( "net_graph", "0", CVAR_ARCHIVE, "draw network usage graph" );
+	net_graphpos = Cvar_Get( "net_graphpos", "1", CVAR_ARCHIVE, "network usage graph position" );
+	net_scale = Cvar_Get( "net_scale", "5", CVAR_ARCHIVE, "network usage graph scale level" );
+	net_graphwidth = Cvar_Get( "net_graphwidth", "192", CVAR_ARCHIVE, "network usage graph width" );
+	net_graphheight = Cvar_Get( "net_graphheight", "64", CVAR_ARCHIVE, "network usage graph height" );
+	net_graphfillsegments = Cvar_Get( "net_graphfillsegments", "1", CVAR_ARCHIVE, "fill segments in network usage graph" );
 	// register our commands
 	Cmd_AddCommand( "timerefresh", SCR_TimeRefresh_f, "turn quickly and print rendering statistcs" );
 	Cmd_AddCommand( "skyname", CL_SetSky_f, "set new skybox by basename" );
@@ -621,9 +1183,12 @@ void SCR_Init( void )
 	Cmd_AddCommand( "sizeup", SCR_SizeUp_f, "screen size up to 10 points" );
 	Cmd_AddCommand( "sizedown", SCR_SizeDown_f, "screen size down to 10 points" );
 
+	Com_ResetLibraryError();
+
 	if( host.state != HOST_RESTART && !UI_LoadProgs( ))
 	{
-		Msg( "^1Error: ^7can't initialize menu.dll\n" ); // there is non fatal for us
+		Sys_Warn( "can't initialize menu library:\n%s", Com_GetLibraryError() ); // this is not fatal for us
+		// console still can't be toggled in-game without extra cmd-line switch
 		if( !host.developer ) host.developer = 1; // we need console, because menu is missing
 	}
 
@@ -631,6 +1196,7 @@ void SCR_Init( void )
 	SCR_InstallParticlePalette ();
 	SCR_RegisterTextures ();
 	SCR_InitCinematic();
+	NetGraph_InitColors();
 	SCR_VidInit();
 
 	if( host.state != HOST_RESTART )
@@ -651,10 +1217,13 @@ void SCR_Shutdown( void )
 	Cmd_RemoveCommand( "timerefresh" );
 	Cmd_RemoveCommand( "skyname" );
 	Cmd_RemoveCommand( "viewpos" );
+	Cmd_RemoveCommand( "sizeup" );
+	Cmd_RemoveCommand( "sizedown" );
 	UI_SetActiveMenu( false );
 
 	if( host.state != HOST_RESTART )
 		UI_UnloadProgs();
-
+	cls.creditsFont.valid = false;
 	scr_init = false;
 }
+#endif // XASH_DEDICATED

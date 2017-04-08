@@ -1,0 +1,71 @@
+CC ?= gcc
+CXX ?= g++
+#CFGAGS = -O0 -ggdb
+CFLAGS = -O2 -fno-omit-frame-pointer -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse2 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=i686
+LDFLAGS =
+LIBS = -lm
+TOPDIR = $(PWD)/..
+INCLUDES = -I../SDL2/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared
+DEFINES = -DDBGHELP
+XASH_VGUI ?= 1
+ifeq ($(XASH_DEDICATED),1)
+DEFINES += -DXASH_DEDICATED
+LIBS += -luser32 -lkernel32 -lgdi32 -ldbghelp -lpsapi
+else
+DEFINES += -DXASH_SDL
+LIBS += -lSDL2 -L../SDL2/lib/x86 -L../SDL2/lib/x64 -luser32 -lkernel32 -lgdi32 -ldbghelp -lpsapi
+endif
+ifeq ($(NANOGL),1)
+INCLUDES += -I../nanogl -I../nanogl/GL
+DEFINES += -DXASH_GLES -DXASH_NANOGL -DUSE_CORE_PROFILE
+LIBS += -lstdc++
+endif
+
+DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FASTSTR -DXASH_FORCEINLINE -DVECTORIZE_SINCOS -DXASH_W32CON
+
+ifeq ($(XASH_VGUI),1)
+DEFINES += -DXASH_VGUI
+endif
+
+%.o : %.c
+	$(CC) -pipe $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
+
+%.o : %.cpp
+	$(CXX) -pipe $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
+
+SRCS_CPP =
+
+ifeq ($(NANOGL),1)
+SRCS_CPP += $(wildcard ../nanogl/*.cpp)
+endif
+OBJS_CPP = $(SRCS_CPP:.cpp=.o)
+SRCS = $(wildcard server/*.c)  $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard platform/win32/*.c)
+OBJS = $(SRCS:.c=.o)
+ifneq ($(XASH_DEDICATED),1)
+SRCS += $(wildcard client/*.c)
+SRCS += $(wildcard platform/sdl/*.c)
+endif
+xash_bin.exe: $(OBJS) $(OBJS_CPP)
+	$(CC) -o xash_bin.exe $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
+
+.PHONY: depend clean list
+clean:
+ifneq ($(RM),)
+	$(RM) $(OBJS) $(OBJS_CPP) xash_bin.exe
+else
+	cmd /c del $(subst /,\,$(OBJS) $(OBJS_CPP) xash_bin.exe)
+endif
+list:
+	@echo Sources:
+	@echo $(SRCS)
+	@echo C++ Sources:
+	@echo $(SRCS_CPP)
+	@echo Objects:
+	@echo $(OBJS) $(OBJS_CPP)
+
+depend: Makefile.dep
+
+Makefile.dep: $(SRCS)
+	rm -f ./Makefile.dep
+	$(CC) $(CFLAGS) $(filter-out -I/usr/include/SDL2,$(INCLUDES)) $(filter-out -DXASH_SDL,$(DEFINES)) -MM $^>>./Makefile.dep
+

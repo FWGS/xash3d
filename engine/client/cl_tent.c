@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "r_efx.h"
@@ -203,7 +205,7 @@ void CL_TEntPlaySound( TEMPENTITY *pTemp, float damp )
 		return;
 	}
 
-	zvel = abs( pTemp->entity.baseline.origin[2] );
+	zvel = fabs( pTemp->entity.baseline.origin[2] );
 		
 	// only play one out of every n
 	if( isshellcasing )
@@ -311,13 +313,13 @@ CL_TempEntAlloc
 alloc normal\low priority tempentity
 ==============
 */
-TEMPENTITY *CL_TempEntAlloc( const vec3_t org, model_t *pmodel )
+TEMPENTITY *GAME_EXPORT CL_TempEntAlloc( const vec3_t org, model_t *pmodel )
 {
 	TEMPENTITY	*pTemp;
 
 	if( !cl_free_tents )
 	{
-		MsgDev( D_INFO, "Overflow %d temporary ents!\n", GI->max_tents );
+		MsgDev( D_NOTE, "Overflow %d temporary ents!\n", GI->max_tents );
 		return NULL;
 	}
 
@@ -342,7 +344,7 @@ CL_TempEntAllocHigh
 alloc high priority tempentity
 ==============
 */
-TEMPENTITY *CL_TempEntAllocHigh( const vec3_t org, model_t *pmodel )
+TEMPENTITY *GAME_EXPORT CL_TempEntAllocHigh( const vec3_t org, model_t *pmodel )
 {
 	TEMPENTITY	*pTemp;
 
@@ -383,7 +385,7 @@ CL_TempEntAlloc
 alloc normal priority tempentity with no model
 ==============
 */
-TEMPENTITY *CL_TempEntAllocNoModel( const vec3_t org )
+TEMPENTITY *GAME_EXPORT CL_TempEntAllocNoModel( const vec3_t org )
 {
 	return CL_TempEntAlloc( org, NULL );
 }
@@ -395,7 +397,7 @@ CL_TempEntAlloc
 custom tempentity allocation
 ==============
 */                                                   
-TEMPENTITY *CL_TempEntAllocCustom( const vec3_t org, model_t *model, int high, void (*pfn)( TEMPENTITY*, float, float ))
+TEMPENTITY *GAME_EXPORT CL_TempEntAllocCustom( const vec3_t org, model_t *model, int high, void (*pfn)( TEMPENTITY*, float, float ))
 {
 	TEMPENTITY	*pTemp;
 
@@ -431,7 +433,7 @@ CL_FizzEffect
 Create a fizz effect
 ==============
 */
-void CL_FizzEffect( cl_entity_t *pent, int modelIndex, int density )
+void GAME_EXPORT CL_FizzEffect( cl_entity_t *pent, int modelIndex, int density )
 {
 	TEMPENTITY	*pTemp;
 	int		i, width, depth, count, frameCount;
@@ -440,6 +442,9 @@ void CL_FizzEffect( cl_entity_t *pent, int modelIndex, int density )
 	vec3_t		origin, mins, maxs;
 
 	if( !pent || Mod_GetType( modelIndex ) == mod_bad )
+		return;
+
+	if( pent->curstate.modelindex <= 0 )
 		return;
 
 	count = density + 1;
@@ -499,7 +504,7 @@ CL_Bubbles
 Create bubbles
 ==============
 */
-void CL_Bubbles( const vec3_t mins, const vec3_t maxs, float height, int modelIndex, int count, float speed )
+void GAME_EXPORT CL_Bubbles( const vec3_t mins, const vec3_t maxs, float height, int modelIndex, int count, float speed )
 {
 	TEMPENTITY	*pTemp;
 	int		i, frameCount;
@@ -524,7 +529,7 @@ void CL_Bubbles( const vec3_t mins, const vec3_t maxs, float height, int modelIn
 
 		pTemp->x = origin[0];
 		pTemp->y = origin[1];
-		angle = Com_RandomLong( -M_PI, M_PI );
+		angle = Com_RandomFloat( -M_PI, M_PI );
 		SinCos( angle, &sine, &cosine );
 		
 		zspeed = Com_RandomLong( 80, 140 );
@@ -546,7 +551,7 @@ CL_BubbleTrail
 Create bubble trail
 ==============
 */
-void CL_BubbleTrail( const vec3_t start, const vec3_t end, float flWaterZ, int modelIndex, int count, float speed )
+void GAME_EXPORT CL_BubbleTrail( const vec3_t start, const vec3_t end, float flWaterZ, int modelIndex, int count, float speed )
 {
 	TEMPENTITY	*pTemp;
 	int		i, frameCount;
@@ -569,7 +574,7 @@ void CL_BubbleTrail( const vec3_t start, const vec3_t end, float flWaterZ, int m
 
 		pTemp->x = origin[0];
 		pTemp->y = origin[1];
-		angle = Com_RandomLong( -M_PI, M_PI );
+		angle = Com_RandomFloat( -M_PI, M_PI );
 
 		zspeed = Com_RandomLong( 80, 140 );
 		VectorSet( pTemp->entity.baseline.origin, speed * cos( angle ), speed * sin( angle ), zspeed );
@@ -589,7 +594,7 @@ CL_AttachTentToPlayer
 Attaches entity to player
 ==============
 */
-void CL_AttachTentToPlayer( int client, int modelIndex, float zoffset, float life )
+void GAME_EXPORT CL_AttachTentToPlayer( int client, int modelIndex, float zoffset, float life )
 {
 	TEMPENTITY	*pTemp;
 	vec3_t		position;
@@ -658,7 +663,7 @@ CL_KillAttachedTents
 Detach entity from player
 ==============
 */
-void CL_KillAttachedTents( int client )
+void GAME_EXPORT CL_KillAttachedTents( int client )
 {
 	int	i;
 
@@ -691,7 +696,7 @@ CL_RicochetSprite
 Create ricochet sprite
 ==============
 */
-void CL_RicochetSprite( const vec3_t pos, model_t *pmodel, float duration, float scale )
+void GAME_EXPORT CL_RicochetSprite( const vec3_t pos, model_t *pmodel, float duration, float scale )
 {
 	TEMPENTITY	*pTemp;
 
@@ -717,7 +722,7 @@ CL_RocketFlare
 Create rocket flare
 ==============
 */
-void CL_RocketFlare( const vec3_t pos )
+void GAME_EXPORT CL_RocketFlare( const vec3_t pos )
 {
 	TEMPENTITY	*pTemp;
 	model_t		*pmodel;
@@ -751,14 +756,14 @@ CL_MuzzleFlash
 Do muzzleflash
 ==============
 */
-void CL_MuzzleFlash( const vec3_t pos, int type )
+void GAME_EXPORT CL_MuzzleFlash( const vec3_t pos, int type )
 {
 	TEMPENTITY	*pTemp;
 	int		index, modelIndex, frameCount;
 	float		scale;
 
 	index = bound( 0, type % 5, MAX_MUZZLEFLASH - 1 );
-	scale = (type / 5) * 0.1f;
+	scale = (type / 10) * 0.1f;
 	if( scale == 0.0f ) scale = 0.5f;
 
 	modelIndex = cl_muzzleflash[index];
@@ -805,7 +810,7 @@ Create a high priority blood sprite
 and some blood drops. This is high-priority tent
 ==============
 */
-void CL_BloodSprite( const vec3_t org, int colorIndex, int modelIndex, int modelIndex2, float size )
+void GAME_EXPORT CL_BloodSprite( const vec3_t org, int colorIndex, int modelIndex, int modelIndex2, float size )
 {
 	TEMPENTITY	*pTemp;
 
@@ -884,7 +889,7 @@ CL_BreakModel
 Create a shards
 ==============
 */
-void CL_BreakModel( const vec3_t pos, const vec3_t size, const vec3_t direction, float random, float life, int count, int modelIndex, char flags )
+void GAME_EXPORT CL_BreakModel( const vec3_t pos, const vec3_t size, const vec3_t direction, float random, float life, int count, int modelIndex, char flags )
 {
 	int		i, frameCount;
 	int		numtries = 0;
@@ -991,7 +996,7 @@ CL_TempModel
 Create a temp model with gravity, sounds and fadeout
 ==============
 */
-TEMPENTITY *CL_TempModel( const vec3_t pos, const vec3_t dir, const vec3_t angles, float life, int modelIndex, int soundtype )
+TEMPENTITY *GAME_EXPORT CL_TempModel( const vec3_t pos, const vec3_t dir, const vec3_t angles, float life, int modelIndex, int soundtype )
 {
 	// alloc a new tempent
 	TEMPENTITY	*pTemp;
@@ -1033,7 +1038,7 @@ CL_DefaultSprite
 Create an animated sprite
 ==============
 */
-TEMPENTITY *CL_DefaultSprite( const vec3_t pos, int spriteIndex, float framerate )
+TEMPENTITY *GAME_EXPORT CL_DefaultSprite( const vec3_t pos, int spriteIndex, float framerate )
 {
 	TEMPENTITY	*pTemp;
 	int		frameCount;
@@ -1068,7 +1073,7 @@ CL_TempSprite
 Create an animated moving sprite 
 ===============
 */
-TEMPENTITY *CL_TempSprite( const vec3_t pos, const vec3_t dir, float scale, int modelIndex, int rendermode, int renderfx, float a, float life, int flags )
+TEMPENTITY *GAME_EXPORT CL_TempSprite( const vec3_t pos, const vec3_t dir, float scale, int modelIndex, int rendermode, int renderfx, float a, float life, int flags )
 {
 	TEMPENTITY	*pTemp;
 	int		frameCount;
@@ -1113,7 +1118,7 @@ CL_Sprite_Explode
 apply params for exploding sprite
 ===============
 */
-void CL_Sprite_Explode( TEMPENTITY *pTemp, float scale, int flags )
+void GAME_EXPORT CL_Sprite_Explode( TEMPENTITY *pTemp, float scale, int flags )
 {
 	if( !pTemp ) return;
 
@@ -1155,7 +1160,7 @@ CL_Sprite_Smoke
 apply params for smoke sprite
 ===============
 */
-void CL_Sprite_Smoke( TEMPENTITY *pTemp, float scale )
+void GAME_EXPORT CL_Sprite_Smoke( TEMPENTITY *pTemp, float scale )
 {
 	int	iColor;
 
@@ -1179,7 +1184,7 @@ CL_Spray
 Throws a shower of sprites or models
 ===============
 */
-void CL_Spray( const vec3_t pos, const vec3_t dir, int modelIndex, int count, int speed, int iRand, int renderMode )
+void GAME_EXPORT CL_Spray( const vec3_t pos, const vec3_t dir, int modelIndex, int count, int speed, int iRand, int renderMode )
 {
 	TEMPENTITY	*pTemp;
 	float		noise;
@@ -1246,7 +1251,7 @@ Line of moving glow sprites with gravity,
 fadeout, and collisions
 ===============
 */
-void CL_Sprite_Trail( int type, const vec3_t vecStart, const vec3_t vecEnd, int modelIndex, int nCount, float flLife, float flSize, float flAmplitude, int nRenderamt, float flSpeed )
+void GAME_EXPORT CL_Sprite_Trail( int type, const vec3_t vecStart, const vec3_t vecEnd, int modelIndex, int nCount, float flLife, float flSize, float flAmplitude, int nRenderamt, float flSpeed )
 {
 	TEMPENTITY	*pTemp;
 	vec3_t		vecDelta, vecDir;
@@ -1303,7 +1308,7 @@ CL_Large_Funnel
 Create a funnel effect (particles only)
 ===============
 */
-void CL_Large_Funnel( const vec3_t pos, int flags )
+void GAME_EXPORT CL_Large_Funnel( const vec3_t pos, int flags )
 {
 	CL_FunnelSprite( pos, 0, flags );
 }
@@ -1315,7 +1320,7 @@ CL_FunnelSprite
 Create a funnel effect with custom sprite
 ===============
 */
-void CL_FunnelSprite( const vec3_t pos, int spriteIndex, int flags )
+void GAME_EXPORT CL_FunnelSprite( const vec3_t pos, int spriteIndex, int flags )
 {
 	TEMPENTITY	*pTemp = NULL;
 	particle_t	*pPart = NULL;
@@ -1410,7 +1415,7 @@ CL_SparkEffect
 Create a custom sparkle effect
 ===============
 */
-void CL_SparkEffect( const vec3_t pos, int count, int velocityMin, int velocityMax )
+void GAME_EXPORT CL_SparkEffect( const vec3_t pos, int count, int velocityMin, int velocityMax )
 {
 	vec3_t	m_vecDir;
 	model_t	*pmodel;
@@ -1438,7 +1443,7 @@ CL_StreakSplash
 Create a streak tracers
 ===============
 */
-void CL_StreakSplash( const vec3_t pos, const vec3_t dir, int color, int count, float speed, int velMin, int velMax )
+void GAME_EXPORT CL_StreakSplash( const vec3_t pos, const vec3_t dir, int color, int count, float speed, int velMin, int velMax )
 {
 	int	i;
 
@@ -1461,7 +1466,7 @@ CL_StreakSplash
 Create a sparks like streaks
 ===============
 */
-void CL_SparkStreaks( const vec3_t pos, int count, int velocityMin, int velocityMax )
+void GAME_EXPORT CL_SparkStreaks( const vec3_t pos, int count, int velocityMin, int velocityMax )
 {
 	particle_t	*p;
 	float		speed;
@@ -1503,7 +1508,7 @@ CL_RicochetSound
 Make a random ricochet sound
 ==============
 */
-void CL_RicochetSound( const vec3_t pos )
+void GAME_EXPORT CL_RicochetSound( const vec3_t pos )
 {
 	char	soundpath[32];
 	int	iPitch = Com_RandomLong( 90, 105 );
@@ -1523,7 +1528,7 @@ CL_Projectile
 Create an projectile entity
 ==============
 */
-void CL_Projectile( const vec3_t origin, const vec3_t velocity, int modelIndex, int life, int owner, void (*hitcallback)( TEMPENTITY*, pmtrace_t* ))
+void GAME_EXPORT CL_Projectile( const vec3_t origin, const vec3_t velocity, int modelIndex, int life, int owner, void (*hitcallback)( TEMPENTITY*, pmtrace_t* ))
 {
 	// alloc a new tempent
 	TEMPENTITY	*pTemp;
@@ -1550,7 +1555,7 @@ CL_TempSphereModel
 Spherical shower of models, picks from set
 ==============
 */
-void CL_TempSphereModel( const vec3_t pos, float speed, float life, int count, int modelIndex )
+void GAME_EXPORT CL_TempSphereModel( const vec3_t pos, float speed, float life, int count, int modelIndex )
 {
 	vec3_t		forward, dir;
 	TEMPENTITY	*pTemp;
@@ -1587,7 +1592,7 @@ CL_Explosion
 Create an explosion (scale is magnitude)
 ==============
 */
-void CL_Explosion( vec3_t pos, int model, float scale, float framerate, int flags )
+void GAME_EXPORT CL_Explosion( vec3_t pos, int model, float scale, float framerate, int flags )
 {
 	TEMPENTITY	*pTemp;
 	sound_t		hSound;
@@ -1639,7 +1644,7 @@ CL_PlayerSprites
 Create a particle smoke around player
 ==============
 */
-void CL_PlayerSprites( int client, int modelIndex, int count, int size )
+void GAME_EXPORT CL_PlayerSprites( int client, int modelIndex, int count, int size )
 {
 	TEMPENTITY	*pTemp;
 	cl_entity_t	*pEnt;
@@ -1681,7 +1686,7 @@ CL_FireField
 Makes a field of fire
 ==============
 */
-void CL_FireField( float *org, int radius, int modelIndex, int count, int flags, float life )
+void GAME_EXPORT CL_FireField( float *org, int radius, int modelIndex, int count, int flags, float life )
 {
 	TEMPENTITY	*pTemp;
 	float		radius2;
@@ -1731,7 +1736,7 @@ CL_MultiGunshot
 Client version of shotgun shot
 ==============
 */
-void CL_MultiGunshot( const vec3_t org, const vec3_t dir, const vec3_t noise, int count, int decalCount, int *decalIndices )
+void GAME_EXPORT CL_MultiGunshot( const vec3_t org, const vec3_t dir, const vec3_t noise, int count, int decalCount, int *decalIndices )
 {
 	pmtrace_t	trace;
 	vec3_t	right, up;
@@ -1784,7 +1789,7 @@ CL_Sprite_WallPuff
 Create a wallpuff
 ==============
 */
-void CL_Sprite_WallPuff( TEMPENTITY *pTemp, float scale )
+void GAME_EXPORT CL_Sprite_WallPuff( TEMPENTITY *pTemp, float scale )
 {
 	if( !pTemp ) return;
 
@@ -2373,7 +2378,7 @@ CL_AllocDlight
 
 ===============
 */
-dlight_t *CL_AllocDlight( int key )
+dlight_t *GAME_EXPORT CL_AllocDlight( int key )
 {
 	dlight_t	*dl;
 	int	i;
@@ -2418,7 +2423,7 @@ CL_AllocElight
 
 ===============
 */
-dlight_t *CL_AllocElight( int key )
+dlight_t *GAME_EXPORT CL_AllocElight( int key )
 {
 	dlight_t	*dl;
 	int	i;
@@ -2606,7 +2611,7 @@ CL_DecalShoot
 normal temporary decal
 ===============
 */
-void CL_DecalShoot( int textureIndex, int entityIndex, int modelIndex, float *pos, int flags )
+void GAME_EXPORT CL_DecalShoot( int textureIndex, int entityIndex, int modelIndex, float *pos, int flags )
 {
 	R_DecalShoot( textureIndex, entityIndex, modelIndex, pos, flags, NULL, 1.0f );
 }
@@ -2618,7 +2623,7 @@ CL_FireCustomDecal
 custom temporary decal
 ===============
 */
-void CL_FireCustomDecal( int textureIndex, int entityIndex, int modelIndex, float *pos, int flags, float scale )
+void GAME_EXPORT CL_FireCustomDecal( int textureIndex, int entityIndex, int modelIndex, float *pos, int flags, float scale )
 {
 	R_DecalShoot( textureIndex, entityIndex, modelIndex, pos, flags, NULL, scale );
 }
@@ -2642,7 +2647,7 @@ CL_DecalIndexFromName
 get decal global index from decalname
 ===============
 */
-int CL_DecalIndexFromName( const char *name )
+int GAME_EXPORT GAME_EXPORT CL_DecalIndexFromName( const char *name )
 {
 	int	i;
 
@@ -2650,9 +2655,9 @@ int CL_DecalIndexFromName( const char *name )
 		return 0;
 
 	// look through the loaded sprite name list for SpriteName
-	for( i = 0; i < MAX_DECALS && host.draw_decals[i+1][0]; i++ )
+	for( i = 0; i < MAX_DECALS - 1 && host.draw_decals[i+1][0]; i++ )
 	{
-		if( !Q_stricmp( name, host.draw_decals[i+1] ))
+		if( !Q_stricmp( name, (char *)host.draw_decals[i+1] ))
 			return i+1;
 	}
 	return 0; // invalid decal
@@ -2665,7 +2670,7 @@ CL_DecalIndex
 get texture index from decal global index
 ===============
 */
-int CL_DecalIndex( int id )
+int GAME_EXPORT CL_DecalIndex( int id )
 {
 	id = bound( 0, id, MAX_DECALS - 1 );
 
@@ -2703,7 +2708,7 @@ int CL_DecalIndex( int id )
 			}
 		}
 
-		if( !load_external ) cl.decal_index[id] = GL_LoadTexture( host.draw_decals[id], NULL, 0, TF_DECAL, NULL );
+		if( !load_external ) cl.decal_index[id] = GL_LoadTexture( (char *)host.draw_decals[id], NULL, 0, TF_DECAL, NULL );
 	}
 	host.decal_loading = false;
 
@@ -2717,7 +2722,7 @@ CL_DecalRemoveAll
 remove all decals with specified texture
 ===============
 */
-void CL_DecalRemoveAll( int textureIndex )
+void GAME_EXPORT CL_DecalRemoveAll( int textureIndex )
 {
 	int id = bound( 0, textureIndex, MAX_DECALS - 1 );	
 	R_DecalRemoveAll( cl.decal_index[id] );
@@ -2764,3 +2769,4 @@ void CL_ClearEffects( void )
 	CL_ClearParticles ();
 	CL_ClearLightStyles ();
 }
+#endif // XASH_DEDICATED

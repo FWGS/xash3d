@@ -1,3 +1,17 @@
+/*
+vgui_api.h - vgui_support library interface
+Copyright (C) 2015 Mittorn
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
 
 #include "system.h"
 
@@ -16,7 +30,7 @@ enum VGUI_MouseCode
 	MOUSE_LEFT=0,
 	MOUSE_RIGHT,
 	MOUSE_MIDDLE,
-	MOUSE_LAST,
+	MOUSE_LAST
 };
 
 enum VGUI_KeyCode
@@ -124,21 +138,21 @@ enum VGUI_KeyCode
 	KEY_F10,
 	KEY_F11,
 	KEY_F12,
-	KEY_LAST,
+	KEY_LAST
 };
 
 enum VGUI_KeyAction
 {
 	KA_TYPED=0,
 	KA_PRESSED,
-	KA_RELEASED,
+	KA_RELEASED
 };
 enum VGUI_MouseAction
 {
 	MA_PRESSED=0,
 	MA_RELEASED,
 	MA_DOUBLE,
-	MA_WHEEL,
+	MA_WHEEL
 };
 
 enum VGUI_DefaultCursor
@@ -157,7 +171,7 @@ enum VGUI_DefaultCursor
 	dc_sizeall,
 	dc_no,
 	dc_hand,
-	dc_last,
+	dc_last
 };
 
 
@@ -187,6 +201,7 @@ typedef struct  vguiapi_s
 	qboolean	(*IsInGame)( void );
 	void	(*SetVisible)( qboolean state );
 	void	(*GetCursorPos)( int *x, int *y );
+	int		(*ProcessUtfChar)( int ch );
 	void	(*Startup)( int width, int height );
 	void	(*Shutdown)( void );
 	void	*(*GetPanel)( void );

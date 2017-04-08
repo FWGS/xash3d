@@ -13,7 +13,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "port.h"
+
+#include "common.h"
+#include "wadfile.h"
+#include "filesystem.h"
+#include "library.h"
+#include "mathlib.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -21,6 +26,7 @@ GNU General Public License for more details.
 #include <stdarg.h> // va
 #ifdef XASH_SDL
 #include <SDL_system.h> // Android External storage
+#include <SDL_filesystem.h> // Android External storage
 #endif
 #ifdef _WIN32
 #include <io.h>
@@ -28,13 +34,8 @@ GNU General Public License for more details.
 #else
 #include <dirent.h>
 #include <errno.h>
+#include <unistd.h>
 #endif
-
-#include "common.h"
-#include "wadfile.h"
-#include "filesystem.h"
-#include "library.h"
-#include "mathlib.h"
 
 #define FILE_BUFF_SIZE		2048
 #define PAK_LOAD_OK			0
@@ -59,7 +60,7 @@ typedef struct wadtype_s
 	signed char		type;
 } wadtype_t;
 
-typedef struct file_s
+struct file_s
 {
 	int		handle;			// file descriptor
 	fs_offset_t	real_length;		// uncompressed file size (for files opened in "read" mode)
@@ -70,7 +71,7 @@ typedef struct file_s
 						// Contents buffer
 	fs_offset_t	buff_ind, buff_len;		// buffer current index and length
 	byte		buff[FILE_BUFF_SIZE];	// intermediate buffer
-} file_t;
+};
 
 byte		*fs_mempool;
 searchpath_t	*fs_searchpaths = NULL;
@@ -80,19 +81,19 @@ char		fs_basedir[MAX_SYSPATH];	// base directory of game
 char		fs_falldir[MAX_SYSPATH];	// game falling directory
 char		fs_gamedir[MAX_SYSPATH];	// game current directory
 char		gs_basedir[MAX_SYSPATH];	// initial dir before loading gameinfo.txt (used for compilers too)
-qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ pathes 
-
+qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ paths 
+#ifndef _WIN32
+qboolean		fs_caseinsensitive = true; // try to search missing files
+#endif
 static void FS_InitMemory( void );
-const char *FS_FileExtension( const char *in );
-searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
-static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype );
+static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const signed char matchtype );
 static packfile_t* FS_AddFileToPack( const char* name, pack_t *pack, fs_offset_t offset, fs_offset_t size );
 static byte *W_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
-static qboolean FS_SysFileExists( const char *path );
+static qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive );
 static qboolean FS_SysFolderExists( const char *path );
-static long FS_SysFileTime( const char *filename );
-static char W_TypeFromExt( const char *lumpname );
-static const char *W_ExtFromType( char lumptype );
+static int FS_SysFileTime( const char *filename );
+static signed char W_TypeFromExt( const char *lumpname );
+static const char *W_ExtFromType( signed char lumptype );
 
 /*
 =============================================================================
@@ -103,28 +104,43 @@ FILEMATCH COMMON SYSTEM
 */
 int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive )
 {
-	int	c1, c2;
+	return matchpattern_with_separator( in, pattern, caseinsensitive, "/\\:", false );
+}
+
+// wildcard_least_one: if true * matches 1 or more characters
+//                     if false * matches 0 or more characters
+int matchpattern_with_separator( const char *in, const char *pattern, qboolean caseinsensitive, const char *separators, qboolean wildcard_least_one )
+{
+	int c1, c2;
+
+	ASSERT( in );
 
 	while( *pattern )
 	{
 		switch( *pattern )
 		{
-		case 0:   return 1; // end of pattern
+		case 0:
+			return 1; // end of pattern
 		case '?': // match any single character
-			if( *in == 0 || *in == '/' || *in == '\\' || *in == ':' )
+			if( *in == 0 || Q_strchr( separators, *in ))
 				return 0; // no match
 			in++;
 			pattern++;
 			break;
 		case '*': // match anything until following string
-			if( !*in ) return 1; // match
+			if( wildcard_least_one )
+			{
+				if( *in == 0 || Q_strchr( separators, *in ))
+					return 0; // no match
+				in++;
+			}
 			pattern++;
 			while( *in )
 			{
-				if( *in == '/' || *in == '\\' || *in == ':' )
+				if( Q_strchr(separators, *in ))
 					break;
 				// see if pattern matches at this offset
-				if( matchpattern( in, pattern, caseinsensitive ))
+				if( matchpattern_with_separator(in, pattern, caseinsensitive, separators, wildcard_least_one ))
 					return 1;
 				// nope, advance to next offset
 				in++;
@@ -141,24 +157,25 @@ int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive 
 				c2 = *pattern;
 				if( c2 >= 'A' && c2 <= 'Z' )
 					c2 += 'a' - 'A';
-				if( c1 != c2) return 0; // no match
+				if( c1 != c2 )
+					return 0; // no match
 			}
 			in++;
 			pattern++;
 			break;
 		}
 	}
-
-	if( *in ) return 0; // reached end of pattern but not end of input
+	if( *in )
+		return 0; // reached end of pattern but not end of input
 	return 1; // success
 }
 
-void stringlistinit( stringlist_t *list )
+static void stringlistinit( stringlist_t *list )
 {
 	Q_memset( list, 0, sizeof( *list ));
 }
 
-void stringlistfreecontents( stringlist_t *list )
+static void stringlistfreecontents( stringlist_t *list )
 {
 	int	i;
 
@@ -171,10 +188,11 @@ void stringlistfreecontents( stringlist_t *list )
 
 	list->numstrings = 0;
 	list->maxstrings = 0;
-	if( list->strings ) Mem_Free( list->strings );
+	Z_Free( list->strings );
+	list->strings = NULL;
 }
 
-void stringlistappend( stringlist_t *list, char *text )
+static void stringlistappend( stringlist_t *list, const char *text )
 {
 	size_t	textlen;
 	char	**oldstrings;
@@ -185,7 +203,7 @@ void stringlistappend( stringlist_t *list, char *text )
 		list->maxstrings += 4096;
 		list->strings = Mem_Alloc( fs_mempool, list->maxstrings * sizeof( *list->strings ));
 		if( list->numstrings ) Q_memcpy( list->strings, oldstrings, list->numstrings * sizeof( *list->strings ));
-		if( oldstrings ) Mem_Free( oldstrings );
+		Z_Free( oldstrings );
 	}
 
 	textlen = Q_strlen( text ) + 1;
@@ -194,7 +212,7 @@ void stringlistappend( stringlist_t *list, char *text )
 	list->numstrings++;
 }
 
-void stringlistsort( stringlist_t *list )
+static void stringlistsort( stringlist_t *list )
 {
 	int	i, j;
 	char	*temp;
@@ -227,22 +245,23 @@ int sel(const struct dirent *d)
 #endif
 
 
-void listdirectory( stringlist_t *list, const char *path )
+static void listdirectory( stringlist_t *list, const char *path, qboolean lowercase )
 {
 	int		i;
-	signed char		pattern[4096], *c;
+	signed char *c;
 #ifdef _WIN32
+	char pattern[4096];
 	struct _finddata_t	n_file;
+	int		hFile;
 #else
-	struct dirent **n_file;
+	DIR *dir;
+	struct dirent *entry;
 #endif
-	long		hFile;
 
-	Q_strncpy( pattern, path, sizeof( pattern ));
-	Q_strncat( pattern, "*", sizeof( pattern ));
+#ifdef _WIN32
+	Q_snprintf( pattern, sizeof( pattern ), "%s*", path );
 
 	// ask for the directory listing handle
-#ifdef _WIN32
 	hFile = _findfirst( pattern, &n_file );
 	if( hFile == -1 ) return;
 
@@ -253,32 +272,92 @@ void listdirectory( stringlist_t *list, const char *path )
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
 #else
-	// ask for the directory listing handle
-	hFile = scandir( path, &n_file, NULL, NULL );
-	if( hFile < 1 )
-	{
-#if 0
-		MsgDev( D_INFO, "listdirectory: scandir() failed, %s at %s", strerror(hFile), path );
-#endif
+	if( !( dir = opendir( path ) ) )
 		return;
-	}
 
 	// iterate through the directory
-	for( i = 0; i < hFile; i++)
-	{
-		stringlistappend( list, n_file[i]->d_name );
-	}
+	while( ( entry = readdir( dir ) ))
+		stringlistappend( list, entry->d_name );
+	closedir( dir );
 #endif
 
 	// convert names to lowercase because windows doesn't care, but pattern matching code often does
-	for( i = 0; i < list->numstrings; i++ )
+	if( lowercase )
 	{
-		for( c = list->strings[i]; *c; c++ )
+		for( i = 0; i < list->numstrings; i++ )
 		{
-			if( *c >= 'A' && *c <= 'Z' )
-				*c += 'a' - 'A';
+			for( c = (signed char *)list->strings[i]; *c; c++ )
+			{
+				if( *c >= 'A' && *c <= 'Z' )
+					*c += 'a' - 'A';
+			}
 		}
 	}
+}
+
+/*
+==================
+FS_FixFileCase
+
+emulate WIN32 FS behaviour when opening local file
+==================
+*/
+const char *FS_FixFileCase( const char *path )
+{
+#if !defined _WIN32 && !TARGET_OS_IPHONE // assume case insensitive
+	DIR *dir; struct dirent *entry;
+	char path2[PATH_MAX], *fname;
+
+	if( !fs_caseinsensitive )
+		return path;
+
+	Q_snprintf( path2, sizeof( path2 ), "./%s", path );
+
+	fname = Q_strrchr( path2, '/' );
+
+	if( fname )
+		*fname++ = 0;
+	else
+	{
+		fname = (char*)path;
+		Q_strcpy( path2, ".");
+	}
+
+	/* android has too slow directory scanning,
+	   so drop out some not useful cases */
+	if( fname - path2 > 4 )
+	{
+		char *point;
+		// too many wad textures
+		if( !Q_stricmp( fname - 5, ".wad") )
+			return path;
+		point = Q_strchr( fname, '.' );
+		if( point )
+		{
+			if( !Q_strcmp( point, ".mip") || !Q_strcmp( point, ".dds" ) || !Q_strcmp( point, ".ent" ) )
+				return path;
+			if( fname[0] == '{' )
+				return path;
+		}
+	}
+
+	//MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
+
+	if( !( dir = opendir( path2 ) ) )
+		return path;
+
+	while( ( entry = readdir( dir ) ) )
+	{
+		if( Q_stricmp( entry->d_name, fname ) )
+			continue;
+
+		path = va( "%s/%s", path2, entry->d_name );
+		//MsgDev( D_NOTE, "FS_FixFileCase: %s %s %s\n", path2, fname, entry->d_name );
+		break;
+	}
+	closedir( dir );
+#endif
+	return path;
 }
 
 /*
@@ -390,6 +469,40 @@ void FS_ClearPaths_f( void )
 	FS_ClearSearchPath();
 }
 
+void FS_Crc32_f( void )
+{
+	dword crc = 0;
+
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Use crc32 <path>\n");
+		return;
+	}
+	if( CRC32_File( &crc, Cmd_Argv( 1 ) ) )
+		Msg( "0x%x\n", crc );
+}
+
+void FS_MD5_f( void )
+{
+	unsigned char hash[16];
+
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Use md5 <path>\n");
+		return;
+	}
+
+	if( MD5_HashFile( hash, Cmd_Argv( 1 ), NULL ) )
+	{
+		char hex[33], *phex = hex;
+		int i;
+
+		for( i = 0; i < 16; i++ )
+			phex += Q_sprintf( phex, "%02hhx", hash[i] );
+		Msg( "%s\n", hex );
+	}
+}
+
 /*
 ============
 FS_FileBase
@@ -434,6 +547,46 @@ void FS_FileBase( const char *in, char *out )
 }
 
 /*
+============
+FS_MapFileBase
+
+Extracts the base name of a map file (no extension, split map from path)
+============
+*/
+void FS_MapFileBase( const char *in, char *out )
+{
+	int	len, start, end;
+	const char *pstr;
+
+	len = Q_strlen( in );
+	if( !len ) return;
+
+	// scan backward for '.'
+	end = len - 1;
+
+	while( end && in[end] != '.' && in[end] != '/' && in[end] != '\\' )
+		end--;
+
+	if( in[end] != '.' )
+		end = len-1; // no '.', copy to end
+	else end--; // found ',', copy to left of '.'
+
+
+	// strip "maps/" if exists
+	start = 0;
+	pstr = Q_strstr( in, "maps/");
+	if( pstr )
+		start = pstr + 5 - in;
+
+	// length of new sting
+	len = end - start + 1;
+
+	// Copy partial string
+	Q_strncpy( out, &in[start], len + 1 );
+	out[len] = 0;
+}
+
+/*
 =================
 FS_LoadPackPAK
 
@@ -452,6 +605,15 @@ pack_t *FS_LoadPackPAK( const char *packfile, int *error )
 	dpackfile_t	*info;
 
 	packhandle = open( packfile, O_RDONLY|O_BINARY );
+
+#ifndef _WIN32
+	if( packhandle < 0 )
+	{
+		const char *fpackfile = FS_FixFileCase( packfile );
+		if( fpackfile!= packfile )
+			packhandle = open( fpackfile, O_RDONLY|O_BINARY );
+	}
+#endif
 
 	if( packhandle < 0 )
 	{
@@ -709,12 +871,13 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	string		fullpath;
 	int		i;
 
+	MsgDev(D_NOTE, "FS_AddGameDirectory( %s, %i )\n", dir, flags );
+
 	if(!( flags & FS_NOWRITE_PATH ))
 		Q_strncpy( fs_gamedir, dir, sizeof( fs_gamedir ));
 
-
 	stringlistinit( &list );
-	listdirectory( &list, dir );
+	listdirectory( &list, dir, false );
 	stringlistsort( &list );
 
 	// For priority files, first is unpacked, then WAD and last PAK
@@ -747,6 +910,7 @@ void FS_AddGameDirectory( const char *dir, int flags )
 	search->flags = flags;
 	search->next = fs_searchpaths;
 	fs_searchpaths = search;
+
 }
 
 /*
@@ -759,9 +923,32 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	// Add the common game directory
 	if( dir && *dir )
 	{
-		FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		// add recursively new game directories
+		if( Q_strnicmp( dir, GI->gamedir, 64 ) )
+		{
+			int i;
+			for( i = 0; i < SI.numgames; i++ )
+			{
+				ASSERT(SI.games[i]);
+				MsgDev( D_NOTE, "%d %s %s\n", i, SI.games[i]->gamedir, SI.games[i]->basedir );
+				if( !Q_strnicmp( dir, SI.games[i]->gamedir, 64 ) )
+				{
+					if( !SI.games[i]->added && Q_strnicmp( SI.games[i]->gamedir, SI.games[i]->basedir, 64 ) )
+					{
+						SI.games[i]->added = true;
+						FS_AddGameHierarchy( SI.games[i]->basedir, flags );
+					}
+				}
+			}
+
+		}
+
+
+		if( flags & FS_GAMEDIR_PATH )
+			FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 		FS_AddGameDirectory( va( "%s%s/", fs_basedir, dir ), flags );
-		FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		if( flags & FS_GAMEDIR_PATH )
+			FS_AddGameDirectory( va( "%s%s/custom/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	}
 }
 
@@ -838,7 +1025,7 @@ void FS_ClearSearchPath( void )
 
 		if( search->flags & FS_STATIC_PATH )
 		{
-			// skip read-only pathes
+			// skip read-only paths
 			if( search->next )
 				fs_searchpaths = search->next->next;
 			else break;
@@ -856,7 +1043,7 @@ void FS_ClearSearchPath( void )
 			W_Close( search->wad );
 		}
 
-		if( search ) Mem_Free( search );
+		Z_Free( search );
 	}
 }
 
@@ -919,6 +1106,20 @@ void FS_Rescan( void )
 	MsgDev( D_NOTE, "FS_Rescan( %s )\n", GI->title );
 	FS_ClearSearchPath();
 
+#ifdef __ANDROID__
+	char *str;
+	if( str = getenv("XASH3D_EXTRAS_PAK1") )
+		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	if( str = getenv("XASH3D_EXTRAS_PAK2") )
+		FS_AddPack_Fullpath( str, NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	//FS_AddPack_Fullpath( "/data/data/in.celest.xash3d.hl.test/files/pak.pak", NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+#elif TARGET_OS_IPHONE
+	{
+		FS_AddPack_Fullpath( va( "%sextras.pak", SDL_GetBasePath() ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		FS_AddPack_Fullpath( va( "%sextras_%s.pak", SDL_GetBasePath(), GI->gamedir ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	}
+#endif
+
 	if( Q_stricmp( GI->basedir, GI->gamedir ))
 		FS_AddGameHierarchy( GI->basedir, 0 );
 	if( Q_stricmp( GI->basedir, GI->falldir ) && Q_stricmp( GI->gamedir, GI->falldir ))
@@ -926,7 +1127,7 @@ void FS_Rescan( void )
 	FS_AddGameHierarchy( GI->gamedir, FS_GAMEDIR_PATH );
 }
 
-void FS_Rescan_f( void )
+static void FS_Rescan_f( void )
 {
 	FS_Rescan();
 }
@@ -1033,6 +1234,10 @@ static qboolean FS_WriteGameInfo( const char *filepath, gameinfo_t *GameInfo )
 		FS_Printf( f, "dllpath\t\t\"%s\"\n", GameInfo->dll_path );	
 	if( Q_strlen( GameInfo->game_dll ))
 		FS_Printf( f, "gamedll\t\t\"%s\"\n", GameInfo->game_dll );
+	if( Q_strlen( GameInfo->game_dll_linux ))
+		FS_Printf( f, "gamedll_linux\t\t\"%s\"\n", GameInfo->game_dll_linux );
+	if( Q_strlen( GameInfo->game_dll_osx ))
+		FS_Printf( f, "gamedll_osx\t\t\"%s\"\n", GameInfo->game_dll_osx );
 
 	if( Q_strlen( GameInfo->iconpath ))
 		FS_Printf( f, "icon\t\t\"%s\"\n", GameInfo->iconpath );
@@ -1114,15 +1319,11 @@ void FS_CreateDefaultGameInfo( const char *filename )
 	Q_strncpy( defGI.basedir, "valve", sizeof( defGI.basedir ));
 	Q_strncpy( defGI.sp_entity, "info_player_start", sizeof( defGI.sp_entity ));
 	Q_strncpy( defGI.mp_entity, "info_player_deathmatch", sizeof( defGI.mp_entity ));
-#ifdef PANDORA
-        Q_strncpy( defGI.dll_path, LIBPATH, sizeof( defGI.dll_path ));
-        Q_strncpy( defGI.game_dll, LIBPATH "/" SERVERDLL, sizeof( defGI.game_dll ));
-
-#else
 	Q_strncpy( defGI.dll_path, "cl_dlls", sizeof( defGI.dll_path ));
 	Q_strncpy( defGI.dll_path, CLIENTDLL, sizeof( defGI.client_lib ));
-	Q_strncpy( defGI.game_dll, "dlls/hl." OS_LIB_EXT, sizeof( defGI.game_dll ));
-#endif
+	Q_strncpy( defGI.game_dll, "dlls/hl.dll" , sizeof( defGI.game_dll ));
+	Q_strncpy( defGI.game_dll_osx, "dlls/hl.dylib", sizeof(defGI.game_dll_osx));
+	Q_strncpy( defGI.game_dll_linux, "dlls/hl.so", sizeof(defGI.game_dll_linux));
 	Q_strncpy( defGI.startmap, "newmap", sizeof( defGI.startmap ));
 	Q_strncpy( defGI.iconpath, "game.ico", sizeof( defGI.iconpath ));
 
@@ -1142,17 +1343,11 @@ void FS_CreateDefaultGameInfo( const char *filename )
 static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, gameinfo_t *GameInfo )
 {
 	char	*afile, *pfile;
-#ifdef _WIN32
-	const char* gameDll = "gamedll";
-#elif defined(__APPLE__)
-	const char* gameDll = "gamedll_osx";
-#else
-	const char* gameDll = "gamedll_linux";
-#endif
+	qboolean found_linux = false, found_osx = false;
 	string	token;
 
 	if( !GameInfo ) return false;	
-	afile = FS_LoadFile( filename, NULL, false );
+	afile = (char *)FS_LoadFile( filename, NULL, false );
 	if( !afile ) return false;
 
 	// setup default values
@@ -1171,16 +1366,9 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
 	Q_strncpy( GameInfo->startmap, "newmap", sizeof( GameInfo->startmap ));
-#if defined(__ANDROID__) || defined(PANDORA)
-	Q_strncpy( GameInfo->dll_path, getenv("XASH3D_GAMELIBDIR"), sizeof( GameInfo->dll_path ));
-	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
-	Q_strncpy( GameInfo->game_dll, GameInfo->dll_path, sizeof( GameInfo->game_dll ));
-	Q_strncat( GameInfo->game_dll,"/" SERVERDLL, sizeof( GameInfo->game_dll ));
-#else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
-#endif
+	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
 	Q_strncpy( GameInfo->iconpath, "game.ico", sizeof( GameInfo->iconpath ));
 
 	VectorSet( GameInfo->client_mins[0],   0,   0,  0  );
@@ -1226,13 +1414,20 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		{
 			pfile = COM_ParseFile( pfile, GameInfo->update_url );
 		}
-		else if( !Q_stricmp( token, gameDll ))
+		else if( !Q_stricmp( token, "gamedll" ))
 		{
-			// already set up for __ANDROID__. Just ignore a path in game config
-#if !defined(__ANDROID__) && !defined(PANDORA)
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
 			COM_FixSlashes( GameInfo->game_dll );
-#endif
+		}
+		else if( !Q_stricmp( token, "gamedll_linux" ))
+		{
+			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
+			found_linux = true;
+		}
+		else if( !Q_stricmp( token, "gamedll_osx" ))
+		{
+			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
+			found_osx = false;
 		}
 		else if( !Q_stricmp( token, "icon" ))
 		{
@@ -1247,8 +1442,9 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 			if( !Q_stricmp( token, "singleplayer_only" ))
 			{
 				// TODO: Remove this ugly hack too.
-				// This made because Half-Life have a multiplayer,
-				//  but for some reason it marked as singleplayer_only
+				// This was made because Half-Life has multiplayer,
+				// but for some reason it's marked as singleplayer_only.
+				// Old WON version is fine.
 				if( !Q_stricmp( GameInfo->gamedir, "valve") )
 					GameInfo->gamemode = 0;
 				else
@@ -1295,6 +1491,21 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		}
 	}
 
+	if( !found_linux || !found_osx )
+	{
+		// just replace extension from dll to so/dylib
+
+		char gamedll[64];
+		Q_strncpy( gamedll, GameInfo->game_dll, sizeof( gamedll ));
+		FS_StripExtension( gamedll );
+
+		if( !found_linux )
+			snprintf( GameInfo->game_dll_linux, sizeof( GameInfo->game_dll_linux ), "%s.so", gamedll );
+
+		if( !found_osx )
+			snprintf( GameInfo->game_dll_osx, sizeof( GameInfo->game_dll_osx ), "%s.dylib", gamedll );
+	}
+
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
 
@@ -1334,6 +1545,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	char	*afile, *pfile;
 	string	fs_path, filepath;
 	string	liblist, token;
+	qboolean found_linux = false, found_osx = false;
 
 	Q_snprintf( filepath, sizeof( filepath ), "%s/gameinfo.txt", gamedir );
 	Q_snprintf( liblist, sizeof( liblist ), "%s/liblist.gam", gamedir );
@@ -1348,7 +1560,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 
 	if( !GameInfo ) return false;	// no dest
 
-	afile = FS_LoadFile( filepath, NULL, false );
+	afile = (char *)FS_LoadFile( filepath, NULL, false );
 	if( !afile ) return false;
 
 	// setup default values
@@ -1364,14 +1576,18 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	Q_strncpy( GameInfo->title, "New Game", sizeof( GameInfo->title ));
 	Q_strncpy( GameInfo->sp_entity, "info_player_start", sizeof( GameInfo->sp_entity ));
 	Q_strncpy( GameInfo->mp_entity, "info_player_deathmatch", sizeof( GameInfo->mp_entity ));
-#if defined(__ANDROID__) || defined(PANDORA)
+#if TARGET_OS_IPHONE
+	//Q_strncpy( GameInfo->game_dll, va( "%sserver", SDL_GetBasePath() ), sizeof( GameInfo->game_dll ) );
+	
+	//Q_strncpy( GameInfo->game_dll, "hlsv.framework/hl", sizeof( GameInfo->game_dll ) );
+#elif defined(__ANDROID__)
 	Q_strncpy( GameInfo->dll_path, getenv("XASH3D_GAMELIBDIR"), sizeof( GameInfo->dll_path ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 	Q_strncpy( GameInfo->game_dll, GameInfo->dll_path, sizeof( GameInfo->game_dll ));
 	Q_strncat( GameInfo->game_dll,"/" SERVERDLL, sizeof( GameInfo->game_dll ));
 #else
 	Q_strncpy( GameInfo->dll_path, "cl_dlls", sizeof( GameInfo->dll_path ));
-	Q_strncpy( GameInfo->game_dll, "dlls/hl." OS_LIB_EXT, sizeof( GameInfo->game_dll ));
+	Q_strncpy( GameInfo->game_dll, "dlls/hl.dll", sizeof( GameInfo->game_dll ));
 	Q_strncpy( GameInfo->client_lib, CLIENTDLL, sizeof( GameInfo->client_lib ));
 #endif
 	Q_strncpy( GameInfo->startmap, "", sizeof( GameInfo->startmap ));
@@ -1422,23 +1638,25 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		}
 		else if( !Q_stricmp( token, "gamedll" ))
 		{
-			// already set up for __ANDROID__. Just ignore a path in game config
-#if !defined(__ANDROID__) && !defined(PANDORA)
 			pfile = COM_ParseFile( pfile, GameInfo->game_dll );
-#endif
+		}
+		else if( !Q_stricmp( token, "gamedll_osx" ))
+		{
+			pfile = COM_ParseFile( pfile, GameInfo->game_dll_osx );
+			found_osx = true;
+		}
+		else if( !Q_stricmp( token, "gamedll_linux" ))
+		{
+			pfile = COM_ParseFile( pfile, GameInfo->game_dll_linux );
+			found_linux = true;
 		}
 		else if( !Q_stricmp( token, "clientlib" ))
 		{
-			// already set up for __ANDROID__. Just ignore a path in game config
-#if !defined(__ANDROID__) && !defined(PANDORA)
 			pfile = COM_ParseFile( pfile, GameInfo->client_lib );
-#endif
 		}
 		else if( !Q_stricmp( token, "dllpath" ))
 		{
-#ifndef __ANDROID__
 			pfile = COM_ParseFile( pfile, GameInfo->dll_path );
-#endif
 		}
 		else if( !Q_stricmp( token, "startmap" ))
 		{
@@ -1505,8 +1723,9 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		{
 			pfile = COM_ParseFile( pfile, token );
 			// TODO: Remove this ugly hack too.
-			// This made because Half-Life have a multiplayer,
-			//  but for some reason it marked as singleplayer_only
+			// This was made because Half-Life has multiplayer,
+			// but for some reason it's marked as singleplayer_only.
+			// Old WON version is fine.
 			if( !Q_stricmp( token, "singleplayer_only" ) && Q_stricmp( GameInfo->gamedir, "valve") )
 				GameInfo->gamemode = 1;
 			else if( !Q_stricmp( token, "multiplayer_only" ))
@@ -1557,6 +1776,22 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 		}
 	}
 
+#if !defined(ANDROID)
+	if( !found_linux || !found_osx )
+	{
+		// just replace extension from dll to so/dylib
+
+		char gamedll[64];
+		Q_strncpy( gamedll, GameInfo->game_dll, sizeof( gamedll ));
+		FS_StripExtension( gamedll );
+
+		if( !found_linux )
+			snprintf( GameInfo->game_dll_linux, sizeof( GameInfo->game_dll_linux ), "%s.so", gamedll );
+
+		if( !found_osx )
+			snprintf( GameInfo->game_dll_osx, sizeof( GameInfo->game_dll_osx ), "%s.dylib", gamedll );
+	}
+#endif
 	// make sure what gamedir is really exist
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
@@ -1564,8 +1799,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->falldir )))
 		GameInfo->falldir[0] = '\0';
 
-	if( afile != NULL )
-		Mem_Free( afile );
+	Z_Free( afile );
 
 	return true;
 }
@@ -1587,7 +1821,7 @@ void FS_LoadGameInfo( const char *rootfolder )
 	if( rootfolder ) Q_strcpy( gs_basedir, rootfolder );
 	MsgDev( D_NOTE, "FS_LoadGameInfo( %s )\n", gs_basedir );
 
-	// clear any old pathes
+	// clear any old paths
 	FS_ClearSearchPath();
 
 	// validate gamedir
@@ -1601,6 +1835,30 @@ void FS_LoadGameInfo( const char *rootfolder )
 		Sys_Error( "Couldn't find game directory '%s'\n", gs_basedir );
 
 	SI.GameInfo = SI.games[i];
+	if( !Sys_GetParmFromCmdLine( "-dll", SI.gamedll ) )
+	{
+#if defined(_WIN32)
+		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
+#elif TARGET_OS_IPHONE || defined __EMSCRIPTEN__
+		Q_strncpy( SI.gamedll, "server", sizeof( SI.gamedll ) );
+#elif defined(__APPLE__)
+		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
+#elif defined(__ANDROID__)
+		Q_strncpy( SI.gamedll, getenv("XASH3D_GAMELIBDIR"), sizeof( SI.gamedll ) );
+		Q_strncat( SI.gamedll, "/" SERVERDLL, sizeof( SI.gamedll ) );
+#else
+		Q_strncpy( SI.gamedll, GI->game_dll_linux, sizeof( SI.gamedll ) );
+#endif
+	}
+	if( !Sys_GetParmFromCmdLine( "-clientlib", SI.clientlib ) )
+	{
+#ifdef __ANDROID__
+		Q_strncpy( SI.clientlib, CLIENTDLL, sizeof( SI.clientlib ) );
+#else
+		Q_strncpy( SI.clientlib, GI->client_lib, sizeof( SI.clientlib ) );
+#endif
+	}
+
 	FS_Rescan(); // create new filesystem
 
 	Host_InitDecals ();	// reload decals
@@ -1619,15 +1877,23 @@ void FS_Init( void )
 	
 	FS_InitMemory();
 
-	Cmd_AddCommand( "fs_rescan", FS_Rescan_f, "rescan filesystem search pathes" );
-	Cmd_AddCommand( "fs_path", FS_Path_f, "show filesystem search pathes" );
-	Cmd_AddCommand( "fs_clearpaths", FS_ClearPaths_f, "clear filesystem search pathes" );
+	Cmd_AddCommand( "fs_rescan", FS_Rescan_f, "rescan filesystem search paths" );
+	Cmd_AddCommand( "fs_path", FS_Path_f, "show filesystem search paths" );
+	Cmd_AddCommand( "fs_clearpaths", FS_ClearPaths_f, "clear filesystem search paths" );
+	Cmd_AddCommand( "crc32", FS_Crc32_f, "print crc32 of for file" );
+	Cmd_AddCommand( "md5", FS_MD5_f, "print md5 of for file" );
+
+
+#ifndef _WIN32
+	if( Sys_CheckParm( "-casesensitive" ) )
+		fs_caseinsensitive = false;
+#endif
 
 	// ignore commandlineoption "-game" for other stuff
-	if( host.type == HOST_NORMAL || host.type == HOST_DEDICATED )
+	if( host.type != HOST_UNKNOWN )
 	{
 		stringlistinit( &dirs );
-		listdirectory( &dirs, "./" );
+		listdirectory( &dirs, "./", false );
 		stringlistsort( &dirs );
 		SI.numgames = 0;
 	
@@ -1672,7 +1938,7 @@ void FS_Init( void )
 		}
 
 		stringlistfreecontents( &dirs );
-	}	
+	}
 
 	MsgDev( D_NOTE, "FS_Init: done\n" );
 }
@@ -1708,7 +1974,7 @@ FS_SysFileTime
 Internal function used to determine filetime
 ====================
 */
-static long FS_SysFileTime( const char *filename )
+static int FS_SysFileTime( const char *filename )
 {
 	struct stat buf;
 	
@@ -1785,7 +2051,7 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 			opt |= O_BINARY;
 			break;
 		default:
-			MsgDev( D_ERROR, "FS_SysOpen: %s: unknown char in mode (%c)\n", filepath, mode, mode[ind] );
+			MsgDev( D_ERROR, "FS_SysOpen: %s: unknown char in mode %s (%c)\n", filepath, mode, mode[ind] );
 			break;
 		}
 	}
@@ -1795,13 +2061,29 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 	file->ungetc = EOF;
 
 	file->handle = open( filepath, mod|opt, 0666 );
+
+#ifndef _WIN32
+	if( file->handle < 0 )
+	{
+		const char *ffilepath = FS_FixFileCase( filepath );
+		if( ffilepath != filepath )
+			file->handle = open( ffilepath, mod|opt, 0666 );
+	}
+#endif
+
 	if( file->handle < 0 )
 	{
 		Mem_Free( file );
 		return NULL;
 	}
 
+
 	file->real_length = lseek( file->handle, 0, SEEK_END );
+	if( file->real_length == -1 )
+	{
+		MsgDev( D_ERROR, "FS_SysOpen: Cannot lseek file: %s\n", strerror(errno));
+		return NULL;
+	}
 
 	// For files opened in append mode, we start at the end of the file
 	if( mod & O_APPEND ) file->position = file->real_length;
@@ -1852,12 +2134,20 @@ FS_SysFileExists
 Look for a file in the filesystem only
 ==================
 */
-qboolean FS_SysFileExists( const char *path )
+qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive )
 {
 	int desc;
      
 	desc = open( path, O_RDONLY|O_BINARY );
-
+#ifndef _WIN32
+	// speedup custom path search
+	if( caseinsensitive && ( desc < 0 ) )
+	{
+		const char *fpath = FS_FixFileCase( path );
+		if( fpath != path )
+			desc = open( fpath, O_RDONLY|O_BINARY );
+	}
+#endif
 	if( desc < 0 ) return false;
 	close( desc );
 	return true;
@@ -1915,7 +2205,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 	// search through the path, one element at a time
 	for( search = fs_searchpaths; search; search = search->next )
 	{
-		if( gamedironly & !( search->flags & ( FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
+		if( gamedironly && !( search->flags & ( FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
 			continue;
 
 		// is the element a pak file?
@@ -1993,7 +2283,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 		{
 			char	netpath[MAX_SYSPATH];
 			Q_sprintf( netpath, "%s%s", search->filename, name );
-			if( FS_SysFileExists( netpath ))
+			if( FS_SysFileExists( netpath, !(search->flags & FS_CUSTOM_PATH ) ) )
 			{
 				if( index != NULL ) *index = -1;
 				return search;
@@ -2014,7 +2304,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 		Q_strcat( search->filename, "\\" );
 		Q_snprintf( netpath, MAX_SYSPATH, "%s%s", search->filename, name );
 
-		if( FS_SysFileExists( netpath ))
+		if( FS_SysFileExists( netpath, !(search->flags & FS_CUSTOM_PATH ) ) )
 		{
 			if( index != NULL )
 				*index = -1;
@@ -2030,7 +2320,7 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 			Q_strcat( search->filename, "\\" );
 			Q_snprintf( netpath, MAX_SYSPATH, "%s%s", search->filename, name );
 
-			if( FS_SysFileExists( netpath ))
+			if( FS_SysFileExists( netpath, !(search->flags & FS_CUSTOM_PATH ) ) )
 			{
 				if( index != NULL )
 					*index = -1;
@@ -2095,12 +2385,14 @@ Open a file. The syntax is the same as fopen
 */
 file_t *FS_Open( const char *filepath, const char *mode, qboolean gamedironly )
 {
-	if( host.type == HOST_NORMAL || host.type == HOST_DEDICATED )
-          {
+	if( !filepath )
+		return NULL;
+	if( host.type != HOST_UNKNOWN )
+	{
 		// some stupid mappers used leading '/' or '\' in path to models or sounds
 		if( filepath[0] == '/' || filepath[0] == '\\' ) filepath++;
 		if( filepath[0] == '/' || filepath[0] == '\\' ) filepath++;
-          }
+	}
 
 	if( FS_CheckNastyPath( filepath, false ))
 		return NULL;
@@ -2115,7 +2407,6 @@ file_t *FS_Open( const char *filepath, const char *mode, qboolean gamedironly )
 
 		FS_CreatePath( real_path );// Create directories up to the file
 		return FS_SysOpen( real_path, mode );
-
 	}
 	
 	// else, we look at the various search paths and open the file in read-only mode
@@ -2349,37 +2640,6 @@ int FS_UnGetc( file_t *file, byte c )
 
 /*
 ====================
-FS_Gets
-
-Same as fgets
-====================
-*/
-int FS_Gets( file_t *file, byte *string, size_t bufsize )
-{
-	int	c, end = 0;
-
-	while( 1 )
-	{
-		c = FS_Getc( file );
-		if( c == '\r' || c == '\n' || c < 0 )
-			break;
-		if( end < bufsize - 1 )
-			string[end++] = c;
-	}
-	string[end] = 0;
-
-	// remove \n following \r
-	if( c == '\r' )
-	{
-		c = FS_Getc( file );
-		if( c != '\n' ) FS_UnGetc( file, (byte)c );
-	}
-
-	return c;
-}
-
-/*
-====================
 FS_Seek
 
 Move the position index in a file
@@ -2402,7 +2662,7 @@ int FS_Seek( file_t *file, fs_offset_t offset, int whence )
 		return -1;
 	}
 	
-	if( offset < 0 || offset > (long)file->real_length )
+	if( offset < 0 || offset > (int)file->real_length )
 		return -1;
 
 	// if we have the data in our read buffer, we don't need to actually seek
@@ -2658,7 +2918,7 @@ return true if library is crypted
 qboolean FS_CheckForCrypt( const char *dllname )
 {
 	file_t	*f;
-	int	key;
+	int	key = 0;
 
 	f = FS_Open( dllname, "rb", false );
 	if( !f ) return false;
@@ -3046,7 +3306,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 			// get a directory listing and look at each name
 			Q_sprintf( netpath, "%s%s", searchpath->filename, basepath );
 			stringlistinit( &dirlist );
-			listdirectory( &dirlist, netpath );
+			listdirectory( &dirlist, netpath, true );
 			for( dirlistindex = 0; dirlistindex < dirlist.numstrings; dirlistindex++ )
 			{
 				Q_sprintf( temp, "%s%s", basepath, dirlist.strings[dirlistindex] );
@@ -3120,17 +3380,32 @@ WADSYSTEM PRIVATE COMMON FUNCTIONS
 =============================================================================
 */
 // associate extension with wad type
-static const wadtype_t wad_types[] =
+static const wadtype_t wad_types[6] =
 {
-{ "pal", TYP_QPAL	}, // palette
-{ "lmp", TYP_QPIC	}, // quake1, hl pic
-{ "fnt", TYP_QFONT	}, // hl qfonts
-{ "mip", TYP_MIPTEX	}, // hl/q1 mip
-{ "raw", TYP_RAW	}, // signed raw data
-{ NULL,  TYP_NONE	}
+{ "pal", TYP_PALETTE	}, // palette
+{ "dds", TYP_DDSTEX 	}, // DDS image
+{ "lmp", TYP_GFXPIC		}, // quake1, hl pic
+{ "fnt", TYP_QFONT		}, // hl qfonts
+{ "mip", TYP_MIPTEX		}, // hl/q1 mip
+{ NULL,  TYP_NONE		}
 };
 
-static char W_TypeFromExt( const char *lumpname )
+// suffix converts to img_type and back
+static const wadtype_t wad_hints[10] =
+{
+{ "",	 IMG_DIFFUSE	}, // no suffix
+{ "_mask", IMG_ALPHAMASK	}, // alpha-channel stored to another lump
+{ "_norm", IMG_NORMALMAP	}, // indexed normalmap
+{ "_spec", IMG_GLOSSMAP	}, // grayscale\color specular
+{ "_gpow", IMG_GLOSSPOWER	}, // grayscale gloss power
+{ "_hmap", IMG_HEIGHTMAP	}, // heightmap (can be converted to normalmap)
+{ "_luma", IMG_LUMA		}, // self-illuminate parts on the diffuse
+{ "_adec", IMG_DECAL_ALPHA	}, // classic HL-decal (with alpha-channel)
+{ "_cdec", IMG_DECAL_COLOR	}, // paranoia decal (base 127 127 127)
+{ NULL,    0		}  // terminator
+};
+
+static signed char W_TypeFromExt( const char *lumpname )
 {
 	const char	*ext = FS_FileExtension( lumpname );
 	const wadtype_t	*type;
@@ -3141,13 +3416,20 @@ static char W_TypeFromExt( const char *lumpname )
 	
 	for( type = wad_types; type->ext; type++ )
 	{
-		if(!Q_stricmp( ext, type->ext ))
+		if( !Q_stricmp( ext, type->ext ))
 			return type->type;
 	}
 	return TYP_NONE;
 }
 
-static const char *W_ExtFromType( char lumptype )
+/*
+===========
+W_ExtFromType
+
+Convert type to extension
+===========
+*/
+static const char *W_ExtFromType( signed char lumptype )
 {
 	const wadtype_t	*type;
 
@@ -3163,12 +3445,64 @@ static const char *W_ExtFromType( char lumptype )
 	return "";
 }
 
-static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char matchtype )
+/*
+===========
+W_HintFromSuf
+
+Convert name suffix into image type
+===========
+*/
+signed char W_HintFromSuf( const char *lumpname )
 {
-	int	left, right, middle;
+	char		barename[64];
+	char		suffix[8];
+	const wadtype_t	*hint;
+
+	// trying to extract hint from the name
+	FS_FileBase( lumpname, barename );
+	Q_strncpy( suffix, barename + Q_strlen( barename ) - HINT_NAMELEN, sizeof( suffix ));
+
+	// we not known about filetype, so match only by filename
+	for( hint = wad_hints; hint->ext; hint++ )
+	{
+		if( !Q_stricmp( suffix, hint->ext ))
+			return hint->type;
+	}
+
+	// no any special type was found
+	return IMG_DIFFUSE;
+}
+
+static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const signed char matchtype )
+{
+	signed char		img_type = IMG_DIFFUSE;
+	char		barename[64], suffix[8];
+	int		left, right;
+	const wadtype_t	*hint;
 
 	if( !wad || !wad->lumps || matchtype == TYP_NONE )
 		return NULL;
+
+	// trying to extract hint from the name
+	FS_FileBase( name, barename );
+
+	if( Q_strlen( barename ) >= HINT_NAMELEN )
+	{
+		Q_strncpy( suffix, barename + Q_strlen( barename ) - HINT_NAMELEN, sizeof( suffix ));
+
+		// we not known about filetype, so match only by filename
+		for( hint = wad_hints; hint->ext; hint++ )
+		{
+			if( !Q_stricmp( suffix, hint->ext ))
+			{
+				img_type = hint->type;
+				break;
+			}
+		}
+
+		if( img_type != IMG_DIFFUSE )
+			barename[Q_strlen( barename ) - HINT_NAMELEN] = '\0'; // kill the suffix
+	}
 
 	// look for the file (binary search)
 	left = 0;
@@ -3176,22 +3510,26 @@ static dlumpinfo_t *W_FindLump( wfile_t *wad, const char *name, const char match
 	
 	while( left <= right )
 	{
-		int	diff;
+		int	middle = (left + right) / 2;
+		int	diff = Q_stricmp( wad->lumps[middle].name, barename );
 
-		middle = (left + right) / 2;
-		diff = Q_stricmp( wad->lumps[middle].name, name );
-
-		// Found it
 		if( !diff )
 		{
-			if( matchtype == TYP_ANY || matchtype == wad->lumps[middle].type )
+			if( wad->lumps[middle].img_type > img_type )
+				diff = 1;
+			else if( wad->lumps[middle].img_type < img_type )
+				diff = -1;
+			else if(( matchtype == TYP_ANY ) || ( matchtype == wad->lumps[middle].type ))
 				return &wad->lumps[middle]; // found
-			else break;
+			else if( wad->lumps[middle].type < matchtype )
+				diff = 1;
+			else if( wad->lumps[middle].type > matchtype )
+				diff = -1;
+			else break; // not found
 		}
 
 		// if we're too far in the list
-		if( diff > 0 )
-			right = middle - 1;
+		if( diff > 0 ) right = middle - 1;
 		else left = middle + 1;
 	}
 
@@ -3205,10 +3543,18 @@ FS_AddFileToWad
 Add a file to the list of files contained into a package
 ====================
 */
-static dlumpinfo_t *W_AddFileToWad( const char *name, wfile_t *wad, int filepos, int packsize, int realsize, char type, char compression )
+static dlumpinfo_t *W_AddFileToWad( const char *name, wfile_t *wad, dlumpinfo_t *newlump )
 {
-	int		left, right, middle;
+	int		left, right;
 	dlumpinfo_t	*plump;
+
+	// convert all qmip types to miptex
+	if( newlump->type == TYP_RAWDATA )
+		newlump->type = TYP_MIPTEX;
+
+	// check for Quake 'conchars' issues (only lmp loader supposed to read this lame pic)
+	if( !Q_stricmp( newlump->name, "conchars" ) && newlump->type == TYP_RAWDATA )
+		newlump->type = TYP_GFXPIC; 
 
 	// look for the slot we should put that file into (binary search)
 	left = 0;
@@ -3216,38 +3562,34 @@ static dlumpinfo_t *W_AddFileToWad( const char *name, wfile_t *wad, int filepos,
 
 	while( left <= right )
 	{
-		int	diff;
+		int	middle = ( left + right ) / 2;
+		int	diff = Q_stricmp( wad->lumps[middle].name, name );
 
-		middle = ( left + right ) / 2;
-		diff = Q_stricmp( wad->lumps[middle].name, name );
-
-		// If we found the file, there's a problem
-		if( !diff ) MsgDev( D_NOTE, "Wad %s contains the file %s several times\n", wad->filename, name );
+		if( !diff )
+		{
+			if( wad->lumps[middle].img_type > newlump->img_type )
+				diff = 1;
+			else if( wad->lumps[middle].img_type < newlump->img_type )			
+				diff = -1;
+			else if( wad->lumps[middle].type < newlump->type )
+				diff = 1;
+			else if( wad->lumps[middle].type > newlump->type )
+				diff = -1;
+			else MsgDev( D_NOTE, "Wad %s contains the file %s several times\n", wad->filename, name );
+		}
 
 		// If we're too far in the list
 		if( diff > 0 ) right = middle - 1;
 		else left = middle + 1;
 	}
 
-	// We have to move the right of the list by one slot to free the one we need
+	// we have to move the right of the list by one slot to free the one we need
 	plump = &wad->lumps[left];
-	Q_memmove( plump + 1, plump, ( wad->numlumps - left ) * sizeof( *plump ));
+	memmove( plump + 1, plump, ( wad->numlumps - left ) * sizeof( *plump ));
 	wad->numlumps++;
 
-	Q_memcpy( plump->name, name, sizeof( plump->name ));
-	plump->filepos = filepos;
-	plump->disksize = realsize;
-	plump->size = packsize;
-	plump->compression = compression;
-
-	// convert all qmip types to miptex
-	if( type == TYP_QMIP )
-		plump->type = TYP_MIPTEX;
-	else plump->type = type;
-
-	// check for Quake 'conchars' issues (only lmp loader supposed to read this lame pic)
-	if( !Q_stricmp( plump->name, "conchars" ) && plump->type == TYP_QMIP )
-		plump->type = TYP_QPIC; 
+	*plump = *newlump;
+	memcpy( plump->name, name, sizeof( plump->name ));
 
 	return plump;
 }
@@ -3286,7 +3628,7 @@ static qboolean W_ReadLumpTable( wfile_t *wad )
 		k = Q_strlen( Q_strrchr( name, '*' ));
 		if( k ) name[Q_strlen( name ) - k] = '!'; // quake1 issues (can't save images that contain '*' symbol)
 
-		W_AddFileToWad( name, wad, srclumps[i].filepos, srclumps[i].size, srclumps[i].disksize, srclumps[i].type, srclumps[i].compression );
+		W_AddFileToWad( name, wad, &srclumps[i] );
 	}
 
 	// release source lumps
@@ -3295,7 +3637,7 @@ static qboolean W_ReadLumpTable( wfile_t *wad )
 	return true;
 }
 
-byte *W_ReadLump( wfile_t *wad, dlumpinfo_t *lump, size_t *lumpsizeptr )
+byte *W_ReadLump( wfile_t *wad, dlumpinfo_t *lump, fs_offset_t *lumpsizeptr )
 {
 	byte	*buf;
 	size_t	size = 0;
@@ -3341,6 +3683,19 @@ wfile_t *W_Open( const char *filename, const char *mode )
 	if( mode[0] == 'a' ) wad->handle = open( filename, O_RDWR|O_BINARY, 0x666 );
 	else if( mode[0] == 'w' ) wad->handle = open( filename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
 	else if( mode[0] == 'r' ) wad->handle = open( filename, O_RDONLY|O_BINARY, 0x666 );
+
+#ifndef _WIN32
+	if( wad->handle < 0 )
+	{
+		const char *ffilename = FS_FixFileCase( filename );
+		if( ffilename != filename )
+		{
+			if( mode[0] == 'a' ) wad->handle = open( ffilename, O_RDWR|O_BINARY, 0x666 );
+			else if( mode[0] == 'w' ) wad->handle = open( ffilename, O_CREAT|O_TRUNC|O_WRONLY|O_BINARY, 0x666 );
+			else if( mode[0] == 'r' ) wad->handle = open( ffilename, O_RDONLY|O_BINARY, 0x666 );
+		}
+	}
+#endif
 
 	if( wad->handle < 0 )
 	{
@@ -3400,7 +3755,7 @@ wfile_t *W_Open( const char *filename, const char *mode )
 		wad->numlumps = header.numlumps;
 		if( wad->numlumps >= MAX_FILES_IN_WAD && wad->mode == O_APPEND )
 		{
-			MsgDev( D_WARN, "W_Open: %s is full (%i lumps)\n", wad->numlumps );
+			MsgDev( D_WARN, "W_Open: %s is full (%i lumps)\n", filename, wad->numlumps );
 			wad->mode = O_RDONLY; // set read-only mode
 		}
 		wad->infotableofs = header.infotableofs; // save infotableofs position
@@ -3491,3 +3846,4 @@ static byte *W_LoadFile( const char *path, fs_offset_t *lumpsizeptr, qboolean ga
 		return W_ReadLump( search->wad, &search->wad->lumps[index], lumpsizeptr ); 
 	return NULL;
 }
+

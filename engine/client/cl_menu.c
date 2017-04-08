@@ -13,15 +13,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "const.h"
 #include "gl_local.h"
 #include "library.h"
 #include "input.h"
-#include "events.h"
+#include "server.h" // !!svgame.hInstance
 
 static MENUAPI	GetMenuAPI;
+static ADDTOUCHBUTTONTOLIST pfnAddTouchButtonToList;
 static void UI_UpdateUserinfo( void );
 
 menu_static_t	menu;
@@ -48,6 +51,16 @@ void UI_MouseMove( int x, int y )
 void UI_SetActiveMenu( qboolean fActive )
 {
 	movie_state_t	*cin_state;
+
+	if( host_xashds_hacks->integer )
+	{
+		if( !cl.refdef.paused && !cls.changelevel && fActive )
+		{
+			Cbuf_InsertText("pause\n");
+			Cbuf_Execute();
+		}
+	}
+
 
 	if( !menu.hInstance )
 	{
@@ -349,7 +362,7 @@ pfnPIC_Load
 
 =========
 */
-static HIMAGE pfnPIC_Load( const char *szPicName, const byte *image_buf, long image_size, long flags )
+static HIMAGE pfnPIC_Load( const char *szPicName, const byte *image_buf, int image_size, int flags )
 {
 	HIMAGE	tx;
 
@@ -625,6 +638,20 @@ static void UI_DrawSetTextColor( int r, int g, int b, int alpha )
 	menu.ds.textColor[2] = b;
 	menu.ds.textColor[3] = alpha;
 }
+/*
+=======================
+UI_AddTouchButtonToList
+
+send button parameters to menu
+=======================
+*/
+void UI_AddTouchButtonToList( const char *name, const char *texture, const char *command, unsigned char *color, int flags )
+{
+	if( pfnAddTouchButtonToList )
+	{
+		pfnAddTouchButtonToList( name, texture, command, color, flags );
+	}
+}
 
 /*
 ====================
@@ -799,7 +826,10 @@ pointer must be released in call place
 */
 static char *pfnGetClipboardData( void )
 {
-	return Sys_GetClipboardData();
+	char *cb, *copy; 
+	cb = Sys_GetClipboardData();
+	copy = copystring( cb );
+	return copy;
 }
 
 /*
@@ -812,13 +842,27 @@ int pfnCheckGameDll( void )
 {
 	void	*hInst;
 
-	if( SV_Active( )) return true;
+#if TARGET_OS_IPHONE
+	// loading server library drains too many ram
+	// so 512MB iPod Touch cannot even connect to
+	// to servers in cstrike
+	return true;
+#endif
 
-	/*if(( hInst = Com_LoadLibrary( GI->game_dll, true )) != NULL )
+	if( svgame.hInstance )
+		return true;
+
+	if( Cvar_VariableInteger("xashds_hacks") )
+		return true;
+
+	Com_ResetLibraryError();
+	if(( hInst = Com_LoadLibrary( SI.gamedll, true )) != NULL )
 	{
 		Com_FreeLibrary( hInst );
 		return true;
-	}*/ return true;
+	}
+	MsgDev( D_WARN, "Could not load server library:\n%s", Com_GetLibraryError() );
+	Com_ResetLibraryError();
 	return false;
 }
 
@@ -869,26 +913,17 @@ pfnStartBackgroundTrack
 static void pfnStartBackgroundTrack( const char *introTrack, const char *mainTrack )
 {
 	S_StartBackgroundTrack( introTrack, mainTrack, 0 );
-
-	// HACKHACK to remove glitches from background track while new game is started.
-	if( !introTrack && !mainTrack )
-	{
-		S_Activate( 0, host.hWnd );
-		S_Activate( 1, host.hWnd );
-	}
 }
 
-#ifndef XASH_SDL
 static void pfnEnableTextInput( int enable )
 {
-	// stub
+	Key_EnableTextInput( enable, false );
 }
-#endif
 
 // engine callbacks
 static ui_enginefuncs_t gEngfuncs = 
 {
-	pfnPIC_Load,
+	(void*)pfnPIC_Load,
 	GL_FreeImage,
 	pfnPIC_Width,
 	pfnPIC_Height,
@@ -911,10 +946,10 @@ static ui_enginefuncs_t gEngfuncs =
 	Cmd_Argc,
 	Cmd_Argv,
 	Cmd_Args,
-	Con_Printf,
-	Con_DPrintf,
-	UI_NPrintf,
-	UI_NXPrintf,
+	(void*)Con_Printf,
+	(void*)Con_DPrintf,
+	(void*)UI_NPrintf,
+	(void*)UI_NXPrintf,
 	pfnPlaySound,
 	UI_DrawLogo,
 	UI_GetLogoWidth,
@@ -931,10 +966,10 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnRenderScene,
 	CL_AddEntity,
 	Host_Error,
-	FS_FileExists,
+	(void*)FS_FileExists,
 	pfnGetGameDir,
-	Cmd_CheckMapsList,
-	CL_Active,
+	(void*)Cmd_CheckMapsList,
+	(void*)CL_Active,
 	pfnClientJoin,
 	COM_LoadFileForMe,
 	COM_ParseFile,
@@ -944,7 +979,7 @@ static ui_enginefuncs_t gEngfuncs =
 	Key_KeynumToString,
 	Key_GetBinding,
 	Key_SetBinding,
-	Key_IsDown,
+	(void*)Key_IsDown,
 	pfnKeyGetOverstrikeMode,
 	pfnKeySetOverstrikeMode,
 	pfnKeyGetState,
@@ -953,26 +988,29 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnGetGameInfo,
 	pfnGetGamesList,
 	pfnGetFilesList,
-	SV_GetComment,
-	CL_GetComment,
+	(void*)SV_GetComment,
+	(void*)CL_GetComment,
 	pfnCheckGameDll,
 	pfnGetClipboardData,
-	Sys_ShellExecute,
-	Host_WriteServerConfig,
+	(void*)Sys_ShellExecute,
+	Host_WriteGameConfig,
 	pfnChangeInstance,
 	pfnStartBackgroundTrack,
 	pfnHostEndGame,
 	Com_RandomFloat,
-	Com_RandomLong,
-	IN_SetCursor,
+	(void*)Com_RandomLong,
+	(void*)IN_SetCursor,
 	pfnIsMapValid,
 	GL_ProcessTexture,
-	COM_CompareFileTime,
-	#ifdef XASH_SDL
-	SDLash_EnableTextInput
-	#else
-	pfnEnableTextInput
-	#endif
+	(void*)COM_CompareFileTime,
+};
+
+static ui_textfuncs_t gTextfuncs =
+{
+	pfnEnableTextInput,
+	Con_UtfProcessChar,
+	Con_UtfMoveLeft,
+	Con_UtfMoveRight
 };
 
 void UI_UnloadProgs( void )
@@ -990,37 +1028,41 @@ void UI_UnloadProgs( void )
 qboolean UI_LoadProgs( void )
 {
 	static ui_enginefuncs_t	gpEngfuncs;
+	static ui_textfuncs_t	gpTextfuncs;
 	static ui_globalvars_t	gpGlobals;
 	int			i;
-
+        UITEXTAPI GiveTextApi;
 	if( menu.hInstance ) UI_UnloadProgs();
 
 	// setup globals
 	menu.globals = &gpGlobals;
-
+#if TARGET_OS_IPHONE || defined __EMSCRIPTEN__
+	if(!( menu.hInstance = Com_LoadLibrary( "menu", false )))
+		return false;
+#elif defined (__ANDROID__)
+	char menulib[256];
+	Q_snprintf( menulib, 256, "%s/%s", getenv("XASH3D_GAMELIBDIR"), MENUDLL );
+	if(!( menu.hInstance = Com_LoadLibrary( menulib, false )))
+	{
+		Q_snprintf( menulib, 256, "%s/%s", getenv("XASH3D_ENGLIBDIR"), MENUDLL );
+		if(!( menu.hInstance = Com_LoadLibrary( menulib, false )))
+			return false;
+	}
+#else
 	if(!( menu.hInstance = Com_LoadLibrary( va( "%s/" MENUDLL, GI->dll_path ), false )))
 	{
 		FS_AllowDirectPaths( true );
 
-#ifdef _WIN32
-		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false )))
-#elif defined (__ANDROID__)
-		char menulib[256];
-		Q_strncpy( menulib, getenv("XASH3D_ENGLIBDIR"), 256 );
-		Q_strncat( menulib, "/" MENUDLL, 256 );
-		if(!( menu.hInstance = Com_LoadLibrary( menulib, false )))
-#else
-		// Attempt to try finding library by libdl magic on Linux
-		if(!( menu.hInstance = Com_LoadLibrary( MENUDLL, false )))
-#endif
+		if(!( menu.hInstance = Com_LoadLibrary( "../" MENUDLL, false ))
+				&& !( menu.hInstance = Com_LoadLibrary( MENUDLL, false )))
+
 		{
 			FS_AllowDirectPaths( false );
 			return false;
 		}
-
-		FS_AllowDirectPaths( false );
 	}
-
+#endif
+	FS_AllowDirectPaths( false );
 	if(!( GetMenuAPI = (MENUAPI)Com_GetProcAddress( menu.hInstance, "GetMenuAPI" )))
 	{
 		Com_FreeLibrary( menu.hInstance );
@@ -1043,6 +1085,18 @@ qboolean UI_LoadProgs( void )
 		return false;
 	}
 
+	menu.use_text_api = false;
+
+	if( ( GiveTextApi = (UITEXTAPI)Com_GetProcAddress( menu.hInstance, "GiveTextAPI" ) ) )
+	{
+		// make local copy of engfuncs to prevent overwrite it with user dll
+		Q_memcpy( &gpTextfuncs, &gTextfuncs, sizeof( gpTextfuncs ));
+		if( GiveTextApi( &gpTextfuncs ) )
+			menu.use_text_api = true;
+	}
+
+	pfnAddTouchButtonToList = (ADDTOUCHBUTTONTOLIST)Com_GetProcAddress( menu.hInstance, "AddTouchButtonToList" );
+
 	// setup gameinfo
 	for( i = 0; i < SI.numgames; i++ )
 	{
@@ -1060,3 +1114,4 @@ qboolean UI_LoadProgs( void )
 
 	return true;
 }
+#endif // XASH_DEDICATED

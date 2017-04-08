@@ -50,6 +50,11 @@ inline HIMAGE PIC_Load( const char *szPicName, const byte *ucRawImage, long ulRa
 	return g_engfuncs.pfnPIC_Load( szPicName, ucRawImage, ulRawImageSize, flags );
 }
 
+inline int FILE_EXISTS( const char *file, int gamedironly = FALSE )
+{
+	return g_engfuncs.pfnFileExists( file, gamedironly );
+}
+
 #define PIC_Free		(*g_engfuncs.pfnPIC_Free)
 #define PLAY_SOUND		(*g_engfuncs.pfnPlayLocalSound)
 #define CVAR_REGISTER	(*g_engfuncs.pfnRegisterVariable)
@@ -67,7 +72,6 @@ inline HIMAGE PIC_Load( const char *szPicName, const byte *ucRawImage, long ulRa
 #define R_RenderFrame	(*g_engfuncs.pfnRenderScene)
 
 #define LOAD_FILE		(*g_engfuncs.COM_LoadFile)
-#define FILE_EXISTS( file )	(*g_engfuncs.pfnFileExists)( file, FALSE )
 #define FREE_FILE		(*g_engfuncs.COM_FreeFile)
 #define GET_GAME_DIR	(*g_engfuncs.pfnGetGameDir)
 #define HOST_ERROR		(*g_engfuncs.pfnHostError)
@@ -141,14 +145,24 @@ inline void PIC_DrawTrans( int x, int y, int width, int height )
 	g_engfuncs.pfnPIC_DrawTrans( x, y, width, height, NULL );
 }
 
+inline void PIC_DrawTrans( int x, int y, int width, int height, const wrect_t *prc )
+{
+	g_engfuncs.pfnPIC_DrawTrans( x, y, width, height, prc );
+}
+
 inline void PIC_DrawHoles( int x, int y, const wrect_t *prc )
 {
 	g_engfuncs.pfnPIC_DrawHoles( x, y, -1, -1, prc );
 }
 
-inline void SPR_DrawHoles( int x, int y, int width, int height )
+inline void PIC_DrawHoles( int x, int y, int width, int height )
 {
 	g_engfuncs.pfnPIC_DrawHoles( x, y, width, height, NULL );
+}
+
+inline void PIC_DrawHoles( int x, int y, int width, int height, const wrect_t *prc )
+{
+	g_engfuncs.pfnPIC_DrawHoles( x, y, width, height, prc );
 }
 
 inline void PIC_DrawAdditive( int x, int y, int width, int height )
@@ -180,5 +194,34 @@ inline void TextMessageSetColor( int r, int g, int b, int alpha = 255 )
 #define RANDOM_FLOAT	(*g_engfuncs.pfnRandomFloat)
 
 #define COMPARE_FILE_TIME	(*g_engfuncs.pfnCompareFileTime)
+
+//#define UtfProcessChar		(*g_textfuncs.pfnUtfProcessChar)
+//#define UtfMoveLeft		(*g_textfuncs.pfnUtfMoveLeft)
+//#define UtfMoveRight		(*g_textfuncs.pfnUtfMoveRight)
+//#define EnableTextInput		(*g_textfuncs.pfnEnableTextInput)
+inline void EnableTextInput( int enable )
+{
+	if( g_textfuncs.pfnEnableTextInput )
+		g_textfuncs.pfnEnableTextInput( enable );
+}
+inline int UtfMoveRight( char *str, int pos, int length )
+{
+	if( g_textfuncs.pfnUtfMoveRight )
+		return g_textfuncs.pfnUtfMoveRight( str, pos, length );
+	return pos + 1;
+}
+
+inline int UtfMoveLeft( char *str, int pos )
+{
+	if( g_textfuncs.pfnUtfMoveLeft )
+		return g_textfuncs.pfnUtfMoveLeft( str, pos );
+	return pos - 1;
+}
+inline int UtfProcessChar( int in )
+{
+	if( g_textfuncs.pfnUtfProcessChar )
+		return g_textfuncs.pfnUtfProcessChar( in );
+	return in;
+}
 
 #endif//ENGINECALLBACKS_H

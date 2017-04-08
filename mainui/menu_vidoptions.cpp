@@ -186,6 +186,7 @@ static void UI_VidOptions_Callback( void *self, int event )
 	{
 	case ID_DONE:
 		UI_VidOptions_SetConfig();
+		CLIENT_COMMAND( FALSE, "trysaveconfig\n" );
 		UI_PopMenu();
 		break;
 	}
@@ -245,7 +246,7 @@ static void UI_VidOptions_Init( void )
 
 	uiVidOptions.screenSize.generic.id = ID_SCREEN_SIZE;
 	uiVidOptions.screenSize.generic.type = QMTYPE_SLIDER;
-	uiVidOptions.screenSize.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiVidOptions.screenSize.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiVidOptions.screenSize.generic.name = "Screen size";
 	uiVidOptions.screenSize.generic.x = 72;
 	uiVidOptions.screenSize.generic.y = 280;
@@ -257,7 +258,7 @@ static void UI_VidOptions_Init( void )
 
 	uiVidOptions.gammaIntensity.generic.id = ID_GAMMA;
 	uiVidOptions.gammaIntensity.generic.type = QMTYPE_SLIDER;
-	uiVidOptions.gammaIntensity.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiVidOptions.gammaIntensity.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiVidOptions.gammaIntensity.generic.name = "Gamma";
 	uiVidOptions.gammaIntensity.generic.x = 72;
 	uiVidOptions.gammaIntensity.generic.y = 340;
@@ -269,7 +270,7 @@ static void UI_VidOptions_Init( void )
 
 	uiVidOptions.glareReduction.generic.id = ID_GLARE_REDUCTION;
 	uiVidOptions.glareReduction.generic.type = QMTYPE_SLIDER;
-	uiVidOptions.glareReduction.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW;
+	uiVidOptions.glareReduction.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS;
 	uiVidOptions.glareReduction.generic.name = "Glare reduction";
 	uiVidOptions.glareReduction.generic.x = 72;
 	uiVidOptions.glareReduction.generic.y = 400;
@@ -281,7 +282,7 @@ static void UI_VidOptions_Init( void )
 
 	uiVidOptions.fastSky.generic.id = ID_SIMPLE_SKY;
 	uiVidOptions.fastSky.generic.type = QMTYPE_CHECKBOX;
-	uiVidOptions.fastSky.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiVidOptions.fastSky.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiVidOptions.fastSky.generic.name = "Draw simple sky";
 	uiVidOptions.fastSky.generic.x = 72;
 	uiVidOptions.fastSky.generic.y = 615;
@@ -290,7 +291,7 @@ static void UI_VidOptions_Init( void )
 
 	uiVidOptions.hiTextures.generic.id = ID_ALLOW_MATERIALS;
 	uiVidOptions.hiTextures.generic.type = QMTYPE_CHECKBOX;
-	uiVidOptions.hiTextures.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW;
+	uiVidOptions.hiTextures.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW;
 	uiVidOptions.hiTextures.generic.name = "Allow materials";
 	uiVidOptions.hiTextures.generic.x = 72;
 	uiVidOptions.hiTextures.generic.y = 665;

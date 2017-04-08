@@ -58,10 +58,13 @@ typedef struct
 
 	menuBitmap_s	background;
 	menuBitmap_s	banner;
+
+	// state toggle by UI_ToggleMainControlsState
 	menuPicButton_s	defaults;
 	menuPicButton_s	advanced;
 	menuPicButton_s	done;
 	menuPicButton_s	cancel;
+	menuScrollList_s keysList;
 
 	// redefine key wait dialog
 	menuAction_s	msgBox1;	// small msgbox
@@ -71,27 +74,30 @@ typedef struct
 	menuPicButton_s	yes;
 	menuPicButton_s	no;
 
-	menuScrollList_s	keysList;
 	menuAction_s	hintMessage;
-	char		hintText[MAX_HINT_TEXT];
-
-	int		bind_grab;	// waiting for key input
+	char			hintText[MAX_HINT_TEXT];
+	int				bind_grab;	// waiting for key input
 } uiControls_t;
 
 static uiControls_t		uiControls;
 extern bool		hold_button_stack;
 
-static void UI_ResetToDefaultsDialog( void )
+static void UI_ToggleMainControlsState( void )
 {
 	// toggle main menu between active\inactive
-	// show\hide reset to defaults dialog
-	uiControls.defaults.generic.flags ^= QMF_INACTIVE; 
+	uiControls.defaults.generic.flags ^= QMF_INACTIVE;
 	uiControls.advanced.generic.flags ^= QMF_INACTIVE;
 	uiControls.done.generic.flags ^= QMF_INACTIVE;
 	uiControls.cancel.generic.flags ^= QMF_INACTIVE;
-
 	uiControls.keysList.generic.flags ^= QMF_INACTIVE;
+}
 
+static void UI_ResetToDefaultsDialog( void )
+{
+	// toggle main menu between active\inactive
+	UI_ToggleMainControlsState();
+
+	// show\hide reset to defaults dialog
 	uiControls.msgBox2.generic.flags ^= QMF_HIDDEN;
 	uiControls.promptMessage.generic.flags ^= QMF_HIDDEN;
 	uiControls.yes.generic.flags ^= QMF_HIDDEN;
@@ -176,9 +182,9 @@ static void UI_Controls_ParseKeysList( void )
 			pfile = COM_ParseFile( pfile, token );
 			if( !pfile ) break;	// technically an error
 
-			sprintf( str, "^6%s^7", token );	// enable uiPromptTextColor
+			snprintf( str, sizeof(str), "^6%s^7", token );	// enable uiPromptTextColor
 			StringConcat( uiControls.keysDescription[i], str, strlen( str ) + 1 );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, 256 );	// empty
+			AddSpaces( uiControls.keysDescription[i], 256 );	// empty
 			uiControls.keysDescriptionPtr[i] = uiControls.keysDescription[i];
 			strcpy( uiControls.keysBind[i], "" );
 			strcpy( uiControls.firstKey[i], "" );
@@ -196,7 +202,7 @@ static void UI_Controls_ParseKeysList( void )
 			pfile = COM_ParseFile( pfile, token );
 			if( !pfile ) break; // technically an error
 
-			sprintf( str, "^6%s^7", token );	// enable uiPromptTextColor
+			snprintf( str, sizeof( str ), "^6%s^7", token );	// enable uiPromptTextColor
 
 			if( keys[0] == -1 ) strcpy( uiControls.firstKey[i], "" );
 			else strncpy( uiControls.firstKey[i], KEY_KeynumToString( keys[0] ), sizeof( uiControls.firstKey[i] ));
@@ -205,22 +211,22 @@ static void UI_Controls_ParseKeysList( void )
 			else strncpy( uiControls.secondKey[i], KEY_KeynumToString( keys[1] ), sizeof( uiControls.secondKey[i] ));
 
 			StringConcat( uiControls.keysDescription[i], str, CMD_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, CMD_LENGTH );
+			AddSpaces( uiControls.keysDescription[i], CMD_LENGTH );
 
 			// HACKHACK this color should be get from kb_keys.lst
 			if( !strnicmp( uiControls.firstKey[i], "MOUSE", 5 ))
-				sprintf( str, "^5%s^7", uiControls.firstKey[i] );	// cyan
-			else sprintf( str, "^3%s^7", uiControls.firstKey[i] );	// yellow
+				snprintf( str, sizeof( str ), "^5%s^7", uiControls.firstKey[i] );	// cyan
+			else snprintf( str, sizeof( str ), "^3%s^7", uiControls.firstKey[i] );	// yellow
 			StringConcat( uiControls.keysDescription[i], str, KEY1_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, KEY1_LENGTH );
+			AddSpaces( uiControls.keysDescription[i], KEY1_LENGTH );
 
 			// HACKHACK this color should be get from kb_keys.lst
 			if( !strnicmp( uiControls.secondKey[i], "MOUSE", 5 ))
-				sprintf( str, "^5%s^7", uiControls.secondKey[i] );// cyan
-			else sprintf( str, "^3%s^7", uiControls.secondKey[i] );	// yellow
+				snprintf( str, sizeof( str ), "^5%s^7", uiControls.secondKey[i] );// cyan
+			else snprintf( str, sizeof( str ), "^3%s^7", uiControls.secondKey[i] );	// yellow
 
 			StringConcat( uiControls.keysDescription[i], str, KEY2_LENGTH );
-			StringConcat( uiControls.keysDescription[i], uiEmptyString, KEY2_LENGTH );
+			AddSpaces( uiControls.keysDescription[i],KEY2_LENGTH );
 			uiControls.keysDescriptionPtr[i] = uiControls.keysDescription[i];
 			i++;
 		}
@@ -235,14 +241,9 @@ static void UI_Controls_ParseKeysList( void )
 static void UI_PromptDialog( void )
 {
 	// toggle main menu between active\inactive
+	UI_ToggleMainControlsState();
+
 	// show\hide quit dialog
-	uiControls.defaults.generic.flags ^= QMF_INACTIVE; 
-	uiControls.advanced.generic.flags ^= QMF_INACTIVE;
-	uiControls.done.generic.flags ^= QMF_INACTIVE;
-	uiControls.cancel.generic.flags ^= QMF_INACTIVE;
-
-	uiControls.keysList.generic.flags ^= QMF_INACTIVE;
-
 	uiControls.msgBox1.generic.flags ^= QMF_HIDDEN;
 	uiControls.dlgMessage.generic.flags ^= QMF_HIDDEN;
 }
@@ -251,6 +252,8 @@ static void UI_Controls_RestartMenu( void )
 {
 	int lastSelectedKey = uiControls.keysList.curItem;
 	int lastTopItem = uiControls.keysList.topItem;
+	int cursor = uiControls.menu.cursor;
+	int cursorPrev = uiControls.menu.cursorPrev;
 
 	// HACK to prevent mismatch anim stack
 	hold_button_stack = true;
@@ -262,6 +265,8 @@ static void UI_Controls_RestartMenu( void )
 	hold_button_stack = false;
 
 	// restore last key and top item
+	uiControls.menu.cursor = cursor;
+	uiControls.menu.cursorPrev = cursorPrev;
 	uiControls.keysList.curItem = lastSelectedKey;
 	uiControls.keysList.topItem = lastTopItem;
 }
@@ -271,7 +276,6 @@ static void UI_Controls_ResetKeysList( void )
 	char *afile = (char *)LOAD_FILE( "gfx/shell/kb_def.lst", NULL );
 	char *pfile = afile;
 	char token[1024];
-	int i = 0;
 
 	if( !afile )
 	{
@@ -298,7 +302,7 @@ static void UI_Controls_ResetKeysList( void )
 
 		UI_UnbindCommand( token );
 
-		sprintf( cmd, "bind \"%s\" \"%s\"\n", key, token );
+		snprintf( cmd, sizeof( cmd ), "bind \"%s\" \"%s\"\n", key, token );
 		CLIENT_COMMAND( TRUE, cmd );
 	}
 
@@ -346,7 +350,10 @@ static const char *UI_Controls_KeyFunc( int key, int down )
 			return uiSoundLaunch;
 		}
 
-		if( down && ( key == K_ENTER || key == K_AUX31 || key == K_AUX32 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN ) // ENTER, A or SELECT
+		if( down
+			&& ( key == K_ENTER || key == K_AUX1 || key == K_AUX31 || key == K_AUX32 )
+			&& uiControls.dlgMessage.generic.flags & QMF_HIDDEN
+			&& UI_IsCurrentSelected( &uiControls.keysList ) ) // ENTER, A or SELECT
 		{
 			if( !strlen( uiControls.keysBind[uiControls.keysList.curItem] ))
 			{
@@ -366,7 +373,9 @@ static const char *UI_Controls_KeyFunc( int key, int down )
 			return uiSoundKey;
 		}
 
-		if(( key == K_BACKSPACE || key == K_DEL || key == K_AUX30 ) && uiControls.dlgMessage.generic.flags & QMF_HIDDEN )
+		if(( key == K_BACKSPACE || key == K_DEL || key == K_AUX30 )
+		   && uiControls.dlgMessage.generic.flags & QMF_HIDDEN
+		   && UI_IsCurrentSelected( &uiControls.keysList ) )
 		{
 			// delete bindings
 
@@ -414,7 +423,11 @@ static void UI_Controls_Callback( void *self, int event )
 	switch( item->id )
 	{
 	case ID_DONE:
+		CLIENT_COMMAND( FALSE, "trysaveconfig\n" );
+		UI_PopMenu();
+		break;
 	case ID_CANCEL:
+		CLIENT_COMMAND( TRUE, "exec keyboard\n");
 		UI_PopMenu();
 		break;
 	case ID_DEFAULTS:
@@ -443,11 +456,11 @@ static void UI_Controls_Init( void )
 	uiControls.menu.keyFunc = UI_Controls_KeyFunc;
 
 	StringConcat( uiControls.hintText, "Action", CMD_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, CMD_LENGTH-4 );
+	AddSpaces( uiControls.hintText, CMD_LENGTH-4 );
 	StringConcat( uiControls.hintText, "Key/Button", KEY1_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, KEY1_LENGTH-8 );
+	AddSpaces( uiControls.hintText, KEY1_LENGTH-8 );
 	StringConcat( uiControls.hintText, "Alternate", KEY2_LENGTH );
-	StringConcat( uiControls.hintText, uiEmptyString, KEY2_LENGTH );
+	AddSpaces( uiControls.hintText, KEY2_LENGTH );
 
 	uiControls.background.generic.id = ID_BACKGROUND;
 	uiControls.background.generic.type = QMTYPE_BITMAP;

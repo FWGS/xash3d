@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "gl_local.h"
@@ -202,7 +204,7 @@ R_WorldToScreen
 Convert a given point from world into screen space
 ===============
 */
-qboolean R_WorldToScreen( const vec3_t point, vec3_t screen )
+qboolean GAME_EXPORT R_WorldToScreen( const vec3_t point, vec3_t screen )
 {
 	matrix4x4	worldToScreen;
 	qboolean	behind;
@@ -240,7 +242,7 @@ R_ScreenToWorld
 Convert a given point from screen into world space
 ===============
 */
-void R_ScreenToWorld( const vec3_t screen, vec3_t point )
+void GAME_EXPORT R_ScreenToWorld( const vec3_t screen, vec3_t point )
 {
 	matrix4x4	screenToWorld;
 	float	w;
@@ -370,16 +372,16 @@ int R_ComputeFxBlend( cl_entity_t *e )
 		break;	
 	}
 
-	if( e->model->type != mod_brush )
+	if( e->model && e->model->type != mod_brush )
 	{
 		// NOTE: never pass sprites with rendercolor '0 0 0' it's a stupid Valve Hammer Editor bug
 		if( !e->curstate.rendercolor.r && !e->curstate.rendercolor.g && !e->curstate.rendercolor.b )
 			e->curstate.rendercolor.r = e->curstate.rendercolor.g = e->curstate.rendercolor.b = 255;
-	}
 
-	// apply scale to studiomodels and sprites only
-	if( e->model && e->model->type != mod_brush && !e->curstate.scale )
-		e->curstate.scale = 1.0f;
+		// apply scale to studiomodels and sprites only
+		if( !e->curstate.scale )
+			e->curstate.scale = 1.0f;
+	}
 
 	blend = bound( 0, blend, 255 );
 
@@ -785,24 +787,8 @@ static void R_SetupFrame( void )
 {
 	vec3_t	viewOrg, viewAng;
 
-	if( RP_NORMALPASS() && cl.thirdperson )
-	{
-		vec3_t	cam_ofs, vpn;
-
-		clgame.dllFuncs.CL_CameraOffset( cam_ofs );
-
-		viewAng[PITCH] = cam_ofs[PITCH];
-		viewAng[YAW] = cam_ofs[YAW];
-		viewAng[ROLL] = 0;
-
-		AngleVectors( viewAng, vpn, NULL, NULL );
-		VectorMA( RI.refdef.vieworg, -cam_ofs[ROLL], vpn, viewOrg );
-	}
-	else
-	{
-		VectorCopy( RI.refdef.vieworg, viewOrg );
-		VectorCopy( RI.refdef.viewangles, viewAng );
-	}
+	VectorCopy( RI.refdef.vieworg, viewOrg );
+	VectorCopy( RI.refdef.viewangles, viewAng );
 
 	// build the transformation matrix for the given view angles
 	VectorCopy( viewOrg, RI.vieworg );
@@ -825,12 +811,12 @@ static void R_SetupFrame( void )
 	R_RunViewmodelEvents();
 
 	// sort opaque entities by model type to avoid drawing model shadows under alpha-surfaces
-	qsort( tr.solid_entities, tr.num_solid_entities, sizeof( cl_entity_t* ), R_SolidEntityCompare );
+	qsort( tr.solid_entities, tr.num_solid_entities, sizeof( cl_entity_t* ), (void*)R_SolidEntityCompare );
 
 	if( !gl_nosort->integer )
 	{
 		// sort translucents entities by rendermode and distance
-		qsort( tr.trans_entities, tr.num_trans_entities, sizeof( cl_entity_t* ), R_TransEntityCompare );
+		qsort( tr.trans_entities, tr.num_trans_entities, sizeof( cl_entity_t* ), (void*)R_TransEntityCompare );
 	}
 
 	// current viewleaf
@@ -1216,7 +1202,7 @@ void R_RenderScene( const ref_params_t *fd )
 	RI.refdef = *fd;
 
 	if( !cl.worldmodel && RI.drawWorld )
-		Host_Error( "R_RenderView: NULL worldmodel\n" );
+		Host_Error( "R_RenderScene: NULL worldmodel\n" );
 
 	R_PushDlights();
 
@@ -1259,7 +1245,6 @@ void R_BeginFrame( qboolean clearScene )
 		{
 			SCR_RebuildGammaTable();
 			GL_UpdateGammaRamp();
-			vid_gamma->modified = false;
 		}
 		else
 		{
@@ -1268,6 +1253,7 @@ void R_BeginFrame( qboolean clearScene )
 			GL_RebuildLightmaps();
 			glConfig.softwareGammaUpdate = false;
 		}
+		vid_gamma->modified = false;
 	}
 
 	R_Set2DMode( true );
@@ -1357,9 +1343,6 @@ void R_EndFrame( void )
 {
 	// flush any remaining 2D bits
 	R_Set2DMode( false );
-#ifdef __ANDROID__
-	Android_DrawControls();
-#endif
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow(host.hWnd);
 #elif defined __ANDROID__ // For direct android backend
@@ -1427,6 +1410,9 @@ static int GL_RenderGetParm( int parm, int arg )
 	case PARM_TEX_GLFORMAT:
 		glt = R_GetTexture( arg );
 		return glt->format;
+	case PARM_TEX_ENCODE:
+		glt = R_GetTexture( arg );
+		return glt->encode;
 	case PARM_TEX_SKYBOX:
 		ASSERT( arg >= 0 && arg < 6 );
 		return tr.skyboxTextures[arg];
@@ -1679,20 +1665,20 @@ static render_api_t gRenderAPI =
 	GL_TextureName,
 	GL_TextureData,
 	GL_LoadTextureNoFilter,
-	GL_CreateTexture,
+	(void*)GL_CreateTexture,
 	GL_SetTextureType,
 	GL_TextureUpdateCache,
 	GL_FreeTexture,
 	DrawSingleDecal,
 	R_DecalSetupVerts,
 	R_EntityRemoveDecals,
-	AVI_LoadVideoNoSound,
-	AVI_GetVideoInfo,
-	AVI_GetVideoFrameNumber,
-	AVI_GetVideoFrame,
+	(void*)AVI_LoadVideoNoSound,
+	(void*)AVI_GetVideoInfo,
+	(void*)AVI_GetVideoFrameNumber,
+	(void*)AVI_GetVideoFrame,
 	R_UploadStretchRaw,
-	AVI_FreeVideo,
-	AVI_IsActive,
+	(void*)AVI_FreeVideo,
+	(void*)AVI_IsActive,
 	GL_Bind,
 	GL_SelectTexture,
 	GL_LoadTexMatrixExt,
@@ -1706,7 +1692,7 @@ static render_api_t gRenderAPI =
 	NULL,
 	NULL,
 	CL_DrawParticlesExternal,
-	R_EnvShot,
+	(void*)R_EnvShot,
 	COM_CompareFileTime,
 	Host_Error,
 	pfnSPR_LoadExt,
@@ -1714,7 +1700,7 @@ static render_api_t gRenderAPI =
 	R_StudioGetTexture,
 	GL_GetOverviewParms,
 	S_FadeMusicVolume,
-	COM_SetRandomSeed,
+	(void*)COM_SetRandomSeed,
 	R_Mem_Alloc,
 	R_Mem_Free,
 	pfnGetFilesList,
@@ -1749,3 +1735,4 @@ qboolean R_InitRenderAPI( void )
 	// render interface is missed
 	return true;
 }
+#endif // XASH_DEDICATED

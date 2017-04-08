@@ -83,7 +83,7 @@
 
 #ifdef __i386__
 # if defined(__GNUC__) && ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 7)))
-#define __stdcall __attribute__((__stdcall__))
+#define __stdcall __attribute__((__stdcall__)) __attribute__((force_align_arg_pointer))
 #define __cdecl   __attribute__((__cdecl__))
 #  define RESTORE_ES  __asm__ volatile("pushl %ds\n\tpopl %es")
 # else

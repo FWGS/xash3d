@@ -117,7 +117,7 @@ void HPAK_CreatePak( const char *filename, resource_t *DirEnt, byte *data, file_
 		FS_Read( f, temp, DirEnt->nDownloadSize );
 		FS_Seek( f, filelocation, SEEK_SET );
 
-		MD5Update( &MD5_Hash, temp, DirEnt->nDownloadSize );
+		MD5Update( &MD5_Hash, (byte *)temp, DirEnt->nDownloadSize );
 		Mem_Free( temp );
 	}
 	else
@@ -125,7 +125,7 @@ void HPAK_CreatePak( const char *filename, resource_t *DirEnt, byte *data, file_
 		MD5Update( &MD5_Hash, data, DirEnt->nDownloadSize );
 	}
 
-	MD5Final( md5, &MD5_Hash );
+	MD5Final( (byte *)md5, &MD5_Hash );
 
 	if( Q_memcmp( md5, DirEnt->rgucMD5_hash, 16 ))
 	{
@@ -238,7 +238,7 @@ void HPAK_AddLump( qboolean add_to_queue, const char *name, resource_t *DirEnt, 
 		MD5Update( &MD5_Hash, data, DirEnt->nDownloadSize );
 	}
 
-	MD5Final( md5, &MD5_Hash );
+	MD5Final( (byte *)md5, &MD5_Hash );
 
 	if( Q_memcmp( md5, DirEnt->rgucMD5_hash, 0x10 ))
 	{
@@ -308,7 +308,7 @@ void HPAK_AddLump( qboolean add_to_queue, const char *name, resource_t *DirEnt, 
 	FS_Read( f1, hpak1.dirs, sizeof( hpak_dir_t ) * hpak1.count );
 	FS_Close( f1 );
 
-	if( HPAK_FindResource( &hpak1, DirEnt->rgucMD5_hash, NULL ))
+	if( HPAK_FindResource( &hpak1, (char *)DirEnt->rgucMD5_hash, NULL ))
 	{
 		Mem_Free( hpak1.dirs );
 		FS_Close( f2 );
@@ -452,7 +452,7 @@ static qboolean HPAK_Validate( const char *filename, qboolean quiet )
 		Q_memset( &MD5_Hash, 0, sizeof( MD5Context_t ));
 		MD5Init( &MD5_Hash );
 		MD5Update( &MD5_Hash, dataPak, dataDir[i].size );
-		MD5Final( md5, &MD5_Hash );
+		MD5Final( (byte *)md5, &MD5_Hash );
 
 		pRes = &dataDir[i].DirectoryResource;
 
@@ -814,7 +814,7 @@ void HPAK_RemoveLump( const char *name, resource_t *resource )
 
 	FS_Read( f1, hpak_read.dirs, sizeof( hpak_dir_t ) * hpak_read.count );
 
-	if( !HPAK_FindResource( &hpak_read, resource->rgucMD5_hash, NULL ))
+	if( !HPAK_FindResource( &hpak_read, (char *)resource->rgucMD5_hash, NULL ))
 	{
 		MsgDev( D_ERROR, "HPAK_RemoveLump: Couldn't find the lump %s in hpak %s.n", resource->szFileName, read_path );
 		Mem_Free( hpak_read.dirs );

@@ -74,6 +74,7 @@
 #define K_KP_PLUS		174
 #define K_CAPSLOCK		175
 #define K_KP_NUMLOCK	176
+#define K_WIN			177
 	
 //
 // joystick buttons
@@ -88,18 +89,31 @@
 // the normal binding process
 //
 #define K_AUX1		207
+#define K_A_BUTTON	207
 #define K_AUX2		208
+#define K_B_BUTTON	208
 #define K_AUX3		209
+#define K_C_BUTTON	209
 #define K_AUX4		210
+#define K_X_BUTTON	210
 #define K_AUX5		211
+#define K_Y_BUTTON	211
 #define K_AUX6		212
+#define K_Z_BUTTON	212
 #define K_AUX7		213
+#define K_LSHOULDER 213
 #define K_AUX8		214
+#define K_RSHOULDER	214
 #define K_AUX9		215
+#define K_LTRIGGER  215
 #define K_AUX10		216
+#define K_RTRIGGER  216
 #define K_AUX11		217
+#define K_LSTICK	217
 #define K_AUX12		218
+#define K_RSTICK	218
 #define K_AUX13		219
+
 #define K_AUX14		220
 #define K_AUX15		221
 #define K_AUX16		222

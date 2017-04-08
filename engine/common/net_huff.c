@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #include "common.h"
 #include "netchan.h"
 
-#define VALUE(a)			((int   )(a))
+#define VALUE(a)			((int   )(size_t)(a))
 #define NODE(a)			((void *)(a))
 
 #define NODE_START			NODE(  1)
@@ -97,10 +97,10 @@ _inline void Huff_PrepareTree( tree_t tree )
 	VALUE( tree[0]++ );
 
 	node[7] = NODE_NONE;
-	tree[2] = node;
-	tree[3] = node;
-	tree[4] = node;
-	tree[261] = node;
+	tree[2] = (byte*)node;
+	tree[3] = (byte*)node;
+	tree[4] = (byte*)node;
+	tree[261] = (byte*)node;
 }
 
 /*
@@ -113,11 +113,11 @@ _inline void **Huff_GetNode( byte **tree )
 	void	**node;
 	int	value;
 
-	node = tree[262];
+	node = (void**)tree[262];
 	if( !node )
 	{
 		value = VALUE( tree[1]++ );
-		node = &tree[value + 6407];
+		node = (void**)&tree[value + 6407];
 		return node;
 	}
 
@@ -223,35 +223,35 @@ static void Huff_IncrementFreq_r( byte **tree1, byte **tree2 )
 
 	if( !tree2 ) return;
 
-	a = tree2[3];
+	a = (void**)tree2[3];
 	if( a )
 	{
 		a = a[6];
-		if( a == tree2[6] )
+		if( a == (void**)tree2[6] )
 		{
-			b = tree2[5];
+			b = (void**)tree2[5];
 			if( b[0] != tree2[2] )
-				Huff_Swap( tree1, b[0], tree2 );
-			Huff_SwapTrees( b[0], tree2 );
+				Huff_Swap( (void**)tree1, (void**)b[0], (void**)tree2 );
+			Huff_SwapTrees( (void**)b[0], (void**)tree2 );
 		}
 	}
 
-	a = tree2[4];
+	a = (void**)tree2[4];
 	if( a && a[6] == tree2[6] )
 	{
-		b = tree2[5];
+		b = (void**)tree2[5];
 		b[0] = a;
 	}
 	else
 	{
-		a = tree2[5];
+		a = (void**)tree2[5];
 		a[0] = 0;
-		Huff_DeleteNode( tree1, tree2[5] );
+		Huff_DeleteNode( (void**)tree1, (void**)tree2[5] );
 	}
 
 	
 	VALUE( tree2[6]++ );
-	a = tree2[3];
+	a = (void**)tree2[3];
 	if( a && a[6] == tree2[6] )
 	{
 		tree2[5] = a[5];
@@ -259,18 +259,18 @@ static void Huff_IncrementFreq_r( byte **tree1, byte **tree2 )
 	else
 	{
 		a = Huff_GetNode( tree1 );
-		tree2[5] = a;
+		tree2[5] = (byte*)a;
 		a[0] = tree2;
 	}
 
 	if( tree2[2] )
 	{
-		Huff_IncrementFreq_r( tree1, tree2[2] );
+		Huff_IncrementFreq_r( (byte**)tree1, (byte**)tree2[2] );
 	
 		if( tree2[4] == tree2[2] )
 		{
-			Huff_SwapTrees( tree2, tree2[2] );
-			a = tree2[5];
+			Huff_SwapTrees( (void**)tree2, (void**)tree2[2] );
+			a = (void**)tree2[5];
 
 			if( a[0] == tree2 ) a[0] = tree2[2];
 		}
@@ -292,19 +292,19 @@ static void Huff_AddReference( byte **tree, int ch )
 	ch &= 255;
 	if( tree[ch + 5] )
 	{
-		Huff_IncrementFreq_r( tree, tree[ch + 5] );
+		Huff_IncrementFreq_r( tree, (byte**)tree[ch + 5] );
 		return; // already added
 	}
 
 	value = VALUE( tree[0]++ );
-	b = &tree[value * 8 + 263];
+	b = (void**)&tree[value * 8 + 263];
 
 	value = VALUE( tree[0]++ );
-	a = &tree[value * 8 + 263];
+	a = (void**)&tree[value * 8 + 263];
 
 	a[7] = NODE_NEXT;
 	a[6] = NODE_START;
-	d = tree[3];
+	d = (void**)tree[3];
 	a[3] = d[3];
 	if( a[3] )
 	{
@@ -330,12 +330,12 @@ static void Huff_AddReference( byte **tree, int ch )
 
 	}
 	
-	d = tree[3];
+	d = (void**)tree[3];
 	d[3] = a;
 	a[4] = tree[3];
-	b[7] = NODE( ch );
+	b[7] = NODE( (size_t)ch );
 	b[6] = NODE_START;
-	d = tree[3];
+	d = (void**)tree[3];
 	b[3] = d[3];
 	if( b[3] )
 	{
@@ -359,12 +359,12 @@ static void Huff_AddReference( byte **tree, int ch )
 		d[0] = b;
 	}
 
-	d = tree[3];
+	d = (void**)tree[3];
 	d[3] = b;
 	b[4] = tree[3];
 	b[1] = NULL;
 	b[0] = NULL;
-	d = tree[3];
+	d = (void**)tree[3];
 	c = d[2];
 	if( c )
 	{
@@ -372,16 +372,16 @@ static void Huff_AddReference( byte **tree, int ch )
 			c[0] = a;
 		else c[1] = a;
 	}
-	else tree[2] = a;
+	else tree[2] =(byte*) a;
 
 	a[1] = b;
-	d = tree[3];
+	d = (void**)tree[3];
 	a[0] = d;
 	a[2] = d[2];
 	b[2] = a;
-	d = tree[3];
+	d = (void**)tree[3];
 	d[2] = a;
-	tree[ch + 5] = b;
+	tree[ch + 5] = (byte*)b;
 
 	Huff_IncrementFreq_r( tree, a[2] );
 }
@@ -526,7 +526,7 @@ void Huff_CompressPacket( sizebuf_t *msg, int offset )
 
 	for( i = 0; i < inLen; i++ )
 	{
-		Huff_EmitByteDynamic( tree, data[i], buffer );
+		Huff_EmitByteDynamic( (void**)tree, data[i], buffer );
 		Huff_AddReference( tree, data[i] );
 	}
 	
@@ -534,6 +534,45 @@ void Huff_CompressPacket( sizebuf_t *msg, int offset )
 	msg->iCurBit = (offset + outLen) << 3;
 	Q_memcpy( data, buffer, outLen );
 }
+/*
+============
+Huff_CompressData
+
+Compress generic data buffer using dynamic Huffman tree
+============
+*/
+void Huff_CompressData( byte *data, size_t *length )
+{
+	tree_t	tree;
+	byte	buffer[NET_MAX_PAYLOAD];
+	int	outLen;
+	int	i, inLen;
+
+	inLen = *length;
+	if( inLen <= 0 || inLen >= NET_MAX_PAYLOAD )
+	{
+		MsgDev( D_ERROR, "Huff_CompressData: overflow\n");
+		return;
+	}
+
+	Huff_PrepareTree( tree );
+
+	buffer[0] = inLen >> 8;
+	buffer[1] = inLen & 0xFF;
+	huffBitPos = 16;
+
+	for( i = 0; i < inLen; i++ )
+	{
+		Huff_EmitByteDynamic( (void**)tree, data[i], buffer );
+		Huff_AddReference( tree, data[i] );
+	}
+
+	outLen = (huffBitPos >> 3) + 1;
+	*length = outLen;
+	Q_memcpy( data, buffer, outLen );
+}
+
+
 
 /*
 ============
@@ -560,9 +599,12 @@ void Huff_DecompressPacket( sizebuf_t *msg, int offset )
 
 	outLen = ( data[0] << 8 ) + data[1];
 	huffBitPos = 16;
-	
+
 	if( outLen > NET_MAX_PAYLOAD - offset )
+	{
 		outLen = NET_MAX_PAYLOAD - offset;
+		MsgDev( D_ERROR, "Huff_DecompressData: overflow\n");
+	}
 
 	for( i = 0; i < outLen; i++ )
 	{
@@ -572,7 +614,7 @@ void Huff_DecompressPacket( sizebuf_t *msg, int offset )
 			break;
 		}
 
-		ch = Huff_GetByteFromTree( tree[2], data );
+		ch = Huff_GetByteFromTree( (void**)tree[2], data );
 
 		if( ch == NOT_REFERENCED )
 		{
@@ -588,6 +630,58 @@ void Huff_DecompressPacket( sizebuf_t *msg, int offset )
 	}
 
 	msg->nDataBits = ( offset + outLen ) << 3;
+	Q_memcpy( data, buffer, outLen );
+}
+
+/*
+============
+Huff_DecompressData
+
+Decompress generic data buffer using dynamic Huffman tree
+============
+*/
+void Huff_DecompressData( byte *data, size_t *length )
+{
+	tree_t	tree;
+	byte	buffer[NET_MAX_PAYLOAD];
+	int	outLen;
+	int	inLen = *length;
+	int	ch, i, j;
+
+	if( inLen <= 0 ) return;
+
+	Huff_PrepareTree( tree );
+
+	outLen = ( data[0] << 8 ) + data[1];
+	huffBitPos = 16;
+
+	if( outLen > NET_MAX_PAYLOAD )
+		outLen = NET_MAX_PAYLOAD;
+
+	for( i = 0; i < outLen; i++ )
+	{
+		if(( huffBitPos >> 3 ) > inLen )
+		{
+			buffer[i] = 0;
+			break;
+		}
+
+		ch = Huff_GetByteFromTree( (void**)tree[2], data );
+
+		if( ch == NOT_REFERENCED )
+		{
+			ch = 0; // just read 8 bits
+			for( j = 0; j < 8; j++ )
+			{
+				ch <<= 1;
+				ch |= Huff_GetBit( data );
+			}
+		}
+		buffer[i] = ch;
+		Huff_AddReference( tree, ch );
+	}
+
+	*length = outLen;
 	Q_memcpy( data, buffer, outLen );
 }
 

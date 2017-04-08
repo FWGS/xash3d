@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "sound.h"
 #include "client.h"
@@ -29,7 +31,7 @@ GNU General Public License for more details.
 
 #define SND_SCALE_BITS	7
 #define SND_SCALE_SHIFT	(8 - SND_SCALE_BITS)
-#define SND_SCALE_LEVELS	(1 << SND_SCALE_BITS)
+#define SND_SCALE_LEVELS	(1U << SND_SCALE_BITS)
 
 
 portable_samplepair_t	*g_curpaintbuffer;
@@ -42,6 +44,7 @@ paintbuffer_t		paintbuffers[CPAINTBUFFERS];
 
 int			snd_scaletable[SND_SCALE_LEVELS][256];
 
+
 void S_InitScaletable( void )
 {
 	int	i, j;
@@ -49,7 +52,7 @@ void S_InitScaletable( void )
 	for( i = 0; i < SND_SCALE_LEVELS; i++ )
 	{
 		for( j = 0; j < 256; j++ )
-			snd_scaletable[i][j] = ((signed char)j) * i * (1<<SND_SCALE_SHIFT);
+			snd_scaletable[i][j] = ((signed char)j) * i * (1U << SND_SCALE_SHIFT);
 	}
 }
 
@@ -64,6 +67,7 @@ void S_TransferPaintBuffer( int endtime )
 	int	*snd_p, snd_linear_count;
 	int	lpos, lpaintedtime;
 	int	i, val, sampleMask;
+	int ls, rs;
 	short	*snd_out;
 	dword	*pbuf;
 
@@ -71,6 +75,19 @@ void S_TransferPaintBuffer( int endtime )
 	snd_p = (int *)PAINTBUFFER;
 	lpaintedtime = paintedtime;
 	sampleMask = ((dma.samples >> 1) - 1);
+
+	if( s_reverse_channels->integer )
+	{
+		// this will reverse channel position in dma buffer
+		ls = 1;
+		rs = 0;
+	}
+	else
+	{
+		// default
+		ls = 0;
+		rs = 1;
+	}
 
 	while( lpaintedtime < endtime )
 	{
@@ -88,18 +105,22 @@ void S_TransferPaintBuffer( int endtime )
 		// write a linear blast of samples
 		for( i = 0; i < snd_linear_count; i += 2 )
 		{
-			val = (snd_p[i+0] * 256) >> 8;
+			val = ( snd_p[i + ls] * 256 ) >> 8;
 
-			if( val > 0x7fff ) snd_out[i+0] = 0x7fff;
-			else if( val < (short)0x8000 )
-				snd_out[i+0] = (short)0x8000;
-			else snd_out[i+0] = val;
+			if ( val > 0x7fff )
+				snd_out[i + 0] = 0x7fff;
+			else if ( val < (short)0x8000 )
+				snd_out[i + 0] = (short)0x8000;
+			else
+				snd_out[i + 0] = val;
 
-			val = (snd_p[i+1] * 256) >> 8;
-			if( val > 0x7fff ) snd_out[i+1] = 0x7fff;
-			else if( val < (short)0x8000 )
-				snd_out[i+1] = (short)0x8000;
-			else snd_out[i+1] = val;
+			val = ( snd_p[i + rs] * 256 ) >> 8;
+			if ( val > 0x7fff )
+				snd_out[i + 1] = 0x7fff;
+			else if ( val < (short)0x8000 )
+				snd_out[i + 1] = (short)0x8000;
+			else
+				snd_out[i + 1] = val;
 		}
 
 		snd_p += snd_linear_count;
@@ -244,7 +265,7 @@ void S_PaintStereoFrom8( portable_samplepair_t *pbuf, int *volume, byte *pData, 
 
 	for( i = 0; i < outCount; i++, data++ )
 	{
-		left = (byte)((*data & 0x00FF));
+		left = (byte)(*data & 0x00FF);
 		right = (byte)((*data & 0xFF00) >> 8);
 		pbuf[i].left += lscale[left];
 		pbuf[i].right += rscale[right];
@@ -276,9 +297,9 @@ void S_PaintStereoFrom16( portable_samplepair_t *pbuf, int *volume, short *pData
 		
 	for( i = 0; i < outCount; i++, data++ )
 	{
-		left = (signed short)((*data & 0x0000FFFF));
+		left = (signed short)(*data & 0x0000FFFF);
 		right = (signed short)((*data & 0xFFFF0000) >> 16);
-
+		
 		left =  (left * volume[0]) >> 8;
 		right = (right * volume[1]) >> 8;
 
@@ -399,13 +420,13 @@ void S_MixChannel( channel_t *pChannel, void *pData, int outputOffset, int input
 	if( pSource->channels == 1 )
 	{
 		if( pSource->width == 1 )
-			S_Mix8Mono( pbuf, pvol, (char *)pData, inputOffset, fracRate, outCount );
+			S_Mix8Mono( pbuf, pvol, (byte *)pData, inputOffset, fracRate, outCount );
 		else S_Mix16Mono( pbuf, pvol, (short *)pData, inputOffset, fracRate, outCount );
 	}
 	else
 	{
 		if( pSource->width == 1 )
-			S_Mix8Stereo( pbuf, pvol, (char *)pData, inputOffset, fracRate, outCount );
+			S_Mix8Stereo( pbuf, pvol, (byte *)pData, inputOffset, fracRate, outCount );
 		else S_Mix16Stereo( pbuf, pvol, (short *)pData, inputOffset, fracRate, outCount );
 	}
 }
@@ -449,7 +470,7 @@ int S_MixDataToDevice( channel_t *pChannel, int sampleCount, int outputRate, int
 		double	end = pChannel->pMixer.sample + rate * sampleCount;
 		int	inputSampleCount = (int)(ceil( end ) - floor( pChannel->pMixer.sample ));
 
-		availableSamples = S_GetOutputData( pSource, &pData, pChannel->pMixer.sample, inputSampleCount, use_loop );
+		availableSamples = S_GetOutputData( pSource, (void **)&pData, pChannel->pMixer.sample, inputSampleCount, use_loop );
 
 		// none available, bail out
 		if( !availableSamples ) break;
@@ -919,14 +940,14 @@ void MIX_MixUpsampleBuffer( int ipaintbuffer, int end, int count )
 	MIX_MixChannelsToPaintbuffer( end, SOUND_11k, SOUND_11k );
 
 	// upsample 11khz buffer by 2x
-	S_MixUpsample( count / (SOUND_DMA_SPEED / SOUND_11k), FILTERTYPE_LINEAR ); 
+	S_MixUpsample( count / (SOUND_DMA_SPEED / SOUND_11k), s_lerping->integer );
 
 	// mix 22khz channels to buffer
 	MIX_MixChannelsToPaintbuffer( end, SOUND_22k, SOUND_22k );
 
 	// upsample 22khz buffer by 2x
 #if (SOUND_DMA_SPEED > SOUND_22k)
-	S_MixUpsample( count / (SOUND_DMA_SPEED / SOUND_22k), FILTERTYPE_LINEAR );
+	S_MixUpsample( count / (SOUND_DMA_SPEED / SOUND_22k), s_lerping->integer );
 #endif
 	// mix 44khz channels to buffer
 	MIX_MixChannelsToPaintbuffer( end, SOUND_44k, SOUND_DMA_SPEED );
@@ -995,7 +1016,7 @@ void MIX_UpsampleAllPaintbuffers( int end, int count )
 	// upsample all 11khz buffers by 2x
 	// only upsample roombuffer if dsp fx are on KDB: perf
 	MIX_SetCurrentPaintbuffer( IROOMBUFFER ); // operates on MixUpSample
-	S_MixUpsample( count / (SOUND_DMA_SPEED / SOUND_11k), FILTERTYPE_LINEAR ); 
+	S_MixUpsample( count / (SOUND_DMA_SPEED / SOUND_11k), s_lerping->integer );
 
 	// mix 22khz sounds: 
 	MIX_MixChannelsToPaintbuffer( end, SOUND_22k, SOUND_22k );
@@ -1004,7 +1025,7 @@ void MIX_UpsampleAllPaintbuffers( int end, int count )
 #if (SOUND_DMA_SPEED > SOUND_22k)
 	// only upsample roombuffer if dsp fx are on KDB: perf
 	MIX_SetCurrentPaintbuffer( IROOMBUFFER );
-	S_MixUpsample( count / ( SOUND_DMA_SPEED / SOUND_22k ), FILTERTYPE_LINEAR );
+	S_MixUpsample( count / ( SOUND_DMA_SPEED / SOUND_22k ), s_lerping->integer );
 #endif
 	// mix all 44khz sounds to all active paintbuffers
 	MIX_MixChannelsToPaintbuffer( end, SOUND_44k, SOUND_DMA_SPEED );
@@ -1016,13 +1037,8 @@ void MIX_UpsampleAllPaintbuffers( int end, int count )
 void MIX_PaintChannels( int endtime )
 {
 	int	end, count;
-	float	dsp_room_gain;
 
 	CheckNewDspPresets();
-
-	// get dsp preset gain values, update gain crossfaders,
-	// used when mixing dsp processed buffers into paintbuffer
-	dsp_room_gain = DSP_GetGain( idsp_room );	// update crossfader - gain only used in MIX_ScaleChannelVolume
 
 	while( paintedtime < endtime )
 	{
@@ -1059,3 +1075,4 @@ void MIX_PaintChannels( int endtime )
 		paintedtime = end;
 	}
 }
+#endif // XASH_DEDICATED

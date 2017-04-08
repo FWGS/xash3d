@@ -23,21 +23,9 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (XASH_LAUNCHER)
 
-# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-set (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -Os")
-set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -O3")
-
-if(PANDORA)
-        add_definitions(-DPANDORA)
-endif()
-
-if(XASH_SDL)
-	include(FindPkgConfig)
-	pkg_search_module(SDL2 REQUIRED sdl2)
-	include_directories(${SDL2_INCLUDE_DIRS})
+if(XASH_SDL AND NOT WIN32) # WinMain is used
+	find_package(SDL2 REQUIRED sdl2)
+	include_directories(${SDL2_INCLUDE_DIR})
 
 	add_definitions(-DXASH_SDL)
 endif()
@@ -45,11 +33,19 @@ endif()
 set (XASH_LAUNCHER_EXECUTABLE xash3d)
 
 file (GLOB XASH_LAUNCHER_SOURCES *.c)
+if(WIN32)
+	list(APPEND XASH_LAUNCHER_SOURCES game.rc)
+endif()
 
-add_executable (${XASH_LAUNCHER_EXECUTABLE} ${XASH_LAUNCHER_SOURCES})
+add_executable (${XASH_LAUNCHER_EXECUTABLE} WIN32 ${XASH_LAUNCHER_SOURCES})
 
-if(XASH_SDL)
-	target_link_libraries(${XASH_LAUNCHER_EXECUTABLE} ${SDL2_LIBRARIES})
+if(XASH_SDL AND NOT WIN32) # WinMain is used
+	target_link_libraries(${XASH_LAUNCHER_EXECUTABLE} ${SDL2_LIBRARY})
+endif()
+
+if(WIN32)
+	set_target_properties(${XASH_LAUNCHER_EXECUTABLE} PROPERTIES
+		OUTPUT_NAME xash)
 endif()
 
 target_link_libraries(${XASH_LAUNCHER_EXECUTABLE}

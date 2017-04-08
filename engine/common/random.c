@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 #include "common.h"
 
-static long idum = 0;
+static int idum = 0;
 
 #define MAX_RANDOM_RANGE	0x7FFFFFFFUL
 #define IA		16807
@@ -28,7 +28,7 @@ static long idum = 0;
 #define EPS		1.2e-7
 #define RNMX		(1.0 - EPS)
 
-void COM_SetRandomSeed( long lSeed )
+void COM_SetRandomSeed( int lSeed )
 {
 	if( lSeed ) idum = lSeed;
 	else idum = -time( NULL );
@@ -39,13 +39,13 @@ void COM_SetRandomSeed( long lSeed )
 		idum -= 22261048;
 }
 
-long lran1( void )
+int lran1( void )
 {
 	int	j;
-	long	k;
+	int	k;
 
-	static long iy = 0;
-	static long iv[NTAB];
+	static int iy = 0;
+	static int iv[NTAB];
 	
 	if( idum <= 0 || !iy )
 	{
@@ -81,7 +81,7 @@ float fran1( void )
 	return temp;
 }
 
-float Com_RandomFloat( float flLow, float flHigh )
+float GAME_EXPORT Com_RandomFloat( float flLow, float flHigh )
 {
 	float	fl;
 
@@ -91,14 +91,14 @@ float Com_RandomFloat( float flLow, float flHigh )
 	return (fl * (flHigh - flLow)) + flLow; // float in [low, high)
 }
 
-long Com_RandomLong( long lLow, long lHigh )
+int GAME_EXPORT GAME_EXPORT Com_RandomLong( int lLow, int lHigh )
 {
 	dword	maxAcceptable;
 	dword	n, x = lHigh-lLow + 1; 	
 
 	if( idum == 0 ) COM_SetRandomSeed(0);
 
-	if( x <= 0 || MAX_RANDOM_RANGE < x-1 )
+	if( x == 0 || MAX_RANDOM_RANGE < x-1 )
 		return lLow;
 
 	// The following maps a uniform distribution on the interval [0, MAX_RANDOM_RANGE]

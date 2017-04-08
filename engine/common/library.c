@@ -18,54 +18,217 @@ GNU General Public License for more details.
 #include "common.h"
 #include "library.h"
 #include "filesystem.h"
+#include "server.h"
 
-#ifndef XASH_NONSTANDART_LOAD
+char lasterror[1024] = "";
+const char *Com_GetLibraryError()
+{
+	return lasterror;
+}
+
+void Com_ResetLibraryError()
+{
+	lasterror[0] = 0;
+}
+
+void Com_PushLibraryError( const char *error )
+{
+	Q_strncat( lasterror, error, sizeof( lasterror ) );
+	Q_strncat( lasterror, "\n", sizeof( lasterror ) );
+}
+
+void *Com_FunctionFromName_SR( void *hInstance, const char *pName )
+{
+	#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+	if( !Q_memcmp( pName, "ofs:",4 ) )
+		return svgame.dllFuncs.pfnGameInit + Q_atoi(pName + 4);
+	#endif
+	return Com_FunctionFromName( hInstance, pName );
+}
+
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+char *Com_OffsetNameForFunction( void *function )
+{
+	static string sname;
+	Q_snprintf( sname, MAX_STRING, "ofs:%d", (int)(void*)(function - (void*)svgame.dllFuncs.pfnGameInit) );
+	MsgDev( D_NOTE, "Com_OffsetNameForFunction %s\n", sname );
+	return sname;
+}
+#endif
+
+#ifndef _WIN32
 
 #ifdef __ANDROID__
 #include "platform/android/dlsym-weak.h"
 #endif
 
+
+#ifdef NO_LIBDL
+
+#ifndef DLL_LOADER
+#error Enable at least one dll backend!!!
+#endif
+
+void *dlsym(void *handle, const char *symbol )
+{
+	MsgDev( D_NOTE, "dlsym( %p, \"%s\" ): stub\n", handle, symbol );
+	return NULL;
+}
+void *dlopen(const char *name, int flag )
+{
+	MsgDev( D_NOTE, "dlopen( \"%s\", %d ): stub\n", name, flag );
+	return NULL;
+}
+int dlclose(void *handle)
+{
+	MsgDev( D_NOTE, "dlsym( %p ): stub\n", handle );
+	return 0;
+}
+char *dlerror( void )
+{
+	return "Loading ELF libraries not supported in this build!\n";
+}
+int dladdr( const void *addr, Dl_info *info )
+{
+	return 0;
+}
+
+
+
+#endif
+#ifdef XASH_SDL
+#include <SDL_filesystem.h>
+#endif
+
+#ifdef TARGET_OS_IPHONE
+
+static void *IOS_LoadLibraryInternal( const char *dllname )
+{
+	void *pHandle;
+	string errorstring = "";
+	char path[MAX_SYSPATH];
+	
+	// load frameworks from Documents directory
+	// frameworks should be signed with same key with application
+	// Useful for debug to prevent rebuilding app on every library update
+	// NOTE: Apple polices forbids loading code from shared places
+#ifdef ENABLE_FRAMEWORK_SIDELOAD
+	Q_snprintf( path, MAX_SYSPATH, "%s.framework/lib", dllname );
+	if( pHandle = dlopen( path, RTLD_LAZY ) )
+		return pHandle;
+	Q_snprintf( errorstring, MAX_STRING, dlerror() );
+#endif
+	
+#ifdef DLOPEN_FRAMEWORKS
+	// load frameworks as it should be located in Xcode builds
+	Q_snprintf( path, MAX_SYSPATH, "%s%s.framework/lib", SDL_GetBasePath(), dllname );
+#else
+	// load libraries from app root to allow re-signing ipa with custom utilities
+	Q_snprintf( path, MAX_SYSPATH, "%s%s", SDL_GetBasePath(), dllname );
+#endif
+	pHandle = dlopen( path, RTLD_LAZY );
+	if( !pHandle )
+	{
+		Com_PushLibraryError(errorstring);
+		Com_PushLibraryError(dlerror());
+	}
+	return pHandle;
+}
+extern char *g_szLibrarySuffix;
+static void *IOS_LoadLibrary( const char *dllname )
+{
+	string name;
+	char *postfix = g_szLibrarySuffix;
+	char *pHandle;
+
+	if( !postfix ) postfix = GI->gamedir;
+
+	Q_snprintf( name, MAX_STRING, "%s_%s", dllname, postfix );
+	pHandle = IOS_LoadLibraryInternal( name );
+	if( pHandle )
+		return pHandle;
+	return IOS_LoadLibraryInternal( dllname );
+}
+
+#endif
+
+
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
-	searchpath_t	*search;
+	searchpath_t	*search = NULL;
 	int		pack_ind;
 	char	path [MAX_SYSPATH];
-
 	void *pHandle;
-	qboolean dll = host.enabledll && (Q_stristr(dllname, ".dll") != 0);
+
+#if TARGET_OS_IPHONE
+	return IOS_LoadLibrary(dllname);
+#endif
+
+#ifdef __EMSCRIPTEN__
+	{
+		string prefix;
+		Q_strcpy(prefix, getenv( "LIBRARY_PREFIX" ) );
+		Q_snprintf( path, MAX_SYSPATH, "%s%s%s",  prefix, dllname, getenv( "LIBRARY_SUFFIX" ) );
+		pHandle = dlopen( path, RTLD_LAZY );
+		if( !pHandle )
+		{
+			Com_PushLibraryError( va("Loading %s:\n", path ) );
+			Com_PushLibraryError( dlerror() );
+		}
+		return pHandle;
+	}
+#endif
+
+	qboolean dll = host.enabledll && ( Q_stristr( dllname, ".dll" ) != 0 );
 #ifdef DLL_LOADER
 	if(dll)
 	{
 		pHandle = Loader_LoadLibrary( dllname );
+		if(!pHandle)
+		{
+			string errorstring;
+			Q_snprintf( errorstring, MAX_STRING, "Failed to load dll with dll loader: %s", dllname );
+			Com_PushLibraryError( errorstring );
+		}
 	}
 	else
 #endif
-#ifdef _WIN32
-	pHandle = LoadLibrary( dllname );
-#else
-	pHandle = dlopen( dllname, RTLD_LAZY );
-#endif
+	{
+		pHandle = dlopen( dllname, RTLD_LAZY );
+		if( !pHandle )
+			Com_PushLibraryError(dlerror());
+	}
 	if(!pHandle)
 	{
 		search = FS_FindFile( dllname, &pack_ind, true );
 
+		if( !search )
+		{
+			return NULL;
+		}
 		sprintf( path, "%s%s", search->filename, dllname );
+
 
 #ifdef DLL_LOADER
 		if(dll)
 		{
 			pHandle = Loader_LoadLibrary( path );
+			if(!pHandle)
+			{
+				string errorstring;
+				Q_snprintf( errorstring, MAX_STRING, "Failed to load dll with dll loader: %s", dllname );
+				Com_PushLibraryError( errorstring );
+			}
 		}
 		else
 #endif
-#ifdef _WIN32
-	pHandle = LoadLibrary( path );
-#else
-	pHandle = dlopen( path, RTLD_LAZY );
-#endif
+		{
+			pHandle = dlopen( path, RTLD_LAZY );
+			if( !pHandle )
+				Com_PushLibraryError( dlerror() );
+		}
 		if(!pHandle)
 		{
-			MsgDev(D_ERROR, "loading library %s: %s\n", dllname, dlerror());
 			return NULL;
 		}
 	}
@@ -81,11 +244,7 @@ void Com_FreeLibrary( void *hInstance )
 		return Loader_FreeLibrary(hInstance);
 	else
 #endif
-#ifdef _WIN32
-	FreeLibrary( hInstance);
-#else
 	dlclose( hInstance );
-#endif
 }
 
 void *Com_GetProcAddress( void *hInstance, const char *name )
@@ -96,11 +255,7 @@ void *Com_GetProcAddress( void *hInstance, const char *name )
 		return Loader_GetProcAddress(hInstance, name);
 	else
 #endif
-#ifdef _WIN32
-	return GetProcAddress( hInstance, name );
-#else
 	return dlsym( hInstance, name );
-#endif
 }
 
 void *Com_FunctionFromName( void *hInstance, const char *pName )
@@ -112,20 +267,35 @@ void *Com_FunctionFromName( void *hInstance, const char *pName )
 		return Loader_GetProcAddress(hInstance, pName);
 	else
 #endif
-	function = dlsym( hInstance, pName );	
+	function = dlsym( hInstance, pName );
 	if(!function)
 	{
 #ifdef __ANDROID__
-		// Shitty Android dlsym don't resolve weak symbols
+		// Shitty Android's dlsym don't resolve weak symbols
 		function = dlsym_weak( hInstance, pName );
 		if(!function)
 #endif
-#ifndef _WIN32
 			MsgDev(D_ERROR, "FunctionFromName: Can't get symbol %s: %s\n", pName, dlerror());
-#endif
 	}
 	return function;
 }
+
+#ifdef XASH_DYNAMIC_DLADDR
+int d_dladdr( void *sym, Dl_info *info )
+{
+	static int (*dladdr_real) ( void *sym, Dl_info *info );
+
+	if( !dladdr_real )
+		dladdr_real = dlsym( (void*)(size_t)(-1), "dladdr" );
+
+	Q_memset( info, 0, sizeof( *info ) );
+
+	if( !dladdr_real )
+		return -1;
+
+	return dladdr_real(  sym, info );
+}
+#endif
 
 const char *Com_NameForFunction( void *hInstance, void *function )
 {
@@ -137,13 +307,82 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 #endif
 	// Note: dladdr() is a glibc extension
 	{
-#ifndef _WIN32
-		Dl_info info;
+		Dl_info info = {0};
 		dladdr((void*)function, &info);
-		return info.dli_sname;
-#endif
+		if(info.dli_sname)
+			return info.dli_sname;
 	}
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+	return Com_OffsetNameForFunction( function );
+#endif
 }
+#elif defined __amd64__
+#include <dbghelp.h>
+void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
+{
+	return LoadLibraryA( dllname );
+}
+void Com_FreeLibrary( void *hInstance )
+{
+	FreeLibrary( hInstance );
+}
+
+
+void *Com_GetProcAddress( void *hInstance, const char *name )
+{
+	return GetProcAddress( hInstance, name );
+}
+
+void *Com_FunctionFromName( void *hInstance, const char *name )
+{
+	return GetProcAddress( hInstance, name );
+}
+
+const char *Com_NameForFunction( void *hInstance, void *function )
+{
+#if 0
+	static qboolean initialized = false;
+	if( initialized )
+	{
+		char message[1024];
+		int len = 0;
+		size_t i;
+		HANDLE process = GetCurrentProcess();
+		HANDLE thread = GetCurrentThread();
+		IMAGEHLP_LINE64 line;
+		DWORD dline = 0;
+		DWORD options;
+		CONTEXT context;
+		STACKFRAME64 stackframe;
+		DWORD image;
+		char buffer[sizeof( IMAGEHLP_SYMBOL64) + MAX_SYM_NAME * sizeof(TCHAR)];
+		PIMAGEHLP_SYMBOL64 symbol = ( PIMAGEHLP_SYMBOL64)buffer;
+		memset( symbol, 0, sizeof(IMAGEHLP_SYMBOL64) + MAX_SYM_NAME );
+		symbol->SizeOfStruct = sizeof( IMAGEHLP_SYMBOL64);
+		symbol->MaxNameLength = MAX_SYM_NAME;
+		DWORD displacement = 0;
+
+		options = SymGetOptions();
+		SymSetOptions( options );
+
+		SymInitialize( process, NULL, TRUE );
+
+		if( SymGetSymFromAddr64( process, function, &displacement, symbol ) )
+		{
+			Msg( "%s\n", symbol->Name );
+			return copystring( symbol->Name );
+		}
+
+	}
+#endif
+
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+	return Com_OffsetNameForFunction( function );
+#endif
+
+	return NULL;
+}
+
 #else
 /*
 ---------------------------------------------------------------
@@ -157,6 +396,11 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 // Vista SDKs no longer define IMAGE_SIZEOF_BASE_RELOCATION!?
 #define IMAGE_SIZEOF_BASE_RELOCATION (sizeof(IMAGE_BASE_RELOCATION))
 #endif
+
+#if defined(_M_X64)
+#error "Xash's nonstandart loader will not work on Win64. Set target to Win32 or disable nonstandart loader"
+#endif
+
 
 typedef struct
 {
@@ -605,6 +849,7 @@ library_error:
 	// cleanup
 	if( data ) Mem_Free( data );
 	MemoryFreeLibrary( result );
+	Com_PushLibraryError( errorstring );
 	MsgDev( D_ERROR, "LoadLibrary: %s\n", errorstring );
 
 	return NULL;
@@ -884,6 +1129,7 @@ table_error:
 	if( f ) FS_Close( f );
 	if( p_Names ) Mem_Free( p_Names );
 	FreeNameFuncGlobals( hInst );
+	Com_PushLibraryError( errorstring );
 	MsgDev( D_ERROR, "LoadLibrary: %s\n", errorstring );
 
 	return false;
@@ -901,13 +1147,21 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 	dll_user_t *hInst;
 
 	hInst = FS_FindLibrary( dllname, directpath );
-	if( !hInst ) 
+	if( !hInst )
+	{
+		char errorstring[256];
+		Q_snprintf( errorstring, 256, "LoadLibraryExt: could not find %s!", dllname );
+		Com_PushLibraryError(errorstring);
 		return NULL; // nothing to load
+	}
 		
 	if( hInst->custom_loader )
 	{
-          	if( hInst->encrypted )
+		if( hInst->encrypted )
 		{
+			char errorstring[256];
+			Q_snprintf( errorstring, 256, "couldn't load encrypted library %s", dllname );
+			Com_PushLibraryError(errorstring);
 			MsgDev( D_ERROR, "Sys_LoadLibrary: couldn't load encrypted library %s\n", dllname );
 			return NULL;
 		}
@@ -918,7 +1172,9 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 
 	if( !hInst->hInstance )
 	{
-		MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed\n", dllname );
+		string errorstring;
+		Q_snprintf( errorstring, MAX_STRING, "LoadLibrary failed for %s:%d", dllname, GetLastError() );
+		Com_PushLibraryError( errorstring );
 		Com_FreeLibrary( hInst );
 		return NULL;
 	}
@@ -928,7 +1184,11 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 	{
 		if( !LibraryLoadSymbols( hInst ))
 		{
-			MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed\n", dllname );
+			string errorstring;
+			Q_snprintf( errorstring, MAX_STRING, "Failed to build ordinals table for %s", dllname );
+			Com_PushLibraryError( errorstring );
+			//MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s - failed\n", dllname );
+
 			Com_FreeLibrary( hInst );
 			return NULL;
 		}
@@ -995,14 +1255,14 @@ void *Com_FunctionFromName(void *hInstance, const char *pName)
 		if( !Q_strcmp( pName, hInst->names[i] ))
 		{
 			index = hInst->ordinals[i];
-			return hInst->funcs[index] + hInst->funcBase;
+			return (void*)(hInst->funcs[index] + hInst->funcBase);
 		}
 	}
 	// couldn't find the function name to return address
 	return 0;
 }
 
-const char *Com_NameForFunction( void *hInstance, dword function )
+const char *Com_NameForFunction( void *hInstance, void * function )
 {
 	dll_user_t	*hInst = (dll_user_t *)hInstance;
 	int		i, index;
@@ -1014,7 +1274,8 @@ const char *Com_NameForFunction( void *hInstance, dword function )
 	{
 		index = hInst->ordinals[i];
 
-		if(( function - hInst->funcBase ) == hInst->funcs[index] )
+		// 32 bit only cast :(
+		if( ( (dword)function - hInst->funcBase ) == hInst->funcs[index] )
 			return hInst->names[i];
 	}
 	// couldn't find the function address to return name

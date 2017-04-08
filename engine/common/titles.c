@@ -12,7 +12,6 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
 #include "common.h"
 #include "client.h"
 
@@ -233,7 +232,7 @@ static int ParseDirective( const char *pText )
 	}
 	return 0;
 }
-
+#ifndef XASH_DEDICATED
 void CL_TextMessageParse( byte *pMemFile, int fileSize )
 {
 	char			buf[512], trim[512], currentName[512];
@@ -242,7 +241,7 @@ void CL_TextMessageParse( byte *pMemFile, int fileSize )
 	int			mode = MSGFILE_NAME; // searching for a message name	
 	int			lineNumber, filePos, lastLinePos;
 	client_textmessage_t	textMessages[MAX_MESSAGES];
-	int			i, nameHeapSize, textHeapSize, messageSize, nameOffset;
+	int			i, nameHeapSize, textHeapSize, messageSize; //, nameOffset;
 	int			messageCount, lastNamePos;
 
 	lastNamePos = 0;
@@ -351,16 +350,17 @@ void CL_TextMessageParse( byte *pMemFile, int fileSize )
 	// copy Name heap
 	pNameHeap = ((char *)clgame.titles) + messageSize;
 	Q_memcpy( pNameHeap, nameHeap, nameHeapSize );
-	nameOffset = pNameHeap - clgame.titles[0].pName;
+	//nameOffset = pNameHeap - clgame.titles[0].pName; //undefined on amd64
 
 	// copy text & fixup pointers
 	pCurrentText = pNameHeap + nameHeapSize;
 
 	for( i = 0; i < messageCount; i++ )
 	{
-		clgame.titles[i].pName += nameOffset;			// adjust name pointer (parallel buffer)
+		clgame.titles[i].pName = pNameHeap;			// adjust name pointer (parallel buffer)
 		Q_strcpy( pCurrentText, clgame.titles[i].pMessage );	// copy text over
 		clgame.titles[i].pMessage = pCurrentText;
+		pNameHeap += Q_strlen( pNameHeap ) + 1;
 		pCurrentText += Q_strlen( pCurrentText ) + 1;
 	}
 
@@ -369,3 +369,4 @@ void CL_TextMessageParse( byte *pMemFile, int fileSize )
 
 	clgame.numTitles = messageCount;
 }
+#endif

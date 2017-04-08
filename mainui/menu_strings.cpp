@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #include "utils.h"
 #include "menu_strings.h"
 
-char *MenuStrings[HINT_MAXSTRINGS] =
+const char *MenuStrings[HINT_MAXSTRINGS] =
 {
 "",
 "",

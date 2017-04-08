@@ -182,7 +182,10 @@ hull_t *SV_HullForBsp( edict_t *ent, const vec3_t mins, const vec3_t maxs, float
 	model = Mod_Handle( ent->v.modelindex );
 
 	if( !model || model->type != mod_brush )
-		Host_Error( "Entity %i SOLID_BSP with a non bsp model %i\n", NUM_FOR_EDICT( ent ), (model) ? model->type : mod_bad );
+	{
+		Host_MapDesignError( "Entity %i SOLID_BSP with a non bsp model %i\n", NUM_FOR_EDICT( ent ), (model) ? model->type : mod_bad );
+		return NULL;
+	}
 
 	VectorSubtract( maxs, mins, size );
 
@@ -250,7 +253,9 @@ hull_t *SV_HullForEntity( edict_t *ent, vec3_t mins, vec3_t maxs, vec3_t offset 
 	if( ent->v.solid == SOLID_BSP )
 	{
 		if( ent->v.movetype != MOVETYPE_PUSH && ent->v.movetype != MOVETYPE_PUSHSTEP )
-			Host_Error( "'%s' has SOLID_BSP without MOVETYPE_PUSH or MOVETYPE_PUSHSTEP\n", SV_ClassName( ent ));
+		{
+			Host_MapDesignError( "'%s' has SOLID_BSP without MOVETYPE_PUSH or MOVETYPE_PUSHSTEP\n", SV_ClassName( ent ) );
+		}
 		hull = SV_HullForBsp( ent, mins, maxs, offset );
 	}
 	else
@@ -461,7 +466,7 @@ void SV_TouchLinks( edict_t *ent, areanode_t *node )
 	for( l = node->trigger_edicts.next; l != &node->trigger_edicts; l = next )
 	{
 		next = l->next;
-		touch = EDICT_FROM_AREA( l );
+		touch = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
 		if( svgame.physFuncs.SV_TriggerTouch != NULL )
 		{
@@ -540,6 +545,9 @@ void SV_FindTouchedLeafs( edict_t *ent, mnode_t *node, int *headnode )
 	int	sides, leafnum;
 	mleaf_t	*leaf;
 
+	if( !node ) // if no collision model
+		return;
+
 	if( node->contents == CONTENTS_SOLID )
 		return;
 	
@@ -590,7 +598,7 @@ qboolean SV_HeadnodeVisible( mnode_t *node, byte *visbits, int *lastleaf )
 	{
 		leafnum = ((mleaf_t *)node - sv.worldmodel->leafs) - 1;
 
-		if(!( visbits[leafnum >> 3] & (1<<( leafnum & 7 ))))
+		if(!( visbits[leafnum >> 3] & (1U << ( leafnum & 7 ))))
 			return false;
 
 		if( lastleaf )
@@ -692,11 +700,13 @@ void SV_WaterLinks( const vec3_t origin, int *pCont, areanode_t *node )
 	vec3_t	test, offset;
 	model_t	*mod;
 
+	Q_memset( offset, 0, 3 * sizeof( float ) );
+
 	// get water edicts
 	for( l = node->water_edicts.next; l != &node->water_edicts; l = next )
 	{
 		next = l->next;
-		touch = EDICT_FROM_AREA( l );
+		touch = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
 		if( touch->v.solid != SOLID_NOT ) // disabled ?
 			continue;
@@ -718,7 +728,13 @@ void SV_WaterLinks( const vec3_t origin, int *pCont, areanode_t *node )
 		mod = Mod_Handle( touch->v.modelindex );
 
 		// check water brushes accuracy
-		hull = SV_HullForBsp( touch, vec3_origin, vec3_origin, offset );
+		if( Mod_GetType( touch->v.modelindex ) == mod_brush )
+			hull = SV_HullForBsp( touch, vec3_origin, vec3_origin, offset );
+		else
+		{
+			Host_MapDesignError( "Water must have BSP model!\n" );
+			hull = SV_HullForBox( touch->v.mins, touch->v.maxs );
+		}
 
 		// support for rotational water
 		if(( mod->flags & MODEL_HAS_ORIGIN ) && !VectorIsNull( touch->v.angles ))
@@ -827,6 +843,18 @@ LINE TESTING IN HULLS
 
 ===============================================================================
 */
+
+/* "Not a number" possible here.
+ * Enable this macro to debug it */
+#ifdef DEBUGNAN
+static void _assertNAN(const char *f, int l, const char *x)
+{
+	MsgDev( D_WARN, "NAN detected at %s:%i (%s)\n", f, l, x );
+}
+#define ASSERTNAN(x) if( !finitef(x) ) _assertNAN( __FILE__, __LINE__, #x );
+#else
+#define ASSERTNAN(x)
+#endif
 /*
 ==================
 SV_RecursiveHullCheck
@@ -860,6 +888,8 @@ qboolean SV_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 	if( num < hull->firstclipnode || num > hull->lastclipnode )
 		Host_Error( "SV_RecursiveHullCheck: bad node number\n" );
 
+	if( !hull->clipnodes )
+		return false;
 	// find the point distances
 	node = hull->clipnodes + num;
 	plane = hull->planes + node->planenum;
@@ -874,15 +904,23 @@ qboolean SV_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 		t1 = DotProduct( plane->normal, p1 ) - plane->dist;
 		t2 = DotProduct( plane->normal, p2 ) - plane->dist;
 	}
+
+	ASSERTNAN( t1 )
+	ASSERTNAN( t2 )
 	
 	if( t1 >= 0 && t2 >= 0 )
 		return SV_RecursiveHullCheck( hull, node->children[0], p1f, p2f, p1, p2, trace );
 	if( t1 < 0 && t2 < 0 )
 		return SV_RecursiveHullCheck( hull, node->children[1], p1f, p2f, p1, p2, trace );
 
+	ASSERTNAN( t1 )
+	ASSERTNAN( t2 )
+
 	// put the crosspoint DIST_EPSILON pixels on the near side
 	if( t1 < 0 ) frac = ( t1 + DIST_EPSILON ) / ( t1 - t2 );
 	else frac = ( t1 - DIST_EPSILON ) / ( t1 - t2 );
+
+	ASSERTNAN( frac )
 
 	if( frac < 0.0f ) frac = 0.0f;
 	if( frac > 1.0f ) frac = 1.0f;
@@ -891,6 +929,8 @@ qboolean SV_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 	VectorLerp( p1, frac, p2, mid );
 
 	side = (t1 < 0);
+
+	ASSERTNAN( frac )
 
 	// move up to the node
 	if( !SV_RecursiveHullCheck( hull, node->children[side], p1f, midf, p1, mid, trace ))
@@ -921,10 +961,11 @@ qboolean SV_RecursiveHullCheck( hull_t *hull, int num, float p1f, float p2f, vec
 
 	while( PM_HullPointContents( hull, hull->firstclipnode, mid ) == CONTENTS_SOLID )
 	{
+		ASSERTNAN( frac )
 		// shouldn't really happen, but does occasionally
 		frac -= 0.1f;
 
-		if( frac < 0.0f )
+		if( ( frac < 0.0f ) || IS_NAN( frac ) )
 		{
 			trace->fraction = midf;
 			VectorCopy( mid, trace->endpos );
@@ -952,7 +993,7 @@ eventually rotation) of the end points
 */
 void SV_ClipMoveToEntity( edict_t *ent, const vec3_t start, vec3_t mins, vec3_t maxs, const vec3_t end, trace_t *trace )
 {
-	hull_t	*hull;
+	hull_t	*hull = NULL;
 	model_t	*model;
 	vec3_t	start_l, end_l;
 	vec3_t	offset, temp;
@@ -978,6 +1019,10 @@ void SV_ClipMoveToEntity( edict_t *ent, const vec3_t start, vec3_t mins, vec3_t 
 		hull = SV_HullForEntity( ent, mins, maxs, offset );
 		hullcount = 1;
 	}
+
+	// prevent crash on incorrect hull
+	if( !hull )
+		return;
 
 	// rotate start and end into the models frame of reference
 	if( ent->v.solid == SOLID_BSP && !VectorIsNull( ent->v.angles ))
@@ -1007,7 +1052,7 @@ void SV_ClipMoveToEntity( edict_t *ent, const vec3_t start, vec3_t mins, vec3_t 
 		if( transform_bbox )
 		{
 			World_TransformAABB( matrix, mins, maxs, out_mins, out_maxs );
-			VectorSubtract( hull->clip_mins, out_mins, offset ); // calc new local offset
+			VectorSubtract( hull[0].clip_mins, out_mins, offset ); // calc new local offset
 
 			for( j = 0; j < 3; j++ )
 			{
@@ -1125,7 +1170,7 @@ static void SV_ClipToLinks( areanode_t *node, moveclip_t *clip )
 	{
 		next = l->next;
 
-		touch = EDICT_FROM_AREA( l );
+		touch = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
 		if( touch->v.groupinfo != 0 && SV_IsValidEdict( clip->passedict ) && clip->passedict->v.groupinfo != 0 )
 		{
@@ -1138,7 +1183,10 @@ static void SV_ClipToLinks( areanode_t *node, moveclip_t *clip )
 			continue;
 
 		if( touch->v.solid == SOLID_TRIGGER )
-			Host_Error( "trigger in clipping list\n" );
+		{
+			Host_MapDesignError( "trigger in clipping list\n" );
+			touch->v.solid = SOLID_NOT;
+		}
 
 		// custom user filter
 		if( svgame.dllFuncs2.pfnShouldCollide )
@@ -1234,7 +1282,7 @@ void SV_ClipToWorldBrush( areanode_t *node, moveclip_t *clip )
 	{
 		next = l->next;
 
-		touch = EDICT_FROM_AREA( l );
+		touch = (edict_t *)((byte *)l - ADDRESS_OF_AREA);
 
 		if( touch->v.solid != SOLID_BSP || touch == clip->passedict || !( touch->v.flags & FL_WORLDBRUSH ))
 			continue;
@@ -1445,6 +1493,8 @@ trace_t SV_MoveToss( edict_t *tossent, edict_t *ignore )
 	trace_t	trace;
 	int	i;
 
+	Q_memset( &trace, 0, sizeof( trace_t ) );
+
 	VectorCopy( tossent->v.origin, original_origin );
 	VectorCopy( tossent->v.velocity, original_velocity );
 	VectorCopy( tossent->v.angles, original_angles );
@@ -1585,11 +1635,20 @@ void SV_RunLightStyles( void )
 	for( i = 0, ls = sv.lightstyles; i < MAX_LIGHTSTYLES; i++, ls++ )
 	{
 		ls->time += host.frametime;
-		ofs = (ls->time * 10);
 
-		if( ls->length == 0 ) ls->value = scale; // disable this light
-		else if( ls->length == 1 ) ls->value = ( ls->map[0] / 12.0f ) * scale;
-		else ls->value = ( ls->map[ofs % ls->length] / 12.0f ) * scale;
+		if( ls->length == 0 )
+		{
+			ls->value = scale; // disable this light
+		}
+		else if( ls->length == 1 )
+		{
+			ls->value = ( ls->map[0] / 12.0f ) * scale;
+		}
+		else
+		{
+			ofs = (ls->time * 10);
+			ls->value = ( ls->map[ofs % ls->length] / 12.0f ) * scale;
+		}
 	}
 }
 

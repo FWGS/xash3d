@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "net_encode.h"
@@ -284,6 +286,9 @@ void CL_ParseSoundPacket( sizebuf_t *msg, qboolean is_ambient )
 		handle = S_RegisterSound( sentenceName );
 	}
 	else handle = cl.sound_index[sound];	// see precached sound
+
+	if( !cl.audio_prepped )
+		return; // too early
 
 	if( is_ambient )
 	{
@@ -575,7 +580,7 @@ void CL_ParseServerData( sizebuf_t *msg )
 	cls.serverProtocol = i;
 
 	if( i != PROTOCOL_VERSION )
-		Host_Error( "Server use invalid protocol (%i should be %i)\n", i, PROTOCOL_VERSION );
+		Host_Error( "Server uses invalid protocol (%i should be %i)\n", i, PROTOCOL_VERSION );
 
 	cl.servercount = BF_ReadLong( msg );
 	cl.checksum = BF_ReadLong( msg );
@@ -616,13 +621,14 @@ void CL_ParseServerData( sizebuf_t *msg )
 #endif
 	if( !cls.changedemo )
 		UI_SetActiveMenu( cl.background );
-	else if( !cls.demoplayback )
-		Key_SetKeyDest( key_menu );
 
 	cl.refdef.viewentity = cl.playernum + 1; // always keep viewent an actual
 
 	menu.globals->maxClients = cl.maxclients;
 	Q_strncpy( menu.globals->maptitle, clgame.maptitle, sizeof( menu.globals->maptitle ));
+
+	if( cl.maxclients > 1 && r_decals->value > mp_decals->value )
+		Cvar_SetFloat( "r_decals", mp_decals->value );
 
 	if( !cls.changelevel && !cls.changedemo )
 		CL_InitEdicts (); // re-arrange edicts
@@ -681,12 +687,17 @@ CL_ParseClientData
 void CL_ParseClientData( sizebuf_t *msg )
 {
 	int		i, j;
+	float		parsecounttime;
+	int		command_ack;
 	clientdata_t	*from_cd, *to_cd;
 	weapon_data_t	*from_wd, *to_wd;
-	weapon_data_t	nullwd[32];
+	weapon_data_t	nullwd[64];
 	clientdata_t	nullcd;
 	frame_t		*frame;
 	int		idx;
+
+	// This is the last movement that the server ack'd
+	command_ack = cls.netchan.incoming_acknowledged;
 
 	// this is the frame update that this message corresponds to
 	i = cls.netchan.incoming_sequence;
@@ -712,26 +723,27 @@ void CL_ParseClientData( sizebuf_t *msg )
 	frame->time = cl.mtime[0];				// mark network received time
 	frame->receivedtime = host.realtime;			// time now that we are parsing.  
 
+	// send time for that frame.
+	parsecounttime = cl.commands[command_ack & CL_UPDATE_MASK].senttime;
+
+	// current time that we got a response to the command packet.
+	cl.commands[command_ack & CL_UPDATE_MASK].receivedtime = host.realtime;
+
 	if( cl.last_command_ack != -1 )
 	{
-		int last_predicted;
-		entity_state_t * ps;
-		entity_state_t * pps;
-		clientdata_t * pcd;
-		clientdata_t * ppcd;
-		weapon_data_t * wd;
-		weapon_data_t * pwd;
+		int		last_predicted;
+		clientdata_t	*pcd, *ppcd;
+		entity_state_t	*ps, *pps;
+		weapon_data_t	*wd, *pwd;
 
-		last_predicted = ( cl.last_incoming_sequence + (
-							   cls.netchan.incoming_acknowledged - cl.last_command_ack)) & CL_UPDATE_MASK;
-
+		last_predicted = ( cl.last_incoming_sequence + ( cls.netchan.incoming_acknowledged - cl.last_command_ack )) & CL_UPDATE_MASK;
 		pps = &cl.predict[last_predicted].playerstate;
-		ppcd = &cl.predict[last_predicted].client;
 		pwd = cl.predict[last_predicted].weapondata;
+		ppcd = &cl.predict[last_predicted].client;
 
 		ps = &frame->playerstate[cl.playernum];
-		pcd = &frame->local.client;
-		wd = frame->local.weapondata;
+		wd = frame->weapondata;
+		pcd = &frame->client;
 
 		clgame.dllFuncs.pfnTxferPredictionData( ps, pps, pcd, ppcd, wd, pwd );
 	}
@@ -740,30 +752,56 @@ void CL_ParseClientData( sizebuf_t *msg )
 	cl.last_command_ack = cls.netchan.incoming_acknowledged;
 	cl.last_incoming_sequence = cls.netchan.incoming_sequence;
 
-	if( hltv->integer ) return;	// clientdata for spectators ends here
-	
-	to_cd = &frame->local.client;
-	to_wd = frame->local.weapondata;
-
-	// clear to old value before delta parsing
-	if( !BF_ReadOneBit( msg ))
+	if( !cls.demoplayback )
 	{
-		Q_memset( &nullcd, 0, sizeof( nullcd ));
-		Q_memset( nullwd, 0, sizeof( nullwd ));
-		from_cd = &nullcd;
-		from_wd = nullwd;
+		// calculate latency of this frame.
+		// sent time is set when usercmd is sent to server in CL_Move
+		// this is the # of seconds the round trip took.
+		float	latency = host.realtime - parsecounttime;
+
+		// fill into frame latency
+		frame->latency = latency;
+
+		// negative latency makes no sense.  Huge latency is a problem.
+		if( latency >= 0.0f && latency <= 2.0f )
+		{
+			// drift the average latency towards the observed latency
+			// if round trip was fastest so far, just use that for latency value
+			// otherwise, move in 1 ms steps toward observed channel latency.
+			if( latency < cls.latency )
+				cls.latency = latency;
+			else cls.latency += 0.001f; // drift up, so corrections are needed	
+		}	
 	}
 	else
 	{
+		frame->latency = 0.0f;
+	}
+
+	if( hltv->integer ) return;	// clientdata for spectators ends here
+	
+	to_cd = &frame->client;
+	to_wd = frame->weapondata;
+
+	// clear to old value before delta parsing
+	if( BF_ReadOneBit( msg ))
+	{
 		int	delta_sequence = BF_ReadByte( msg );
 
-		from_cd = &cl.frames[delta_sequence & CL_UPDATE_MASK].local.client;
-		from_wd = cl.frames[delta_sequence & CL_UPDATE_MASK].local.weapondata;
+		from_cd = &cl.frames[delta_sequence & CL_UPDATE_MASK].client;
+		from_wd = cl.frames[delta_sequence & CL_UPDATE_MASK].weapondata;
+	}
+	else
+	{
+		memset( &nullcd, 0, sizeof( nullcd ));
+		memset( nullwd, 0, sizeof( nullwd ));
+		from_cd = &nullcd;
+		from_wd = nullwd;
 	}
 
 	MSG_ReadClientData( msg, from_cd, to_cd, cl.mtime[0] );
 
-	for( i = 0; i < MAX_WEAPONS; i++ )
+	for( i = 0; i < 64; i++ )
 	{
 		// check for end of weapondata (and clientdata_t message)
 		if( !BF_ReadOneBit( msg )) break;
@@ -794,6 +832,8 @@ void CL_ParseBaseline( sizebuf_t *msg )
 	if( newnum >= clgame.maxEntities ) Host_Error( "CL_AllocEdict: no free edicts\n" );
 
 	ent = CL_EDICT_NUM( newnum );
+	if( !ent )
+		Host_Error( "CL_ParseBaseline: got invalid entity");
 	Q_memset( &ent->prevstate, 0, sizeof( ent->prevstate ));
 	ent->index = newnum;
 
@@ -914,6 +954,7 @@ void CL_UpdateUserinfo( sizebuf_t *msg )
 		Q_strncpy( player->userinfo, BF_ReadString( msg ), sizeof( player->userinfo ));
 		Q_strncpy( player->name, Info_ValueForKey( player->userinfo, "name" ), sizeof( player->name ));
 		Q_strncpy( player->model, Info_ValueForKey( player->userinfo, "model" ), sizeof( player->model ));
+		cl.playermodels[slot] = 0;
 		player->topcolor = Q_atoi( Info_ValueForKey( player->userinfo, "topcolor" ));
 		player->bottomcolor = Q_atoi( Info_ValueForKey( player->userinfo, "bottomcolor" ));
 
@@ -1032,7 +1073,7 @@ void CL_ServerInfo( sizebuf_t *msg )
 
 	Q_strncpy( key, BF_ReadString( msg ), sizeof( key ));
 	Q_strncpy( value, BF_ReadString( msg ), sizeof( value ));
-	Info_SetValueForKey( cl.serverinfo, key, value );
+	Info_SetValueForKey( cl.serverinfo, key, value, sizeof( cl.serverinfo ) );
 }
 
 /*
@@ -1047,16 +1088,14 @@ void CL_CheckingResFile( char *pResFileName )
 	byte	data[32];
 
 	if( FS_FileExists( pResFileName, false ))
-		return;	// already existing
-	if( FS_FileExists( FS_ToLowerCase( pResFileName ), false ) )
-		return;
+		return;	// already exists
 
 	cls.downloadcount++;
 
 	
-	if( cl_allow_fragment->value )
+	if( cl_allow_fragment->integer )
 	{
-		Msg( "Starting downloads file: %s\n", pResFileName );
+		Msg( "Starting file download: %s\n", pResFileName );
 		if( cls.state == ca_disconnected ) return;
 
 		BF_Init( &buf, "ClientPacket", data, sizeof( data ));
@@ -1207,13 +1246,18 @@ CL_ParseScreenShake
 Set screen shake
 ==============
 */
-void CL_ParseScreenShake( sizebuf_t *msg )
+int CL_ParseScreenShake( const char *pszName, int iSize, void *pbuf )
 {
-	clgame.shake.amplitude = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<12));
-	clgame.shake.duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<12));
-	clgame.shake.frequency = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<8));
+	sizebuf_t _msg = { false, pszName, pbuf, 0, iSize * 8 };
+	sizebuf_t *msg = &_msg;
+
+	clgame.shake.amplitude = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
+	clgame.shake.duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 12));
+	clgame.shake.frequency = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1U << 8));
 	clgame.shake.time = cl.time + max( clgame.shake.duration, 0.01f );
 	clgame.shake.next_shake = 0.0f; // apply immediately
+
+	return 1;
 }
 
 /*
@@ -1223,20 +1267,31 @@ CL_ParseScreenFade
 Set screen fade
 ==============
 */
-void CL_ParseScreenFade( sizebuf_t *msg )
+int CL_ParseScreenFade( const char *pszName, int iSize, void *pbuf )
 {
-	float		duration, holdTime;
+	sizebuf_t _msg = { false, pszName, pbuf, 0, iSize * 8 };
+	sizebuf_t *msg = &_msg;
+	float		duration, holdTime, scale;
 	screenfade_t	*sf = &clgame.fade;
 
-	duration = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<12));
-	holdTime = (float)(word)BF_ReadShort( msg ) * (1.0f / (float)(1<<12));
+	duration = (float)(word)BF_ReadShort( msg );
+	holdTime = (float)(word)BF_ReadShort( msg );
 	sf->fadeFlags = BF_ReadShort( msg );
+
+	// set longfade scale and multiply times
+	if( sf->fadeFlags & FFADE_LONGFADE )
+		scale = 1 / 256.0f;
+	else scale = 1 / 4096.0f;
+
+	duration *= scale;
+	holdTime *= scale;
 
 	sf->fader = BF_ReadByte( msg );
 	sf->fadeg = BF_ReadByte( msg );
 	sf->fadeb = BF_ReadByte( msg );
 	sf->fadealpha = BF_ReadByte( msg );
 	sf->fadeSpeed = 0.0f;
+
 	sf->fadeEnd = duration;
 	sf->fadeReset = holdTime;
 
@@ -1264,6 +1319,8 @@ void CL_ParseScreenFade( sizebuf_t *msg )
 			sf->fadeEnd += sf->fadeReset;
 		}
 	}
+
+	return 1;
 }
 
 /*
@@ -1377,18 +1434,6 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 		return;
 	}
 
-	// NOTE: some user messages handled into engine
-	if( !Q_strcmp( clgame.msg[i].name, "ScreenShake" ))
-	{
-		CL_ParseScreenShake( msg );
-		return;
-	}
-	else if( !Q_strcmp( clgame.msg[i].name, "ScreenFade" ))
-	{
-		CL_ParseScreenFade( msg );
-		return;
-	}
-
 	iSize = clgame.msg[i].size;
 
 	// message with variable sizes receive an actual size as first byte
@@ -1396,6 +1441,12 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 
 	// parse user message into buffer
 	BF_ReadBytes( msg, pbuf, iSize );
+
+	if( cl_trace_messages->integer )
+	{
+		MsgDev( D_INFO, "^3USERMSG %s SIZE %i SVC_NUM %i\n",
+			clgame.msg[i].name, iSize, clgame.msg[i].number );
+	}
 
 	if( clgame.msg[i].func )
 	{
@@ -1417,6 +1468,16 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 	}
 }
 
+void CL_ParseStuffText( sizebuf_t *msg )
+{
+	char *s = BF_ReadString( msg );
+	if( cl_trace_stufftext->integer )
+	{
+		Msg("^3STUFFTEXT:\n^2%s\n^3END^7\n", s);
+	}
+	Cbuf_AddText( s );
+}
+
 /*
 =====================================================================
 
@@ -1431,14 +1492,14 @@ CL_ParseServerMessage
 */
 void CL_ParseServerMessage( sizebuf_t *msg )
 {
-	char	*s;
+	//char	*s;
 	int	i, j, cmd;
 	int	param1, param2;
-	int	bufStart;
+	int	bufStart, playerbytes;
 
 	cls_message_debug.parsing = true;		// begin parsing
 	starting_count = BF_GetNumBytesRead( msg );	// updates each frame
-	
+
 	// parse the message
 	while( 1 )
 	{
@@ -1470,6 +1531,7 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			// this does nothing
 			break;
 		case svc_disconnect:
+			MsgDev( D_INFO, "Disconnected from server\n" );
 			CL_Drop ();
 			Host_AbortCurrentFrame ();
 			break;
@@ -1503,6 +1565,8 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_sound:
 			CL_ParseSoundPacket( msg, false );
+
+			cl.frames[cl.parsecountmod].graphdata.sound += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_time:
 			// shuffle timestamps
@@ -1515,8 +1579,7 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			if( i == PRINT_CHAT ) S_StartLocalSound( "common/menu2.wav", VOL_NORM, false );
 			break;
 		case svc_stufftext:
-			s = BF_ReadString( msg );
-			Cbuf_AddText( s );
+			CL_ParseStuffText( msg );
 			break;
 		case svc_lightstyle:
 			CL_ParseLightStyle( msg );
@@ -1533,12 +1596,20 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_clientdata:
 			CL_ParseClientData( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.client += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_packetentities:
-			CL_ParsePacketEntities( msg, false );
+			playerbytes = CL_ParsePacketEntities( msg, false );
+
+			cl.frames[cl.parsecountmod].graphdata.players += playerbytes;
+			cl.frames[cl.parsecountmod].graphdata.entities += BF_GetNumBytesRead( msg ) - bufStart - playerbytes;
 			break;
 		case svc_deltapacketentities:
-			CL_ParsePacketEntities( msg, true );
+			playerbytes = CL_ParsePacketEntities( msg, true );
+
+			cl.frames[cl.parsecountmod].graphdata.players += playerbytes;
+			cl.frames[cl.parsecountmod].graphdata.entities += BF_GetNumBytesRead( msg ) - bufStart - playerbytes;
 			break;
 		case svc_updatepings:
 			CL_UpdateUserPings( msg );
@@ -1551,12 +1622,16 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_restoresound:
 			CL_ParseRestoreSoundPacket( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.sound += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_spawnstatic:
 			CL_ParseStaticEntity( msg );
 			break;
 		case svc_ambientsound:
 			CL_ParseSoundPacket( msg, true );
+
+			cl.frames[cl.parsecountmod].graphdata.sound += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_crosshairangle:
 			CL_ParseCrosshairAngle( msg );
@@ -1566,6 +1641,8 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_temp_entity:
 			CL_ParseTempEntity( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.tentities += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_setpause:
 			cl.refdef.paused = ( BF_ReadOneBit( msg ) != 0 );
@@ -1581,9 +1658,13 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		case svc_event:
 			CL_ParseEvent( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.event += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_event_reliable:
 			CL_ParseReliableEvent( msg );
+
+			cl.frames[cl.parsecountmod].graphdata.event += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		case svc_updateuserinfo:
 			CL_UpdateUserinfo( msg );
@@ -1657,9 +1738,14 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			break;
 		default:
 			CL_ParseUserMessage( msg, cmd );
+
+			cl.frames[cl.parsecountmod].graphdata.usr += BF_GetNumBytesRead( msg ) - bufStart;
 			break;
 		}
+
+		cl.frames[cl.parsecountmod].graphdata.msgbytes += BF_GetNumBytesRead( msg ) - bufStart;
 	}
+
 
 	cls_message_debug.parsing = false;	// done
 
@@ -1677,3 +1763,4 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 		}
 	}
 }
+#endif // XASH_DEDICATED

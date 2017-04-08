@@ -142,6 +142,7 @@ typedef struct modref_list_t
 FARPROC MODULE_GetProcAddress( HMODULE hModule, LPCSTR function, WIN_BOOL snoop );
 WINE_MODREF *MODULE32_LookupHMODULE( HMODULE hModule );
 WINE_MODREF *MODULE_FindModule( LPCSTR path );
+WINE_MODREF *MODULE_FindNearFunctionName(FARPROC f);
 
 /* resource.c */
 INT WINAPI AccessResource( HMODULE, HRSRC );

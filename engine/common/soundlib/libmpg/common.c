@@ -19,14 +19,14 @@ const int tabsel_123[2][3][16] = {
      {0,8,16,24,32,40,48,56,64,80,96,112,128,144,160,} }
 };
 
-const long freqs[9] = { 44100, 48000, 32000,
+const int freqs[9] = { 44100, 48000, 32000,
                   22050, 24000, 16000 ,
                   11025 , 12000 , 8000 };
 
 
 #define HDRCMPMASK 0xfffffd00
 
-int head_check(unsigned long head)
+int head_check(unsigned int head)
 {
     if( (head & 0xffe00000) != 0xffe00000)
 	return FALSE;
@@ -46,9 +46,9 @@ int head_check(unsigned long head)
  * the code a header and write the information
  * into the frame structure
  */
-int decode_header(struct mpstr *mp, struct frame *fr,unsigned long newhead)
+int decode_header(struct mpstr *mp, struct frame *fr,unsigned int newhead)
 {
-	long ltmp;
+	int ltmp;
 
     if( newhead & (1<<20) ) {
       fr->lsf = (newhead & (1<<19)) ? 0x0 : 0x1;
@@ -96,7 +96,7 @@ int decode_header(struct mpstr *mp, struct frame *fr,unsigned long newhead)
         break;
       case 2:
         fr->do_layer = do_layer2;
-        fr->framesize = (long) tabsel_123[fr->lsf][1][fr->bitrate_index] * 144000;
+		fr->framesize = (int) tabsel_123[fr->lsf][1][fr->bitrate_index] * 144000;
         fr->framesize /= freqs[fr->sampling_frequency];
         fr->framesize += fr->padding - 4;
         break;
@@ -107,11 +107,11 @@ int decode_header(struct mpstr *mp, struct frame *fr,unsigned long newhead)
         ------- BEGIN OF MODIFICATIONS FOR mpglib.dll
           Because LCC-Win32 made the Program crash at this
           point, the following modification was necessary.
-          fr->framesize  = (long) tabsel_123[fr->lsf][2][fr->bitrate_index] * 144000;
+		  fr->framesize  = (int) tabsel_123[fr->lsf][2][fr->bitrate_index] * 144000;
           fr->framesize /= freqs[fr->sampling_frequency]<<(fr->lsf);
           fr->framesize = fr->framesize + fr->padding - 4;
 */        
-          ltmp  = (long) tabsel_123[fr->lsf][2][fr->bitrate_index] * 144000;
+		  ltmp  = (int) tabsel_123[fr->lsf][2][fr->bitrate_index] * 144000;
           ltmp /= freqs[fr->sampling_frequency]<<(fr->lsf);
           ltmp  = ltmp + fr->padding - 4;
           fr->framesize=ltmp;
@@ -128,7 +128,7 @@ int decode_header(struct mpstr *mp, struct frame *fr,unsigned long newhead)
 
 unsigned int getbits(struct StaticData * psd, int number_of_bits)
 {
-  unsigned long rval;
+  unsigned int rval;
   
   if(!number_of_bits)
     return 0;
@@ -154,7 +154,7 @@ unsigned int getbits(struct StaticData * psd, int number_of_bits)
 
 unsigned int getbits_fast(struct StaticData * psd, int number_of_bits)
 {
-  unsigned long rval;
+  unsigned int rval;
 
   {
     rval = psd->wordpointer[0];
@@ -271,11 +271,9 @@ int GetVbrTag(VBRTAGDATA *pTagData,  unsigned char *buf)
 
 	if( head_flags & TOC_FLAG )
 	{
-		if( pTagData->toc != NULL )
-		{
-			for(i=0;i<NUMTOCENTRIES;i++)
-				pTagData->toc[i] = buf[i];
-		}
+		for(i=0;i<NUMTOCENTRIES;i++)
+			pTagData->toc[i] = buf[i];
+
 		buf+=NUMTOCENTRIES;
 	}
 

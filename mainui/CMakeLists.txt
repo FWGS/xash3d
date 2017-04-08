@@ -23,26 +23,23 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (MAINUI)
 
-# set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-set (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -Os")
-set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g -O3")
-
-if(PANDORA)
-	add_definitions(-DPANDORA)
-endif()
-
 set (MAINUI_LIBRARY xashmenu)
 
 file (GLOB MAINUI_SOURCES *.cpp)
-include_directories (../common ../engine ${HL_SDK_DIR}/pm_shared)
+include_directories (../common ../engine ../pm_shared)
 add_library (${MAINUI_LIBRARY} SHARED ${MAINUI_SOURCES})
 
-set_target_properties (${MAINUI_SHARED} PROPERTIES
-	VERSION ${XASH3D_VERSION} SOVERSION ${XASH3D_VERSION}
-	POSITION_INDEPENDENT_CODE 1)
+if( MSVC )
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif( )
+
+set_target_properties (${MAINUI_LIBRARY} PROPERTIES
+	POSITION_INDEPENDENT_CODE 1 )
+
+if( WIN32 )
+	set_target_properties(${MAINUI_LIBRARY} PROPERTIES
+		OUTPUT_NAME menu )
+endif()
 
 install( TARGETS ${MAINUI_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d 
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)

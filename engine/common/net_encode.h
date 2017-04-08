@@ -41,10 +41,6 @@ GNU General Public License for more details.
 #define CLDT_DEF( x )	#x, offsetof( clientdata_t, x ), sizeof( ((clientdata_t *)0)->x )
 #define WPDT_DEF( x )	#x, offsetof( weapon_data_t, x ), sizeof( ((weapon_data_t *)0)->x )
 
-#include "event_args.h"
-#include "entity_state.h"
-#include "weaponinfo.h"
-
 enum
 {
 	CUSTOM_NONE = 0,

@@ -271,6 +271,7 @@ int SV_TransferConsistencyInfo( void )
 		{
 			switch( check->force_state )
 			{
+			case force_model_specifybounds_if_avail:
 			case force_exactfile:
 				// only MD5 hash compare
 				break;

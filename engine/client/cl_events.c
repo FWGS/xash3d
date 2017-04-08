@@ -13,6 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
+#ifndef XASH_DEDICATED
+
 #include "common.h"
 #include "client.h"
 #include "event_flags.h"
@@ -63,7 +65,7 @@ CL_EventIndex
 
 =============
 */
-word CL_EventIndex( const char *name )
+word GAME_EXPORT CL_EventIndex( const char *name )
 {
 	int	i;
 	
@@ -84,9 +86,9 @@ CL_EventIndex
 
 =============
 */
-const char *CL_IndexEvent( word index )
+const char *GAME_EXPORT CL_IndexEvent( word index )
 {
-	if( index < 0 || index >= MAX_EVENTS )
+	if( index >= MAX_EVENTS )
 		return 0;
 
 	return cl.event_precache[index];
@@ -134,6 +136,19 @@ qboolean CL_FireEvent( event_info_t *ei )
 
 	if( !ei || !ei->index )
 		return false;
+
+	if( cl_trace_events->integer )
+	{
+		MsgDev( D_INFO, "^3EVENT  %s AT %.2f %.2f %.2f\n"    // event name
+					"     %.2f %.2f\n" // float params
+					"     %i %i\n" // int params
+					"     %s %s\n", // bool params
+					cl.event_precache[ bound( 1, ei->index, MAX_EVENTS )], ei->args.origin[0], ei->args.origin[1], ei->args.origin[2],
+					ei->args.fparam1, ei->args.fparam2,
+					ei->args.iparam1, ei->args.iparam2,
+					ei->args.bparam1 ? "TRUE" : "FALSE", ei->args.bparam2 ? "TRUE" : "FALSE" );
+
+	}
 
 	// get the func pointer
 	for( i = 0; i < MAX_EVENTS; i++ )
@@ -386,8 +401,8 @@ void CL_ParseEvent( sizebuf_t *msg )
 					VectorCopy( cl.refdef.cl_viewangles, args.angles );
 				}
 
-				VectorCopy( cl.frame.local.client.origin, args.origin );
-				VectorCopy( cl.frame.local.client.velocity, args.velocity );
+				VectorCopy( cl.frame.client.origin, args.origin );
+				VectorCopy( cl.frame.client.velocity, args.velocity );
 			}
 			else if( state )
 			{
@@ -395,6 +410,12 @@ void CL_ParseEvent( sizebuf_t *msg )
 				args.angles[PITCH] = -state->angles[PITCH] * 3;
 				args.angles[YAW] = state->angles[YAW];
 				args.angles[ROLL] = 0; // no roll
+
+				// if we restore origin and velocity everytime, why don't do it here also?
+				if( VectorIsNull( args.origin ))
+					VectorCopy( state->origin, args.origin );
+				if( VectorIsNull( args.velocity ))
+					VectorCopy( state->velocity, args.velocity );
 			}
 		}
 		else if( state )
@@ -431,7 +452,7 @@ CL_PlaybackEvent
 
 =============
 */
-void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, float delay, float *origin,
+void GAME_EXPORT CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, float delay, float *origin,
 	float *angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2 )
 {
 	event_args_t	args;
@@ -443,6 +464,14 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 		MsgDev( D_ERROR, "CL_PlaybackEvent: invalid eventindex %i\n", eventindex );
 		return;
 	}
+
+
+	if( flags & FEV_SERVER )
+	{
+		MsgDev( D_WARN, "CL_PlaybackEvent: event with FEV_SERVER flag!\n" );
+		return;
+	}
+
 	// check event for precached
 	if( !CL_EventIndex( cl.event_precache[eventindex] ))
 	{
@@ -459,15 +488,18 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 	args.flags = 0;
 	args.entindex = invokerIndex;
 
-// TODO: restore checks when predicting will be done
-//	if( !angles || VectorIsNull( angles ))
+	if( !angles || VectorIsNull( angles ))
 		VectorCopy( cl.refdef.cl_viewangles, args.angles );
+	else
+		VectorCopy( angles, args.angles );
 
-//	if( !origin || VectorIsNull( origin ))
-		VectorCopy( cl.frame.local.client.origin, args.origin );
+	if( !origin || VectorIsNull( origin ))
+		VectorCopy( cl.predicted.origin, args.origin );
+	else
+		VectorCopy( origin, args.origin );
 
-	VectorCopy( cl.frame.local.client.velocity, args.velocity );
-	args.ducking = cl.frame.local.playerstate.usehull;
+	VectorCopy( cl.predicted.velocity, args.velocity );
+	args.ducking = cl.predicted.usehull == 1;
 
 	args.fparam1 = fparam1;
 	args.fparam2 = fparam2;
@@ -478,3 +510,4 @@ void CL_PlaybackEvent( int flags, const edict_t *pInvoker, word eventindex, floa
 
 	CL_QueueEvent( flags, eventindex, delay, &args );
 }
+#endif // XASH_DEDICATED

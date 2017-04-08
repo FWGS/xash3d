@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "keydefs.h"
 #include "ref_params.h"
 #include "cl_entity.h"
+#include "com_model.h"
 #include "entity_types.h"
 #include "menu_btnsbmp_table.h"
 
@@ -42,6 +43,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ID_BOTTOMCOLOR	8
 #define ID_HIMODELS		9
 #define ID_SHOWMODELS	10
+#define ID_PREDICT	11
+#define ID_LW		12
 
 #define MAX_PLAYERMODELS	100
 
@@ -65,11 +68,16 @@ typedef struct
 
 	menuCheckBox_s	showModels;
 	menuCheckBox_s	hiModels;
+	menuCheckBox_s	clPredict;
+	menuCheckBox_s	clLW;
 	menuSlider_s	topColor;
 	menuSlider_s	bottomColor;
 
 	menuField_s	name;
 	menuSpinControl_s	model;
+
+	bool mouseYawControl;
+	int prevCursorX;
 } uiPlayerSetup_t;
 
 static uiPlayerSetup_t	uiPlayerSetup;
@@ -115,8 +123,8 @@ static void UI_PlayerSetup_FindModels( void )
 	for( i = 0; i < numFiles; i++ )
 	{
 		COM_FileBase( filenames[i], name );
-		sprintf( path, "models/player/%s/%s.mdl", name, name );
-		if( !FILE_EXISTS( path )) continue;
+		snprintf( path, sizeof(path), "models/player/%s/%s.mdl", name, name );
+		if( !FILE_EXISTS( path, TRUE )) continue;
 
 		strcpy( uiPlayerSetup.models[uiPlayerSetup.num_models], name );
 		uiPlayerSetup.num_models++;
@@ -161,6 +169,12 @@ static void UI_PlayerSetup_GetConfig( void )
 
 	if( CVAR_GET_FLOAT( "ui_showmodels" ))
 		uiPlayerSetup.showModels.enabled = 1;
+
+	if( CVAR_GET_FLOAT( "cl_predict" ))
+		uiPlayerSetup.clPredict.enabled = 1;
+
+	if( CVAR_GET_FLOAT( "cl_lw" ))
+		uiPlayerSetup.clLW.enabled = 1;
 }
 
 /*
@@ -176,6 +190,8 @@ static void UI_PlayerSetup_SetConfig( void )
 	CVAR_SET_FLOAT( "bottomcolor", (int)(uiPlayerSetup.bottomColor.curValue * 255 ));
 	CVAR_SET_FLOAT( "cl_himodels", uiPlayerSetup.hiModels.enabled );
 	CVAR_SET_FLOAT( "ui_showmodels", uiPlayerSetup.showModels.enabled );
+	CVAR_SET_FLOAT( "cl_predict", uiPlayerSetup.clPredict.enabled );
+	CVAR_SET_FLOAT( "cl_lw", uiPlayerSetup.clLW.enabled );
 }
 
 /*
@@ -190,7 +206,7 @@ static void UI_PlayerSetup_UpdateConfig( void )
 	int	topColor, bottomColor;
 
 	// see if the model has changed
-	if( stricmp( uiPlayerSetup.currentModel, uiPlayerSetup.models[(int)uiPlayerSetup.model.curValue] ))
+	if( stricmp( uiPlayerSetup.currentModel, uiPlayerSetup.models[(int)uiPlayerSetup.model.curValue] ) != 0 )
 	{
 		strcpy( uiPlayerSetup.currentModel, uiPlayerSetup.models[(int)uiPlayerSetup.model.curValue] );
 	}
@@ -205,8 +221,8 @@ static void UI_PlayerSetup_UpdateConfig( void )
 	}
 	else
 	{
-		sprintf( path, "models/player/%s/%s.mdl", name, name );
-		sprintf( newImage, "models/player/%s/%s.bmp", name, name );
+		snprintf( path, sizeof(path), "models/player/%s/%s.mdl", name, name );
+		snprintf( newImage, sizeof(newImage), "models/player/%s/%s.bmp", name, name );
 	}
 
 	topColor = (int)(uiPlayerSetup.topColor.curValue * 255 );
@@ -217,6 +233,8 @@ static void UI_PlayerSetup_UpdateConfig( void )
 	CVAR_SET_FLOAT( "ui_showmodels", uiPlayerSetup.showModels.enabled );
 	CVAR_SET_FLOAT( "topcolor", topColor );
 	CVAR_SET_FLOAT( "bottomcolor", bottomColor );
+	CVAR_SET_FLOAT( "cl_predict", uiPlayerSetup.clPredict.enabled );
+	CVAR_SET_FLOAT( "cl_lw", uiPlayerSetup.clLW.enabled );
 
 	// IMPORTANT: always set default model becuase we need to have something valid here
 	// if you wish draw your playermodel as normal studiomodel please change "models/player.mdl" to path
@@ -225,7 +243,7 @@ static void UI_PlayerSetup_UpdateConfig( void )
 
 	if( !ui_showmodels->value )
 	{
-		if( stricmp( lastImage, newImage ))
+		if( stricmp( lastImage, newImage ) != 0 )
 		{
 			if( lastImage[0] && playerImage )
 			{
@@ -235,9 +253,9 @@ static void UI_PlayerSetup_UpdateConfig( void )
 				playerImage = 0;
 			}
 
-			if( stricmp( name, "player" ))
+			if( stricmp( name, "player" ) != 0 )
 			{
-				sprintf( lastImage, "models/player/%s/%s.bmp", name, name );
+				snprintf( lastImage, sizeof(lastImage), "models/player/%s/%s.bmp", name, name );
 				playerImage = PIC_Load( lastImage, PIC_KEEP_8BIT ); // if present of course
 			}
 			else if( lastImage[0] && playerImage )
@@ -267,6 +285,8 @@ static void UI_PlayerSetup_Callback( void *self, int event )
 	{
 	case ID_HIMODELS:
 	case ID_SHOWMODELS:
+	case ID_PREDICT:
+	case ID_LW:
 		if( event == QM_PRESSED )
 			((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_PRESSED;
 		else ((menuCheckBox_s *)self)->focusPic = UI_CHECKBOX_FOCUS;
@@ -286,6 +306,7 @@ static void UI_PlayerSetup_Callback( void *self, int event )
 	{
 	case ID_DONE:
 		UI_PlayerSetup_SetConfig();
+		CLIENT_COMMAND( FALSE, "trysaveconfig\n" );
 		UI_PopMenu();
 		break;
 	case ID_ADVOPTIONS:
@@ -308,7 +329,10 @@ static void UI_PlayerSetup_Ownerdraw( void *self )
 	UI_FillRect( item->x, item->y, item->width, item->height, uiPromptBgColor );
 
 	// draw the rectangle
-	UI_DrawRectangle( item->x, item->y, item->width, item->height, uiInputFgColor );
+	if( item->flags & QMF_HIGHLIGHTIFFOCUS && UI_IsCurrentSelected( self ) )
+		UI_DrawRectangle( item->x, item->y, item->width, item->height, uiInputTextColor );
+	else
+		UI_DrawRectangle( item->x, item->y, item->width, item->height, uiInputFgColor );
 
 	if( !ui_showmodels->value && playerImage != 0 )
 	{
@@ -324,10 +348,106 @@ static void UI_PlayerSetup_Ownerdraw( void *self )
 		uiPlayerSetup.refdef.frametime = gpGlobals->frametime;
 		uiPlayerSetup.ent->curstate.body = 0; // clearing body each frame
 
+		if( uiPlayerSetup.mouseYawControl )
+		{
+			int diffX = uiStatic.cursorX - uiPlayerSetup.prevCursorX;
+
+			if( diffX )
+			{
+				float yaw = uiPlayerSetup.ent->angles[1];
+
+				yaw += (float)diffX / uiStatic.scaleX;
+
+				if( yaw > 180.0f )       yaw -= 360.0f;
+				else if( yaw < -180.0f ) yaw += 360.0f;
+
+				uiPlayerSetup.ent->angles[1] = uiPlayerSetup.ent->curstate.angles[1] = yaw;
+			}
+
+			/*if( diffY )
+			{
+				float pitch = uiPlayerSetup.ent->angles[0];
+
+				pitch += diffY;
+
+				if( pitch > 180.0f ) pitch -= 360.0f;
+				else if( pitch < -180.0f ) pitch += 360.0f;
+
+				uiPlayerSetup.ent->angles[0] = uiPlayerSetup.ent->curstate.angles[0] = pitch;
+			}*/
+			uiPlayerSetup.prevCursorX = uiStatic.cursorX;
+		}
+
 		// draw the player model
 		R_AddEntity( ET_NORMAL, uiPlayerSetup.ent );
 		R_RenderFrame( &uiPlayerSetup.refdef );
 	}
+}
+
+/*
+=================
+UI_PlayerSetup_Key
+=================
+*/
+static const char *UI_PlayerSetup_Key( int key, int down )
+{
+	if( key == K_MOUSE1
+		&& UI_CursorInRect( uiPlayerSetup.view.generic.x, uiPlayerSetup.view.generic.y,
+			uiPlayerSetup.view.generic.width, uiPlayerSetup.view.generic.height )
+		&& down
+		&& !uiPlayerSetup.mouseYawControl )
+	{
+		uiPlayerSetup.mouseYawControl = true;
+		uiPlayerSetup.prevCursorX = uiStatic.cursorX;
+	}
+	else if( key == K_MOUSE1 && !down && uiPlayerSetup.mouseYawControl )
+	{
+		uiPlayerSetup.mouseYawControl = false;
+	}
+
+
+	if( UI_IsCurrentSelected( &uiPlayerSetup.view ) )
+	{
+		float yaw = uiPlayerSetup.ent->angles[1];
+
+		switch( key )
+		{
+		case K_LEFTARROW:
+		case K_KP_RIGHTARROW:
+			if( down )
+			{
+				yaw -= 10.0f;
+
+				if( yaw > 180.0f ) yaw -= 360.0f;
+				else if( yaw < -180.0f ) yaw += 360.0f;
+
+				uiPlayerSetup.ent->angles[1] = uiPlayerSetup.ent->curstate.angles[1] = yaw;
+			}
+			break;
+		case K_RIGHTARROW:
+		case K_KP_LEFTARROW:
+			if( down )
+			{
+				yaw -= 10.0f;
+
+				if( yaw > 180.0f ) yaw -= 360.0f;
+				else if( yaw < -180.0f ) yaw += 360.0f;
+
+				uiPlayerSetup.ent->angles[1] = uiPlayerSetup.ent->curstate.angles[1] = yaw;
+			}
+			break;
+		case K_ENTER:
+		case K_AUX1:
+			if( down ) uiPlayerSetup.ent->curstate.sequence++;
+			break;
+		default: return UI_DefaultKey( &uiPlayerSetup.menu, key, down );
+		}
+
+
+		return uiSoundLaunch;
+	}
+	else
+		return UI_DefaultKey( &uiPlayerSetup.menu, key, down );
 }
 
 /*
@@ -342,6 +462,8 @@ static void UI_PlayerSetup_Init( void )
 
 	memset( &uiPlayerSetup, 0, sizeof( uiPlayerSetup_t ));
 
+	uiPlayerSetup.menu.keyFunc = UI_PlayerSetup_Key;
+
 	// disable playermodel preview for HLRally to prevent crash
 	if( !stricmp( gMenu.m_gameinfo.gamefolder, "hlrally" ))
 		game_hlRally = TRUE;
@@ -349,7 +471,7 @@ static void UI_PlayerSetup_Init( void )
 	if( gMenu.m_gameinfo.flags & GFL_NOMODELS )
 		addFlags |= QMF_INACTIVE;
 
-	uiPlayerSetup.menu.vidInitFunc = UI_PlayerSetup_Init;
+	//uiPlayerSetup.menu.vidInitFunc = UI_PlayerSetup_Init;
 
 	uiPlayerSetup.background.generic.id = ID_BACKGROUND;
 	uiPlayerSetup.background.generic.type = QMTYPE_BITMAP;
@@ -393,7 +515,7 @@ static void UI_PlayerSetup_Init( void )
 
 	uiPlayerSetup.view.generic.id = ID_VIEW;
 	uiPlayerSetup.view.generic.type = QMTYPE_BITMAP;
-	uiPlayerSetup.view.generic.flags = QMF_INACTIVE;
+	uiPlayerSetup.view.generic.flags = QMF_HIGHLIGHTIFFOCUS;
 	uiPlayerSetup.view.generic.x = 660;
 	uiPlayerSetup.view.generic.y = 260;
 	uiPlayerSetup.view.generic.width = 260;
@@ -426,7 +548,7 @@ static void UI_PlayerSetup_Init( void )
 
 	uiPlayerSetup.topColor.generic.id = ID_TOPCOLOR;
 	uiPlayerSetup.topColor.generic.type = QMTYPE_SLIDER;
-	uiPlayerSetup.topColor.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|addFlags;
+	uiPlayerSetup.topColor.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS|addFlags;
 	uiPlayerSetup.topColor.generic.name = "Top color";
 	uiPlayerSetup.topColor.generic.x = 250;
 	uiPlayerSetup.topColor.generic.y = 550;
@@ -439,7 +561,7 @@ static void UI_PlayerSetup_Init( void )
 
 	uiPlayerSetup.bottomColor.generic.id = ID_BOTTOMCOLOR;
 	uiPlayerSetup.bottomColor.generic.type = QMTYPE_SLIDER;
-	uiPlayerSetup.bottomColor.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|addFlags;
+	uiPlayerSetup.bottomColor.generic.flags = QMF_PULSEIFFOCUS|QMF_DROPSHADOW|QMF_HIGHLIGHTIFFOCUS|addFlags;
 	uiPlayerSetup.bottomColor.generic.name = "Bottom color";
 	uiPlayerSetup.bottomColor.generic.x = 250;
 	uiPlayerSetup.bottomColor.generic.y = 620;
@@ -450,20 +572,38 @@ static void UI_PlayerSetup_Init( void )
 	uiPlayerSetup.bottomColor.maxValue = 1.0;
 	uiPlayerSetup.bottomColor.range = 0.05f;
 
+	uiPlayerSetup.clPredict.generic.id = ID_PREDICT;
+	uiPlayerSetup.clPredict.generic.type = QMTYPE_CHECKBOX;
+	uiPlayerSetup.clPredict.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW|addFlags;
+	uiPlayerSetup.clPredict.generic.name = "Predict movement";
+	uiPlayerSetup.clPredict.generic.x = 72;
+	uiPlayerSetup.clPredict.generic.y = 380;
+	uiPlayerSetup.clPredict.generic.callback = UI_PlayerSetup_Callback;
+	uiPlayerSetup.clPredict.generic.statusText = "Enable player movement prediction";
+
+	uiPlayerSetup.clLW.generic.id = ID_LW;
+	uiPlayerSetup.clLW.generic.type = QMTYPE_CHECKBOX;
+	uiPlayerSetup.clLW.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW|addFlags;
+	uiPlayerSetup.clLW.generic.name = "Local weapons";
+	uiPlayerSetup.clLW.generic.x = 72;
+	uiPlayerSetup.clLW.generic.y = 430;
+	uiPlayerSetup.clLW.generic.callback = UI_PlayerSetup_Callback;
+	uiPlayerSetup.clLW.generic.statusText = "Enable local weapons";
+
 	uiPlayerSetup.showModels.generic.id = ID_SHOWMODELS;
 	uiPlayerSetup.showModels.generic.type = QMTYPE_CHECKBOX;
-	uiPlayerSetup.showModels.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW|addFlags;
+	uiPlayerSetup.showModels.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW|addFlags;
 	uiPlayerSetup.showModels.generic.name = "Show 3D Preview";
-	uiPlayerSetup.showModels.generic.x = 72;
+	uiPlayerSetup.showModels.generic.x = 340;
 	uiPlayerSetup.showModels.generic.y = 380;
 	uiPlayerSetup.showModels.generic.callback = UI_PlayerSetup_Callback;
 	uiPlayerSetup.showModels.generic.statusText = "show 3D player models instead of preview thumbnails";
 
 	uiPlayerSetup.hiModels.generic.id = ID_HIMODELS;
 	uiPlayerSetup.hiModels.generic.type = QMTYPE_CHECKBOX;
-	uiPlayerSetup.hiModels.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_MOUSEONLY|QMF_DROPSHADOW|addFlags;
+	uiPlayerSetup.hiModels.generic.flags = QMF_HIGHLIGHTIFFOCUS|QMF_ACT_ONRELEASE|QMF_DROPSHADOW|addFlags;
 	uiPlayerSetup.hiModels.generic.name = "High quality models";
-	uiPlayerSetup.hiModels.generic.x = 72;
+	uiPlayerSetup.hiModels.generic.x = 340;
 	uiPlayerSetup.hiModels.generic.y = 430;
 	uiPlayerSetup.hiModels.generic.callback = UI_PlayerSetup_Callback;
 	uiPlayerSetup.hiModels.generic.statusText = "show hi-res models in multiplayer";
@@ -474,19 +614,21 @@ static void UI_PlayerSetup_Init( void )
 	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.banner );
 	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.done );
 	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.AdvOptions );
-	// disable playermodel preview for HLRally to prevent crash
-	if( game_hlRally == FALSE )
-		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.view );
 	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.name );
-
+	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.clPredict);
+	UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.clLW);
 	if( !gMenu.m_gameinfo.flags & GFL_NOMODELS )
 	{
-		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.model );
 		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.topColor );
 		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.bottomColor );
 		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.showModels );
 		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.hiModels );
+		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.model );
 	}
+	// disable playermodel preview for HLRally to prevent crash
+	if( game_hlRally == FALSE )
+		UI_AddItem( &uiPlayerSetup.menu, (void *)&uiPlayerSetup.view );
+
 	// setup render and actor
 	uiPlayerSetup.refdef.fov_x = 40;
 

@@ -11,6 +11,16 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
+
+In addition, as a special exception, the author gives permission
+to link the code of this program with VGUI library developed by
+Valve, L.L.C ("Valve"). You must obey the GNU General Public License
+in all respects for all of the code used other than VGUI library.
+If you modify this file, you may extend this exception to your
+version of the file, but you are not obligated to do so. If
+you do not wish to do so, delete this exception statement
+from your version.
+
 */
 #ifdef XASH_VGUI
 #include "vgui_main.h"
@@ -144,20 +154,4 @@ extern "C" void InitAPI(vguiapi_t * api)
 	g_api->MouseMove = VGUI_MouseMove;
 	g_api->Key = VGUI_Key;
 }
-
-#ifdef _WIN32
-#include "windows.h"
-// Required DLL entry point
-qboolean WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-if (fdwReason == DLL_PROCESS_ATTACH)
-{
-}
-else if (fdwReason == DLL_PROCESS_DETACH)
-{
-}
-return TRUE;
-}
-#endif
-
 #endif

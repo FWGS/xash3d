@@ -22,17 +22,34 @@ extern "C" {
 
 #include "port.h"
 
-#ifndef _WIN32
-#ifdef __linux__
-#include <linux/limits.h> // PATH_MAX
+#include "backends.h"
+#include "defaults.h"
+//
+// check if selected backend not allowed
+//
+#if XASH_TIMER == TIMER_NULL
+	#error "Please select timer backend"
 #endif
+
+#ifndef XASH_DEDICATED
+	#if XASH_VIDEO == VIDEO_NULL
+		#error "Please select video backend"
+	#endif
+#endif
+
+#ifndef XASH_SDL
+
+#if XASH_TIMER == TIMER_SDL || XASH_VIDEO == VIDEO_SDL || XASH_SOUND == SOUND_SDL || XASH_INPUT == INPUT_SDL
+#error "SDL backends without XASH_SDL not allowed"
+#endif
+
+#endif
+
+#ifndef _WIN32
 #include <stddef.h> // size_t
 #include <stdio.h> // off_t
 #include <stdarg.h> // va_list
 #include <stdlib.h> // rand, abs
-#ifdef PANDORA
-#include <unistd.h>	//off_t on PANDORA
-#endif
 
 #define EXPORT __attribute__ ((visibility ("default")))
 #else
@@ -41,14 +58,15 @@ extern "C" {
 #include <stdlib.h> // rand, adbs
 #include <stdarg.h> // va
 #define EXPORT		__declspec( dllexport )
-#define PATH_MAX MAX_PATH // Now there is must be MATH_PAX
+#undef PATH_MAX
+#define PATH_MAX 4096 // Try workaround some strange bugs
 #endif
 
 #define MAX_STRING		256	// generic string
 #define MAX_INFO_STRING	256	// infostrings are transmitted across network
 #define MAX_SYSPATH		PATH_MAX	// system filepath
 #define MAX_MODS		512	// environment games that engine can keep visible
-#define BIT( n )		(1<<( n ))
+#define BIT( n )		(1U << ( n ))
 
 #ifndef __cplusplus
 #define NULL		((void *)0)
@@ -60,9 +78,22 @@ extern "C" {
 
 #define Mod_AllowMaterials()	( mod_allow_materials != NULL && mod_allow_materials->integer && !( host.features & ENGINE_DISABLE_HDTEXTURES ))
 
-typedef unsigned long	dword;
+#ifdef XASH_FORCEINLINE
+#define xash_force_inline _inline
+#else
+#define xash_force_inline
+#endif
+
+#if defined __i386__ &&  defined __GNUC__
+#define GAME_EXPORT __attribute__((force_align_arg_pointer))
+#else
+#define GAME_EXPORT
+#endif
+
+typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
+typedef struct searchpath_s searchpath_t;
 typedef off_t		fs_offset_t;
 typedef struct file_s	file_t;		// normal file
 typedef struct wfile_s	wfile_t;		// wad file
@@ -85,19 +116,26 @@ enum
 };
 
 typedef enum
-{	
+{
+	HOST_UNKNOWN = 0, // prevent detecting as normal before host.type set
 	HOST_NORMAL,	// listen server, singleplayer
 	HOST_DEDICATED,
 } instance_t;
+
+#ifdef XASH_DEDICATED
+#define Host_IsDedicated() ( true )
+#else
+#define Host_IsDedicated() ( host.type == HOST_DEDICATED )
+#endif
 
 #include "system.h"
 #include "ref_params.h"
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	0.15f		// engine current version
+#define XASH_VERSION	"0.19"		// engine current version
 // since this fork have own version, this is just left for compability
-#define BASED_VERSION	0.97f
+#define BASED_VERSION	0.98f
 
 // PERFORMANCE INFO
 #define MIN_FPS         	15.0		// host minimum fps value for maxfps.
@@ -135,6 +173,8 @@ typedef enum
 #define FS_Gamedir()	SI.GameInfo->gamedir
 #define FS_Title()		SI.GameInfo->title
 
+#define FORCE_DRAW_VERSION_TIME 5.0f // draw version for 5 seconds
+
 #ifdef _DEBUG
 void DBG_AssertFunction( qboolean fExpr, const char* szExpr, const char* szFile, int szLine, const char* szMessage );
 #define Assert( f )		DBG_AssertFunction( f, #f, __FILE__, __LINE__, NULL )
@@ -152,7 +192,8 @@ extern convar_t	*host_limitlocal;
 extern convar_t	*host_maxfps;
 extern convar_t *net_qport;
 extern convar_t *download_types;
-
+extern convar_t	*host_xashds_hacks;
+extern convar_t	*sv_master;
 /*
 ==============================================================
 
@@ -183,6 +224,8 @@ typedef struct gameinfo_s
 	// .dll pathes
 	char		dll_path[64];	// e.g. "bin" or "cl_dlls"
 	char		game_dll[64];	// custom path for game.dll
+	char		game_dll_linux[64];	// custom path for game.dll
+	char		game_dll_osx[64];	// custom path for game.dll
 	char		client_lib[64];	// custom name of client library
 	// .ico path
 	char		iconpath[64];	// "game.ico" by default
@@ -211,6 +254,7 @@ typedef struct gameinfo_s
 	int		max_tents;	// min temp ents is 300, max is 2048
 	int		max_beams;	// min beams is 64, max beams is 512
 	int		max_particles;	// min particles is 4096, max particles is 32768
+	qboolean	added;
 } gameinfo_t;
 
 typedef struct sysinfo_s
@@ -219,6 +263,8 @@ typedef struct sysinfo_s
 	gameinfo_t	*GameInfo;	// current GameInfo
 	gameinfo_t	*games[MAX_MODS];	// environment games (founded at each engine start)
 	int		numgames;
+	char gamedll[256];
+	char clientlib[256];
 } sysinfo_t;
 
 typedef enum
@@ -268,7 +314,8 @@ typedef enum
 typedef enum
 {
 	NS_CLIENT,
-	NS_SERVER
+	NS_SERVER,
+	NS_MULTICAST
 } netsrc_t;
 
 #include "netadr.h"
@@ -280,6 +327,7 @@ typedef struct host_redirect_s
 	int		buffersize;
 	netadr_t		address;
 	void		(*flush)( netadr_t adr, rdtype_t target, char *buffer );
+	int lines;
 } host_redirect_t;
 
 typedef struct
@@ -301,12 +349,6 @@ typedef struct host_parm_s
 {
     HINSTANCE	hInst;
     HANDLE		hMutex;
-#ifdef _WIN32
-	LPTOP_LEVEL_EXCEPTION_FILTER       oldFilter;
-#else
-	struct sigaction oldFilter;
-#endif
-
 	host_state	state;		// global host state
 	instance_t	type;		// running at
 	jmp_buf		abortframe;	// abort current frame
@@ -346,6 +388,8 @@ typedef struct host_parm_s
 	qboolean		force_draw_version;	// used when fraps is loaded
 	qboolean		write_to_clipboard;	// put image to clipboard instead of disk
 	qboolean		crashed;		// set to true if crashed
+	qboolean		skip_configs;	// skip config save during Host_Shutdown
+	double	force_draw_version_time; // time when disable force_draw_version
 
 	char		rootdir[256];	// member root directory
 	char		gamefolder[64];	// it's a default gamefolder	
@@ -364,7 +408,7 @@ typedef struct host_parm_s
 	soundlist_t	*soundList;	// used for keep ambient sounds, when renderer or sound is restarted
 	int		numsounds;
 	qboolean enabledll;
-	char vguiloader[64];
+	qboolean textmode;
 } host_parm_t;
 
 extern host_parm_t	host;
@@ -373,6 +417,8 @@ extern sysinfo_t	SI;
 //
 // filesystem.c
 //
+int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive );
+int matchpattern_with_separator( const char *in, const char *pattern, qboolean caseinsensitive, const char *separators, qboolean wildcard_least_one );
 void FS_Init( void );
 void FS_Path( void );
 char *FS_ToLowerCase( const char *path );
@@ -383,6 +429,7 @@ void FS_AddGameDirectory( const char *dir, int flags );
 void FS_AddGameHierarchy( const char *dir, int flags );
 void FS_LoadGameInfo( const char *rootfolder );
 void FS_FileBase( const char *in, char *out );
+void FS_MapFileBase( const char *in, char *out );
 const char *FS_FileExtension( const char *in );
 void FS_DefaultExtension( char *path, const char *extension );
 void FS_ExtractFilePath( const char *path, char* dest );
@@ -391,6 +438,7 @@ const char *FS_FileWithoutPath( const char *in );
 wfile_t *W_Open( const char *filename, const char *mode );
 byte *W_LoadLump( wfile_t *wad, const char *lumpname, size_t *lumpsizeptr, const char type );
 void W_Close( wfile_t *wad );
+searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 qboolean FS_WriteFile( const char *filename, const void *data, fs_offset_t len );
@@ -404,8 +452,7 @@ fs_offset_t FS_Write( file_t *file, const void *data, size_t datasize );
 fs_offset_t FS_Read( file_t *file, void *buffer, size_t buffersize );
 int FS_VPrintf( file_t *file, const char *format, va_list ap );
 int FS_Seek( file_t *file, fs_offset_t offset, int whence );
-int FS_Gets( file_t *file, byte *string, size_t bufsize );
-int FS_Printf( file_t *file, const char *format, ... );
+int FS_Printf( file_t *file, const char *format, ... ) _format(2);
 fs_offset_t FS_FileSize( const char *filename, qboolean gamedironly );
 fs_offset_t FS_FileTime( const char *filename, qboolean gamedironly );
 int FS_Print( file_t *file, const char *msg );
@@ -422,13 +469,13 @@ int FS_Close( file_t *file );
 int FS_Getc( file_t *file );
 qboolean FS_Eof( file_t *file );
 fs_offset_t FS_FileLength( file_t *f );
+void FS_Rescan( void );
 
 //
 // network.c
 //
 void NET_Init( void );
 void NET_Shutdown( void );
-void NET_Sleep( int msec );
 void NET_Config( qboolean net_enable );
 qboolean NET_IsLocalAddress( netadr_t adr );
 char *NET_AdrToString( const netadr_t a );
@@ -483,6 +530,18 @@ typedef enum
 	IL_DDS_HARDWARE = BIT(4), // DXT compression is support
 } ilFlags_t;
 
+// goes into rgbdata_t->encode
+#define DXT_ENCODE_DEFAULT		0	// don't use custom encoders
+#define DXT_ENCODE_COLOR_YCoCg	0x1A01	// make sure that value dosn't collide with anything
+#define DXT_ENCODE_ALPHA_1BIT		0x1A02	// normal 1-bit alpha
+#define DXT_ENCODE_ALPHA_8BIT		0x1A03	// normal 8-bit alpha
+#define DXT_ENCODE_ALPHA_SDF		0x1A04	// signed distance field
+#define DXT_ENCODE_NORMAL_AG_ORTHO	0x1A05	// orthographic projection
+#define DXT_ENCODE_NORMAL_AG_STEREO	0x1A06	// stereographic projection
+#define DXT_ENCODE_NORMAL_AG_PARABOLOID	0x1A07	// paraboloid projection
+#define DXT_ENCODE_NORMAL_AG_QUARTIC	0x1A08	// newton method
+#define DXT_ENCODE_NORMAL_AG_AZIMUTHAL	0x1A09	// Lambert Azimuthal Equal-Area
+
 // rgbdata output flags
 typedef enum
 {
@@ -530,6 +589,7 @@ typedef struct rgbdata_s
 	word	depth;		// image depth
 	uint	type;		// compression type
 	uint	flags;		// misc image flags
+	word	encode;
 	byte	numMips;	// mipmap count
 	byte	*palette;		// palette if present
 	byte	*buffer;		// image buffer
@@ -567,6 +627,7 @@ qboolean Image_Process( rgbdata_t **pix, int width, int height, float gamma, uin
 void Image_PaletteHueReplace( byte *palSrc, int newHue, int start, int end );
 void Image_SetForceFlags( uint flags );	// set image force flags on loading
 size_t Image_DXTGetLinearSize( int type, int width, int height, int depth );
+void Image_SetMDLPointer(byte *p);
 
 /*
 ========================================================================
@@ -626,9 +687,9 @@ wavdata_t *FS_LoadSound( const char *filename, const byte *buffer, size_t size )
 void FS_FreeSound( wavdata_t *pack );
 stream_t *FS_OpenStream( const char *filename );
 wavdata_t *FS_StreamInfo( stream_t *stream );
-long FS_ReadStream( stream_t *stream, int bytes, void *buffer );
-long FS_SetStreamPos( stream_t *stream, long newpos );
-long FS_GetStreamPos( stream_t *stream );
+int FS_ReadStream( stream_t *stream, int bytes, void *buffer );
+int FS_SetStreamPos( stream_t *stream, int newpos );
+int FS_GetStreamPos( stream_t *stream );
 void FS_FreeStream( stream_t *stream );
 qboolean Sound_Process( wavdata_t **wav, int rate, int width, uint flags );
 uint Sound_GetApproxWavePlayLen( const char *filepath );
@@ -637,6 +698,10 @@ uint Sound_GetApproxWavePlayLen( const char *filepath );
 // build.c
 //
 int Q_buildnum( void );
+const char *Q_buildos( void );
+const char *Q_buildarch( void );
+const char *Q_buildcommit( void );
+int Q_buildnum_compat( void );
 
 //
 // host.c
@@ -644,15 +709,20 @@ int Q_buildnum( void );
 void EXPORT Host_Shutdown( void );
 void Host_SetServerState( int state );
 int Host_ServerState( void );
-int Host_CompareFileTime( long ft1, long ft2 );
+int Host_CompareFileTime( int ft1, int ft2 );
 void Host_NewInstance( const char *name, const char *finalmsg );
 qboolean Host_NewGame( const char *mapName, qboolean loadGame );
 void Host_EndGame( const char *message, ... );
-void Host_AbortCurrentFrame( void );
+#ifdef __GNUC__
+void EXPORT Host_AbortCurrentFrame( void ) __attribute__ ((noreturn)) __attribute__ ((noinline)) ;
+#endif
+#ifdef _MSC_VER
+__declspec(noreturn) void EXPORT Host_AbortCurrentFrame( void );
+#endif
 void Host_RestartAmbientSounds( void );
 void Host_RestartDecals( void );
 qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset );
-void Host_WriteServerConfig( const char *name );
+void Host_WriteGameConfig( const char *name );
 void Host_WriteOpenGLConfig( void );
 void Host_WriteVideoConfig( void );
 void Host_WriteConfig( void );
@@ -660,7 +730,8 @@ qboolean Host_IsLocalGame( void );
 qboolean Host_IsLocalClient( void );
 void Host_ShutdownServer( void );
 void Host_Print( const char *txt );
-void Host_Error( const char *error, ... );
+void Host_Error( const char *error, ... ) _format(1);
+void Host_MapDesignError( const char *error, ... ) _format(1);
 void Host_PrintEngineFeatures( void );
 void Host_InitDecals( void );
 void Host_Credits( void );
@@ -675,6 +746,7 @@ CLIENT / SERVER SYSTEMS
 void CL_Init( void );
 void CL_Shutdown( void );
 void Host_ClientFrame( void );
+void Host_RenderFrame( void );
 qboolean CL_Active( void );
 
 void SV_Init( void );
@@ -704,8 +776,8 @@ void pfnGetGameDir( char *szGetGameDir );
 int pfnDecalIndex( const char *m );
 int pfnGetModelType( model_t *mod );
 int pfnIsMapValid( char *filename );
-void Con_DPrintf( char *fmt, ... );
-void Con_Printf( char *szFmt, ... );
+void Con_DPrintf( char *fmt, ... ) _format(1);
+void Con_Printf( char *szFmt, ... ) _format(1);
 int pfnIsInGame( void );
 
 // CS:CS engfuncs (stubs)
@@ -740,7 +812,7 @@ void CRC32_ProcessBuffer( dword *pulCRC, const void *pBuffer, int nBuffer );
 void CRC32_ProcessByte( dword *pulCRC, byte ch );
 void CRC32_Final( dword *pulCRC );
 qboolean CRC32_File( dword *crcvalue, const char *filename );
-qboolean CRC32_MapFile( dword *crcvalue, const char *filename );
+qboolean CRC32_MapFile( dword *crcvalue, const char *filename, qboolean multiplayer );
 void MD5Init( MD5Context_t *ctx );
 void MD5Update( MD5Context_t *ctx, const byte *buf, uint len );
 void MD5Final( byte digest[16], MD5Context_t *ctx );
@@ -759,6 +831,13 @@ void HPAK_CheckSize( const char *filename );
 void HPAK_FlushHostQueue( void );
 
 //
+// identification.c
+//
+void ID_Init( void );
+const char *ID_GetMD5( void );
+void GAME_EXPORT ID_SetCustomClientID( const char *id );
+
+//
 // keys.c
 //
 qboolean Key_IsDown( int keynum );
@@ -774,6 +853,7 @@ int Key_StringToKeynum( const char *str );
 int Key_GetKey( const char *binding );
 void Key_EnumCmds_f( void );
 void Key_SetKeyDest( int key_dest );
+void Key_EnableTextInput( qboolean enable, qboolean force );
 
 //
 // avikit.c
@@ -809,6 +889,11 @@ struct pmtrace_s;
 // input.c
 //
 
+#define INPUT_DEVICE_MOUSE (1<<0)
+#define INPUT_DEVICE_TOUCH (1<<1)
+#define INPUT_DEVICE_JOYSTICK (1<<2)
+#define INPUT_DEVICE_VR (1<<3)
+
 void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active );
 //void IN_JoyAppendMove( usercmd_t *cmd, float forwardmove, float sidemove );
 
@@ -834,14 +919,13 @@ struct pmtrace_s *PM_TraceLine( float *start, float *end, int flags, int usehull
 void SV_StartSound( edict_t *ent, int chan, const char *sample, float vol, float attn, int flags, int pitch );
 void SV_StartMusic( const char *curtrack, const char *looptrack, fs_offset_t position );
 void SV_CreateDecal( struct sizebuf_s *msg, const float *origin, int decalIndex, int entityIndex, int modelIndex, int flags, float scale );
-void SV_CreateStudioDecal( struct sizebuf_s *msg, const float *origin, const float *start, int decalIndex, int entityIndex, int modelIndex,
-int flags, struct modelstate_s *state );
+void SV_CreateStudioDecal( struct sizebuf_s *msg, const float *origin, const float *start, int decalIndex, int entityIndex, int modelIndex, int flags, struct modelstate_s *state );
 struct sizebuf_s *SV_GetReliableDatagram( void );
 qboolean SV_RestoreCustomDecal( struct decallist_s *entry, edict_t *pEdict, qboolean adjacent );
 int R_CreateDecalList( struct decallist_s *pList, qboolean changelevel );
 void R_ClearAllDecals( void );
 void R_ClearStaticEntities( void );
-qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, int *position );
+qboolean S_StreamGetCurrentState( char *currentTrack, char *loopTrack, fs_offset_t *position );
 struct cl_entity_s *CL_GetEntityByIndex( int index );
 struct cl_entity_s *CL_GetLocalPlayer( void );
 struct player_info_s *CL_GetPlayerInfo( int playerIndex );
@@ -873,18 +957,19 @@ void SCR_Init( void );
 void SCR_UpdateScreen( void );
 void SCR_BeginLoadingPlaque( qboolean is_background );
 void SCR_CheckStartupVids( void );
-long SCR_GetAudioChunk( char *rawdata, long length );
+int SCR_GetAudioChunk( char *rawdata, int length );
 wavdata_t *SCR_GetMovieInfo( void );
 void SCR_Shutdown( void );
 void Con_Print( const char *txt );
-void Con_NPrintf( int idx, char *fmt, ... );
-void Con_NXPrintf( struct con_nprint_s *info, char *fmt, ... );
-void UI_NPrintf( int idx, char *fmt, ... );
-void UI_NXPrintf( struct con_nprint_s *info, char *fmt, ... );
+void Rcon_Print( const char *pMsg );
+void Con_NPrintf( int idx, char *fmt, ... ) _format(2);
+void Con_NXPrintf( struct con_nprint_s *info, char *fmt, ... ) _format(2);
+void UI_NPrintf( int idx, char *fmt, ... ) _format(2);
+void UI_NXPrintf( struct con_nprint_s *info, char *fmt, ... ) _format(2);
 char *Info_ValueForKey( const char *s, const char *key );
 void Info_RemovePrefixedKeys( char *start, char prefix );
 qboolean Info_RemoveKey( char *s, const char *key );
-qboolean Info_SetValueForKey( char *s, const char *key, const char *value );
+qboolean Info_SetValueForKey( char *s, const char *key, const char *value, size_t maxsize );
 qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, int maxsize );
 qboolean Info_Validate( const char *s );
 void Info_Print( const char *s );
@@ -893,8 +978,8 @@ char *Cvar_Serverinfo( void );
 void Cmd_WriteVariables( file_t *f );
 qboolean Cmd_CheckMapsList( qboolean fRefresh );
 void Cmd_AutoComplete( char *complete_string );
-void COM_SetRandomSeed( long lSeed );
-long Com_RandomLong( long lMin, long lMax );
+void COM_SetRandomSeed( int lSeed );
+int Com_RandomLong( int lMin, int lMax );
 float Com_RandomFloat( float fMin, float fMax );
 void TrimSpace( const char *source, char *dest );\
 const byte *GL_TextureData( unsigned int texnum );
@@ -907,12 +992,15 @@ struct cmdalias_s *Cmd_AliasGetList( void );
 char *Cmd_GetName( struct cmd_s *cmd );
 cvar_t *Cvar_GetList( void );
 void Cmd_Null_f( void );
+int CSCR_LoadDefaultCVars( const char *scriptfilename );
+int CSCR_WriteGameCVars( file_t *cfg, const char *scriptfilename );
 
 void HTTP_AddDownload( char *path, int size, qboolean process );
 void HTTP_ResetProcessState ( void );
 void HTTP_Init( void );
 void HTTP_Shutdown( void );
 void HTTP_Run( void );
+void HTTP_ClearCustomServers( void );
 void CL_ProcessFile( qboolean successfully_received, const char *filename );
 
 typedef struct autocomplete_list_s
@@ -922,12 +1010,28 @@ typedef struct autocomplete_list_s
 } autocomplete_list_t;
 
 extern autocomplete_list_t cmd_list[];
+
+typedef struct
+{
+	string		buffer;
+	int		cursor;
+	int		scroll;
+	int		widthInChars;
+} field_t;
+
+void Con_CompleteCommand( field_t *field );
+void Con_ClearAutoComplete();
+
+//
+// console.c
+//
+void Con_Clear( void );
+
 extern const char *svc_strings[256];
 
 // soundlib shared exports
 qboolean S_Init( void );
 void S_Shutdown( void );
-void S_Activate( qboolean active, void *hInst );
 void S_StopSound( int entnum, int channel, const char *soundname );
 int S_GetCurrentStaticSounds( soundlist_t *pout, int size );
 void S_StopAllSounds( void );

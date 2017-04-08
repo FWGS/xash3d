@@ -81,10 +81,10 @@ WINE_MODREF* MODULE_FindNearFunctionName(FARPROC f)
 //    while(strcmp(m, list->wm->filename))
     while(list && !s)
     {
-		s=PE_FindNearFunctionName(list->wm, f);
+		s = PE_FindNearFunctionName(list->wm, f);
 		list = list->prev;
 	}
-	return s;
+	return (WINE_MODREF*)s;
 }
 
 
