@@ -365,17 +365,6 @@ static int CL_AdjustYPos( float y, int height )
 	return yPos * scale;
 }
 
-void CL_CenterPrint_f( void )
-{
-	if( Cmd_Argc() < 3 )
-	{
-		Msg( "centerprint: <text> <y>" );
-		return;
-	}
-
-	CL_CenterPrint( Cmd_Argv(1), Q_atof(Cmd_Argv(2)) );
-}
-
 /*
 =============
 CL_CenterPrint
@@ -4142,8 +4131,6 @@ qboolean CL_LoadProgs( const char *name )
 	clgame.dllFuncs.pfnInit();
 
 	CL_InitStudioAPI( );
-
-	Cmd_AddCommand( "centerprint", CL_CenterPrint_f, "centerprint test function");
 
 	return true;
 }
