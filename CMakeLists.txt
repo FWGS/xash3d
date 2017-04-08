@@ -27,7 +27,7 @@ project (XASH3D)
 # USER DEFINES \
 ################\
 
-set (XASH3D_VERSION 0.19)
+set (XASH3D_VERSION 0.19.1)
 
 set (HL_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/hlsdk/)
 

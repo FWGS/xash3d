@@ -133,7 +133,7 @@ typedef enum
 #include "com_model.h"
 #include "crtlib.h"
 
-#define XASH_VERSION	"0.19"		// engine current version
+#define XASH_VERSION	"0.19.1"		// engine current version
 // since this fork have own version, this is just left for compability
 #define BASED_VERSION	0.98f
 
