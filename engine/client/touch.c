@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "client.h"
 #include "touch.h"
 #include "math.h"
+#include "vgui_draw.h"
 #ifdef XASH_SDL
 #include <SDL_hints.h>
 #include <SDL_keyboard.h>
@@ -1549,6 +1550,18 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 			Key_Event(241, 0);
 		return 0;
 	}
+
+
+	VGui_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
+
+	if( type == event_down )
+			VGui_KeyEvent(241, 1);
+	if( type == event_up )
+			VGui_KeyEvent(241, 0);
+
+	// allow scoreboard scroll
+	if( host.mouse_visible && type == event_motion )
+		return 0;
 
 	if( !touch.initialized || (!touch_enable->integer && !touch.clientonly) )
 	{
