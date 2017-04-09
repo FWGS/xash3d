@@ -28,6 +28,7 @@ int	g_textures[VGUI_MAX_TEXTURES];
 int	g_textureId = 0;
 int	g_iBoundTexture;
 static enum VGUI_KeyCode s_pVirtualKeyTrans[256];
+static enum VGUI_DefaultCursor s_currentCursor;
 #ifdef XASH_SDL
 #include <SDL_events.h>
 #include "platform/sdl/events.h"
@@ -106,19 +107,18 @@ void VGUI_InitCursors( void )
 
 void GAME_EXPORT VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 {
-	qboolean oldstate = host.mouse_visible;
+	qboolean visible;
 	if( cls.key_dest != key_game || cl.refdef.paused )
 		return;
-
 	
 	switch( cursor )
 	{
 		case dc_user:
 		case dc_none:
-			host.mouse_visible = false;
+			visible = false;
 			break;
 		default:
-		host.mouse_visible = true;
+		visible = true;
 		break;
 	}
 
@@ -132,11 +132,16 @@ void GAME_EXPORT VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 	else
 	{
 		SDL_ShowCursor( false );
-		if( oldstate )
+		if( host.mouse_visible )
 			SDL_GetRelativeMouseState( 0, 0 );
 	}
 	//SDL_SetRelativeMouseMode(false);
 #endif
+	if( s_currentCursor == cursor )
+		return;
+
+	s_currentCursor = cursor;
+	host.mouse_visible = visible;
 }
 
 byte GAME_EXPORT VGUI_GetColor( int i, int j)
@@ -253,17 +258,11 @@ void VGui_Startup( int width, int height )
 		}
 
 	}
-	width *= scr_width->value / (float)clgame.scrInfo.iWidth;
-	height *= scr_height->value / (float)clgame.scrInfo.iHeight;
 
-	// vgui may crash if it cannot find font
-	if( width <= 320 )
-		width = 320;
-	else if( width <= 400 )
-		width = 400;
-	else if( width <= 512 )
-		width = 512;
-	else if( width <= 640 )
+	if( height < 480 )
+		height = 480;
+
+	if( width <= 640 )
 		width = 640;
 	else if( width <= 800 )
 		width = 800;
