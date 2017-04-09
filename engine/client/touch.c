@@ -1589,7 +1589,7 @@ void IN_TouchKeyEvent( int key, int down )
 	x = xi/SCR_W;
 	y = yi/SCR_H;
 
-	IN_TouchControlsEvent( down, key == K_MOUSE1?0:1, x, y, 0, 0 );
+	IN_TouchControlsEvent( !down, key == K_MOUSE1?0:1, x, y, 0, 0 );
 }
 
 void IN_TouchShutdown( void )
