@@ -72,6 +72,11 @@ qboolean SNDDMA_Init( void *hInst )
 		return false;
 	}
 
+#ifdef __linux__
+	setenv("PULSE_PROP_application.name", GI->title , 1);
+	setenv("PULSE_PROP_media.role", "game", 1);
+#endif
+
 	Q_memset(&desired, 0, sizeof(desired));
 	desired.freq = SOUND_DMA_SPEED;
 	desired.format = AUDIO_S16LSB;
