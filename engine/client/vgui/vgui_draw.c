@@ -29,6 +29,8 @@ int	g_textureId = 0;
 int	g_iBoundTexture;
 static enum VGUI_KeyCode s_pVirtualKeyTrans[256];
 #ifdef XASH_SDL
+#include <SDL_events.h>
+#include "platform/sdl/events.h"
 static SDL_Cursor* s_pDefaultCursor[20];
 #endif
 
@@ -70,9 +72,14 @@ qboolean GAME_EXPORT VGUI_IsInGame( void )
 	return cls.state == ca_active && cls.key_dest == key_game;
 }
 
-void GAME_EXPORT VGUI_GetMousePos( int *x, int *y )
+void GAME_EXPORT VGUI_GetMousePos( int *_x, int *_y )
 {
-	CL_GetMousePosition( x, y );
+	float xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
+	float yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
+	int x,y;
+
+	CL_GetMousePosition( &x, &y );
+	*_x = x / xscale, *_y = y / yscale;
 }
 
 void VGUI_InitCursors( void )
@@ -102,7 +109,7 @@ void GAME_EXPORT VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 	qboolean oldstate = host.mouse_visible;
 	if( cls.key_dest != key_game || cl.refdef.paused )
 		return;
-#ifdef XASH_SDL
+
 	
 	switch( cursor )
 	{
@@ -112,12 +119,14 @@ void GAME_EXPORT VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 			break;
 		default:
 		host.mouse_visible = true;
-		SDL_SetRelativeMouseMode( SDL_FALSE );
-		SDL_SetCursor( s_pDefaultCursor[cursor] );
 		break;
 	}
+
+#ifdef XASH_SDL
 	if( host.mouse_visible )
 	{
+		SDL_SetRelativeMouseMode( SDL_FALSE );
+		SDL_SetCursor( s_pDefaultCursor[cursor] );
 		SDL_ShowCursor( true );
 	}
 	else
@@ -139,11 +148,11 @@ byte GAME_EXPORT VGUI_GetColor( int i, int j)
 
 void GAME_EXPORT VGUI_SetVisible ( qboolean state )
 {
-	host.input_enabled=state;
 	host.mouse_visible=state;
 #ifdef XASH_SDL
 	SDL_ShowCursor( state );
 	if(!state) SDL_GetRelativeMouseState( 0, 0 );
+	SDLash_EnableTextInput( state, true );
 #endif
 }
 vguiapi_t vgui =
@@ -216,12 +225,20 @@ void VGui_Startup( int width, int height )
 				MsgDev( D_WARN, "VGUI preloading failed. Default library will be used!\n");
 		}
 
+		if( Q_strstr( GI->client_lib, ".dll" ) )
+			Q_strncpy( vguiloader, "vgui_support.dll", 256 );
+
 		if( !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
 			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
 
 		lib = Com_LoadLibrary( vguiloader, false );
-		if(!lib)
-			MsgDev( D_ERROR, "Failed to load vgui_support library: %s", Com_GetLibraryError() );
+		if( !lib )
+		{
+			if( FS_SysFileExists( vguiloader, false ) )
+				MsgDev( D_ERROR, "Failed to load vgui_support library: %s", Com_GetLibraryError() );
+			else
+				MsgDev( D_INFO, "vgui_support: not found\n" );
+		}
 		else
 		{
 			F = Com_GetProcAddress( lib, "InitAPI" );
@@ -236,6 +253,8 @@ void VGui_Startup( int width, int height )
 		}
 
 	}
+	width *= scr_width->value / (float)clgame.scrInfo.iWidth;
+	height *= scr_height->value / (float)clgame.scrInfo.iHeight;
 
 	// vgui may crash if it cannot find font
 	if( width <= 320 )
@@ -332,8 +351,6 @@ void VGUI_InitKeyTranslationTable( void )
 	s_pVirtualKeyTrans['X'] = s_pVirtualKeyTrans['x'] = KEY_X;
 	s_pVirtualKeyTrans['Y'] = s_pVirtualKeyTrans['y'] = KEY_Y;
 	s_pVirtualKeyTrans['Z'] = s_pVirtualKeyTrans['z'] = KEY_Z;
-#ifdef XASH_SDL
-
 
 	s_pVirtualKeyTrans[K_KP_5 - 5] = KEY_PAD_0;
 	s_pVirtualKeyTrans[K_KP_5 - 4] = KEY_PAD_1;
@@ -402,14 +419,13 @@ void VGUI_InitKeyTranslationTable( void )
 	s_pVirtualKeyTrans[K_F10] = KEY_F10;
 	s_pVirtualKeyTrans[K_F11] = KEY_F11;
 	s_pVirtualKeyTrans[K_F12] = KEY_F12;
-#endif
 }
 
 enum VGUI_KeyCode VGUI_MapKey( int keyCode )
 {
 	VGUI_InitKeyTranslationTable();
 
-	if( keyCode < 0 || keyCode >= sizeof( s_pVirtualKeyTrans ) / sizeof( s_pVirtualKeyTrans[0] ))
+	if( keyCode < 0 || keyCode >= (int)sizeof( s_pVirtualKeyTrans ) / (int)sizeof( s_pVirtualKeyTrans[0] ))
 	{
 		//Assert( false );
 		return (enum VGUI_KeyCode)-1;
@@ -420,75 +436,49 @@ enum VGUI_KeyCode VGUI_MapKey( int keyCode )
 	}
 }
 
-
-enum VGUI_MouseCode VGUI_MapMouseButton( byte button)
+void VGui_KeyEvent( int key, int down )
 {
-#ifdef XASH_SDL
-	switch(button)
-	{
-	case SDL_BUTTON_LEFT:
-		return MOUSE_LEFT;
-	case SDL_BUTTON_MIDDLE:
-		return MOUSE_MIDDLE;
-	case SDL_BUTTON_RIGHT:
-		return MOUSE_RIGHT;
-	}
-#else
-	return (enum VGUI_MouseCode)button;
-#endif
-	return MOUSE_LAST; // What is MOUSE_LAST? Is it really used?
-}
-
-
-
-void VGUI_SurfaceWndProc( Xash_Event *event )
-{
-#ifdef XASH_SDL
-/* When false returned, event passed to engine, else only to vgui*/
-/* NOTE: this disabled because VGUI shows its cursor on engine start*/
 	if( !vgui.initialized )
-		return /*false*/;
-
-	switch( event->type )
+		return;
+#ifdef XASH_SDL
+	if( host.mouse_visible )
+		SDLash_EnableTextInput( 1, false );
+#endif
+	switch( key )
 	{
-	/*case :
-		VGUI_ActivateCurrentCursor();
-		break;*/
-	case SDL_MOUSEMOTION:
-		vgui.MouseMove(event->motion.x, event->motion.y);
-		//return false;
-		break;
-	case SDL_MOUSEBUTTONDOWN:
-		//if(event->button.clicks == 1)
-		vgui.Mouse(MA_PRESSED, VGUI_MapMouseButton(event->button.button));
-	//	else
-	//	vgui.Mouse(MA_DOUBLE, VGUI_MapMouseButton(event->button.button));
-		//return true;
-		break;
-	case SDL_MOUSEBUTTONUP:
-		vgui.Mouse(MA_RELEASED, VGUI_MapMouseButton(event->button.button));
-		//return true;
-		break;
-	case SDL_MOUSEWHEEL:
-		vgui.Mouse(MA_WHEEL, event->wheel.y);
-		//return true;
-		break;
-	case SDL_KEYDOWN:
-		if(!( event->key.keysym.sym & ( 1 << 30 )))
-			vgui.Key( KA_PRESSED, VGUI_MapKey( event->key.keysym.sym ));
-		vgui.Key( KA_TYPED, VGUI_MapKey( event->key.keysym.sym ));
-		//return false;
-		break;
-	case SDL_KEYUP:
-		vgui.Key( KA_RELEASED, VGUI_MapKey( event->key.keysym.sym ) );
-		//return false;
+	case K_MOUSE1:
+		vgui.Mouse( down?MA_PRESSED:MA_RELEASED, MOUSE_LEFT );
+		return;
+	case K_MOUSE2:
+		vgui.Mouse( down?MA_PRESSED:MA_RELEASED, MOUSE_RIGHT );
+		return;
+	case K_MOUSE3:
+		vgui.Mouse( down?MA_PRESSED:MA_RELEASED, MOUSE_MIDDLE );
+		return;
+	case K_MWHEELDOWN:
+		vgui.Mouse( MA_WHEEL, 1 );
+		return;
+	case K_MWHEELUP:
+		vgui.Mouse( MA_WHEEL, -1 );
+		return;
+	default:
 		break;
 	}
-	
-#endif
-	//return false;
+
+	if( down == 2 )
+		vgui.Key( KA_TYPED, VGUI_MapKey( key ) );
+	else
+		vgui.Key( down?KA_PRESSED:KA_RELEASED, VGUI_MapKey( key ) );
+	//Msg("VGui_KeyEvent %d %d %d\n", key, VGUI_MapKey( key ), down );
 }
 
+void VGui_MouseMove( int x, int y )
+{
+	float xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
+	float yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
+	if( vgui.initialized )
+		vgui.MouseMove( x / xscale, y / yscale );
+}
 
 /*
 ================
@@ -698,20 +688,23 @@ generic method to fill rectangle
 */
 void GAME_EXPORT VGUI_DrawQuad( const vpoint_t *ul, const vpoint_t *lr )
 {
+	float xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
+	float yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
+
 	ASSERT( ul != NULL && lr != NULL );
 
 	pglBegin( GL_QUADS );
 		pglTexCoord2f( ul->coord[0], ul->coord[1] );
-		pglVertex2f( ul->point[0], ul->point[1] );
+		pglVertex2f( ul->point[0] * xscale, ul->point[1] * yscale );
 
 		pglTexCoord2f( lr->coord[0], ul->coord[1] );
-		pglVertex2f( lr->point[0], ul->point[1] );
+		pglVertex2f( lr->point[0] * xscale, ul->point[1] * yscale );
 
 		pglTexCoord2f( lr->coord[0], lr->coord[1] );
-		pglVertex2f( lr->point[0], lr->point[1] );
+		pglVertex2f( lr->point[0] * xscale, lr->point[1] * yscale );
 
 		pglTexCoord2f( ul->coord[0], lr->coord[1] );
-		pglVertex2f( ul->point[0], lr->point[1] );
+		pglVertex2f( ul->point[0] * xscale, lr->point[1] * yscale );
 	pglEnd();
 }
 
@@ -721,15 +714,18 @@ void VGui_Paint()
 		vgui.Paint();
 }
 
-void *GAME_EXPORT VGui_GetPanel()
-{
-	if( vgui.initialized )
-		return vgui.GetPanel();
-	return NULL;
-}
+
 
 void VGui_RunFrame()
 {
 	//stub
+}
+
+
+void *GAME_EXPORT pfnVGui_GetPanel()
+{
+	if( vgui.initialized )
+		return vgui.GetPanel();
+	return NULL;
 }
 #endif

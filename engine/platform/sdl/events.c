@@ -110,7 +110,9 @@ void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 {
 	int down = button.type == SDL_MOUSEBUTTONDOWN ? 1 : 0;
 	if( in_mouseinitialized && !m_ignore->integer && button.which != SDL_TOUCH_MOUSEID )
+	{
 		Key_Event( 240 + button.button, down );
+	}
 }
 
 void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
@@ -139,6 +141,8 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 		Con_CharEvent( ch );
 		if( cls.key_dest == key_menu )
 			UI_CharEvent ( ch );
+		if( cls.key_dest == key_game )
+			VGui_KeyEvent( ch, 2 );
 	}
 }
 
@@ -170,13 +174,6 @@ void SDLash_EventFilter( void *ev )
 {
 	SDL_Event *event = (SDL_Event*)ev;
 	static int mdown;
-#ifdef XASH_VGUI
-	//if( !host.mouse_visible || !VGUI_SurfaceWndProc(event))
-	// switch ....
-	// CEnginePanel is visible by default, why?
-	VGUI_SurfaceWndProc( event );
-#endif
-
 	if( wheelbutton )
 	{
 		Key_Event( wheelbutton, false );

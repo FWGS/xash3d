@@ -12,8 +12,10 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
+#ifndef VGUI_API_H
+#define VGUI_API_H
 
-#include "system.h"
+#include "types.h"
 
 // VGUI generic vertex
 
@@ -210,3 +212,4 @@ typedef struct  vguiapi_s
 	void	(*Key)(enum VGUI_KeyAction action,enum VGUI_KeyCode code );
 	void	(*MouseMove)( int x, int y );
 } vguiapi_t;
+#endif // VGUI_API_H

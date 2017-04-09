@@ -584,22 +584,27 @@ IN_Mouse
 */
 void IN_MouseMove( void )
 {
-	POINT	current_pos;
+	POINT	current_pos = {0, 0};
 	
-	if( !in_mouseinitialized || !in_mouseactive || !UI_IsVisible( ))
+	if( !in_mouseinitialized || !in_mouseactive || m_ignore->integer )
 		return;
 
-	if( m_ignore->integer )
+	// find mouse movement
+	#ifdef XASH_SDL
+		SDL_GetMouseState( &current_pos.x, &current_pos.y );
+	#endif
+
+
+	VGui_MouseMove( current_pos.x, current_pos.y );
+
+	if( !UI_IsVisible() )
 		return;
 
 	// Show cursor in UI
 #ifdef XASH_SDL
 	if( UI_IsVisible() ) SDL_ShowCursor( SDL_TRUE );
 #endif
-	// find mouse movement
-#ifdef XASH_SDL
-	SDL_GetMouseState( &current_pos.x, &current_pos.y );
-#endif
+
 	// if the menu is visible, move the menu cursor
 	UI_MouseMove( current_pos.x, current_pos.y );
 

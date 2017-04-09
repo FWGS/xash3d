@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "input.h"
 #include "client.h"
 #include "joyinput.h"
+#include "vgui_draw.h"
 
 #ifdef XASH_SDL
 #include <SDL_keyboard.h>
@@ -589,6 +590,8 @@ void GAME_EXPORT Key_Event( int key, qboolean down )
 	{
 		keys[key].repeats = 0;
 	}
+
+	VGui_KeyEvent( key, down );
 
 	// console key is hardcoded, so the user can never unbind it
 	if( key == '`' || key == '~' )

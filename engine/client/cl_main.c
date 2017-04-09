@@ -1989,9 +1989,7 @@ void Host_ClientFrame( void )
 		menu.globals->demorecording = cls.demorecording;
 	}
 
-#ifdef XASH_VGUI
 	VGui_RunFrame ();
-#endif
 
 	if( cls.initialized )
 	{

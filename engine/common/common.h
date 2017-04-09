@@ -381,7 +381,6 @@ typedef struct host_parm_s
 	qboolean		con_showalways;	// show console always (developer and dedicated)
 	qboolean		change_game;	// initialize when game is changed
 	qboolean		mouse_visible;	// vgui override cursor control
-	qboolean		input_enabled;	// vgui override mouse & keyboard input
 	qboolean		shutdown_issued;	// engine is shutting down
 	qboolean		decal_loading;	// nasty hack to tell imagelib about decal
 	qboolean		overview_loading;	// another nasty hack to tell imagelib about ovierview
@@ -470,6 +469,7 @@ int FS_Getc( file_t *file );
 qboolean FS_Eof( file_t *file );
 fs_offset_t FS_FileLength( file_t *f );
 void FS_Rescan( void );
+qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive );
 
 //
 // network.c

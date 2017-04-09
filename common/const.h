@@ -727,19 +727,13 @@ enum
 	kRenderFxClampMinScale		// Keep this sprite from getting very small (SPRITES only!)
 };
 
+#include "types.h"
+
 typedef int		func_t;
 typedef int		string_t;
 
 typedef unsigned short       word;
 
-#undef true
-#undef false
-
-#ifndef __cplusplus
-typedef enum { false, true }	qboolean;
-#else 
-typedef int qboolean;
-#endif
 
 typedef struct
 {

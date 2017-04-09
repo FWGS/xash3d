@@ -649,9 +649,7 @@ void SCR_VidInit( void )
 	}
 
 	SCR_RebuildGammaTable();
-#ifdef XASH_VGUI
 	VGui_Startup (scr_width->integer, scr_height->integer);
-#endif
 
 	clgame.load_sequence++; // now all hud sprites are invalid
 	

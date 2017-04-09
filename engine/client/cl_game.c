@@ -3590,14 +3590,6 @@ void GAME_EXPORT VGui_ViewportPaintBackground( int extents[4] )
 	// stub
 }
 
-#ifndef XASH_VGUI
-void *VGui_GetPanel()
-{
-	// stub
-	return NULL;
-}
-#endif
-
 /*
 =================
 IVoiceTweak implementation
@@ -3908,7 +3900,7 @@ static cl_enginefunc_t gEngfuncs =
 	pfnGetLevelName,
 	pfnGetScreenFade,
 	pfnSetScreenFade,
-	VGui_GetPanel,
+	pfnVGui_GetPanel,
 	VGui_ViewportPaintBackground,
 	(void*)COM_LoadFile,
 	COM_ParseFile,
@@ -3987,9 +3979,7 @@ void CL_UnloadProgs( void )
 	Cvar_FullSet( "host_clientloaded", "0", CVAR_INIT );
 
 	Com_FreeLibrary( clgame.hInstance );
-#ifdef XASH_VGUI
 	VGui_Shutdown();
-#endif
 	Mem_FreePool( &cls.mempool );
 	Mem_FreePool( &clgame.mempool );
 	Q_memset( &clgame, 0, sizeof( clgame ));
@@ -4022,9 +4012,7 @@ qboolean CL_LoadProgs( const char *name )
 	// NOTE: important stuff!
 	// vgui must startup BEFORE loading client.dll to avoid get error ERROR_NOACESS
 	// during LoadLibrary
-#ifdef XASH_VGUI
 	VGui_Startup (menu.globals->scrWidth, menu.globals->scrHeight);
-#endif
 	
 	clgame.hInstance = Com_LoadLibrary( name, false );
 	if( !clgame.hInstance ) return false;

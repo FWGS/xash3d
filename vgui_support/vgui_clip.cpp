@@ -25,7 +25,7 @@ from your version.
 #ifdef XASH_VGUI
 //#include "common.h"
 #define Assert(x)
-#include "vgui_api.h"
+#include "vgui_main.h"
 #include "wrect.h"
 	
 //-----------------------------------------------------------------------------

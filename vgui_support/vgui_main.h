@@ -24,11 +24,15 @@ from your version.
 */
 #ifndef VGUI_MAIN_H
 #define VGUI_MAIN_H
-#ifdef XASH_VGUI
 
 #define Assert(x)
 
-#include "system.h"
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <string.h>
+#endif
+
 #include "vgui_api.h"
 #include "utlvector.h"
 #include "utlrbtree.h"
@@ -227,5 +231,4 @@ extern CEnginePanel	*rootpanel;
 extern CEngineSurface	*surface;
 extern CEngineApp          *pApp;
 
-#endif
 #endif//VGUI_MAIN_H
