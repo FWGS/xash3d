@@ -43,5 +43,5 @@ void IN_TouchShutdown( void );
 void IN_TouchMove( float * forward, float *side, float *yaw, float *pitch );
 void IN_TouchResetDefaultButtons( void );
 int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy );
-
+void IN_TouchKeyEvent( int key, int down );
 #endif // TOUCH_H

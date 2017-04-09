@@ -408,11 +408,25 @@ touchbutton2_t *IN_TouchFindFirst( const char *name )
 void IN_TouchSetClientOnly( qboolean state )
 {
 	touch.clientonly = state;
+	host.mouse_visible = state;
+#ifdef XASH_SDL
+	if( state )
+	{
+		SDL_SetRelativeMouseMode( SDL_FALSE );
+		SDL_ShowCursor( true );
+		IN_DeactivateMouse();
+	}
+	else
+	{
+		SDL_ShowCursor( false );
+		SDL_GetRelativeMouseState( 0, 0 );
+	}
+#endif
 }
 
 void IN_TouchSetClientOnly_f( void )
 {
-	touch.clientonly = Q_atoi( Cmd_Argv( 1 ) );
+	IN_TouchSetClientOnly( Q_atoi( Cmd_Argv( 1 ) ) );
 }
 
 void IN_TouchRemoveButton( const char *name )
@@ -1026,7 +1040,7 @@ void IN_TouchDraw( void )
 {
 	touchbutton2_t *button;
 
-	if( !touch.initialized || !touch_enable->integer )
+	if( !touch.initialized || (!touch_enable->integer && !touch.clientonly) )
 		return;
 
 	if( cls.key_dest != key_game && touch_in_menu->integer == 0 )
@@ -1282,60 +1296,9 @@ static void IN_TouchEditMove( touchEventType type, int fingerID, float x, float 
 	}
 }
 
-int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
+static int IN_TouchControlsEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
 {
 	touchbutton2_t *button;
-	
-	// simulate menu mouse click
-	if( cls.key_dest != key_game && !touch_in_menu->integer )
-	{
-		touch.move_finger = touch.resize_finger = touch.look_finger = -1;
-		// Hack for keyboard, hope it help
-		if( cls.key_dest == key_console || cls.key_dest == key_message ) 
-		{
-			Key_EnableTextInput( true, true );
-			if( cls.key_dest == key_console )
-			{
-				static float y1 = 0;
-				y1 += dy;
-				if( dy > 0.4 )
-					Con_Bottom();
-				if( y1 > 0.01 )
-				{
-					Con_PageUp( 1 );
-					y1 = 0;
-				}
-				if( y1 < -0.01 )
-				{
-					Con_PageDown( 1 );
-					y1 = 0;
-				}
-			}
-
-			// exit of console area
-			if( type == event_down && x < 0.1f && y > 0.9f )
-				Cbuf_AddText( "escape\n" );
-		}
-		UI_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
-		//MsgDev( D_NOTE, "touch %d %d\n", TO_SCRN_X(x), TO_SCRN_Y(y) );
-		if( type == event_down )
-			Key_Event(241, 1);
-		if( type == event_up )
-			Key_Event(241, 0);
-		return 0;
-	}
-	
-	if( !touch.initialized || !touch_enable->integer )
-	{
-#if 0
-		if( type == event_down )
-			Key_Event( K_MOUSE1, true );
-		if( type == event_up )
-			Key_Event( K_MOUSE1, false );
-		Android_AddMove( dx * scr_width->value, dy * scr_height->value );
-#endif
-		return 0;
-	}
 
 	if( touch.state == state_edit_move )
 	{
@@ -1545,6 +1508,62 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	return 1;
 }
 
+int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
+{
+
+	// simulate menu mouse click
+	if( cls.key_dest != key_game && !touch_in_menu->integer )
+	{
+		touch.move_finger = touch.resize_finger = touch.look_finger = -1;
+		// Hack for keyboard, hope it help
+		if( cls.key_dest == key_console || cls.key_dest == key_message )
+		{
+			Key_EnableTextInput( true, true );
+			if( cls.key_dest == key_console )
+			{
+				static float y1 = 0;
+				y1 += dy;
+				if( dy > 0.4 )
+					Con_Bottom();
+				if( y1 > 0.01 )
+				{
+					Con_PageUp( 1 );
+					y1 = 0;
+				}
+				if( y1 < -0.01 )
+				{
+					Con_PageDown( 1 );
+					y1 = 0;
+				}
+			}
+
+			// exit of console area
+			if( type == event_down && x < 0.1f && y > 0.9f )
+				Cbuf_AddText( "escape\n" );
+		}
+		UI_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
+		//MsgDev( D_NOTE, "touch %d %d\n", TO_SCRN_X(x), TO_SCRN_Y(y) );
+		if( type == event_down )
+			Key_Event(241, 1);
+		if( type == event_up )
+			Key_Event(241, 0);
+		return 0;
+	}
+
+	if( !touch.initialized || (!touch_enable->integer && !touch.clientonly) )
+	{
+#if 0
+		if( type == event_down )
+			Key_Event( K_MOUSE1, true );
+		if( type == event_up )
+			Key_Event( K_MOUSE1, false );
+		Android_AddMove( dx * scr_width->value, dy * scr_height->value );
+#endif
+		return 0;
+	}
+	return IN_TouchControlsEvent( type, fingerID, x, y, dx, dy );
+}
+
 void IN_TouchMove( float *forward, float *side, float *yaw, float *pitch )
 {
 	*forward += touch.forward;
@@ -1552,6 +1571,25 @@ void IN_TouchMove( float *forward, float *side, float *yaw, float *pitch )
 	*yaw += touch.yaw;
 	*pitch += touch.pitch;
 	touch.yaw = touch.pitch = 0;
+}
+
+void IN_TouchKeyEvent( int key, int down )
+{
+	int xi, yi;
+	float x, y;
+
+	if( touch_enable->integer )
+		return;
+
+	if( !touch.clientonly )
+		return;
+
+	CL_GetMousePosition( &xi, &yi );
+
+	x = xi/SCR_W;
+	y = yi/SCR_H;
+
+	IN_TouchControlsEvent( down, key == K_MOUSE1?0:1, x, y, 0, 0 );
 }
 
 void IN_TouchShutdown( void )
