@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifdef XASH_VGUI
+#ifndef XASH_DEDICATED
 
 #include "common.h"
 #include "client.h"
