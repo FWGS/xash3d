@@ -474,14 +474,18 @@ void GL_SetupAttributes()
 #ifdef XASH_SDL
 	int samples;
 
+#ifdef XASH_X11
+	SDL_SetHint("SDL_VIDEO_X11_XRANDR", "1");
+	SDL_SetHint("SDL_VIDEO_X11_XVIDMODE", "1");
+#endif
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 4);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 4);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 4);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
 
 	switch( gl_msaa->integer )
 	{
@@ -1113,6 +1117,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 #ifdef XASH_SDL
 	static string	wndname;
 	Uint32 wndFlags = 0;
+	rgbdata_t *icon = NULL;
 
 	if( vid_highdpi->integer ) wndFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
@@ -1156,7 +1161,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
-#if defined(_WIN32) & !defined(__amd64__)
+#if defined(_WIN32)
+#if !defined(__amd64__)
 	{
 		HICON ico;
 		SDL_SysWMinfo info;
@@ -1181,6 +1187,31 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			// info.info.info.info.info... Holy shit, SDL?
 			SetClassLong( info.info.win.window, GCL_HICON, (LONG)ico );
 		}
+	}
+#endif // __amd64__
+#else // _WIN32
+
+	icon = FS_LoadImage( "game.tga", NULL, 0 );
+	if( icon )
+	{
+		SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
+			icon->buffer,
+			icon->width,
+			icon->height,
+			32,
+			4 * icon->width,
+			0x000000ff,
+			0x0000ff00,
+			0x00ff0000,
+			0xff000000 );
+
+		if( surface )
+		{
+			SDL_SetWindowIcon( host.hWnd, surface );
+			SDL_FreeSurface( surface );
+		}
+
+		FS_FreeImage( icon );
 	}
 #endif
 
