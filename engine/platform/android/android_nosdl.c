@@ -430,6 +430,7 @@ nativeSetPause
 	JNIEXPORT ret JNICALL Java_in_celest_xash3d_XashActivity_##name( JNIEnv *env, jclass clazz, __VA_ARGS__ )
 #define DECLARE_JNI_INTERFACE_VOID( ret, name ) \
 	JNIEXPORT ret JNICALL Java_in_celest_xash3d_XashActivity_##name( JNIEnv *env, jclass clazz )
+#include <sys/prctl.h>
 
 DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 {
@@ -460,6 +461,7 @@ DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 		argv[argc++] = arg;
 	}
 	argv[argc] = NULL;
+	prctl(PR_SET_DUMPABLE, 1);
 
 	/* Init callbacks. */
 
