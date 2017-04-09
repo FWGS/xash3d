@@ -969,12 +969,13 @@ void R_ChangeDisplaySettingsFast( int width, int height );
 
 void *SDL_GetVideoDevice( void );
 
+#if 0
 #ifdef _WIN32
 #define XASH_SDL_WINDOW_RECREATE
 #elif defined XASH_X11
 #define XASH_SDL_USE_FAKEWND
 #endif
-
+#endif
 
 #ifdef XASH_SDL_USE_FAKEWND
 
