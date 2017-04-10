@@ -2059,28 +2059,18 @@ void CL_Init( void )
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
 	IN_TouchInit();
-#if TARGET_OS_IPHONE || defined __EMSCRIPTEN__
-	loaded = CL_LoadProgs( "client" );
-#elif defined (__ANDROID__)
-	{
-		char clientlib[256];
-		Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_GAMELIBDIR"));
-		loaded = CL_LoadProgs( clientlib );
 
-		if( !loaded )
-		{
-			Q_snprintf( clientlib, sizeof(clientlib), "%s/" CLIENTDLL, getenv("XASH3D_ENGLIBDIR"));
-			loaded = CL_LoadProgs( clientlib );
-		}
-	}
-#else
 	{
 		char clientlib[256];
 		Com_ResetLibraryError();
 		if( Sys_GetParmFromCmdLine( "-clientlib", clientlib ) )
 			loaded = CL_LoadProgs( clientlib );
 		else
+#ifdef XASH_INTERNAL_GAMELIBS
+			loaded = CL_LoadProgs( "client" );
+#else
 			loaded = CL_LoadProgs( va( "%s/%s" , GI->dll_path, SI.clientlib ));
+#endif
 		if( !loaded )
 		{
 
@@ -2088,7 +2078,7 @@ void CL_Init( void )
 
 		}
 	}
-#endif
+
 	if( loaded )
 	{
 		cls.initialized = true;

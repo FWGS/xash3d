@@ -129,6 +129,12 @@ Default build-depended cvar and constant values
 	#define DEFAULT_M_IGNORE "0"
 #endif
 
+#if defined __ANDROID__ || TARGET_OS_IPHONE || defined __EMSCRIPTEN__
+#define XASH_INTERNAL_GAMELIBS
+// this means that libraries are provided with engine, but not in game data
+// You need add library loading code to library.c when adding new platform
+#endif
+
 #define DEFAULT_SV_MASTER "ms.xash.su:27010"
 
 // allow override for developer/debug builds

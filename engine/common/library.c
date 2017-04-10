@@ -179,8 +179,25 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	}
 #endif
 
-	qboolean dll = host.enabledll && ( Q_stristr( dllname, ".dll" ) != 0 );
+#ifdef  __ANDROID__
+	{
+		Q_snprintf( path, MAX_SYSPATH, "%s/lib%s"POSTFIX"."OS_LIB_EXT, getenv("XASH3D_GAMELIBDIR"), dllname );
+		pHandle = dlopen( path, RTLD_LAZY );
+		if( !pHandle )
+		{
+			Q_snprintf( path, MAX_SYSPATH, "%s/lib%s"POSTFIX"."OS_LIB_EXT, getenv("XASH3D_ENGLIBDIR"), dllname );
+			Com_PushLibraryError( dlerror() );
+			pHandle = dlopen( path, RTLD_LAZY );
+			if( !pHandle )
+				Com_PushLibraryError( dlerror() );
+		}
+		if( pHandle )
+			return pHandle;
+	}
+#endif
+
 #ifdef DLL_LOADER
+	qboolean dll = host.enabledll && ( Q_stristr( dllname, ".dll" ) != 0 );
 	if(dll)
 	{
 		pHandle = Loader_LoadLibrary( dllname );
