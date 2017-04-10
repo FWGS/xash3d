@@ -22,7 +22,7 @@ you do not wish to do so, delete this exception statement
 from your version.
 
 */
-#ifdef XASH_VGUI
+
 #include <ctype.h>
 #include "vgui_main.h"
 
@@ -337,4 +337,3 @@ void CEngineSurface :: setWindowedMode( void )
 	Cvar_SetFloat( "fullscreen", 0.0f );
 	*/
 }
-#endif

@@ -22,9 +22,7 @@ you do not wish to do so, delete this exception statement
 from your version.
 
 */
-#ifdef XASH_VGUI
-//#include "common.h"
-#define Assert(x)
+
 #include "vgui_main.h"
 #include "wrect.h"
 	
@@ -123,4 +121,3 @@ qboolean ClipRect( const vpoint_t &inUL, const vpoint_t &inLR, vpoint_t *pOutUL,
 	}
 	return true;
 }
-#endif

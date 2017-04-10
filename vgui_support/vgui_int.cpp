@@ -22,7 +22,7 @@ you do not wish to do so, delete this exception statement
 from your version.
 
 */
-#ifdef XASH_VGUI
+
 #include "vgui_main.h"
 
 vguiapi_t *g_api;
@@ -154,4 +154,3 @@ extern "C" void InitAPI(vguiapi_t * api)
 	g_api->MouseMove = VGUI_MouseMove;
 	g_api->Key = VGUI_Key;
 }
-#endif

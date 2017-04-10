@@ -22,7 +22,7 @@ you do not wish to do so, delete this exception statement
 from your version.
 
 */
-#ifdef XASH_VGUI
+
 #include "vgui_main.h"
 
 int FontCache::s_pFontPageSize[FONT_PAGE_SIZE_COUNT] = { 16, 32, 64, 128 };
@@ -183,4 +183,3 @@ bool FontCache::AllocatePageForChar( int charWide, int charTall, int &pageIndex,
 
 	return true;
 }
-#endif

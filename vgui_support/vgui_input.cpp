@@ -22,12 +22,10 @@ you do not wish to do so, delete this exception statement
 from your version.
 
 */
-#ifdef XASH_VGUI
+
 #define OEMRESOURCE		// for OCR_* cursor junk
 
-
 #include "vgui_main.h"
-#include "input.h"
 
 void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code)
 {
@@ -81,4 +79,3 @@ void VGUI_MouseMove(int x, int y)
 		return;
 	pApp->internalCursorMoved( x, y, surface );
 }
-#endif
