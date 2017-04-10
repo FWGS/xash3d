@@ -100,7 +100,7 @@ int dladdr( const void *addr, Dl_info *info )
 #include <SDL_filesystem.h>
 #endif
 
-#ifdef TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
 
 static void *IOS_LoadLibraryInternal( const char *dllname )
 {
