@@ -47,7 +47,8 @@ from your version.
 #include<VGUI_MouseCode.h>
 #include<VGUI_KeyCode.h>
 
-
+namespace vgui_support
+{
 extern vguiapi_t *g_api;
 
 using namespace vgui;
@@ -230,5 +231,6 @@ extern FontCache *g_FontCache;
 extern CEnginePanel	*rootpanel;
 extern CEngineSurface	*surface;
 extern CEngineApp          *pApp;
-
+}
+using namespace vgui_support;
 #endif//VGUI_MAIN_H

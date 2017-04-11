@@ -208,11 +208,31 @@ Load vgui_support library and call VGui_Startup
 void VGui_Startup( int width, int height )
 {
 	static qboolean failed = false;
+	void (*F) ( vguiapi_t * );
+
 	if( failed )
 		return;
-	if(!vgui.initialized)
+#ifdef XASH_INTERNAL_GAMELIBS
+	if( !vgui.initialized )
 	{
-		void (*F) ( vguiapi_t * );
+		lib = Com_LoadLibrary( "client", false );
+
+		if( lib )
+		{
+			F = Com_GetProcAddress( lib, "InitVGUISupportAPI" );
+			if( F )
+			{
+				F( &vgui );
+				vgui.initialized = true;
+				VGUI_InitCursors();
+				MsgDev( D_INFO, "vgui_support: found interal client support\n" );
+			}
+		}
+	}
+#endif
+
+	if( !vgui.initialized )
+	{
 		char vguiloader[256];
 		char vguilib[256];
 
@@ -237,6 +257,7 @@ void VGui_Startup( int width, int height )
 			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
 
 		lib = Com_LoadLibrary( vguiloader, false );
+
 		if( !lib )
 		{
 			if( FS_SysFileExists( vguiloader, false ) )

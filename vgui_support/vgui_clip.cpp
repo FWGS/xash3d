@@ -31,7 +31,7 @@ from your version.
 //-----------------------------------------------------------------------------
 static wrect_t g_ScissorRect;
 static qboolean g_bScissor = false;
-
+namespace vgui_support {
 //-----------------------------------------------------------------------------
 // Enable/disable scissoring...
 //-----------------------------------------------------------------------------
@@ -120,4 +120,5 @@ qboolean ClipRect( const vpoint_t &inUL, const vpoint_t &inLR, vpoint_t *pOutUL,
 		*pOutLR = inLR;
 	}
 	return true;
+}
 }

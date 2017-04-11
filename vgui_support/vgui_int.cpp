@@ -24,6 +24,7 @@ from your version.
 */
 
 #include "vgui_main.h"
+namespace vgui_support {
 
 vguiapi_t *g_api;
 
@@ -32,6 +33,7 @@ FontCache *g_FontCache = 0;
 CEnginePanel	*rootpanel = NULL;
 CEngineSurface	*surface = NULL;
 CEngineApp          *pApp = NULL;
+
 
 SurfaceBase* CEnginePanel::getSurfaceBase( void )
 {
@@ -137,7 +139,11 @@ void *VGui_GetPanel( void )
 {
 	return (void *)rootpanel;
 }
+}
 
+#ifdef INTERNAL_VGUI_SUPPORT
+#define InitAPI InitVGUISupportAPI
+#endif
 
 #ifdef _WIN32
 extern "C" void _declspec( dllexport ) InitAPI(vguiapi_t * api)

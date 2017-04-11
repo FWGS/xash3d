@@ -27,6 +27,7 @@ from your version.
 
 #include "vgui_main.h"
 
+namespace vgui_support {
 void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code)
 {
 	if(!surface)
@@ -78,4 +79,5 @@ void VGUI_MouseMove(int x, int y)
 	if(!surface)
 		return;
 	pApp->internalCursorMoved( x, y, surface );
+}
 }
