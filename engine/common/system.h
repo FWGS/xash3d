@@ -54,7 +54,7 @@ extern "C" {
 #define MSGBOX3( x )	fprintf(stderr, BORDER1 "Host Recursive Error: %s\n" BORDER1,x)
 #endif
 
-#include "types.h"
+#include "xash3d_types.h"
 #include "const.h"
 
 #define ASSERT( exp )	if(!( exp )) Sys_Break( "assert failed at %s:%i\n", __FILE__, __LINE__ )

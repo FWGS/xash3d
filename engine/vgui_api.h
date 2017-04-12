@@ -15,7 +15,7 @@ GNU General Public License for more details.
 #ifndef VGUI_API_H
 #define VGUI_API_H
 
-#include "types.h"
+#include "xash3d_types.h"
 
 // VGUI generic vertex
 
