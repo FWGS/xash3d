@@ -35,7 +35,6 @@ include( CMakeDependentOption )
 
 # Servers must choose this
 option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF)
-option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompile game for 64 bit." OFF)
 
 # Windows only. Enable it by default for Windows.
 cmake_dependent_option(XASH_IPX "Enable IPX support for networking. Windows only." ON "WIN32" OFF)
@@ -55,6 +54,9 @@ option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 # Shared library loader implementation. Must be checked one of these or both.
 cmake_dependent_option(XASH_LIBDL "Enable libdl use. POSIX only." ON "NOT WIN32" OFF)
 option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
+
+# Enable 64-bit build of Xash3D FWGS Engine.
+option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompile game for 64 bit." OFF)
 
 # Desktop-version options
 if(XASH_DEDICATED) 
