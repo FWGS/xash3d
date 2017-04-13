@@ -217,7 +217,10 @@ Load vgui_support library and call VGui_Startup
 void VGui_Startup( int width, int height )
 {
 	static qboolean failed = false;
+
 	void (*F) ( vguiapi_t * );
+	char vguiloader[256];
+	char vguilib[256];
 
 	if( failed )
 		return;
@@ -242,9 +245,6 @@ void VGui_Startup( int width, int height )
 
 	if( !vgui.initialized )
 	{
-		char vguiloader[256];
-		char vguilib[256];
-
 		Com_ResetLibraryError();
 
 		// hack: load vgui with correct path first if specified.
