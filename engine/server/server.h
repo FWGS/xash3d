@@ -177,6 +177,9 @@ typedef struct server_s
 
 	qboolean		write_bad_message;	// just for debug
 	qboolean		paused;
+
+	qboolean        resourcelistcache;
+	resourcelist_t  reslist;
 } server_t;
 
 typedef struct
