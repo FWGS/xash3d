@@ -31,6 +31,7 @@ convar_t	*con_alpha;
 convar_t	*con_black;
 convar_t	*con_fontscale;
 convar_t	*con_fontnum;
+convar_t	*vgui_utf8;
 
 static int g_codepage = 0;
 static qboolean g_utf8 = false;
@@ -831,6 +832,7 @@ void Con_Init( void )
 	con_black = Cvar_Get( "con_black", "0", CVAR_ARCHIVE, "make console black like a nigga" );
 	con_fontscale = Cvar_Get( "con_fontscale", "1.0", CVAR_ARCHIVE, "scale font texture" );
 	con_fontnum = Cvar_Get( "con_fontnum", "-1", CVAR_ARCHIVE, "console font number (0, 1 or 2), -1 for autoselect" );
+	vgui_utf8 = Cvar_Get( "vgui_utf8", "0", CVAR_ARCHIVE, "enable utf-8 support for vgui text" );
 
 	Con_CheckResize();
 
@@ -1965,7 +1967,7 @@ void Con_RunConsole( void )
 			con.displayFrac = con.finalFrac;
 	}
 
-	if( con_charset->modified || con_fontscale->modified || con_fontnum->modified )
+	if( con_charset->modified || con_fontscale->modified || con_fontnum->modified || cl_charset->modified )
 	{
 		// update codepage parameters
 		g_codepage = 0;

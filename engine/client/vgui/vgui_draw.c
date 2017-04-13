@@ -160,6 +160,15 @@ void GAME_EXPORT VGUI_SetVisible ( qboolean state )
 	SDLash_EnableTextInput( state, true );
 #endif
 }
+
+int GAME_EXPORT VGUI_UtfProcessChar( int in )
+{
+	if( vgui_utf8->integer )
+		return Con_UtfProcessCharForce( in );
+	else
+		return in;
+}
+
 vguiapi_t vgui =
 {
 	false, //Not initialized yet
@@ -184,7 +193,7 @@ vguiapi_t vgui =
 	VGUI_IsInGame,
 	VGUI_SetVisible,
 	VGUI_GetMousePos,
-	Con_UtfProcessChar,
+	VGUI_UtfProcessChar,
 	NULL,
 	NULL,
 	NULL,

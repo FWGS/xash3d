@@ -586,6 +586,7 @@ extern convar_t	*userinfo;
 extern convar_t	*hltv;
 extern convar_t *m_ignore;
 extern convar_t *hud_utf8;
+extern convar_t *vgui_utf8;
 
 
 //=============================================================================
