@@ -220,7 +220,18 @@ void SV_UpdateMovevars( qboolean initialize )
 
 	// check range
 	if( sv_zmax->value < 256.0f ) Cvar_SetFloat( "sv_zmax", 256.0f );
-	if( sv_zmax->value > 131070.0f ) Cvar_SetFloat( "sv_zmax", 131070.0f );
+
+	// clamp it right
+	if( host.features & ENGINE_WRITE_LARGE_COORD )
+	{
+		if( sv_zmax->value > 131070.0f )
+			Cvar_SetFloat( "sv_zmax", 131070.0f );
+	}
+	else
+	{
+		if( sv_zmax->value > 32767.0f )
+			Cvar_SetFloat( "sv_zmax", 32767.0f );
+	}
 
 	svgame.movevars.gravity = sv_gravity->value;
 	svgame.movevars.stopspeed = sv_stopspeed->value;
