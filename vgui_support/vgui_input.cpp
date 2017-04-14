@@ -30,6 +30,7 @@ from your version.
 namespace vgui_support {
 void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code)
 {
+	App *pApp = App::getInstance();
 	if(!surface)
 		return;
 	switch( action )
@@ -50,6 +51,7 @@ void VGUI_Key(VGUI_KeyAction action, VGUI_KeyCode code)
 
 void VGUI_Mouse(VGUI_MouseAction action, int code)
 {
+	App *pApp = App::getInstance();
 	if(!surface)
 		return;
 	switch( action )
@@ -74,6 +76,7 @@ void VGUI_Mouse(VGUI_MouseAction action, int code)
 
 void VGUI_MouseMove(int x, int y)
 {
+	App *pApp = App::getInstance();
 	//fprintf(stdout, "vgui_support: VGUI mouse move %d %d %p\n", x, y, surface);
 	//fflush(stdout);
 	if(!surface)

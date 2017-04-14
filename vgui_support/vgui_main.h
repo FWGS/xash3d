@@ -194,16 +194,6 @@ class CEngineApp : public App
 public:
 	CEngineApp( bool externalMain = true ) : App( externalMain ) { }
 	virtual void main( int argc, char* argv[] ) { } // stub
-	virtual void setCursorPos( int x, int y ); // we need to recompute abs position to window
-	virtual void getCursorPos( int &x,int &y );
-};
-
-class CEnginePanel : public Panel
-{
-public:
-	virtual SurfaceBase* getSurfaceBase( void );
-	virtual App* getApp( void );
-	virtual void setVisible(bool state);
 };
 
 //
@@ -228,9 +218,8 @@ qboolean ClipRect( const vpoint_t &inUL, const vpoint_t &inLR, vpoint_t *pOutUL,
 extern FontCache *g_FontCache;
 
 
-extern CEnginePanel	*rootpanel;
 extern CEngineSurface	*surface;
-extern CEngineApp          *pApp;
+extern Panel *root;
 }
 using namespace vgui_support;
 #endif//VGUI_MAIN_H
