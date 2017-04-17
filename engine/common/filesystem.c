@@ -1827,7 +1827,7 @@ void FS_LoadGameInfo( const char *rootfolder )
 	int	i;
 
 	// lock uplevel of gamedir for read\write
-	fs_ext_path = false;
+	FS_AllowDirectPaths( false );
 
 	if( rootfolder ) Q_strcpy( gs_basedir, rootfolder );
 	MsgDev( D_NOTE, "FS_LoadGameInfo( %s )\n", gs_basedir );
@@ -1905,8 +1905,8 @@ void FS_Init( void )
 			Host_Error( "RoDir and default rootdir can't point to same directory!" );
 		}
 	}
-#endif
 	else
+#endif
 	{
 		if( !Q_stricmp( host.rodir, host.rootdir ) )
 		{
@@ -1928,7 +1928,28 @@ void FS_Init( void )
 			Q_strcpy( gs_basedir, SI.ModuleName ); // default dir
 		}
 
-		// add readonly directories first
+		if( host.rodir[0] )
+		{
+			// add readonly directories first
+			stringlistinit( &dirs );
+			listdirectory( &dirs, host.rodir, false );
+			stringlistsort( &dirs );
+
+			for( i = 0; i < dirs.numstrings; i++ )
+			{
+				// skip unneeded
+				if( !Q_strcmp( dirs.strings[i], "." ) || (!Q_strcmp( dirs.strings[i], ".." ) && !fs_ext_path) )
+					continue;
+
+				// magic here is that dirs.strings don't contain full path
+				// so code below checks and creates folders in current directory(host.rootdir)
+				if( !FS_SysFolderExists( dirs.strings[i] ) )
+					_mkdir( dirs.strings[i] );
+			}
+
+			stringlistfreecontents( &dirs );
+		}
+
 		stringlistinit( &dirs );
 		listdirectory( &dirs, "./", false );
 		stringlistsort( &dirs );
@@ -1954,7 +1975,12 @@ void FS_Init( void )
 
 		for( i = 0; i < dirs.numstrings; i++ )
 		{
-			if( !FS_SysFolderExists( dirs.strings[i] ) || (!Q_stricmp( dirs.strings[i], ".." ) && !fs_ext_path ))
+			// skip unneeded
+			if( !Q_strcmp( dirs.strings[i], "." ) || (!Q_strcmp( dirs.strings[i], ".." ) && !fs_ext_path) )
+				continue;
+
+			// is this check really should be here?
+			if( !FS_SysFolderExists( dirs.strings[i] ) )
 				continue;
 
 			if( !SI.games[SI.numgames] )
