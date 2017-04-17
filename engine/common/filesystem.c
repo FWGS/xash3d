@@ -1567,10 +1567,10 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	if( !GameInfo ) return false;	// no dest
 
 	if( host.rodir[0] )
-		afile = (char *)FS_LoadDirectFile( va("%s%s", host.rodir, filename ), NULL );
+		afile = (char *)FS_LoadDirectFile( va("%s%s", host.rodir, filepath ), NULL );
 	// TODO: Merge with writable gameinfo.txt
 	if( !afile )
-		afile = (char *)FS_LoadDirectFile( filename, NULL );
+		afile = (char *)FS_LoadDirectFile( filepath, NULL );
 	if( !afile )
 		return false;
 
