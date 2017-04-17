@@ -1118,6 +1118,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	static string	wndname;
 	Uint32 wndFlags = 0;
 	rgbdata_t *icon = NULL;
+	char iconpath[64];
 
 	if( vid_highdpi->integer ) wndFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
@@ -1191,7 +1192,12 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 #endif // __amd64__
 #else // _WIN32
 
-	icon = FS_LoadImage( "game.tga", NULL, 0 );
+	Q_strcpy( iconpath, GI->iconpath );
+	FS_StripExtension( iconpath );
+	FS_DefaultExtension( iconpath, ".tga") ;
+
+	icon = FS_LoadImage( iconpath, NULL, 0 );
+
 	if( icon )
 	{
 		SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
