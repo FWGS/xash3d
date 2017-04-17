@@ -223,7 +223,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		{
 			return NULL;
 		}
-		sprintf( path, "%s%s", search->filename, dllname );
+		Q_sprintf( path, "%s%s", search->filename, dllname );
 
 
 #ifdef DLL_LOADER

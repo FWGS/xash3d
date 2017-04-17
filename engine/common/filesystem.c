@@ -81,6 +81,7 @@ char		fs_basedir[MAX_SYSPATH];	// base directory of game
 char		fs_falldir[MAX_SYSPATH];	// game falling directory
 char		fs_gamedir[MAX_SYSPATH];	// game current directory
 char		gs_basedir[MAX_SYSPATH];	// initial dir before loading gameinfo.txt (used for compilers too)
+
 qboolean		fs_ext_path = false;	// attempt to read\write from ./ or ../ paths 
 #ifndef _WIN32
 qboolean		fs_caseinsensitive = true; // try to search missing files
@@ -928,20 +929,20 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 			int i;
 			for( i = 0; i < SI.numgames; i++ )
 			{
-				ASSERT(SI.games[i]);
-				MsgDev( D_NOTE, "%d %s %s\n", i, SI.games[i]->gamedir, SI.games[i]->basedir );
-				if( !Q_strnicmp( dir, SI.games[i]->gamedir, 64 ) )
+				MsgDev( D_NOTE, "FS_AddGameHierarchy: %d %s %s\n", i, SI.games[i]->gamedir, SI.games[i]->basedir );
+				if( !Q_strnicmp( SI.games[i]->gamedir, dir, 64 ))
 				{
-					if( !SI.games[i]->added && Q_strnicmp( SI.games[i]->gamedir, SI.games[i]->basedir, 64 ) )
+					if( !SI.games[i]->added && Q_stricmp( SI.games[i]->gamedir, SI.games[i]->basedir ) )
 					{
 						SI.games[i]->added = true;
 						FS_AddGameHierarchy( SI.games[i]->basedir, flags );
 					}
 				}
 			}
-
 		}
 
+		if( host.rodir[0] && flags & FS_GAMEDIR_PATH )
+			FS_AddGameDirectory( va( "%s%s/", host.rodir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 
 		if( flags & FS_GAMEDIR_PATH )
 			FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
@@ -1319,7 +1320,7 @@ void FS_CreateDefaultGameInfo( const char *filename )
 	Q_strncpy( defGI.sp_entity, "info_player_start", sizeof( defGI.sp_entity ));
 	Q_strncpy( defGI.mp_entity, "info_player_deathmatch", sizeof( defGI.mp_entity ));
 	Q_strncpy( defGI.dll_path, "cl_dlls", sizeof( defGI.dll_path ));
-	Q_strncpy( defGI.dll_path, CLIENTDLL, sizeof( defGI.client_lib ));
+	Q_strncpy( defGI.client_lib, CLIENTDLL, sizeof( defGI.client_lib ));
 	Q_strncpy( defGI.game_dll, "dlls/hl.dll" , sizeof( defGI.game_dll ));
 	Q_strncpy( defGI.game_dll_osx, "dlls/hl.dylib", sizeof(defGI.game_dll_osx));
 	Q_strncpy( defGI.game_dll_linux, "dlls/hl.so", sizeof(defGI.game_dll_linux));
@@ -1346,8 +1347,14 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 	string	token;
 
 	if( !GameInfo ) return false;	
-	afile = (char *)FS_LoadFile( filename, NULL, false );
-	if( !afile ) return false;
+
+	if( host.rodir[0] )
+		afile = (char *)FS_LoadDirectFile( va("%s%s", host.rodir, filename ), NULL );
+	// TODO: Merge with writable gameinfo.txt
+	if( !afile )
+		afile = (char *)FS_LoadDirectFile( filename, NULL );
+	if( !afile )
+		return false;
 
 	// setup default values
 	GameInfo->max_edicts = 900;	// default value if not specified
@@ -1559,8 +1566,13 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 
 	if( !GameInfo ) return false;	// no dest
 
-	afile = (char *)FS_LoadFile( filepath, NULL, false );
-	if( !afile ) return false;
+	if( host.rodir[0] )
+		afile = (char *)FS_LoadDirectFile( va("%s%s", host.rodir, filename ), NULL );
+	// TODO: Merge with writable gameinfo.txt
+	if( !afile )
+		afile = (char *)FS_LoadDirectFile( filename, NULL );
+	if( !afile )
+		return false;
 
 	// setup default values
 	Q_strncpy( GameInfo->gamefolder, gamedir, sizeof( GameInfo->gamefolder ));
@@ -1885,22 +1897,41 @@ void FS_Init( void )
 		fs_caseinsensitive = false;
 #endif
 
+#ifndef _WIN32
+	if( !fs_caseinsensitive )
+	{
+		if( !Q_strcmp( host.rodir, host.rootdir ) )
+		{
+			Host_Error( "RoDir and default rootdir can't point to same directory!" );
+		}
+	}
+#endif
+	else
+	{
+		if( !Q_stricmp( host.rodir, host.rootdir ) )
+		{
+			Host_Error( "RoDir and default rootdir can't point to same directory!" );
+		}
+	}
+
 	// ignore commandlineoption "-game" for other stuff
 	if( host.type != HOST_UNKNOWN )
 	{
-		stringlistinit( &dirs );
-		listdirectory( &dirs, "./", false );
-		stringlistsort( &dirs );
 		SI.numgames = 0;
-	
+
 		if( !Sys_GetParmFromCmdLine( "-game", gs_basedir ))
 			Q_strcpy( gs_basedir, SI.ModuleName ); // default dir
 
 		if( FS_CheckNastyPath( gs_basedir, true ))
 		{
-			MsgDev( D_ERROR, "FS_Init: invalid game directory \"%s\"\n", gs_basedir );		
+			MsgDev( D_ERROR, "FS_Init: invalid game directory \"%s\"\n", gs_basedir );
 			Q_strcpy( gs_basedir, SI.ModuleName ); // default dir
 		}
+
+		// add readonly directories first
+		stringlistinit( &dirs );
+		listdirectory( &dirs, "./", false );
+		stringlistsort( &dirs );
 
 		// validate directories
 		for( i = 0; i < dirs.numstrings; i++ )
@@ -2749,6 +2780,47 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 				*filesizeptr = filesize;
 
 			return buf;
+		}
+	}
+
+	// Try to load
+	filesize = file->real_length;
+	buf = (byte *)Mem_Alloc( fs_mempool, filesize + 1 );
+	buf[filesize] = '\0';
+	FS_Read( file, buf, filesize );
+	FS_Close( file );
+
+	if( filesizeptr )
+		*filesizeptr = filesize;
+
+	return buf;
+}
+
+/*
+============
+FS_LoadFile
+
+Filename are relative to the xash directory.
+Always appends a 0 byte.
+============
+*/
+byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr )
+{
+	file_t		*file;
+	byte		*buf = NULL;
+	fs_offset_t	filesize = 0;
+
+	file = FS_SysOpen( path, "rb" );
+
+	if( !file )
+	{
+		// Try to open this file with lowered path
+		char *loweredPath = FS_ToLowerCase( path );
+		file = FS_SysOpen( loweredPath, "rb" );
+		free(loweredPath);
+		if( !file )
+		{
+			return NULL;
 		}
 	}
 
