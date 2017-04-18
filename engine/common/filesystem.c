@@ -924,7 +924,7 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	if( dir && *dir )
 	{
 		// add recursively new game directories
-		if( Q_strnicmp( dir, GI->gamedir, 64 ) )
+		if( !Q_strcmp( dir, GI->gamefolder ) )
 		{
 			int i;
 			for( i = 0; i < SI.numgames; i++ )
