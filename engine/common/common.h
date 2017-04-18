@@ -390,10 +390,10 @@ typedef struct host_parm_s
 	qboolean		skip_configs;	// skip config save during Host_Shutdown
 	double	force_draw_version_time; // time when disable force_draw_version
 
+	char		rodir[256]; // readonly root
 	char		rootdir[256];	// member root directory
 	char		gamefolder[64];	// it's a default gamefolder	
 
-	char		rodir[256]; // readonly root
 
 	byte		*imagepool;	// imagelib mempool
 	byte		*soundpool;	// soundlib mempool

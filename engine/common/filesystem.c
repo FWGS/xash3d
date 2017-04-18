@@ -942,7 +942,7 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 		}
 
 		if( host.rodir[0] && flags & FS_GAMEDIR_PATH )
-			FS_AddGameDirectory( va( "%s%s/", host.rodir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+			FS_AddGameDirectory( va( "%s/%s/", host.rodir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 
 		if( flags & FS_GAMEDIR_PATH )
 			FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
@@ -1342,14 +1342,14 @@ void FS_CreateDefaultGameInfo( const char *filename )
 
 static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, gameinfo_t *GameInfo )
 {
-	char	*afile, *pfile;
+	char	*afile = NULL, *pfile;
 	qboolean found_linux = false, found_osx = false;
 	string	token;
 
 	if( !GameInfo ) return false;	
 
 	if( host.rodir[0] )
-		afile = (char *)FS_LoadDirectFile( va("%s%s", host.rodir, filename ), NULL );
+		afile = (char *)FS_LoadDirectFile( va("%s/%s", host.rodir, filename ), NULL );
 	// TODO: Merge with writable gameinfo.txt
 	if( !afile )
 		afile = (char *)FS_LoadDirectFile( filename, NULL );
@@ -1548,7 +1548,7 @@ FS_ParseGameInfo
 */
 static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 {
-	char	*afile, *pfile;
+	char	*afile = NULL, *pfile;
 	string	fs_path, filepath;
 	string	liblist, token;
 	qboolean found_linux = false, found_osx = false;
@@ -1567,7 +1567,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	if( !GameInfo ) return false;	// no dest
 
 	if( host.rodir[0] )
-		afile = (char *)FS_LoadDirectFile( va("%s%s", host.rodir, filepath ), NULL );
+		afile = (char *)FS_LoadDirectFile( va("%s/%s", host.rodir, filepath ), NULL );
 	// TODO: Merge with writable gameinfo.txt
 	if( !afile )
 		afile = (char *)FS_LoadDirectFile( filepath, NULL );

@@ -966,6 +966,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 	// get readonly root. The order is: check for arg, then env.
 	// If still not got it, rodir is disabled.
+	host.rodir[0] = 0;
 	if( !Sys_GetParmFromCmdLine( "-rodir", host.rodir ) )
 	{
 		char *roDir;
@@ -973,10 +974,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		if( ( roDir = getenv( "XASH_RODIR" ) ) )
 		{
 			Q_strncpy( host.rodir, roDir, sizeof( host.rodir ) );
-		}
-		else
-		{
-			host.rodir[0] = 0;
 		}
 	}
 
@@ -989,6 +986,10 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
+
+	if( host.rodir[Q_strlen( host.rodir ) - 1] == '/' )
+		host.rodir[Q_strlen( host.rodir ) - 1] = 0;
+
 
 	if( !Sys_CheckParm( "-noch" ) )
 	{
