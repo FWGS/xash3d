@@ -1197,7 +1197,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Wcon_ShowConsole( false ); // hide console
 #endif
 		// execute startup config and cmdline
-		Cbuf_AddText( va( "exec %s.rc\n", SI.ModuleName ) );
+		Cbuf_AddText( va( "exec %s.rc\n", GI->gamedir ) );
 		CSCR_LoadDefaultCVars( "settings.scr" );
 		CSCR_LoadDefaultCVars( "user.scr" );
 		// intentional fallthrough

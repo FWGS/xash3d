@@ -118,6 +118,7 @@ struct touch_s
 	int resettexture;
 	int closetexture;
 	int joytexture; // touch indicator
+	qboolean configchanged;
 } touch;
 
 touchdefaultbutton_t g_DefaultButtons[256];
@@ -160,10 +161,10 @@ void IN_TouchWriteConfig( void )
 
 	if( !touch.first ) return;
 
-	MsgDev( D_NOTE, "IN_TouchWriteConfig(): %s\n", touch_config_file->string );
-
-	if( Sys_CheckParm( "-nowriteconfig" ) )
+	if( Sys_CheckParm( "-nowriteconfig" ) || !touch.configchanged )
 		return;
+
+	MsgDev( D_NOTE, "IN_TouchWriteConfig(): %s\n", touch_config_file->string );
 
 	Q_snprintf( newconfigfile, 64, "%s.new", touch_config_file->string );
 	Q_snprintf( oldconfigfile, 64, "%s.bak", touch_config_file->string );
@@ -376,6 +377,7 @@ void IN_TouchListButtons_f( void )
 			continue;
 		UI_AddTouchButtonToList( B(name), B(texturefile), B(command),B(color), B(flags) );
 	}
+	touch.configchanged = true;
 }
 
 void IN_TouchStroke_f( void )
@@ -760,6 +762,7 @@ void IN_TouchEnableEdit_f( void )
 		touch.state = state_edit;
 	touch.resize_finger = touch.move_finger = touch.look_finger = -1;
 	touch.move = NULL;
+	touch.configchanged = true;
 }
 
 void IN_TouchDisableEdit_f( void )
@@ -888,6 +891,7 @@ void IN_TouchInitConfig( void )
 	touch.showtexture = GL_LoadTexture( "touch_default/edit_show.tga", NULL, 0, TF_NOPICMIP, NULL );
 	touch.resettexture = GL_LoadTexture( "touch_default/edit_reset.tga", NULL, 0, TF_NOPICMIP, NULL );
 	touch.joytexture = GL_LoadTexture( touch_joy_texture->string, NULL, 0, TF_NOPICMIP, NULL );
+	touch.configchanged = false;
 }
 qboolean IN_TouchIsVisible( touchbutton2_t *button )
 {
