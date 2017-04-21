@@ -95,6 +95,12 @@ static int FS_SysFileTime( const char *filename );
 static signed char W_TypeFromExt( const char *lumpname );
 static const char *W_ExtFromType( signed char lumptype );
 
+#ifdef _WIN32
+#define PATH_SPLITTER "\\"
+#else
+#define PATH_SPLITTER "/"
+#endif
+
 /*
 =============================================================================
 
@@ -1512,10 +1518,10 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 			snprintf( GameInfo->game_dll_osx, sizeof( GameInfo->game_dll_osx ), "%s.dylib", gamedll );
 	}
 
-	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->gamedir )))
+	if( !FS_SysFolderExists( va( "%s"PATH_SPLITTER"%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
 
-	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->falldir )))
+	if( !FS_SysFolderExists( va( "%s"PATH_SPLITTER"%s", host.rootdir, GameInfo->falldir )))
 		GameInfo->falldir[0] = '\0';
 
 	Mem_Free( afile );
@@ -1804,10 +1810,10 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	}
 #endif
 	// make sure what gamedir is really exist
-	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->gamedir )))
+	if( !FS_SysFolderExists( va( "%s"PATH_SPLITTER"%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));
 
-	if( !FS_SysFolderExists( va( "%s\\%s", host.rootdir, GameInfo->falldir )))
+	if( !FS_SysFolderExists( va( "%s"PATH_SPLITTER"%s", host.rootdir, GameInfo->falldir )))
 		GameInfo->falldir[0] = '\0';
 
 	Z_Free( afile );
@@ -1938,7 +1944,7 @@ void FS_Init( void )
 			for( i = 0; i < dirs.numstrings; i++ )
 			{
 				// skip unneeded
-				if( !Q_strcmp( dirs.strings[i], "." ) || (!Q_strcmp( dirs.strings[i], ".." ) && !fs_ext_path) )
+				if( !Q_strcmp( dirs.strings[i], "." ) || (!Q_strcmp( dirs.strings[i], ".." ) && !fs_ext_path) || !FS_SysFolderExists( va("%s"PATH_SPLITTER"%s",host.rodir, dirs.strings[i] ) ) )
 					continue;
 
 				// magic here is that dirs.strings don't contain full path
