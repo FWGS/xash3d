@@ -1910,7 +1910,7 @@ void FS_Init( void )
 	{
 		if( !Q_strcmp( host.rodir, host.rootdir ) )
 		{
-			Host_Error( "RoDir and default rootdir can't point to same directory!" );
+			Sys_Error( "RoDir and default rootdir can't point to same directory!" );
 		}
 	}
 	else
@@ -1918,7 +1918,7 @@ void FS_Init( void )
 	{
 		if( !Q_stricmp( host.rodir, host.rootdir ) )
 		{
-			Host_Error( "RoDir and default rootdir can't point to same directory!" );
+			Sys_Error( "RoDir and default rootdir can't point to same directory!" );
 		}
 	}
 
