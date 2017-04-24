@@ -153,12 +153,15 @@ JustAfew:
 	nMain = nBuffer >> 3;
 	while( nMain-- )
 	{
-		ulCrc ^= *(dword *)pb;	// warning, this only works on little-endian.
+		dword tmp;
+		Q_memcpy( &tmp, pb, sizeof(dword) );
+		ulCrc ^= tmp;	// warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
-		ulCrc ^= *(dword *)(pb + 4);// warning, this only works on little-endian.
+		Q_memcpy( &tmp, pb + 4, sizeof(dword) );
+		ulCrc ^= tmp;   // warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
