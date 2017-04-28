@@ -332,7 +332,7 @@ V_RenderView
 */
 void V_RenderView( void )
 {
-	if( !cl.video_prepped || ( UI_IsVisible() && !cl.background ))
+	if( !cl.video_prepped || ( !ui_renderworld->value && UI_IsVisible() && !cl.background ))
 		return; // still loading
 
 	if( cl.frame.valid && ( cl.force_refdef || !cl.refdef.paused ))

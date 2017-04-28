@@ -66,6 +66,8 @@ convar_t	*cl_maxpacket;
 convar_t    *r_bmodelinterp;
 
 convar_t	*hud_utf8;
+
+convar_t    *ui_renderworld;
 //
 // userinfo
 //
@@ -1872,6 +1874,8 @@ void CL_InitLocal( void )
 
 	hud_scale = Cvar_Get( "hud_scale", "0", CVAR_ARCHIVE|CVAR_LATCH, "scale hud at current resolution" );
 	hud_utf8 = Cvar_Get( "hud_utf8", "0", CVAR_ARCHIVE, "Use utf-8 encoding for hud text" );
+
+	ui_renderworld = Cvar_Get( "ui_renderworld", "0", CVAR_ARCHIVE, "render world when UI is visible" );
 
 	Cvar_Get( "skin", "", CVAR_USERINFO, "player skin" ); // XDM 3.3 want this cvar
 	Cvar_Get( "cl_background", "0", CVAR_READ_ONLY, "indicates that background map is running" );
