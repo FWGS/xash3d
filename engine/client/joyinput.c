@@ -422,8 +422,8 @@ void Joy_FinalizeMove( float *fw, float *side, float *dpitch, float *dyaw )
 		joy_axis_binding->modified = false;
 	}
 
-	*fw     -= (float)joyaxis[JOY_AXIS_FWD ].val/(float)SHRT_MAX;  // must be form -1.0 to 1.0
-	*side   += (float)joyaxis[JOY_AXIS_SIDE].val/(float)SHRT_MAX;
+	*fw     -= joy_forward->value * (float)joyaxis[JOY_AXIS_FWD ].val/(float)SHRT_MAX;  // must be form -1.0 to 1.0
+	*side   += joy_side->value    * (float)joyaxis[JOY_AXIS_SIDE].val/(float)SHRT_MAX;
 #if !defined(XASH_SDL)
 	*dpitch += joy_pitch->value * (float)joyaxis[JOY_AXIS_PITCH].val/(float)SHRT_MAX * host.realframetime;  // abs axis rotate is frametime related
 	*dyaw   -= joy_yaw->value   * (float)joyaxis[JOY_AXIS_YAW  ].val/(float)SHRT_MAX * host.realframetime;
