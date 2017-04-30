@@ -164,10 +164,10 @@ typedef enum
 #define MAX_STATIC_ENTITIES	512	// static entities that moved on the client when level is spawn
 
 // filesystem flags
-#define FS_STATIC_PATH	1	// FS_ClearSearchPath will be ignore this path
-#define FS_NOWRITE_PATH	2	// default behavior - last added gamedir set as writedir. This flag disables it
-#define FS_GAMEDIR_PATH	4	// just a marker for gamedir path
-#define FS_CUSTOM_PATH	8	// map search allowed
+#define FS_STATIC_PATH	BIT(0)	// FS_ClearSearchPath will be ignore this path
+#define FS_NOWRITE_PATH	BIT(1)	// default behavior - last added gamedir set as writedir. This flag disables it
+#define FS_GAMEDIR_PATH	BIT(2)	// just a marker for gamedir path
+#define FS_CUSTOM_PATH	BIT(3)	// map search allowed
 
 #define GI              SI.GameInfo
 #define FS_Gamedir()	SI.GameInfo->gamedir
@@ -254,7 +254,7 @@ typedef struct gameinfo_s
 	int		max_tents;	// min temp ents is 300, max is 2048
 	int		max_beams;	// min beams is 64, max beams is 512
 	int		max_particles;	// min particles is 4096, max particles is 32768
-	qboolean	added;
+	qboolean added;
 } gameinfo_t;
 
 typedef struct sysinfo_s
@@ -390,8 +390,11 @@ typedef struct host_parm_s
 	qboolean		skip_configs;	// skip config save during Host_Shutdown
 	double	force_draw_version_time; // time when disable force_draw_version
 
+	char		rodir[256]; // readonly root
 	char		rootdir[256];	// member root directory
 	char		gamefolder[64];	// it's a default gamefolder	
+
+
 	byte		*imagepool;	// imagelib mempool
 	byte		*soundpool;	// soundlib mempool
 
@@ -440,6 +443,7 @@ void W_Close( wfile_t *wad );
 searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
+byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr );
 qboolean FS_WriteFile( const char *filename, const void *data, fs_offset_t len );
 int COM_FileSize( const char *filename );
 void COM_FixSlashes( char *pname );

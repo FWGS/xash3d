@@ -20,7 +20,7 @@ GNU General Public License for more details.
 
 #include <stdarg.h>  // va_args
 #include <errno.h> // errno
-
+#include <string.h> // strerror
 
 #include "netchan.h"
 #include "server.h"
@@ -947,29 +947,49 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 	else
 	{
-		#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
 		const char *IOS_GetDocsDir();
 		Q_strncpy( host.rootdir, IOS_GetDocsDir(), sizeof(host.rootdir) );
-		#elif defined(XASH_SDL)
+#elif defined(XASH_SDL)
 		if( !( baseDir = SDL_GetBasePath() ) )
 			Sys_Error( "couldn't determine current directory: %s", SDL_GetError() );
 		Q_strncpy( host.rootdir, baseDir, sizeof( host.rootdir ) );
 		SDL_free( baseDir );
-		#else
+#else
 		if( !getcwd( host.rootdir, sizeof(host.rootdir) ) )
+		{
+			Sys_Error( "couldn't determine current directory: %s", strerror( errno ) );
 			host.rootdir[0] = 0;
-		#endif
+		}
+#endif
+	}
+
+	// get readonly root. The order is: check for arg, then env.
+	// If still not got it, rodir is disabled.
+	host.rodir[0] = 0;
+	if( !Sys_GetParmFromCmdLine( "-rodir", host.rodir ) )
+	{
+		char *roDir;
+
+		if( ( roDir = getenv( "XASH3D_RODIR" ) ) )
+		{
+			Q_strncpy( host.rodir, roDir, sizeof( host.rodir ) );
+		}
 	}
 
 	if( !Sys_CheckParm( "-disablehelp" ) )
 	{
 	    if( Sys_CheckParm( "-help" ) || Sys_CheckParm( "-h" ) || Sys_CheckParm( "--help" ) )
 	    {
-		Sys_Error( "%s", usage_str );
+			Sys_Error( "%s", usage_str );
 	    }
 	}
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
+
+	if( host.rodir[Q_strlen( host.rodir ) - 1] == '/' )
+		host.rodir[Q_strlen( host.rodir ) - 1] = 0;
+
 
 	if( !Sys_CheckParm( "-noch" ) )
 	{

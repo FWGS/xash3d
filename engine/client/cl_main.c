@@ -2010,7 +2010,12 @@ void Host_ClientFrame( void )
 			if( !cl.video_prepped ) CL_PrepVideo();
 			if( !cl.audio_prepped ) CL_PrepSound();
 		}
-	
+
+		// send a new command message to the server
+		CL_SendCommand();
+
+		// predict all unacknowledged movements
+		CL_PredictMovement();
 	}
 	// update the screen
 	SCR_UpdateScreen ();
@@ -2018,12 +2023,6 @@ void Host_ClientFrame( void )
 	{
 		// update audio
 		S_RenderFrame( &cl.refdef );
-
-		// send a new command message to the server
-		CL_SendCommand();
-
-		// predict all unacknowledged movements
-		CL_PredictMovement();
 
 		// decay dynamic lights
 		CL_DecayLights ();
