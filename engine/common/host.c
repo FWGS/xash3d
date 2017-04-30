@@ -971,7 +971,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	{
 		char *roDir;
 
-		if( ( roDir = getenv( "XASH_RODIR" ) ) )
+		if( ( roDir = getenv( "XASH3D_RODIR" ) ) )
 		{
 			Q_strncpy( host.rodir, roDir, sizeof( host.rodir ) );
 		}

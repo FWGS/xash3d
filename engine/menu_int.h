@@ -158,7 +158,7 @@ typedef struct ui_enginefuncs_s
 	long	(*pfnRandomLong)( long lLow, long lHigh );
 
 	void	(*pfnSetCursor)( void *hCursor );			// change cursor
-	int	(*pfnIsMapValid)( char *filename );
+	int	(*pfnIsMapValid)( const char *filename );
 	void	(*pfnProcessImage)( int texnum, float gamma, int topColor, int bottomColor );
 	int	(*pfnCompareFileTime)( char *filename1, char *filename2, int *iCompare );
 } ui_enginefuncs_t;
