@@ -463,7 +463,7 @@ qboolean CL_AddVisibleEntity( cl_entity_t *ent, int entityType )
 		VectorCopy( ent->angles, ent->curstate.angles );
 	}
 
-	if( CL_IsInMenu( ) && ( !cl.background || ent->player ))
+	if( CL_IsInMenu( ) && ( !ui_renderworld->integer && !cl.background || ent->player ))
 	{
 		// menu entities ignores client filter
 		if( !R_AddEntity( ent, entityType ))
