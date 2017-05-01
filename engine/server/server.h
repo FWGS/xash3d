@@ -262,7 +262,7 @@ typedef struct sv_client_s
 	int		authentication_method;
 	uint		WonID;			// WonID
 
-	int		maxpacket;
+	int		maxpayload;
 	int		resources_sent;
 	int resources_count;
 } sv_client_t;

@@ -1568,7 +1568,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	msg_start = BF_GetNumBitsWritten( &cl->netchan.message );
 	BF_WriteWord( &cl->netchan.message, rescount );
 
-	for( ; ( index < rescount ) && ( BF_GetNumBytesWritten( &cl->netchan.message ) <  cl->maxpacket ); index++ )
+	for( ; ( index < rescount ) && ( BF_GetNumBytesWritten( &cl->netchan.message ) <  cl->maxpayload ); index++ )
 	{
 		BF_WriteWord( &cl->netchan.message, reslist.restype[index] );
 		BF_WriteString( &cl->netchan.message, reslist.resnames[index] );
@@ -1615,7 +1615,7 @@ void SV_WriteModels_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_MODELS )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpayload ) && start < MAX_MODELS )
 	{
 		if( sv.model_precache[start][0] )
 		{
@@ -1661,7 +1661,7 @@ void SV_WriteSounds_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_SOUNDS )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpayload ) && start < MAX_SOUNDS )
 	{
 		if( sv.sound_precache[start][0] )
 		{
@@ -1707,7 +1707,7 @@ void SV_WriteEvents_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_EVENTS )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpayload ) && start < MAX_EVENTS )
 	{
 		if( sv.event_precache[start][0] )
 		{
@@ -1753,7 +1753,7 @@ void SV_WriteLightstyles_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_LIGHTSTYLES )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpayload ) && start < MAX_LIGHTSTYLES )
 	{
 		if( sv.lightstyles[start].pattern[0] )
 		{
@@ -1801,7 +1801,7 @@ void SV_UserMessages_f( sv_client_t *cl )
 	start = Q_atoi( Cmd_Argv( 2 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < MAX_USER_MESSAGES )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpayload ) && start < MAX_USER_MESSAGES )
 	{
 		message = &svgame.msg[start];
 		if( message->name[0] )
@@ -1856,7 +1856,7 @@ void SV_DeltaInfo_f( sv_client_t *cl )
 	fieldIndex = Q_atoi( Cmd_Argv( 3 ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && tableIndex < Delta_NumTables( ))
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpayload ) && tableIndex < Delta_NumTables( ))
 	{
 		dt = Delta_FindStructByIndex( tableIndex );
 
@@ -1865,7 +1865,7 @@ void SV_DeltaInfo_f( sv_client_t *cl )
 			Delta_WriteTableField( &cl->netchan.message, tableIndex, &dt->pFields[fieldIndex] );
 
 			// it's time to send another portion
-			if( BF_GetNumBytesWritten( &cl->netchan.message ) >= ( cl->maxpacket ))
+			if( BF_GetNumBytesWritten( &cl->netchan.message ) >= ( cl->maxpayload ))
 				break;
 		}
 
@@ -1920,7 +1920,7 @@ void SV_Baselines_f( sv_client_t *cl )
 	Q_memset( &nullstate, 0, sizeof( nullstate ));
 
 	// write a packet full of data
-	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpacket ) && start < svgame.numEntities )
+	while( BF_GetNumBytesWritten( &cl->netchan.message ) < ( cl->maxpayload ) && start < svgame.numEntities )
 	{
 		base = &svs.baselines[start];
 		// if baseline created in SV_CreateBaselines
@@ -2111,16 +2111,25 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 
 	cl->local_weapons = Q_atoi( Info_ValueForKey( cl->userinfo, "cl_lw" )) ? true : false;
 	cl->lag_compensation = Q_atoi( Info_ValueForKey( cl->userinfo, "cl_lc" )) ? true : false;
-	val = Info_ValueForKey( cl->userinfo, "cl_maxpacket" );
-	if( !cl->netchan.split && *val )
+
+	// max payload calculation
+	if( *( val = Info_ValueForKey( cl->userinfo, "cl_maxpayload" ) ) )
+		cl->maxpayload = bound( 100, Q_atoi(val), sv_maxpacket->integer );
+	else if( *( val = Info_ValueForKey( cl->userinfo, "cl_maxpacket" ) ) )
 	{
-		cl->maxpacket = Q_atoi( val );
-		cl->maxpacket = bound( 100, cl->maxpacket, ( sv_maxpacket->integer / 2 ) );
+		int maxpayload = Q_atoi( val );
+
+		if( !cl->netchan.split ) // 1000 + overrun,  should be < 1400
+			cl->maxpayload = bound( 100, maxpayload, ( sv_maxpacket->integer / 2 ) );
+		// do not let send more than two packets at time, it may be killed by firewall
+		else // 1960 bytes default
+			cl->maxpayload = bound( 100, sv_maxpacket->integer, maxpayload * 1.4f );
 	}
 	else
-		cl->maxpacket = sv_maxpacket->integer;
+		cl->maxpayload = sv_maxpacket->integer;
+
 	if( sv_maxclients->integer == 1 )
-		cl->maxpacket = NET_MAX_PAYLOAD / 2;
+		cl->maxpayload = NET_MAX_PAYLOAD / 2;
 
 	val = Info_ValueForKey( cl->userinfo, "cl_updaterate" );
 
