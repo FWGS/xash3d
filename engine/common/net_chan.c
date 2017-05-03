@@ -505,7 +505,7 @@ void Netchan_OutOfBandPrint( int net_socket, netadr_t adr, char *format, ... )
 	char	string[MAX_SYSPATH];
 
 	va_start( argptr, format );
-	Q_vsprintf( string, format, argptr );
+	Q_vsnprintf( string, sizeof(string), format, argptr );
 	va_end( argptr );
 
 	Netchan_OutOfBand( net_socket, adr, Q_strlen( string ), (byte *)string );
