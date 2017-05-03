@@ -2653,7 +2653,7 @@ int FS_VPrintf( file_t *file, const char* format, va_list ap )
 	while( 1 )
 	{
 		tempbuff = (char *)Mem_Alloc( fs_mempool, buff_size );
-		len = Q_vsprintf( tempbuff, format, ap );
+		len = Q_vsnprintf( tempbuff, buff_size, format, ap );
 		if( len >= 0 && len < buff_size ) break;
 		Mem_Free( tempbuff );
 		buff_size *= 2;

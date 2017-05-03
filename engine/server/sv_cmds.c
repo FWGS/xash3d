@@ -34,7 +34,7 @@ void SV_ClientPrintf( sv_client_t *cl, int level, char *fmt, ... )
 		return;
 	
 	va_start( argptr, fmt );
-	Q_vsprintf( string, fmt, argptr );
+	Q_vsnprintf( string, sizeof(string), fmt, argptr );
 	va_end( argptr );
 	
 	BF_WriteByte( &cl->netchan.message, svc_print );
@@ -59,7 +59,7 @@ void SV_BroadcastPrintf( int level, char *fmt, ... )
 	if( !sv.state ) return;
 
 	va_start( argptr, fmt );
-	Q_vsprintf( string, fmt, argptr );
+	Q_vsnprintf( string, sizeof( string ), fmt, argptr );
 	va_end( argptr );
 	
 	// echo to console
@@ -91,7 +91,7 @@ void SV_BroadcastCommand( char *fmt, ... )
 	
 	if( !sv.state ) return;
 	va_start( argptr, fmt );
-	Q_vsprintf( string, fmt, argptr );
+	Q_vsnprintf( string, sizeof( string ), fmt, argptr );
 	va_end( argptr );
 
 	BF_WriteByte( &sv.reliable_datagram, svc_stufftext );

@@ -177,7 +177,7 @@ void Host_EndGame( const char *message, ... )
 	static char	string[MAX_SYSPATH];
 	
 	va_start( argptr, message );
-	Q_vsprintf( string, message, argptr );
+	Q_vsnprintf( string, sizeof( string ), message, argptr );
 	va_end( argptr );
 
 	MsgDev( D_INFO, "Host_EndGame: %s\n", string );
@@ -787,7 +787,7 @@ void Host_Error( const char *error, ... )
 	}
 
 	va_start( argptr, error );
-	Q_vsprintf( hosterror1, error, argptr );
+	Q_vsnprintf( hosterror1, sizeof( hosterror1 ), error, argptr );
 	va_end( argptr );
 
 	CL_WriteMessageHistory (); // before Q_error call

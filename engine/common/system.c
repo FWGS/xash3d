@@ -593,7 +593,7 @@ void Sys_Error( const char *format, ... )
 	error_on_exit = true;
 	host.state = HOST_ERR_FATAL;	
 	va_start( argptr, format );
-	Q_vsprintf( text, format, argptr );
+	Q_vsnprintf( text, sizeof( text ), format, argptr );
 	va_end( argptr );
 
 	SV_SysError( text );
@@ -645,7 +645,7 @@ void Sys_Break( const char *format, ... )
 	error_on_exit = true;	
 	host.state = HOST_ERR_FATAL;         
 	va_start( argptr, format );
-	Q_vsprintf( text, format, argptr );
+	Q_vsnprintf( text, sizeof( text ), format, argptr );
 	va_end( argptr );
 
 	if( !Host_IsDedicated() )
