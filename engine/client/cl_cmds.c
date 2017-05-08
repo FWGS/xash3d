@@ -141,8 +141,6 @@ Handle "mp3" console command
 void CL_MP3Command_f ( void )
 {
 	char *pszCommand, *pszTrack;
-	static qboolean	looped = false;
-	static qboolean	enabled = true;
 
 	if ( Cmd_Argc() < 2 )
 		return;
@@ -152,41 +150,26 @@ void CL_MP3Command_f ( void )
 
 	if (Q_stricmp(pszCommand, "play") == 0)
 	{
-		looped = false;
-		enabled = true;
-
 		S_StartBackgroundTrack( pszTrack, NULL, 0 );
 		return;
 	}
 	else if (Q_stricmp(pszCommand, "playfile") == 0)
 	{
-		looped = false;
-		enabled = true;
-
 		S_StartBackgroundTrack( pszTrack, NULL, 0 );
 		return;
 	}
 	else if (Q_stricmp(pszCommand, "loop") == 0)
 	{
-		looped = true;
-		enabled = true;
-
 		S_StartBackgroundTrack( pszTrack, pszTrack, 0 );
 		return;
 	}
 	else if (Q_stricmp(pszCommand, "loopfile") == 0)
 	{
-		looped = true;
-		enabled = true;
-
 		S_StartBackgroundTrack( pszTrack, pszTrack, 0 );
 		return;
 	}
 	else if (Q_stricmp(pszCommand, "stop") == 0)
 	{
-		looped = false;
-		enabled = false;
-
 		S_StopBackgroundTrack();
 		return;
 	}
