@@ -1149,7 +1149,7 @@ convar_t *http_autoremove;
 convar_t *http_timeout;
 
 char header[BUFSIZ]; // query or response
-int headersize, querylength, sent, downloadfileid, downloadcount;;
+int headersize, querylength, sent, downloadfileid, downloadcount;
 
 /*
 ========================
@@ -1212,13 +1212,10 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		char name[256];
 		Q_snprintf( name, 256, "downloaded/%s", file->path );
 		FS_Rename( incname, name );
-		if( file->process )CL_ProcessFile( true, name );
+		if( file->process )
+			CL_ProcessFile( true, name );
 		else
-		{
 			Msg ( "HTTP: Successfully downloaded %s, prosessing disabled!\n", name );
-			if( last_file == first_file )
-				Cbuf_AddText( "menu_connectionprogress dlend\n" );
-		}
 	}
 	// Now free list node
 	if( first_file == file )
@@ -1487,7 +1484,7 @@ void HTTP_Run( void )
 			{
 				curfile->checktime = 0;
 				Msg( "HTTP: %f KB/s\n", (float)curfile->lastchecksize / ( 5.0 * 1024 ) );
-				Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d \"(File size is %s, speed is %.2f KB/s)\"\n", curfile->path, server->host, server->path, downloadfileid, downloadcount, Q_pretifymem( curfile->size, 1 ), (float)curfile->lastchecksize / ( 5.0 * 1024 ) ) );
+				Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d \"(file size is %s, speed is %.2f KB/s)\"\n", curfile->path, server->host, server->path, downloadfileid, downloadcount, Q_pretifymem( curfile->size, 1 ), (float)curfile->lastchecksize / ( 5.0 * 1024 ) ) );
 				curfile->lastchecksize = 0;
 			}
 		}

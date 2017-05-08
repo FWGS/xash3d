@@ -1739,6 +1739,13 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 	{
 		MsgDev( D_INFO, "Download completed, resuming connection\n" );
 		FS_Rescan();
+
+		if( cls.state < ca_connecting )
+		{
+				Cbuf_AddText( "menu_connectionprogress dlend\n" );
+				return;
+		}
+
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "continueloading" );
 		downloadfileid = 0;
