@@ -2397,6 +2397,17 @@ searchpath_t *FS_FindFile( const char *name, int* index, qboolean gamedironly )
 	return NULL;
 }
 
+/*
+===========
+FS_GetSearchPaths
+
+===========
+*/
+searchpath_t *FS_GetSearchPaths()
+{
+	return fs_searchpaths;
+}
+
 
 /*
 ===========

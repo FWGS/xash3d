@@ -441,6 +441,7 @@ wfile_t *W_Open( const char *filename, const char *mode );
 byte *W_LoadLump( wfile_t *wad, const char *lumpname, size_t *lumpsizeptr, const char type );
 void W_Close( wfile_t *wad );
 searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
+searchpath_t *FS_GetSearchPaths( void );
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr );
@@ -474,6 +475,8 @@ qboolean FS_Eof( file_t *file );
 fs_offset_t FS_FileLength( file_t *f );
 void FS_Rescan( void );
 qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive );
+void FS_CreatePath( char *path );
+
 
 //
 // network.c
