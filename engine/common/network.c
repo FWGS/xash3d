@@ -1149,7 +1149,7 @@ convar_t *http_autoremove;
 convar_t *http_timeout;
 
 char header[BUFSIZ]; // query or response
-int headersize, querylength, sent;
+int headersize, querylength, sent, downloadfileid, downloadcount;;
 
 /*
 ========================
@@ -1285,6 +1285,7 @@ void HTTP_Run( void )
 	{
 		char name[PATH_MAX];
 		Msg( "HTTP: Starting download %s from %s\n", curfile->path, server->host );
+		Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d\n", curfile->path, server->host, server->path, downloadfileid, downloadcount ) );
 		Q_snprintf( name, PATH_MAX, "downloaded/%s.incomplete", curfile->path );
 		curfile->file = FS_Open( name, "wb", true );
 		if( !curfile->file )

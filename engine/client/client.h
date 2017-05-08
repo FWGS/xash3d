@@ -501,11 +501,6 @@ typedef struct
 	int		envshot_viewsize;		// override cvar
 	qboolean		envshot_disable_vis;	// disable VIS on server while makes an envshots
 	string		shotname;
-
-	// download info
-	int		downloadcount;
-	int		downloadfileid;
-
 	// demo loop control
 	int		demonum;			// -1 = don't play demos
 	int		olddemonum;		// restore playing
@@ -529,6 +524,12 @@ typedef struct
 	qboolean splitcompress;			// enabled only on server->client netchan
 	qboolean need_save_config;
 } client_static_t;
+
+
+	// download info
+extern int		downloadcount;
+extern int		downloadfileid;
+
 
 #ifdef __cplusplus
 extern "C" {

@@ -621,6 +621,8 @@ void CL_ParseServerData( sizebuf_t *msg )
 #endif
 	if( !cls.changedemo )
 		UI_SetActiveMenu( cl.background );
+	if( cl.maxclients > 1 )
+		Cbuf_AddText( "menu_connectionprogress serverinfo server\n" );
 
 	cl.refdef.viewentity = cl.playernum + 1; // always keep viewent an actual
 
@@ -1090,7 +1092,7 @@ void CL_CheckingResFile( char *pResFileName )
 	if( FS_FileExists( pResFileName, false ))
 		return;	// already exists
 
-	cls.downloadcount++;
+	downloadcount++;
 
 	
 	if( cl_allow_fragment->integer )
@@ -1147,7 +1149,7 @@ void CL_ParseResourceList( sizebuf_t *msg )
 		Q_strncpy( reslist.resnames[i], BF_ReadString( msg ), CS_SIZE );
 	}
 
-	cls.downloadcount = 0;
+	downloadcount = 0;
 
 	HTTP_ResetProcessState();
 
@@ -1169,7 +1171,7 @@ void CL_ParseResourceList( sizebuf_t *msg )
 		else CL_CheckingResFile( reslist.resnames[i] );
 	}
 
-	if( !cls.downloadcount )
+	if( !downloadcount )
 	{
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "continueloading" );
@@ -1468,12 +1470,66 @@ void CL_ParseUserMessage( sizebuf_t *msg, int svc_num )
 	}
 }
 
+struct stufftexttable_s
+{
+char *command;
+char *description;
+float percent;
+float step;
+} stufftexttable[] = {
+{ "getresourcelist", "Getting resource list", .1, .1 },
+{ "modellist", "Getting model list", .2, .1 },
+{ "soundlist", "Getting sound list", .3, .1 },
+{ "eventlist", "Getting event list", .4, .1 },
+{ "lightstyles", "Getting light styles", .5, .1 },
+{ "usermsgs", "Getting user messages", .6, .1 },
+{ "deltainfo", "Getting delta tables", .7, .1 },
+{ "baselines", "Getting baselines", .8, .2 }
+};
+
+struct stufftextparser_s
+{
+char last;
+int counter;
+} stufftextparser;
+
 void CL_ParseStuffText( sizebuf_t *msg )
 {
 	char *s = BF_ReadString( msg );
 	if( cl_trace_stufftext->integer )
 	{
 		Msg("^3STUFFTEXT:\n^2%s\n^3END^7\n", s);
+	}
+	if( cls.state != ca_active )
+	{
+		char token[256], *s2;
+		int i;
+
+		s2 = COM_ParseFile( s, token );
+
+		if( !Q_strcmp( token, "precache" ) )
+			Cbuf_AddText( "menu_connectionprogress precache\n" );
+		else if ( !Q_strcmp( token, "cmd" ) )
+		{
+			COM_ParseFile( s2, token );
+		for( i = 0; i < ARRAYSIZE( stufftexttable ); i++ )
+		{
+			float percent;
+
+			if( Q_strcmp( token, stufftexttable[i].command ) )
+				continue;
+
+			percent = stufftexttable[i].percent;
+
+			if( i == stufftextparser.last )
+				percent += (1 - exp( -( ++stufftextparser.counter )*2 ) ) * stufftexttable[i].step;
+			else
+				stufftextparser.counter = 0;
+			stufftextparser.last = i;
+			Cbuf_AddText( va( "menu_connectionprogress stufftext %f \"%s\"\n", percent, stufftexttable[i].description ) );
+			break;
+		}
+		}
 	}
 	Cbuf_AddText( s );
 }
