@@ -23,8 +23,10 @@
 #define M_SQRT2		1.41421356237309504880
 #define NEW_DCT9
 
+#ifdef MSC_VER
 #pragma warning(disable : 4244)	// MIPS
 #pragma warning(disable : 4018)	// signed/unsigned mismatch
+#endif
 
 /* AUDIOBUFSIZE = n*64 with n=1,2,3 ...  */
 #define AUDIOBUFSIZE	16384

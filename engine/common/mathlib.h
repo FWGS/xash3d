@@ -18,7 +18,9 @@ GNU General Public License for more details.
 
 #include <math.h>
 
+#ifdef MSC_VER
 #pragma warning(disable : 4201)	// nonstandard extension used
+#endif
 
 // euler angle order
 #define PITCH		0
