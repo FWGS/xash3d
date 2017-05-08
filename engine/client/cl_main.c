@@ -1012,6 +1012,7 @@ void CL_Disconnect( void )
 	Cvar_FullSet( "touch_enable", va( "%s", touch_enable->string ), touch_enable->flags & ~CVAR_READ_ONLY );
 	Cvar_FullSet( "m_ignore", va( "%s", m_ignore->string ), m_ignore->flags & ~CVAR_READ_ONLY );
 	Cvar_FullSet( "joy_enable", va( "%s", Cvar_VariableString( "joy_enable" ) ), CVAR_ARCHIVE );
+	Cbuf_InsertText( "menu_connectionprogress disconnect\n" );
 
 	// back to menu if developer mode set to "player" or "mapper"
 	if( host.developer > 2 ) return;
@@ -1734,18 +1735,25 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 	else
 		MsgDev( D_WARN, "Failed to download %s\n", filename );
 
-	if( cls.downloadfileid == cls.downloadcount - 1 )
+	if( downloadfileid == downloadcount - 1 )
 	{
 		MsgDev( D_INFO, "Download completed, resuming connection\n" );
 		FS_Rescan();
+
+		if( cls.state < ca_connecting )
+		{
+				Cbuf_AddText( "menu_connectionprogress dlend\n" );
+				return;
+		}
+
 		BF_WriteByte( &cls.netchan.message, clc_stringcmd );
 		BF_WriteString( &cls.netchan.message, "continueloading" );
-		cls.downloadfileid = 0;
-		cls.downloadcount = 0;
+		downloadfileid = 0;
+		downloadcount = 0;
 		return;
 	}
 
-	cls.downloadfileid++;
+	downloadfileid++;
 }
 
 //=============================================================================

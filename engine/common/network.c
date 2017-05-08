@@ -1149,7 +1149,7 @@ convar_t *http_autoremove;
 convar_t *http_timeout;
 
 char header[BUFSIZ]; // query or response
-int headersize, querylength, sent;
+int headersize, querylength, sent, downloadfileid, downloadcount;
 
 /*
 ========================
@@ -1212,8 +1212,10 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		char name[256];
 		Q_snprintf( name, 256, "downloaded/%s", file->path );
 		FS_Rename( incname, name );
-		if( file->process )CL_ProcessFile( true, name );
-		else Msg ( "HTTP: Successfully downloaded %s, prosessing disabled!\n", name );
+		if( file->process )
+			CL_ProcessFile( true, name );
+		else
+			Msg ( "HTTP: Successfully downloaded %s, prosessing disabled!\n", name );
 	}
 	// Now free list node
 	if( first_file == file )
@@ -1285,6 +1287,7 @@ void HTTP_Run( void )
 	{
 		char name[PATH_MAX];
 		Msg( "HTTP: Starting download %s from %s\n", curfile->path, server->host );
+		Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d \"(starting)\"\n", curfile->path, server->host, server->path, downloadfileid, downloadcount ) );
 		Q_snprintf( name, PATH_MAX, "downloaded/%s.incomplete", curfile->path );
 		curfile->file = FS_Open( name, "wb", true );
 		if( !curfile->file )
@@ -1359,6 +1362,8 @@ void HTTP_Run( void )
 	{
 		while( sent < querylength )
 		{
+			Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d \"(sending request)\"\n", curfile->path, server->host, server->path, downloadfileid, downloadcount ) );
+
 			res = pSend( curfile->socket, header + sent, querylength - sent, 0 );
 			if( res < 0 )
 			{
@@ -1426,6 +1431,7 @@ void HTTP_Run( void )
 				{
 					int size = Q_atoi( length += 16 );
 					Msg( "HTTP: File size is %d\n", size );
+					Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d \"(File size is %s)\"\n", curfile->path, server->host, server->path, downloadfileid, downloadcount, Q_pretifymem( size, 1 ) ) );
 					if( ( curfile->size != -1 ) && ( curfile->size != size ) ) // check size if specified, not used
 						MsgDev( D_WARN, "Server reports wrong file size!\n" );
 					curfile->size = size;
@@ -1477,7 +1483,8 @@ void HTTP_Run( void )
 			if( curfile->checktime > 5 )
 			{
 				curfile->checktime = 0;
-				Msg( "HTTP: %f kbps\n", curfile->lastchecksize / ( 5.0 * 1024 ) );
+				Msg( "HTTP: %f KB/s\n", (float)curfile->lastchecksize / ( 5.0 * 1024 ) );
+				Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d \"(file size is %s, speed is %.2f KB/s)\"\n", curfile->path, server->host, server->path, downloadfileid, downloadcount, Q_pretifymem( curfile->size, 1 ), (float)curfile->lastchecksize / ( 5.0 * 1024 ) ) );
 				curfile->lastchecksize = 0;
 			}
 		}
