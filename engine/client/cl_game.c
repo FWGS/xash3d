@@ -377,7 +377,7 @@ void CL_CenterPrint( const char *text, float y )
 	byte	*s;
 	int	width = 0;
 	int	length = 0;
-	float yscale;
+	float yscale = 1;
 
 	clgame.centerPrint.lines = 1;
 	clgame.centerPrint.totalWidth = 0;

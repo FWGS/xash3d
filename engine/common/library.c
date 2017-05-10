@@ -331,6 +331,8 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 	}
 #ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
 	return Com_OffsetNameForFunction( function );
+#else
+	return NULL;
 #endif
 }
 #elif defined __amd64__
