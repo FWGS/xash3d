@@ -35,6 +35,10 @@ qboolean	in_mouseinitialized;
 qboolean	in_mouse_suspended;
 int	in_mouse_oldbuttonstate;
 int	in_mouse_buttons;
+static struct inputstate_s
+{
+float lastpitch, lastyaw;
+} inputstate;
 
 extern convar_t *vid_fullscreen;
 
@@ -61,7 +65,7 @@ convar_t *m_ignore;
 convar_t *cl_forwardspeed;
 convar_t *cl_sidespeed;
 convar_t *cl_backspeed;
-
+convar_t *look_filter;
 /*
 =======
 Host_MapKey
@@ -133,6 +137,7 @@ int fds[MAX_EVDEV_DEVICES];
 string paths[MAX_EVDEV_DEVICES];
 qboolean grab;
 float grabtime;
+float x, y;
 } evdev;
 
 int KeycodeFromEvdev(int keycode, int value);
@@ -376,19 +381,16 @@ void IN_EvdevFrame ()
 		}
 
 		if( evdev.grab && evdev.grabtime <= host.realtime )
+		{
 			ioctl( evdev.fds[i], EVIOCGRAB, (void*) 1 );
+			Key_ClearStates();
+		}
 
 		if( m_ignore->integer )
 			continue;
-
-		if( clgame.dllFuncs.pfnLookEvent )
-			clgame.dllFuncs.pfnLookEvent( -dx * m_yaw->value, dy * m_pitch->value );
-		else
-		{
-			cl.refdef.cl_viewangles[PITCH] += dy * m_enginesens->value;
-			cl.refdef.cl_viewangles[PITCH] = bound( -90, cl.refdef.cl_viewangles[PITCH], 90 );
-			cl.refdef.cl_viewangles[YAW] -= dx * m_enginesens->value;
-		}
+		
+		evdev.x += -dx * m_yaw->value;
+		evdev.y += dy * m_pitch->value;
 	}
 	if( evdev.grabtime <= host.realtime )
 		evdev.grab = false;
@@ -401,11 +403,19 @@ void Evdev_SetGrab( qboolean grab )
 	if( grab )
 	{
 		Key_Event( K_ESCAPE, 0 ); //Do not leave ESC down
-		evdev.grabtime = host.realtime + 1;
+		evdev.grabtime = host.realtime + 0.5;
+		Key_ClearStates();
 	}
 	else for( i = 0; i < evdev.devices; i++ )
 		ioctl( evdev.fds[i], EVIOCGRAB, (void*) 0 );
 	evdev.grab = grab;
+}
+
+void IN_EvdevMove( float *yaw, float *pitch )
+{
+	*yaw += evdev.x;
+	*pitch += evdev.y;
+	evdev.x = evdev.y = 0.0f;
 }
 
 #endif
@@ -420,6 +430,7 @@ void IN_StartupMouse( void )
 	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
 	m_pitch = Cvar_Get("m_pitch", "0.022", CVAR_ARCHIVE, "Mouse pitch value");
 	m_yaw = Cvar_Get("m_yaw", "0.022", CVAR_ARCHIVE, "Mouse yaw value");
+	look_filter = Cvar_Get( "look_filter", "0", CVAR_ARCHIVE, "Filter look events making t smoother" );
 	
 	// You can use -nomouse argument to prevent using mouse from client
 	// -noenginemouse will disable all mouse input
@@ -844,6 +855,16 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		Joy_FinalizeMove( &forward, &side, &dyaw, &dpitch );
 		IN_TouchMove( &forward, &side, &dyaw, &dpitch );
 		IN_JoyAppendMove( cmd, forward, side );
+#ifdef USE_EVDEV
+		IN_EvdevMove( &dyaw, &dpitch );
+#endif
+		if( look_filter->integer )
+		{
+			dpitch = ( inputstate.lastpitch + dpitch ) / 2;
+			dyaw = ( inputstate.lastyaw + dyaw ) / 2;
+			inputstate.lastpitch = dpitch;
+			inputstate.lastyaw = dyaw;
+		}
 
 		cl.refdef.cl_viewangles[YAW] += dyaw * sensitivity;
 		cl.refdef.cl_viewangles[PITCH] += dpitch * sensitivity;
@@ -888,6 +909,17 @@ void Host_InputFrame( void )
 
 		Joy_FinalizeMove( &forward, &side, &yaw, &pitch );
 		IN_TouchMove( &forward, &side, &yaw, &pitch );
+#ifdef USE_EVDEV
+		IN_EvdevMove( &yaw, &pitch );
+#endif
+		if( look_filter->integer )
+		{
+			pitch = ( inputstate.lastpitch + pitch ) / 2;
+			yaw = ( inputstate.lastyaw + yaw ) / 2;
+			inputstate.lastpitch = pitch;
+			inputstate.lastyaw = yaw;
+		}
+
 		clgame.dllFuncs.pfnLookEvent( yaw, pitch );
 		clgame.dllFuncs.pfnMoveEvent( forward, side );
 	}
