@@ -17,7 +17,7 @@ GNU General Public License for more details.
 #include "client.h"
 #include "server.h"
 
-#define MAX_CMD_BUFFER	16384
+#define MAX_CMD_BUFFER	32768
 #define MAX_CMD_LINE	1024
 
 typedef struct
