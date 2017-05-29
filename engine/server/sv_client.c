@@ -275,18 +275,8 @@ gotnewcl:
 
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
 
-	// get the game a chance to reject this connection or modify the userinfo
-	if( !( SV_ClientConnect( ent, userinfo )))
-	{
-		if( *Info_ValueForKey( userinfo, "rejmsg" ))
-			Netchan_OutOfBandPrint( NS_SERVER, from, "%s\n%s\nConnection refused.\n", errorpacket, Info_ValueForKey( userinfo, "rejmsg" ));
-		else Netchan_OutOfBandPrint( NS_SERVER, from, "%s\nConnection refused.\n", errorpacket );
-
-		MsgDev( D_ERROR, "SV_DirectConnect: game rejected a connection.\n");
-		Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
-		SV_DropClient( newcl );
-		return;
-	}
+	// parse some info from the info strings (this can override cl_updaterate)
+	SV_UserinfoChanged( newcl, userinfo );
 
 	// send the connect packet to the client
 	Netchan_OutOfBandPrint( NS_SERVER, from, "client_connect %d\n", extensions );
@@ -301,10 +291,6 @@ gotnewcl:
 	newcl->delta_sequence = -1;
 	newcl->resources_sent = 1;
 	newcl->hasusrmsgs = false;
-
-	// parse some info from the info strings (this can override cl_updaterate)
-	SV_UserinfoChanged( newcl, userinfo );
-
 	newcl->next_messagetime = host.realtime + newcl->cl_updaterate;
 
 	// if this was the first client on the server, or the last client
@@ -1186,7 +1172,7 @@ void SV_PutClientInServer( edict_t *ent )
 {
 	sv_client_t	*client;
 
-	client = SV_ClientFromEdict( ent, true );
+	client = SV_ClientFromEdict( ent, false );
 
 	if( client == NULL )
 	{
@@ -1263,6 +1249,8 @@ void SV_PutClientInServer( edict_t *ent )
 	client->last_cmdtime = 0.0;
 	client->last_movetime = 0.0;
 	client->next_movetime = 0.0;
+
+	client->state = cs_spawned;
 
 	if( !client->fakeclient )
 	{
@@ -1363,6 +1351,18 @@ void SV_New_f( sv_client_t *cl )
 	// refresh userinfo on spawn
 	SV_RefreshUserinfo();
 
+	// get the game a chance to reject this connection or modify the userinfo
+	if( !( SV_ClientConnect( cl->edict, cl->userinfo )))
+	{
+		if( *Info_ValueForKey( cl->userinfo, "rejmsg" ))
+			Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "errormsg\n%s\nConnection refused.\n", Info_ValueForKey( cl->userinfo, "rejmsg" ));
+		else Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "errormsg\nConnection refused.\n");
+
+		MsgDev( D_ERROR, "SV_DirectConnect: game rejected a connection.\n");
+		Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "disconnect\n" );
+		SV_DropClient( cl );
+		return;
+	}
 
 
 	// game server
@@ -1961,7 +1961,6 @@ void SV_Begin_f( sv_client_t *cl )
 		return;
 	}
 
-	cl->state = cs_spawned;
 	SV_PutClientInServer( cl->edict );
 
 	// if we are paused, tell the client
