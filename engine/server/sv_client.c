@@ -1352,7 +1352,7 @@ void SV_New_f( sv_client_t *cl )
 	SV_RefreshUserinfo();
 
 	// get the game a chance to reject this connection or modify the userinfo
-	if( !( SV_ClientConnect( cl->edict, cl->userinfo )))
+	if( !SV_ClientConnect( cl->edict, cl->userinfo ) )
 	{
 		if( *Info_ValueForKey( cl->userinfo, "rejmsg" ))
 			Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "errormsg\n%s\nConnection refused.\n", Info_ValueForKey( cl->userinfo, "rejmsg" ));
