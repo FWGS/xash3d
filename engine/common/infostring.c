@@ -215,6 +215,94 @@ qboolean Info_Validate( const char *s )
 	return true;
 }
 
+/*
+==================
+Info_IsImportantKey
+
+Check is key is important, like "model", "name", starkey and so on
+==================
+*/
+static int Info_KeyImportance( const char *key )
+{
+	// these keys are very important
+	// because clients uses these keys to identify or show playermodel
+	// it will ruin game, if they will be removed
+	if( !Q_strcmp( key, "model" ))
+		return 2;
+	if( !Q_strcmp( key, "name" ))
+		return 2;
+
+	// these keys are used mainly by server code
+	if( key[0] == '*' )
+		return 1;
+	if( !Q_strcmp( key, "rate" ))
+		return 1;
+	if( !Q_strcmp( key, "cl_lw" ))
+		return 1;
+	if( !Q_strcmp( key, "cl_lc" ))
+		return 1;
+	if( !Q_strcmp( key, "cl_updaterate" ))
+		return 1;
+	if( !Q_strcmp( key, "hltv" ))
+		return 1;
+
+	return 0; // not important key, can be omitted or removed
+}
+
+
+/*
+==================
+Info_FindLargestKey
+
+Find largest key, excluding keys which is important
+==================
+*/
+static char *Info_FindLargestKey( char *s, const int importance )
+{
+	static char largestKey[MAX_INFO_KEY];
+	char key[MAX_INFO_KEY];
+	int largeKeySize = 0;
+
+	if( *s == '\\' ) s++;
+
+	largestKey[0] = 0;
+
+	while( *s )
+	{
+		int keySize = 0, valueSize = 0;
+
+		while( keySize < MAX_INFO_KEY && *s && *s != '\\' )
+		{
+			key[keySize] = *s;
+			keySize++;
+			s++;
+		}
+		key[keySize] = 0;
+
+		if( !*s )
+			break;
+		if( *s == '\\' ) s++;
+
+		while( *s && *s != '\\' )
+		{
+			valueSize++;
+			s++;
+		}
+
+		// exclude important keys
+		if( largeKeySize < keySize + valueSize && Info_KeyImportance( key ) < importance )
+		{
+			largeKeySize = keySize + valueSize;
+			Q_strncpy( largestKey, key, sizeof( largestKey ) );
+		}
+
+		if( *s )
+			s++;
+	}
+
+	return largestKey;
+}
+
 qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, int maxsize )
 {
 	char	new[1024], *v;
@@ -238,7 +326,7 @@ qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, i
 		return false;
 	}
 
-	if( Q_strlen( key ) > MAX_INFO_KEY - 1 || Q_strlen( value ) > MAX_INFO_KEY - 1 )
+	if( Q_strlen( key ) > MAX_INFO_KEY - 1 || Q_strlen( value ) > MAX_INFO_VALUE - 1 )
 	{
 		MsgDev( D_ERROR, "SetValueForKey: keys and values must be < %i characters.\n", MAX_INFO_KEY );
 		return false;
@@ -261,10 +349,35 @@ qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, i
 		return true; // just clear variable
 
 	Q_snprintf( new, sizeof( new ) - 1, "\\%s\\%s", key, value );
+
 	if( Q_strlen( new ) + Q_strlen( s ) > maxsize )
 	{
-		MsgDev( D_ERROR, "SetValueForKey: info string length exceeded\n" );
-		return true; // info changed, new value can't saved
+		// If it is important key, force add it
+		int importance = Info_KeyImportance( key );
+
+		if( importance )
+		{
+			char *largeKey;
+
+			// remove largest key, check size. if there is still no room, do it again
+			do
+			{
+				largeKey = Info_FindLargestKey( s, importance );
+				Info_RemoveKey( s, largeKey );
+			}
+			while( Q_strlen( new ) + Q_strlen( s ) > maxsize && *largeKey != 0 );
+
+			if( !*largeKey )
+			{
+				MsgDev( D_ERROR, "SetValueForKey: info string length exceeded\n" );
+				return true; // info changed, new value can't saved
+			}
+		}
+		else
+		{
+			MsgDev( D_ERROR, "SetValueForKey: info string length exceeded\n" );
+			return true; // info changed, new value can't saved
+		}
 	}
 
 	// only copy ascii values
