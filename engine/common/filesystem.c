@@ -931,21 +931,18 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 	// Add the common game directory
 	if( dir && *dir )
 	{
-		// add recursively new game directories
-		if( !Q_strcmp( dir, GI->gamefolder ) )
+		int i;
+		for( i = 0; i < SI.numgames; i++ )
 		{
-			int i;
-			for( i = 0; i < SI.numgames; i++ )
+			if( !Q_strnicmp( SI.games[i]->gamefolder, dir, 64 ))
 			{
-				if( !Q_strnicmp( SI.games[i]->gamefolder, dir, 64 ))
+				MsgDev( D_NOTE, "FS_AddGameHierarchy: %d %s %s\n", i, SI.games[i]->gamedir, SI.games[i]->basedir );
+				if( !SI.games[i]->added && Q_stricmp( SI.games[i]->gamedir, SI.games[i]->basedir ) )
 				{
-					MsgDev( D_NOTE, "FS_AddGameHierarchy: %d %s %s\n", i, SI.games[i]->gamedir, SI.games[i]->basedir );
-					if( !SI.games[i]->added && Q_stricmp( SI.games[i]->gamedir, SI.games[i]->basedir ) )
-					{
-						SI.games[i]->added = true;
-						FS_AddGameHierarchy( SI.games[i]->basedir, flags & FS_GAMEDIR_PATH );
-					}
+					SI.games[i]->added = true;
+					FS_AddGameHierarchy( SI.games[i]->basedir, flags & FS_GAMEDIR_PATH );
 				}
+				break;
 			}
 		}
 
@@ -1898,7 +1895,6 @@ void FS_Init( void )
 	Cmd_AddCommand( "fs_clearpaths", FS_ClearPaths_f, "clear filesystem search paths" );
 	Cmd_AddCommand( "crc32", FS_Crc32_f, "print crc32 of for file" );
 	Cmd_AddCommand( "md5", FS_MD5_f, "print md5 of for file" );
-
 
 #ifndef _WIN32
 	if( Sys_CheckParm( "-casesensitive" ) )
