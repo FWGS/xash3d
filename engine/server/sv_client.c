@@ -3037,7 +3037,8 @@ void SV_TSourceEngineQuery( netadr_t from )
 
 	BF_Init( &buf, "TSourceEngineQuery", answer, sizeof( answer ));
 
-#if 0 // Source format
+#if 1 // Source format
+	BF_WriteLong(&buf, -1);// Fixed this
 	BF_WriteByte( &buf, 'I' );
 	BF_WriteByte( &buf, PROTOCOL_VERSION );
 	BF_WriteString( &buf, hostname->string );
@@ -3059,6 +3060,11 @@ void SV_TSourceEngineQuery( netadr_t from )
 	BF_WriteByte( &buf, 0 ); // visibility
 	BF_WriteByte( &buf, 0 ); // secure
 #else // GS format
+	/*
+	**	This will work in monitoring,
+	**	but does not appear in the list of GoldSource servers
+	*/
+	BF_WriteLong(&buf, -1);// Fixed this
 	BF_WriteByte( &buf, 'm' );
 	BF_WriteString( &buf, NET_AdrToString( net_local ) );
 	BF_WriteString( &buf, hostname->string );
