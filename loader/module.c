@@ -317,7 +317,7 @@ static WINE_MODREF *MODULE_LoadLibraryExA( LPCSTR libname, HFILE hfile, DWORD fl
 	WINE_MODREF *pwm;
 //	module_loadorder_t *plo;
 
-        SetLastError( ERROR_FILE_NOT_FOUND );
+	SetLastError( ERROR_FILE_NOT_FOUND );
 	TRACE("Trying native dll '%s'\n", libname);
 	pwm = PE_LoadLibraryExA(libname, flags);
 #ifdef HAVE_LIBDL
@@ -337,7 +337,7 @@ static WINE_MODREF *MODULE_LoadLibraryExA( LPCSTR libname, HFILE hfile, DWORD fl
 		/* decrement the dependencies through the MODULE_FreeLibrary call. */
 		pwm->refCount++;
 
-                SetLastError( err );  /* restore last error */
+		SetLastError( err );  /* restore last error */
 		return pwm;
 	}
 

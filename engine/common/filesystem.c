@@ -3029,6 +3029,9 @@ qboolean FS_CheckForCrypt( const char *dllname )
 	file_t	*f;
 	int	key = 0;
 
+	if( Q_stricmp( FS_FileExtension( dllname ), "dll" ) )
+		return false; // only dlls can be encrypted
+
 	f = FS_Open( dllname, "rb", false );
 	if( !f ) return false;
 
@@ -3073,7 +3076,7 @@ dll_user_t *FS_FindLibrary( const char *dllname, qboolean directpath )
 	}
 	dllpath[i] = '\0';
 
-	FS_DefaultExtension( dllpath, ".dll" );	// apply ext if forget
+	FS_DefaultExtension( dllpath, "." OS_LIB_EXT );	// apply ext if forget
 	search = FS_FindFile( dllpath, &index, false );
 
 	if( !search )
@@ -3096,6 +3099,7 @@ dll_user_t *FS_FindLibrary( const char *dllname, qboolean directpath )
 	// shortPath is used for LibraryLoadSymbols only
 	Q_strncpy( hInst->shortPath, dllpath, sizeof( hInst->shortPath ));
 
+	// only Win32 libs can be encrypted
 	hInst->encrypted = FS_CheckForCrypt( dllpath );
 
 	if( index < 0 && !hInst->encrypted )
