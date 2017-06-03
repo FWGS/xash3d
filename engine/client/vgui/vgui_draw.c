@@ -269,6 +269,11 @@ void VGui_Startup( int width, int height )
 
 		if( !lib )
 		{
+			lib = Com_LoadLibrary( va( "../%s", vguiloader ), false );
+		}
+
+		if( !lib )
+		{
 			if( FS_SysFileExists( vguiloader, false ) )
 				MsgDev( D_ERROR, "Failed to load vgui_support library: %s", Com_GetLibraryError() );
 			else
