@@ -137,6 +137,7 @@ static void *IOS_LoadLibraryInternal( const char *dllname )
 extern char *g_szLibrarySuffix;
 static void *IOS_LoadLibrary( const char *dllname )
 {
+
 	string name;
 	char *postfix = g_szLibrarySuffix;
 	char *pHandle;
@@ -166,6 +167,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 #elif defined( __EMSCRIPTEN__ )
 	{
 		void *pHandle;
+		char path[MAX_SYSPATH];
 		string prefix;
 		Q_strcpy(prefix, getenv( "LIBRARY_PREFIX" ) );
 		Q_snprintf( path, MAX_SYSPATH, "%s%s%s",  prefix, dllname, getenv( "LIBRARY_SUFFIX" ) );
@@ -180,6 +182,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 #elif defined( __ANDROID__ )
 	{
 		void *pHandle;
+		char path[MAX_SYSPATH];
 		Q_snprintf( path, MAX_SYSPATH, "%s/lib%s"POSTFIX"."OS_LIB_EXT, getenv("XASH3D_GAMELIBDIR"), dllname );
 		pHandle = dlopen( path, RTLD_LAZY );
 		if( !pHandle )
