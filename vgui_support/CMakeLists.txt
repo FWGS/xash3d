@@ -30,12 +30,15 @@ include_directories (. ../common ../engine ../engine/common ../engine/client ../
 
 add_library (${VGUI_SUPPORT_LIBRARY} MODULE ${VGUI_SUPPORT_SOURCES})
 
-if(WIN32)	
-	target_link_libraries(${VGUI_SUPPORT_LIBRARY} ${HL_SDK_DIR}/utils/vgui/lib/win32_vc6/vgui.lib)
+if(WIN32)
+	set( VGUI_LIB_PATH ${HL_SDK_DIR}/utils/vgui/lib/win32_vc6/vgui.lib )
+	target_link_libraries(${VGUI_SUPPORT_LIBRARY} ${VGUI_LIB_PATH} )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	target_link_libraries(${VGUI_SUPPORT_LIBRARY} ${HL_SDK_DIR}/linux/release/vgui.dylib)
+	set( VGUI_LIB_PATH ${HL_SDK_DIR}/linux/release/vgui.dylib )
+	target_link_libraries(${VGUI_SUPPORT_LIBRARY} ${VGUI_LIB_PATH} )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
+	set( VGUI_LIB_PATH $<TARGET_FILE_DIR:vgui_support>/vgui.so )
     #Make GCC don't put full path to vgui.so
     add_custom_command(TARGET vgui_support PRE_LINK COMMAND
 	${CMAKE_COMMAND} -E copy ${HL_SDK_DIR}/linux/vgui.so $<TARGET_FILE_DIR:vgui_support>)
@@ -46,7 +49,21 @@ add_definitions(-DXASH_VGUI)
 set_target_properties (${VGUI_SUPPORT_SHARED} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
-install( TARGETS ${VGUI_SUPPORT_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d
-        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
-install( FILES $<TARGET_FILE_DIR:vgui_support>/vgui.so DESTINATION ${LIB_INSTALL_DIR}/xash3d
+if( NOT WIN32 )
+	install( TARGETS ${VGUI_SUPPORT_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d
+		    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
+	install( FILES ${VGUI_LIB_PATH} DESTINATION ${LIB_INSTALL_DIR}/xash3d
 	        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
+else()
+	install( TARGETS ${VGUI_SUPPORT_LIBRARY}
+		CONFIGURATIONS Debug 
+		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Debug/
+		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Debug/ )
+	install( FILES $<TARGET_FILE_DIR:${VGUI_SUPPORT_LIBRARY}>/vgui_support.pdb
+		CONFIGURATIONS Debug 
+		DESTINATION ${LIB_INSTALL_DIR}/Debug/ )
+	install( TARGETS ${VGUI_SUPPORT_LIBRARY}
+		CONFIGURATIONS Release 
+		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Release/
+		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Release/ )
+endif()

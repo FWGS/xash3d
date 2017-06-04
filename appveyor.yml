@@ -4,12 +4,12 @@ branches:
   only:
     - master
 
-os: Windows Server 2012
+os: Visual Studio 2015
 
 clone_folder: c:\projects\xash\xash3d
 
 build:
-  project: xash.sln
+  project: INSTALL.sln
   verbosity: normal
 
 configuration:
@@ -17,20 +17,16 @@ configuration:
   - Debug
 
 before_build:
-  - mkdir C:\projects\xash\SDL2
   - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.4-VC.zip
   - 7z x SDL2-devel-2.0.4-VC.zip -oc:\projects\xash
   - cd c:\projects\xash
-  - rmdir SDL2 /s /q
   - ren SDL2-2.0.4 SDL2
   - cd c:\projects\xash\xash3d
-  - git submodule init
-  - git submodule update
-  - mkdir Debug
-  - mkdir Release
+  - git submodule update --init
+  - cmake -G "Visual Studio 14 2015" -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build"
 
 after_build:
-  - 7z a -t7z xash3d-win.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on c:\projects\xash\xash3d\Release c:\projects\xash\xash3d\Debug
+  - 7z a -t7z xash3d-win.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on c:\projects\xash\xash3d\build\Release c:\projects\xash\xash3d\build\Debug
   - curl --upload-file xash3d-win.7z https://transfer.sh/xash3d-win.7z
 
 notifications:
