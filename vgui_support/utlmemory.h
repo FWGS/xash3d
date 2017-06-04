@@ -18,6 +18,7 @@
 #pragma once
 #endif
 
+#include "port.h"
 #include <string.h>
 #ifdef NO_STL
 template <class T>
@@ -27,7 +28,7 @@ return ptr;
 #elif defined _WIN32
 #include <new.h>
 #else
-#include "new"
+#include <new>
 #endif
 #include <stdlib.h>
 #include <math.h>

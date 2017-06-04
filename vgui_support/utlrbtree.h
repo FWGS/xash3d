@@ -14,6 +14,7 @@
 #ifndef UTLRBTREE_H
 #define UTLRBTREE_H
 
+#include "port.h"
 #include "utlmemory.h"
 //-----------------------------------------------------------------------------
 // Tool to generate a default compare function for any type that implements
