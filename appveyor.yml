@@ -28,7 +28,7 @@ before_build:
   - cmake -G "Visual Studio 14 2015" -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build"
 
 after_build:
-  - 7z a -t7z xash3d-win.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on c:\projects\xash\xash3d\build\Release c:\projects\xash\xash3d\build\Debug
+  - 7z a -t7z xash3d-win.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on c:\projects\xash\xash3d\build\%CONFIGURATION% c:\projects\xash\xash3d\build\%CONFIGURATION%
   - curl --upload-file xash3d-win.7z https://transfer.sh/xash3d-win.7z
 
 notifications:
