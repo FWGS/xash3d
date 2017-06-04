@@ -11,7 +11,7 @@ os: Visual Studio 2015
 clone_folder: c:\projects\xash\xash3d
 
 build:
-  project: INSTALL.sln
+  project: INSTALL.vcxproj
   verbosity: normal
 
 configuration:
