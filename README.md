@@ -1,4 +1,4 @@
-# Xash3D FWGS Engine [![Build Status](https://travis-ci.org/FWGS/xash3d.svg)](https://travis-ci.org/FWGS/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/FWGS/xash3d?branch=master&svg=true)](https://ci.appveyor.com/project/a1batross/xash3d)
+# Xash3D FWGS Engine [![Build Status](https://travis-ci.org/FWGS/xash3d.svg)](https://travis-ci.org/FWGS/xash3d) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/FWGS/xash3d?svg=true)](https://ci.appveyor.com/project/a1batross/xash3d)
 
 Latest version of the engine is available at:
 https://github.com/FWGS/xash3d
