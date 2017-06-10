@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -9,27 +9,52 @@
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{C66BF480-DB25-4609-80BE-738F3F5E8AEA}</ProjectGuid>
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{63673E42-FF2C-40EC-99E1-CBABD1DEEB3D}</ProjectGuid>
     <RootNamespace>engine</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -37,16 +62,14 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
-    <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;$(LibraryPath)</LibraryPath>
-    <TargetExt>.dll</TargetExt>
-    <TargetName>xash_sdl</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir);common\sdl;client;common;server;client/imagelib;client/vgui;client/soundlib;..\..\SDL2\include;..\common;../pm_shared;$(WindowsSDK_IncludePath);$(VC_IncludePath)</IncludePath>
-    <LibraryPath>common\soundlib;..\..\SDL2\lib\x86;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
     <TargetName>xash_sdl</TargetName>
   </PropertyGroup>
@@ -54,14 +77,27 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>XASH_VGUI;XASH_SDL;XASH_NONSTANDART_LOAD;XASH_VGUI;_MBCS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>../../SDL2/include/;common;../common;../pm_shared;client;server;client/vgui;common/sdl;..;.;D:\FixLife\source code\steamaudio_api_2.0-beta.4\include;D:\Program Files %28x86%29\OpenAL 1.1 SDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>XASH_VGUI;XASH_SDL;SOUND_SDL;DBGHELP;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;mpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\FixLife\source code\steamaudio_api_2.0-beta.4\lib\Windows\x86;D:\Program Files %28x86%29\OpenAL 1.1 SDK\libs\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>../../SDL2/lib/x86/SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>D:\FixLife\Build\$(TargetName)$(TargetExt)</OutputFile>
       <IgnoreSpecificDefaultLibraries>LIBC.lib</IgnoreSpecificDefaultLibraries>
     </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -70,15 +106,23 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>XASH_SDL;XASH_VGUI;XASH_NONSTANDART_LOAD;_MBCS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>SDL2.lib;mpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <IgnoreSpecificDefaultLibraries>LIBC.lib</IgnoreSpecificDefaultLibraries>
-      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -97,6 +141,8 @@
     <ClCompile Include="client\cl_tent.c" />
     <ClCompile Include="client\cl_video.c" />
     <ClCompile Include="client\cl_view.c" />
+    <ClCompile Include="client\console.c" />
+    <ClCompile Include="client\gamma.c" />
     <ClCompile Include="client\gl_backend.c" />
     <ClCompile Include="client\gl_beams.c" />
     <ClCompile Include="client\gl_cull.c" />
@@ -113,33 +159,39 @@
     <ClCompile Include="client\gl_rsurf.c" />
     <ClCompile Include="client\gl_sprite.c" />
     <ClCompile Include="client\gl_studio.c" />
-    <ClCompile Include="client\gl_vidnt.c" />
-    <ClCompile Include="client\gl_vidnt_common.c" />
     <ClCompile Include="client\gl_warp.c" />
-    <ClCompile Include="client\s_backend.c" />
+    <ClCompile Include="client\input.c" />
+    <ClCompile Include="client\input_evdevkey.c" />
+    <ClCompile Include="client\joyinput.c" />
+    <ClCompile Include="client\keys.c" />
     <ClCompile Include="client\s_dsp.c" />
     <ClCompile Include="client\s_load.c" />
     <ClCompile Include="client\s_main.c" />
     <ClCompile Include="client\s_mix.c" />
     <ClCompile Include="client\s_mouth.c" />
     <ClCompile Include="client\s_stream.c" />
+    <ClCompile Include="client\s_stub.c" />
     <ClCompile Include="client\s_utils.c" />
     <ClCompile Include="client\s_vox.c" />
+    <ClCompile Include="client\touch.c" />
     <ClCompile Include="client\vgui\vgui_draw.c" />
+    <ClCompile Include="client\vid_common.c" />
     <ClCompile Include="common\avikit.c" />
     <ClCompile Include="common\base_cmd.c" />
     <ClCompile Include="common\build.c" />
+    <ClCompile Include="common\cfgscript.c" />
     <ClCompile Include="common\cmd.c" />
     <ClCompile Include="common\common.c" />
-    <ClCompile Include="common\console.c" />
     <ClCompile Include="common\con_utils.c" />
+    <ClCompile Include="common\crashhandler.c" />
     <ClCompile Include="common\crclib.c" />
     <ClCompile Include="common\crtlib.c" />
     <ClCompile Include="common\cvar.c" />
+    <ClCompile Include="common\dedicated.c" />
     <ClCompile Include="common\filesystem.c" />
-    <ClCompile Include="common\gamma.c" />
     <ClCompile Include="common\host.c" />
     <ClCompile Include="common\hpak.c" />
+    <ClCompile Include="common\identification.c" />
     <ClCompile Include="common\imagelib\img_bmp.c" />
     <ClCompile Include="common\imagelib\img_dds.c" />
     <ClCompile Include="common\imagelib\img_main.c" />
@@ -148,9 +200,7 @@
     <ClCompile Include="common\imagelib\img_utils.c" />
     <ClCompile Include="common\imagelib\img_wad.c" />
     <ClCompile Include="common\infostring.c" />
-    <ClCompile Include="common\input.c" />
-    <ClCompile Include="common\joyinput.c" />
-    <ClCompile Include="common\keys.c" />
+    <ClCompile Include="common\launcher.c" />
     <ClCompile Include="common\library.c" />
     <ClCompile Include="common\mathlib.c" />
     <ClCompile Include="common\matrixlib.c" />
@@ -164,26 +214,35 @@
     <ClCompile Include="common\pm_surface.c" />
     <ClCompile Include="common\pm_trace.c" />
     <ClCompile Include="common\random.c" />
-    <ClCompile Include="common\cfgscript.c" />
-    <ClCompile Include="common\sdl\events.c" />
+    <ClCompile Include="common\Sequence.c" />
+    <ClCompile Include="common\soundlib\libmpg\dct64_i386.c" />
+    <ClCompile Include="common\soundlib\libmpg\decode_i386.c" />
+    <ClCompile Include="common\soundlib\libmpg\interface.c" />
+    <ClCompile Include="common\soundlib\libmpg\layer2.c" />
+    <ClCompile Include="common\soundlib\libmpg\layer3.c" />
+    <ClCompile Include="common\soundlib\libmpg\tabinit.c" />
     <ClCompile Include="common\soundlib\snd_main.c" />
     <ClCompile Include="common\soundlib\snd_mp3.c" />
     <ClCompile Include="common\soundlib\snd_utils.c" />
     <ClCompile Include="common\soundlib\snd_wav.c" />
+    <ClCompile Include="common\system.c" />
     <ClCompile Include="common\sys_con.c" />
-    <ClCompile Include="common\sys_win.c" />
     <ClCompile Include="common\titles.c" />
-    <ClCompile Include="common\touch.c" />
     <ClCompile Include="common\world.c" />
     <ClCompile Include="common\zone.c" />
+    <ClCompile Include="gl_debug.c" />
+    <ClCompile Include="platform\sdl\events.c" />
+    <ClCompile Include="platform\sdl\snd_sdl.c" />
+    <ClCompile Include="platform\sdl\vid_sdl.c" />
+    <ClCompile Include="platform\sdl\vid_sdl_nanogl.c" />
     <ClCompile Include="server\sv_client.c" />
     <ClCompile Include="server\sv_cmds.c" />
     <ClCompile Include="server\sv_custom.c" />
     <ClCompile Include="server\sv_frame.c" />
     <ClCompile Include="server\sv_game.c" />
     <ClCompile Include="server\sv_init.c" />
-    <ClCompile Include="server\sv_main.c" />
     <ClCompile Include="server\sv_log.c" />
+    <ClCompile Include="server\sv_main.c" />
     <ClCompile Include="server\sv_move.c" />
     <ClCompile Include="server\sv_phys.c" />
     <ClCompile Include="server\sv_pmove.c" />
@@ -191,55 +250,14 @@
     <ClCompile Include="server\sv_world.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="anorms.h" />
-    <ClInclude Include="cdll_exp.h" />
-    <ClInclude Include="cdll_int.h" />
-    <ClInclude Include="client\anorm_dots.h" />
-    <ClInclude Include="client\client.h" />
-    <ClInclude Include="client\cl_tent.h" />
-    <ClInclude Include="client\gl_export.h" />
-    <ClInclude Include="client\gl_local.h" />
-    <ClInclude Include="client\sound.h" />
-    <ClInclude Include="client\vgui\utlmemory.h" />
-    <ClInclude Include="client\vgui\utlrbtree.h" />
-    <ClInclude Include="client\vgui\utlvector.h" />
-    <ClInclude Include="client\vgui\vgui_draw.h" />
-    <ClInclude Include="client\vgui\vgui_main.h" />
-    <ClInclude Include="client\vox.h" />
-    <ClInclude Include="common\common.h" />
-    <ClInclude Include="common\crtlib.h" />
-    <ClInclude Include="common\filesystem.h" />
-    <ClInclude Include="common\imagelib\imagelib.h" />
-    <ClInclude Include="common\input.h" />
-    <ClInclude Include="common\library.h" />
-    <ClInclude Include="common\mathlib.h" />
-    <ClInclude Include="common\mod_local.h" />
-    <ClInclude Include="common\netchan.h" />
-    <ClInclude Include="common\net_buffer.h" />
-    <ClInclude Include="common\net_encode.h" />
-    <ClInclude Include="common\pm_local.h" />
-    <ClInclude Include="common\protocol.h" />
-    <ClInclude Include="common\sdl\events.h" />
-    <ClInclude Include="common\soundlib\soundlib.h" />
-    <ClInclude Include="common\sse_mathfun.h" />
-    <ClInclude Include="common\system.h" />
-    <ClInclude Include="common\world.h" />
-    <ClInclude Include="custom.h" />
-    <ClInclude Include="customentity.h" />
-    <ClInclude Include="edict.h" />
-    <ClInclude Include="eiface.h" />
-    <ClInclude Include="keydefs.h" />
-    <ClInclude Include="menu_int.h" />
-    <ClInclude Include="physint.h" />
-    <ClInclude Include="progdefs.h" />
-    <ClInclude Include="server\server.h" />
-    <ClInclude Include="shake.h" />
-    <ClInclude Include="sprite.h" />
-    <ClInclude Include="studio.h" />
-    <ClInclude Include="warpsin.h" />
+    <Library Include="common\soundlib\mpeg.lib" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="common\soundlib\mpeg.lib" />
+    <ClInclude Include="common\soundlib\soundlib.h" />
+    <ClInclude Include="gl_debug.h" />
+    <ClInclude Include="sound_load.h" />
+    <ClInclude Include="sound_main.h" />
+    <ClInclude Include="sound_openal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
