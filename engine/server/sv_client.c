@@ -1,4 +1,4 @@
-/*
+﻿/*
 sv_client.c - client interactions
 Copyright (C) 2008 Uncle Mike
 
@@ -3028,7 +3028,8 @@ void SV_TSourceEngineQuery( netadr_t from )
 
 	BF_Init( &buf, "TSourceEngineQuery", answer, sizeof( answer ));
 
-#if 0 // Source format
+#if 1 // Source format
+	BF_WriteLong(&buf, -1);// Fixed this
 	BF_WriteByte( &buf, 'I' );
 	BF_WriteByte( &buf, PROTOCOL_VERSION );
 	BF_WriteString( &buf, hostname->string );
@@ -3047,9 +3048,14 @@ void SV_TSourceEngineQuery( netadr_t from )
 #else
 	BF_WriteByte( &buf, 'l' );
 #endif
-	BF_WriteByte( &buf, 0 ); // visibility
+	BF_WriteByte( &buf, 0 ); 
 	BF_WriteByte( &buf, 0 ); // secure
 #else // GS format
+	/*
+	**	This will work in monitoring,
+	**	but does not appear in the list of GoldSource servers
+	*/
+	BF_WriteLong(&buf, -1);// Fixed this
 	BF_WriteByte( &buf, 'm' );
 	BF_WriteString( &buf, NET_AdrToString( net_local ) );
 	BF_WriteString( &buf, hostname->string );
@@ -3058,13 +3064,14 @@ void SV_TSourceEngineQuery( netadr_t from )
 	BF_WriteString( &buf, GI->title );
 	BF_WriteByte( &buf, count );
 	BF_WriteByte( &buf, sv_maxclients->integer );
-	BF_WriteByte( &buf, PROTOCOL_VERSION );
-	BF_WriteByte( &buf, Host_IsDedicated() ? 'D' : 'L');
+	BF_WriteByte( &buf, PROTOCOL_VERSION);
+	BF_WriteByte( &buf, Host_IsDedicated() ? 'D' : 'L'); 
 #if defined(_WIN32)
 	BF_WriteByte( &buf, 'W' );
 #else
 	BF_WriteByte( &buf, 'L' );
 #endif
+	BF_WriteByte(&buf, 0);// Visibility
 	if( Q_stricmp(GI->gamedir, "valve") )
 	{
 		BF_WriteByte( &buf, 1 ); // mod
@@ -3084,7 +3091,7 @@ void SV_TSourceEngineQuery( netadr_t from )
 	}
 	else
 	{
-		BF_WriteByte( &buf, 0 ); // Half-Life
+		BF_WriteByte(&buf, 0); // NOMOD
 	}
 	BF_WriteByte( &buf, 0 ); // unsecure
 	BF_WriteByte( &buf, bots );
