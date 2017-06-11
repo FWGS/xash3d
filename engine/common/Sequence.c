@@ -1098,14 +1098,11 @@ sentenceEntry_s *Sequence_GetSentenceByIndex( unsigned int index )
 
 		if( index < sentenceCount )
 		{
-			sentenceCount = 0;
-
-			for( sentenceEntry = groupEntry->firstSentence;
-				 sentenceEntry && index > sentenceCount;
-				 sentenceEntry = sentenceEntry->nextEntry )
-				sentenceCount++;
-
-			return sentenceEntry;
+			for( sentenceEntry = groupEntry->firstSentence; sentenceEntry;  sentenceEntry = sentenceEntry->nextEntry )
+			{
+				if( sentenceEntry->index == index )
+					return sentenceEntry;
+			}
 		}
 	}
 

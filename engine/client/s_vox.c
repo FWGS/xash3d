@@ -112,18 +112,22 @@ char *VOX_LookupString( const char *pSentenceName, int *psentencenum )
 	int	i;
 	sentenceEntry_s *sentenceEntry;
 
-	if( Q_isdigit( pSentenceName ) ) i = Q_atoi( pSentenceName );
-
-	if( i >= 1536 ) i -= 1536;
-
-	sentenceEntry = Sequence_GetSentenceByIndex( i );
-	if( sentenceEntry )
-		return sentenceEntry->data;
-
-	if( i < g_numSentences )
+	if( Q_isdigit( pSentenceName ) )
 	{
-		if( psentencenum ) *psentencenum = i;
-		return (g_Sentences[i].pName + Q_strlen( g_Sentences[i].pName ) + 1 );
+		i = Q_atoi( pSentenceName );
+
+		if( i >= 1536 )
+		{
+			sentenceEntry = Sequence_GetSentenceByIndex( i - 1536 );
+			if( sentenceEntry )
+				return sentenceEntry->data;
+		}
+
+		if( i < g_numSentences )
+		{
+			if( psentencenum ) *psentencenum = i;
+			return (g_Sentences[i].pName + Q_strlen( g_Sentences[i].pName ) + 1 );
+		}
 	}
 
 	for( i = 0; i < g_numSentences; i++ )
