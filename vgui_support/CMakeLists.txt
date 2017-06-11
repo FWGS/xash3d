@@ -42,7 +42,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     #Make GCC don't put full path to vgui.so
     add_custom_command(TARGET vgui_support PRE_LINK COMMAND
 	${CMAKE_COMMAND} -E copy ${HL_SDK_DIR}/linux/vgui.so $<TARGET_FILE_DIR:vgui_support>)
-    target_link_libraries(${VGUI_SUPPORT_LIBRARY} -L. -l:vgui.so)
+    target_link_libraries(${VGUI_SUPPORT_LIBRARY} -L. -Lvgui_support/ -l:vgui.so)
 endif()
 
 add_definitions(-DXASH_VGUI)
