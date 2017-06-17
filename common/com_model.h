@@ -76,7 +76,9 @@ typedef struct texture_s
 	struct texture_s	*alternate_anims;	// bmodels in frame 1 use these
 	unsigned short	fb_texturenum;	// auto-luma texturenum
 	unsigned short	dt_texturenum;	// detail-texture binding
-	unsigned int	unused[3];	// reserved 
+	unsigned int	unused[2];	// reserved
+	unsigned short unused1;
+	unsigned short	nm_texturenum;
 } texture_t;
 
 typedef struct
