@@ -2055,7 +2055,7 @@ static void R_StudioDrawPoints_legacy( void )
 
 			if( g_iRenderMode == kRenderNormal )
 			{
-				if( gl_overbright->integer == 2 )
+				if( gl_overbright_studio->integer )
 				{
 					pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB );
 					pglTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE );
