@@ -364,10 +364,13 @@ void GL_InitExtensions( void )
 
 	// initalize until base opengl functions loaded
 
-	GL_SetExtension( GL_DRAW_RANGEELEMENTS_EXT, false );
-	GL_SetExtension( GL_ARB_MULTITEXTURE, false );
-	GL_SetExtension( GL_ENV_COMBINE_EXT, false );
-	GL_SetExtension( GL_DOT3_ARB_EXT, false );
+	GL_SetExtension( GL_DRAW_RANGEELEMENTS_EXT, true );
+	GL_SetExtension( GL_ARB_MULTITEXTURE, true );
+	pglGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &glConfig.max_texture_units );
+	glConfig.max_texture_coords = glConfig.max_texture_units;
+
+	GL_SetExtension( GL_ENV_COMBINE_EXT, true );
+	GL_SetExtension( GL_DOT3_ARB_EXT, true );
 	GL_SetExtension( GL_TEXTURE_3D_EXT, false );
 	GL_SetExtension( GL_SGIS_MIPMAPS_EXT, true ); // gles specs
 
