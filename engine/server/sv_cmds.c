@@ -1171,6 +1171,17 @@ void SV_EntityInfo_f( void )
 	}
 }
 
+void SV_SendReconnect_f( void )
+{
+	char *message = "Reconnect by console request!\n";
+
+	if( Cmd_Argc() > 1 )
+		message = Cmd_Argv( 1 );
+
+	SV_FinalMessage( message, true );
+}
+
+
 /*
 ================
 Rcon_Redirect_f
@@ -1216,6 +1227,7 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "endgame", SV_EndGame_f, "end current game, takes ending message" );
 	Cmd_AddCommand( "killgame", SV_KillGame_f, "end current game" );
 	Cmd_AddCommand( "hazardcourse", SV_HazardCourse_f, "start a Hazard Course" );
+	Cmd_AddCommand( "sendreconnect", SV_SendReconnect_f, "send reconnect message to clients" );
 	Cmd_AddCommand( "changelevel", SV_ChangeLevel_f, "change level" );
 	Cmd_AddCommand( "changelevel2", SV_ChangeLevel2_f, "change level, in Half-Life style" );
 	Cmd_AddCommand( "restart", SV_Restart_f, "restart current level" );
@@ -1268,6 +1280,7 @@ void SV_KillOperatorCommands( void )
 	Cmd_RemoveCommand( "entpatch" );
 	Cmd_RemoveCommand( "edicts_info" );
 	Cmd_RemoveCommand( "entity_info" );
+	Cmd_RemoveCommand( "sendreconnect" );
 
 	if( Host_IsDedicated() )
 	{
