@@ -919,6 +919,7 @@ CL_ClearState
 void CL_ClearState( void )
 {
 	S_StopAllSounds ();
+	R_ClearVBO();
 	CL_ClearEffects ();
 	CL_FreeEdicts ();
 

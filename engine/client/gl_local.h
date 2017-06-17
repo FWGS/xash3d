@@ -217,6 +217,8 @@ typedef struct
 
 	// cull info
 	vec3_t		modelorg;		// relative to viewpoint
+	int		deluxemapTextures[MAX_LIGHTMAPS];
+	color24 *deluxemap;
 } ref_globals_t;
 
 typedef struct
@@ -404,7 +406,9 @@ void GL_SetupFogColorForSurfaces( void );
 void GL_RebuildLightmaps( void );
 void GL_BuildLightmaps( void );
 void GL_ResetFogColor( void );
-
+void R_GenerateVBO();
+void R_ClearVBO();
+void R_AddDecalVBO( decal_t *pdecal, msurface_t *surf );
 //
 // gl_sprite.c
 //
@@ -549,6 +553,7 @@ enum
 	XASH_TEXTURE1,
 	XASH_TEXTURE2,
 	XASH_TEXTURE3,		// g-cont. 4 units should be enough
+	XASH_TEXTURE4,		// mittorn. bump+detail needs 5 for single-pass
 	MAX_TEXTURE_UNITS = 32	// can't acess to all over units without GLSL or cg
 };
 
@@ -566,6 +571,7 @@ typedef struct
 	int		max_texture_units;
 	int		max_texture_coords;
 	int		max_teximage_units;
+
 	GLint		max_2d_texture_size;
 	GLint		max_2d_rectangle_size;
 	GLint		max_3d_texture_size;
@@ -691,6 +697,8 @@ extern convar_t	*r_lockcull;
 extern convar_t	*r_dynamic;
 extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
+extern convar_t	*r_vbo;
+extern convar_t	*r_bump;
 
 extern convar_t *mp_decals;
 

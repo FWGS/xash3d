@@ -57,7 +57,7 @@ typedef struct
 static float	g_DecalClipVerts[MAX_DECALCLIPVERT][VERTEXSIZE];
 static float	g_DecalClipVerts2[MAX_DECALCLIPVERT][VERTEXSIZE];
 
-static decal_t	gDecalPool[MAX_RENDER_DECALS];
+decal_t	gDecalPool[MAX_RENDER_DECALS];
 static int	gDecalCount;
 
 void R_ClearDecals( void )
@@ -633,6 +633,8 @@ static void R_AddDecalToSurface( decal_t *pdecal, msurface_t *surf, decalinfo_t 
 	// build mesh for decal if allowed
 	if( host.features & ENGINE_BUILD_SURFMESHES )
 		pdecal->mesh = R_DecalCreateMesh( decalinfo, pdecal, surf );
+
+	R_AddDecalVBO( pdecal, surf );
 }
 
 static void R_DecalCreate( decalinfo_t *decalinfo, msurface_t *surf, float x, float y )
@@ -1077,7 +1079,7 @@ void DrawSurfaceDecals( msurface_t *fa )
 				// color decal like detail texture. Base color is 127 127 127
 				pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 				pglBlendFunc( GL_DST_COLOR, GL_SRC_COLOR );
-                              }
+			}
 
 			DrawSingleDecal( p, fa );
 		}
