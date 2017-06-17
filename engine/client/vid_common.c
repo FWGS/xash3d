@@ -77,6 +77,8 @@ convar_t	*r_lockcull;
 convar_t	*r_dynamic;
 convar_t	*r_lightmap;
 convar_t	*r_fastsky;
+convar_t	*r_vbo;
+convar_t 	*r_bump;
 convar_t	*mp_decals;
 
 convar_t	*vid_displayfrequency;
@@ -915,6 +917,8 @@ void GL_InitCommands( void )
 	gl_overview = Cvar_Get( "dev_overview", "0", 0, "show level overview" );
 	gl_overbright = Cvar_Get( "gl_overbright", "0", CVAR_ARCHIVE, "Overbright mode (0-2)");
 	gl_overbright_studio = Cvar_Get( "gl_overbright_studio", "0", CVAR_ARCHIVE, "Overbright for studiomodels");
+	r_vbo = Cvar_Get( "r_vbo", "0", CVAR_ARCHIVE, "draw world using VBO" );
+	r_bump = Cvar_Get( "r_bump", "0", CVAR_ARCHIVE, "enable bump-mapping (r_vbo required)" );
 
 	// these cvar not used by engine but some mods requires this
 	Cvar_Get( "gl_polyoffset", "-0.1", 0, "polygon offset for decals" );
