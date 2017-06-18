@@ -1898,7 +1898,7 @@ void R_GenerateVBO()
 	R_ClearVBO();
 
 	// we do not want to write vbo code that does not use multitexture
-	if( !GL_Support( GL_ARB_VERTEX_BUFFER_OBJECT_EXT ) || !GL_Support( GL_ARB_MULTITEXTURE ) || glConfig.max_teximage_units < 2 )
+	if( !GL_Support( GL_ARB_VERTEX_BUFFER_OBJECT_EXT ) || !GL_Support( GL_ARB_MULTITEXTURE ) || glConfig.max_texture_units < 2 )
 	{
 		Cvar_FullSet( "r_vbo", "0", CVAR_READ_ONLY );
 		Cvar_FullSet( "r_bump", "0", CVAR_READ_ONLY );
