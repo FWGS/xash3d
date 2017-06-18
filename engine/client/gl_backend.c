@@ -153,6 +153,25 @@ void GL_LoadIdentityTexMatrix( void )
 	glState.texIdentityMatrix[glState.activeTMU] = true;
 }
 
+
+
+/*
+=================
+GL_MaxTextureUnits
+=================
+*/
+inline int GL_MaxTextureUnits( void )
+{
+	if( glConfig.max_texture_units_cached == -1 )
+	{
+		if( GL_Support( GL_SHADER_GLSL100_EXT ))
+			glConfig.max_texture_units_cached =  min( max( glConfig.max_texture_coords, glConfig.max_teximage_units ), MAX_TEXTURE_UNITS );
+		else
+			glConfig.max_texture_units_cached = glConfig.max_texture_units;
+	}
+	return glConfig.max_texture_units_cached;
+}
+
 /*
 =================
 GL_SelectTexture
