@@ -373,6 +373,7 @@ void GL_InitExtensions( void )
 	GL_SetExtension( GL_DOT3_ARB_EXT, true );
 	GL_SetExtension( GL_TEXTURE_3D_EXT, false );
 	GL_SetExtension( GL_SGIS_MIPMAPS_EXT, true ); // gles specs
+	GL_SetExtension( GL_ARB_VERTEX_BUFFER_OBJECT_EXT, true ); // gles specs
 
 	// hardware cubemaps
 	GL_CheckExtension( "GL_OES_texture_cube_map", NULL, "gl_texture_cubemap", GL_TEXTURECUBEMAP_EXT );
@@ -396,7 +397,6 @@ void GL_InitExtensions( void )
 	GL_SetExtension( GL_BLEND_SUBTRACT_EXT, false );
 	GL_SetExtension( GL_SEPARATESTENCIL_EXT, false );
 	GL_SetExtension( GL_STENCILTWOSIDE_EXT, false );
-	GL_SetExtension( GL_ARB_VERTEX_BUFFER_OBJECT_EXT, false );
 	GL_SetExtension( GL_TEXTURE_ENV_ADD_EXT,false  );
 	GL_SetExtension( GL_SHADER_OBJECTS_EXT, false );
 	GL_SetExtension( GL_SHADER_GLSL100_EXT, false );
