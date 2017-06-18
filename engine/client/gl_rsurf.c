@@ -1906,7 +1906,7 @@ void R_GenerateVBO()
 	}
 
 	// cannot do bump mapping without dot3, but still can use VBO
-	if( !GL_Support( GL_DOT3_ARB_EXT ) || glConfig.max_texture_units < 3 )
+	if( !GL_Support( GL_DOT3_ARB_EXT ) || glConfig.max_texture_units < 4 )
 		Cvar_FullSet( "r_bump", "0", CVAR_READ_ONLY );
 
 	vbos.mempool = Mem_AllocPool("Render VBO Zone");
