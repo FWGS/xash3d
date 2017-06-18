@@ -595,18 +595,6 @@ qboolean GL_Support( int r_ext )
 }
 
 /*
-=================
-GL_MaxTextureUnits
-=================
-*/
-int GL_MaxTextureUnits( void )
-{
-	if( GL_Support( GL_SHADER_GLSL100_EXT ))
-		return min( max( glConfig.max_texture_coords, glConfig.max_teximage_units ), MAX_TEXTURE_UNITS );
-	return glConfig.max_texture_units;
-}
-
-/*
 ===============
 GL_BuildGammaTable
 ===============
@@ -660,6 +648,7 @@ static void GL_SetDefaultState( void )
 {
 	Q_memset( &glState, 0, sizeof( glState ));
 	GL_SetDefaultTexState ();
+	glConfig.max_texture_units_cached = -1;
 }
 
 

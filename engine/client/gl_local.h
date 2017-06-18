@@ -571,6 +571,7 @@ typedef struct
 	int		max_texture_units;
 	int		max_texture_coords;
 	int		max_teximage_units;
+	int		max_texture_units_cached;
 
 	GLint		max_2d_texture_size;
 	GLint		max_2d_rectangle_size;
