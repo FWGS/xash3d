@@ -478,6 +478,9 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 		// reset mouse pos, so cancel effect in game
 #ifdef XASH_SDL
 		SDL_WarpMouseInWindow( host.hWnd, host.window_center_x, host.window_center_y );
+		SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
+		if( clgame.dllFuncs.pfnLookEvent )
+			SDL_SetRelativeMouseMode( SDL_TRUE );
 #endif
 		if( cls.initialized )
 			clgame.dllFuncs.IN_ActivateMouse();
@@ -487,6 +490,8 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 	{
 #ifdef XASH_SDL
 		SDL_SetWindowGrab(host.hWnd, SDL_FALSE);
+		if( clgame.dllFuncs.pfnLookEvent )
+			SDL_SetRelativeMouseMode( SDL_FALSE );
 #endif
 #ifdef __ANDROID__
 		Android_ShowMouse( true );
@@ -559,7 +564,6 @@ void IN_ActivateMouse( qboolean force )
 	{
 		clgame.dllFuncs.IN_ActivateMouse();
 #ifdef XASH_SDL
-		SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
 		SDL_GetRelativeMouseState( 0, 0 ); // Reset mouse position
 #endif
 	}

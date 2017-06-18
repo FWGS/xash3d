@@ -1431,7 +1431,7 @@ void HTTP_Run( void )
 				{
 					int size = Q_atoi( length += 16 );
 					Msg( "HTTP: File size is %d\n", size );
-					Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d \"(File size is %s)\"\n", curfile->path, server->host, server->path, downloadfileid, downloadcount, Q_pretifymem( size, 1 ) ) );
+					Cbuf_AddText( va( "menu_connectionprogress dl \"%s\" \"%s%s\" %d %d \"(file size is %s)\"\n", curfile->path, server->host, server->path, downloadfileid, downloadcount, Q_pretifymem( size, 1 ) ) );
 					if( ( curfile->size != -1 ) && ( curfile->size != size ) ) // check size if specified, not used
 						MsgDev( D_WARN, "Server reports wrong file size!\n" );
 					curfile->size = size;

@@ -930,6 +930,7 @@ void CL_ClearState( void )
 	BF_Clear( &cls.netchan.message );
 	Q_memset( &clgame.fade, 0, sizeof( clgame.fade ));
 	Q_memset( &clgame.shake, 0, sizeof( clgame.shake ));
+
 	Cvar_FullSet( "cl_background", "0", CVAR_READ_ONLY );
 	cl.refdef.movevars = &clgame.movevars;
 	cl.maxclients = 1; // allow to drawing player in menu
@@ -941,7 +942,7 @@ void CL_ClearState( void )
 	// restore real developer level
 	host.developer = host.old_developer;
 
-	if( !SV_Active() )
+	if( !SV_Active() && !CL_IsPlaybackDemo() )
 	{
 		Delta_Shutdown();
 		Delta_InitClient();
