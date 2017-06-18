@@ -1896,6 +1896,19 @@ void R_GenerateVBO()
 	uint maxindex = 0;
 
 	R_ClearVBO();
+
+	// we do not want to write vbo code that does not use multitexture
+	if( !GL_Support( GL_ARB_VERTEX_BUFFER_OBJECT_EXT ) || !GL_Support( GL_ARB_MULTITEXTURE ) || glConfig.max_teximage_units < 2 )
+	{
+		Cvar_FullSet( "r_vbo", "0", CVAR_READ_ONLY );
+		Cvar_FullSet( "r_bump", "0", CVAR_READ_ONLY );
+		return;
+	}
+
+	// cannot do bump mapping without dot3, but still can use VBO
+	if( !GL_Support( GL_DOT3_ARB_EXT ) || glConfig.max_texture_units < 3 )
+		Cvar_FullSet( "r_bump", "0", CVAR_READ_ONLY );
+
 	vbos.mempool = Mem_AllocPool("Render VBO Zone");
 
 	vbos.minarraysplit_tex = INT_MAX;
@@ -2401,21 +2414,25 @@ static texture_t *R_SetupVBOTexture( texture_t *tex, int number )
 ===================
 R_AdditionalPasses
 
-draw details on bump-mapped surfaces
+draw details when not enough tmus
 ===================
 */
 static void R_AdditionalPasses( vboarray_t *vbo, int indexlen, void *indexarray, texture_t *tex, qboolean resetvbo )
 {
 	// draw details in additional pass
-	if( r_detailtextures->integer && mtst.tmu_dt == -1 && mtst.bump_enabled && tex->dt_texturenum )
+	if( r_detailtextures->integer && mtst.tmu_dt == -1 && tex->dt_texturenum )
 	{
 		gltexture_t *glt = R_GetTexture( tex->gl_texturenum );
 
 		// disable bump
-		GL_SelectTexture( XASH_TEXTURE3 );
-		pglDisable( GL_TEXTURE_2D );
-		GL_SelectTexture( XASH_TEXTURE2 );
-		pglDisable( GL_TEXTURE_2D );
+		if( mtst.bump_enabled )
+		{
+			GL_SelectTexture( XASH_TEXTURE3 );
+			pglDisable( GL_TEXTURE_2D );
+			GL_SelectTexture( XASH_TEXTURE2 );
+			pglDisable( GL_TEXTURE_2D );
+		}
+
 		GL_SelectTexture( XASH_TEXTURE1 );
 		pglDisable( GL_TEXTURE_2D );
 
@@ -2443,12 +2460,20 @@ static void R_AdditionalPasses( vboarray_t *vbo, int indexlen, void *indexarray,
 		pglLoadIdentity();
 		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 		pglDisable( GL_BLEND );
-		GL_Bind( XASH_TEXTURE0, mtst.dl );
-		pglTexCoordPointer( 2, GL_FLOAT, sizeof( vbovertex_t ), (void*)offsetof( vbovertex_t, lm_tc ) );
-		GL_SelectTexture( XASH_TEXTURE3 );
-		pglEnable( GL_TEXTURE_2D );
-		GL_SelectTexture( XASH_TEXTURE2 );
-		pglEnable( GL_TEXTURE_2D );
+		if( mtst.bump_enabled )
+		{
+			GL_Bind( XASH_TEXTURE0, mtst.dl );
+			pglTexCoordPointer( 2, GL_FLOAT, sizeof( vbovertex_t ), (void*)offsetof( vbovertex_t, lm_tc ) );
+			GL_SelectTexture( XASH_TEXTURE3 );
+			pglEnable( GL_TEXTURE_2D );
+			GL_SelectTexture( XASH_TEXTURE2 );
+			pglEnable( GL_TEXTURE_2D );
+		}
+		else
+		{
+			GL_Bind( XASH_TEXTURE1, mtst.lm );
+			pglTexCoordPointer( 2, GL_FLOAT, sizeof( vbovertex_t ), (void*)offsetof( vbovertex_t, lm_tc ) );
+		}
 		GL_SelectTexture( XASH_TEXTURE1 );
 		pglEnable( GL_TEXTURE_2D );
 		if( resetvbo )
@@ -2821,7 +2846,7 @@ void R_DrawVBO( qboolean drawlightmap, qboolean drawtextures )
 
 	mtst.skipbump = !drawtextures || !drawlightmap || RI.currententity->curstate.rendermode == kRenderTransAlpha ;
 	mtst.skiptexture = !drawtextures;
-	mtst.tmu_dt = XASH_TEXTURE2;
+	mtst.tmu_dt = glConfig.max_texture_units > 2? XASH_TEXTURE2:-1;
 
 	// setup limits
 	if( vbos.minlightmap > vbos.minarraysplit_lm )
