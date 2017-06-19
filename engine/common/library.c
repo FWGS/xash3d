@@ -183,18 +183,28 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	{
 		void *pHandle;
 		char path[MAX_SYSPATH];
-		Q_snprintf( path, MAX_SYSPATH, "%s/lib%s"POSTFIX"."OS_LIB_EXT, getenv("XASH3D_GAMELIBDIR"), dllname );
-		pHandle = dlopen( path, RTLD_LAZY );
-		if( !pHandle )
+		const char *libdir[2];
+		int i;
+
+		libdir[0] = getenv("XASH3D_GAMELIBDIR");
+		libdir[1] = getenv("XASH3D_ENGLIBDIR");
+
+		for( i = 0; i < 2; i++ )
 		{
-			Q_snprintf( path, MAX_SYSPATH, "%s/lib%s"POSTFIX"."OS_LIB_EXT, getenv("XASH3D_ENGLIBDIR"), dllname );
-			Com_PushLibraryError( dlerror() );
+			Q_snprintf( path, MAX_SYSPATH, "%s/lib%s"POSTFIX"."OS_LIB_EXT, libdir[i], dllname );
 			pHandle = dlopen( path, RTLD_LAZY );
-			if( !pHandle )
-				Com_PushLibraryError( dlerror() );
+			if( pHandle )
+				return pHandle;
+
+			Com_PushLibraryError( dlerror() );
 		}
+
+		// HACKHACK: keep old behaviour for compability
+		pHandle = dlopen( dllname, RTLD_LAZY );
 		if( pHandle )
 			return pHandle;
+
+		Com_PushLibraryError( dlerror() );
 	}
 #endif
 
