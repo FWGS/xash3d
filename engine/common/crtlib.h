@@ -152,11 +152,10 @@ void Cmd_ForwardToServer( void );
 void Q_strnupr( const char *in, char *out, size_t size_out );
 #define Q_strlwr( int, out ) Q_strnlwr( in, out, 99999 )
 void Q_strnlwr( const char *in, char *out, size_t size_out );
-#ifndef XASH_SKIPCRTLIB
 
+#ifndef XASH_SKIPCRTLIB
 char Q_toupper( const char in );
 char Q_tolower( const char in );
-
 #else
 static inline int Q_strlen( const char *str )
 {
@@ -167,6 +166,7 @@ static inline int Q_strlen( const char *str )
 #define Q_toupper toupper
 #define Q_tolower tolower
 #endif
+
 #ifndef XASH_FORCEINLINE
 size_t Q_strncat( char *dst, const char *src, size_t siz );
 size_t Q_strncpy( char *dst, const char *src, size_t siz );
@@ -187,7 +187,9 @@ float Q_atof( const char *str );
 #define Q_atof atof
 #endif
 void Q_atov( float *vec, const char *str, size_t siz );
+
 #ifndef XASH_SKIPCRTLIB
+
 #ifndef XASH_FORCEINLINE
 char *Q_strchr( const char *s, char c );
 char *Q_strrchr( const char *s, char c );
@@ -196,7 +198,8 @@ int Q_strncmp( const char *s1, const char *s2, int n );
 int Q_stricmp( const char *s1, const char *s2 );
 int Q_strcmp( const char *s1, const char *s2 );
 #endif
-#else
+
+#else // XASH_SKIPCRTLIB
 static inline char *Q_strchr( const char *s, char c )
 {
 	if( !s )
@@ -266,8 +269,10 @@ static inline int Q_strncmp( const char *s1, const char *s2, int n )
 	return strncmp( s1, s2, n );
 }
 #endif
+
 qboolean Q_stricmpext( const char *s1, const char *s2 );
 const char *Q_timestamp( int format );
+
 #ifndef XASH_SKIPCRTLIB
 char *Q_stristr( const char *string, const char *string2 );
 char *Q_strstr( const char *string, const char *string2 );
@@ -275,7 +280,7 @@ char *Q_strstr( const char *string, const char *string2 );
 int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list args );
 int Q_snprintf( char *buffer, size_t buffersize, const char *format, ... ) _format(3);
 int Q_sprintf( char *buffer, const char *format, ... ) _format(2);
-#else
+#else // XASH_SKIPCRTLIB
 #define Q_stristr strcasestr
 #define Q_strstr strstr
 #define Q_vsprintf vsprintf
@@ -283,10 +288,11 @@ int Q_sprintf( char *buffer, const char *format, ... ) _format(2);
 #define Q_snprintf snprintf
 #define Q_sprintf sprintf
 #endif
+
 #define Q_memprint( val ) Q_pretifymem( val, 2 )
 char *Q_pretifymem( float value, int digitsafterdecimal );
 char *va( const char *format, ... ) _format(1);
-#ifndef XASH_SKIPCRTLIB
+#if 0 // debug mem*
 #define Q_memcpy( dest, src, size ) _Q_memcpy( dest, src, size, __FILE__, __LINE__ )
 #define Q_memset( dest, val, size ) _Q_memset( dest, val, size, __FILE__, __LINE__ )
 #define Q_memcmp( src0, src1, siz ) _Q_memcmp( src0, src1, siz, __FILE__, __LINE__ )

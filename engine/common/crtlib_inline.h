@@ -4,8 +4,21 @@
 #define ALIGNOF(x) ( ( unsigned long int )(x) & ( sizeof( int ) - 1) )
 #define IS_UNALIGNED(x) (ALIGNOF(x) != 0)
 #define HAS_NULL(x) ( ( ( x - lomagic ) & himagic ) != 0 )
-#endif
 
+// disable address sanitizer
+#if defined(__has_feature)
+ #if __has_feature(address_sanitizer)
+  #define NOASAN __attribute__((no_sanitize("address")))
+ #endif
+#endif
+#ifndef NOASAN
+#ifdef __GNUC__
+#define NOASAN __attribute__((no_sanitize_address)) __attribute__((no_address_safety_analysis))
+#else
+#define NOASAN
+#endif
+#endif
+#endif
 #ifndef XASH_SKIPCRTLIB
 #ifdef XASH_FASTSTR
 
@@ -13,7 +26,7 @@
 #define ALIGNOF(x) ( ( unsigned long int )(x) & ( sizeof( int ) - 1) )
 #define IS_UNALIGNED(x) (ALIGNOF(x) != 0)
 #define HAS_NULL(x) ( ( ( x - lomagic ) & himagic ) != 0 )
-xash_force_inline int Q_strlen( const char *string )
+xash_force_inline NOASAN int Q_strlen( const char *string )
 {
 	register const char	*pchr = string;
 	register const unsigned int *plongword;
@@ -53,8 +66,8 @@ xash_force_inline int Q_strlen( const char *string )
 	}
 	return 0;
 }
-#else
-xash_force_inline int Q_strlen( const char *string )
+#else // XASH_SKIPCRTLIB
+xash_force_inline NOASAN int Q_strlen( const char *string )
 {
 	int	len;
 	const char	*p;
@@ -116,7 +129,7 @@ xash_force_inline size_t Q_strcpy_unaligned( char *dst, const char *src )
 	return ( s - src - 1 ); // count does not include NULL
 }
 
-xash_force_inline size_t Q_strncpy( char *dst, const char *src, size_t size )
+xash_force_inline NOASAN size_t Q_strncpy( char *dst, const char *src, size_t size )
 {
 	register const char	*pchr = src;
 	register const unsigned int *plongword;
@@ -184,7 +197,7 @@ xash_force_inline size_t Q_strncpy( char *dst, const char *src, size_t size )
 	return 0;
 }
 
-xash_force_inline size_t Q_strncat( char *dst, const char *src, size_t size )
+xash_force_inline NOASAN size_t Q_strncat( char *dst, const char *src, size_t size )
 {
 	register const char	*pchr = src;
 	register const unsigned int *plongword;
@@ -284,7 +297,7 @@ xash_force_inline size_t Q_strncat( char *dst, const char *src, size_t size )
 }
 */
 
-xash_force_inline size_t Q_strcpy( char *dst, const char *src )
+xash_force_inline NOASAN size_t Q_strcpy( char *dst, const char *src )
 {
 	register const char	*pchr = src;
 	register const unsigned int *plongword;
@@ -343,7 +356,7 @@ xash_force_inline size_t Q_strcpy( char *dst, const char *src )
 	return 0;
 }
 
-xash_force_inline size_t Q_strcat( char *dst, const char *src )
+xash_force_inline NOASAN size_t Q_strcat( char *dst, const char *src )
 {
 	register const char	*pchr = src;
 	register const unsigned int *plongword;
@@ -612,7 +625,7 @@ xash_force_inline int Q_stricmp_unaligned( const char *s1, const char *s2 )
 	return 0;
 }
 
-xash_force_inline int Q_strnicmp( const char *s1, const char *s2, int n )
+xash_force_inline NOASAN int Q_strnicmp( const char *s1, const char *s2, int n )
 {
 	register const unsigned int *p1, *p2;
 	register int len;
@@ -681,7 +694,7 @@ xash_force_inline int Q_strnicmp( const char *s1, const char *s2, int n )
 	return 0;
 }
 
-xash_force_inline int Q_strncmp( const char *s1, const char *s2, int n )
+xash_force_inline NOASAN int Q_strncmp( const char *s1, const char *s2, int n )
 {
 	register const unsigned int *p1, *p2;
 	register int len;
@@ -743,7 +756,7 @@ xash_force_inline int Q_strncmp( const char *s1, const char *s2, int n )
 	return 0;
 }
 
-xash_force_inline int Q_stricmp( const char *s1, const char *s2 )
+xash_force_inline NOASAN int Q_stricmp( const char *s1, const char *s2 )
 {
 	register const unsigned int *p1, *p2;
 
@@ -806,7 +819,7 @@ xash_force_inline int Q_stricmp( const char *s1, const char *s2 )
 	return 0;
 }
 
-xash_force_inline int Q_strcmp( const char *s1, const char *s2 )
+xash_force_inline NOASAN int Q_strcmp( const char *s1, const char *s2 )
 {
 	register const unsigned int *p1, *p2;
 
