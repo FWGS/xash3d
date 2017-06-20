@@ -371,7 +371,13 @@ char *Q_stristr( const char *string, const char *string2 )
 	}
 	return (char *)string;
 }
-
+#define USE_STB_SPRINTF
+#ifdef USE_STB_SPRINTF
+#define STB_SPRINTF_IMPLEMENTATION
+#define STB_SPRINTF_DECORATE(name) Q_##name
+#undef Q_vsprintf
+#include "stb/stb_sprintf.h"
+#else
 int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list args )
 {
 	int	result;
@@ -409,7 +415,8 @@ int Q_sprintf( char *buffer, const char *format, ... )
 
 	return result;
 }
-#endif
+#endif // USE_STB_SRPINTF
+#endif // XASH_SKIPCRTLIB
 char *Q_pretifymem( float value, int digitsafterdecimal )
 {
 	static char	output[8][32];
