@@ -17,11 +17,11 @@ if [ "$SCRIPT_DIR" = "bin" ]; then
 	GAMEROOT=${PWD}/../${LIBPREFIX}/xash3d
 	echo "Xash3D SDL is installed in system."
 else
-	GAMEROOT=$(dirname -- $(readlink -f -- $0))
+	GAMEROOT=$(dirname -- "$(readlink -f -- "$0")")
 fi
 
 #determine platform
-UNAME=`uname`
+UNAME=$(uname)
 if [ "$UNAME" = "Darwin" ]; then
 	# prepend our lib path to LD_LIBRARY_PATH
 	export DYLD_LIBRARY_PATH=${GAMEROOT}:$DYLD_LIBRARY_PATH
@@ -32,7 +32,7 @@ elif [ "$UNAME" = "FreeBSD" ]; then
 	export LD_LIBRARY_PATH=${GAMEROOT}:$LD_LIBRARY_PATH
 fi
 
-if [ -z $GAMEEXE ]; then
+if [ -z "$GAMEEXE" ]; then
 	if [ "$UNAME" = "Darwin" ]; then
 		GAMEEXE=xash3d
 	elif [ "$UNAME" = "Linux" ]; then
@@ -42,14 +42,12 @@ if [ -z $GAMEEXE ]; then
 	fi
 fi
 
-ulimit -n 2048
-
 # and launch the game
-cd "$GAMEROOT"
+cd "$GAMEROOT" || echo "Failed cd to $GAMEROOT" && exit
 
 STATUS=42
 while [ $STATUS -eq 42 ]; do
-	${DEBUGGER} "${GAMEROOT}"/${GAMEEXE} $@
+	${DEBUGGER} "${GAMEROOT}"/${GAMEEXE} "$@"
 	STATUS=$?
 done
 exit $STATUS
