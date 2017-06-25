@@ -153,6 +153,25 @@ void GL_LoadIdentityTexMatrix( void )
 	glState.texIdentityMatrix[glState.activeTMU] = true;
 }
 
+
+
+/*
+=================
+GL_MaxTextureUnits
+=================
+*/
+inline int GL_MaxTextureUnits( void )
+{
+	if( glConfig.max_texture_units_cached == -1 )
+	{
+		if( GL_Support( GL_SHADER_GLSL100_EXT ))
+			glConfig.max_texture_units_cached =  min( max( glConfig.max_texture_coords, glConfig.max_teximage_units ), MAX_TEXTURE_UNITS );
+		else
+			glConfig.max_texture_units_cached = glConfig.max_texture_units;
+	}
+	return glConfig.max_texture_units_cached;
+}
+
 /*
 =================
 GL_SelectTexture
@@ -176,8 +195,9 @@ void GL_SelectTexture( GLint tmu )
 		return;
 
 	glState.activeTMU = tmu;
-
+#ifndef XASH_NANOGL
 	if( pglActiveTextureARB )
+#endif
 	{
 		pglActiveTextureARB( tmu + GL_TEXTURE0_ARB );
 
@@ -240,15 +260,15 @@ void GL_MultiTexCoord2f( GLenum texture, GLfloat s, GLfloat t )
 {
 #ifndef XASH_NANOGL
 	if( pglMultiTexCoord2f )
+#endif
 	{
 		pglMultiTexCoord2f( texture + GL_TEXTURE0_ARB, s, t );
 	}
+#ifndef XASH_NANOGL
 	else if( pglMTexCoord2fSGIS )
 	{
 		pglMTexCoord2fSGIS( texture + GL_TEXTURE0_SGIS, s, t );
 	}
-#else
-	glTexCoord2f( s, t );
 #endif
 }
 
@@ -705,7 +725,7 @@ rebuild_page:
 			continue;
 
 		x = k % base_w * w;
-		y = k / (float)base_w * h;
+		y = k / base_w * h;
 
 		pglColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 		GL_Bind( XASH_TEXTURE0, i ); // NOTE: don't use image->texnum here, because skybox has a 'wrong' indexes

@@ -153,10 +153,10 @@ static void *IOS_LoadLibrary( const char *dllname )
 
 #endif
 
-
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
 	dll_user_t *hInst;
+	void *pHandle;
 
 	// platforms where gameinfo mechanism is impossible
 	// or not implemented
@@ -166,7 +166,6 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	}
 #elif defined( __EMSCRIPTEN__ )
 	{
-		void *pHandle;
 		char path[MAX_SYSPATH];
 		string prefix;
 		Q_strcpy(prefix, getenv( "LIBRARY_PREFIX" ) );
@@ -181,7 +180,6 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	}
 #elif defined( __ANDROID__ )
 	{
-		void *pHandle;
 		char path[MAX_SYSPATH];
 		const char *libdir[2];
 		int i;
@@ -213,7 +211,13 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	hInst = FS_FindLibrary( dllname, false );
 	if( !hInst )
 	{
+		// try to find by linker(LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, LD_32_LIBRARY_PATH and so on...)
+		pHandle = dlopen( dllname, RTLD_LAZY );
+		if( pHandle )
+			return pHandle;
+
 		Com_PushLibraryError( va( "Failed to find library %s", dllname ));
+		Com_PushLibraryError( dlerror() );
 		return NULL;
 	}
 
@@ -252,7 +256,11 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		}
 	}
 
-	return hInst->hInstance;
+	pHandle = hInst->hInstance;
+
+	Mem_Free( hInst );
+
+	return pHandle;
 }
 
 void Com_FreeLibrary( void *hInstance )
@@ -260,7 +268,7 @@ void Com_FreeLibrary( void *hInstance )
 #ifdef DLL_LOADER
 	void *wm;
 	if( host.enabledll && (wm = Loader_GetDllHandle( hInstance )) )
-		return Loader_FreeLibrary(hInstance);
+		return Loader_FreeLibrary( hInstance );
 	else
 #endif
 	dlclose( hInstance );

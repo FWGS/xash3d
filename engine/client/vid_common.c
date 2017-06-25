@@ -77,6 +77,8 @@ convar_t	*r_lockcull;
 convar_t	*r_dynamic;
 convar_t	*r_lightmap;
 convar_t	*r_fastsky;
+convar_t	*r_vbo;
+convar_t 	*r_bump;
 convar_t	*mp_decals;
 
 convar_t	*vid_displayfrequency;
@@ -593,18 +595,6 @@ qboolean GL_Support( int r_ext )
 }
 
 /*
-=================
-GL_MaxTextureUnits
-=================
-*/
-int GL_MaxTextureUnits( void )
-{
-	if( GL_Support( GL_SHADER_GLSL100_EXT ))
-		return min( max( glConfig.max_texture_coords, glConfig.max_teximage_units ), MAX_TEXTURE_UNITS );
-	return glConfig.max_texture_units;
-}
-
-/*
 ===============
 GL_BuildGammaTable
 ===============
@@ -658,6 +648,7 @@ static void GL_SetDefaultState( void )
 {
 	Q_memset( &glState, 0, sizeof( glState ));
 	GL_SetDefaultTexState ();
+	glConfig.max_texture_units_cached = -1;
 }
 
 
@@ -1000,6 +991,27 @@ void Win_SetDPIAwareness( void )
 	}
 }
 #endif
+
+/*
+===============
+R_CheckVBO
+
+register VBO cvars and get default value
+===============
+*/
+static void R_CheckVBO( void )
+{
+	const char *def = "1";
+	int flags = CVAR_ARCHIVE;
+
+	// some bad GLES1 implementations breaks dlights completely
+	if( glConfig.max_texture_units < 3 )
+		def = "0";
+
+	r_vbo = Cvar_Get( "r_vbo", def, flags, "draw world using VBO" );
+	r_bump = Cvar_Get( "r_bump", def, flags, "enable bump-mapping (r_vbo required)" );
+}
+
 /*
 ===============
 R_Init
@@ -1036,6 +1048,7 @@ qboolean R_Init( void )
 
 	GL_InitExtensions();
 	GL_SetDefaults();
+	R_CheckVBO();
 	R_InitImages();
 	R_SpriteInit();
 	R_StudioInit();
