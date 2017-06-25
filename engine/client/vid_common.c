@@ -906,8 +906,6 @@ void GL_InitCommands( void )
 	gl_overview = Cvar_Get( "dev_overview", "0", 0, "show level overview" );
 	gl_overbright = Cvar_Get( "gl_overbright", "0", CVAR_ARCHIVE, "Overbright mode (0-2)");
 	gl_overbright_studio = Cvar_Get( "gl_overbright_studio", "0", CVAR_ARCHIVE, "Overbright for studiomodels");
-	r_vbo = Cvar_Get( "r_vbo", "0", CVAR_ARCHIVE, "draw world using VBO" );
-	r_bump = Cvar_Get( "r_bump", "0", CVAR_ARCHIVE, "enable bump-mapping (r_vbo required)" );
 
 	// these cvar not used by engine but some mods requires this
 	Cvar_Get( "gl_polyoffset", "-0.1", 0, "polygon offset for decals" );
@@ -993,6 +991,27 @@ void Win_SetDPIAwareness( void )
 	}
 }
 #endif
+
+/*
+===============
+R_CheckVBO
+
+register VBO cvars and get default value
+===============
+*/
+static void R_CheckVBO( void )
+{
+	const char *def = "1";
+	int flags = CVAR_ARCHIVE;
+
+	// some bad GLES1 implementations breaks dlights completely
+	if( glConfig.max_texture_units < 3 )
+		def = "0";
+
+	r_vbo = Cvar_Get( "r_vbo", def, flags, "draw world using VBO" );
+	r_bump = Cvar_Get( "r_bump", def, flags, "enable bump-mapping (r_vbo required)" );
+}
+
 /*
 ===============
 R_Init
@@ -1029,6 +1048,7 @@ qboolean R_Init( void )
 
 	GL_InitExtensions();
 	GL_SetDefaults();
+	R_CheckVBO();
 	R_InitImages();
 	R_SpriteInit();
 	R_StudioInit();
