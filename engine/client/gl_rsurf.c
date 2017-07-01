@@ -1940,7 +1940,7 @@ void R_GenerateVBO()
 			{
 				msurface_t *surf = &cl.worldmodel->surfaces[i];
 
-				if( surf->flags & ( SURF_DRAWSKY | SURF_DRAWTURB | SURF_CONVEYOR ) )
+				if( surf->flags & ( SURF_DRAWSKY | SURF_DRAWTURB | SURF_CONVEYOR | SURF_REFLECT ) )
 					continue;
 
 				if( surf->lightmaptexturenum != k )
@@ -2008,7 +2008,7 @@ void R_GenerateVBO()
 				msurface_t *surf = &cl.worldmodel->surfaces[i];
 				int l;
 
-				if( surf->flags & ( SURF_DRAWSKY | SURF_DRAWTURB | SURF_CONVEYOR ) )
+				if( surf->flags & ( SURF_DRAWSKY | SURF_DRAWTURB | SURF_CONVEYOR | SURF_REFLECT ) )
 					continue;
 
 				if( surf->lightmaptexturenum != k )
