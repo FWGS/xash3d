@@ -2984,7 +2984,7 @@ void GAME_EXPORT pfnFreeEntPrivateData( edict_t *pEdict )
 
 #ifdef __amd64__
 char g_stringbase[65536];
-char *pLastsStr = g_stringbase;
+char *pLastsStr = g_stringbase + 1;
 #endif
 
 /*
@@ -3001,8 +3001,21 @@ string_t GAME_EXPORT SV_AllocString( const char *szValue )
 	if( svgame.physFuncs.pfnAllocString != NULL )
 		return svgame.physFuncs.pfnAllocString( szValue );
 #ifdef __amd64__
-	newString = pLastsStr;
-	pLastsStr += Q_strcpy(pLastsStr,szValue) + 1;
+	for( newString = g_stringbase; newString < pLastsStr && *newString && Q_strcmp( newString, szValue ); newString += Q_strlen( newString ) + 1 );
+
+	if( !*newString )
+	{
+		uint len = Q_strlen( szValue );
+
+		if( pLastsStr - g_stringbase + len + 2 > sizeof( g_stringbase ) )
+			pLastsStr = g_stringbase + 1;
+
+		MsgDev( D_INFO, "%d\n", pLastsStr - g_stringbase + len + 2 );
+		Q_memcpy( pLastsStr, szValue, len + 1 );
+
+		newString = pLastsStr;
+		pLastsStr += len + 1;
+	}
 
 	return newString - g_stringbase;
 #else
