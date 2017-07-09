@@ -2983,9 +2983,34 @@ void GAME_EXPORT pfnFreeEntPrivateData( edict_t *pEdict )
 }
 
 #ifdef __amd64__
-char g_stringbase[65536];
-char *pLastsStr = g_stringbase + 1;
+#define MAX_STRING_ARRAY 65536
+char g_stringarray[MAX_STRING_ARRAY];
+char g_stringarraystatic[MAX_STRING_ARRAY];
+char *g_stringbase = g_stringarray;
+char *g_oldstringbase = g_stringarray;
+char *pLastsStr = g_stringarray + 1;
 #endif
+
+
+/*
+===============
+SV_SetStringArrayMode
+
+use different arrays on 64 bit platforms
+===============
+*/
+void SV_SetStringArrayMode( qboolean dynamic )
+{
+#ifdef __amd64__
+	if( dynamic ) // switch only after array fill
+		g_stringbase = g_stringarray;
+	else
+	{
+		g_stringbase = g_oldstringbase = g_stringarraystatic;
+		pLastsStr = g_stringbase + 1;
+	}
+#endif
+}
 
 /*
 =============
@@ -3001,23 +3026,27 @@ string_t GAME_EXPORT SV_AllocString( const char *szValue )
 	if( svgame.physFuncs.pfnAllocString != NULL )
 		return svgame.physFuncs.pfnAllocString( szValue );
 #ifdef __amd64__
-	for( newString = g_stringbase; newString < pLastsStr && *newString && Q_strcmp( newString, szValue ); newString += Q_strlen( newString ) + 1 );
+	int cmp;
 
-	if( !*newString )
+	for( newString = g_oldstringbase + 1; newString < pLastsStr && ( cmp = Q_strcmp( newString, szValue ) ); newString += Q_strlen( newString ) + 1 );
+
+	if( cmp )
 	{
 		uint len = Q_strlen( szValue );
 
-		if( pLastsStr - g_stringbase + len + 2 > sizeof( g_stringbase ) )
-			pLastsStr = g_stringbase + 1;
+		if( pLastsStr - g_oldstringbase + len + 2 > MAX_STRING_ARRAY )
+			pLastsStr = g_stringbase + 1, g_oldstringbase = g_stringbase;
 
-		MsgDev( D_INFO, "%d\n", pLastsStr - g_stringbase + len + 2 );
+		MsgDev( D_NOTE, "SV_AllocString: %ld %s\n", pLastsStr - svgame.globals->pStringBase, szValue );
 		Q_memcpy( pLastsStr, szValue, len + 1 );
 
 		newString = pLastsStr;
 		pLastsStr += len + 1;
 	}
+	else
+		MsgDev( D_NOTE, "SV_AllocString: dup %ld %s\n", newString - svgame.globals->pStringBase, szValue );
 
-	return newString - g_stringbase;
+	return newString - svgame.globals->pStringBase;
 #else
 	newString = _copystring( svgame.stringspool, szValue, __FILE__, __LINE__ );
 	return newString - svgame.globals->pStringBase;
@@ -5072,7 +5101,7 @@ qboolean SV_LoadProgs( const char *name )
 	// grab function SV_SaveGameComment
 	SV_InitSaveRestore ();
 #ifdef __amd64__
-	svgame.globals->pStringBase = g_stringbase; // setup string base
+	svgame.globals->pStringBase = g_stringarraystatic; // setup string base
 #else
 	svgame.globals->pStringBase = "";
 #endif

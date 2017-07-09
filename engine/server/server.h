@@ -612,6 +612,7 @@ edict_t* SV_AllocPrivateData( edict_t *ent, string_t className );
 string_t SV_AllocString( const char *szValue );
 string_t SV_MakeString( const char *szValue );
 const char *SV_GetString( string_t iString );
+void SV_SetStringArrayMode( qboolean dynamic );
 sv_client_t *SV_ClientFromEdict( const edict_t *pEdict, qboolean spawned_only );
 void SV_SetClientMaxspeed( sv_client_t *cl, float fNewMaxspeed );
 int SV_MapIsValid( const char *filename, const char *spawn_entity, const char *landmark_name );
