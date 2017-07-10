@@ -2984,11 +2984,12 @@ void GAME_EXPORT pfnFreeEntPrivateData( edict_t *pEdict )
 
 #ifdef __amd64__
 #define MAX_STRING_ARRAY 65536
-char g_stringarray[MAX_STRING_ARRAY];
-char g_stringarraystatic[MAX_STRING_ARRAY];
-char *g_stringbase = g_stringarray;
-char *g_oldstringbase = g_stringarray;
-char *pLastsStr = g_stringarray + 1;
+static char stringarray[MAX_STRING_ARRAY * 2];
+char *g_stringarray;
+char *g_stringarraystatic;
+char *g_stringbase;
+char *g_oldstringbase;
+char *pLastsStr;
 #endif
 
 
@@ -3009,6 +3010,78 @@ void SV_SetStringArrayMode( qboolean dynamic )
 		g_stringbase = g_oldstringbase = g_stringarraystatic;
 		pLastsStr = g_stringbase + 1;
 	}
+#endif
+}
+
+#ifdef __amd64__
+#include <sys/mman.h>
+#endif
+
+void SV_AllocStringPool( void )
+{
+#ifdef __amd64__
+	size_t pagesize = sysconf( _SC_PAGESIZE );
+	int arrlen = (MAX_STRING_ARRAY * 2) & ~(pagesize - 1);
+	void *base = svgame.dllFuncs.pfnGameInit;
+	void *start = svgame.hInstance - arrlen;
+	void *ptr = NULL;
+
+	while( start - base > INT_MIN )
+	{
+		void *mapptr = mmap((void*)((unsigned long)start & ~(pagesize - 1)), arrlen, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0 );
+		if( mapptr && mapptr != (void*)-1 && mapptr - base > INT_MIN && mapptr - base < INT_MAX )
+		{
+			ptr = mapptr;
+			break;
+		}
+		if( mapptr ) munmap( mapptr, arrlen );
+		start -= arrlen;
+	}
+
+	if( !ptr )
+	{
+		start = base;
+		while( start - base < INT_MAX )
+		{
+			void *mapptr = mmap((void*)((unsigned long)start & ~(pagesize - 1)), arrlen, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0 );
+			if( mapptr && mapptr != (void*)-1  && mapptr - base > INT_MIN && mapptr - base < INT_MAX )
+			{
+				ptr = mapptr;
+				break;
+			}
+			if( mapptr ) munmap( mapptr, arrlen );
+			start += arrlen;
+		}
+	}
+
+	if( ptr )
+	{
+		MsgDev( D_NOTE, "SV_AllocStringPool: Allocated string array near the server library: %p %p\n", base, ptr );
+	}
+	else
+	{
+		MsgDev( D_WARN, "SV_AllocStringPool: Failed to allocate string array near the server library!\n" );
+		ptr = stringarray;
+	}
+
+	g_stringarray = ptr;
+	g_stringarraystatic = ptr + MAX_STRING_ARRAY;
+	g_stringbase = g_oldstringbase = ptr;
+	pLastsStr = ptr + 1;
+	svgame.globals->pStringBase = ptr;
+#else
+	svgame.stringspool = Mem_AllocPool( "Server Strings" );
+	svgame.globals->pStringBase = "";
+#endif
+}
+
+void SV_FreeStringPool( void )
+{
+#ifdef __amd64__
+	if( g_stringarray != stringarray )
+		munmap( g_stringarray, (MAX_STRING_ARRAY * 2) & ~(sysconf( _SC_PAGESIZE ) - 1) );
+#else
+	Mem_FreePool( &svgame.stringspool );
 #endif
 }
 
@@ -3064,10 +3137,16 @@ string_t SV_MakeString( const char *szValue )
 {
 	if( svgame.physFuncs.pfnMakeString != NULL )
 		return svgame.physFuncs.pfnMakeString( szValue );
-#ifndef __amd64__
-	return szValue - svgame.globals->pStringBase;
+#ifdef __amd64__
+	{
+		long ptrdiff = szValue - svgame.globals->pStringBase;
+		if( ptrdiff > INT_MAX || ptrdiff < INT_MIN )
+			return SV_AllocString(szValue);
+		else
+			return (int)ptrdiff;
+	}
 #else
-	return SV_AllocString(szValue);
+	return szValue - svgame.globals->pStringBase;
 #endif
 }
 
@@ -4952,7 +5031,8 @@ void SV_UnloadProgs( void )
 	SV_DeactivateServer ();
 	Delta_Shutdown ();
 
-	Mem_FreePool( &svgame.stringspool );
+	SV_FreeStringPool();
+
 
 	if( svgame.dllFuncs2.pfnGameShutdown != NULL )
 		svgame.dllFuncs2.pfnGameShutdown ();
@@ -5100,11 +5180,6 @@ qboolean SV_LoadProgs( const char *name )
 
 	// grab function SV_SaveGameComment
 	SV_InitSaveRestore ();
-#ifdef __amd64__
-	svgame.globals->pStringBase = g_stringarraystatic; // setup string base
-#else
-	svgame.globals->pStringBase = "";
-#endif
 	svgame.globals->maxEntities = GI->max_edicts;
 	svgame.globals->maxClients = sv_maxclients->integer;
 	svgame.edicts = Mem_Alloc( svgame.mempool, sizeof( edict_t ) * svgame.globals->maxEntities );
@@ -5117,7 +5192,7 @@ qboolean SV_LoadProgs( const char *name )
 	svgame.gmsgHudText = -1;
 
 	Cvar_FullSet( "host_gameloaded", "1", CVAR_INIT );
-	svgame.stringspool = Mem_AllocPool( "Server Strings" );
+	SV_AllocStringPool();
 
 	// fire once
 	MsgDev( D_INFO, "Dll loaded for mod %s\n", svgame.dllFuncs.pfnGetGameDescription( ));
