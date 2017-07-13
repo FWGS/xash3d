@@ -2830,22 +2830,16 @@ static model_t *GAME_EXPORT R_StudioSetupPlayerModel( int index )
 		return cl.playermodels[index];
 
 	if( !Q_stricmp( info->model, "player" ))
-	{
 		Q_strncpy( modelpath, "models/player.mdl", sizeof( modelpath ));
-	}
 	else
-	{
 		Q_snprintf( modelpath, sizeof( modelpath ), "models/player/%s/%s.mdl", info->model, info->model );
 
-		// replace with default if missed
-		if( !FS_FileExists( modelpath, false ))
-			Q_strncpy( modelpath, "models/player.mdl", sizeof( modelpath ));
-	}
+	cl.playermodels[index] = Mod_ForName( modelpath, false );
 
-	if( !FS_FileExists( modelpath, false ))
-		return NULL;
+	if( !cl.playermodels[index] )
+		cl.playermodels[index] = Mod_ForName( "models/player.mdl", false );
 
-	return cl.playermodels[index] = Mod_ForName( modelpath, false );
+	return cl.playermodels[index];
 }
 
 /*

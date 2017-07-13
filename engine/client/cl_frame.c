@@ -351,6 +351,9 @@ void CL_UpdateEntityFields( cl_entity_t *ent )
 
 	if( ent->player )
 	{
+		if( ent->curstate.modelindex && !ent->model )
+			ent->model = Mod_ForName("models/player.mdl", false );
+
 		CL_InterpolatePlayer( ent );
 	}
 	else CL_InterpolateModel( ent );
