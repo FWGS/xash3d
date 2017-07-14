@@ -3146,6 +3146,7 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	else if( !Q_strcmp( c, "c" ) )
 	{
 		netadr_t to;
+
 		if( NET_StringToAdr( Cmd_Argv( 1 ), &to ) )
 			SV_Info( to, 48 );
 	}

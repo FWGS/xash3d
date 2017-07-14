@@ -285,6 +285,38 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 #endif
 }
 
+#if !defined _WIN32 && !defined __EMSCRIPTEN__
+#define USE_PTHREAD
+#endif
+
+#ifdef USE_PTHREAD
+#include <pthread.h>
+
+static struct nspthread_s
+{
+pthread_mutex_t mutexns, mutexres;
+struct hostent *result;
+string hostname;
+qboolean busy;
+pthread_t thread;
+} nspthread = { PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER };
+
+void *pthread_resolve(void *arg)
+{
+	struct hostent *res;
+
+	pthread_mutex_lock( &nspthread.mutexns );
+	res = pGetHostByName( nspthread.hostname );
+	pthread_mutex_unlock( &nspthread.mutexns );
+	pthread_mutex_lock( &nspthread.mutexres );
+	nspthread.result = res;
+	nspthread.busy = false;
+	pthread_mutex_unlock( &nspthread.mutexres );
+	return 0;
+}
+
+#endif
+
 /*
 =============
 NET_StringToAdr
@@ -302,7 +334,7 @@ idnewt:28000
 	sscanf( copy, "%x", &val );	\
 	((struct sockaddr_ipx *)sadr)->dest = val
 
-static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
+static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean nonblocking )
 {
 	struct hostent	*h;
 	char		*colon;
@@ -353,13 +385,56 @@ static qboolean NET_StringToSockaddr( const char *s, struct sockaddr *sadr )
 		}
 		else
 		{
+#ifdef USE_PTHREAD
+
+		if( !nonblocking )
+		{
+			pthread_mutex_lock( &nspthread.mutexns );
+			h = pGetHostByName( copy );
+			pthread_mutex_unlock( &nspthread.mutexns );
+			if( !h )
+				return 0;
+		}
+		else
+		{
+					pthread_mutex_lock( &nspthread.mutexres );
+
+					if( nspthread.busy )
+					{
+						pthread_mutex_unlock( &nspthread.mutexres );
+						return 2;
+					}
+
+					if( !Q_strcmp( copy, nspthread.hostname ) )
+						h = nspthread.result;
+					else
+					{
+						Q_strncpy( nspthread.hostname, copy, MAX_STRING );
+						nspthread.busy = true;
+						pthread_mutex_unlock( &nspthread.mutexres );
+
+						pthread_create( &nspthread.thread, NULL, pthread_resolve, NULL );
+
+						return 2;
+					}
+
+					pthread_mutex_unlock( &nspthread.mutexres );
+
+					if( !h )
+						return 0;
+
+		}
+
+#else
 			if(!( h = pGetHostByName( copy )))
-				return false;
+				return 0;
+#endif
 			*(int *)&((struct sockaddr_in *)sadr)->sin_addr = *(int *)h->h_addr_list[0];
 		}
 	}
-	return true;
+	return 1;
 }
+
 #undef DO
 
 char *NET_AdrToString( const netadr_t a )
@@ -474,12 +549,35 @@ qboolean NET_StringToAdr( const char *string, netadr_t *adr )
 		return true;
 	}
 
-	if( !NET_StringToSockaddr( string, &s ))
+	if( !NET_StringToSockaddr( string, &s, false ))
 		return false;
 	NET_SockadrToNetadr( &s, adr );
 
 	return true;
 }
+
+int NET_StringToAdrNB( const char *string, netadr_t *adr )
+{
+	struct sockaddr s;
+	int res;
+
+	Q_memset( adr, 0, sizeof( netadr_t ));
+	if( !Q_stricmp( string, "localhost" ))
+	{
+		adr->type = NA_LOOPBACK;
+		return true;
+	}
+
+	res = NET_StringToSockaddr( string, &s, true );
+
+	if( res == 0 || res == 2 )
+		return res;
+
+	NET_SockadrToNetadr( &s, adr );
+
+	return true;
+}
+
 
 /*
 =============================================================================
@@ -618,7 +716,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 
 	// sequenced packets are shown in netchan, so just show oob
 	if( net_showpackets->integer && *(int *)data == -1 )
-		MsgDev( D_INFO, "send packet %4i\n", length );
+		MsgDev( D_INFO, "send packet %4li\n", length );
 
 	if( to.type == NA_LOOPBACK )
 	{
@@ -750,7 +848,7 @@ static int NET_IPSocket( const char *netInterface, int port )
 
 	if( !netInterface[0] || !Q_stricmp( netInterface, "localhost" ))
 		addr.sin_addr.s_addr = INADDR_ANY;
-	else NET_StringToSockaddr( netInterface, (struct sockaddr *)&addr );
+	else NET_StringToSockaddr( netInterface, (struct sockaddr *)&addr, false );
 
 	if( port == PORT_ANY ) addr.sin_port = 0;
 	else addr.sin_port = pHtons((short)port);
@@ -1123,6 +1221,18 @@ typedef struct httpserver_s
 
 } httpserver_t;
 
+enum connectionstate
+{
+	HTTP_FREE = 0,
+	HTTP_OPENED,
+	HTTP_SOCKET,
+	HTTP_NS_RESOLVED,
+	HTTP_CONNECTED,
+	HTTP_REQUEST,
+	HTTP_REQUEST_SENT,
+	HTTP_RESPONSE_RECEIVED,
+};
+
 typedef struct httpfile_s
 {
 	httpserver_t *server;
@@ -1135,7 +1245,7 @@ typedef struct httpfile_s
 	float checktime;
 	float blocktime;
 	int id;
-	int state;
+	enum connectionstate state;
 	qboolean process;
 	struct httpfile_s *next;
 } httpfile_t;
@@ -1206,10 +1316,10 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 	if( error )
 	{
 		// Switch to next fastdl server if present
-		if( file->server && ( file->state > 0 ) )
+		if( file->server && ( file->state > HTTP_FREE ) )
 		{
 			file->server = file->server->next;
-			file->state = 0; // Reset download state, HTTP_Run() will open file again
+			file->state = HTTP_FREE; // Reset download state, HTTP_Run() will open file again
 			return;
 		}
 
@@ -1286,6 +1396,7 @@ void HTTP_Run( void )
 	httpfile_t *curfile = http.first_file; // download is single-threaded now, but can be rewrited
 	httpserver_t *server;
 	float frametime;
+	struct sockaddr addr;
 
 	if( !curfile )
 		return;
@@ -1319,14 +1430,14 @@ void HTTP_Run( void )
 			return;
 		}
 
-		curfile->state = 1;
+		curfile->state = HTTP_OPENED;
 		curfile->blocktime = 0;
 		curfile->downloaded = 0;
 		curfile->lastchecksize = 0;
 		curfile->checktime = 0;
 	}
 
-	if( curfile->state < 2 ) // Socket is not created
+	if( curfile->state < HTTP_SOCKET ) // Socket is not created
 	{
 		dword mode;
 
@@ -1342,14 +1453,29 @@ void HTTP_Run( void )
 		// SOCK_NONBLOCK is not portable, so use fcntl
 		fcntl( curfile->socket, F_SETFL, fcntl( curfile->socket, F_GETFL, 0 ) | O_NONBLOCK );
 #endif
-		curfile->state = 2;
+		curfile->state = HTTP_SOCKET;
 	}
 
-	if( curfile->state < 3 ) // Connection not enstabilished
+	if( curfile->state < HTTP_NS_RESOLVED )
 	{
-		struct sockaddr addr;
+		res = NET_StringToSockaddr( va( "%s:%d", server->host, server->port ), &addr, true );
 
-		NET_StringToSockaddr( va( "%s:%d", server->host, server->port ), &addr );
+		if( res == 2 )
+			return; // skip to next frame
+
+		if( !res )
+		{
+			Msg( "HTTP: Failed to resolve server address for %s!\n", server->host );
+			HTTP_FreeFile( curfile, true ); // Cannot connect
+			return;
+		}
+		curfile->state = HTTP_NS_RESOLVED;
+	}
+
+	if( curfile->state < HTTP_CONNECTED ) // Connection not enstabilished
+	{
+
+
 		res = pConnect( curfile->socket, &addr, sizeof( struct sockaddr ) );
 
 		if( res )
@@ -1361,7 +1487,7 @@ void HTTP_Run( void )
 #else
 			if( errno == EINPROGRESS ) // Should give EWOOLDBLOCK if try recv too soon
 #endif
-				curfile->state = 3;
+				curfile->state = HTTP_CONNECTED;
 			else
 			{
 				Msg( "HTTP: Cannot connect to server: %s\n", NET_ErrorString( ) );
@@ -1370,10 +1496,10 @@ void HTTP_Run( void )
 			}
 			return; // skip to next frame
 		}
-		curfile->state = 3;
+		curfile->state = HTTP_CONNECTED;
 	}
 
-	if( curfile->state < 4 ) // Request not formatted
+	if( curfile->state < HTTP_REQUEST ) // Request not formatted
 	{
 		http.query_length = Q_snprintf( http.buf, BUFSIZ,
 			"GET %s%s HTTP/1.0\r\n"
@@ -1382,10 +1508,10 @@ void HTTP_Run( void )
 			curfile->path, server->host, http_useragent->string );
 		http.header_size = 0;
 		http.bytes_sent = 0;
-		curfile->state = 4;
+		curfile->state = HTTP_REQUEST;
 	}
 
-	if( curfile->state < 5 ) // Request not sent
+	if( curfile->state < HTTP_REQUEST_SENT ) // Request not sent
 	{
 		while( http.bytes_sent < http.query_length )
 		{
@@ -1426,7 +1552,7 @@ void HTTP_Run( void )
 
 		Msg( "HTTP: Request sent!\n");
 		Q_memset( http.buf, 0, BUFSIZ );
-		curfile->state = 5;
+		curfile->state = HTTP_REQUEST_SENT;
 	}
 
 	frametime = host.frametime; // save frametime to reset it after first iteration
@@ -1436,7 +1562,7 @@ void HTTP_Run( void )
 		//MsgDev(D_INFO,"res: %d\n", res);
 		curfile->blocktime = 0;
 
-		if( curfile->state < 6 ) // Response still not received
+		if( curfile->state < HTTP_RESPONSE_RECEIVED ) // Response still not received
 		{
 			buf[res] = 0; // string break to search \r\n\r\n
 			Q_memcpy( http.buf + http.header_size, buf, res );
@@ -1480,7 +1606,7 @@ void HTTP_Run( void )
 					return;
 				}
 
-				curfile->state = 6; // got response, let's start download
+				curfile->state = HTTP_RESPONSE_RECEIVED; // got response, let's start download
 				begin += 4;
 
 				// Write remaining message part
@@ -1492,7 +1618,7 @@ void HTTP_Run( void )
 					{
 						// close it and go to next
 						Msg( "HTTP: Write failed for %s!\n", curfile->path );
-						curfile->state = 0;
+						curfile->state = HTTP_FREE;
 						HTTP_FreeFile( curfile, true );
 						return;
 					}
@@ -1510,7 +1636,7 @@ void HTTP_Run( void )
 			{
 				// close it and go to next
 				Msg( "HTTP: Write failed for %s!\n", curfile->path );
-				curfile->state = 0;
+				curfile->state = HTTP_FREE;
 				HTTP_FreeFile( curfile, true );
 				return;
 			}
@@ -1593,7 +1719,7 @@ void HTTP_AddDownload( char *path, int size, qboolean process )
 
 	httpfile->file = NULL;
 	httpfile->next = NULL;
-	httpfile->state = 0;
+	httpfile->state = HTTP_FREE;
 	httpfile->server = http.first_server;
 	httpfile->process = process;
 }
@@ -1745,7 +1871,7 @@ void HTTP_Cancel_f( void )
 		return;
 
 	// if download even not started, it will be removed completely
-	http.first_file->state = 0;
+	http.first_file->state = HTTP_FREE;
 	HTTP_FreeFile( http.first_file, true );
 }
 

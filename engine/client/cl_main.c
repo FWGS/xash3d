@@ -775,6 +775,10 @@ Resend a connect message if the last one has timed out
 void CL_CheckForResend( void )
 {
 	netadr_t	adr;
+	int res;
+
+	if( cls.internetservers_wait )
+		CL_InternetServers_f();
 
 	// if the local server is running and we aren't then connect
 	if( cls.state == ca_disconnected && SV_Active( ))
@@ -793,15 +797,27 @@ void CL_CheckForResend( void )
 	if(( host.realtime - cls.connect_time ) < 10.0f )
 		return;
 
-	if( !NET_StringToAdr( cls.servername, &adr ))
+	res = NET_StringToAdrNB( cls.servername, &adr );
+
+	if( !res )
 	{
 		MsgDev( D_ERROR, "CL_CheckForResend: bad server address\n" );
 		cls.state = ca_disconnected;
 		return;
 	}
 
+	// blocked
+	if( res == 2 )
+	{
+		cls.connect_time = MAX_HEARTBEAT;
+		return;
+	}
+
 	if( adr.port == 0 ) adr.port = BF_BigShort( PORT_SERVER );
 	cls.connect_time = host.realtime; // for retransmit requests
+
+	// do not make non-blocking requests again
+	Q_strncpy( cls.servername, NET_AdrToString( adr ), sizeof( cls.servername ));
 
 	MsgDev( D_NOTE, "Connecting to %s...\n", cls.servername );
 	Netchan_OutOfBandPrint( NS_CLIENT, adr, "getchallenge\n" );
@@ -813,8 +829,6 @@ CL_Connect_f
 
 ================
 */
-
-//#include <sys/mman.h>
 void CL_Connect_f( void )
 {
 	string server;
@@ -1076,18 +1090,29 @@ void CL_InternetServers_f( void )
 	netadr_t	adr;
 	char	fullquery[512] = MS_SCAN_REQUEST;
 	char info[256] = "";
+	int res;
 
 	Info_SetValueForKey( info, "nat", cl_nat->string, 256 );
 	Info_SetValueForKey( info, "gamedir", GI->gamedir, 256 );
 
-	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
 	NET_Config( true ); // allow remote
 
-	if( !NET_StringToAdr( sv_master->string, &adr ) )
+	res = NET_StringToAdrNB( sv_master->string, &adr );
+
+	if( !res )
 	{
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
 		return;
 	}
+
+	if( res == 2 )
+	{
+		cls.internetservers_wait = true;
+		return;
+	}
+
+	cls.internetservers_wait = false;
+	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
 
 	NET_SendPacket( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strcpy( fullquery + sizeof( MS_SCAN_REQUEST ) - 1, info ), fullquery, adr );
 }

@@ -523,6 +523,7 @@ typedef struct
 	qboolean keybind_changed;
 	qboolean splitcompress;			// enabled only on server->client netchan
 	qboolean need_save_config;
+	qboolean internetservers_wait;	// internetservers is waiting for dns request
 } client_static_t;
 
 

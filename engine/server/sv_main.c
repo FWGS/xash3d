@@ -708,11 +708,23 @@ Master_Add
 void Master_Add( void )
 {
 	netadr_t	adr;
+	int res;
 
 	NET_Config( true ); // allow remote
 
-	if( !NET_StringToAdr( sv_master->string, &adr ))
+	res = NET_StringToAdrNB( sv_master->string, &adr );
+
+	if( !res )
+	{
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
+		return;
+	}
+
+	if( res == 2 )
+	{
+		svs.last_heartbeat = host.realtime - HEARTBEAT_SECONDS;
+		return;
+	}
 
 	NET_SendPacket( NS_SERVER, 2, "q\xFF", adr );
 }
@@ -757,7 +769,10 @@ void Master_Shutdown( void )
 	NET_Config( true ); // allow remote
 
 	if( !NET_StringToAdr( sv_master->string, &adr ))
+	{
 		MsgDev( D_INFO, "Can't resolve addr: %s\n", sv_master->string );
+		return;
+	}
 
 	NET_SendPacket( NS_SERVER, 2, "\x62\x0A", adr );
 }
