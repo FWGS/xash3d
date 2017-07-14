@@ -471,26 +471,30 @@ SV_Load_f
 */
 void SV_Load_f( void )
 {
+	string arg;
+
 	if( Cmd_Argc() != 2 )
 	{
 		Msg( "Usage: load <savename>\n" );
 		return;
 	}
 
+	Q_strncpy( arg, Cmd_Argv( 1 ), sizeof(arg) );
+
 	if( host_xashds_hacks->integer )
 	{
-		Cbuf_InsertText(va("rcon load %s\n",Cmd_Argv( 1 )));
-		Cbuf_AddText("connect 127.0.0.1\n");
+		Cbuf_InsertText( va ( "rcon load %s\n", arg ) );
+		Cbuf_AddText( "connect 127.0.0.1\n" );
 		return;
 	}
 
 	if( Host_IsDedicated() )
 	{
-		SV_InactivateClients ();
-		SV_DeactivateServer ();
+		SV_InactivateClients();
+		SV_DeactivateServer();
 	}
 
-	SV_LoadGame( Cmd_Argv( 1 ));
+	SV_LoadGame( arg );
 
 	if( Host_IsDedicated() )
 		SV_ActivateServer();
