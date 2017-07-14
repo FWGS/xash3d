@@ -105,11 +105,13 @@ const char *Q_buildarch( void )
 {
 	const char *archname;
 
-#if defined(__amd64__) || defined(_M_X64)
+#if defined( __x86_64__) || defined(_M_X64)
 	archname = "amd64";
 #elif defined(__i386__) || defined(_X86_) || defined(_M_IX86)
 	archname = "i386";
-#elif defined(__arm__) || defined(_M_ARM)
+#elif defined __aarch64__
+	archname = "aarch64";
+#elif defined __arm__ || defined _M_ARM
 	archname = "arm";
 #elif defined __EMSCRIPTEN__
 	archname = "javascript";

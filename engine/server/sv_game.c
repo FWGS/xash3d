@@ -2982,7 +2982,7 @@ void GAME_EXPORT pfnFreeEntPrivateData( edict_t *pEdict )
 	SV_FreePrivateData( pEdict );
 }
 
-#ifdef __amd64__
+#ifdef XASH_64BIT
 #define MAX_STRING_ARRAY 65536
 static struct str64_s
 {
@@ -2999,7 +2999,7 @@ static struct str64_s
 
 void SV_EmptyStringPool( void )
 {
-#ifdef __amd64__
+#ifdef XASH_64BIT
 	if( str64.dynamic ) // switch only after array fill (more space for multiplayer games)
 		str64.pstringbase = str64.pstringarray;
 	else
@@ -3022,7 +3022,7 @@ use different arrays on 64 bit platforms
 */
 void SV_SetStringArrayMode( qboolean dynamic )
 {
-#ifdef __amd64__
+#ifdef XASH_64BIT
 	MsgDev( D_NOTE, "SV_SetStringArrayMode(%d) %d\n", dynamic, str64.dynamic );
 
 	if( dynamic == str64.dynamic )
@@ -3034,58 +3034,69 @@ void SV_SetStringArrayMode( qboolean dynamic )
 #endif
 }
 
-#ifdef __amd64__
+#ifdef XASH_64BIT
+#ifndef _WIN32
+#define USE_MMAP
 #include <sys/mman.h>
+#endif
 #endif
 
 void SV_AllocStringPool( void )
 {
-	MsgDev( D_NOTE, "SV_AllocStringPool()\n" );
-
-#ifdef __amd64__
-	size_t pagesize = sysconf( _SC_PAGESIZE );
-	int arrlen = (MAX_STRING_ARRAY * 2) & ~(pagesize - 1);
-	void *base = svgame.dllFuncs.pfnGameInit;
-	void *start = svgame.hInstance - arrlen;
+#ifdef XASH_64BIT
 	void *ptr = NULL;
 
-	while( start - base > INT_MIN )
+	MsgDev( D_NOTE, "SV_AllocStringPool()\n" );
+#ifdef USE_MMAP
 	{
-		void *mapptr = mmap((void*)((unsigned long)start & ~(pagesize - 1)), arrlen, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0 );
-		if( mapptr && mapptr != (void*)-1 && mapptr - base > INT_MIN && mapptr - base < INT_MAX )
-		{
-			ptr = mapptr;
-			break;
-		}
-		if( mapptr ) munmap( mapptr, arrlen );
-		start -= arrlen;
-	}
+		size_t pagesize = sysconf( _SC_PAGESIZE );
+		int arrlen = (MAX_STRING_ARRAY * 2) & ~(pagesize - 1);
+		void *base = svgame.dllFuncs.pfnGameInit;
+		void *start = svgame.hInstance - arrlen;
 
-	if( !ptr )
-	{
-		start = base;
-		while( start - base < INT_MAX )
+		while( start - base > INT_MIN )
 		{
 			void *mapptr = mmap((void*)((unsigned long)start & ~(pagesize - 1)), arrlen, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0 );
-			if( mapptr && mapptr != (void*)-1  && mapptr - base > INT_MIN && mapptr - base < INT_MAX )
+			if( mapptr && mapptr != (void*)-1 && mapptr - base > INT_MIN && mapptr - base < INT_MAX )
 			{
 				ptr = mapptr;
 				break;
 			}
 			if( mapptr ) munmap( mapptr, arrlen );
-			start += arrlen;
+			start -= arrlen;
+		}
+
+		if( !ptr )
+		{
+			start = base;
+			while( start - base < INT_MAX )
+			{
+				void *mapptr = mmap((void*)((unsigned long)start & ~(pagesize - 1)), arrlen, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0 );
+				if( mapptr && mapptr != (void*)-1  && mapptr - base > INT_MIN && mapptr - base < INT_MAX )
+				{
+					ptr = mapptr;
+					break;
+				}
+				if( mapptr ) munmap( mapptr, arrlen );
+				start += arrlen;
+			}
+		}
+
+
+		if( ptr )
+		{
+			MsgDev( D_NOTE, "SV_AllocStringPool: Allocated string array near the server library: %p %p\n", base, ptr );
+
+		}
+		else
+		{
+			MsgDev( D_WARN, "SV_AllocStringPool: Failed to allocate string array near the server library!\n" );
+			ptr = str64.staticstringarray;
 		}
 	}
-
-	if( ptr )
-	{
-		MsgDev( D_NOTE, "SV_AllocStringPool: Allocated string array near the server library: %p %p\n", base, ptr );
-	}
-	else
-	{
-		MsgDev( D_WARN, "SV_AllocStringPool: Failed to allocate string array near the server library!\n" );
-		ptr = str64.staticstringarray;
-	}
+#else
+	ptr = str64.staticstringarray;
+#endif
 
 	str64.pstringarray = ptr;
 	str64.pstringarraystatic = ptr + MAX_STRING_ARRAY;
@@ -3100,9 +3111,9 @@ void SV_AllocStringPool( void )
 
 void SV_FreeStringPool( void )
 {
+#ifdef XASH_64BIT
 	MsgDev( D_NOTE, "SV_FreeStringPool()\n" );
 
-#ifdef __amd64__
 	if( str64.pstringarray != str64.staticstringarray )
 		munmap( str64.pstringarray, (MAX_STRING_ARRAY * 2) & ~(sysconf( _SC_PAGESIZE ) - 1) );
 #else
@@ -3123,7 +3134,7 @@ string_t GAME_EXPORT SV_AllocString( const char *szValue )
 
 	if( svgame.physFuncs.pfnAllocString != NULL )
 		return svgame.physFuncs.pfnAllocString( szValue );
-#ifdef __amd64__
+#ifdef XASH_64BIT
 	int cmp = 1;
 
 	for( newString = str64.poldstringbase + 1; newString < str64.plast && ( cmp = Q_strcmp( newString, szValue ) ); newString += Q_strlen( newString ) + 1 );
@@ -3162,9 +3173,9 @@ string_t SV_MakeString( const char *szValue )
 {
 	if( svgame.physFuncs.pfnMakeString != NULL )
 		return svgame.physFuncs.pfnMakeString( szValue );
-#ifdef __amd64__
+#ifdef XASH_64BIT
 	{
-		long ptrdiff = szValue - svgame.globals->pStringBase;
+		long long ptrdiff = szValue - svgame.globals->pStringBase;
 		if( ptrdiff > INT_MAX || ptrdiff < INT_MIN )
 			return SV_AllocString(szValue);
 		else

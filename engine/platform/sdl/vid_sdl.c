@@ -1163,7 +1163,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_y = height / 2;
 
 #if defined(_WIN32)
-#if !defined(__amd64__)
+#if !defined(XASH_64BIT)
 	{
 		HICON ico;
 		SDL_SysWMinfo info;
@@ -1189,7 +1189,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			SetClassLong( info.info.win.window, GCL_HICON, (LONG)ico );
 		}
 	}
-#endif // __amd64__
+#endif // __XASH_64BIT__
 #else // _WIN32
 
 	Q_strcpy( iconpath, GI->iconpath );
