@@ -296,6 +296,8 @@ void SV_ActivateServer( void )
 	// Activate the DLL server code
 	svgame.dllFuncs.pfnServerActivate( svgame.edicts, svgame.numEntities, svgame.globals->maxClients );
 
+	SV_SetStringArrayMode( true );
+
 	// create a baseline for more efficient communications
 	SV_CreateBaseline();
 
@@ -406,7 +408,7 @@ void SV_DeactivateServer( void )
 
 	SV_ClearPhysEnts ();
 
-	Mem_EmptyPool( svgame.stringspool );
+	SV_EmptyStringPool();
 
 	svgame.dllFuncs.pfnServerDeactivate();
 
@@ -439,6 +441,9 @@ void SV_LevelInit( const char *pMapName, char const *pOldLevel, char const *pLan
 {
 	if( !svs.initialized )
 		return;
+
+	// reset string pool on 64bit systems
+	SV_SetStringArrayMode( false );
 
 	if( loadGame )
 	{

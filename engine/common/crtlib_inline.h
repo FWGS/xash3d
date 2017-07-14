@@ -18,6 +18,8 @@
 #define NOASAN
 #endif
 #endif
+#else
+#define NOASAN
 #endif
 #ifndef XASH_SKIPCRTLIB
 #ifdef XASH_FASTSTR

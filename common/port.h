@@ -17,7 +17,11 @@ GNU General Public License for more details.
 #ifndef PORT_H
 #define PORT_H
 
-#ifdef __amd64__
+#if defined(__LP64__) || defined(__LLP64__) || defined(_WIN64) || (defined(__x86_64__) && !defined(__ILP32__) ) || defined(_M_X64) || defined(__ia64) || defined (_M_IA64) || defined(__aarch64__) || defined(__powerpc64__)
+  #define XASH_64BIT
+#endif
+
+#ifdef XASH_64BIT
 #define ARCH_SUFFIX "64"
 #else
 #define ARCH_SUFFIX
@@ -93,7 +97,7 @@ GNU General Public License for more details.
 	{
 		int x, y;
 	} POINT;
-#else
+#else // WIN32
 	#ifdef __MINGW32__
 		#define _inline static inline
 	#endif
@@ -123,6 +127,10 @@ GNU General Public License for more details.
 	#define MENUDLL "menu"ARCH_SUFFIX"." OS_LIB_EXT
 	#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
+#ifdef XASH_64BIT
+// windows NameForFunction not implemented yet
+#define XASH_ALLOW_SAVERESTORE_OFFSETS
 #endif
+#endif //WIN32
 
 #endif // PORT_H

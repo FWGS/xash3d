@@ -597,7 +597,7 @@ void EmitWaterPolys( glpoly_t *polys, qboolean noCull )
 	if( noCull ) pglDisable( GL_CULL_FACE );
 
 	// set the current waveheight
-	waveHeight = RI.currentWaveHeight;
+	waveHeight = RI.currentWaveHeight / 32.0f;
 
 	// reset fog color for nonlightmapped water
 	GL_ResetFogColor();
@@ -610,9 +610,9 @@ void EmitWaterPolys( glpoly_t *polys, qboolean noCull )
 		{
 			if( waveHeight )
 			{
-				nv = v[2] + waveHeight + ( waveHeight * sin(v[0] * 0.02f + cl.time)
-					* sin(v[1] * 0.02 + cl.time) * sin(v[2] * 0.02f + cl.time));
-				nv -= waveHeight;
+				nv = r_turbsin[(int)(cl.time * 160.0f + v[1] + v[0]) & 255] + 8.0f;
+				nv = (r_turbsin[(int)(v[0] * 5.0f + cl.time * 171.0f - v[1]) & 255] + 8.0f ) * 0.8f + nv;
+				nv = nv * waveHeight + v[2];
 			}
 			else nv = v[2];
 

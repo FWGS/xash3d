@@ -1301,11 +1301,21 @@ void Cmd_WriteRenderVariables( file_t *f )
 	Cvar_LookupVars( CVAR_RENDERINFO, NULL, f, (void*)Cmd_WriteRenderCvar );
 }
 
-#define REPLACE_CONFIG(x) \
-FS_Delete( x ".bak" ); \
-FS_Rename( x, x ".bak" ); \
-FS_Delete( x ); \
-FS_Rename( x ".new", x );
+#define CFG_END(f,x) \
+	if( FS_Printf( f,"// end of " x "\n" ) >= (int)sizeof( "// end of " x "\n" ) - 2 )\
+	{ \
+		FS_Close( f );\
+		FS_Delete( x ".bak" ); \
+		FS_Rename( x, x ".bak" ); \
+		FS_Delete( x ); \
+		FS_Rename( x ".new", x );\
+	}\
+	else\
+	{\
+		FS_Close( f );\
+		MsgDev( D_ERROR, "could not update " x "\n" );\
+	}
+
 
 /*
 ===============
@@ -1327,7 +1337,9 @@ void Host_WriteConfig( void )
 	}
 
 	MsgDev( D_NOTE, "Host_WriteConfig()\n" );
+
 	f = FS_Open( "config.cfg.new", "w", true );
+
 	if( f )
 	{
 		FS_Printf( f, "//=======================================================================\n");
@@ -1340,8 +1352,7 @@ void Host_WriteConfig( void )
 
 		FS_Printf( f, "exec userconfig.cfg\n" );
 
-		FS_Close( f );
-		REPLACE_CONFIG( "config.cfg" );
+		CFG_END( f, "config.cfg" );
 	}
 	else MsgDev( D_ERROR, "Couldn't write config.cfg.\n" );
 
@@ -1365,8 +1376,7 @@ void Host_WriteConfig( void )
 			if( jlook && ( jlook->state & 1 ))
 				FS_Printf( f, "+jlook\n" );
 
-			FS_Close( f );
-			REPLACE_CONFIG( "keyboard.cfg" );
+			CFG_END( f, "keyboard.cfg" );
 		}
 		else MsgDev( D_ERROR, "Couldn't write keyboard.cfg.\n" );
 	}
@@ -1432,9 +1442,10 @@ void Host_WriteOpenGLConfig( void )
 		FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\t    opengl.cfg - archive of opengl extension cvars\n");
 		FS_Printf( f, "//=======================================================================\n" );
+
 		Cmd_WriteOpenGLVariables( f );
-		FS_Close( f );
-		REPLACE_CONFIG( "opengl.cfg" );
+
+		CFG_END( f, "opengl.cfg" );
 	}                                                
 	else MsgDev( D_ERROR, "Can't update opengl.cfg.\n" );
 }
@@ -1466,9 +1477,10 @@ void Host_WriteVideoConfig( void )
 		FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 		FS_Printf( f, "//\t\tvideo.cfg - archive of renderer variables\n");
 		FS_Printf( f, "//=======================================================================\n" );
+
 		Cmd_WriteRenderVariables( f );
-		FS_Close( f );
-		REPLACE_CONFIG( "video.cfg" );
+
+		CFG_END( f, "video.cfg" );
 	}                                                
 	else MsgDev( D_ERROR, "Can't update video.cfg.\n" );
 }

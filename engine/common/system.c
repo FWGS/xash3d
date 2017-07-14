@@ -150,7 +150,7 @@ qboolean Sys_DebuggerPresent( void )
 #endif
 #endif
 
-#if defined _WIN32 && !defined __amd64__
+#if defined _WIN32 && !defined XASH_64BIT
 #ifdef _MSC_VER
 
 

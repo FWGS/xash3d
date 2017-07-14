@@ -345,7 +345,7 @@ const char *Com_NameForFunction( void *hInstance, void *function )
 	return NULL;
 #endif
 }
-#elif defined __amd64__
+#elif defined XASH_64BIT
 #include <dbghelp.h>
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {

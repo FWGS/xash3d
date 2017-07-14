@@ -271,7 +271,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 #else
 	ucontext_t *ucontext = (ucontext_t*)context;
 #endif
-#if defined(__amd64__)
+#if defined(__x86_64__)
 	#if defined(__FreeBSD__)
 		void *pc = (void*)ucontext->uc_mcontext.mc_rip, **bp = (void**)ucontext->uc_mcontext.mc_rbp, **sp = (void**)ucontext->uc_mcontext.mc_rsp;
 	#elif defined(__NetBSD__)
@@ -291,8 +291,12 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 	#else
 		void *pc = (void*)ucontext->uc_mcontext.gregs[REG_EIP], **bp = (void**)ucontext->uc_mcontext.gregs[REG_EBP], **sp = (void**)ucontext->uc_mcontext.gregs[REG_ESP];
 	#endif
-#elif defined(__arm__) // arm not tested
-	void *pc = (void*)ucontext->uc_mcontext.arm_pc, **bp = (void*)ucontext->uc_mcontext.arm_r10, **sp = (void*)ucontext->uc_mcontext.arm_sp;
+#elif defined(__aarch64__) // arm not tested
+	void *pc = (void*)ucontext->uc_mcontext.pc, **bp = (void*)ucontext->uc_mcontext.regs[29], **sp = (void*)ucontext->uc_mcontext.sp;
+#elif defined(__arm__)
+	void *pc = (void*)ucontext->uc_mcontext.arm_pc, **bp = (void*)ucontext->uc_mcontext.arm_fp, **sp = (void*)ucontext->uc_mcontext.arm_sp;
+#else
+#error "Unknown arch!!!"
 #endif
 	// Safe actions first, stack and memory may be corrupted
 	#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)

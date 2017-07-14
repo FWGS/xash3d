@@ -481,5 +481,6 @@ void R_NewMap( void )
 	R_SetupSky( cl.refdef.movevars->skyName );
 
 	GL_BuildLightmaps ();
+	R_GenerateVBO();
 }
 #endif // XASH_DEDICATED

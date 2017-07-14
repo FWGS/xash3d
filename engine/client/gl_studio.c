@@ -655,7 +655,7 @@ mstudioanim_t *R_StudioGetAnim( model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc
 
 	pseqgroup = (mstudioseqgroup_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
 	if( pseqdesc->seqgroup == 0 )
-#ifdef __amd64__
+#ifdef XASH_64BIT
 		return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqdesc->animindex);
 #else
 		return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
@@ -2055,7 +2055,7 @@ static void R_StudioDrawPoints_legacy( void )
 
 			if( g_iRenderMode == kRenderNormal )
 			{
-				if( gl_overbright->integer == 2 )
+				if( gl_overbright_studio->integer )
 				{
 					pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB );
 					pglTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE );
@@ -2408,14 +2408,13 @@ static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref, flo
 
 			if( g_iRenderMode == kRenderNormal )
 			{
-				if( gl_overbright->integer == 2 )
+				if( gl_overbright_studio->integer )
 				{
 					pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB );
 					pglTexEnvi( GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_MODULATE );
 					pglTexEnvi( GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_PREVIOUS_ARB );
 					pglTexEnvi( GL_TEXTURE_ENV, GL_SOURCE1_RGB_ARB, GL_TEXTURE );
 					pglTexEnvi( GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 2 );
-
 				}
 				else
 					pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
@@ -2831,22 +2830,16 @@ static model_t *GAME_EXPORT R_StudioSetupPlayerModel( int index )
 		return cl.playermodels[index];
 
 	if( !Q_stricmp( info->model, "player" ))
-	{
 		Q_strncpy( modelpath, "models/player.mdl", sizeof( modelpath ));
-	}
 	else
-	{
 		Q_snprintf( modelpath, sizeof( modelpath ), "models/player/%s/%s.mdl", info->model, info->model );
 
-		// replace with default if missed
-		if( !FS_FileExists( modelpath, false ))
-			Q_strncpy( modelpath, "models/player.mdl", sizeof( modelpath ));
-	}
+	cl.playermodels[index] = Mod_ForName( modelpath, false );
 
-	if( !FS_FileExists( modelpath, false ))
-		return NULL;
+	if( !cl.playermodels[index] )
+		cl.playermodels[index] = Mod_ForName( "models/player.mdl", false );
 
-	return cl.playermodels[index] = Mod_ForName( modelpath, false );
+	return cl.playermodels[index];
 }
 
 /*

@@ -707,6 +707,7 @@ static void Mod_LoadTextures( const dlump_t *l )
 	{
 		qboolean	load_external = false;
 		qboolean	load_external_luma = false;
+		qboolean	load_external_norm = false;
 
 		if( *(offset + i + 1) == -1 )
 		{
@@ -937,6 +938,24 @@ static void Mod_LoadTextures( const dlump_t *l )
 					MsgDev( D_ERROR, "Couldn't load %s\n", texname );
 				} 
 			}
+		}
+
+		// build standard norm path: "materials/mapname/texname_norm.tga"
+		Q_snprintf( texname, sizeof( texname ), "materials/%s/%s_norm.tga", modelname, mt.name );
+
+		if( !FS_FileExists( texname, false ))
+		{
+			// build common path: "materials/common/texname_norm.tga"
+			Q_snprintf( texname, sizeof( texname ), "materials/common/%s_norm.tga", mt.name );
+
+			if( FS_FileExists( texname, false ))
+				load_external_norm = true;
+		}
+		else load_external_norm = true;
+
+		if( load_external_norm )
+		{
+			tx->nm_texturenum = GL_LoadTexture( texname, NULL, 0, 0, filter );
 		}
 
 		if( tx->gl_texturenum != tr.defaultTexture )
