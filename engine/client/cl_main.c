@@ -31,6 +31,8 @@ GNU General Public License for more details.
 #define MAX_CMD_BUFFER		4000
 #define CONNECTION_PROBLEM_TIME	15.0	// 15 seconds
 
+void CL_InternetServers_f( void );
+
 convar_t	*r_oldparticles;
 convar_t	*rcon_client_password;
 convar_t	*rcon_address;

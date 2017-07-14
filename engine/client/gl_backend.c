@@ -160,7 +160,7 @@ void GL_LoadIdentityTexMatrix( void )
 GL_MaxTextureUnits
 =================
 */
-inline int GL_MaxTextureUnits( void )
+int GL_MaxTextureUnits( void )
 {
 	if( glConfig.max_texture_units_cached == -1 )
 	{

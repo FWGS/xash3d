@@ -101,6 +101,7 @@ GNU General Public License for more details.
 	#ifdef __MINGW32__
 		#define _inline static inline
 	#endif
+
 	#define strcasecmp _stricmp
 	#define strncasecmp _strnicmp
 	#define open _open
@@ -132,5 +133,13 @@ GNU General Public License for more details.
 #define XASH_ALLOW_SAVERESTORE_OFFSETS
 #endif
 #endif //WIN32
+
+#ifndef INT_MAX
+#define INT_MAX 2147483647
+#endif
+
+#ifndef USHRT_MAX
+#define USHRT_MAX 65535
+#endif
 
 #endif // PORT_H

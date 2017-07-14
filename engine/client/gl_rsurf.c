@@ -416,7 +416,7 @@ void GL_BuildPolygonFromSurface( model_t *mod, msurface_t *fa )
 	poly->numverts = lnumverts;
 }
 
-static inline texture_t *R_TextureRandomTiling( texture_t *base, int surfacenum )
+_inline texture_t *R_TextureRandomTiling( texture_t *base, int surfacenum )
 {
 	int reletive;
 	int count = 0;
@@ -435,7 +435,7 @@ static inline texture_t *R_TextureRandomTiling( texture_t *base, int surfacenum 
 	return base;
 }
 
-static inline texture_t *R_TextureAnim( texture_t *base )
+_inline texture_t *R_TextureAnim( texture_t *base )
 {
 	int	reletive;
 	int	count, speed;
@@ -1514,7 +1514,7 @@ static int R_SurfaceCompare( const msurface_t **a, const msurface_t **b )
 	return 0;
 }
 
-static inline qboolean R_HasLightmap( void )
+_inline qboolean R_HasLightmap( void )
 {
 	if( r_fullbright->integer || !cl.worldmodel->lightdata )
 		return false;
