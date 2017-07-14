@@ -3003,6 +3003,7 @@ use different arrays on 64 bit platforms
 void SV_SetStringArrayMode( qboolean dynamic )
 {
 #ifdef __amd64__
+	MsgDev( D_NOTE, "SV_SetStringArrayMode(%d)\n", dynamic );
 	if( dynamic ) // switch only after array fill
 		g_stringbase = g_stringarray;
 	else
@@ -3019,6 +3020,8 @@ void SV_SetStringArrayMode( qboolean dynamic )
 
 void SV_AllocStringPool( void )
 {
+	MsgDev( D_NOTE, "SV_AllocStringPool()\n" );
+
 #ifdef __amd64__
 	size_t pagesize = sysconf( _SC_PAGESIZE );
 	int arrlen = (MAX_STRING_ARRAY * 2) & ~(pagesize - 1);
@@ -3077,6 +3080,8 @@ void SV_AllocStringPool( void )
 
 void SV_FreeStringPool( void )
 {
+	MsgDev( D_NOTE, "SV_FreeStringPool()\n" );
+
 #ifdef __amd64__
 	if( g_stringarray != stringarray )
 		munmap( g_stringarray, (MAX_STRING_ARRAY * 2) & ~(sysconf( _SC_PAGESIZE ) - 1) );
@@ -3099,7 +3104,7 @@ string_t GAME_EXPORT SV_AllocString( const char *szValue )
 	if( svgame.physFuncs.pfnAllocString != NULL )
 		return svgame.physFuncs.pfnAllocString( szValue );
 #ifdef __amd64__
-	int cmp;
+	int cmp = 1;
 
 	for( newString = g_oldstringbase + 1; newString < pLastsStr && ( cmp = Q_strcmp( newString, szValue ) ); newString += Q_strlen( newString ) + 1 );
 
