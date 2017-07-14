@@ -15,6 +15,7 @@ GNU General Public License for more details.
 
 #pragma once
 #ifndef BASE_CMD_H
+#define BASE_CMD_H
 
 #define XASH_HASHED_VARS
 

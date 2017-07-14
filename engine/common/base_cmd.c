@@ -18,9 +18,9 @@ GNU General Public License for more details.
 
 typedef struct base_command_hashmap_s
 {
-	base_command_t *basecmd;
-	const char *name;
-	base_command_type_e     type;
+	base_command_t          *basecmd; // base command: cvar, alias or command
+	const char              *name;    // key for searching
+	base_command_type_e     type;     // type for faster searching
 	struct base_command_hashmap_s *next;
 } base_command_hashmap_t;
 
@@ -31,6 +31,8 @@ base_command_hashmap_t *hashed_cmds[HASH_SIZE];
 /*
 ============
 BaseCmd_Find
+
+Find base command in hashmap
 ============
 */
 base_command_t *BaseCmd_Find( base_command_type_e type, const char *name )
@@ -50,6 +52,8 @@ base_command_t *BaseCmd_Find( base_command_type_e type, const char *name )
 /*
 ============
 BaseCmd_Insert
+
+Add new typed base command to hashmap
 ============
 */
 void BaseCmd_Insert( base_command_type_e type, base_command_t *basecmd, const char *name )
@@ -68,6 +72,8 @@ void BaseCmd_Insert( base_command_type_e type, base_command_t *basecmd, const ch
 /*
 ============
 BaseCmd_Replace
+
+Used in case, when basecmd has been registered, but gamedll wants to register it's own
 ============
 */
 void BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const char *name )
@@ -92,6 +98,8 @@ void BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const c
 /*
 ============
 BaseCmd_Remove
+
+Remove base command from hashmap
 ============
 */
 void BaseCmd_Remove( base_command_type_e type, base_command_t *basecmd, const char *name )
@@ -120,6 +128,8 @@ void BaseCmd_Remove( base_command_type_e type, base_command_t *basecmd, const ch
 /*
 ============
 BaseCmd_Init
+
+initialize base command hashmap system
 ============
 */
 void BaseCmd_Init( void )
