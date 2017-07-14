@@ -1634,6 +1634,9 @@ int SV_LoadGameState( char const *level, qboolean createPlayers )
 		pent = pEntInfo->pent;
 		SaveRestore_Seek( pSaveData, pEntInfo->location );
 
+		// prevent crash on recursive saverestore
+		svgame.globals->pSaveData = pSaveData;
+
 		if( pent )
 		{
 			if( svgame.dllFuncs.pfnRestore( pent, pSaveData, false ) < 0 )
