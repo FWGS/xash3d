@@ -2984,13 +2984,33 @@ void GAME_EXPORT pfnFreeEntPrivateData( edict_t *pEdict )
 
 #ifdef __amd64__
 #define MAX_STRING_ARRAY 65536
-static char stringarray[MAX_STRING_ARRAY * 2];
-char *g_stringarray;
-char *g_stringarraystatic;
-char *g_stringbase;
-char *g_oldstringbase;
-char *pLastsStr;
+static struct str64_s
+{
+	char staticstringarray[MAX_STRING_ARRAY * 2];
+	char *pstringarray;
+	char *pstringarraystatic;
+	char *pstringbase;
+	char *poldstringbase;
+	char *plast;
+	qboolean dynamic;
+} str64;
 #endif
+
+
+void SV_EmptyStringPool( void )
+{
+#ifdef __amd64__
+	if( str64.dynamic ) // switch only after array fill (more space for multiplayer games)
+		str64.pstringbase = str64.pstringarray;
+	else
+	{
+		str64.pstringbase = str64.poldstringbase = str64.pstringarraystatic;
+		str64.plast = str64.pstringbase + 1;
+	}
+#else
+	Mem_EmptyPool( svgame.stringspool );
+#endif
+}
 
 
 /*
@@ -3003,14 +3023,14 @@ use different arrays on 64 bit platforms
 void SV_SetStringArrayMode( qboolean dynamic )
 {
 #ifdef __amd64__
-	MsgDev( D_NOTE, "SV_SetStringArrayMode(%d)\n", dynamic );
-	if( dynamic ) // switch only after array fill
-		g_stringbase = g_stringarray;
-	else
-	{
-		g_stringbase = g_oldstringbase = g_stringarraystatic;
-		pLastsStr = g_stringbase + 1;
-	}
+	MsgDev( D_NOTE, "SV_SetStringArrayMode(%d) %d\n", dynamic, str64.dynamic );
+
+	if( dynamic == str64.dynamic )
+		return;
+
+	str64.dynamic = dynamic;
+
+	SV_EmptyStringPool();
 #endif
 }
 
@@ -3064,13 +3084,13 @@ void SV_AllocStringPool( void )
 	else
 	{
 		MsgDev( D_WARN, "SV_AllocStringPool: Failed to allocate string array near the server library!\n" );
-		ptr = stringarray;
+		ptr = str64.staticstringarray;
 	}
 
-	g_stringarray = ptr;
-	g_stringarraystatic = ptr + MAX_STRING_ARRAY;
-	g_stringbase = g_oldstringbase = ptr;
-	pLastsStr = ptr + 1;
+	str64.pstringarray = ptr;
+	str64.pstringarraystatic = ptr + MAX_STRING_ARRAY;
+	str64.pstringbase = str64.poldstringbase = ptr;
+	str64.plast = ptr + 1;
 	svgame.globals->pStringBase = ptr;
 #else
 	svgame.stringspool = Mem_AllocPool( "Server Strings" );
@@ -3083,8 +3103,8 @@ void SV_FreeStringPool( void )
 	MsgDev( D_NOTE, "SV_FreeStringPool()\n" );
 
 #ifdef __amd64__
-	if( g_stringarray != stringarray )
-		munmap( g_stringarray, (MAX_STRING_ARRAY * 2) & ~(sysconf( _SC_PAGESIZE ) - 1) );
+	if( str64.pstringarray != str64.staticstringarray )
+		munmap( str64.pstringarray, (MAX_STRING_ARRAY * 2) & ~(sysconf( _SC_PAGESIZE ) - 1) );
 #else
 	Mem_FreePool( &svgame.stringspool );
 #endif
@@ -3106,23 +3126,23 @@ string_t GAME_EXPORT SV_AllocString( const char *szValue )
 #ifdef __amd64__
 	int cmp = 1;
 
-	for( newString = g_oldstringbase + 1; newString < pLastsStr && ( cmp = Q_strcmp( newString, szValue ) ); newString += Q_strlen( newString ) + 1 );
+	for( newString = str64.poldstringbase + 1; newString < str64.plast && ( cmp = Q_strcmp( newString, szValue ) ); newString += Q_strlen( newString ) + 1 );
 
 	if( cmp )
 	{
 		uint len = Q_strlen( szValue );
 
-		if( pLastsStr - g_oldstringbase + len + 2 > MAX_STRING_ARRAY )
-			pLastsStr = g_stringbase + 1, g_oldstringbase = g_stringbase;
+		if( str64.plast - str64.poldstringbase + len + 2 > MAX_STRING_ARRAY )
+			str64.plast = str64.pstringbase + 1, str64.poldstringbase = str64.pstringbase;
 
-		MsgDev( D_NOTE, "SV_AllocString: %ld %s\n", pLastsStr - svgame.globals->pStringBase, szValue );
-		Q_memcpy( pLastsStr, szValue, len + 1 );
+		//MsgDev( D_NOTE, "SV_AllocString: %ld %s\n", str64.plast - svgame.globals->pStringBase, szValue );
+		Q_memcpy( str64.plast, szValue, len + 1 );
 
-		newString = pLastsStr;
-		pLastsStr += len + 1;
+		newString = str64.plast;
+		str64.plast += len + 1;
 	}
-	else
-		MsgDev( D_NOTE, "SV_AllocString: dup %ld %s\n", newString - svgame.globals->pStringBase, szValue );
+	//else
+		//MsgDev( D_NOTE, "SV_AllocString: dup %ld %s\n", newString - svgame.globals->pStringBase, szValue );
 
 	return newString - svgame.globals->pStringBase;
 #else

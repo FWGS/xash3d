@@ -408,9 +408,7 @@ void SV_DeactivateServer( void )
 
 	SV_ClearPhysEnts ();
 
-#ifndef __amd64__
-	Mem_EmptyPool( svgame.stringspool );
-#endif
+	SV_EmptyStringPool();
 
 	svgame.dllFuncs.pfnServerDeactivate();
 
