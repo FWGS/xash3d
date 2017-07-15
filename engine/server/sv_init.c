@@ -402,9 +402,9 @@ void SV_DeactivateServer( void )
 	if( !svs.initialized || sv.state == ss_dead )
 		return;
 
-	svgame.dllFuncs.pfnServerDeactivate();
-
 	sv.state = ss_dead;
+
+	svgame.dllFuncs.pfnServerDeactivate();
 
 	SV_FreeEdicts ();
 
