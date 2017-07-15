@@ -315,7 +315,7 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 static struct nspthread_s
 {
 pthread_mutex_t mutexns, mutexres;
-struct hostent *result;
+int result;
 string hostname;
 qboolean busy;
 pthread_t thread;
@@ -327,9 +327,14 @@ void *NET_ResolveThread( void *arg )
 
 	pthread_mutex_lock( &nspthread.mutexns );
 	res = pGetHostByName( nspthread.hostname );
-	pthread_mutex_unlock( &nspthread.mutexns );
 	pthread_mutex_lock( &nspthread.mutexres );
-	nspthread.result = res;
+
+	if( res )
+		nspthread.result = *(int *)res->h_addr_list[0];
+	else
+		nspthread.result = 0;
+
+	pthread_mutex_unlock( &nspthread.mutexns );
 	nspthread.busy = false;
 	pthread_mutex_unlock( &nspthread.mutexres );
 	return 0;
@@ -347,7 +352,7 @@ struct cs {
 static struct nswthread_s
 {
 struct cs mutexns, mutexres;
-struct hostent *result;
+int result;
 string hostname;
 qboolean busy;
 } nswthread;
@@ -364,9 +369,14 @@ uint _stdcall NET_ResolveThread( const void *arg )
 
 	pEnterCriticalSection( &nswthread.mutexns );
 	res = pGetHostByName( nswthread.hostname );
-	pLeaveCriticalSection( &nswthread.mutexns );
 	pEnterCriticalSection( &nswthread.mutexres );
-	nswthread.result = res;
+
+	if( res )
+		nswthread.result = *(int *)res->h_addr_list[0];
+	else
+		nwpthread.result = 0;
+
+	pLeaveCriticalSection( &nswthread.mutexns );
 	nswthread.busy = false;
 	pLeaveCriticalSection( &nswthread.mutexres );
 	ExitThread(0);
@@ -393,7 +403,7 @@ idnewt:28000
 
 static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean nonblocking )
 {
-	struct hostent	*h;
+	int ip = 0;
 	char		*colon;
 	char		copy[MAX_SYSPATH];
 	
@@ -442,15 +452,21 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 		}
 		else
 		{
+			struct hostent *h;
 #ifdef USE_PTHREAD
 
 		if( !nonblocking )
 		{
 			pthread_mutex_lock( &nspthread.mutexns );
 			h = pGetHostByName( copy );
-			pthread_mutex_unlock( &nspthread.mutexns );
 			if( !h )
+			{
+				pthread_mutex_unlock( &nspthread.mutexns );
 				return 0;
+			}
+			ip = *(int *)h->h_addr_list[0];
+			pthread_mutex_unlock( &nspthread.mutexns );
+
 		}
 		else
 		{
@@ -464,7 +480,8 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 
 			if( !Q_strcmp( copy, nspthread.hostname ) )
 			{
-				h = nspthread.result;
+				
+				ip = nspthread.result;
 				nspthread.hostname[0] = 0;
 			}
 			else
@@ -479,10 +496,6 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 			}
 
 			pthread_mutex_unlock( &nspthread.mutexres );
-
-			if( !h )
-				return 0;
-
 		}
 
 #elif defined _WIN32
@@ -492,9 +505,13 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 				{
 					pEnterCriticalSection( &nswthread.mutexns );
 					h = pGetHostByName( copy );
-					pLeaveCriticalSection( &nswthread.mutexns );
 					if( !h )
+					{
+						pLeaveCriticalSection( &nswthread.mutexns );
 						return 0;
+					}
+					ip = *(int *)h->h_addr_list[0];
+					pLeaveCriticalSection( &nswthread.mutexns );
 				}
 				else
 				{
@@ -508,7 +525,7 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 
 					if( !Q_strcmp( copy, nswthread.hostname ) )
 					{
-						h = nswthread.result;
+						ip = nswthread.result;
 						nswthread.hostname[0] = 0;
 					}
 					else
@@ -524,18 +541,23 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 					}
 
 					pLeaveCriticalSection( &nswthread.mutexres );
-
-					if( !h )
-						return 0;
-					}
+				}
 			}
-			else if( !( h = pGetHostByName( copy )) )
-				return 0;
+			else
+			{
+				if( !( h = pGetHostByName( copy )) )
+					return 0;
+				ip = *(int *)h->h_addr_list[0];
+			}
 #else
 			if(!( h = pGetHostByName( copy )))
 				return 0;
+			ip = *(int *)h->h_addr_list[0];
 #endif
-			*(int *)&((struct sockaddr_in *)sadr)->sin_addr = *(int *)h->h_addr_list[0];
+			if( !ip )
+				return 0;
+
+			*(int *)&((struct sockaddr_in *)sadr)->sin_addr = ip;
 		}
 	}
 	return 1;
