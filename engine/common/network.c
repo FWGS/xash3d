@@ -374,7 +374,7 @@ uint _stdcall NET_ResolveThread( const void *arg )
 	if( res )
 		nswthread.result = *(int *)res->h_addr_list[0];
 	else
-		nwpthread.result = 0;
+		nswthread.result = 0;
 
 	pLeaveCriticalSection( &nswthread.mutexns );
 	nswthread.busy = false;
