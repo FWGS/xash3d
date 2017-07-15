@@ -1104,6 +1104,7 @@ void CL_InternetServers_f( void )
 	if( !res )
 	{
 		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
+		cls.internetservers_wait = false;
 		return;
 	}
 

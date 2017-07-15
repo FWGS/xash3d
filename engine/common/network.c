@@ -62,7 +62,10 @@ static int (_stdcall *pSend)( SOCKET s, const char *buf, int len, int flags );
 static int (_stdcall *pRecv)( SOCKET s, char *buf, int len, int flags );
 static int (_stdcall *pGetHostName)( char *name, int namelen );
 static dword (_stdcall *pNtohl)( dword netlong );
-
+static void (_stdcall *pInitializeCriticalSection)( void* );
+static void (_stdcall *pEnterCriticalSection)( void* );
+static void (_stdcall *pLeaveCriticalSection)( void* );
+static void (_stdcall *pDeleteCriticalSection)( void* );
 static dllfunc_t winsock_funcs[] =
 {
 { "bind", (void **) &pBind },
@@ -92,8 +95,25 @@ static dllfunc_t winsock_funcs[] =
 
 dll_info_t winsock_dll = { "wsock32.dll", winsock_funcs, false };
 
+static dllfunc_t kernel32_funcs[] =
+{
+	{ "InitializeCriticalSection", (void **) &pInitializeCriticalSection },
+	{ "EnterCriticalSection", (void **) &pEnterCriticalSection },
+	{ "LeaveCriticalSection", (void **) &pLeaveCriticalSection },
+	{ "DeleteCriticalSection", (void **) &pDeleteCriticalSection },
+	{ NULL, NULL }
+};
+
+dll_info_t kernel32_dll = { "kernel32.dll", kernel32_funcs, false };
+
+
+static void NET_InitializeCriticalSections( void );
+
 qboolean NET_OpenWinSock( void )
 {
+	if( Sys_LoadLibrary( &kernel32_dll ) )
+		NET_InitializeCriticalSections();
+
 	// initialize the Winsock function vectors (we do this instead of statically linking
 	// so we can run on Win 3.1, where there isn't necessarily Winsock)
 	return Sys_LoadLibrary( &winsock_dll );
@@ -301,7 +321,7 @@ qboolean busy;
 pthread_t thread;
 } nspthread = { PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER };
 
-void *pthread_resolve(void *arg)
+void *NET_ResolveThread( void *arg )
 {
 	struct hostent *res;
 
@@ -314,7 +334,44 @@ void *pthread_resolve(void *arg)
 	pthread_mutex_unlock( &nspthread.mutexres );
 	return 0;
 }
+#elif defined _WIN32
+struct cs {
+	void* p1;
+	int i1;
+	int i2;
+	void *p2;
+	void *p3;
+	uint i4;
+};
 
+static struct nswthread_s
+{
+struct cs mutexns, mutexres;
+struct hostent *result;
+string hostname;
+qboolean busy;
+} nswthread;
+
+static void NET_InitializeCriticalSections( void )
+{
+	pInitializeCriticalSection( &nswthread.mutexns );
+	pInitializeCriticalSection( &nswthread.mutexres );
+}
+
+uint _stdcall NET_ResolveThread( const void *arg )
+{
+	struct hostent *res;
+
+	pEnterCriticalSection( &nswthread.mutexns );
+	res = pGetHostByName( nswthread.hostname );
+	pLeaveCriticalSection( &nswthread.mutexns );
+	pEnterCriticalSection( &nswthread.mutexres );
+	nswthread.result = res;
+	nswthread.busy = false;
+	pLeaveCriticalSection( &nswthread.mutexres );
+	ExitThread(0);
+	return 0;
+}
 #endif
 
 /*
@@ -397,34 +454,83 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 		}
 		else
 		{
-					pthread_mutex_lock( &nspthread.mutexres );
+			pthread_mutex_lock( &nspthread.mutexres );
 
-					if( nspthread.busy )
-					{
-						pthread_mutex_unlock( &nspthread.mutexres );
-						return 2;
-					}
+			if( nspthread.busy )
+			{
+				pthread_mutex_unlock( &nspthread.mutexres );
+				return 2;
+			}
 
-					if( !Q_strcmp( copy, nspthread.hostname ) )
-						h = nspthread.result;
-					else
-					{
-						Q_strncpy( nspthread.hostname, copy, MAX_STRING );
-						nspthread.busy = true;
-						pthread_mutex_unlock( &nspthread.mutexres );
+			if( !Q_strcmp( copy, nspthread.hostname ) )
+			{
+				h = nspthread.result;
+				nspthread.hostname[0] = 0;
+			}
+			else
+			{
+				Q_strncpy( nspthread.hostname, copy, MAX_STRING );
+				nspthread.busy = true;
+				pthread_mutex_unlock( &nspthread.mutexres );
 
-						pthread_create( &nspthread.thread, NULL, pthread_resolve, NULL );
+				pthread_create( &nspthread.thread, NULL, NET_ResolveThread, NULL );
 
-						return 2;
-					}
+				return 2;
+			}
 
-					pthread_mutex_unlock( &nspthread.mutexres );
+			pthread_mutex_unlock( &nspthread.mutexres );
 
-					if( !h )
-						return 0;
+			if( !h )
+				return 0;
 
 		}
 
+#elif defined _WIN32
+			if( pInitializeCriticalSection )
+			{
+				if( !nonblocking )
+				{
+					pEnterCriticalSection( &nswthread.mutexns );
+					h = pGetHostByName( copy );
+					pLeaveCriticalSection( &nswthread.mutexns );
+					if( !h )
+						return 0;
+				}
+				else
+				{
+					pEnterCriticalSection( &nswthread.mutexres );
+
+					if( nswthread.busy )
+					{
+						pLeaveCriticalSection( &nswthread.mutexres );
+						return 2;
+					}
+
+					if( !Q_strcmp( copy, nswthread.hostname ) )
+					{
+						h = nswthread.result;
+						nswthread.hostname[0] = 0;
+					}
+					else
+					{
+
+						Q_strncpy( nswthread.hostname, copy, MAX_STRING );
+						nswthread.busy = true;
+						pLeaveCriticalSection( &nswthread.mutexres );
+
+						CreateThread( NULL, 0, &NET_ResolveThread, NULL, 0, NULL );
+
+						return 2;
+					}
+
+					pLeaveCriticalSection( &nswthread.mutexres );
+
+					if( !h )
+						return 0;
+					}
+			}
+			else if( !( h = pGetHostByName( copy )) )
+				return 0;
 #else
 			if(!( h = pGetHostByName( copy )))
 				return 0;
