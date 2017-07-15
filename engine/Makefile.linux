@@ -2,7 +2,7 @@ CC = gcc -g
 CXX ?= g++
 CFLAGS ?= -O2 -march=native -fno-omit-frame-pointer -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
-LIBS = -lm
+LIBS = -lm -lpthread
 LBITS := $(shell getconf LONG_BIT)
 ifneq ($(64BIT),1)
 	ifeq ($(LBITS),64)
@@ -28,7 +28,7 @@ ifeq ($(XASH_DEDICATED),1)
     DEFINES += -DXASH_DEDICATED
 else
    DEFINES += -DXASH_SDL
-   LIBS += -lSDL2 -pthread
+   LIBS += -lSDL2
 ifeq ($(XASH_X11),1)
 	   LIBS += -lX11
 	   DEFINES += -DXASH_X11
@@ -58,7 +58,7 @@ endif
 ifeq ($(XASH_DLL_LOADER),1)
 	DEFINES += -DDLL_LOADER
     ifeq ($(XASH_SINGLE_BINARY),1)
-	LIBS += libloader.a -pthread -lm
+	LIBS += libloader.a
     else
 	LIBS += libloader.so
     endif
