@@ -61,6 +61,7 @@ add_definitions( -DXASH_FORCEINLINE )
 
 # Set executable or library
 if( XASH_SINGLE_BINARY )
+	add_definitions( -DSINGLE_BINARY )
 	add_executable( ${XASH_ENGINE_LIBRARY} ${XASH_ENGINE_SOURCES} )
 else( )
 	add_library( ${XASH_ENGINE_LIBRARY} SHARED ${XASH_ENGINE_SOURCES} )
@@ -160,7 +161,7 @@ endif( )
 
 
 if( NOT WIN32 )
-	target_link_libraries( ${XASH_ENGINE_LIBRARY} -lm )
+	target_link_libraries( ${XASH_ENGINE_LIBRARY} -lm -lpthread )
 endif( )
 
 set_target_properties( ${XASH_ENGINE_LIBRARY} PROPERTIES
