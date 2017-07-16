@@ -185,8 +185,9 @@ static qboolean noip = false;
 static qboolean noipx = false;
 #endif
 static convar_t *net_ip;
-//static convar_t *net_hostport;
-//static convar_t *net_clientport;
+static convar_t *net_hostport;
+static convar_t *net_clientport;
+static convar_t *net_port;
 extern convar_t *net_showpackets;
 void NET_Restart_f( void );
 
@@ -1004,15 +1005,31 @@ NET_OpenIP
 static void NET_OpenIP( void )
 {
 	int	port;
+	qboolean sv_nat = Cvar_VariableInteger( "sv_nat" );
+	qboolean cl_nat = Cvar_VariableInteger( "cl_nat" );
 
-	net_ip = Cvar_Get( "ip", "localhost", CVAR_INIT, "network ip address" );
+	net_ip = Cvar_Get( "ip", "localhost", 0, "network ip address" );
+
+	if( sv_nat || net_port->modified )
+	{
+		// reopen socket to set random port
+		pCloseSocket( ip_sockets[NS_SERVER] );
+		ip_sockets[NS_SERVER] = 0;
+		net_port->modified = false;
+	}
 
 	if( !ip_sockets[NS_SERVER] )
 	{
 		port = Cvar_VariableInteger("ip_hostport");
-		if( !port ) port = Cvar_VariableInteger("port");
-		Cvar_FullSet( "port", va( "%i", Cvar_VariableInteger("port") ), CVAR_INIT );
-		Cvar_FullSet( "ip_hostport", va( "%i", Cvar_VariableInteger("ip_hostport") ), CVAR_INIT );
+
+		// nat servers selects random port until ip_hostport specified
+		if( !port )
+		{
+			if( sv_nat )
+				port = PORT_ANY;
+			else
+				port = Cvar_VariableInteger("port");
+		}
 
 		ip_sockets[NS_SERVER] = NET_IPSocket( net_ip->string, port );
 		if( !ip_sockets[NS_SERVER] && Host_IsDedicated() )
@@ -1022,14 +1039,26 @@ static void NET_OpenIP( void )
 	// dedicated servers don't need client ports
 	if( Host_IsDedicated() ) return;
 
+	if( cl_nat || net_clientport->modified )
+	{
+		// reopen socket to set random port
+		pCloseSocket( ip_sockets[NS_CLIENT] );
+		ip_sockets[NS_CLIENT] = 0;
+		net_clientport->modified = false;
+	}
+
 	if( !ip_sockets[NS_CLIENT] )
 	{
-		port = Cvar_Get( "ip_clientport", "0", CVAR_INIT, "network client port" )->integer;
+		port = Cvar_VariableInteger( "ip_clientport" );
+
 		if( !port )
 		{
-			port = Cvar_Get( "clientport", va( "%i", PORT_CLIENT ), CVAR_INIT, "network client port" )->integer;
-			if( !port ) port = PORT_ANY;
+			if( cl_nat )
+				port = PORT_ANY;
+			else
+				port = net_clientport->integer;
 		}
+
 		ip_sockets[NS_CLIENT] = NET_IPSocket( net_ip->string, port );
 		if( !ip_sockets[NS_CLIENT] ) ip_sockets[NS_CLIENT] = NET_IPSocket( net_ip->string, PORT_ANY );
 	}
@@ -1104,7 +1133,7 @@ void NET_OpenIPX( void )
 	if( !ipx_sockets[NS_SERVER] )
 	{
 		port = Cvar_Get( "ipx_hostport", "0", CVAR_INIT, "network server port" )->integer;
-		if( !port ) port = Cvar_Get( "port", va( "%i", PORT_SERVER ), CVAR_INIT, "network default port" )->integer;
+		if( !port ) port = net_port->integer;
 		ipx_sockets[NS_SERVER] = NET_IPXSocket( port );
 	}
 
@@ -1116,7 +1145,7 @@ void NET_OpenIPX( void )
 		port = Cvar_Get( "ipx_clientport", "0", CVAR_INIT, "network client port" )->integer;
 		if( !port )
 		{
-			port = Cvar_Get( "clientport", va( "%i", PORT_CLIENT ), CVAR_INIT, "network client port" )->integer;
+			port = net_clientport->integer;
 			if( !port ) port = PORT_ANY;
 		}
 
@@ -1189,7 +1218,7 @@ void NET_Config( qboolean multiplayer )
 	static qboolean old_config;
 	static qboolean bFirst = true;
 
-	if( old_config == multiplayer && !Host_IsDedicated() )
+	if( old_config == multiplayer && !Host_IsDedicated() && SV_Active() )
 		return;
 
 	old_config = multiplayer;
@@ -1288,6 +1317,9 @@ void NET_Init( void )
 #endif
 
 	net_showpackets = Cvar_Get( "net_showpackets", "0", 0, "show network packets" );
+	net_clientport = Cvar_Get( "clientport", "27005", 0, "client tcp/ip port" );
+	net_port = Cvar_Get( "port", "27015", 0, "server tcp/ip port" );
+	net_ip = Cvar_Get( "ip", "localhost", 0, "local server ip" );
 	Cmd_AddCommand( "net_showip", NET_ShowIP_f,  "show hostname and IPs" );
 	Cmd_AddCommand( "net_restart", NET_Restart_f, "restart the network subsystem" );
 
