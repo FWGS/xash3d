@@ -1075,7 +1075,27 @@ void SV_ClientInfo_f( void )
 	Msg( "userinfo\n" );
 	Msg( "--------\n" );
 	Info_Print( svs.currentPlayer->userinfo );
+}
 
+/*
+===========
+SV_ClientUserAgent_f
+
+Examine useragent strings
+===========
+*/
+void SV_ClientUserAgent_f( void )
+{
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Usage: clientuseragent <userid>\n" );
+		return;
+	}
+
+	if( !SV_SetPlayer( )) return;
+	Msg( "useragent\n" );
+	Msg( "--------\n" );
+	Info_Print( svs.currentPlayer->useragent );
 }
 
 /*
@@ -1223,6 +1243,7 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "serverinfo", SV_ServerInfo_f, "print server settings" );
 	Cmd_AddCommand( "localinfo", SV_LocalInfo_f, "print local info settings" );
 	Cmd_AddCommand( "clientinfo", SV_ClientInfo_f, "print user infostring (player num required)" );
+	Cmd_AddCommand( "clientuseragent", SV_ClientUserAgent_f, "print user agent (player num required)" );
 	Cmd_AddCommand( "playersonly", SV_PlayersOnly_f, "freezes physics, except for players" );
 
 	Cmd_AddCommand( "map", SV_Map_f, "start new level" );

@@ -3649,7 +3649,7 @@ uint GAME_EXPORT pfnGetPlayerWONId( edict_t *e )
 
 	for( i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++ )
 	{
-		if( cl->edict == e && cl->authentication_method == 0 )
+		if( cl->edict == e && cl->WonID )
 			return cl->WonID;
 	}
 

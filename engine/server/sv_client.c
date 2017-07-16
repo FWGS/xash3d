@@ -235,6 +235,16 @@ gotnewcl:
 	if( sv_maxclients->integer == 1 ) // restore physinfo for singleplayer
 		Q_strncpy( newcl->physinfo, physinfostr, sizeof( physinfostr ));
 
+	if( Q_strncpy( newcl->useragent, Cmd_Argv( 6 ), MAX_INFO_STRING ) )
+	{
+		char *id = Info_ValueForKey( newcl->useragent, "i" );
+
+		if( *id )
+		{
+			sscanf( id, "%llx", &newcl->WonID );
+		}
+	}
+
 	svs.currentPlayer = newcl;
 	svs.currentPlayerNum = (newcl - svs.clients);
 	edictnum = svs.currentPlayerNum + 1;
@@ -658,7 +668,7 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 	if( cl->authentication_method == 0 )
 	{
 		// probably some old compatibility code.
-		Q_snprintf( result, sizeof( result ), "%010lu", (unsigned long)cl->WonID );
+		Q_snprintf( result, sizeof( result ), "%010llu", cl->WonID );
 	}
 	else if( cl->authentication_method == 2 )
 	{
@@ -666,13 +676,22 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 		{
 			Q_strncpy( result, "VALVE_ID_LOOPBACK", sizeof( result ));
 		}
+		else if( cl->useragent[0] )
+		{
+			char *id = Info_ValueForKey( cl->useragent, "i" );
+
+			if( *id )
+				Q_snprintf( result, sizeof( result ), "VALVE_XASH_%s", id );
+			else
+				Q_strncpy( result, "VALVE_ID_PENDING", sizeof( result ));
+		}
 		else if( cl->WonID == 0 )
 		{
 			Q_strncpy( result, "VALVE_ID_PENDING", sizeof( result ));
 		}
 		else
 		{
-			Q_snprintf( result, sizeof( result ), "VALVE_%010lu", (unsigned long)cl->WonID );
+			Q_snprintf( result, sizeof( result ), "VALVE_%010llu", cl->WonID );
 		}
 	}
 	else Q_strncpy( result, "UNKNOWN", sizeof( result ));
@@ -1354,11 +1373,13 @@ void SV_New_f( sv_client_t *cl )
 	// get the game a chance to reject this connection or modify the userinfo
 	if( !SV_ClientConnect( cl->edict, cl->userinfo ) )
 	{
-		if( *Info_ValueForKey( cl->userinfo, "rejmsg" ))
-			Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "errormsg\n%s\nConnection refused.\n", Info_ValueForKey( cl->userinfo, "rejmsg" ));
-		else Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "errormsg\nConnection refused.\n");
+		char *errorpacket = cl->useragent[0]?"errormsg":"print";
 
-		MsgDev( D_ERROR, "SV_DirectConnect: game rejected a connection.\n");
+		if( *Info_ValueForKey( cl->userinfo, "rejmsg" ))
+			Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "%s\n%s\nConnection refused.\n", errorpacket, Info_ValueForKey( cl->userinfo, "rejmsg" ));
+		else Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "%s\nConnection refused.\n", errorpacket );
+
+		MsgDev( D_ERROR, "game rejected a connection.\n");
 		Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "disconnect\n" );
 		SV_DropClient( cl );
 		return;
