@@ -1013,7 +1013,8 @@ static void NET_OpenIP( void )
 	if( sv_nat || net_port->modified )
 	{
 		// reopen socket to set random port
-		pCloseSocket( ip_sockets[NS_SERVER] );
+		if( ip_sockets[NS_SERVER] )
+			pCloseSocket( ip_sockets[NS_SERVER] );
 		ip_sockets[NS_SERVER] = 0;
 		net_port->modified = false;
 	}
@@ -1042,7 +1043,8 @@ static void NET_OpenIP( void )
 	if( cl_nat || net_clientport->modified )
 	{
 		// reopen socket to set random port
-		pCloseSocket( ip_sockets[NS_CLIENT] );
+		if( ip_sockets[NS_CLIENT] )
+			pCloseSocket( ip_sockets[NS_CLIENT] );
 		ip_sockets[NS_CLIENT] = 0;
 		net_clientport->modified = false;
 	}
