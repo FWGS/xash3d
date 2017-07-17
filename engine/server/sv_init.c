@@ -88,6 +88,7 @@ int GAME_EXPORT SV_SoundIndex( const char *filename )
 	}
 
 	sv.resourcelistcache = false;
+	sv.reslist.rescount = 0;
 
 	// register new sound
 	Q_strncpy( sv.sound_precache[i], name, sizeof( sv.sound_precache[i] ));
@@ -171,6 +172,7 @@ int GAME_EXPORT SV_GenericIndex( const char *filename )
 	}
 
 	sv.resourcelistcache = false;
+	sv.reslist.rescount = 0;
 
 	// register new generic resource
 	Q_strncpy( sv.files_precache[i], name, sizeof( sv.files_precache[i] ));
@@ -479,6 +481,7 @@ void SV_LevelInit( const char *pMapName, char const *pOldLevel, char const *pLan
 	}
 
 	sv.resourcelistcache = false;
+	sv.reslist.rescount = 0;
 
 	// always clearing newunit variable
 	Cvar_SetFloat( "sv_newunit", 0 );
