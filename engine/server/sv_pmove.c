@@ -904,10 +904,10 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 
 	if( sv_maxunlag->value != 0.0f )
 	{
-		if (sv_maxunlag->value < 0.0f )
+		if( sv_maxunlag->value < 0.0f )
 			Cvar_SetFloat( "sv_maxunlag", 0.0f );
 
-		if( latency >= sv_maxunlag->value )
+		if( latency > sv_maxunlag->value )
 			latency = sv_maxunlag->value;
 	}
 
@@ -918,7 +918,8 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 		lerp_msec = cl->cl_updaterate;
 
 	finalpush = ( host.realtime - latency - lerp_msec ) + sv_unlagpush->value;
-	if( finalpush > host.realtime ) finalpush = host.realtime; // pushed too much ?
+	if( finalpush > host.realtime )
+		finalpush = host.realtime; // pushed too much ?
 
 	frame = NULL;
 
@@ -930,11 +931,13 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 		{
 			state = &svs.packet_entities[(frame->first_entity+j)%svs.num_client_entities];
 
-			if( state->number <= 0 || state->number >= sv_maxclients->integer )
+			if( state->number <= 0 || state->number > sv_maxclients->integer )
 				continue;
 
 			lerp = &svgame.interp[state->number-1];
-			if( lerp->nointerp ) continue;
+
+			if( lerp->nointerp )
+				continue;
 
 			if( state->health <= 0 || ( state->effects & EF_NOINTERP ))
 				lerp->nointerp = true;
@@ -980,7 +983,7 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 	{
 		state = &svs.packet_entities[(frame->first_entity+i)%svs.num_client_entities];
 
-		if( state->number <= 0 || state->number >= sv_maxclients->integer )
+		if( state->number <= 0 || state->number > sv_maxclients->integer )
 			continue;
 
 		clientnum = state->number - 1;
