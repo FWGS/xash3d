@@ -4537,10 +4537,16 @@ return nullstring for now
 */
 const char *GAME_EXPORT pfnGetPlayerAuthId( edict_t *e )
 {
-	sv_client_t	*cl;
-	static string	result;
-	int		i;
+	static string	authIds[8];
+	static int count = -1;
 
+	sv_client_t	*cl;
+	char *result;
+	int i;
+
+	count = (count + 1) & 7;
+
+	result = authIds[count];
 	result[0] = '\0';
 
 	if( sv.state != ss_active || !SV_IsValidEdict( e ))
@@ -4551,10 +4557,21 @@ const char *GAME_EXPORT pfnGetPlayerAuthId( edict_t *e )
 		if( cl->edict == e )
 		{
 			if( cl->fakeclient )
-				Q_strncat( result, "BOT", sizeof( result ));
+			{
+				Q_strncat( result, "BOT", MAX_STRING );
+			}
+			else if( cl->hltv_proxy )
+			{
+				Q_strncat( result, "HLTV", MAX_STRING );
+			}
 			else if( cl->authentication_method == 0 )
-				Q_snprintf( result, sizeof( result ), "%u", (uint)cl->WonID );
-			else Q_snprintf( result, sizeof( result ), "%s", SV_GetClientIDString( cl ));
+			{
+				Q_snprintf( result, MAX_STRING, "%u", (uint)cl->WonID );
+			}
+			else
+			{
+				Q_snprintf( result, MAX_STRING, "%s", SV_GetClientIDString( cl ));
+			}
 
 			return result;
 		}

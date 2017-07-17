@@ -29,7 +29,7 @@ project (XASH3D)
 
 set (XASH3D_VERSION 0.19.1)
 
-set (HL_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/hlsdk/)
+option(HL_SDK_DIR "Half-Life SDK directory" ${CMAKE_CURRENT_SOURCE_DIR}/hlsdk/)
 
 include( CMakeDependentOption )
 
