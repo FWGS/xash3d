@@ -1133,6 +1133,8 @@ int GAME_EXPORT pfnPrecacheModel( const char *s )
 
 	Mod_RegisterModel( s, modelIndex );
 
+	sv.resourcelistcache = false;
+
 	return modelIndex;
 }
 

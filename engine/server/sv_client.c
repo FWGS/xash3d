@@ -1592,7 +1592,7 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	msg_start = BF_GetNumBitsWritten( &cl->netchan.message );
 	BF_WriteWord( &cl->netchan.message, sv.reslist.rescount );
 
-	for( ; ( index < sv.reslist.rescount ) && ( BF_GetNumBytesWritten( &cl->netchan.message ) < cl->maxpacket ); index++ )
+	for( ; ( index < sv.reslist.rescount ) && ( BF_GetNumBytesWritten( &cl->netchan.message ) < cl->maxpayload ); index++ )
 	{
 		BF_WriteWord( &cl->netchan.message, sv.reslist.restype[index] );
 		BF_WriteString( &cl->netchan.message, sv.reslist.resnames[index] );

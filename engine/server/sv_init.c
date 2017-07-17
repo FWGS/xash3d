@@ -87,6 +87,8 @@ int GAME_EXPORT SV_SoundIndex( const char *filename )
 		return 0;
 	}
 
+	sv.resourcelistcache = false;
+
 	// register new sound
 	Q_strncpy( sv.sound_precache[i], name, sizeof( sv.sound_precache[i] ));
 
@@ -167,6 +169,8 @@ int GAME_EXPORT SV_GenericIndex( const char *filename )
 		Host_Error( "SV_PrecacheGeneric: ( %s ). Precache can only be done in spawn functions.", name );
 		return 0;
 	}
+
+	sv.resourcelistcache = false;
 
 	// register new generic resource
 	Q_strncpy( sv.files_precache[i], name, sizeof( sv.files_precache[i] ));
@@ -473,6 +477,8 @@ void SV_LevelInit( const char *pMapName, char const *pOldLevel, char const *pLan
 			SV_ClearSaveDir();
 		}
 	}
+
+	sv.resourcelistcache = false;
 
 	// always clearing newunit variable
 	Cvar_SetFloat( "sv_newunit", 0 );
