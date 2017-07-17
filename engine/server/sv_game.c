@@ -133,7 +133,8 @@ void SV_CopyTraceToGlobal( trace_t *trace )
 
 void SV_SetModel( edict_t *ent, const char *name )
 {
-	model_t *model;
+	vec3_t	mins = { 0.0f, 0.0f, 0.0f };
+	vec3_t	maxs = { 0.0f, 0.0f, 0.0f };
 	int	i, mod_type;
 
 	i = SV_ModelIndex( name );
@@ -142,20 +143,18 @@ void SV_SetModel( edict_t *ent, const char *name )
 	ent->v.model = MAKE_STRING( sv.model_precache[i] );
 	ent->v.modelindex = i;
 
-	model = Mod_Handle( ent->v.modelindex );
-	VectorCopy( model->mins, ent->v.mins );
-	VectorCopy( model->maxs, ent->v.maxs );
+	mod_type = Mod_GetType( ent->v.modelindex );
 
 	// studio models set to zero sizes as default
-	switch( model->type )
+	switch( mod_type )
 	{
 	case mod_brush:
 	case mod_sprite:
-		Mod_GetBounds( ent->v.modelindex, ent->v.mins, ent->v.maxs );
+		Mod_GetBounds( ent->v.modelindex, mins, maxs );
 		break;
 	}
 
-	SV_SetMinMaxSize( ent, ent->v.mins, ent->v.maxs );
+	SV_SetMinMaxSize( ent, mins, maxs );
 }
 
 float SV_AngleMod( float ideal, float current, float speed )
@@ -2402,7 +2401,7 @@ void GAME_EXPORT pfnClientCommand( edict_t* pEdict, char* szFmt, ... )
 
 	if(( client = SV_ClientFromEdict( pEdict, false )) == NULL )
 	{
-		MsgDev( D_ERROR, "SV_ClientCommand: client is not spawned!\n" );
+		MsgDev( D_ERROR, "SV_ClientCommand: invalid client!\n" );
 		return;
 	}
 
