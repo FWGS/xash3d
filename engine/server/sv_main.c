@@ -1018,7 +1018,7 @@ void SV_Init( void )
 	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
 	Cmd_AddCommand( "log", SV_ServerLog_f, "enables logging to file" );
 
-	SVFilter_Init();
+	SV_InitFilter();
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));
 }
@@ -1102,7 +1102,7 @@ void SV_Shutdown( qboolean reconnect )
 
 	SV_DeactivateServer ();
 
-	SVFilter_Shutdown();
+	SV_ShutdownFilter();
 
 	// free current level
 	Q_memset( &sv, 0, sizeof( sv ));
