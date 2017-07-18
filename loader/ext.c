@@ -66,7 +66,7 @@ int dbg_vprintf( const char *format, va_list args )
 {
     return 0;
 }
-int __vprintf( const char *format, ... )
+int ldr__vprintf( const char *format, ... )
 {
     va_list va;
     va_start(va, format);
