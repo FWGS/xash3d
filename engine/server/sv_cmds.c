@@ -935,7 +935,7 @@ void SV_Status_f( void )
 
 		if( !cl->state ) continue;
 
-		Msg( "%3i ", i );
+		Msg( "%3i ", cl->userid );
 		Msg( "%5i ", (int)cl->edict->v.frags );
 
 		if( cl->state == cs_connected ) Msg( "Connect" );
