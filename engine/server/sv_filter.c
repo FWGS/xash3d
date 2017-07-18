@@ -103,41 +103,52 @@ void SV_BanID_f( void )
 	if( time )
 		time = host.realtime + time * 60.0f;
 
-	if( id[0] == '#' )
-		cl = SV_ClientById( Q_atoi( id + 1 ) );
-
 	if( !id[0] )
-		return;
-
-	if( !cl )
 	{
-		int i;
-		sv_client_t *cl1;
-
-		if( !Q_strnicmp( id, "STEAM_", 6 ) || !Q_strnicmp( id, "VALVE_", 6 ) )
-			id += 6;
-		if( !Q_strnicmp( id, "XASH_", 5 ) )
-			id += 5;
-
-		for( i = 0, cl1 = &svs.clients[0]; i < sv_maxclients->integer; i++, cl1++ )
-			if( !Q_strcmp( id, Info_ValueForKey( cl1->useragent, "i") ) )
-			{
-				cl = cl1;
-				break;
-			}
-	}
-
-	if( !cl )
-	{
-		Msg( "Could not ban, no such player\n");
+		Msg( "Usage: banid <minutes> <#userid or unique id>\n0 minutes for permanent ban\n");
 		return;
 	}
 
-	id = Info_ValueForKey( cl->useragent, "i" );
+	if( !Q_strnicmp( id, "STEAM_", 6 ) || !Q_strnicmp( id, "VALVE_", 6 ) )
+		id += 6;
+	if( !Q_strnicmp( id, "XASH_", 5 ) )
+		id += 5;
 
-	if( !id[0] )
+	if( svs.clients )
 	{
-		Msg( "Could not ban, not implemented yet\n");
+		if( id[0] == '#' )
+			cl = SV_ClientById( Q_atoi( id + 1 ) );
+
+		if( !cl )
+		{
+			int i;
+			sv_client_t *cl1;
+
+			for( i = 0, cl1 = &svs.clients[0]; i < sv_maxclients->integer; i++, cl1++ )
+				if( !Q_strcmp( id, Info_ValueForKey( cl1->useragent, "i") ) )
+				{
+					cl = cl1;
+					break;
+				}
+		}
+
+		if( !cl )
+		{
+			MsgDev( D_WARN, "banid: no such player\n");
+		}
+		else
+			id = Info_ValueForKey( cl->useragent, "i" );
+
+		if( !id[0] )
+		{
+			MsgDev( D_ERROR, "Could not ban, not implemented yet\n");
+			return;
+		}
+	}
+
+	if( !id[0] || id[0] == '#' )
+	{
+		MsgDev( D_ERROR, "banid: bad id\n");
 		return;
 	}
 
@@ -148,11 +159,16 @@ void SV_BanID_f( void )
 	filter->next = cidfilter;
 	Q_strncpy( filter->id, id, sizeof( filter->id ) );
 	cidfilter = filter;
+
+	if( svs.clients && Q_stricmp( Cmd_Argv( Cmd_Argc() - 1 ), "kick" ) )
+		Cbuf_AddText( va( "kick #%d \"Kicked and banned\"\n", cl->userid ) );
 }
 
 void SV_ListID_f( void )
 {
 	cidfilter_t *filter;
+	Msg( "id ban list\n" );
+	Msg( "-----------\n" );
 
 	for( filter = cidfilter; filter; filter = filter->next )
 	{
@@ -167,9 +183,48 @@ void SV_ListID_f( void )
 }
 void SV_RemoveID_f( void )
 {
+	char *id = Cmd_Argv( 1 );
 
+	if( id[0] == '#' && svs.clients )
+	{
+		int num = Q_atoi( id + 1 );
+
+		if( num >= sv_maxclients->integer || num < 0 )
+			return;
+
+		id = Info_ValueForKey( svs.clients[num].useragent, "i" );
+	}
+
+	if( !id[0] )
+	{
+		Msg("Usage: removeid <#slotnumber or uniqueid>\n");
+		return;
+	}
+
+	SV_RemoveID( id );
 }
-void SV_WriteID_f( void ) { }
+void SV_WriteID_f( void )
+{
+	file_t *f = FS_Open( Cvar_VariableString( "bannedcfgfile" ), "w", false );
+	cidfilter_t *filter;
+
+	if( !f )
+	{
+		MsgDev( D_ERROR, "Could not write %s\n", Cvar_VariableString( "bannedcfgfile" ) );
+		return;
+	}
+
+	FS_Printf( f, "//=======================================================================\n" );
+	FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+	FS_Printf( f, "//\t\t    %s - archive of id blacklist\n", Cvar_VariableString( "bannedcfgfile" ) );
+	FS_Printf( f, "//=======================================================================\n" );
+
+	for( filter = cidfilter; filter; filter = filter->next )
+		if( !filter->endTime ) // only permanent
+			FS_Printf( f, "banid 0 %s\n", filter->id );
+
+	FS_Close( f );
+}
 void SV_AddIP_f( void ) { }
 void SV_ListIP_f( void ) { }
 void SV_RemoveIP_f( void ) { }
@@ -181,10 +236,10 @@ void SV_InitFilter( void )
 	Cmd_AddCommand( "listid", SV_ListID_f, "list banned players" );
 	Cmd_AddCommand( "removeid", SV_RemoveID_f, "remove player from banned list" );
 	Cmd_AddCommand( "writeid", SV_WriteID_f, "write banned.cfg" );
-	Cmd_AddCommand( "addip", SV_AddIP_f, "add entry to IP filter" );
+	/*Cmd_AddCommand( "addip", SV_AddIP_f, "add entry to IP filter" );
 	Cmd_AddCommand( "listip", SV_ListIP_f, "list current IP filter" );
 	Cmd_AddCommand( "removeip", SV_RemoveIP_f, "remove IP filter" );
-	Cmd_AddCommand( "writeip", SV_WriteIP_f, "write listip.cfg" );
+	Cmd_AddCommand( "writeip", SV_WriteIP_f, "write listip.cfg" );*/
 }
 
 void SV_ShutdownFilter( void )
@@ -192,7 +247,7 @@ void SV_ShutdownFilter( void )
 	//ipfilter_t *ipList, *ipNext;
 	cidfilter_t *cidList, *cidNext;
 
-	SV_WriteIP_f();
+	//SV_WriteIP_f();
 	SV_WriteID_f();
 
 	/*for( ipList = ipfilter; ipList; ipList = ipNext )
@@ -207,5 +262,5 @@ void SV_ShutdownFilter( void )
 		Mem_Free( cidList );
 	}
 
-
+	cidfilter = NULL;
 }

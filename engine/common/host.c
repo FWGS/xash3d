@@ -1318,6 +1318,7 @@ void EXPORT Host_Shutdown( void )
 	Log_Close();
 
 	SV_Shutdown( false );
+	SV_ShutdownFilter();
 	SV_UnloadProgs();
 	CL_Shutdown();
 

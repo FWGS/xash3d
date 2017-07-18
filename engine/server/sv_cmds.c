@@ -1094,7 +1094,7 @@ void SV_ClientUserAgent_f( void )
 
 	if( !SV_SetPlayer( )) return;
 	Msg( "useragent\n" );
-	Msg( "--------\n" );
+	Msg( "---------\n" );
 	Info_Print( svs.currentPlayer->useragent );
 }
 

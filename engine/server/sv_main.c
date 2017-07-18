@@ -843,11 +843,12 @@ send error message and return false on wrong input devices
 */
 qboolean SV_ProcessUserAgent( netadr_t from, char *useragent )
 {
-	char *input_devices_str = Info_ValueForKey( useragent,"d" );
+	char *input_devices_str = Info_ValueForKey( useragent, "d" );
+	char *id = Info_ValueForKey( useragent, "i" );
 
 	if( !sv_allow_noinputdevices->integer && ( !input_devices_str || !input_devices_str[0] ) )
 	{
-		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow\nconnect without input devices list.\nPlease update your engine.\n");
+		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow\nconnect without input devices list.\nPlease update your engine.\n" );
 		return false;
 	}
 
@@ -857,22 +858,33 @@ qboolean SV_ProcessUserAgent( netadr_t from, char *useragent )
 
 		if( !sv_allow_touch->integer && ( input_devices & INPUT_DEVICE_TOUCH ) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow touch\nDisable it (touch_enable 0)\nto play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow touch\nDisable it (touch_enable 0)\nto play on this server\n" );
 			return false;
 		}
 		if( !sv_allow_mouse->integer && ( input_devices & INPUT_DEVICE_MOUSE) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow mouse\nDisable it(m_ignore 1)\nto play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow mouse\nDisable it(m_ignore 1)\nto play on this server\n" );
 			return false;
 		}
 		if( !sv_allow_joystick->integer && ( input_devices & INPUT_DEVICE_JOYSTICK) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow joystick\nDisable it(joy_enable 0)\nto play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow joystick\nDisable it(joy_enable 0)\nto play on this server\n" );
 			return false;
 		}
 		if( !sv_allow_vr->integer && ( input_devices & INPUT_DEVICE_VR) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow VR\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow VR\n" );
+			return false;
+		}
+	}
+
+	if( id )
+	{
+		qboolean banned = !SV_CheckID( id );
+
+		if( banned )
+		{
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nYou are banned!\n" );
 			return false;
 		}
 	}
@@ -1099,8 +1111,6 @@ void SV_Shutdown( qboolean reconnect )
 	Sequence_PurgeEntries( true ); // clear Sequence
 
 	SV_DeactivateServer ();
-
-	SV_ShutdownFilter();
 
 	// free current level
 	Q_memset( &sv, 0, sizeof( sv ));
