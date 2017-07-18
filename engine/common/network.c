@@ -672,7 +672,7 @@ qboolean NET_StringToAdr( const char *string, netadr_t *adr )
 	struct sockaddr s;
 
 	Q_memset( adr, 0, sizeof( netadr_t ));
-	if( !Q_stricmp( string, "localhost" ))
+	if( !Q_stricmp( string, "localhost" ) || !Q_stricmp( string, "loopback" ) )
 	{
 		adr->type = NA_LOOPBACK;
 		return true;
@@ -691,7 +691,7 @@ int NET_StringToAdrNB( const char *string, netadr_t *adr )
 	int res;
 
 	Q_memset( adr, 0, sizeof( netadr_t ));
-	if( !Q_stricmp( string, "localhost" ))
+	if( !Q_stricmp( string, "localhost" )  || !Q_stricmp( string, "loopback" ) )
 	{
 		adr->type = NA_LOOPBACK;
 		return true;
@@ -1220,7 +1220,7 @@ void NET_Config( qboolean multiplayer )
 	static qboolean old_config;
 	static qboolean bFirst = true;
 
-	if( old_config == multiplayer && !Host_IsDedicated() && SV_Active() )
+	if( old_config == multiplayer && !Host_IsDedicated() && ( SV_Active() || CL_Active() ) )
 		return;
 
 	old_config = multiplayer;
