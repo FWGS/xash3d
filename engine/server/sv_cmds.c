@@ -824,6 +824,7 @@ void SV_Kick_f( void )
 	const char *param, *clientId;
 	char name[32];
 	int userid;
+	netadr_t adr;
 
 	if( !SV_Active() )
 	{
@@ -856,12 +857,14 @@ void SV_Kick_f( void )
 	}
 
 	param = Cmd_Argv( 2 );
+
 	if( *param )
 		SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from the game with message: \"%s\"\n", param );
 	else
 		SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from the game\n" );
 
 	Q_strcpy( name, cl->name );
+	Q_memcpy( &adr, &cl->netchan.remote_address, sizeof( adr ) );
 	userid = cl->userid;
 	clientId = SV_GetClientIDString( cl );
 
@@ -876,6 +879,13 @@ void SV_Kick_f( void )
 	{
 		SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked\n", name );
 		Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\"\n", name, userid, clientId );
+	}
+	if( cl->useragent[0] )
+	{
+		if( *param )
+			Netchan_OutOfBandPrint( NS_SERVER, adr, "errormsg\nKicked with message:\n%s\n", param );
+		else
+			Netchan_OutOfBandPrint( NS_SERVER, adr, "errormsg\nYou were kicked from the game\n" );
 	}
 
 	// min case there is a funny zombie
