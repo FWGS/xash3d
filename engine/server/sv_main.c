@@ -711,8 +711,6 @@ void Master_Add( void )
 	netadr_t	adr;
 	int res;
 
-	NET_Config( true ); // allow remote
-
 	res = NET_StringToAdrNB( sv_master->string, &adr );
 
 	if( !res )
@@ -723,7 +721,7 @@ void Master_Add( void )
 
 	if( res == 2 )
 	{
-		svs.last_heartbeat = host.realtime - HEARTBEAT_SECONDS;
+		svs.last_heartbeat = MAX_HEARTBEAT;
 		return;
 	}
 
