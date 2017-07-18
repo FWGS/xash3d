@@ -124,7 +124,7 @@ void SV_BanID_f( void )
 			int i;
 			sv_client_t *cl1;
 
-			for( i = 0, cl1 = &svs.clients[0]; i < sv_maxclients->integer; i++, cl1++ )
+			for( i = 0, cl1 = svs.clients; i < sv_maxclients->integer; i++, cl1++ )
 				if( !Q_strcmp( id, Info_ValueForKey( cl1->useragent, "i") ) )
 				{
 					cl = cl1;
@@ -160,7 +160,7 @@ void SV_BanID_f( void )
 	Q_strncpy( filter->id, id, sizeof( filter->id ) );
 	cidfilter = filter;
 
-	if( svs.clients && Q_stricmp( Cmd_Argv( Cmd_Argc() - 1 ), "kick" ) )
+	if( cl && !Q_stricmp( Cmd_Argv( Cmd_Argc() - 1 ), "kick" ) )
 		Cbuf_AddText( va( "kick #%d \"Kicked and banned\"\n", cl->userid ) );
 }
 

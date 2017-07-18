@@ -880,7 +880,7 @@ qboolean SV_ProcessUserAgent( netadr_t from, char *useragent )
 
 	if( id )
 	{
-		qboolean banned = !SV_CheckID( id );
+		qboolean banned = SV_CheckID( id );
 
 		if( banned )
 		{
