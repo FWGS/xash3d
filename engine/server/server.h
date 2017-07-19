@@ -269,6 +269,7 @@ typedef struct sv_client_s
 	int		resources_sent;
 	int		resources_count;
 	char	useragent[MAX_INFO_STRING];
+	char	auth_id[64];
 } sv_client_t;
 
 

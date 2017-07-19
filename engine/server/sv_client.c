@@ -243,6 +243,8 @@ gotnewcl:
 		{
 			sscanf( id, "%llx", &newcl->WonID );
 		}
+
+		Q_strncpy( cl->auth_id, id, sizeof( cl->auth_id ) );
 	}
 
 	svs.currentPlayer = newcl;
@@ -676,14 +678,9 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 		{
 			Q_strncpy( result, "VALVE_ID_LOOPBACK", sizeof( result ));
 		}
-		else if( cl->useragent[0] )
+		else if( cl->auth_id[0] )
 		{
-			char *id = Info_ValueForKey( cl->useragent, "i" );
-
-			if( *id )
-				Q_snprintf( result, sizeof( result ), "VALVE_XASH_%s", id );
-			else
-				Q_strncpy( result, "VALVE_ID_PENDING", sizeof( result ));
+			Q_snprintf( result, sizeof( result ), "VALVE_XASH_%s", cl->auth_id );
 		}
 		else if( cl->WonID == 0 )
 		{
