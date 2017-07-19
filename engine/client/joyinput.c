@@ -76,6 +76,10 @@ convar_t *joy_found;
 convar_t *joy_index;
 convar_t *joy_lt_threshold;
 convar_t *joy_rt_threshold;
+convar_t *joy_side_deadzone;
+convar_t *joy_forward_deadzone;
+convar_t *joy_pitch_deadzone;
+convar_t *joy_yaw_deadzone;
 convar_t *joy_axis_binding;
 
 /*
@@ -109,6 +113,74 @@ void Joy_HatMotionEvent( int id, byte hat, byte value )
 
 /*
 =============
+Joy_ProcessTrigger
+=============
+*/
+void Joy_ProcessTrigger( const engineAxis_t engineAxis, short value )
+{
+	int trigButton, trigThreshold;
+
+	switch( engineAxis )
+	{
+	case JOY_AXIS_RT:
+		trigButton = K_JOY2;
+		trigThreshold = joy_rt_threshold->integer;
+		break;
+	case JOY_AXIS_LT:
+		trigButton = K_JOY1;
+		trigThreshold = joy_lt_threshold->integer;
+		break;
+	default:
+		MsgDev( D_ERROR, "Joy_ProcessTrigger: invalid axis = %i", engineAxis );
+		break;
+	}
+
+	// update axis values
+	joyaxis[engineAxis].prevval = joyaxis[engineAxis].val;
+	joyaxis[engineAxis].val = value;
+
+	if( joyaxis[engineAxis].val > trigThreshold &&
+		joyaxis[engineAxis].prevval <= trigThreshold ) // ignore random press
+	{
+		Key_Event( trigButton, true );
+	}
+	else if( joyaxis[engineAxis].val < trigThreshold &&
+			 joyaxis[engineAxis].prevval >= trigThreshold ) // we're unpressing (inverted)
+	{
+		Key_Event( trigButton, false );
+	}
+}
+
+/*
+=============
+Joy_ProcessStick
+=============
+*/
+void Joy_ProcessStick( const engineAxis_t engineAxis, short value )
+{
+	int deadzone;
+
+	switch( engineAxis )
+	{
+	case JOY_AXIS_FWD:   deadzone = joy_forward_deadzone->integer; break;
+	case JOY_AXIS_SIDE:  deadzone = joy_side_deadzone->integer; break;
+	case JOY_AXIS_PITCH: deadzone = joy_pitch_deadzone->integer; break;
+	case JOY_AXIS_YAW:   deadzone = joy_yaw_deadzone->integer; break;
+	default:
+		MsgDev( D_ERROR, "Joy_ProcessStick: invalid axis = %i", engineAxis );
+		break;
+	}
+
+	if( value < deadzone && value > -deadzone )
+		value = 0; // caught new event in deadzone, fill it with zero(no motion)
+
+	// update axis values
+	joyaxis[engineAxis].prevval = joyaxis[engineAxis].val;
+	joyaxis[engineAxis].val = value;
+}
+
+/*
+=============
 Joy_AxisMotionEvent
 
 Axis events
@@ -117,7 +189,6 @@ Axis events
 void Joy_AxisMotionEvent( int id, byte axis, short value )
 {
 	byte engineAxis;
-	int trigButton, trigThreshold;
 
 	if( !initialized )
 		return;
@@ -136,34 +207,10 @@ void Joy_AxisMotionEvent( int id, byte axis, short value )
 	if( value == joyaxis[engineAxis].val )
 		return; // it is not an update
 
-	// update axis values
-	joyaxis[engineAxis].prevval = joyaxis[engineAxis].val;
-	joyaxis[engineAxis].val = value;
-
-	switch( engineAxis )
-	{
-	case JOY_AXIS_RT:
-		trigButton = K_JOY2;
-		trigThreshold = joy_rt_threshold->integer;
-		break;
-	case JOY_AXIS_LT:
-		trigButton = K_JOY1;
-		trigThreshold = joy_lt_threshold->integer;
-		break;
-	default:
-		return; // next code only for triggers
-	}
-
-	if( joyaxis[engineAxis].val > trigThreshold &&
-		joyaxis[engineAxis].prevval <= trigThreshold ) // ignore random press
-	{
-		Key_Event( trigButton, true );
-	}
-	else if( joyaxis[engineAxis].val < trigThreshold &&
-			 joyaxis[engineAxis].prevval >= trigThreshold ) // we're unpressing (inverted)
-	{
-		Key_Event( trigButton, false );
-	}
+	if( engineAxis >= JOY_AXIS_RT )
+		Joy_ProcessTrigger( engineAxis, value );
+	else
+		Joy_ProcessStick( engineAxis, value );
 }
 
 /*
@@ -197,7 +244,7 @@ void Joy_ButtonEvent( int id, byte button, byte down )
 	if( button > 32 )
 	{
 		int origbutton = button;
-		button = button % 32 + K_AUX1;
+		button = button & 31 + K_AUX1;
 
 		MsgDev( D_INFO, "Only 32 joybuttons is supported, converting %i button ID to %s\n", origbutton, Key_KeynumToString( button ) );
 	}
@@ -298,6 +345,13 @@ void Joy_Init( void )
 
 	joy_lt_threshold = Cvar_Get( "joy_lt_threshold", "-16384", CVAR_ARCHIVE, "left trigger threshold. Value from -32768 to 32767");
 	joy_rt_threshold = Cvar_Get( "joy_rt_threshold", "-16384", CVAR_ARCHIVE, "right trigger threshold. Value from -32768 to 32767" );
+
+	// by default, we rely on deadzone detection come from system, but some glitchy devices report false deadzones
+	joy_side_deadzone = Cvar_Get( "joy_side_deadzone", "0", CVAR_ARCHIVE, "side axis deadzone. Value from 0 to 32767" );
+	joy_forward_deadzone = Cvar_Get( "joy_forward_deadzone", "0", CVAR_ARCHIVE, "forward axis deadzone. Value from 0 to 32767");
+	joy_pitch_deadzone = Cvar_Get( "joy_pitch_deadzone", "0", CVAR_ARCHIVE, "pitch axis deadzone. Value from 0 to 32767");
+	joy_yaw_deadzone = Cvar_Get( "joy_yaw_deadzone", "0", CVAR_ARCHIVE, "yaw axis deadzone. Value from 0 to 32767" );
+
 	joy_axis_binding = Cvar_Get( "joy_axis_binding", "sfpyrl", CVAR_ARCHIVE, "axis hardware id to engine inner axis binding, "
 																			 "s - side, f - forward, y - yaw, p - pitch, r - left trigger, l - right trigger" );
 	joy_found   = Cvar_Get( "joy_found", "0", CVAR_READ_ONLY, "total num of connected joysticks" );
