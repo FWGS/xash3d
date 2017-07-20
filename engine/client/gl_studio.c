@@ -2821,15 +2821,11 @@ static model_t *GAME_EXPORT R_StudioSetupPlayerModel( int index )
 		info = &cl.players[index];
 	}
 
-
-	// set to invisible, skip
-	if( !info->model[0] ) return NULL;
-
 	// FS_FileExists is too slow to use it 32 times at every frame
 	if( ( cls.key_dest != key_menu || index ) && cl.playermodels[index] )
 		return cl.playermodels[index];
 
-	if( !Q_stricmp( info->model, "player" ))
+	if( !info->model[0] || !Q_stricmp( info->model, "player" ))
 		Q_strncpy( modelpath, "models/player.mdl", sizeof( modelpath ));
 	else
 		Q_snprintf( modelpath, sizeof( modelpath ), "models/player/%s/%s.mdl", info->model, info->model );
