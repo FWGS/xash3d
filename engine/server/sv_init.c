@@ -402,6 +402,8 @@ void SV_DeactivateServer( void )
 	if( !svs.initialized || sv.state == ss_dead )
 		return;
 
+	svgame.dllFuncs.pfnServerDeactivate();
+
 	sv.state = ss_dead;
 
 	SV_FreeEdicts ();
@@ -409,8 +411,6 @@ void SV_DeactivateServer( void )
 	SV_ClearPhysEnts ();
 
 	SV_EmptyStringPool();
-
-	svgame.dllFuncs.pfnServerDeactivate();
 
 	if( sv_maxclients->integer > 32 )
 		Cvar_SetFloat( "maxplayers", 32.0f );
