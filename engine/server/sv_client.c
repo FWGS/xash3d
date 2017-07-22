@@ -1192,7 +1192,7 @@ void SV_PutClientInServer( edict_t *ent )
 
 	if( client == NULL )
 	{
-		MsgDev( D_ERROR, "SV_AddEntitiesToPacket: you have broken clients!\n");
+		MsgDev( D_ERROR, "SV_PutClientInServer: you have broken clients!\n");
 		return;
 	}
 
