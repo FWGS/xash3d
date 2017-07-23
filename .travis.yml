@@ -2,23 +2,23 @@ language: c
 compiler: gcc
 sudo: true
 before_script:
-    - sudo apt-get -qq update
-    - sudo apt-get -qq install --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch
-    - sudo apt-get -qq install --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full
-    - sudo apt-get -qq install --force-yes gcc-multilib
-    - sudo apt-get -qq install --force-yes libx11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev
-    - sudo apt-get -qq install --force-yes libasound-dev
+    - sudo apt-get -qq update 2>/dev/null
+    - sudo apt-get -qq install --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch 2>/dev/null
+    - sudo apt-get -qq install --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full 2>/dev/null
+    - sudo apt-get -qq install --force-yes gcc-multilib 2>/dev/null
+    - sudo apt-get -qq install --force-yes libx11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev 2>/dev/null
+    - sudo apt-get -qq install --force-yes libasound-dev 2>/dev/null
     - jdk_switcher use oraclejdk7
-    - curl http://dl.google.com/android/android-sdk_r22.0.4-linux.tgz | tar xzf -
+    - curl -s http://dl.google.com/android/android-sdk_r22.0.4-linux.tgz | tar xzf -
     - export ANDROID_HOME=$PWD/android-sdk-linux
     - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk
     - sleep 3s; echo y | android update sdk -u --filter platform-tools,build-tools-19.0.0,android-19,extra-android-support --force --all > /dev/null
     - wget http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
     - chmod +x android-ndk-r10e-linux-x86_64.bin && ./android-ndk-r10e-linux-x86_64.bin > /dev/null
     - mv android-ndk-r10e android-ndk
-    - curl http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz | tar xzf -
+    - curl -s http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz | tar xzf -
     - mv SDL2-2.0.4 SDL2
-    - curl http://libsdl.org/release/SDL2-2.0.4.tar.gz | tar xzf -
+    - curl -s http://libsdl.org/release/SDL2-2.0.4.tar.gz | tar xzf -
     - git clone --depth 1 https://github.com/FWGS/vgui-dev
     - git clone --depth 1 https://github.com/FWGS/vgui_support_bin
     - git clone --depth 1 https://github.com/FWGS/xash3d-android-project
@@ -52,6 +52,7 @@ script:
     - cp ../vgui_support_bin/libvgui_support.so .
     - mv libSDL2.so libSDL2-2.0.so.0
     - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2-2.0.so.0 libvgui_support.so vgui.so
+    - 7z a -t7z android-debug-symbols.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on obj/local/*/*.so
 after_script:
-    - sh ../travis-deploy.sh travis xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk
+    - sh ../travis-deploy.sh travis xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk android-debug-symbols.7z
     - sh ../travis-upload.sh xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk
