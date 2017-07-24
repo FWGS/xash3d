@@ -358,7 +358,7 @@ void *GL_GetProcAddress( const char *name )
 void GL_InitExtensions( void )
 {
 	// initialize gl extensions
-	GL_CheckExtension( "OpenGL 1.1.0", opengl_110funcs, NULL, GL_OPENGL_110 );
+	GL_CheckExtension( "OpenGL 1.1.0", (void*)opengl_110funcs, NULL, GL_OPENGL_110 );
 
 	// get our various GL strings
 	glConfig.vendor_string = pglGetString( GL_VENDOR );
@@ -369,12 +369,16 @@ void GL_InitExtensions( void )
 
 	// initalize until base opengl functions loaded
 
-	GL_SetExtension( GL_DRAW_RANGEELEMENTS_EXT, false );
-	GL_SetExtension( GL_ARB_MULTITEXTURE, false );
-	GL_SetExtension( GL_ENV_COMBINE_EXT, false );
-	GL_SetExtension( GL_DOT3_ARB_EXT, false );
+	GL_SetExtension( GL_DRAW_RANGEELEMENTS_EXT, true );
+	GL_SetExtension( GL_ARB_MULTITEXTURE, true );
+	pglGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &glConfig.max_texture_units );
+	glConfig.max_texture_coords = glConfig.max_texture_units = 4;
+
+	GL_SetExtension( GL_ENV_COMBINE_EXT, true );
+	GL_SetExtension( GL_DOT3_ARB_EXT, true );
 	GL_SetExtension( GL_TEXTURE_3D_EXT, false );
 	GL_SetExtension( GL_SGIS_MIPMAPS_EXT, true ); // gles specs
+	GL_SetExtension( GL_ARB_VERTEX_BUFFER_OBJECT_EXT, true ); // gles specs
 
 	// hardware cubemaps
 	GL_CheckExtension( "GL_OES_texture_cube_map", NULL, "gl_texture_cubemap", GL_TEXTURECUBEMAP_EXT );
@@ -398,7 +402,6 @@ void GL_InitExtensions( void )
 	GL_SetExtension( GL_BLEND_SUBTRACT_EXT, false );
 	GL_SetExtension( GL_SEPARATESTENCIL_EXT, false );
 	GL_SetExtension( GL_STENCILTWOSIDE_EXT, false );
-	GL_SetExtension( GL_ARB_VERTEX_BUFFER_OBJECT_EXT, false );
 	GL_SetExtension( GL_TEXTURE_ENV_ADD_EXT,false  );
 	GL_SetExtension( GL_SHADER_OBJECTS_EXT, false );
 	GL_SetExtension( GL_SHADER_GLSL100_EXT, false );
