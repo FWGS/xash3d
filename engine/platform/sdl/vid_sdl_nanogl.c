@@ -592,6 +592,7 @@ qboolean GL_CreateContext( void )
 #endif
 
 #ifdef XASH_WES
+	void wes_init();
 	wes_init();
 #endif
 

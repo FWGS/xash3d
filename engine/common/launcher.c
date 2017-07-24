@@ -25,6 +25,7 @@ char szGameDir[128]; // safe place to keep gamedir
 int g_iArgc;
 
 void Host_Shutdown( void );
+void *Com_LoadLibrary(char *, qboolean );
 int Host_Main( int szArgc, char **szArgv, const char *szGameDir, int chg, void *callback );
 
 char **g_pszArgv;

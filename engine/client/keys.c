@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "input.h"
 #include "client.h"
 #include "joyinput.h"
+#include "touch.h"
 #include "vgui_draw.h"
 
 #ifdef XASH_SDL

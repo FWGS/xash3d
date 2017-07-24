@@ -240,7 +240,7 @@ void Host_RunFrame()
 	emscripten_sleep(1);
 #else
 	if( host.crashed || host.shutdown_issued )
-		emscritpen_cancel_main_loop();
+		emscripten_cancel_main_loop();
 #endif
 #endif
 }

@@ -83,7 +83,7 @@ qboolean SV_CheckID( const char *id )
 			filter = filter->next;
 			SV_RemoveID( fid );
 			if( !filter )
-				return;
+				return false;
 		}
 
 		if( !Q_strncmp( id, filter->id, len ) )
