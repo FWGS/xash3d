@@ -2241,10 +2241,6 @@ static void R_SetLightmap( void )
 	else
 		pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 	pglTexCoordPointer( 2, GL_FLOAT, sizeof( vbovertex_t ), (void*)offsetof(vbovertex_t, lm_tc ) );
-
-	// glColor is unuseful when bump enabled
-	if( !mtst.bump_enabled && gl_overbright->integer == 1 )
-		pglColor4f( 1 / 1.5, 1 / 1.5, 1 / 1.5, 1.0 );
 }
 
 /*
