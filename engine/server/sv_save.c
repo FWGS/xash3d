@@ -441,6 +441,9 @@ void ReapplyDecal( SAVERESTOREDATA *pSaveData, decallist_t *entry, qboolean adja
 	if( adjacent && ( flags & FDECAL_PERMANENT ))
 		return;
 
+	if( entry->entityIndex < 0 || entry->entityIndex > pSaveData->tableCount )
+		return;
+
 	// restore entity and model index
 	pEdict = pSaveData->pTable[entry->entityIndex].pent;
 	if( SV_IsValidEdict( pEdict ) )
