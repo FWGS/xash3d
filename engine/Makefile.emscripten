@@ -129,8 +129,7 @@ BINARIES = xash
 /mnt/data2/xash-em/xash$(SIMD_SUF).html: $(OBJS) $(OBJS_CPP) platform/emscripten/shell.html
 
 
-	EMCC_FORCE_STDLIBS=1 $(CXX) -s UNALIGNED_ACCESS_FUNCTION_LIST=\"platform/emscripten/unaligned.txt\" --llvm-lto 1 --shell-file platform/emscripten/shell.html -s NO_EXIT_RUNTIME=1 -s LZ4=1 -s -g0 -o /mnt/data2/xash-em/xash$(SIMD_SUF).html -s MAIN_MODULE=1 -s USE_SDL=2 -s TOTAL_MEMORY=150000000 -fvisibility=hidden $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
-
+	EMCC_FORCE_STDLIBS=1 $(CXX) -s LEGACY_GL_CREATE_RESOURCE_ON_BIND=1 -s UNALIGNED_ACCESS_FUNCTION_LIST=\"platform/emscripten/unaligned.txt\" --llvm-lto 1 --shell-file platform/emscripten/shell.html -s NO_EXIT_RUNTIME=1 -s LZ4=1 -s -g0 -o /mnt/data2/xash-em/xash$(SIMD_SUF).html -s MAIN_MODULE=1 -s USE_SDL=2 -s TOTAL_MEMORY=150994944 -fvisibility=hidden $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
 
 endif
 
