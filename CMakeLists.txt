@@ -29,9 +29,9 @@ project (XASH3D)
 
 set (XASH3D_VERSION 0.19.1)
 
-option(HL_SDK_DIR "Half-Life SDK directory" ${CMAKE_CURRENT_SOURCE_DIR}/hlsdk/)
-
 include( CMakeDependentOption )
+
+include( CPack )
 
 # Servers must choose this
 option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF)
@@ -102,16 +102,16 @@ endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
 	if( WIN32 )
-		set( LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_BUILD_TYPE}" )
+		set( LIB_INSTALL_DIR "${CMAKE_BUILD_TYPE}" )
 	else()
-		set(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}")
+		set(LIB_INSTALL_DIR "lib${LIB_SUFFIX}")
 	endif()
 endif()
 if(NOT DEFINED LIBEXEC_INSTALL_DIR)
-    set(LIBEXEC_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/libexec")
+	set(LIBEXEC_INSTALL_DIR "libexec")
 endif()
 if(NOT DEFINED BIN_INSTALL_DIR)
-    set(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin")
+	set(BIN_INSTALL_DIR "bin")
 endif()
 
 if(NOT XASH_DEDICATED)

@@ -30,20 +30,9 @@ include_directories (. ../common ../engine ../engine/common ../engine/client ../
 
 add_library (${VGUI_SUPPORT_LIBRARY} MODULE ${VGUI_SUPPORT_SOURCES})
 
-if(WIN32)
-	set( VGUI_LIB_PATH ${HL_SDK_DIR}/utils/vgui/lib/win32_vc6/vgui.lib )
-	target_link_libraries(${VGUI_SUPPORT_LIBRARY} ${VGUI_LIB_PATH} )
-elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	set( VGUI_LIB_PATH ${HL_SDK_DIR}/linux/release/vgui.dylib )
-	target_link_libraries(${VGUI_SUPPORT_LIBRARY} ${VGUI_LIB_PATH} )
-elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+find_package( VGUI REQUIRED )
 
-	set( VGUI_LIB_PATH $<TARGET_FILE_DIR:vgui_support>/vgui.so )
-    #Make GCC don't put full path to vgui.so
-    add_custom_command(TARGET vgui_support PRE_LINK COMMAND
-	${CMAKE_COMMAND} -E copy ${HL_SDK_DIR}/linux/vgui.so $<TARGET_FILE_DIR:vgui_support>)
-    target_link_libraries(${VGUI_SUPPORT_LIBRARY} -L. -Lvgui_support/ -l:vgui.so)
-endif()
+target_link_vgui_hack( ${VGUI_SUPPORT_LIBRARY} )
 
 add_definitions(-DXASH_VGUI)
 set_target_properties (${VGUI_SUPPORT_SHARED} PROPERTIES
