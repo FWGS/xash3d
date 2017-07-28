@@ -18,12 +18,27 @@ static int wheelbutton;
 static SDL_Joystick *joy;
 
 void R_ChangeDisplaySettingsFast( int w, int h );
+void SDLash_SendCharEvent( int ch );
 
 #define DECLARE_KEY_RANGE( min, max, repl ) if( keynum >= (min) && keynum <= (max) ) { keynum = keynum - (min) + (repl); }
 
 void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 {
 	int keynum = key.keysym.scancode;
+
+	if( SDL_IsTextInputActive() )
+	{
+		if( SDL_GetModState() & KMOD_CTRL )
+		{
+			if( keynum >= SDL_SCANCODE_A && keynum <= SDL_SCANCODE_Z )
+			{
+				keynum = keynum - SDL_SCANCODE_A + 1;
+				SDLash_SendCharEvent( keynum );
+			}
+
+			return;
+		}
+	}
 
 	DECLARE_KEY_RANGE( SDL_SCANCODE_A, SDL_SCANCODE_Z, 'a' )
 	else DECLARE_KEY_RANGE( SDL_SCANCODE_1, SDL_SCANCODE_9, '1' )
@@ -138,12 +153,17 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 		if( !ch )
 			continue;
 
-		Con_CharEvent( ch );
-		if( cls.key_dest == key_menu )
-			UI_CharEvent ( ch );
-		if( cls.key_dest == key_game )
-			VGui_KeyEvent( ch, 2 );
+		SDLash_SendCharEvent( ch );
 	}
+}
+
+void SDLash_SendCharEvent( int ch )
+{
+	Con_CharEvent( ch );
+	if( cls.key_dest == key_menu )
+		UI_CharEvent ( ch );
+	if( cls.key_dest == key_game )
+		VGui_KeyEvent( ch, 2 );
 }
 
 void SDLash_EnableTextInput( int enable, qboolean force )
