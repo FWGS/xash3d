@@ -104,40 +104,28 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 
 	// Debug on grenade
 	//qboolean debug = !Q_strcmp( ent->model->name, "models/w_grenade.mdl" );
+	// qboolean debug = ent->player;
 
 	// It is wrong, but it seems that courrent_position is wrong during interp
-	imod = ent->current_position - 2;
+	imod = ent->current_position;
 	i0 = (imod + 1) & HISTORY_MASK;
 	i1 = imod & HISTORY_MASK;
 
 	extrapolate = true;
 
-	if( ent->ph[i0].animtime >= targettime )
+	for ( i = 1 ; i < HISTORY_MAX - 1 ; i++ )
 	{
-		for( i = 0; i < HISTORY_MAX - 2; i++ )
+		at = ent->ph[ ( imod - i ) & HISTORY_MASK ].animtime;
+
+		if ( at == 0.0 )
+			break;
+
+		if ( targettime > at )
 		{
-			at = ent->ph[imod & HISTORY_MASK].animtime;
-
-			// if( debug )
-				// Msg( "CL_FindInterpolationUpdates: at %f %d\n", at, imod );
-
-			// Entity was not exist at targettime
-			if( at == 0.0f )
-			{
-				i0 = 1;
-				i1 = 0;
-				break;
-			}
-
-			if( at < targettime )
-			{
-				i0 = (imod + 1) & HISTORY_MASK;
-				i1 = imod & HISTORY_MASK;
-				extrapolate = false;
-				break;
-			}
-
-			imod--;
+			i0 = ( ( imod - i ) + 1 ) & HISTORY_MASK;
+			i1 = ( imod - i ) & HISTORY_MASK;
+			extrapolate = false;
+			break;
 		}
 	}
 
@@ -149,6 +137,51 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 	if( ph0Index != NULL ) *ph0Index = i0;
 
 	return extrapolate;
+}
+
+static inline qboolean CL_EntityTeleported( cl_entity_t *e )
+{
+	return fabs(e->curstate.origin[0] - e->prevstate.origin[0]) > 128.0f ||
+		fabs(e->curstate.origin[1] - e->prevstate.origin[1]) > 128.0f ||
+		fabs(e->curstate.origin[2] - e->prevstate.origin[2]) > 128.0f;
+}
+
+void CL_PureOrigin( cl_entity_t *ent, float t, vec3_t outorigin, vec3_t outangles )
+{
+	position_history_t *ph0, *ph1;
+	float				t1, t0;
+	float				frac;
+	vec3_t				delta;
+	vec3_t				pos, angles;
+
+	CL_FindInterpolationUpdates( ent, t, &ph0, &ph1, NULL );
+
+	if( !ph0 || !ph1 )
+		return;
+
+	t0 = ph0->animtime;
+	t1 = ph1->animtime;
+
+	if( t0 != 0 )
+	{
+		VectorSubtract( ph0->origin, ph1->origin, delta );
+
+		if ( t0 != t1 )
+			frac = bound( 0.0, ( t - t1 ) / ( t0 - t1 ), 1.2f ); // players are allowed to extrapolate
+		else
+			frac = 1.0f;
+
+		VectorMA( ph1->origin, frac, delta, pos );
+		InterpolateAngles( ph1->angles, ph1->angles, angles, frac );
+
+		VectorCopy( pos, outorigin );
+		VectorCopy( angles, outangles );
+	}
+	else
+	{
+		VectorCopy( ph1->origin, outorigin );
+		VectorCopy( ph1->angles, outangles );
+	}
 }
 
 void CL_InterpolatePlayer( cl_entity_t *e )
@@ -169,16 +202,8 @@ void CL_InterpolatePlayer( cl_entity_t *e )
 		VectorCopy( e->curstate.angles, e->angles );
 	}
 
-	if( cls.timedemo || cl.maxclients == 1 )
-		return;
-
-	if( e->curstate.movetype == MOVETYPE_NONE  || e->prevstate.movetype == MOVETYPE_NONE )
-		return;
-
 	// enitty was moved too far
-	if( fabs(e->curstate.origin[0] - e->prevstate.origin[0]) > 128.0f ||
-		fabs(e->curstate.origin[1] - e->prevstate.origin[1]) > 128.0f ||
-		fabs(e->curstate.origin[2] - e->prevstate.origin[2]) > 128.0f )
+	if( CL_EntityTeleported( e ) )
 	{
 		VectorCopy( e->curstate.origin, e->origin );
 		VectorCopy( e->curstate.angles, e->angles );
@@ -186,46 +211,7 @@ void CL_InterpolatePlayer( cl_entity_t *e )
 	}
 
 	t = cl.time - cl_interp->value;
-
-	CL_FindInterpolationUpdates( e, t, &ph0, &ph1, NULL );
-
-	t1 = ph0->animtime;
-	t2 = ph1->animtime;
-
-	if( !t1 || !t2 )
-		return;
-
-	/*if( t2 == 0.0f )
-	{
-		VectorCopy( ph0->origin, e->origin );
-		VectorCopy( ph0->angles, e->angles );
-		return;
-	}*/
-
-	VectorSubtract( ph0->origin, ph1->origin, delta );
-
-	if( t2 == t1 )
-	{
-		frac = 1.0f;
-	}
-	else
-	{
-		frac = (t - t2) / (t1 - t2);
-
-		if( frac < 0.0f )
-			frac = 0.0f;
-
-		if( frac > 1.2f )
-			frac = 1.2f;
-	}
-
-	VectorMA( ph1->origin, frac, delta, origin );
-	InterpolateAngles( ph0->angles, ph1->angles, angles, frac );
-
-	VectorCopy( origin, e->origin );
-	VectorCopy( angles, e->angles );
-
-	return;
+	CL_PureOrigin( e, t, e->origin, e->angles );
 }
 
 int CL_InterpolateModel( cl_entity_t *e )
@@ -242,7 +228,9 @@ int CL_InterpolateModel( cl_entity_t *e )
 		return 0;
 
 	// don't inerpolate modelless entities or bmodels
-	if( e->model && e->model->type == mod_brush && !r_bmodelinterp->integer )
+	if( e->model &&
+		( e->model->type == mod_brush || e->model->name[0] == '*' ) &&
+		!r_bmodelinterp->integer )
 		return 0;
 
 	// skip entity on which we ride
@@ -255,8 +243,7 @@ int CL_InterpolateModel( cl_entity_t *e )
 		e->curstate.movetype == MOVETYPE_FLY  ||
 		e->curstate.renderfx == kRenderFxDeadPlayer ||
 		e->prevstate.renderfx == kRenderFxDeadPlayer ||
-		// don't interpolate monsters in coop
-		( e->curstate.movetype == MOVETYPE_STEP && cls.netchan.remote_address.type != NA_LOOPBACK ) )
+		!(e->curstate.movetype == MOVETYPE_STEP && cls.netchan.remote_address.type != NA_LOOPBACK) )
 		return 0;
 
 	t = cl.time - cl_interp->value;
@@ -330,42 +317,60 @@ void CL_InterpolateMovingEntity( cl_entity_t *ent )
 	InterpolateAngles( ent->angles, ent->latched.prevangles, ent->angles, f );
 }
 
-void CL_UpdateEntityFields( cl_entity_t *ent )
+static inline qboolean CL_IsParametricEntity( cl_entity_t *ent )
+{
+	return ent->curstate.starttime != 0.0f && ent->curstate.impacttime != 0.0f;
+}
+
+void CL_ParametricMove( cl_entity_t *ent )
 {
 	// parametric rockets code
-	if( ent->curstate.starttime != 0.0f && ent->curstate.impacttime != 0.0f )
-	{
-		float	lerp = ( cl.time - ent->curstate.starttime ) / ( ent->curstate.impacttime - ent->curstate.starttime );
-		vec3_t	dir;
+	float	lerp = ( cl.time - ent->curstate.starttime ) / ( ent->curstate.impacttime - ent->curstate.starttime );
+	vec3_t	dir;
 
-		lerp = bound( 0.0f, lerp, 1.0f );
+	lerp = bound( 0.0f, lerp, 1.0f );
 
-		// first we need to calc actual origin
-		VectorLerp( ent->curstate.startpos, lerp, ent->curstate.endpos, ent->curstate.origin );
-		VectorSubtract( ent->curstate.endpos, ent->curstate.startpos, dir );
-		VectorAngles( dir, ent->curstate.angles ); // re-aim projectile		
-	}
+	// first we need to calc actual origin
+	VectorLerp( ent->curstate.startpos, lerp, ent->curstate.endpos, ent->curstate.origin );
+	VectorSubtract( ent->curstate.endpos, ent->curstate.startpos, dir );
+	VectorAngles( dir, ent->curstate.angles ); // re-aim projectile
+}
 
+void CL_UpdateEntityFields( cl_entity_t *ent )
+{
 	ent->model = Mod_Handle( ent->curstate.modelindex );
 	ent->curstate.msg_time = cl.time;
 
-	if( ent->player )
+	if( CL_IsParametricEntity( ent ) )
 	{
-		if( ent->curstate.modelindex && !ent->model )
-			ent->model = Mod_ForName("models/player.mdl", false );
-
-		CL_InterpolatePlayer( ent );
+		CL_ParametricMove( ent );
+		VectorCopy( ent->curstate.origin, ent->origin );
+		VectorCopy( ent->curstate.angles, ent->angles );
 	}
-	else CL_InterpolateModel( ent );
+	else
+	{
+		if( ent->player )
+		{
+			if( ent->curstate.modelindex && !ent->model )
+				ent->model = Mod_ForName("models/player.mdl", false );
 
+			CL_InterpolatePlayer( ent );
+		}
+		else
+		{
+			CL_InterpolateModel( ent );
+		}
+	}
 
 	if( ent->player && RP_LOCALCLIENT( ent )) // stupid Half-Life bug
 		ent->angles[PITCH] = -ent->angles[PITCH] / 3.0f;
 
 	// make me lerp
-	if( ent->index == cl.predicted.onground && cl.predicted.moving )
+	/*if( ent->index == cl.predicted.onground && cl.predicted.moving )
+	{
 		CL_InterpolateMovingEntity( ent );
-	else if( ent->model && ent->model->type == mod_brush && ent->curstate.animtime != 0.0f)
+	}
+	else */if( ent->model && ent->model->type == mod_brush && ent->curstate.animtime != 0.0f)
 	{
 		float f = 0.0f;
 
