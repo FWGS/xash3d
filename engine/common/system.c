@@ -172,12 +172,16 @@ create buffer, that contain clipboard
 */
 char *Sys_GetClipboardData( void )
 {
-	static char data[1024] = "";
+	static char data[1024];
+	char *buffer;
+
+	data[0] = '\0';
+
 #ifdef XASH_SDL
-	char *buffer = SDL_GetClipboardText();
+	buffer = SDL_GetClipboardText();
 	if( buffer )
 	{
-		Q_strncpy( data, buffer = SDL_GetClipboardText(), sizeof( data ) );
+		Q_strncpy( data, buffer, sizeof( data ) );
 		SDL_free( buffer );
 	}
 #endif
