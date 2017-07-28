@@ -1085,7 +1085,6 @@ void Field_Paste( field_t *edit )
 	pasteLen = Q_strlen( cbd );
 	for( i = 0; i < pasteLen; i++ )
 		Field_CharEvent( edit, cbd[i] );
-	SDL_free( cbd );
 #endif
 }
 
