@@ -248,10 +248,10 @@
         ENV.XASH3D_GAMEDIR=gamedir;
         function loadModule(name)
         {
-          var script = document.createElement('script');                                                                                        script.src = "menu.js";
-          document.body.appendChild(script);                                                                                                    script = document.createElement('script');
+          var script = document.createElement('script');
+          document.body.appendChild(script);
           script.src = name + ".js";
-		}
+        }
         loadModule("server");
         loadModule("client");
         loadModule("menu");
