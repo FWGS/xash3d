@@ -21,6 +21,10 @@ GNU General Public License for more details.
 #include "SDL.h"
 #endif
 
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 char szGameDir[128]; // safe place to keep gamedir
 int g_iArgc;
 
@@ -70,10 +74,20 @@ int main( int argc, char** argv )
 	}
 
 #ifdef __EMSCRIPTEN__
+#ifdef EMSCRIPTEN_LIB_FS
 	// For some unknown reason emscripten refusing to load libraries later
 	Com_LoadLibrary("menu", 0 );
 	Com_LoadLibrary("server", 0 );
 	Com_LoadLibrary("client", 0 );
+#endif
+#ifdef XASH_DEDICATED
+	// NodeJS support for debug
+	EM_ASM(try{
+		FS.mkdir('/xash');
+		FS.mount(NODEFS, { root: '.'}, '/xash' );
+		FS.chdir('/xash');
+	}catch(e){};);
+#endif
 #endif
 
 	g_iArgc = argc;
