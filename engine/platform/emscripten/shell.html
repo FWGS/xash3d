@@ -243,9 +243,18 @@
           html += '<input name=a type=radio id=rLocalStorage />';
         html += 'LocalStorage (Sometimes not enough space)<br><input type=radio name=a id=rNone checked=true>None(in RAM)<br><input type=button onclick=setupFS() value="Setup filesystem" /></form>'
         asyncDialog.innerHTML=html;
-        ENV.LIBRARY_PREFIX=basedir+'/';
-        ENV.LIBRARY_SUFFIX='.js';
+        //ENV.LIBRARY_PREFIX=basedir+'/';
+        //ENV.LIBRARY_SUFFIX='.js';
         ENV.XASH3D_GAMEDIR=gamedir;
+        function loadModule(name)
+        {
+          var script = document.createElement('script');                                                                                        script.src = "menu.js";
+          document.body.appendChild(script);                                                                                                    script = document.createElement('script');
+          script.src = name + ".js";
+		}
+        loadModule("server");
+        loadModule("client");
+        loadModule("menu");
       }
       Module.preInit = [skipRun];
       Module.websocket = [];
@@ -256,5 +265,6 @@
     <script type='text/javascript' src='uplink.js'></script>
 
     {{{ SCRIPT }}}
+
   </body>
 </html>

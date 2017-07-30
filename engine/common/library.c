@@ -280,7 +280,9 @@ void Com_FreeLibrary( void *hInstance )
 		return Loader_FreeLibrary( hInstance );
 	else
 #endif
+#if !defined __EMSCRIPTEN__ || defined EMSCRIPTEN_LIB_FS
 	dlclose( hInstance );
+#endif
 }
 
 void *Com_GetProcAddress( void *hInstance, const char *name )
