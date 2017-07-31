@@ -875,6 +875,9 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		if( !GL_UpdateContext( ))
 			return false;
 	}
+	SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
+
+	R_ChangeDisplaySettingsFast( width, height );
 	return true;
 }
 
