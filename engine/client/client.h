@@ -796,7 +796,7 @@ int CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta );
 qboolean CL_AddVisibleEntity( cl_entity_t *ent, int entityType );
 void CL_UpdateStudioVars( cl_entity_t *ent, entity_state_t *newstate, qboolean noInterp );
 qboolean CL_GetEntitySpatialization( int entnum, vec3_t origin, float *pradius );
-void CL_UpdateEntityFields( cl_entity_t *ent );
+qboolean CL_UpdateEntityFields( cl_entity_t *ent );
 qboolean CL_IsPlayerIndex( int idx );
 void CL_SetIdealPitch( void );
 
