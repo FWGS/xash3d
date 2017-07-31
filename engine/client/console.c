@@ -1073,8 +1073,6 @@ Field_Paste
 */
 void Field_Paste( field_t *edit )
 {
-// I guess we don't have the ability to paste without SDL.
-#ifdef XASH_SDL
 	char	*cbd;
 	int	i, pasteLen;
 
@@ -1085,7 +1083,6 @@ void Field_Paste( field_t *edit )
 	pasteLen = Q_strlen( cbd );
 	for( i = 0; i < pasteLen; i++ )
 		Field_CharEvent( edit, cbd[i] );
-#endif
 }
 
 /*
