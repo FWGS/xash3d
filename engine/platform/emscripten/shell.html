@@ -89,9 +89,8 @@
       var myerrorbuf = ''
       var myerrordate = new Date();
       var mounted = false;
-      var basedir = 'uplink';
-      var gamedir = 'uplink_gamedir'
-      var gameinfotext = 'basedir '+basedir+' gamedir '+gamedir+' title "Half-Life: Uplink" startmap hldemo1 trainmap t0a0';
+      var gamedir = 'valve';
+      var xashdir = 'xash'
 
       var Module = {
         preRun: [],
@@ -201,32 +200,33 @@
       }
       function setupFS()
       {
-        FS.mkdir(gamedir);
+        FS.mkdir(xashdir);
         var bIndexedDB = document.getElementById('rIndexedDB');
         var bLocalStorage = document.getElementById('rLocalStorage')
         function updategameinfo()
         {
-        Module.print('Writing gameinfo');
+        /*Module.print('Writing gameinfo');
         try{
         FS.unlink(gamedir+'/gameinfo.txt');
         }catch(e){}
-        FS.writeFile(gamedir+'/gameinfo.txt', gameinfotext);
+        FS.writeFile(gamedir+'/gameinfo.txt', gameinfotext);*/
 
         }
         
         if( bIndexedDB && bIndexedDB.checked )
         {
-          FS.mount(IDBFS,{},'/'+gamedir);
+          FS.mount(IDBFS,{},'/'+xashdir);
           FS.syncfs(true,function(err){if(err)Module.print('Loading IDBFS: ' + err);else updategameinfo() });
           mounted = true;
         }
         if( bLocalStorage && bLocalStorage.checked )
         {
           BrowserFS.initialize(new BrowserFS.FileSystem.LocalStorage());
-          FS.mount(new BrowserFS.EmscriptenFS(), {root:'/'}, '/'+gamedir);
+          FS.mount(new BrowserFS.EmscriptenFS(), {root:'/'}, '/'+xashdir);
           Module.print('LocalStorage mounted');
         }
         updategameinfo();
+        FS.chdir('/xash/')
         asyncDialog.innerHTML='<input type=text value="'+window.location.hash.substring(1).replace(',',' ')+'" id=iArgs /><button onclick=startXash()>Start</button>';
         Module.setStatus('FS setup done, click "Start"');
       }
@@ -245,7 +245,8 @@
         asyncDialog.innerHTML=html;
         //ENV.LIBRARY_PREFIX=basedir+'/';
         //ENV.LIBRARY_SUFFIX='.js';
-        ENV.XASH3D_GAMEDIR=gamedir;
+        ENV.XASH3D_GAMEDIR = gamedir;
+        ENV.XASH3D_RODIR = '/rodir'
         function loadModule(name)
         {
           var script = document.createElement('script');
@@ -258,11 +259,11 @@
       }
       Module.preInit = [skipRun];
       Module.websocket = [];
-      //Module.websocket.url = 'wsproxy://the-swank.pp.ua:3000/'
+      Module.websocket.url = 'wsproxy://127.0.0.1:3000/'
       ENV = [];
       
     </script>
-    <script type='text/javascript' src='uplink.js'></script>
+    <script type='text/javascript' src='hldm.js'></script>
 
     {{{ SCRIPT }}}
 
