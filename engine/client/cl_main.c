@@ -863,6 +863,7 @@ void CL_Connect_f( void )
 	Msg( "server %s\n", server );
 	CL_Disconnect();
 
+	HTTP_Clear_f();
 	cls.state = ca_connecting;
 	Q_strncpy( cls.servername, server, sizeof( cls.servername ));
 	cls.connect_time = MAX_HEARTBEAT; // CL_CheckForResend() will fire immediately

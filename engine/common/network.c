@@ -1506,7 +1506,7 @@ void HTTP_FreeFile( httpfile_t *file, qboolean error )
 		if( file->process )
 			CL_ProcessFile( true, name );
 		else
-			Msg ( "HTTP: Successfully downloaded %s, prosessing disabled!\n", name );
+			Msg ( "HTTP: Successfully downloaded %s, processing disabled!\n", name );
 	}
 	// Now free list node
 	if( http.first_file == file )
@@ -2003,6 +2003,7 @@ Clear all queue
 void HTTP_Clear_f( void )
 {
 	http.last_file = NULL;
+	downloadfileid = downloadcount = 0;
 
 	while( http.first_file )
 	{
