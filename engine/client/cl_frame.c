@@ -394,7 +394,7 @@ qboolean CL_UpdateEntityFields( cl_entity_t *ent )
 	}
 	else if( CL_EntityCustomLerp( ent ) )
 	{
-		if( !CL_InterpolateModel( ent ) )
+		if( !CL_InterpolateModel( ent ))
 			return false; // failed to interpolate entity, skip this frame
 	}
 	// this originally was allowed for only cstrike and czero
@@ -1148,6 +1148,7 @@ int CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta )
 
 		SCR_MakeLevelShot();		// make levelshot if needs
 		Cvar_SetFloat( "scr_loading", 0.0f );	// reset progress bar	
+		Netchan_ReportFlow( &cls.netchan );
 
 		if(( cls.demoplayback || cls.disable_servercount != cl.servercount ) && cl.video_prepped )
 			SCR_EndLoadingPlaque(); // get rid of loading plaque
