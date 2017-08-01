@@ -261,6 +261,7 @@ qboolean Netchan_IncomingReady( netchan_t *chan );
 qboolean Netchan_CanPacket( netchan_t *chan );
 void Netchan_FragSend( netchan_t *chan );
 void Netchan_Clear( netchan_t *chan );
+void Netchan_ReportFlow( netchan_t *chan );
 
 // packet splitting
 qboolean NetSplit_GetLong(netsplit_t *ns, netadr_t *from, byte *data, size_t *length , qboolean decompress );
