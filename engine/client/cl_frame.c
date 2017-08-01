@@ -394,7 +394,7 @@ qboolean CL_UpdateEntityFields( cl_entity_t *ent )
 	}
 	else if( CL_EntityCustomLerp( ent ) )
 	{
-		if( !CL_InterpolateModel( ent ))
+		if( !CL_InterpolateModel( ent ) && ent->curstate.entityType != ENTITY_BEAM)
 			return false; // failed to interpolate entity, skip this frame
 	}
 	// this originally was allowed for only cstrike and czero
