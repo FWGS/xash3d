@@ -3168,6 +3168,9 @@ static qboolean R_CheckLightMap( msurface_t *fa )
 				R_BuildDeluxeMap( fa, temp, smax * 4 );
 
 				GL_Bind( XASH_TEXTURE0, tr.deluxemapTextures[fa->lightmaptexturenum] );
+#ifdef XASH_WES
+				pglTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, GL_TRUE );
+#endif
 
 				pglTexSubImage2D( GL_TEXTURE_2D, 0, fa->light_s, fa->light_t, smax, tmax,
 				GL_RGBA, GL_UNSIGNED_BYTE, temp );
@@ -3186,6 +3189,10 @@ static qboolean R_CheckLightMap( msurface_t *fa )
 		R_SetCacheState( fa );
 
 		GL_Bind( XASH_TEXTURE0, tr.lightmapTextures[fa->lightmaptexturenum] );
+
+#ifdef XASH_WES
+		pglTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, GL_TRUE );
+#endif
 
 		pglTexSubImage2D( GL_TEXTURE_2D, 0, fa->light_s, fa->light_t, smax, tmax,
 		GL_RGBA, GL_UNSIGNED_BYTE, temp );
