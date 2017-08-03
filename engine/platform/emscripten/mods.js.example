@@ -1,0 +1,19 @@
+// last field is used to show progress correctly when browser could not determine file size
+// You may add human-readable size to display name
+// zip -r9 mod.zip gamedir
+// Zip support uses BrowserFS ZipFS implementation which may be unstable in some browsers (i'm getting abort in syscall5 sometimes)
+// Loading files from heavily compressed zips may freeze
+zipMods = [
+['mod1.zip', 'Mod1 display name (58M)', 60000000],
+['mod2.zip', 'Mod2 display name (39M)', 40000000]
+];
+
+// use emscripten file packager with js output
+// place game data to 'rodir' folder before packaging to get '/rodir/gamedir' paths after packaging
+// python ~/emscripten/tools/file_packager.py mod1.data --preload rodir --indexedDB-name=MODNAME --use-preload-cache --no-heap-copy --lz4 --js-output=mod1.js
+// package script already contains file size, so you need to specify size only in name
+pkgMods = [
+['mod1.js','Display name(mod size)'],
+['mod2.js', 'Display name(mod size)']
+];
+

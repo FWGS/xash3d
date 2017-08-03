@@ -249,7 +249,7 @@ void Host_FrameLoop()
 {
 #if defined __EMSCRIPTEN__ && !defined EMSCRIPTEN_ASYNC
 	emscripten_cancel_main_loop();
-	emscripten_set_main_loop( Host_RunFrame, 0, 1 );
+	emscripten_set_main_loop( Host_RunFrame, 0, 0 );
 #else
 	// main window message loop
 	while( !host.crashed && !host.shutdown_issued )
