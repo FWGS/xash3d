@@ -1724,6 +1724,11 @@ void GAME_EXPORT CL_FireField( float *org, int radius, int modelIndex, int count
 			pTemp->entity.curstate.rendermode = kRenderTransTexture;
 			pTemp->entity.curstate.renderamt = 128;
 		}
+		else if ( flags & TEFIRE_FLAG_ADDITIVE )
+		{
+			pTemp->entity.curstate.rendermode = kRenderTransAdd;
+			pTemp->entity.curstate.renderamt = 80;
+		}
 
 		pTemp->die += life;
 	}

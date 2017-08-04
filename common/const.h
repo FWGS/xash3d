@@ -111,7 +111,10 @@
 #define EF_LIGHT			64	// rocket flare glow sprite
 #define EF_NODRAW			128	// don't draw entity
 
-
+// From HLSDK 2.4
+#define EF_NIGHTVISION			256	// player nightvision
+#define EF_SNIPERLASER			512	// sniper laser effect
+#define EF_FIBERCAMERA			1024	// fiber camera
 
 #define EF_NOREFLECT		(1U << 24)	// Entity won't reflecting in mirrors
 #define EF_REFLECTONLY		(1U << 25)	// Entity will be drawing only in mirrors
@@ -532,6 +535,9 @@
 #define TEFIRE_FLAG_ALPHA	8 // if set, sprite is rendered alpha blended at 50% else, opaque
 #define TEFIRE_FLAG_PLANAR	16 // if set, all fire sprites have same initial Z instead of randomly filling a cube. 
 
+// From HLSDK 2.4
+#define TEFIRE_FLAG_ADDITIVE	32 // if set, sprite is rendered non-opaque with additive
+
 #define TE_PLAYERATTACHMENT		124	// attaches a TENT to a player (this is a high-priority tent)
 // byte (entity index of player)
 // coord (vertical offset) ( attachment origin.z = player origin.z + vertical offset )
@@ -621,8 +627,11 @@
 #define CHAN_BODY			4
 #define CHAN_STREAM			5	// allocate stream channel from the static or dynamic area
 #define CHAN_STATIC			6	// allocate channel from the static area 
-#define CHAN_NETWORKVOICE_BASE	7	// voice data coming across the network
+#define CHAN_NETWORKVOICE_BASE		7	// voice data coming across the network
 #define CHAN_NETWORKVOICE_END		500	// network voice data reserves slots (CHAN_NETWORKVOICE_BASE through CHAN_NETWORKVOICE_END).
+
+// From HLSDK 2.4
+#define CHAN_BOT					501 // channel used for bot chatter
 
 // attenuation values
 #define ATTN_NONE			0
@@ -724,7 +733,8 @@ enum
 	kRenderFxDeadPlayer,		// kRenderAmt is the player index
 	kRenderFxExplode,			// Scale up really big!
 	kRenderFxGlowShell,			// Glowing Shell
-	kRenderFxClampMinScale		// Keep this sprite from getting very small (SPRITES only!)
+	kRenderFxClampMinScale,		// Keep this sprite from getting very small (SPRITES only!)
+	kRenderFxLightMultiplier    //CTM !!!CZERO added to tell the studiorender that the value in iuser2 is a lightmultiplier
 };
 
 #include "xash3d_types.h"
