@@ -93,7 +93,7 @@ void CL_UpdatePositions( cl_entity_t *ent )
 
 	VectorCopy( ent->curstate.origin, ph->origin );
 	VectorCopy( ent->curstate.angles, ph->angles );
-	ph->animtime = cl.mtime[0];
+	ph->animtime = ent->curstate.msg_time;
 }
 
 /*
@@ -110,8 +110,8 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 	float	at;
 
 	// Debug on grenade
-	//qboolean debug = !Q_strcmp( ent->model->name, "models/w_grenade.mdl" );
-	// qboolean debug = ent->player;
+	// qboolean debug = !Q_strcmp( ent->model->name, "models/w_grenade.mdl" );
+	// qboolean debug = ent->index == cl.playernum;
 
 	i0 = ( ent->current_position ) & HISTORY_MASK;
 	i1 = ( ent->current_position - 1 ) & HISTORY_MASK;
@@ -121,10 +121,10 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 	{
 		at = ent->ph[ ( imod - i ) & HISTORY_MASK ].animtime;
 
-		if ( at == 0.0 )
+		if( at == 0.0 )
 			break;
 
-		if ( targettime > at )
+		if( at < targettime )
 		{
 			i0 = ( ( imod - i ) + 1 ) & HISTORY_MASK;
 			i1 = ( imod - i ) & HISTORY_MASK;
@@ -132,9 +132,6 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 			break;
 		}
 	}
-
-	// if( debug )
-		// Msg( "CL_FindInterpolationUpdates: %d %d %d %f\n", ent->current_position, i0, i1, ent->ph[i0].animtime - targettime );
 
 	if( ph0 != NULL ) *ph0 = &ent->ph[i0];
 	if( ph1 != NULL ) *ph1 = &ent->ph[i1];
@@ -189,7 +186,7 @@ void CL_PureOrigin( cl_entity_t *ent, float t, vec3_t outorigin, vec3_t outangle
 			frac = 1.0f;
 
 		VectorMA( ph1->origin, frac, delta, pos );
-		InterpolateAngles( ph1->angles, ph1->angles, angles, frac );
+		InterpolateAngles( ph0->angles, ph1->angles, angles, frac );
 
 		VectorCopy( pos, outorigin );
 		VectorCopy( angles, outangles );
@@ -377,7 +374,7 @@ Try to interpolate entity. If can't, return zero and skip entity this frame
 qboolean CL_UpdateEntityFields( cl_entity_t *ent )
 {
 	ent->model = Mod_Handle( ent->curstate.modelindex );
-	ent->curstate.msg_time = cl.time;
+	// ent->curstate.msg_time = cl.time;
 
 	if( CL_IsParametricEntity( ent ) )
 	{
@@ -876,10 +873,11 @@ void CL_DeltaEntity( sizebuf_t *msg, frame_t *frame, int newnum, entity_state_t 
 		if ( newent )
 			CL_ResetPositions( ent );
 	}
-	else if( ent->player && ( ent->curstate.movetype != MOVETYPE_NONE ) && ( ent->prevstate.movetype == MOVETYPE_NONE ) )
-		CL_ResetPositions( ent );
 	else
 	{
+		if( ent->player && ( ent->curstate.movetype != MOVETYPE_NONE ) && ( ent->prevstate.movetype == MOVETYPE_NONE ) )
+			CL_ResetPositions( ent );
+
 		// shuffle the last state to previous
 		ent->prevstate = ent->curstate;
 	}
