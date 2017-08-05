@@ -259,6 +259,8 @@
 			}
 		};
 		window.onerror = function(event) {
+			if(mounted)
+				FS.syncfs(false, function(err){Module.print('Saving IDBFS: '+err);});
 			if( (''+event).indexOf('SimulateInfiniteLoop') > 0 )
 				return;
 			var text = 'Exception thrown: ' + event;
@@ -268,8 +270,6 @@
 			text = text.replace('\n', '<br>', 'g');
 			Module.setStatus(text);
 			Module.print('Exception thrown: ' + event);
-			if(mounted)
-				FS.syncfs(false, function(err){Module.print('Saving IDBFS: '+err);});
 		};
 
 		function haltRun()
