@@ -1,8 +1,19 @@
 CC ?= gcc
 CXX ?= g++
+
+ifeq ($(CC),cc)
+ CC = gcc
+endif
 #CFGAGS = -O0 -ggdb
 CFLAGS = -O2 -fno-omit-frame-pointer -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse2 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=i686
 LDFLAGS =
+MACHINE := $(shell $(CC) -dumpmachine)
+ifneq ($(64BIT),1)
+	ifeq ($(MACHINE),x86_64-w64-mingw32)
+		LDFLAGS += -m32
+		CFLAGS += -m32
+	endif
+endif
 LIBS = -lm
 TOPDIR = $(PWD)/..
 INCLUDES = -I../SDL2/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared
@@ -50,11 +61,8 @@ xash_bin.exe: $(OBJS) $(OBJS_CPP)
 
 .PHONY: depend clean list
 clean:
-ifneq ($(RM),)
-	$(RM) $(OBJS) $(OBJS_CPP) xash_bin.exe
-else
-	cmd /c del $(subst /,\,$(OBJS) $(OBJS_CPP) xash_bin.exe)
-endif
+	-$(RM) $(OBJS) $(OBJS_CPP) xash_bin.exe
+	-cmd /c del $(subst /,\,$(OBJS) $(OBJS_CPP) xash_bin.exe)
 list:
 	@echo Sources:
 	@echo $(SRCS)
