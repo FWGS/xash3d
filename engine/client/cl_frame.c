@@ -61,12 +61,15 @@ int CL_PushMoveFilter( physent_t *pe )
 
 void CL_ResetPositions( cl_entity_t *ent )
 {
-	position_history_t store = ent->ph[ent->current_position];
+	// disabled to prevent FindInterpolationUpdates use wrong stored data
+	// re-enable when ent->ph[ent->current_position] will be actual
+	//position_history_t store = ent->ph[ent->current_position];
 
-	ent->current_position = 1;
+	ent->current_position = 0;
+	//ent->current_position = 1;
 
 	Q_memset( ent->ph, 0, sizeof( ent->ph ) );
-	ent->ph[1] = ent->ph[0] = store;
+	//ent->ph[1] = ent->ph[0] = store;
 }
 
 /*
@@ -141,7 +144,7 @@ qboolean CL_FindInterpolationUpdates( cl_entity_t *ent, float targettime, positi
 
 /*
 ==================
-CL_FindInterpolationUpdates
+CL_EntityTeleported
 
 Check is entity teleported
 ==================
@@ -247,12 +250,17 @@ qboolean CL_InterpolateModel( cl_entity_t *e )
 	position_history_t  *ph0 = NULL, *ph1 = NULL;
 	vec3_t              origin, angles, delta;
 	float		        t, t1, t2, frac;
+	qboolean extrapolate;
 
 	VectorCopy( e->curstate.origin, e->origin );
 	VectorCopy( e->curstate.angles, e->angles );
 
 	// disable interpolating in singleplayer
-	if( cls.timedemo || cl.maxclients == 1 )
+	if( cls.timedemo || cls.netchan.remote_address.type == NA_LOOPBACK )
+		return true;
+
+	// disable interpolating non-moving entities
+	if( e->curstate.movetype == MOVETYPE_NONE )
 		return true;
 
 	// don't inerpolate modelless entities or bmodels
@@ -266,15 +274,30 @@ qboolean CL_InterpolateModel( cl_entity_t *e )
 	if( cl.predicted.moving && cl.predicted.onground == e->index )
 		return true;
 
+	// recovering from delta error or cl_nodelta enabled
+	if( cl.delta_sequence < 1 )
+		return true;
+
 	t = cl.time - cl_interp->value;
 
-	CL_FindInterpolationUpdates( e, t, &ph0, &ph1 );
+	extrapolate = CL_FindInterpolationUpdates( e, t, &ph0, &ph1 );
 
 	t1 = ph1->animtime;
 	t2 = ph0->animtime;
 
 	if( t < t1 )
 		return false;
+
+	if( extrapolate )
+	{
+		if( e->model->type == mod_brush )
+			return true; //keep curstate
+
+		//Msg("%s %f %f %f %f\n", e->model->name, e->curstate.animtime, cl.time - e->curstate.msg_time, t1, t2 );
+
+		if( e->curstate.animtime == 0 )
+			return false; // hide new non-interpolated entity
+	}
 
 	if( t1 == 0 || ( VectorIsNull( ph1->origin ) && !VectorIsNull( ph0->origin ) ) )
 	{
@@ -391,11 +414,12 @@ qboolean CL_UpdateEntityFields( cl_entity_t *ent )
 	}
 	else if( CL_EntityCustomLerp( ent ) )
 	{
-		if( !CL_InterpolateModel( ent ) && ent->curstate.entityType != ENTITY_BEAM)
+		if( !CL_InterpolateModel( ent ) && ent->curstate.entityType != ENTITY_BEAM &&
+				ent->model && ent->model->type != mod_brush )
 			return false; // failed to interpolate entity, skip this frame
 	}
 	// this originally was allowed for only cstrike and czero
-	else if( ent->curstate.movetype == MOVETYPE_STEP && !NET_IsLocalAddress( cls.netchan.remote_address ) )
+	else if( ent->curstate.movetype == MOVETYPE_STEP && cls.netchan.remote_address.type != NA_LOOPBACK )
 	{
 		if( !CL_InterpolateModel( ent ) )
 			return false; // failed to interpolate entity, skip this frame
