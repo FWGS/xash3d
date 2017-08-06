@@ -235,6 +235,18 @@ gotnewcl:
 	if( sv_maxclients->integer == 1 ) // restore physinfo for singleplayer
 		Q_strncpy( newcl->physinfo, physinfostr, sizeof( physinfostr ));
 
+	if( Q_strncpy( newcl->useragent, Cmd_Argv( 6 ), MAX_INFO_STRING ) )
+	{
+		char *id = Info_ValueForKey( newcl->useragent, "i" );
+
+		if( *id )
+		{
+			sscanf( id, "%llx", &newcl->WonID );
+		}
+
+		Q_strncpy( cl->auth_id, id, sizeof( cl->auth_id ) );
+	}
+
 	svs.currentPlayer = newcl;
 	svs.currentPlayerNum = (newcl - svs.clients);
 	edictnum = svs.currentPlayerNum + 1;
@@ -275,18 +287,8 @@ gotnewcl:
 
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
 
-	// get the game a chance to reject this connection or modify the userinfo
-	if( !( SV_ClientConnect( ent, userinfo )))
-	{
-		if( *Info_ValueForKey( userinfo, "rejmsg" ))
-			Netchan_OutOfBandPrint( NS_SERVER, from, "%s\n%s\nConnection refused.\n", errorpacket, Info_ValueForKey( userinfo, "rejmsg" ));
-		else Netchan_OutOfBandPrint( NS_SERVER, from, "%s\nConnection refused.\n", errorpacket );
-
-		MsgDev( D_ERROR, "SV_DirectConnect: game rejected a connection.\n");
-		Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
-		SV_DropClient( newcl );
-		return;
-	}
+	// parse some info from the info strings (this can override cl_updaterate)
+	SV_UserinfoChanged( newcl, userinfo );
 
 	// send the connect packet to the client
 	Netchan_OutOfBandPrint( NS_SERVER, from, "client_connect %d\n", extensions );
@@ -301,10 +303,6 @@ gotnewcl:
 	newcl->delta_sequence = -1;
 	newcl->resources_sent = 1;
 	newcl->hasusrmsgs = false;
-
-	// parse some info from the info strings (this can override cl_updaterate)
-	SV_UserinfoChanged( newcl, userinfo );
-
 	newcl->next_messagetime = host.realtime + newcl->cl_updaterate;
 
 	// if this was the first client on the server, or the last client
@@ -672,7 +670,7 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 	if( cl->authentication_method == 0 )
 	{
 		// probably some old compatibility code.
-		Q_snprintf( result, sizeof( result ), "%010lu", (unsigned long)cl->WonID );
+		Q_snprintf( result, sizeof( result ), "%010llu", cl->WonID );
 	}
 	else if( cl->authentication_method == 2 )
 	{
@@ -680,13 +678,17 @@ const char *SV_GetClientIDString( sv_client_t *cl )
 		{
 			Q_strncpy( result, "VALVE_ID_LOOPBACK", sizeof( result ));
 		}
+		else if( cl->auth_id[0] )
+		{
+			Q_snprintf( result, sizeof( result ), "VALVE_XASH_%s", cl->auth_id );
+		}
 		else if( cl->WonID == 0 )
 		{
 			Q_strncpy( result, "VALVE_ID_PENDING", sizeof( result ));
 		}
 		else
 		{
-			Q_snprintf( result, sizeof( result ), "VALVE_%010lu", (unsigned long)cl->WonID );
+			Q_snprintf( result, sizeof( result ), "VALVE_%010llu", cl->WonID );
 		}
 	}
 	else Q_strncpy( result, "UNKNOWN", sizeof( result ));
@@ -1186,11 +1188,11 @@ void SV_PutClientInServer( edict_t *ent )
 {
 	sv_client_t	*client;
 
-	client = SV_ClientFromEdict( ent, true );
+	client = SV_ClientFromEdict( ent, false );
 
 	if( client == NULL )
 	{
-		MsgDev( D_ERROR, "SV_AddEntitiesToPacket: you have broken clients!\n");
+		MsgDev( D_ERROR, "SV_PutClientInServer: you have broken clients!\n");
 		return;
 	}
 
@@ -1263,6 +1265,8 @@ void SV_PutClientInServer( edict_t *ent )
 	client->last_cmdtime = 0.0;
 	client->last_movetime = 0.0;
 	client->next_movetime = 0.0;
+
+	client->state = cs_spawned;
 
 	if( !client->fakeclient )
 	{
@@ -1363,6 +1367,20 @@ void SV_New_f( sv_client_t *cl )
 	// refresh userinfo on spawn
 	SV_RefreshUserinfo();
 
+	// get the game a chance to reject this connection or modify the userinfo
+	if( !SV_ClientConnect( cl->edict, cl->userinfo ) )
+	{
+		char *errorpacket = cl->useragent[0]?"errormsg":"print";
+
+		if( *Info_ValueForKey( cl->userinfo, "rejmsg" ))
+			Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "%s\n%s\nConnection refused.\n", errorpacket, Info_ValueForKey( cl->userinfo, "rejmsg" ));
+		else Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "%s\nConnection refused.\n", errorpacket );
+
+		MsgDev( D_ERROR, "game rejected a connection.\n");
+		Netchan_OutOfBandPrint( NS_SERVER, cl->netchan.remote_address, "disconnect\n" );
+		SV_DropClient( cl );
+		return;
+	}
 
 
 	// game server
@@ -1428,6 +1446,59 @@ void SV_ContinueLoading_f( sv_client_t *cl )
 	BF_WriteString( &cl->netchan.message, va( "cmd modellist %i %i\n", svs.spawncount, 0 ));
 }
 
+void SV_AppendToResourceList( resourcelist_t *reslist, const resourcetype_t type, const char *file )
+{
+	if( reslist->rescount > MAX_RESOURCES )
+	{
+		MsgDev( D_WARN, "Too big resource list! Skipping %s of type %i\n", file, type );
+		return;
+	}
+
+	Q_strncpy( reslist->resnames[reslist->rescount], file, CS_SIZE );
+	reslist->restype[reslist->rescount] = type;
+	reslist->rescount++;
+}
+
+void SV_ParseResListFile( resourcelist_t *reslist, const char *name )
+{
+	char *afile, *pfile;
+	char token[MAX_SYSPATH];
+	resourcetype_t type;
+
+	afile = pfile = FS_LoadFile( name, NULL, true );
+
+	while(( pfile = COM_ParseFile( pfile, token )))
+	{
+		int i;
+
+		if( FS_FileExists( token, true ))
+			continue;
+
+		if( !Q_memcmp( token, "sound/", 6))
+		{
+			type = t_sound;
+			Q_memmove( token, token + 6, sizeof( token ) - 7 );
+		}
+		else
+		{
+			type = t_generic;
+		}
+
+		// prevent resource duplication
+		for( i = 0; i < reslist->rescount; i++ )
+		{
+			if( !Q_strcmp( reslist->resnames[i], token ) )
+				break;
+		}
+
+		// don't found dupe, ok, add to list
+		if( i == reslist->rescount )
+			SV_AppendToResourceList( reslist, type, token );
+	}
+
+	Z_Free( afile );
+}
+
 /*
 =======================
 SV_SendResourceList
@@ -1439,17 +1510,9 @@ g-cont. this is fucking big message!!! i've rewriting this code
 void SV_SendResourceList_f( sv_client_t *cl )
 {
 	int		index = 0;
-	int		rescount = 0;
-	resourcelist_t	reslist;	// g-cont. what about stack???
 	size_t		msg_size;
 	int msg_start, msg_end;
-	char *resfile;
-	char *mapresfile;
 	char mapresfilename[256];
-	char token[256];
-	char *pfile;
-
-	Q_memset( &reslist, 0, sizeof( resourcelist_t ));
 
 	// transfer fastdl servers list
 	if( *sv_downloadurl->string )
@@ -1463,117 +1526,74 @@ void SV_SendResourceList_f( sv_client_t *cl )
 		}
 	}
 
-	reslist.restype[rescount] = t_world; // terminator
-	Q_strcpy( reslist.resnames[rescount], "NULL" );
-	rescount++;
-
-	for( index = 1; index < MAX_MODELS && sv.model_precache[index][0]; index++ )
+	// generate new resource list, if it's not cached
+	if ( !sv.resourcelistcache )
 	{
-		if( sv.model_precache[index][0] == '*' ) // internal bmodel
-			continue;
-		if( !FS_FileExists( sv.model_precache[index], true ) )
-			continue;
+		SV_AppendToResourceList( &sv.reslist, t_world, "NULL" ); // terminator
 
-		reslist.restype[rescount] = t_model;
-		Q_strcpy( reslist.resnames[rescount], sv.model_precache[index] );
-		rescount++;
-	}
-
-	for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
-	{
-
-		if( !FS_FileExists( va( "sound/%s", sv.sound_precache[index] ), true ) )
-			continue;
-		reslist.restype[rescount] = t_sound;
-		Q_strcpy( reslist.resnames[rescount], sv.sound_precache[index] );
-		rescount++;
-	}
-
-	for( index = 1; index < MAX_EVENTS && sv.event_precache[index][0]; index++ )
-	{
-		if( !FS_FileExists( sv.event_precache[index], true ) )
-			continue;
-		reslist.restype[rescount] = t_eventscript;
-		Q_strcpy( reslist.resnames[rescount], sv.event_precache[index] );
-		rescount++;
-	}
-
-	for( index = 1; index < MAX_CUSTOM && sv.files_precache[index][0]; index++ )
-	{
-		if( !FS_FileExists( sv.files_precache[index], true ) )
-			continue;
-		reslist.restype[rescount] = t_generic;
-		Q_strcpy( reslist.resnames[rescount], sv.files_precache[index] );
-		rescount++;
-	}
-
-	// load common reslist file form gamedir root
-	resfile = pfile = (char *)FS_LoadFile("reslist.txt", 0, true );
-	while( ( pfile = COM_ParseFile( pfile, token ) ) )
-	{
-		int i;
-		if( !FS_FileExists( token, true ) )
-			continue;
-		if( !Q_memcmp( token, "sound/", 6 ) )
+		// write models
+		for ( index = 1; index < MAX_MODELS && sv.model_precache[index][0]; index++ )
 		{
-			reslist.restype[rescount] = t_sound;
-			Q_memmove( token, &token[0] + 6, sizeof( token ) - 7 );
+			if ( sv.model_precache[index][0] == '*' ) // internal bmodel
+				continue;
+
+			if ( !FS_FileExists( sv.model_precache[index], true ) )
+				continue;
+
+			SV_AppendToResourceList( &sv.reslist, t_model, sv.model_precache[index] );
 		}
-		else
-			reslist.restype[rescount] = t_generic;
-		// prevent resource dublication
-		for( i = 0; i < rescount; i++ )
-			if( !Q_strcmp( reslist.resnames[i], token ) )
-				goto cont1;
-		Q_strcpy( reslist.resnames[rescount], token );
-		rescount++;
-		cont1:
-		continue;
-	}
-	if( resfile )
-		Mem_Free( resfile );
-	// maps/<name>.res
-	Q_strncpy( mapresfilename, sv.worldmodel->name, sizeof( mapresfilename ));
-	FS_StripExtension( mapresfilename );
-	FS_DefaultExtension( mapresfilename, ".res" );
-	mapresfile = pfile = (char *)FS_LoadFile( mapresfilename, 0, true );
-	while( ( pfile = COM_ParseFile( pfile, token ) ) )
-	{
-		int i;
-		if( !FS_FileExists( token, true ) )
-			continue;
-		if( !Q_memcmp( token, "sound/", 6 ) )
+
+		// write sounds
+		for ( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
 		{
-			reslist.restype[rescount] = t_sound;
-			Q_memmove( token, &token[0] + 6, sizeof( token ) - 7 );
+			if ( !FS_FileExists( va( "sound/%s", sv.sound_precache[index] ), true ) )
+				continue;
+
+			SV_AppendToResourceList( &sv.reslist, t_sound, sv.sound_precache[index] );
 		}
-		else
-			reslist.restype[rescount] = t_generic;
-		// prevent resource dublication
-		for( i = 0; i < rescount; i++ )
-			if( !Q_strcmp( reslist.resnames[i], token ) )
-				goto cont;
-		Q_strcpy( reslist.resnames[rescount], token );
-		rescount++;
-		cont:
-		continue;
+
+		// write eventscripts
+		for ( index = 1; index < MAX_EVENTS && sv.event_precache[index][0]; index++ )
+		{
+			if ( !FS_FileExists( sv.event_precache[index], true ) )
+				continue;
+
+			SV_AppendToResourceList( &sv.reslist, t_eventscript, sv.event_precache[index] );
+		}
+
+		// write generic
+		for ( index = 1; index < MAX_CUSTOM && sv.files_precache[index][0]; index++ )
+		{
+			if ( !FS_FileExists( sv.files_precache[index], true ) )
+				continue;
+
+			SV_AppendToResourceList( &sv.reslist, t_generic, sv.files_precache[index] );
+		}
+
+		// load common reslist.txt file form gamedir root
+		SV_ParseResListFile( &sv.reslist, "reslist.txt");
+
+		// write maps/<name>.res
+		Q_strcpy( mapresfilename, sv.worldmodel->name );
+		FS_StripExtension( mapresfilename );
+		FS_DefaultExtension( mapresfilename, ".res" );
+		SV_ParseResListFile( &sv.reslist, mapresfilename );
+
+		sv.resourcelistcache = true;
 	}
-	if( mapresfile )
-		Mem_Free( mapresfile );
 
 	msg_size = BF_GetRealBytesWritten( &cl->netchan.message ); // start
 
 	index = cl->resources_sent;
 	BF_WriteByte( &cl->netchan.message, svc_resourcelist );
 	msg_start = BF_GetNumBitsWritten( &cl->netchan.message );
-	BF_WriteWord( &cl->netchan.message, rescount );
+	BF_WriteWord( &cl->netchan.message, sv.reslist.rescount );
 
-	for( ; ( index < rescount ) && ( BF_GetNumBytesWritten( &cl->netchan.message ) <  cl->maxpayload ); index++ )
+	for( ; ( index < sv.reslist.rescount ) && ( BF_GetNumBytesWritten( &cl->netchan.message ) < cl->maxpayload ); index++ )
 	{
-		BF_WriteWord( &cl->netchan.message, reslist.restype[index] );
-		BF_WriteString( &cl->netchan.message, reslist.resnames[index] );
+		BF_WriteWord( &cl->netchan.message, sv.reslist.restype[index] );
+		BF_WriteString( &cl->netchan.message, sv.reslist.resnames[index] );
 	}
-
 
 	// change real sent resource count
 	msg_end = BF_GetNumBitsWritten( &cl->netchan.message );
@@ -1582,9 +1602,9 @@ void SV_SendResourceList_f( sv_client_t *cl )
 	BF_SeekToBit( &cl->netchan.message, msg_end );
 
 	cl->resources_sent = index;
-	cl->resources_count = rescount;
+	cl->resources_count = sv.reslist.rescount;
 
-	Msg( "Count res: %d\n", rescount );
+	Msg( "Count res: %d\n", sv.reslist.rescount );
 	Msg( "ResList size: %s\n", Q_memprint( BF_GetRealBytesWritten( &cl->netchan.message ) - msg_size ));
 }
 
@@ -1961,7 +1981,6 @@ void SV_Begin_f( sv_client_t *cl )
 		return;
 	}
 
-	cl->state = cs_spawned;
 	SV_PutClientInServer( cl->edict );
 
 	// if we are paused, tell the client

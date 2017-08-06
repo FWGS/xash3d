@@ -872,10 +872,11 @@ void CL_CheckForResend( void )
 		CL_InternetServers_f();
 
 	// if the local server is running and we aren't then connect
-	if( cls.state == ca_disconnected && SV_Active( ))
+	if( cls.state == ca_disconnected && ( SV_Active( ) ) )
 	{
 		cls.state = ca_connecting;
-		Q_strncpy( cls.servername, "localhost", sizeof( cls.servername ));
+		cls.connect_time = host.realtime;
+		Q_strncpy( cls.servername, "loopback", sizeof( cls.servername ) );
 		// we don't need a challenge on the localhost
 		CL_SendConnectPacket();
 		return;
@@ -951,6 +952,7 @@ void CL_Connect_f( void )
 	Msg( "server %s\n", server );
 	CL_Disconnect();
 
+	HTTP_Clear_f();
 	cls.state = ca_connecting;
 	Q_strncpy( cls.servername, server, sizeof( cls.servername ));
 	cls.connect_time = MAX_HEARTBEAT; // CL_CheckForResend() will fire immediately

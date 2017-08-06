@@ -23,6 +23,15 @@ GNU General Public License for more details.
 #include <GL/gl.h>
 #if defined XASH_WES && defined __EMSCRIPTEN__
 GLvoid glDrawRangeElements( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices );
+GLvoid glClientActiveTextureARB( GLenum tmu );
+GLvoid glActiveTextureARB( GLenum tmu );
+extern void glBindBufferARB (GLenum target, GLuint buffer);
+extern void glDeleteBuffersARB (GLsizei n, const GLuint *buffers);
+extern void glGenBuffersARB (GLsizei n, GLuint *buffers);
+
+void glBufferDataARB (GLenum target, GLsizei size, const GLvoid *data, GLenum usage);
+void glBufferSubDataARB (GLenum target, GLint offset, GLsizei size, const GLvoid *data);
+
 #endif
 
 #undef GL_ALL_ATTRIB_BITS

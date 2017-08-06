@@ -161,6 +161,16 @@ void GL_TexFilter( gltexture_t *tex, qboolean update )
 		break;
 	}
 
+#ifdef __EMSCRIPTEN__
+	// glGenerateMipmaps may delay,
+	// but we need draw lightmaps after re-uploading
+	if( r_vbo->integer )
+	{
+		if( tex->texType == TEX_LIGHTMAP )
+			tex->flags |= TF_NOMIPMAP;
+	}
+#endif
+
 	// set texture filter
 	if( tex->flags & TF_DEPTHMAP )
 	{

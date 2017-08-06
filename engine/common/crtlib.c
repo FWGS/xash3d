@@ -371,8 +371,10 @@ char *Q_stristr( const char *string, const char *string2 )
 	}
 	return (char *)string;
 }
-#define USE_STB_SPRINTF
-#ifdef USE_STB_SPRINTF
+#ifndef USE_STB_SPRINTF
+#define USE_STB_SPRINTF 1
+#endif
+#if USE_STB_SPRINTF
 #define STB_SPRINTF_IMPLEMENTATION
 #define STB_SPRINTF_DECORATE(name) Q_##name
 #undef Q_vsprintf

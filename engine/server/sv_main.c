@@ -121,6 +121,7 @@ void Master_Shutdown( void );
 
 char localinfo[MAX_LOCALINFO];
 
+
 //============================================================================
 
 /*
@@ -710,8 +711,6 @@ void Master_Add( void )
 	netadr_t	adr;
 	int res;
 
-	NET_Config( true ); // allow remote
-
 	res = NET_StringToAdrNB( sv_master->string, &adr );
 
 	if( !res )
@@ -722,7 +721,7 @@ void Master_Add( void )
 
 	if( res == 2 )
 	{
-		svs.last_heartbeat = host.realtime - HEARTBEAT_SECONDS;
+		svs.last_heartbeat = MAX_HEARTBEAT;
 		return;
 	}
 
@@ -844,11 +843,12 @@ send error message and return false on wrong input devices
 */
 qboolean SV_ProcessUserAgent( netadr_t from, char *useragent )
 {
-	char *input_devices_str = Info_ValueForKey( useragent,"d" );
+	char *input_devices_str = Info_ValueForKey( useragent, "d" );
+	char *id = Info_ValueForKey( useragent, "i" );
 
 	if( !sv_allow_noinputdevices->integer && ( !input_devices_str || !input_devices_str[0] ) )
 	{
-		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow\nconnect without input devices list.\nPlease update your engine.\n");
+		Netchan_OutOfBandPrint( NS_SERVER, from, "print\nThis server does not allow\nconnect without input devices list.\nPlease update your engine.\n" );
 		return false;
 	}
 
@@ -858,22 +858,33 @@ qboolean SV_ProcessUserAgent( netadr_t from, char *useragent )
 
 		if( !sv_allow_touch->integer && ( input_devices & INPUT_DEVICE_TOUCH ) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow touch\nDisable it (touch_enable 0)\nto play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow touch\nDisable it (touch_enable 0)\nto play on this server\n" );
 			return false;
 		}
 		if( !sv_allow_mouse->integer && ( input_devices & INPUT_DEVICE_MOUSE) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow mouse\nDisable it(m_ignore 1)\nto play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow mouse\nDisable it(m_ignore 1)\nto play on this server\n" );
 			return false;
 		}
 		if( !sv_allow_joystick->integer && ( input_devices & INPUT_DEVICE_JOYSTICK) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow joystick\nDisable it(joy_enable 0)\nto play on this server\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow joystick\nDisable it(joy_enable 0)\nto play on this server\n" );
 			return false;
 		}
 		if( !sv_allow_vr->integer && ( input_devices & INPUT_DEVICE_VR) )
 		{
-			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow VR\n");
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nThis server does not allow VR\n" );
+			return false;
+		}
+	}
+
+	if( id )
+	{
+		qboolean banned = SV_CheckID( id );
+
+		if( banned )
+		{
+			Netchan_OutOfBandPrint( NS_SERVER, from, "errormsg\nYou are banned!\n" );
 			return false;
 		}
 	}
@@ -1017,6 +1028,7 @@ void SV_Init( void )
 	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
 	Cmd_AddCommand( "log", SV_ServerLog_f, "enables logging to file" );
 
+	SV_InitFilter();
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));
 }

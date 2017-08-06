@@ -243,6 +243,7 @@ STBSP__PUBLICDEF void STB_SPRINTF_DECORATE( set_separators )( char pcomma, char 
 #define STBSP__METRIC_NOSPACE 1024
 #define STBSP__METRIC_1024 2048
 #define STBSP__METRIC_JEDEC 4096
+#define STBSP__HALFHALFWIDTH 8192
 
 static void stbsp__lead_sign(stbsp__uint32 fl, char *sign)
 {
@@ -358,7 +359,7 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE( vsprintfcb )( STBSP_SPRINTFCB * callb
     switch(f[0])
     {
       // are we halfwidth?
-      case 'h': fl|=STBSP__HALFWIDTH; ++f; break;
+	  case 'h': fl|=STBSP__HALFWIDTH; ++f; if ( f[0]=='h') { fl|=STBSP__HALFHALFWIDTH; ++f; }  break;
       // are we 64-bit (unix style)
       case 'l': ++f; if ( f[0]=='l') { fl|=STBSP__INTMAX; ++f; } break;
       // are we 64-bit on intmax? (c99)
@@ -698,6 +699,11 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE( vsprintfcb )( STBSP_SPRINTFCB * callb
         else
           n64 = va_arg(va,stbsp__uint32);
 
+		if( fl&STBSP__HALFHALFWIDTH )
+			n64 &= 0xFF;
+		else if( fl&STBSP__HALFWIDTH )
+			n64 &= 0xFFFF;
+
         s = num + STBSP__NUMSZ; dp = 0;
         // clear tail, and clear leading if value is zero
         tail[0]=0; if (n64==0) { lead[0]=0; if (pr==0) { l=0; cs = ( ((l>>4)&15)) << 24; goto scopy; } }
@@ -722,6 +728,12 @@ STBSP__PUBLICDEF int STB_SPRINTF_DECORATE( vsprintfcb )( STBSP_SPRINTFCB * callb
         {
           stbsp__int32 i = va_arg(va,stbsp__int32); n64 = (stbsp__uint32)i; if ((f[0]!='u') && (i<0)) { n64=(stbsp__uint32)-i; fl|=STBSP__NEGATIVE; }
         }
+
+
+		if( fl&STBSP__HALFHALFWIDTH )
+			n64 &= 0xFF;
+		else if( fl&STBSP__HALFWIDTH )
+			n64 &= 0xFFFF;
 
         #ifndef STB_SPRINTF_NOFLOAT
         if (fl&STBSP__METRIC_SUFFIX) { if (n64<1024) pr=0; else if (pr==-1) pr=1; fv=(double)(stbsp__int64)n64; goto doafloat; } 
