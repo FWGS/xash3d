@@ -132,7 +132,7 @@ OpenGL funcs
 
 ==============================================
 */
-#ifndef XASH_NANOGL
+#ifndef XASH_GL_STATIC
 // helper opengl functions
 GLenum ( APIENTRY *pglGetError )(void);
 const GLubyte * ( APIENTRY *pglGetString )(GLenum name);

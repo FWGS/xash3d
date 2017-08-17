@@ -29,18 +29,11 @@ SETUP BACKENDS DEFINATIONS
 
 	#ifdef XASH_SDL
 
+		// by default, use SDL subsystems
 		#ifndef XASH_VIDEO
-
-			// special case for nanogl builds
-			#ifdef XASH_NANOGL
-				#define XASH_VIDEO VIDEO_SDL_NANOGL // VIDEO_SDL_NANOGL
-			#else
-				#define XASH_VIDEO VIDEO_SDL
-			#endif // XASH_NANOGL
-
+			#define XASH_VIDEO VIDEO_SDL
 		#endif // XASH_VIDEO
 
-		// by default, use SDL subsystems
 		#ifndef XASH_TIMER
 			#define XASH_TIMER TIMER_SDL
 		#endif
@@ -133,6 +126,10 @@ Default build-depended cvar and constant values
 #define XASH_INTERNAL_GAMELIBS
 // this means that libraries are provided with engine, but not in game data
 // You need add library loading code to library.c when adding new platform
+#endif
+
+#if defined XASH_NANOGL || defined XASH_WES
+#define XASH_GL_STATIC
 #endif
 
 #define DEFAULT_SV_MASTER "ms.xash.su:27010"
