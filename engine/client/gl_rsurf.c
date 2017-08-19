@@ -3186,15 +3186,19 @@ static qboolean R_CheckLightMap( msurface_t *fa )
 		}
 
 		R_SetCacheState( fa );
-
-		GL_Bind( XASH_TEXTURE0, tr.lightmapTextures[fa->lightmaptexturenum] );
-
 #ifdef XASH_WES
+		GL_Bind( XASH_TEXTURE1, tr.lightmapTextures[fa->lightmaptexturenum] );
+
 		pglTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, GL_TRUE );
+#else
+		GL_Bind( XASH_TEXTURE0, tr.lightmapTextures[fa->lightmaptexturenum] );
 #endif
 
 		pglTexSubImage2D( GL_TEXTURE_2D, 0, fa->light_s, fa->light_t, smax, tmax,
 		GL_RGBA, GL_UNSIGNED_BYTE, temp );
+#ifdef XASH_WES
+		GL_SelectTexture( XASH_TEXTURE0 );
+#endif
 	}
 	// add to dynamic chain
 	else
