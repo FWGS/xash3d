@@ -24,10 +24,14 @@ extern vidmode_t vidmode[];
 
 // backend functions
 void GL_InitExtensions( void );
+qboolean GL_CreateContext( void );
+qboolean GL_UpdateContext( void );
+void GL_SetupAttributes( void );
 void R_Free_OpenGL( void );
 qboolean R_Init_OpenGL( void );
 qboolean VID_SetMode( void );
 qboolean VID_SetScreenResolution( int width, int height );
+void VID_DestroyWindow( void );
 void VID_RestoreScreenResolution( void );
 
 void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cvarname, int r_ext );

@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "gl_local.h"
 #include "mod_local.h"
 #include "input.h"
+#include "gl_vidnt.h"
 #ifdef XASH_NANOGL
 #include <GL/nanogl.h>
 #endif
