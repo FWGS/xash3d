@@ -295,7 +295,11 @@ void EXPORT Host_AbortCurrentFrame( void )
 #else // sj/lj not supported, so re-run main loop with shifted stack
 	Host_FrameLoop();
 #endif
+#ifdef __EMSCRIPTEN__
+	EM_ASM(throw 'SimulateInfiniteLoop');
+#else
 	exit(127);
+#endif
 }
 
 /*
