@@ -2099,6 +2099,9 @@ void R_AddDecalVBO( decal_t *pdecal, msurface_t *surf )
 	float *v;
 	int decalindex = pdecal - &gDecalPool[0];
 
+	if( !vbos.decaldata )
+		return;
+
 	v = R_DecalSetupVerts( pdecal, surf, pdecal->texture, &numVerts );
 
 	if( numVerts > DECAL_VERTS_CUT )
@@ -3589,6 +3592,7 @@ void R_DrawWorld( void )
 	R_DrawVBO( !r_fullbright->integer && !!cl.worldmodel->lightdata, true );
 
 	R_DrawTextureChains();
+
 
 	R_BlendLightmaps();
 

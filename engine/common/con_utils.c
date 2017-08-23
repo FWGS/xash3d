@@ -156,7 +156,11 @@ void Con_CompleteCommand( field_t *field )
 	// only look at the first token for completion purposes
 	Cmd_TokenizeString( con.completionField->buffer );
 
-	nextcmd = con.completionField->buffer[ Q_strlen( con.completionField->buffer ) - 1 ] == ' ';
+	i = Q_strlen( con.completionField->buffer ) - 1;
+	if( i < 0 )
+		i = 0;
+
+	nextcmd = con.completionField->buffer[ i ] == ' ';
 
 	con.completionString = Cmd_Argv( 0 );
 

@@ -2957,7 +2957,7 @@ R_StudioRestoreRenderer
 */
 static void GAME_EXPORT R_StudioRestoreRenderer( void )
 {
-	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 	pglShadeModel( GL_FLAT );
 
 	// restore depthmask state for sprites etc
