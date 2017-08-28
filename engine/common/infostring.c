@@ -332,17 +332,6 @@ qboolean Info_SetValueForStarKey( char *s, const char *key, const char *value, i
 		return false;
 	}
 
-	// this next line is kinda trippy
-	if( *(v = Info_ValueForKey( s, key )))
-	{
-		// key exists, make sure we have enough room for new value, if we don't, don't change it!
-		if( Q_strlen( value ) - Q_strlen( v ) + Q_strlen( s ) > maxsize )
-		{
-			MsgDev( D_ERROR, "SetValueForKey: info string length exceeded\n" );
-			return false;
-		}
-	}
-
 	Info_RemoveKey( s, key );
 
 	if( !value || !Q_strlen( value ))
