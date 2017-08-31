@@ -630,6 +630,10 @@ pack_t *FS_LoadPackPAK( const char *packfile, int *error )
 
 	read( packhandle, (void *)&header, sizeof( header ));
 
+	LittleLongSW(header.ident);
+	LittleLongSW(header.dirlen);
+	LittleLongSW(header.dirofs);
+
 	if( header.ident != IDPACKV1HEADER )
 	{
 		MsgDev( D_NOTE, "%s is not a packfile. Ignored.\n", packfile );
@@ -686,7 +690,7 @@ pack_t *FS_LoadPackPAK( const char *packfile, int *error )
 	// parse the directory
 	for( i = 0; i < numpackfiles; i++ )
 	{
-		FS_AddFileToPack( info[i].name, pack, info[i].filepos, info[i].filelen );
+		FS_AddFileToPack( info[i].name, pack, LittleLong(info[i].filepos), LittleLong(info[i].filelen) );
 	}
 
 	MsgDev( D_NOTE, "Adding packfile: %s (%i files)\n", packfile, numpackfiles );
@@ -3736,6 +3740,9 @@ static qboolean W_ReadLumpTable( wfile_t *wad )
 
 		// cleanup lumpname
 		Q_strnlwr( srclumps[i].name, name, sizeof( srclumps[i].name ));
+		LittleLongSW(srclumps[i].filepos);
+		LittleLongSW(srclumps[i].disksize);
+		LittleLongSW(srclumps[i].size);
 
 		// check for '*' symbol issues
 		k = Q_strlen( Q_strrchr( name, '*' ));
@@ -3832,9 +3839,9 @@ wfile_t *W_Open( const char *filename, const char *mode )
 		wad->mode = O_WRONLY;
 
 		// save space for header
-		hdr.ident = IDWAD3HEADER;
-		hdr.numlumps = wad->numlumps;
-		hdr.infotableofs = sizeof( dwadinfo_t );
+		hdr.ident = LittleLong(IDWAD3HEADER);
+		hdr.numlumps = LittleLong(wad->numlumps);
+		hdr.infotableofs = LittleLong(sizeof( dwadinfo_t ));
 		write( wad->handle, &hdr, sizeof( hdr ));
 		write( wad->handle, comment, Q_strlen( comment ) + 1 );
 		wad->infotableofs = tell( wad->handle );
@@ -3853,6 +3860,10 @@ wfile_t *W_Open( const char *filename, const char *mode )
 			W_Close( wad );
 			return NULL;
 		}
+
+		LittleLongSW(header.ident);
+		LittleLongSW(header.infotableofs);
+		LittleLongSW(header.numlumps);
 
 		switch( header.ident )
 		{

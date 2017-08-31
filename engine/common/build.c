@@ -113,6 +113,8 @@ const char *Q_buildarch( void )
 	archname = "aarch64";
 #elif defined __arm__ || defined _M_ARM
 	archname = "arm";
+#elif defined __mips__
+	archname = "mips";
 #elif defined __EMSCRIPTEN__
 	archname = "javascript";
 #else

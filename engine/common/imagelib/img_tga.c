@@ -42,8 +42,8 @@ qboolean Image_LoadTGA( const char *name, const byte *buffer, size_t filesize )
 	targa_header.colormap_size = *buf_p;				buf_p += 1;
 	targa_header.x_origin = *(short *)buf_p;			buf_p += 2;
 	targa_header.y_origin = *(short *)buf_p;			buf_p += 2;
-	targa_header.width = image.width = *(short *)buf_p;		buf_p += 2;
-	targa_header.height = image.height = *(short *)buf_p;		buf_p += 2;
+	targa_header.width = image.width = LittleShort(*(short *)buf_p);		buf_p += 2;
+	targa_header.height = image.height = LittleShort(*(short *)buf_p);		buf_p += 2;
 	targa_header.pixel_size = *buf_p++;
 	targa_header.attributes = *buf_p++;
 	if( targa_header.id_length != 0 ) buf_p += targa_header.id_length;	// skip TARGA image comment

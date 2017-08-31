@@ -631,17 +631,17 @@ static void Mod_LoadSubmodels( const dlump_t *l )
 		for( j = 0; j < 3; j++ )
 		{
 			// spread the mins / maxs by a pixel
-			out->mins[j] = in->mins[j] - 1.0f;
-			out->maxs[j] = in->maxs[j] + 1.0f;
-			out->origin[j] = in->origin[j];
+			out->mins[j] = LittleFloat(in->mins[j]) - 1.0f;
+			out->maxs[j] = LittleFloat(in->maxs[j]) + 1.0f;
+			out->origin[j] = LittleFloat(in->origin[j]);
 		}
 
 		for( j = 0; j < MAX_MAP_HULLS; j++ )
-			out->headnode[j] = in->headnode[j];
+			out->headnode[j] = LittleLong(in->headnode[j]);
 
-		out->visleafs = in->visleafs;
-		out->firstface = in->firstface;
-		out->numfaces = in->numfaces;
+		out->visleafs = LittleLong(in->visleafs);
+		out->firstface = LittleLong(in->firstface);
+		out->numfaces = LittleLong(in->numfaces);
 
 		if( i == 0 || !world.loading )
 			continue; // skip the world
@@ -699,6 +699,7 @@ static void Mod_LoadTextures( const dlump_t *l )
 	}
 
 	offset = (int *)(mod_base + l->fileofs);
+	LittleLongSW(*offset);
 
 	loadmodel->numtextures = *offset;
 	loadmodel->textures = (texture_t **)Mem_Alloc( loadmodel->mempool, loadmodel->numtextures * sizeof( texture_t* ));
@@ -708,6 +709,8 @@ static void Mod_LoadTextures( const dlump_t *l )
 		qboolean	load_external = false;
 		qboolean	load_external_luma = false;
 		qboolean	load_external_norm = false;
+
+		LittleLongSW(*(offset + i + 1));
 
 		if( *(offset + i + 1) == -1 )
 		{
@@ -725,6 +728,13 @@ static void Mod_LoadTextures( const dlump_t *l )
 
 		buf = (byte *)offset + *(offset + i + 1);
 		Q_memcpy( &mt, buf, sizeof(mip_t));
+
+#ifdef XASH_BIG_ENDIAN
+		LittleLongSW(mt.width);
+		LittleLongSW(mt.height);
+		for (j=0 ; j<MIPLEVELS ; j++)
+			LittleLongSW(mt.offsets[j]);
+#endif
 		
 		if( !mt.name[0] )
 		{
@@ -1154,8 +1164,8 @@ static void Mod_LoadTexInfo( const dlump_t *l )
 	{
 		for( j = 0; j < 4; j++ )
 		{
-			out->vecs[0][j] = in->vecs[0][j];
-			out->vecs[1][j] = in->vecs[1][j];
+			out->vecs[0][j] = LittleFloat(in->vecs[0][j]);
+			out->vecs[1][j] = LittleFloat(in->vecs[1][j]);
 		}
 
 		len1 = VectorLength( out->vecs[0] );
@@ -1168,12 +1178,12 @@ static void Mod_LoadTexInfo( const dlump_t *l )
 		else if( len1 < 0.99f ) out->mipadjust = 2;
 		else out->mipadjust = 1;
 
-		miptex = in->miptex;
+		miptex = LittleLong(in->miptex);
 		if( miptex < 0 || miptex > loadmodel->numtextures )
 			Host_Error( "Mod_LoadTexInfo: bad miptex number in '%s'\n", loadmodel->name );
 
 		out->texture = loadmodel->textures[miptex];
-		out->flags = in->flags;
+		out->flags = LittleLong(in->flags);
 	}
 }
 
@@ -1216,7 +1226,7 @@ static void Mod_LoadDeluxemap( void )
 
 	ASSERT( in != NULL );
 
-	if( *(uint *)in != IDDELUXEMAPHEADER || *((uint *)in + 1) != DELUXEMAP_VERSION )
+	if( LittleLong(*(uint *)in) != IDDELUXEMAPHEADER || *((uint *)in + 1) != DELUXEMAP_VERSION )
 	{
 		MsgDev( D_ERROR, "Mod_LoadDeluxemap: %s is not a deluxemap file\n", path );
 		world.deluxedata = NULL;
@@ -1903,20 +1913,23 @@ static void Mod_LoadSurfaces( const dlump_t *l )
 	for( i = 0; i < count; i++, in++, out++, info++ )
 	{
 		texture_t	*tex;
+		int lightofs;
+		int firstedge = LittleLong(in->firstedge);
+		int numedges = LittleShort(in->numedges);
 
-		if(( in->firstedge + in->numedges ) > loadmodel->numsurfedges )
+		if(( firstedge + numedges ) > loadmodel->numsurfedges )
 		{
 			MsgDev( D_ERROR, "Bad surface %i from %i\n", i, count );
 			continue;
 		} 
 
-		out->firstedge = in->firstedge;
-		out->numedges = in->numedges;
+		out->firstedge = firstedge;
+		out->numedges = numedges;
 		out->flags = 0;
 
 		if( in->side ) out->flags |= SURF_PLANEBACK;
-		out->plane = loadmodel->planes + in->planenum;
-		out->texinfo = loadmodel->texinfo + in->texinfo;
+		out->plane = loadmodel->planes + LittleShort(in->planenum);
+		out->texinfo = loadmodel->texinfo + LittleShort(in->texinfo);
 
 		tex = out->texinfo->texture;
 
@@ -1958,15 +1971,17 @@ static void Mod_LoadSurfaces( const dlump_t *l )
 		Mod_CalcSurfaceBounds( out, info );
 		Mod_CalcSurfaceExtents( out );
 
-		if( loadmodel->lightdata && in->lightofs != -1 )
+		lightofs = LittleLong(in->lightofs);
+
+		if( loadmodel->lightdata && lightofs != -1 )
 		{
 			if( bmodel_version >= HLBSP_VERSION )
-				out->samples = loadmodel->lightdata + (in->lightofs / 3);
-			else out->samples = loadmodel->lightdata + in->lightofs;
+				out->samples = loadmodel->lightdata + (lightofs / 3);
+			else out->samples = loadmodel->lightdata + lightofs;
 
 			// also setup deluxemap if present
 			if( world.deluxedata )
-				info->deluxemap = world.deluxedata + (in->lightofs / 3);
+				info->deluxemap = world.deluxedata + (lightofs / 3);
 		}
 
 		for( j = 0; j < MAXLIGHTMAPS; j++ )
@@ -2007,8 +2022,10 @@ static void Mod_LoadVertexes( const dlump_t *l )
 
 	for( i = 0; i < count; i++, in++, out++ )
 	{
-		VectorCopy( in->point, out->position );
-		if( world.loading ) AddPointToBounds( in->point, world.mins, world.maxs );
+		out->position[0] = LittleFloat(in->point[0]);
+		out->position[1] = LittleFloat(in->point[1]);
+		out->position[2] = LittleFloat(in->point[2]);
+		if( world.loading ) AddPointToBounds( out->position, world.mins, world.maxs );
 	}
 
 	if( !world.loading ) return;
@@ -2044,8 +2061,8 @@ static void Mod_LoadEdges( const dlump_t *l )
 
 	for( i = 0; i < count; i++, in++, out++ )
 	{
-		out->v[0] = (word)in->v[0];
-		out->v[1] = (word)in->v[1];
+		out->v[0] = (unsigned short)LittleShort(in->v[0]);
+		out->v[1] = (unsigned short)LittleShort(in->v[1]);
 	}
 }
 
@@ -2056,18 +2073,21 @@ Mod_LoadSurfEdges
 */
 static void Mod_LoadSurfEdges( const dlump_t *l )
 {
-	dsurfedge_t	*in;
-	int		count;
+	dsurfedge_t	*in, *out;
+	int		count, i;
 
 	in = (void *)( mod_base + l->fileofs );	
 	if( l->filelen % sizeof( *in ))
 		Host_Error( "Mod_LoadSurfEdges: funny lump size in %s\n", loadmodel->name );
 
 	count = l->filelen / sizeof( dsurfedge_t );
-	loadmodel->surfedges = Mem_Alloc( loadmodel->mempool, count * sizeof( dsurfedge_t ));
+	loadmodel->surfedges = out = Mem_Alloc( loadmodel->mempool, count * sizeof( dsurfedge_t ));
 	loadmodel->numsurfedges = count;
 
-	Q_memcpy( loadmodel->surfedges, in, count * sizeof( dsurfedge_t ));
+	//Q_memcpy( loadmodel->surfedges, in, count * sizeof( dsurfedge_t ));
+	for( i = 0; i < count; i++)
+		out[i] = LittleLong (in[i]);
+
 }
 
 /*
@@ -2091,7 +2111,7 @@ static void Mod_LoadMarkSurfaces( const dlump_t *l )
 
 	for( i = 0; i < count; i++ )
 	{
-		j = in[i];
+		j = LittleShort(in[i]);
 		if( j < 0 ||  j >= loadmodel->numsurfaces )
 			Host_MapDesignError( "Mod_LoadMarkFaces: bad surface number in '%s'\n", loadmodel->name );
 		else
@@ -2135,18 +2155,18 @@ static void Mod_LoadNodes( const dlump_t *l )
 	{
 		for( j = 0; j < 3; j++ )
 		{
-			out->minmaxs[j] = in->mins[j];
-			out->minmaxs[3+j] = in->maxs[j];
+			out->minmaxs[j] = LittleShort(in->mins[j]);
+			out->minmaxs[3+j] = LittleShort(in->maxs[j]);
 		}
 
-		p = in->planenum;
+		p = LittleLong(in->planenum);
 		out->plane = loadmodel->planes + p;
-		out->firstsurface = in->firstface;
-		out->numsurfaces = in->numfaces;
+		out->firstsurface = LittleShort(in->firstface);
+		out->numsurfaces = LittleShort(in->numfaces);
 
 		for( j = 0; j < 2; j++ )
 		{
-			p = in->children[j];
+			p = (short)LittleShort(in->children[j]);
 			if( p >= 0 ) out->children[j] = loadmodel->nodes + p;
 			else out->children[j] = (mnode_t *)(loadmodel->leafs + ( -1 - p ));
 		}
@@ -2181,13 +2201,13 @@ static void Mod_LoadLeafs( const dlump_t *l )
 	{
 		for( j = 0; j < 3; j++ )
 		{
-			out->minmaxs[j] = in->mins[j];
-			out->minmaxs[3+j] = in->maxs[j];
+			out->minmaxs[j] = LittleShort(in->mins[j]);
+			out->minmaxs[3+j] = LittleShort(in->maxs[j]);
 		}
 
-		out->contents = in->contents;
+		out->contents = LittleLong(in->contents);
 	
-		p = in->visofs;
+		p = LittleLong(in->visofs);
 
 		if( p == -1 ) out->compressed_vis = NULL;
 		else out->compressed_vis = loadmodel->visdata + p;
@@ -2195,8 +2215,8 @@ static void Mod_LoadLeafs( const dlump_t *l )
 		for( j = 0; j < 4; j++ )
 			out->ambient_sound_level[j] = in->ambient_level[j];
 
-		out->firstmarksurface = loadmodel->marksurfaces + in->firstmarksurface;
-		out->nummarksurfaces = in->nummarksurfaces;
+		out->firstmarksurface = loadmodel->marksurfaces + LittleShort(in->firstmarksurface);
+		out->nummarksurfaces = LittleShort(in->nummarksurfaces);
 
 		// gl underwater warp
 		if( out->contents != CONTENTS_EMPTY )
@@ -2239,13 +2259,13 @@ static void Mod_LoadPlanes( const dlump_t *l )
 	{
 		for( j = 0; j < 3; j++ )
 		{
-			out->normal[j] = in->normal[j];
+			out->normal[j] = LittleFloat(in->normal[j]);
 			if( out->normal[j] < 0.0f )
 				out->signbits |= 1<<j;
 		}
 
-		out->dist = in->dist;
-		out->type = in->type;
+		out->dist = LittleFloat(in->dist);
+		out->type = LittleLong(in->type);
 	}
 }
 
@@ -2398,9 +2418,9 @@ static void Mod_LoadClipnodes( const dlump_t *l )
 
 	for( i = 0; i < count; i++, out++, in++ )
 	{
-		out->planenum = in->planenum;
-		out->children[0] = in->children[0];
-		out->children[1] = in->children[1];
+		out->planenum = LittleLong(in->planenum);
+		out->children[0] = LittleShort(in->children[0]);
+		out->children[1] = LittleShort(in->children[1]);
 	}
 }
 
@@ -2464,23 +2484,23 @@ static void Mod_LoadClipnodes31( const dlump_t *l, const dlump_t *l2, const dlum
 
 	for( i = 0; i < count; i++, out++, in++ )
 	{
-		out->planenum = in->planenum;
-		out->children[0] = in->children[0];
-		out->children[1] = in->children[1];
+		out->planenum = LittleLong(in->planenum);
+		out->children[0] = LittleShort(in->children[0]);
+		out->children[1] = LittleShort(in->children[1]);
 	}
 
 	for( i = 0; i < count2; i++, out2++, in2++ )
 	{
-		out2->planenum = in2->planenum;
-		out2->children[0] = in2->children[0];
-		out2->children[1] = in2->children[1];
+		out2->planenum = LittleLong(in2->planenum);
+		out2->children[0] = LittleShort(in2->children[0]);
+		out2->children[1] = LittleShort(in2->children[1]);
 	}
 
 	for( i = 0; i < count3; i++, out3++, in3++ )
 	{
-		out3->planenum = in3->planenum;
-		out3->children[0] = in3->children[0];
-		out3->children[1] = in3->children[1];
+		out3->planenum = LittleLong(in3->planenum);
+		out3->children[0] = LittleShort(in3->children[0]);
+		out3->children[1] = LittleShort(in3->children[1]);
 	}
 }
 
@@ -2763,7 +2783,8 @@ static void Mod_LoadBrushModel( model_t *mod, const void *buffer, qboolean *load
 	if( loaded ) *loaded = false;	
 	header = (dheader_t *)buffer;
 	loadmodel->type = mod_brush;
-	i = header->version;
+	i = LittleLong(header->version);
+
 
 	switch( i )
 	{
@@ -2799,6 +2820,11 @@ static void Mod_LoadBrushModel( model_t *mod, const void *buffer, qboolean *load
 
 	// swap all the lumps
 	mod_base = (byte *)header;
+#ifdef XASH_BIG_ENDIAN
+	for (i=0 ; i<sizeof(dheader_t)/4 ; i++)
+		LittleLongSW(((int *)header)[i]);
+#endif
+
 	loadmodel->mempool = Mem_AllocPool( va( "^2%s^7", loadmodel->name ));
 
 	// load into heap
@@ -3019,7 +3045,7 @@ model_t *Mod_LoadModel( model_t *mod, qboolean crash )
 	loadmodel = mod;
 
 	// call the apropriate loader
-	switch( *(uint *)buf )
+	switch( LittleLong(*(uint *)buf) )
 	{
 	case IDSTUDIOHEADER:
 		Mod_LoadStudioModel( mod, buf, &loaded );

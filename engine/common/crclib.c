@@ -122,7 +122,7 @@ JustAfew:
 	case 5: ulCrc  = crc32table[*pb++ ^ (byte)ulCrc] ^ (ulCrc >> 8);
 	case 4:
 		Q_memcpy( &poolpb, pb, sizeof(dword));
-		ulCrc ^= poolpb;	// warning, this only works on little-endian.
+		ulCrc ^= LittleLong(poolpb);	// warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
@@ -155,13 +155,13 @@ JustAfew:
 	{
 		dword tmp;
 		Q_memcpy( &tmp, pb, sizeof(dword) );
-		ulCrc ^= tmp;	// warning, this only works on little-endian.
+		ulCrc ^= LittleLong(tmp);	// warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		Q_memcpy( &tmp, pb + 4, sizeof(dword) );
-		ulCrc ^= tmp;   // warning, this only works on little-endian.
+		ulCrc ^= LittleLong(tmp);   // warning, this only works on little-endian.
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
 		ulCrc  = crc32table[(byte)ulCrc] ^ (ulCrc >> 8);
@@ -261,6 +261,8 @@ qboolean CRC32_MapFile( dword *crcvalue, const char *filename, qboolean multipla
 	FS_Read( f, &version, sizeof( int ));
 	FS_Seek( f, 0, SEEK_SET );
 
+	LittleLongSW(version);
+
 	if( version == XTBSP_VERSION )
 		NUM_LUMPS = 17; // two extra lumps added
 	else NUM_LUMPS = HEADER_LUMPS;
@@ -277,6 +279,9 @@ qboolean CRC32_MapFile( dword *crcvalue, const char *filename, qboolean multipla
 
 	header = (dheader_t *)headbuf;
 
+	LittleLongSW( header->version );
+
+
 	// invalid version ?
 	if( header->version != Q1BSP_VERSION && header->version != HLBSP_VERSION && header->version != XTBSP_VERSION )
 	{
@@ -286,6 +291,11 @@ qboolean CRC32_MapFile( dword *crcvalue, const char *filename, qboolean multipla
 
 	ASSERT( crcvalue != NULL );
 	CRC32_Init( crcvalue );
+
+#ifdef XASH_BIG_ENDIAN
+	for (i=0 ; i<sizeof(dheader_t)/4 ; i++)
+		LittleLongSW(((int *)header)[i]);
+#endif
 
 	// check for Blue-Shift maps
 	if( header->lumps[LUMP_ENTITIES].fileofs <= 1024 && (header->lumps[LUMP_ENTITIES].filelen % sizeof( dplane_t )) == 0 )

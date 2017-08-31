@@ -422,6 +422,7 @@ void R_DrawSpriteModel( cl_entity_t *e );
 //
 void R_StudioInit( void );
 void Mod_LoadStudioModel( model_t *mod, const void *buffer, qboolean *loaded );
+void Mod_StudioBigEndian( model_t *mod, byte *buffer );
 struct mstudiotex_s *R_StudioGetTexture( cl_entity_t *e );
 void R_DrawStudioModel( cl_entity_t *e );
 

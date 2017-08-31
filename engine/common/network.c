@@ -306,7 +306,7 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 #endif
 }
 
-#if !defined _WIN32 && !defined __EMSCRIPTEN__
+#if !defined _WIN32 && !defined __EMSCRIPTEN__ && !defined NO_PTHREAD
 #define USE_PTHREAD
 #endif
 
