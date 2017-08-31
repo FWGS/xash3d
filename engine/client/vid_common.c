@@ -97,33 +97,46 @@ glwstate_t	glw_state;
 
 vidmode_t vidmode[] =
 {
-{ "Mode  0: 4x3",	640,	480,	false	},
-{ "Mode  1: 4x3",	800,	600,	false	},
-{ "Mode  2: 4x3",	960,	720,	false	},
-{ "Mode  3: 4x3",	1024,	768,	false	},
-{ "Mode  4: 4x3",	1152,	864,	false	},
-{ "Mode  5: 16x10",	1280,	800,	false	},
-{ "Mode  6: 4x3",	1280,	960,	false	},
-{ "Mode  7: 5x4",	1280,	1024,	false	},
-{ "Mode  8: 4x3",	1600,	1200,	false	},
-{ "Mode  9: 4x3",	2048,	1536,	false	},
-{ "Mode 10: 16x9",	800,	480,	true	},
-{ "Mode 11: 16x9",	856,	480,	true	},
-{ "Mode 12: 16x9",	960,	540,	true	},
-{ "Mode 13: 16x9",	1024,	576,	true	},
-{ "Mode 14: 16x9",	1024,	600,	true	},
-{ "Mode 15: 16x9",	1280,	720,	true	},
-{ "Mode 16: 16x9",	1360,	768,	true	},
-{ "Mode 17: 16x9",	1366,	768,	true	},
-{ "Mode 18: 16x10",	1440,	900,	true	},
-{ "Mode 19: 16x10",	1680,	1050,	true	},
-{ "Mode 20: 16x9",	1920,	1080,	true	},
-{ "Mode 21: 16x10",	1920,	1200,	true	},
-{ "Mode 22: 16x10",	2560,	1600,	true	},
-{ "Mode 23: 16x9",	1600,	900,	true	},
+{ "640 x 480",			640,	480,	false	},
+{ "800 x 600",			800,	600,	false	},
+{ "960 x 720",			960,	720,	false	},
+{ "1024 x 768",			1024,	768,	false	},
+{ "1152 x 864",			1152,	864,	false	},
+{ "1280 x 800",			1280,	800,	false	},
+{ "1280 x 960",			1280,	960,	false	},
+{ "1280 x 1024",		1280,	1024,	false	},
+{ "1600 x 1200",		1600,	1200,	false	},
+{ "2048 x 1536",		2048,	1536,	false	},
+{ "800 x 480 (wide)",	800,	480,	true	},
+{ "856 x 480 (wide)",	856,	480,	true	},
+{ "960 x 540 (wide)",	960,	540,	true	},
+{ "1024 x 576 (wide)",	1024,	576,	true	},
+{ "1024 x 600 (wide)",	1024,	600,	true	},
+{ "1280 x 720 (wide)",	1280,	720,	true	},
+{ "1360 x 768 (wide)",	1360,	768,	true	},
+{ "1366 x 768 (wide)",	1366,	768,	true	},
+{ "1440 x 900 (wide)",	1440,	900,	true	},
+{ "1680 x 1050 (wide)",	1680,	1050,	true	},
+{ "1920 x 1080 (wide)",	1920,	1080,	true	},
+{ "1920 x 1200 (wide)",	1920,	1200,	true	},
+{ "2560 x 1440 (wide)",	2560,	1440,	true	},
+{ "2560 x 1600 (wide)",	2560,	1600,	true	},
+{ "1600 x 900 (wide)",	1600,	 900,	true	},
 };
 
 int num_vidmodes = ( sizeof( vidmode ) / sizeof( vidmode[0] ));
+
+/*
+=================
+VID_GetModeString
+=================
+*/
+const char *VID_GetModeString( int vid_mode )
+{
+	if( vid_mode >= 0 && vid_mode < num_vidmodes )
+		return vidmode[vid_mode].desc;
+	return NULL; // out of bounds
+}
 
 /*
 ==============================================
