@@ -1492,13 +1492,19 @@ static qboolean FS_ParseLiblistGam( const char *filename, const char *gamedir, g
 		else if( !Q_stricmp( token, "secure" ))
 		{
 			pfile = COM_ParseFile( pfile, token );
-			MsgDev( D_WARN, "secure parameter in liblist.gam is deprecated.\n");
+			// Don't show for liblist.gam
+			// MsgDev( D_WARN, "secure parameter in liblist.gam is deprecated.\n");
 			GameInfo->secure = 0;
 		}
 		else if( !Q_stricmp( token, "nomodels" ))
 		{
 			pfile = COM_ParseFile( pfile, token );
 			GameInfo->nomodels = Q_atoi( token );
+		}
+		else if( !Q_stricmp( token, "edicts" ))
+		{
+			pfile = COM_ParseFile( pfile, token );
+			GameInfo->max_edicts = bound( 600, Q_atoi( token ), 4096 );
 		}
 	}
 
