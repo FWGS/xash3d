@@ -292,18 +292,21 @@ static const delta_field_t ent_fields[] =
 { NULL },
 };
 
+#define D( x, y ) \
+	{ x, y, NUM_FIELDS( y ), 0, NULL, 0, "", 0, false }
 static delta_info_t dt_info[] =
 {
-{ "event_t", ev_fields, NUM_FIELDS( ev_fields ) },
-{ "movevars_t", pm_fields, NUM_FIELDS( pm_fields ) },
-{ "usercmd_t", cmd_fields, NUM_FIELDS( cmd_fields ) },
-{ "clientdata_t", cd_fields, NUM_FIELDS( cd_fields ) },
-{ "weapon_data_t", wd_fields, NUM_FIELDS( wd_fields ) },
-{ "entity_state_t", ent_fields, NUM_FIELDS( ent_fields ) },
-{ "entity_state_player_t", ent_fields, NUM_FIELDS( ent_fields ) },
-{ "custom_entity_state_t", ent_fields, NUM_FIELDS( ent_fields ) },
+D( "event_t", ev_fields ),
+D( "movevars_t", pm_fields ),
+D( "usercmd_t", cmd_fields ),
+D( "clientdata_t", cd_fields ),
+D( "weapon_data_t", wd_fields ),
+D( "entity_state_t", ent_fields ),
+D( "entity_state_player_t", ent_fields ),
+D( "custom_entity_state_t", ent_fields ),
 { NULL },
 };
+#undef D
 
 delta_info_t *Delta_FindStruct( const char *name )
 {
