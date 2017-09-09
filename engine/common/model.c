@@ -2300,14 +2300,17 @@ static void Mod_LoadEntities( const dlump_t *l )
 			{
 				char	*path = token;
 				string	wadpath;
-				wadpath[MAX_STRING - 1] = '\0';
+				size_t charsLeftInBuffer;
 
-				// Excludes terminator.
-				size_t charsLeftInBuffer = MAX_STRING - 1;
+				// Stick a null on the end just in case. The rest of the chars can be written to.
+				wadpath[MAX_STRING - 1] = '\0';
+				charsLeftInBuffer = MAX_STRING - 1;
 
 				// parse wad pathes
 				while( path && *path )
 				{
+					size_t sizeOfPath, charsCopied;
+
 					char *end = Q_strchr( path, ';' );
 					if( !end )
 						end = path + Q_strlen( path );
@@ -2319,13 +2322,13 @@ static void Mod_LoadEntities( const dlump_t *l )
 						break;
 					}
 
-					size_t sizeOfPath = (end - path) + 1;
+					sizeOfPath = (end - path) + 1;
 					if (sizeOfPath > charsLeftInBuffer)
 					{
 						break;
 					}
 
-					size_t charsCopied = Q_strncpy( wadpath, path, sizeOfPath );
+					charsCopied = Q_strncpy( wadpath, path, sizeOfPath );
 					charsLeftInBuffer -= charsCopied;
 
 					FS_FileBase( wadpath, wadlist.wadnames[wadlist.count++] );
