@@ -325,7 +325,6 @@ int ID_RunWMIC(char *buffer, const char *cmdline)
 	bSuccess = ReadFile( g_OUT_Rd, buffer, BUFSIZE, &dwRead, NULL );
 	buffer[BUFSIZE-1] = 0;
 	CloseHandle( g_IN_Rd );
-	CloseHandle( g_IN_Wr );
 	CloseHandle( g_OUT_Rd );
 
 	return bSuccess;
