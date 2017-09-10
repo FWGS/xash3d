@@ -129,7 +129,7 @@ Default build-depended cvar and constant values
 	#define DEFAULT_M_IGNORE "0"
 #endif
 
-#define DEFAULT_SV_MASTER "ms.xash.su:27010"
+#define DEFAULT_SV_MASTER "ms.fwgs.ru:27010"
 
 // allow override for developer/debug builds
 #ifndef DEFAULT_DEV
