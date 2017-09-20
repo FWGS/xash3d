@@ -301,3 +301,6 @@ _Pvt_Extensions
 # Kate
 *.kate-swp
 *.apk
+
+# QtCreator
+build-*
