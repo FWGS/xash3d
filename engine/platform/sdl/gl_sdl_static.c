@@ -16,23 +16,15 @@ GNU General Public License for more details.
 
 
 #include "common.h"
-#if XASH_VIDEO == VIDEO_SDL_NANOGL
+#if XASH_VIDEO == VIDEO_SDL && defined XASH_GL_STATIC
 #include "client.h"
 #include "gl_local.h"
 #include "mod_local.h"
 #include "input.h"
-#include <GL/nanogl.h>
 #include "gl_vidnt.h"
-
-
-typedef enum
-{
-	rserr_ok,
-	rserr_invalid_fullscreen,
-	rserr_invalid_mode,
-	rserr_unknown
-} rserr_t;
-
+#ifdef XASH_NANOGL
+#include <GL/nanogl.h>
+#endif
 static char* opengl_110funcs[] =
 {
  "glClearColor"         ,
@@ -358,7 +350,7 @@ void *GL_GetProcAddress( const char *name )
 void GL_InitExtensions( void )
 {
 	// initialize gl extensions
-	GL_CheckExtension( "OpenGL 1.1.0", opengl_110funcs, NULL, GL_OPENGL_110 );
+	GL_CheckExtension( "OpenGL 1.1.0", (void*)opengl_110funcs, NULL, GL_OPENGL_110 );
 
 	// get our various GL strings
 	glConfig.vendor_string = pglGetString( GL_VENDOR );
@@ -369,12 +361,16 @@ void GL_InitExtensions( void )
 
 	// initalize until base opengl functions loaded
 
-	GL_SetExtension( GL_DRAW_RANGEELEMENTS_EXT, false );
-	GL_SetExtension( GL_ARB_MULTITEXTURE, false );
-	GL_SetExtension( GL_ENV_COMBINE_EXT, false );
-	GL_SetExtension( GL_DOT3_ARB_EXT, false );
+	GL_SetExtension( GL_DRAW_RANGEELEMENTS_EXT, true );
+	GL_SetExtension( GL_ARB_MULTITEXTURE, true );
+	pglGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &glConfig.max_texture_units );
+	glConfig.max_texture_coords = glConfig.max_texture_units = 4;
+
+	GL_SetExtension( GL_ENV_COMBINE_EXT, true );
+	GL_SetExtension( GL_DOT3_ARB_EXT, true );
 	GL_SetExtension( GL_TEXTURE_3D_EXT, false );
 	GL_SetExtension( GL_SGIS_MIPMAPS_EXT, true ); // gles specs
+	GL_SetExtension( GL_ARB_VERTEX_BUFFER_OBJECT_EXT, true ); // gles specs
 
 	// hardware cubemaps
 	GL_CheckExtension( "GL_OES_texture_cube_map", NULL, "gl_texture_cubemap", GL_TEXTURECUBEMAP_EXT );
@@ -398,7 +394,6 @@ void GL_InitExtensions( void )
 	GL_SetExtension( GL_BLEND_SUBTRACT_EXT, false );
 	GL_SetExtension( GL_SEPARATESTENCIL_EXT, false );
 	GL_SetExtension( GL_STENCILTWOSIDE_EXT, false );
-	GL_SetExtension( GL_ARB_VERTEX_BUFFER_OBJECT_EXT, false );
 	GL_SetExtension( GL_TEXTURE_ENV_ADD_EXT,false  );
 	GL_SetExtension( GL_SHADER_OBJECTS_EXT, false );
 	GL_SetExtension( GL_SHADER_GLSL100_EXT, false );
@@ -539,9 +534,14 @@ void GL_SetupAttributes()
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 
-#ifndef XASH_WES
+#ifdef XASH_NANOGL
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+#endif
+
+#ifdef XASH_WES
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
 
 	switch( gl_msaa->integer )
@@ -576,7 +576,7 @@ GL_CreateContext
 */
 qboolean GL_CreateContext( void )
 {
-#ifndef XASH_WES
+#ifdef XASH_NANOGL
 	nanoGL_Init();
 #endif
 
@@ -592,6 +592,7 @@ qboolean GL_CreateContext( void )
 #endif
 
 #ifdef XASH_WES
+	void wes_init();
 	wes_init();
 #endif
 
@@ -615,6 +616,11 @@ qboolean GL_UpdateContext( void )
 	return true;
 }
 
+#ifndef EGL_LIB
+#define EGL_LIB NULL
+#endif
+
+
 /*
 =================
 GL_DeleteContext
@@ -631,421 +637,6 @@ qboolean GL_DeleteContext( void )
 	return false;
 }
 
-uint VID_EnumerateInstances( void )
-{
-	return 1;
-}
-
-void VID_StartupGamma( void )
-{
-	// Device supports gamma anyway, but cannot do anything with it.
-	fs_offset_t	gamma_size;
-	byte	*savedGamma;
-	size_t	gammaTypeSize = sizeof(glState.stateRamp);
-
-	// init gamma ramp
-	Q_memset( glState.stateRamp, 0, gammaTypeSize);
-
-	// force to set cvar
-	Cvar_FullSet( "gl_ignorehwgamma", "1", CVAR_GLCONFIG );
-
-	glConfig.deviceSupportsGamma = false;	// even if supported!
-	BuildGammaTable( vid_gamma->value, vid_texgamma->value );
-	MsgDev( D_NOTE, "VID_StartupGamma: software gamma initialized\n" );
-}
-
-void VID_RestoreGamma( void )
-{
-	// no hardware gamma
-}
-
-void R_ChangeDisplaySettingsFast( int width, int height );
-
-#ifdef XASH_SDL_USE_FAKEWND
-
-SDL_Window *fakewnd;
-
-qboolean VID_SetScreenResolution( int width, int height )
-{
-	SDL_DisplayMode want, got;
-
-	want.w = width;
-	want.h = height;
-	want.driverdata = NULL;
-	want.format = want.refresh_rate = 0; // don't care
-
-	if( !SDL_GetClosestDisplayMode(0, &want, &got) )
-		return false;
-
-	MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
-
-	if( fakewnd )
-		SDL_DestroyWindow( fakewnd );
-
-	fakewnd = SDL_CreateWindow("fakewnd", SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED, got.h, got.w, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_FULLSCREEN );
-
-	if( !fakewnd )
-		return false;
-
-	if( SDL_SetWindowDisplayMode( fakewnd, &got) == -1 )
-		return false;
-
-	//SDL_ShowWindow( fakewnd );
-	if( SDL_SetWindowFullscreen( fakewnd, SDL_WINDOW_FULLSCREEN) == -1 )
-		return false;
-	SDL_SetWindowBordered( host.hWnd, SDL_FALSE );
-	SDL_SetWindowPosition( host.hWnd, 0, 0 );
-	SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
-	SDL_HideWindow( host.hWnd );
-	SDL_ShowWindow( host.hWnd );
-	SDL_SetWindowSize( host.hWnd, got.w, got.h );
-
-	SDL_GL_GetDrawableSize( host.hWnd, &got.w, &got.h );
-
-	R_ChangeDisplaySettingsFast( got.w, got.h );
-	SDL_HideWindow( fakewnd );
-	return true;
-}
-
-void VID_RestoreScreenResolution( void )
-{
-	if( fakewnd )
-	{
-		SDL_ShowWindow( fakewnd );
-		SDL_DestroyWindow( fakewnd );
-	}
-	fakewnd = NULL;
-	if( !Cvar_VariableInteger("fullscreen") )
-	{
-		SDL_SetWindowBordered( host.hWnd, SDL_TRUE );
-		//SDL_SetWindowPosition( host.hWnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED  );
-		SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
-	}
-	else
-	{
-		SDL_MinimizeWindow( host.hWnd );
-	}
-}
-#else
-static qboolean recreate = false;
-qboolean VID_SetScreenResolution( int width, int height )
-{
-	SDL_DisplayMode want, got;
-	Uint32 wndFlags = 0;
-	static string wndname;
-
-	if( vid_highdpi->integer ) wndFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
-	Q_strncpy( wndname, GI->title, sizeof( wndname ));
-
-	want.w = width;
-	want.h = height;
-	want.driverdata = NULL;
-	want.format = want.refresh_rate = 0; // don't care
-
-	if( !SDL_GetClosestDisplayMode(0, &want, &got) )
-		return false;
-
-	MsgDev(D_NOTE, "Got closest display mode: %ix%i@%i\n", got.w, got.h, got.refresh_rate);
-
-#ifdef XASH_SDL_WINDOW_RECREATE
-	if( recreate )
-	{
-	SDL_DestroyWindow( host.hWnd );
-	host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, wndFlags | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
-	SDL_GL_MakeCurrent( host.hWnd, glw_state.context );
-	recreate = false;
-	}
-#endif
-
-	if( SDL_SetWindowDisplayMode( host.hWnd, &got) == -1 )
-		return false;
-
-	if( SDL_SetWindowFullscreen( host.hWnd, SDL_WINDOW_FULLSCREEN) == -1 )
-		return false;
-	SDL_SetWindowBordered( host.hWnd, SDL_FALSE );
-	SDL_SetWindowPosition( host.hWnd, 0, 0 );
-	SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
-	SDL_SetWindowSize( host.hWnd, got.w, got.h );
-
-	SDL_GL_GetDrawableSize( host.hWnd, &got.w, &got.h );
-
-	R_ChangeDisplaySettingsFast( got.w, got.h );
-	return true;
-}
-
-void VID_RestoreScreenResolution( void )
-{
-	if( !Cvar_VariableInteger("fullscreen") )
-	{
-		SDL_SetWindowBordered( host.hWnd, SDL_TRUE );
-		SDL_SetWindowPosition( host.hWnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED  );
-		SDL_SetWindowGrab( host.hWnd, SDL_FALSE );
-	}
-	else
-	{
-		SDL_MinimizeWindow( host.hWnd );
-		SDL_SetWindowFullscreen( host.hWnd, 0 );
-		recreate = true;
-	}
-}
-#endif
-
-
-qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
-{
-#ifdef XASH_SDL
-	static string	wndname;
-	Uint32 wndFlags = 0;
-	if( vid_highdpi->integer ) wndFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
-	Q_strncpy( wndname, GI->title, sizeof( wndname ));
-
-#ifdef XASH_NOMODESWITCH
-	width = displayMode.w;
-	height = displayMode.h;
-	fullscreen = false;
-#endif
-
-	if( !fullscreen )
-	{
-#ifndef XASH_SDL_DISABLE_RESIZE
-		wndFlags |= SDL_WINDOW_RESIZABLE;
-#endif
-		host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
-			r_ypos->integer, width, height, wndFlags | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL );
-	}
-	else
-	{
-		int wndFullScreen = 0;
-#ifdef XASH_SDL_FULLSCREEN_DESKTOP
-		wndFullScreen |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-#endif
-		host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, wndFullScreen | wndFlags | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
-		SDL_SetWindowFullscreen( host.hWnd, wndFullScreen | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS );
-	}
-
-
-	if( !host.hWnd )
-	{
-		MsgDev( D_ERROR, "VID_CreateWindow: couldn't create '%s': %s\n", wndname, SDL_GetError());
-
-		// remove MSAA, if it present, because
-		// window creating may fail on GLX visual choose
-		if( gl_msaa->integer )
-		{
-			Cvar_Set("gl_msaa", "0");
-			GL_SetupAttributes(); // re-choose attributes
-
-			// try again
-			return VID_CreateWindow( width, height, fullscreen );
-		}
-		return false;
-	}
-
-	if( fullscreen )
-	{
-		if( !VID_SetScreenResolution( width, height ) )
-			return false;
-
-	}
-
-	host.window_center_x = width / 2;
-	host.window_center_y = height / 2;
-	SDL_ShowWindow( host.hWnd );
-#else
-	host.hWnd = 1; //fake window
-	host.window_center_x = width / 2;
-	host.window_center_y = height / 2;
-#endif
-	if( !glw_state.initialized )
-	{
-		if( !GL_CreateContext( ) )
-		{
-			return false;
-		}
-
-		VID_StartupGamma();
-	}
-	else
-	{
-		if( !GL_UpdateContext( ))
-			return false;
-	}
-	return true;
-}
-
-void VID_DestroyWindow( void )
-{
-#ifdef XASH_SDL
-	if( glw_state.context )
-	{
-		SDL_GL_DeleteContext( glw_state.context );
-		glw_state.context = NULL;
-	}
-
-	if( host.hWnd )
-	{
-		SDL_DestroyWindow ( host.hWnd );
-		host.hWnd = NULL;
-	}
-#endif
-	if( glState.fullScreen )
-	{
-		glState.fullScreen = false;
-	}
-}
-
-/*
-==================
-R_ChangeDisplaySettingsFast
-
-Change window size fastly to custom values, without setting vid mode
-==================
-*/
-void R_ChangeDisplaySettingsFast( int width, int height )
-{
-	//Cvar_SetFloat("vid_mode", VID_NOMODE);
-	Cvar_SetFloat("width", width);
-	Cvar_SetFloat("height", height);
-
-	if( glState.width != width || glState.height != height )
-	{
-		glState.width = width;
-		glState.height = height;
-
-		glState.wideScreen = true; // V_AdjustFov will check for widescreen
-
-		SCR_VidInit();
-	}
-}
-
-
-rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
-{
-#ifdef XASH_SDL
-	SDL_DisplayMode displayMode;
-
-	SDL_GetCurrentDisplayMode(0, &displayMode);
-#ifdef XASH_NOMODESWITCH
-	width = displayMode.w;
-	height = displayMode.h;
-	fullscreen = false;
-#endif
-	R_SaveVideoMode( width, height );
-
-	// check our desktop attributes
-	glw_state.desktopBitsPixel = SDL_BITSPERPIXEL(displayMode.format);
-	glw_state.desktopWidth = displayMode.w;
-	glw_state.desktopHeight = displayMode.h;
-
-	glState.fullScreen = fullscreen;
-	glState.wideScreen = true; // V_AdjustFov will check for widescreen
-
-	if(!host.hWnd)
-	{
-		if( !VID_CreateWindow( width, height, fullscreen ) )
-			return rserr_invalid_mode;
-	}
-#ifndef XASH_NOMODESWITCH
-	else if( fullscreen )
-	{
-		if( !VID_SetScreenResolution( width, height ) )
-			return rserr_invalid_fullscreen;
-	}
-	else
-	{
-		if( SDL_SetWindowFullscreen(host.hWnd, 0) )
-			return rserr_invalid_fullscreen;
-		SDL_SetWindowSize(host.hWnd, width, height);
-
-		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
-
-		R_ChangeDisplaySettingsFast( width, height );
-	}
-#endif
-#endif // XASH_SDL
-	return rserr_ok;
-}
-
-
-
-/*
-==================
-VID_SetMode
-
-Set the described video mode
-==================
-*/
-qboolean VID_SetMode( void )
-{
-#ifdef XASH_SDL
-	qboolean	fullscreen = false;
-	int iScreenWidth, iScreenHeight;
-	rserr_t	err;
-
-	if( vid_mode->integer == -1 )	// trying to get resolution automatically by default
-	{
-#if !defined DEFAULT_MODE_WIDTH || !defined DEFAULT_MODE_HEIGHT
-		SDL_DisplayMode mode;
-
-		SDL_GetDesktopDisplayMode(0, &mode);
-
-		iScreenWidth = mode.w;
-		iScreenHeight = mode.h;
-#else
-		iScreenWidth = DEFAULT_MODE_WIDTH;
-		iScreenHeight = DEFAULT_MODE_HEIGHT;
-#endif
-		Cvar_SetFloat( "fullscreen", DEFAULT_FULLSCREEN );
-	}
-	else if( vid_mode->modified && vid_mode->integer >= 0 && vid_mode->integer <= num_vidmodes )
-	{
-		iScreenWidth = vidmode[vid_mode->integer].width;
-		iScreenHeight = vidmode[vid_mode->integer].height;
-	}
-	else
-	{
-		iScreenHeight = scr_height->integer;
-		iScreenWidth = scr_width->integer;
-	}
-
-	gl_swapInterval->modified = true;
-	fullscreen = Cvar_VariableInteger("fullscreen") != 0;
-
-	if(( err = R_ChangeDisplaySettings( iScreenWidth, iScreenHeight, fullscreen )) == rserr_ok )
-	{
-		glConfig.prev_width = iScreenWidth;
-		glConfig.prev_height = iScreenHeight;
-	}
-	else
-	{
-		if( err == rserr_invalid_fullscreen )
-		{
-			Cvar_SetFloat( "fullscreen", 0 );
-			MsgDev( D_ERROR, "VID_SetMode: fullscreen unavailable in this mode\n" );
-			if(( err = R_ChangeDisplaySettings( iScreenWidth, iScreenHeight, false )) == rserr_ok )
-				return true;
-		}
-		else if( err == rserr_invalid_mode )
-		{
-			Cvar_SetFloat( "vid_mode", glConfig.prev_mode );
-			MsgDev( D_ERROR, "VID_SetMode: invalid mode\n" );
-		}
-
-		// try setting it back to something safe
-		if(( err = R_ChangeDisplaySettings( glConfig.prev_width, glConfig.prev_height, false )) != rserr_ok )
-		{
-			MsgDev( D_ERROR, "VID_SetMode: could not revert to safe mode\n" );
-			return false;
-		}
-	}
-#endif
-	return true;
-}
-
-#ifndef EGL_LIB
-#define EGL_LIB NULL
-#endif
 
 /*
 ==================

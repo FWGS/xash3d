@@ -132,6 +132,7 @@ LOCAL_SRC_FILES := \
            server/sv_cmds.c \
            server/sv_custom.c \
            server/sv_frame.c \
+           server/sv_filter.c \
            server/sv_game.c \
            server/sv_init.c \
            server/sv_main.c \

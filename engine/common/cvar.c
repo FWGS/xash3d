@@ -52,7 +52,8 @@ static qboolean Cvar_ValidateString( const char *s, qboolean isvalue )
 	if( Q_strstr( s, "\\" ) && !isvalue )
 		return false;
 	if( Q_strstr( s, "\"" )) return false;
-	if( Q_strstr( s, ";" )) return false;
+	if( Q_strstr( s, ";" ) && !isvalue )
+		return false;
 	return true;
 }
 

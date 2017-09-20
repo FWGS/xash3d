@@ -49,6 +49,8 @@ void R_AnimateLight( void )
 
 	if( gl_overbright->integer == 2 )
 		scale /= 1.6;
+	else if( r_vbo->integer && gl_overbright->integer )
+		scale /= 1.5;
 
 	// light animations
 	// 'm' is normal light, 'a' is no light, 'z' is double bright

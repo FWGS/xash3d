@@ -533,13 +533,13 @@ static int WINAPI expIsBadWritePtr(void* ptr, unsigned int count)
 {
     int result = (count == 0 || ptr != 0) ? 0 : 1;
     dbgprintf("IsBadWritePtr(0x%x, 0x%x) => %d\n", ptr, count, result);
-    return result;
+	return result;
 }
 static int WINAPI expIsBadReadPtr(void* ptr, unsigned int count)
 {
     int result = (count == 0 || ptr != 0) ? 0 : 1;
     dbgprintf("IsBadReadPtr(0x%x, 0x%x) => %d\n", ptr, count, result);
-    return result;
+	return result;
 }
 static int WINAPI expDisableThreadLibraryCalls(int module)
 {
@@ -1308,6 +1308,11 @@ static int WINAPI expVirtualFree(void* v1, int v2, int v3)
     int result = VirtualFree(v1,v2,v3);
     dbgprintf("VirtualFree(0x%x, %d, %d) => %d\n",v1,v2,v3, result);
     return result;
+}
+
+static int WINAPI expHeapValidate( void *hHeap, DWORD dwFlags, void *lpMem )
+{
+	return TRUE;
 }
 
 /* we're building a table of critical sections. cs_win pointer uses the DLL
@@ -5380,6 +5385,7 @@ static const struct exports exp_kernel32[]=
     FF(HeapFree, -1)
     FF(HeapSize, -1)
     FF(HeapReAlloc,-1)
+	FF(HeapValidate, -1)
     FF(GetProcessHeap, -1)
     FF(VirtualAlloc, -1)
     FF(VirtualFree, -1)

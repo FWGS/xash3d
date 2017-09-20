@@ -161,6 +161,16 @@ void GL_TexFilter( gltexture_t *tex, qboolean update )
 		break;
 	}
 
+#ifdef __EMSCRIPTEN__
+	// glGenerateMipmaps may delay,
+	// but we need draw lightmaps after re-uploading
+	if( r_vbo->integer )
+	{
+		if( tex->texType == TEX_LIGHTMAP )
+			tex->flags |= TF_NOMIPMAP;
+	}
+#endif
+
 	// set texture filter
 	if( tex->flags & TF_DEPTHMAP )
 	{
@@ -1091,7 +1101,7 @@ static void GL_TextureImage( GLenum inFormat, GLenum outFormat, GLenum glTarget,
 
 static void GL_TextureImageDXT( GLenum format, GLenum glTarget, GLint side, GLint level, GLint width, GLint height, GLint depth, qboolean subImage, size_t size, const void *data )
 {
-#ifndef XASH_NANOGL
+#if !defined XASH_NANOGL && !defined XASH_WES
 	if( glTarget == GL_TEXTURE_1D )
 	{
 		if( subImage ) pglCompressedTexSubImage1DARB( glTarget, level, 0, width, format, size, data );

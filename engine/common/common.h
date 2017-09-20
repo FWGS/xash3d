@@ -1009,6 +1009,7 @@ void HTTP_Init( void );
 void HTTP_Shutdown( void );
 void HTTP_Run( void );
 void HTTP_ClearCustomServers( void );
+void HTTP_Clear_f( void );
 void CL_ProcessFile( qboolean successfully_received, const char *filename );
 
 typedef struct autocomplete_list_s

@@ -266,7 +266,7 @@ void Host_RunFrame()
 	emscripten_sleep(1);
 #else
 	if( host.crashed || host.shutdown_issued )
-		emscritpen_cancel_main_loop();
+		emscripten_cancel_main_loop();
 #endif
 #endif
 }
@@ -275,7 +275,7 @@ void Host_FrameLoop()
 {
 #if defined __EMSCRIPTEN__ && !defined EMSCRIPTEN_ASYNC
 	emscripten_cancel_main_loop();
-	emscripten_set_main_loop( Host_RunFrame, 0, 1 );
+	emscripten_set_main_loop( Host_RunFrame, 0, 0 );
 #else
 	// main window message loop
 	while( !host.crashed && !host.shutdown_issued )
@@ -295,7 +295,11 @@ void EXPORT Host_AbortCurrentFrame( void )
 #else // sj/lj not supported, so re-run main loop with shifted stack
 	Host_FrameLoop();
 #endif
+#ifdef __EMSCRIPTEN__
+	EM_ASM(throw 'SimulateInfiniteLoop');
+#else
 	exit(127);
+#endif
 }
 
 /*
@@ -1343,6 +1347,7 @@ void EXPORT Host_Shutdown( void )
 	Log_Close();
 
 	SV_Shutdown( false );
+	SV_ShutdownFilter();
 	SV_UnloadProgs();
 	CL_Shutdown();
 

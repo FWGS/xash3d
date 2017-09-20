@@ -177,6 +177,9 @@ typedef struct server_s
 
 	qboolean		write_bad_message;	// just for debug
 	qboolean		paused;
+
+	qboolean        resourcelistcache;
+	resourcelist_t  reslist;
 } server_t;
 
 typedef struct
@@ -260,12 +263,16 @@ typedef struct sv_client_s
 	int		challenge;		// challenge of this user, randomly generated
 	int		userid;			// identifying number on server
 	int		authentication_method;
-	uint		WonID;			// WonID
+	integer64		WonID;			// WonID
 
 	int		maxpayload;
 	int		resources_sent;
-	int resources_count;
+	int		resources_count;
+	char	useragent[MAX_INFO_STRING];
+	char	auth_id[64];
 } sv_client_t;
+
+
 
 /*
 =============================================================================
@@ -690,5 +697,13 @@ void Log_Open( void );
 void Log_InitCvars( void );
 void SV_SetLogAddress_f( void );
 void SV_ServerLog_f( void );
+
+//
+// sv_filter.c
+//
+void SV_InitFilter( void );
+void SV_ShutdownFilter( void );
+// qboolean SV_CheckIP( netadr_t *adr );
+qboolean SV_CheckID( const char *id );
 
 #endif//SERVER_H

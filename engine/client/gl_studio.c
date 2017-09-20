@@ -2957,7 +2957,7 @@ R_StudioRestoreRenderer
 */
 static void GAME_EXPORT R_StudioRestoreRenderer( void )
 {
-	pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+	pglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 	pglShadeModel( GL_FLAT );
 
 	// restore depthmask state for sprites etc
@@ -3037,7 +3037,7 @@ static void R_StudioDrawPlanarShadow( void )
 
 #ifndef XASH_NANOGL
 	if( GL_Support( GL_DRAW_RANGEELEMENTS_EXT ))
-		pglDrawRangeElementsEXT( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
+		pglDrawRangeElements( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
 	else
 #endif
 	pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );

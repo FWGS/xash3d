@@ -20,8 +20,7 @@ GNU General Public License for more details.
 // video backends (XASH_VIDEO)
 #define VIDEO_NULL 0
 #define VIDEO_SDL 1
-#define VIDEO_SDL_NANOGL 2
-#define VIDEO_ANDROID 3
+#define VIDEO_ANDROID 2
 
 // audio backends (XASH_SOUND)
 #define SOUND_NULL 0

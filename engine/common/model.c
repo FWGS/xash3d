@@ -308,7 +308,7 @@ mleaf_t *Mod_PointInLeaf( const vec3_t p, mnode_t *node )
 	{
 		if( node->contents < 0 )
 			return (mleaf_t *)node;
-		node = node->children[PlaneDiff( p, node->plane ) < 0];
+		node = node->children[PlaneDiff( p, node->plane ) <= 0];
 	}
 
 	// never reached

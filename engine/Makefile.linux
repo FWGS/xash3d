@@ -1,8 +1,7 @@
-CC = gcc -g
+CC = gcc -g -fsanitize=undefined -fsanitize=address
 CXX ?= g++
 CFLAGS ?= -O2 -march=native -fno-omit-frame-pointer -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
-LIBS = -lm -lpthread
 LBITS := $(shell getconf LONG_BIT)
 ifneq ($(64BIT),1)
 	ifeq ($(LBITS),64)
@@ -36,8 +35,13 @@ endif
 endif
 
 ifeq ($(NANOGL),1)
-DEFINES += -DXASH_GLES -DXASH_NANOGL -D__MULTITEXTURE_SUPPORT__  -DEGL_LIB=\"libEGL.so\"
+DEFINES += -DXASH_NANOGL -D__MULTITEXTURE_SUPPORT__  -DEGL_LIB=\"libEGL.so\"
 endif
+
+ifeq ($(WES),1)
+DEFINES += -DXASH_WES -D__MULTITEXTURE_SUPPORT__  -DEGL_LIB=\"libEGL.so\"
+endif
+
 # Some libc implementations cannot use libdl, so disable it by default
 ifeq ($(XASH_STATIC),1)
 
@@ -64,6 +68,9 @@ ifeq ($(XASH_DLL_LOADER),1)
     endif
 endif
 
+LIBS += -lm -pthread
+
+
 ifeq ($(XASH_SINGLE_BINARY),1)
     DEFINES += -DSINGLE_BINARY
 endif
@@ -82,11 +89,15 @@ SRCS_CPP =
 ifeq ($(NANOGL),1)
 SRCS_CPP += $(wildcard nanogl/*.cpp)
 endif
+
 OBJS_CPP = $(patsubst %.cpp,obj/%.o,$(SRCS_CPP))
 SRCS = $(wildcard server/*.c) $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c)
 ifneq ($(XASH_DEDICATED),1)
 SRCS += $(wildcard client/*.c)
 SRCS += $(wildcard platform/sdl/*.c)
+ifeq ($(WES),1)
+SRCS += $(wildcard gl-wes-v2/src/*.c)
+endif
 endif
 OBJS = $(patsubst %.c,obj/%.o,$(SRCS))
 ifeq ($(XASH_SINGLE_BINARY),0)

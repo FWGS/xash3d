@@ -43,7 +43,10 @@ if [ -z "$GAMEEXE" ]; then
 fi
 
 # and launch the game
-cd "$GAMEROOT" || echo "Failed cd to $GAMEROOT" && exit
+if ! cd "$GAMEROOT"; then
+	echo "Failed cd to $GAMEROOT"
+	exit
+fi
 
 STATUS=42
 while [ $STATUS -eq 42 ]; do

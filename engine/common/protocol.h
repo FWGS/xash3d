@@ -145,9 +145,9 @@ GNU General Public License for more details.
 
 typedef struct
 {
-	int	rescount;
-	int	restype[MAX_RESOURCES];
-	char	resnames[MAX_RESOURCES][CS_SIZE];
+	int  rescount;
+	int  restype[MAX_RESOURCES];
+	char resnames[MAX_RESOURCES][CS_SIZE];
 } resourcelist_t;
 
 #endif//PROTOCOL_H

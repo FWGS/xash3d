@@ -824,6 +824,7 @@ void SV_Kick_f( void )
 	const char *param, *clientId;
 	char name[32];
 	int userid;
+	netadr_t adr;
 
 	if( !SV_Active() )
 	{
@@ -856,12 +857,14 @@ void SV_Kick_f( void )
 	}
 
 	param = Cmd_Argv( 2 );
+
 	if( *param )
 		SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from the game with message: \"%s\"\n", param );
 	else
 		SV_ClientPrintf( cl, PRINT_HIGH, "You were kicked from the game\n" );
 
 	Q_strcpy( name, cl->name );
+	Q_memcpy( &adr, &cl->netchan.remote_address, sizeof( adr ) );
 	userid = cl->userid;
 	clientId = SV_GetClientIDString( cl );
 
@@ -876,6 +879,13 @@ void SV_Kick_f( void )
 	{
 		SV_BroadcastPrintf( PRINT_HIGH, "%s was kicked\n", name );
 		Log_Printf( "Kick: \"%s<%i><%s><>\" was kicked by \"Console\"\n", name, userid, clientId );
+	}
+	if( cl->useragent[0] )
+	{
+		if( *param )
+			Netchan_OutOfBandPrint( NS_SERVER, adr, "errormsg\nKicked with message:\n%s\n", param );
+		else
+			Netchan_OutOfBandPrint( NS_SERVER, adr, "errormsg\nYou were kicked from the game\n" );
 	}
 
 	// min case there is a funny zombie
@@ -935,7 +945,7 @@ void SV_Status_f( void )
 
 		if( !cl->state ) continue;
 
-		Msg( "%3i ", i );
+		Msg( "%3i ", cl->userid );
 		Msg( "%5i ", (int)cl->edict->v.frags );
 
 		if( cl->state == cs_connected ) Msg( "Connect" );
@@ -1075,7 +1085,27 @@ void SV_ClientInfo_f( void )
 	Msg( "userinfo\n" );
 	Msg( "--------\n" );
 	Info_Print( svs.currentPlayer->userinfo );
+}
 
+/*
+===========
+SV_ClientUserAgent_f
+
+Examine useragent strings
+===========
+*/
+void SV_ClientUserAgent_f( void )
+{
+	if( Cmd_Argc() != 2 )
+	{
+		Msg( "Usage: clientuseragent <userid>\n" );
+		return;
+	}
+
+	if( !SV_SetPlayer( )) return;
+	Msg( "useragent\n" );
+	Msg( "---------\n" );
+	Info_Print( svs.currentPlayer->useragent );
 }
 
 /*
@@ -1223,6 +1253,7 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "serverinfo", SV_ServerInfo_f, "print server settings" );
 	Cmd_AddCommand( "localinfo", SV_LocalInfo_f, "print local info settings" );
 	Cmd_AddCommand( "clientinfo", SV_ClientInfo_f, "print user infostring (player num required)" );
+	Cmd_AddCommand( "clientuseragent", SV_ClientUserAgent_f, "print user agent (player num required)" );
 	Cmd_AddCommand( "playersonly", SV_PlayersOnly_f, "freezes physics, except for players" );
 
 	Cmd_AddCommand( "map", SV_Map_f, "start new level" );
