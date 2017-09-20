@@ -161,6 +161,8 @@ typedef struct ui_enginefuncs_s
 	int	(*pfnIsMapValid)( const char *filename );
 	void	(*pfnProcessImage)( int texnum, float gamma, int topColor, int bottomColor );
 	int	(*pfnCompareFileTime)( char *filename1, char *filename2, int *iCompare );
+
+	const char *(*pfnGetModeString)( int vid_mode );
 } ui_enginefuncs_t;
 
 typedef struct ui_textfuncs_s {

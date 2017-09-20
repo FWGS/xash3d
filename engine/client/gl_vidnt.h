@@ -36,6 +36,8 @@ void VID_RestoreScreenResolution( void );
 
 void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cvarname, int r_ext );
 
+const char *VID_GetModeString( int vid_mode );
+
 // common functions
 void R_SaveVideoMode( int w, int h );
 void GL_SetExtension( int r_ext, int enable );

@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include "library.h"
 #include "input.h"
 #include "server.h" // !!svgame.hInstance
+#include "gl_vidnt.h"
 
 static MENUAPI	GetMenuAPI;
 static ADDTOUCHBUTTONTOLIST pfnAddTouchButtonToList;
@@ -1006,6 +1007,7 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnIsMapValid,
 	GL_ProcessTexture,
 	(void*)COM_CompareFileTime,
+	VID_GetModeString
 };
 
 static ui_textfuncs_t gTextfuncs =
