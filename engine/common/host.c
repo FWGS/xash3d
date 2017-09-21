@@ -1017,7 +1017,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
-	if( host.rodir[Q_strlen( host.rodir ) - 1] == '/' )
+	if( host.rodir[0] && host.rodir[Q_strlen( host.rodir ) - 1] == '/' )
 		host.rodir[Q_strlen( host.rodir ) - 1] = 0;
 
 	if( !Sys_CheckParm( "-noch" ) )
