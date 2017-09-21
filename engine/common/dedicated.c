@@ -529,13 +529,17 @@ studiohdr_t *R_StudioLoadHeader( model_t *mod, const void *buffer )
 
 	pin = (byte *)buffer;
 	phdr = (studiohdr_t *)pin;
-	i = phdr->version;
+	i = LittleLong(phdr->version);
 
 	if( i != STUDIO_VERSION )
 	{
 		MsgDev( D_ERROR, "%s has wrong version number (%i should be %i)\n", mod->name, i, STUDIO_VERSION );
 		return NULL;
 	}
+
+#ifdef XASH_BIG_ENDIAN
+	Mod_StudioBigEndian( mod, phdr );
+#endif
 
 	return (studiohdr_t *)buffer;
 }
@@ -587,6 +591,8 @@ void Mod_LoadStudioModel( model_t *mod, const void *buffer, qboolean *loaded )
 	loadmodel->cache.data = Mem_Alloc( loadmodel->mempool, phdr->length );
 	Q_memcpy( loadmodel->cache.data, buffer, phdr->length );
 
+	phdr = loadmodel->cache.data;
+
 	// setup bounding box
 	VectorCopy( phdr->bbmin, loadmodel->mins );
 	VectorCopy( phdr->bbmax, loadmodel->maxs );
@@ -634,93 +640,6 @@ void Mod_UnloadStudioModel( model_t *mod )
 }
 
 #include "sprite.h"
-char		group_suffix[8];
-
-/*
-====================
-R_SpriteLoadFrame
-
-upload a single frame
-====================
-*/
-static byte *R_SpriteLoadFrame( model_t *mod, byte *pin, mspriteframe_t **ppframe, int num )
-{
-	dspriteframe_t	pinframe;
-	mspriteframe_t	*pspriteframe;
-	char		texname[128], sprname[128];
-
-	Q_memcpy( &pinframe, pin, sizeof(dspriteframe_t));
-
-	// setup frame description
-	pspriteframe = Mem_Alloc( mod->mempool, sizeof( mspriteframe_t ));
-	pspriteframe->width = pinframe.width;
-	pspriteframe->height = pinframe.height;
-#ifdef __VFP_FP__
-	volatile int tmp2;                // Cannot directly load unaligned int to float register
-	tmp2 = *( pinframe.origin + 1 ); // So load it to int first. Must not be optimized out
-	pspriteframe->up = tmp2;
-	tmp2 = *( pinframe.origin );
-	pspriteframe->left = tmp2;
-	tmp2 = *( pinframe.origin + 1 ) - pinframe.height;
-	pspriteframe->down = tmp2;
-	tmp2 = pinframe.width + * ( pinframe.origin );
-	pspriteframe->right = tmp2;
-#else
-	pspriteframe->up = pinframe.origin[1];
-	pspriteframe->left = pinframe.origin[0];
-	pspriteframe->down = pinframe.origin[1] - pinframe.height;
-	pspriteframe->right = pinframe.width + pinframe.origin[0];
-#endif
-
-	return ( pin + sizeof(dspriteframe_t) + pinframe.width * pinframe.height );
-}
-
-/*
-====================
-R_SpriteLoadGroup
-
-upload a group frames
-====================
-*/
-static byte *R_SpriteLoadGroup( model_t *mod, byte *pin, mspriteframe_t **ppframe, int framenum )
-{
-	dspritegroup_t	pingroup;
-	mspritegroup_t	*pspritegroup;
-	dspriteinterval_t	pin_intervals;
-	float		*poutintervals;
-	int		i, groupsize, numframes;
-
-	Q_memcpy( &pingroup, pin, sizeof(dspritegroup_t));
-	numframes = pingroup.numframes;
-
-	groupsize = sizeof( mspritegroup_t ) + (numframes - 1) * sizeof( pspritegroup->frames[0] );
-	pspritegroup = Mem_Alloc( mod->mempool, groupsize );
-	pspritegroup->numframes = numframes;
-
-	Q_memcpy( ppframe, pspritegroup, sizeof(mspriteframe_t));
-	pin += sizeof(dspritegroup_t);
-	Q_memcpy( &pin_intervals, pin, sizeof(dspriteinterval_t));
-
-	poutintervals = Mem_Alloc( mod->mempool, numframes * sizeof( float ));
-	pspritegroup->intervals = poutintervals;
-
-	for( i = 0; i < numframes; i++ )
-	{
-		*poutintervals = pin_intervals.interval;
-		if( *poutintervals <= 0.0f )
-			*poutintervals = 1.0f; // set error value
-		poutintervals++;
-		pin += sizeof(dspriteinterval_t);
-	}
-
-	for( i = 0; i < numframes; i++ )
-	{
-		pin = R_SpriteLoadFrame( mod, pin, &pspritegroup->frames[i], framenum * 10 + i );
-	}
-
-	return pin;
-}
-
 
 /*
 ====================
@@ -739,9 +658,9 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 	if( loaded ) *loaded = false;
 	Q_memcpy(&pin, buffer, sizeof(dsprite_t));
 	mod->type = mod_sprite;
-	i = pin.version;
+	i = LittleLong(pin.version);
 
-	if( pin.ident != IDSPRITEHEADER )
+	if( LittleLong(pin.ident) != IDSPRITEHEADER )
 	{
 		MsgDev( D_ERROR, "%s has wrong id (%x should be %x)\n", mod->name, pin.ident, IDSPRITEHEADER );
 		return;
@@ -754,95 +673,27 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 	}
 
 	mod->mempool = Mem_AllocPool( va( "^2%s^7", mod->name ));
-	size = sizeof( msprite_t ) + ( pin.numframes - 1 ) * sizeof( psprite->frames );
+	size = sizeof( msprite_t ) + ( LittleLong(pin.numframes) - 1 ) * sizeof( psprite->frames );
 	psprite = Mem_Alloc( mod->mempool, size );
 	mod->cache.data = psprite;	// make link to extradata
 
-	psprite->type = pin.type;
-	psprite->texFormat = pin.texFormat;
-	psprite->numframes = mod->numframes = pin.numframes;
-	psprite->facecull = pin.facetype;
-	psprite->radius = pin.boundingradius;
-	psprite->synctype = pin.synctype;
+	psprite->type = LittleLong(pin.type);
+	psprite->texFormat = LittleLong(pin.texFormat);
+	psprite->numframes = mod->numframes = LittleLong(pin.numframes);
+	psprite->facecull = LittleLong(pin.facetype);
+	psprite->radius = LittleLong(pin.boundingradius);
+	psprite->synctype = LittleLong(pin.synctype);
 
-	mod->mins[0] = mod->mins[1] = -pin.bounds[0] / 2;
-	mod->maxs[0] = mod->maxs[1] = pin.bounds[0] / 2;
-	mod->mins[2] = -pin.bounds[1] / 2;
-	mod->maxs[2] = pin.bounds[1] / 2;
+	mod->mins[0] = mod->mins[1] = -LittleLong(pin.bounds[0]) / 2;
+	mod->maxs[0] = mod->maxs[1] = LittleLong(pin.bounds[0]) / 2;
+	mod->mins[2] = -LittleLong(pin.bounds[1]) / 2;
+	mod->maxs[2] = LittleLong(pin.bounds[1]) / 2;
 	buffer += sizeof(dsprite_t);
 	Q_memcpy(&numi, buffer, sizeof(short));
 
-	if( Host_IsDedicated() )
-	{
-		// skip frames loading
-		if( loaded ) *loaded = true;	// done
-		psprite->numframes = 0;
-		return;
-	}
-
-	if( numi == 256 )
-	{
-		rgbdata_t	*pal;
-
-		buffer += sizeof(short);
-
-		// install palette
-		switch( psprite->texFormat )
-		{
-		case SPR_ADDITIVE:
-			pal = FS_LoadImage( "#normal.pal", buffer, 768 );
-			break;
-					case SPR_INDEXALPHA:
-			pal = FS_LoadImage( "#decal.pal", buffer, 768 );
-			break;
-		case SPR_ALPHTEST:
-			pal = FS_LoadImage( "#transparent.pal", buffer, 768 );
-							  break;
-		case SPR_NORMAL:
-		default:
-			pal = FS_LoadImage( "#normal.pal", buffer, 768 );
-			break;
-		}
-
-		buffer += 768;
-		FS_FreeImage( pal ); // palette installed, no reason to keep this data
-	}
-	else
-	{
-		MsgDev( D_ERROR, "%s has wrong number of palette colors %i (should be 256)\n", mod->name, numi );
-		return;
-	}
-
-	if( pin.numframes < 1 )
-	{
-		MsgDev( D_ERROR, "%s has invalid # of frames: %d\n", mod->name, pin.numframes );
-		return;
-	}
-
-	for( i = 0; i < pin.numframes; i++ )
-	{
-		frametype_t frametype = *buffer;
-		psprite->frames[i].type = frametype;
-
-		switch( frametype )
-		{
-		case FRAME_SINGLE:
-			Q_strncpy( group_suffix, "one", sizeof( group_suffix ));
-			buffer = R_SpriteLoadFrame( mod, buffer + sizeof(int), &psprite->frames[i].frameptr, i );
-			break;
-		case FRAME_GROUP:
-			Q_strncpy( group_suffix, "grp", sizeof( group_suffix ));
-			buffer = R_SpriteLoadGroup( mod, buffer + sizeof(int), &psprite->frames[i].frameptr, i );
-			break;
-		case FRAME_ANGLED:
-			Q_strncpy( group_suffix, "ang", sizeof( group_suffix ));
-			buffer = R_SpriteLoadGroup( mod, buffer + sizeof(int), &psprite->frames[i].frameptr, i );
-			break;
-		}
-		if( !buffer ) break; // technically an error
-	}
-
+	// skip frames loading
 	if( loaded ) *loaded = true;	// done
+	psprite->numframes = 0;
 }
 /*
 ====================

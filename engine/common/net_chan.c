@@ -123,6 +123,10 @@ qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *l
 	//ASSERT( *length > NETSPLIT_HEADER_SIZE );
 	if( *length <= NETSPLIT_HEADER_SIZE ) return false;
 
+	LittleLongSW(packet->id);
+	LittleLongSW(packet->length);
+	LittleLongSW(packet->part);
+
 	p = &ns->packets[packet->id & NETSPLIT_BACKUP_MASK];
 	// MsgDev( D_NOTE, "NetSplit_GetLong: packet from %s, id %d, index %d length %d\n", NET_AdrToString( *from ), (int)packet->id, (int)packet->index, (int)*length );
 
@@ -206,10 +210,10 @@ void NetSplit_SendLong( netsrc_t sock, size_t length, void *data, netadr_t to, u
 	if( compress )
 		Huff_CompressData( data, &length );
 
-	packet.signature = 0xFFFFFFFE;
-	packet.id = id;
-	packet.length = length;
-	packet.part = part;
+	packet.signature = LittleLong(0xFFFFFFFE);
+	packet.id = LittleLong(id);
+	packet.length = LittleLong(length);
+	packet.part = LittleLong(part);
 	packet.count = ( length - 1 ) / part + 1;
 
 	//MsgDev( D_NOTE, "NetSplit_SendLong: packet to %s, count %d, length %d\n", NET_AdrToString( to ), (int)packet.count, (int)packet.length );
@@ -225,6 +229,7 @@ void NetSplit_SendLong( netsrc_t sock, size_t length, void *data, netadr_t to, u
 
 		Q_memcpy( packet.data, (const byte*)data + packet.index * part, size );
 		//MsgDev( D_NOTE, "NetSplit_SendLong: packet to %s, id %d, index %d\n", NET_AdrToString( to ), (int)packet.id, (int)packet.index );
+
 		NET_SendPacket( sock, size + NETSPLIT_HEADER_SIZE, &packet, to );
 		packet.index++;
 	}

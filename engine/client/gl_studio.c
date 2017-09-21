@@ -3887,13 +3887,17 @@ studiohdr_t *R_StudioLoadHeader( model_t *mod, const void *buffer )
 
 	pin = (byte *)buffer;
 	phdr = (studiohdr_t *)pin;
-	i = phdr->version;
+	i = LittleLong(phdr->version);
 
 	if( i != STUDIO_VERSION )
 	{
 		MsgDev( D_ERROR, "%s has wrong version number (%i should be %i)\n", mod->name, i, STUDIO_VERSION );
 		return NULL;
 	}	
+
+#ifdef XASH_BIG_ENDIAN
+	Mod_StudioBigEndian( mod, phdr );
+#endif
 
 	if( !Host_IsDedicated() )
 	{
@@ -3904,17 +3908,6 @@ studiohdr_t *R_StudioLoadHeader( model_t *mod, const void *buffer )
 				R_StudioLoadTexture( mod, phdr, &ptexture[i] );
 		}
 	}
-
-#if 0
-	{
-		// HACK: pseqgroup->data contains garbage. Clean it now
-		mstudioseqdesc_t	*pseqdesc = (mstudioseqdesc_t *)((byte *)phdr + phdr->seqindex);
-		mstudioseqgroup_t	*pseqgroup = (mstudioseqgroup_t *)((byte *)phdr + phdr->seqgroupindex) + pseqdesc->seqgroup;
-		//MsgDev( D_INFO, "R_StudioLoadHeader: data=0x%08x\n", pseqgroup->data );
-		int *ptr = (byte*)(mstudioseqgroup_t *)( pseqgroup + 1); // pseqgroup->data field
-		*ptr = 0;
-	}
-#endif
 
 	return (studiohdr_t *)buffer;
 }
@@ -3951,8 +3944,8 @@ void Mod_LoadStudioModel( model_t *mod, const void *buffer, qboolean *loaded )
 			MsgDev( D_WARN, "Mod_LoadStudioModel: %s missing textures file\n", mod->name ); 
 			if( buffer2 ) Mem_Free( buffer2 );
 		}
-                    else
-                    {
+		else
+		{
 			// give space for textures and skinrefs
 			size1 = thdr->numtextures * sizeof( mstudiotexture_t );
 			size2 = thdr->numskinfamilies * thdr->numskinref * sizeof( short );

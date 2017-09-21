@@ -369,7 +369,7 @@ void SV_ReadPackets( void )
 			}
 			continue;
 		}
-		if( *((int *)&net_message_buffer) == 0xFFFFFFFE )
+		if( LittleLong(*((int *)&net_message_buffer)) == 0xFFFFFFFE )
 		{
 			if( curSize <= NETSPLIT_HEADER_SIZE )
 				continue;

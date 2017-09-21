@@ -49,6 +49,17 @@ qboolean Image_LoadBMP( const char *name, const byte *buffer, size_t filesize )
 	Q_memcpy( &bhdr, buf_p, sizeof( bmp_t ));
 	buf_p += sizeof( bmp_t );
 
+	LittleLongSW(bhdr.fileSize);
+	LittleLongSW(bhdr.bitmapDataOffset);
+	LittleLongSW(bhdr.bitmapHeaderSize);
+	LittleLongSW(bhdr.width);
+	LittleLongSW(bhdr.height);
+	LittleShortSW(bhdr.planes);
+	LittleShortSW(bhdr.bitsPerPixel);
+	LittleLongSW(bhdr.compression);
+	LittleLongSW(bhdr.bitmapDataSize);
+	LittleLongSW(bhdr.colors);
+
 	// bogus file header check
 	if( bhdr.reserved0 != 0 ) return false;
 	if( bhdr.planes != 1 ) return false;
@@ -373,9 +384,22 @@ qboolean Image_SaveBMP( const char *name, rgbdata_t *pix )
 	}
 	else
 	{
+		bmp_t sw= bhdr;
 		// Write header
 		FS_Write( pfile, magic, sizeof( magic ));
-		FS_Write( pfile, &bhdr, sizeof( bmp_t ));
+		LittleLongSW(sw.fileSize);
+		LittleLongSW(sw.bitmapDataOffset);
+		LittleLongSW(sw.bitmapHeaderSize);
+		LittleLongSW(sw.width);
+		LittleLongSW(sw.height);
+		LittleShortSW(sw.planes);
+		LittleShortSW(sw.bitsPerPixel);
+		LittleLongSW(sw.compression);
+		LittleLongSW(sw.bitmapDataSize);
+		LittleLongSW(sw.colors);
+
+
+		FS_Write( pfile, &sw, sizeof( bmp_t ));
 	}
 
 	pbBmpBits = Mem_Alloc( host.imagepool, cbBmpBits );

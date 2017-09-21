@@ -63,6 +63,12 @@ static byte *R_SpriteLoadFrame( model_t *mod, byte *pin, mspriteframe_t **ppfram
 	int		gl_texturenum = 0;
 
 	Q_memcpy( &pinframe, pin, sizeof(dspriteframe_t));
+
+	LittleLongSW(pinframe.origin[0]);
+	LittleLongSW(pinframe.origin[1]);
+	LittleLongSW(pinframe.width);
+	LittleLongSW(pinframe.height);
+
 	// build unique frame name
 	if( mod->flags & 256 ) // it's a HUD sprite
 	{
@@ -98,22 +104,10 @@ static byte *R_SpriteLoadFrame( model_t *mod, byte *pin, mspriteframe_t **ppfram
 	pspriteframe = Mem_Alloc( mod->mempool, sizeof( mspriteframe_t ));
 	pspriteframe->width = pinframe.width;
 	pspriteframe->height = pinframe.height;
-	#ifdef __VFP_FP__
-	volatile int tmp2;                // Cannot directly load unaligned int to float register
-	tmp2 = *( pinframe.origin + 1 ); // So load it to int first. Must not be optimized out
-	pspriteframe->up = tmp2;
-	tmp2 = *( pinframe.origin );
-	pspriteframe->left = tmp2;
-	tmp2 = *( pinframe.origin + 1 ) - pinframe.height;
-	pspriteframe->down = tmp2;
-	tmp2 = pinframe.width + * ( pinframe.origin );
-	pspriteframe->right = tmp2;
-        #else
 	pspriteframe->up = pinframe.origin[1];
 	pspriteframe->left = pinframe.origin[0];
 	pspriteframe->down = pinframe.origin[1] - pinframe.height;
 	pspriteframe->right = pinframe.width + pinframe.origin[0];
-	#endif
 	pspriteframe->gl_texturenum = gl_texturenum;
 	*ppframe = pspriteframe;
 
@@ -138,7 +132,7 @@ static byte *R_SpriteLoadGroup( model_t *mod, byte *pin, mspriteframe_t **ppfram
 	int		i, groupsize, numframes;
 
 	Q_memcpy( &pingroup, pin, sizeof(dspritegroup_t));
-	numframes = pingroup.numframes;
+	numframes = LittleLong(pingroup.numframes);
 
 	groupsize = sizeof( mspritegroup_t ) + (numframes - 1) * sizeof( pspritegroup->frames[0] );
 	pspritegroup = Mem_Alloc( mod->mempool, groupsize );
@@ -153,7 +147,7 @@ static byte *R_SpriteLoadGroup( model_t *mod, byte *pin, mspriteframe_t **ppfram
 
 	for( i = 0; i < numframes; i++ )
 	{
-		*poutintervals = pin_intervals.interval;
+		*poutintervals = LittleFloat(pin_intervals.interval);
 		if( *poutintervals <= 0.0f )
 			*poutintervals = 1.0f; // set error value
 		poutintervals++;
@@ -186,14 +180,14 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 	Q_memcpy(&pin, buffer, sizeof(dsprite_t));
 	mod->type = mod_sprite;
 	r_texFlags = texFlags;
-	i = pin.version;
+	i = LittleLong(pin.version);
 
-	if( pin.ident != IDSPRITEHEADER )
+	if( LittleLong(pin.ident) != IDSPRITEHEADER )
 	{
 		MsgDev( D_ERROR, "%s has wrong id (%x should be %x)\n", mod->name, pin.ident, IDSPRITEHEADER );
 		return;
 	}
-		
+
 	if( i != SPRITE_VERSION )
 	{
 		MsgDev( D_ERROR, "%s has wrong version number (%i should be %i)\n", mod->name, i, SPRITE_VERSION );
@@ -201,23 +195,24 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 	}
 
 	mod->mempool = Mem_AllocPool( va( "^2%s^7", mod->name ));
-	size = sizeof( msprite_t ) + ( pin.numframes - 1 ) * sizeof( psprite->frames );
+	size = sizeof( msprite_t ) + ( LittleLong(pin.numframes) - 1 ) * sizeof( psprite->frames );
 	psprite = Mem_Alloc( mod->mempool, size );
 	mod->cache.data = psprite;	// make link to extradata
-	
-	psprite->type = pin.type;
-	psprite->texFormat = pin.texFormat;
-	psprite->numframes = mod->numframes = pin.numframes;
-	psprite->facecull = pin.facetype;
-	psprite->radius = pin.boundingradius;
-	psprite->synctype = pin.synctype;
 
-	mod->mins[0] = mod->mins[1] = -pin.bounds[0] / 2.0f;
-	mod->maxs[0] = mod->maxs[1] = pin.bounds[0] / 2.0f;
-	mod->mins[2] = -pin.bounds[1] / 2.0f;
-	mod->maxs[2] = pin.bounds[1] / 2.0f;
+	psprite->type = LittleLong(pin.type);
+	psprite->texFormat = LittleLong(pin.texFormat);
+	psprite->numframes = mod->numframes = LittleLong(pin.numframes);
+	psprite->facecull = LittleLong(pin.facetype);
+	psprite->radius = LittleLong(pin.boundingradius);
+	psprite->synctype = LittleLong(pin.synctype);
+
+	mod->mins[0] = mod->mins[1] = -LittleLong(pin.bounds[0]) / 2;
+	mod->maxs[0] = mod->maxs[1] = LittleLong(pin.bounds[0]) / 2;
+	mod->mins[2] = -LittleLong(pin.bounds[1]) / 2;
+	mod->maxs[2] = LittleLong(pin.bounds[1]) / 2;
 	buffer += sizeof(dsprite_t);
 	Q_memcpy(&numi, buffer, sizeof(short));
+	LittleShortSW(numi);
 
 	if( Host_IsDedicated() )
 	{
@@ -260,16 +255,16 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 		return;
 	}
 
-	if( pin.numframes < 1 )
+	if( psprite->numframes < 1 )
 	{
 		MsgDev( D_ERROR, "%s has invalid # of frames: %d\n", mod->name, pin.numframes );
 		return;
 	}
 
-	for( i = 0; i < pin.numframes; i++ )
+	for( i = 0; i < psprite->numframes; i++ )
 	{
 		frametype_t frametype = *buffer;
-		psprite->frames[i].type = frametype;
+		psprite->frames[i].type = LittleLong(frametype);
 
 		switch( frametype )
 		{
