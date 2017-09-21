@@ -3,7 +3,6 @@ compiler: gcc
 sudo: true
 before_script:
     - sudo apt-get -qq update >/dev/null
-    - sudo apt-get -qq install --force-yes libgd2-xpm ia32-libs ia32-libs-multiarch >/dev/null
     - sudo apt-get -qq install --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full >/dev/null
     - sudo apt-get -qq install --force-yes gcc-multilib >/dev/null
     - sudo apt-get -qq install --force-yes libx11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-swx11-dev >/dev/null
