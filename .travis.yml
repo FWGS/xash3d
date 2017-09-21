@@ -7,7 +7,7 @@ before_script:
     - sudo apt-get -qq install --force-yes gcc-multilib >/dev/null
     - sudo apt-get -qq install --force-yes libx11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-dev >/dev/null
     - sudo apt-get -qq install --force-yes libasound-dev >/dev/null
-    - jdk_switcher use oraclejdk7
+    - jdk_switcher use oraclejdk8
     - curl -s http://dl.google.com/android/android-sdk_r22.0.4-linux.tgz | tar xzf -
     - export ANDROID_HOME=$PWD/android-sdk-linux
     - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk
