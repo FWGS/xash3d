@@ -2331,8 +2331,11 @@ static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float 
 	pglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 	pglTexCoordPointer( 2, GL_FLOAT, 0, g_xarraycoord );
 
-	pglEnableClientState( GL_COLOR_ARRAY );
-	pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_xarraycolor );
+	if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ) )
+	{
+		pglEnableClientState( GL_COLOR_ARRAY );
+		pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_xarraycolor );
+	}
 
 #if !defined XASH_NANOGL || defined XASH_WES && defined __EMSCRIPTEN__ // WebGL need to know array sizes
 	if( pglDrawRangeElements )
@@ -2342,7 +2345,8 @@ static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float 
 		pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
 	pglDisableClientState( GL_VERTEX_ARRAY );
 	pglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	pglDisableClientState( GL_COLOR_ARRAY );
+	if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ) )
+		pglDisableClientState( GL_COLOR_ARRAY );
 }
 
 /*
