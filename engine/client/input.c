@@ -924,8 +924,11 @@ void Host_InputFrame( void )
 			inputstate.lastyaw = yaw;
 		}
 
-		clgame.dllFuncs.pfnLookEvent( yaw, pitch );
-		clgame.dllFuncs.pfnMoveEvent( forward, side );
+		if( cls.key_dest == key_game )
+		{
+			clgame.dllFuncs.pfnLookEvent( yaw, pitch );
+			clgame.dllFuncs.pfnMoveEvent( forward, side );
+		}
 	}
 	Cbuf_Execute ();
 
