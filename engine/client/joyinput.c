@@ -44,6 +44,8 @@ typedef enum engineAxis_e
 
 #define MAX_AXES JOY_AXIS_NULL
 
+#define JOY_SIMULATED_HAT_ID ( -1 )
+
 // index - axis num come from event
 // value - inner axis
 static engineAxis_t joyaxesmap[MAX_AXES] =
@@ -78,9 +80,12 @@ convar_t *joy_lt_threshold;
 convar_t *joy_rt_threshold;
 convar_t *joy_side_deadzone;
 convar_t *joy_forward_deadzone;
+convar_t *joy_side_key_threshold;
+convar_t *joy_forward_key_threshold;
 convar_t *joy_pitch_deadzone;
 convar_t *joy_yaw_deadzone;
 convar_t *joy_axis_binding;
+
 
 /*
 ============
@@ -151,6 +156,42 @@ void Joy_ProcessTrigger( const engineAxis_t engineAxis, short value )
 	}
 }
 
+int Joy_GetHatValueForAxis( const engineAxis_t engineAxis )
+{
+	int threshold, negative, positive;
+
+	switch( engineAxis )
+	{
+	case JOY_AXIS_SIDE:
+		threshold = joy_side_key_threshold->integer;
+		negative = JOY_HAT_LEFT;
+		positive = JOY_HAT_RIGHT;
+		break;
+	case JOY_AXIS_FWD:
+		threshold = joy_side_key_threshold->integer;
+		negative = JOY_HAT_UP;
+		positive = JOY_HAT_DOWN;
+		break;
+	default:
+		ASSERT( false ); // only fwd/side axes can emit key events
+		return 0;
+	}
+
+	// similar code in Joy_ProcessTrigger
+
+	if( joyaxis[engineAxis].val > threshold &&
+		joyaxis[engineAxis].prevval <= threshold ) // ignore random press
+	{
+		return positive;
+	}
+	if( joyaxis[engineAxis].val < -threshold &&
+		joyaxis[engineAxis].prevval >= -threshold ) // we're unpressing (inverted)
+	{
+		return negative;
+	}
+	return 0;
+}
+
 /*
 =============
 Joy_ProcessStick
@@ -177,6 +218,18 @@ void Joy_ProcessStick( const engineAxis_t engineAxis, short value )
 	// update axis values
 	joyaxis[engineAxis].prevval = joyaxis[engineAxis].val;
 	joyaxis[engineAxis].val = value;
+
+	// fwd/side axis simulate hat movement
+	if( ( engineAxis == JOY_AXIS_SIDE || engineAxis == JOY_AXIS_FWD ) &&
+		( CL_IsInMenu() || CL_IsInConsole() ) )
+	{
+		int val = 0;
+
+		val |= Joy_GetHatValueForAxis( JOY_AXIS_SIDE );
+		val |= Joy_GetHatValueForAxis( JOY_AXIS_FWD );
+
+		Joy_HatMotionEvent( JOY_SIMULATED_HAT_ID, 0, val );
+	}
 }
 
 /*
@@ -346,6 +399,10 @@ void Joy_Init( void )
 	joy_lt_threshold = Cvar_Get( "joy_lt_threshold", "-16384", CVAR_ARCHIVE, "left trigger threshold. Value from -32768 to 32767");
 	joy_rt_threshold = Cvar_Get( "joy_rt_threshold", "-16384", CVAR_ARCHIVE, "right trigger threshold. Value from -32768 to 32767" );
 
+	// emit a key event at 75% axis move
+	joy_side_key_threshold = Cvar_Get( "joy_side_key_threshold", "24576", CVAR_ARCHIVE, "side axis key event emit threshold. Value from 0 to 32767" );
+	joy_forward_key_threshold = Cvar_Get( "joy_forward_key_threshold", "24576", CVAR_ARCHIVE, "forward axis key event emit threshold. Value from 0 to 32767");
+
 	// by default, we rely on deadzone detection come from system, but some glitchy devices report false deadzones
 	joy_side_deadzone = Cvar_Get( "joy_side_deadzone", "0", CVAR_ARCHIVE, "side axis deadzone. Value from 0 to 32767" );
 	joy_forward_deadzone = Cvar_Get( "joy_forward_deadzone", "0", CVAR_ARCHIVE, "forward axis deadzone. Value from 0 to 32767");
@@ -397,4 +454,4 @@ void Joy_Shutdown( void )
 	initialized = false;
 }
 
-#endif
+#endif // XASH_DEDICATED
