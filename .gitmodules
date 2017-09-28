@@ -1,6 +1,6 @@
 [submodule "hlsdk"]
 	path = hlsdk
-	url = https://github.com/SDLash3D/halflife
+	url = https://github.com/FWGS/halflife
 [submodule "mainui"]
 	path = mainui
 	url = https://github.com/FWGS/mainui_cpp
