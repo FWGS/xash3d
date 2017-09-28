@@ -24,10 +24,11 @@ include(FindPackageHandleStandardArgs)
 
 message("<FindVGUI.cmake>")
 
-set(VGUI_SEARCH_PATHS
-	${CMAKE_SOURCE_DIR}/hlsdk
-	${HL_SDK_DIR}
-)
+if(NOT HL_SDK_DIR)
+	message( FATAL_ERROR "Pass a HL_SDK_DIR variable to CMake to be able use VGUI" )
+endif()
+
+set(VGUI_SEARCH_PATHS ${HL_SDK_DIR})
 
 find_path(VGUI_INCLUDE_DIR 
 	VGUI.h
@@ -37,7 +38,7 @@ find_path(VGUI_INCLUDE_DIR
 )
 
 find_library(VGUI_LIBRARY
-	NAMES VGUI vgui.so
+	NAMES vgui vgui.so
 	HINTS $ENV{VGUIDIR}
 	PATH_SUFFIXES 
 		utils/vgui/lib/win32_vc6 # Win32 VC6
@@ -48,7 +49,17 @@ find_library(VGUI_LIBRARY
 
 # HACKHACK: as you can see, other compilers and OSes 
 # can easily link to vgui library, no matter how it was placed
-# On Linux meanwhile putting full path to linker can get you 
+# On Linux just target_link_libraries will give you a wrong
+# binary, which ALWAYS have same path to library!
+# Stupid Linux linkers just check for a path and this may give
+# a TWO SAME libraries in memory, which obviously goes to crash engine
+# Without hack:
+# $ LD_LIBRARY_PATH=$(pwd) ldd libvgui_support.so
+#       /home/user/projects/hlsdk/linux/vgui.so => /home/user/projects/hlsdk/linux/vgui.so (addr)
+# With hack:
+# $ LD_LIBRARY_PATH=$(pwd) ldd libvgui_support.so
+#       vgui.so => $(pwd)/vgui.so
+
 macro(target_link_vgui_hack arg1)
 	if(WIN32)
 		target_link_libraries(${arg1} ${VGUI_LIBRARY} )

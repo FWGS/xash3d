@@ -19,13 +19,14 @@ configuration:
   - Debug
 
 before_build:
-  - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.4-VC.zip
-  - 7z x SDL2-devel-2.0.4-VC.zip -oc:\projects\xash
+  - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.6-VC.zip
+  - 7z x SDL2-devel-2.0.6-VC.zip -oc:\projects\xash
   - cd c:\projects\xash
-  - ren SDL2-2.0.4 SDL2
+  - ren SDL2-2.0.6 SDL2
+  - git clone https://github.com/ValveSoftware/halflife hlsdk --depth=1
   - cd c:\projects\xash\xash3d
   - git submodule update --init
-  - cmake -G "Visual Studio 14 2015" -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build"
+  - cmake -G "Visual Studio 14 2015" -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build" -DHL_SDK_DIR="c:\projects\xash\hlsdk"
 
 after_build:
   - copy c:\projects\xash\SDL2\lib\x86\SDL2.dll c:\projects\xash\xash3d\build\%CONFIGURATION%\SDL2.dll
