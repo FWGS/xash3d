@@ -26,7 +26,7 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 {
 	int keynum = key.keysym.scancode;
 
-	if( SDL_IsTextInputActive() )
+	if( SDL_IsTextInputActive() && down )
 	{
 		if( SDL_GetModState() & KMOD_CTRL )
 		{
