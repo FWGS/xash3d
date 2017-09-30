@@ -618,6 +618,14 @@ void CL_ParseServerData( sizebuf_t *msg )
 #if 0
 	// NOTE: this is not tested as well. Use with precaution
 	CL_ChangeGame( gamefolder, false );
+#else
+	if( Q_stricmp( host.gamefolder, gamefolder ))
+	{
+		MsgDev( D_ERROR, "Server is running game %s. Restart in that game to connect.\n", gamefolder );
+		CL_Drop();
+		Host_AbortCurrentFrame ();
+		return;
+	}
 #endif
 	if( !cls.changedemo )
 		UI_SetActiveMenu( cl.background );
