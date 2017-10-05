@@ -17,6 +17,8 @@ GNU General Public License for more details.
 #ifndef BASE_CMD_H
 #define BASE_CMD_H
 
+// TODO: Find cases when command hashmap works incorrect
+// and maybe disable it
 #define XASH_HASHED_VARS
 
 #ifdef XASH_HASHED_VARS
@@ -34,7 +36,9 @@ typedef void base_command_t;
 void BaseCmd_Init( void );
 base_command_t *BaseCmd_Find( base_command_type_e type, const char *name );
 void BaseCmd_Insert ( base_command_type_e type, base_command_t *basecmd, const char *name );
-void BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const char *name ); // only if same name
+qboolean BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const char *name ); // only if same name
 void BaseCmd_Remove ( base_command_type_e type, base_command_t *basecmd, const char *name );
-#endif
-#endif
+
+#endif // XASH_HASHED_VARS
+
+#endif // BASE_CMD_H

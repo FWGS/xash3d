@@ -12,9 +12,8 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-#define XASH_HASHED_VARS
-#include <base_cmd.h>
-#include <common.h>
+
+#include "common.h"
 
 typedef struct base_command_hashmap_s
 {
@@ -24,8 +23,8 @@ typedef struct base_command_hashmap_s
 	struct base_command_hashmap_s *next;
 } base_command_hashmap_t;
 
-#define HASH_SIZE 300
-base_command_hashmap_t *hashed_cmds[HASH_SIZE];
+#define HASH_SIZE 256 // 256 * 4 * 4 == 4096 bytes
+static base_command_hashmap_t *hashed_cmds[HASH_SIZE];
 
 
 /*
@@ -76,7 +75,7 @@ BaseCmd_Replace
 Used in case, when basecmd has been registered, but gamedll wants to register it's own
 ============
 */
-void BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const char *name )
+qboolean BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const char *name )
 {
 	uint hash = Com_HashKey( name, HASH_SIZE );
 	base_command_hashmap_t *i;
@@ -88,11 +87,13 @@ void BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const c
 	if( !i )
 	{
 		MsgDev( D_ERROR, "BaseCmd_Replace: couldn't find %s\n", name);
-		return;
+		return false;
 	}
 
 	i->basecmd = basecmd;
 	i->name = name; // may be freed after
+
+	return true;
 }
 
 /*

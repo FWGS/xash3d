@@ -157,6 +157,7 @@ typedef enum
 #include "com_model.h"
 #include "filesystem.h"
 #include "crtlib.h"
+#include "base_cmd.h"
 
 #define XASH_VERSION	"0.19.1"		// engine current version
 // since this fork have own version, this is just left for compability

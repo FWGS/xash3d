@@ -14,7 +14,6 @@ GNU General Public License for more details.
 */
 
 #include "common.h"
-#include "base_cmd.h"
 
 #define HASH_SIZE 256
 

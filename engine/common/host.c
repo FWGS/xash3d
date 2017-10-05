@@ -32,7 +32,6 @@ GNU General Public License for more details.
 #include "engine_features.h"
 #include "render_api.h"	// decallist_t
 #include "library.h"
-#include "base_cmd.h"
 #ifdef XASH_SDL
 #include "platform/sdl/events.h"
 #endif
@@ -1099,9 +1098,8 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	// first text message into console or log 
 	MsgDev( D_NOTE, "Console initialized\n" );
 
-#if 1
 	BaseCmd_Init();
-#endif
+
 	// startup cmds and cvars subsystem
 	Cmd_Init();
 	Cvar_Init();
