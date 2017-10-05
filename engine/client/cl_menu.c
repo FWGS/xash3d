@@ -924,6 +924,38 @@ static void pfnEnableTextInput( int enable )
 	Key_EnableTextInput( enable, false );
 }
 
+/*
+===========
+pfnCvarSet
+
+Since menu can load script files, it's unsafe to allow
+menu code change read-only cvar values
+===========
+*/
+static void pfnCvarSet( const char *name, const char *value )
+{
+	Cvar_Set2( name, value, false );
+}
+
+/*
+===========
+pfnCvarSetValue
+
+Since menu can load script files, it's unsafe to allow
+menu code change read-only cvar values
+===========
+*/
+static void pfnCvarSetValue( const char *name, float value )
+{
+	char val[32];
+
+	if( value == (int)value )
+		Q_sprintf( val, "%i", (int)value );
+	else Q_sprintf( val, "%f", value );
+
+	Cvar_Set2( name, val, false );
+}
+
 // engine callbacks
 static ui_enginefuncs_t gEngfuncs = 
 {
@@ -942,8 +974,8 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnCvar_RegisterVariable,
 	Cvar_VariableValue,
 	Cvar_VariableString,
-	Cvar_Set,
-	Cvar_SetFloat,
+	pfnCvarSet,
+	pfnCvarSetValue,
 	pfnAddClientCommand,
 	pfnClientCmd,
 	Cmd_RemoveCommand,
