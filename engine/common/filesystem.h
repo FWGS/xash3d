@@ -119,15 +119,7 @@ typedef struct pack_s
 	packfile_t	*files;
 } pack_t;
 
-struct searchpath_s
-{
-	char		filename[MAX_SYSPATH];
-	pack_t		*pack;
-	wfile_t		*wad;
-	int		flags;
-	struct searchpath_s *next;
-};
-
+#include "fs_int.h"
 
 #include "custom.h"
 

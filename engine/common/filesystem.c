@@ -3977,3 +3977,52 @@ static byte *W_LoadFile( const char *path, fs_offset_t *lumpsizeptr, qboolean ga
 	return NULL;
 }
 
+/*
+=============================================================================
+
+FILESYSTEM PUBLIC API
+
+=============================================================================
+*/
+void *FSAPI_MemAlloc( size_t size, const char *filename, int fileline );
+
+fs_api_t g_fsapi =
+{
+	FS_API_VERSION,
+	FS_Open,
+	FS_Close,
+	FS_Tell,
+	FS_Seek,
+	FS_Read,
+	FS_Write,
+	FS_VPrintf,
+	FS_Getc,
+	FS_Eof,
+	FS_CreatePath,
+	FS_AddGameDirectory,
+	FS_Search,
+	FS_FileSize,
+	FS_FileTime,
+	FS_GetDiskPath,
+	FS_FindFile,
+	FS_GetSearchPaths,
+	FS_AddPack_Fullpath,
+	Msg,
+	FSAPI_MemAlloc,
+	_Mem_Free
+};
+
+void *FSAPI_MemAlloc( size_t size, const char *filename, int fileline )
+{
+	return _Mem_Alloc( fs_mempool, size, filename, fileline );
+}
+
+int GAME_EXPORT FS_GetAPI( fs_api_t *g_api )
+{
+	if( !g_api )
+		return 1;
+
+	Q_memcpy( g_api, &g_fsapi, sizeof( fs_api_t ) );
+
+	return 0;
+}

@@ -123,17 +123,12 @@ typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
 typedef struct searchpath_s searchpath_t;
-typedef off_t		fs_offset_t;
-typedef struct file_s	file_t;		// normal file
 typedef struct wfile_s	wfile_t;		// wad file
+typedef struct file_s file_t;     // normal file
+#define FILE_T_DEFINED
 typedef struct stream_s	stream_t;		// sound stream for background music playing
-
-typedef struct
-{
-	int	numfilenames;
-	char	**filenames;
-	char	*filenamesbuffer;
-} search_t;
+typedef off_t fs_offset_t;
+#define FS_OFFSET_T_DEFINED
 
 enum
 {
@@ -160,6 +155,7 @@ typedef enum
 #include "system.h"
 #include "ref_params.h"
 #include "com_model.h"
+#include "filesystem.h"
 #include "crtlib.h"
 
 #define XASH_VERSION	"0.19.1"		// engine current version
@@ -191,12 +187,6 @@ typedef enum
 
 #define MAX_DECALS		512	// touching TE_DECAL messages, etc
 #define MAX_STATIC_ENTITIES	512	// static entities that moved on the client when level is spawn
-
-// filesystem flags
-#define FS_STATIC_PATH	BIT(0)	// FS_ClearSearchPath will be ignore this path
-#define FS_NOWRITE_PATH	BIT(1)	// default behavior - last added gamedir set as writedir. This flag disables it
-#define FS_GAMEDIR_PATH	BIT(2)	// just a marker for gamedir path
-#define FS_CUSTOM_PATH	BIT(3)	// map search allowed
 
 #define GI              SI.GameInfo
 #define FS_Gamedir()	SI.GameInfo->gamedir
