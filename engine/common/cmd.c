@@ -360,13 +360,8 @@ static void Cmd_Alias_f( void )
 	}
 
 	// if the alias already exists, reuse it
-#if defined( XASH_HASHED_VARS )
-	a = BaseCmd_Find( HM_CMDALIAS, s );
-	if( a )
-	{
-		Mem_Free( a->value );
-	}
-#else
+	// we don't need to search it in BaseCmd too,
+	// as BaseCmd just need for fast searching during exec
 	for( a = cmd_alias; a; a = a->next )
 	{
 		if( !Q_strcmp( s, a->name ))
@@ -375,7 +370,6 @@ static void Cmd_Alias_f( void )
 			break;
 		}
 	}
-#endif
 
 	if( !a )
 	{
@@ -825,13 +819,11 @@ Cmd_Exists
 */
 qboolean Cmd_Exists( const char *cmd_name )
 {
+#if defined(XASH_HASHED_VARS)
+	return BaseCmd_Find( HM_CMD, cmd_name ) != NULL;
+#else
 	cmd_t	*cmd;
 
-#if defined(XASH_HASHED_VARS)
-	if( BaseCmd_Find( HM_CMD, cmd_name ) )
-		return true;
-	return false;
-#else
 	for( cmd = cmd_functions; cmd; cmd = cmd->next )
 	{
 		if( !Q_strcmp( cmd_name, cmd->name ))
@@ -985,7 +977,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 
 	// check aliases
 #if defined(XASH_HASHED_VARS)
-	a = BaseCmd_Find(HM_CMDALIAS, cmd_argv[0] );
+	a = BaseCmd_Find( HM_CMDALIAS, cmd_argv[0] );
 	if( a )
 	{
 		Cbuf_InsertText( a->value );
