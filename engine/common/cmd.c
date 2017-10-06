@@ -919,6 +919,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 {	
 	cmd_t	*cmd;
 	cmdalias_t	*a;
+	convar_t *cvar;
 	char command[MAX_CMD_LINE], *pcmd = command;
 	int len = 0;;
 
@@ -975,9 +976,12 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 
 	if( !Cmd_Argc()) return; // no tokens
 
-	// check aliases
 #if defined(XASH_HASHED_VARS)
-	a = BaseCmd_Find( HM_CMDALIAS, cmd_argv[0] );
+	BaseCmd_FindAll( cmd_argv[0],
+		(base_command_t**)&cmd,
+		(base_command_t**)&a,
+		(base_command_t**)&cvar );
+
 	if( a )
 	{
 		Cbuf_InsertText( a->value );
@@ -996,7 +1000,6 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 
 	// check functions
 #if defined(XASH_HASHED_VARS)
-	cmd = BaseCmd_Find( HM_CMD, cmd_argv[0] );
 	if( cmd && cmd->function )
 	{
 		cmd->function();
@@ -1014,7 +1017,12 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 #endif
 
 	// check cvars
-	if( Cvar_Command( )) return;
+#if defined(XASH_HASHED_VARS)
+	if( Cvar_Command( cvar )) return;
+#else
+	if( Cvar_Command( NULL )) return;
+#endif
+
 #ifndef XASH_DEDICATED
 	// forward the command line to the server, so the entity DLL can parse it
 	// UCyborg: Is src_client used anywhere?

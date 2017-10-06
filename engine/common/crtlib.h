@@ -110,7 +110,7 @@ char *Cvar_VariableString( const char *var_name );
 void Cvar_DirectSet( cvar_t *var, const char *value );
 void Cvar_Reset( const char *var_name );
 void Cvar_SetCheatState( qboolean force );
-qboolean Cvar_Command( void );
+qboolean Cvar_Command( convar_t *v );
 void Cvar_WriteVariables( file_t *f );
 void Cvar_Init( void );
 char *Cvar_Userinfo( void );
