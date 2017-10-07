@@ -649,7 +649,8 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		VID_RestoreScreenResolution();
 		if( SDL_SetWindowFullscreen(host.hWnd, 0) )
 			return rserr_invalid_fullscreen;
-		SDL_SetWindowSize(host.hWnd, width, height);
+		SDL_RestoreWindow( host.hWnd );
+		SDL_SetWindowSize( host.hWnd, width, height );
 		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
 		R_ChangeDisplaySettingsFast( width, height );
 	}
