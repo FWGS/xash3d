@@ -425,6 +425,8 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		if( SDL_SetWindowFullscreen(host.hWnd, 0) )
 			return rserr_invalid_fullscreen;
 		SDL_RestoreWindow( host.hWnd );
+		SDL_SetWindowResizable( host.hWnd, true );
+		SDL_SetWindowBordered( host.hWnd, true );
 		SDL_SetWindowSize( host.hWnd, width, height );
 		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
 		R_ChangeDisplaySettingsFast( width, height );
@@ -452,7 +454,7 @@ qboolean VID_SetMode( void )
 	{
 		SDL_DisplayMode mode;
 #if !defined DEFAULT_MODE_WIDTH || !defined DEFAULT_MODE_HEIGHT
-		SDL_GetDesktopDisplayMode(0, &mode);
+		SDL_GetDesktopDisplayMode( 0, &mode );
 #else
 		mode.w = DEFAULT_MODE_WIDTH;
 		mode.h = DEFAULT_MODE_HEIGHT;
@@ -461,7 +463,9 @@ qboolean VID_SetMode( void )
 		iScreenWidth = mode.w;
 		iScreenHeight = mode.h;
 
-		Cvar_SetFloat( "fullscreen", DEFAULT_FULLSCREEN );
+		if( !vid_fullscreen->modified )
+			Cvar_SetFloat( "fullscreen", DEFAULT_FULLSCREEN );
+		vid_fullscreen->modified = false;
 	}
 	else if( vid_mode->modified && vid_mode->integer >= 0 && vid_mode->integer <= num_vidmodes )
 	{
