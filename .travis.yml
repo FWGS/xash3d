@@ -34,7 +34,7 @@ script:
     - ant debug -Dtest.version=1
     - cp bin/xashdroid-debug.apk ../engine/xash3d-generic.apk
     - cd ../engine
-    - make -f Makefile.mingw CC="i686-w64-mingw32-gcc" CXX="i686-w64-mingw32-g++" -j2
+    - make -f Makefile.mingw CC="ccache i686-w64-mingw32-gcc" CXX="ccache i686-w64-mingw32-g++" -j2
     - cp ../vgui_support_bin/vgui_support.dll .
     - cp ../SDL2/lib/x86/SDL2.dll .
     - 7z a -t7z xash3d-mingw.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash_bin.exe SDL2.dll vgui_support.dll
@@ -43,11 +43,11 @@ script:
     - make -j2
     - cp build/.libs/libSDL2.so ../engine/
     - cd ../loader
-    - make -f Makefile.linux -j2 CC="gcc -m32 -O1" CFLAGS="-I../SDL-2.0.4/include -w -ggdb" libloader.a
+    - make -f Makefile.linux -j2 CC="ccache gcc -m32 -O1" CFLAGS="-I../SDL-2.0.4/include -w -ggdb" libloader.a
     - cp libloader.a ../engine
     - cd ../engine
     - make -f Makefile.linux -j2 XASH_VGUI=0 XASH_SINGLE_BINARY=1 XASH_DLL_LOADER=1 clean
-    - make -f Makefile.linux -j2 CC="gcc -m32" LDFLAGS="-L. libSDL2.so -static-libgcc" CFLAGS="-O2 -ggdb -I../SDL2-2.0.4/include/ -msse2 -march=i686 -w" XASH_VGUI=1 XASH_SINGLE_BINARY=1 xash
+    - make -f Makefile.linux -j2 CC="ccache gcc -m32" LDFLAGS="-L. libSDL2.so -static-libgcc" CFLAGS="-O2 -ggdb -I../SDL2-2.0.4/include/ -msse2 -march=i686 -w" XASH_VGUI=1 XASH_SINGLE_BINARY=1 xash
     - cp ../vgui-dev/lib/vgui.so .
     - cp ../vgui_support_bin/libvgui_support.so .
     - mv libSDL2.so libSDL2-2.0.so.0
