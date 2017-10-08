@@ -808,6 +808,8 @@ void R_RenderInfo_f( void )
 		Msg( "GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB: %i\n", glConfig.max_cubemap_size );
 	if( GL_Support( GL_ANISOTROPY_EXT ))
 		Msg( "GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: %.1f\n", glConfig.max_texture_anisotropy );
+	if( GL_Support( GL_TEXTURE_LODBIAS ))
+		Msg( "GL_MAX_TEXTURE_LODBIAS: %f", glConfig.max_texture_lodbias );
 	if( glConfig.texRectangle )
 		Msg( "GL_MAX_RECTANGLE_TEXTURE_SIZE_NV: %i\n", glConfig.max_2d_rectangle_size );
 	if( GL_Support( GL_SHADER_GLSL100_EXT ))
