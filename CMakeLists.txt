@@ -62,15 +62,9 @@ option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompil
 if(XASH_DEDICATED) 
 	option(XASH_SDL "Enable SDL." OFF) # Dedicated servers still can use SDL
 	set(XASH_VGUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
-	set(XASH_X11 OFF)
 else()
 	option(XASH_SDL "Enable SDL." ON)
 	option(XASH_VGUI "Enable VGUI support." ON)
-	if( NOT WIN32 )
-		option(XASH_X11 "Enable X11 support." ON)
-	else()
-		option(XASH_X11 "Enable X11 support." OFF)
-	endif()
 endif()
 
 # Pre-build analyze step

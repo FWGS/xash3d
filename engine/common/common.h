@@ -1012,7 +1012,6 @@ float Com_RandomFloat( float fMin, float fMax );
 void TrimSpace( const char *source, char *dest );\
 const byte *GL_TextureData( unsigned int texnum );
 void GL_FreeImage( const char *name );
-void VID_RestoreGamma( void );
 void UI_SetActiveMenu( qboolean fActive );
 struct cmd_s *Cmd_GetFirstFunctionHandle( void );
 struct cmd_s *Cmd_GetNextFunctionHandle( struct cmd_s *cmd );

@@ -1241,18 +1241,10 @@ void R_BeginFrame( qboolean clearScene )
 	// update gamma
 	if( vid_gamma->modified )
 	{
-		if( glConfig.deviceSupportsGamma )
-		{
-			SCR_RebuildGammaTable();
-			GL_UpdateGammaRamp();
-		}
-		else
-		{
-			glConfig.softwareGammaUpdate = true;
-			BuildGammaTable( vid_gamma->value, vid_texgamma->value );
-			GL_RebuildLightmaps();
-			glConfig.softwareGammaUpdate = false;
-		}
+		glConfig.softwareGammaUpdate = true;
+		BuildGammaTable( vid_gamma->value, vid_texgamma->value );
+		GL_RebuildLightmaps();
+		glConfig.softwareGammaUpdate = false;
 		vid_gamma->modified = false;
 	}
 

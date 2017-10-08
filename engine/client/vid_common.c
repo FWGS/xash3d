@@ -28,7 +28,6 @@ convar_t	*gl_allow_software;
 convar_t	*gl_extensions;
 convar_t	*gl_alphabits;
 convar_t	*gl_stencilbits;
-convar_t	*gl_ignorehwgamma;
 convar_t	*gl_texture_anisotropy;
 convar_t	*gl_compress_textures;
 convar_t	*gl_luminance_textures;
@@ -609,31 +608,6 @@ qboolean GL_Support( int r_ext )
 
 /*
 ===============
-GL_BuildGammaTable
-===============
-*/
-void GL_BuildGammaTable( void )
-{
-	int	i, v;
-	double	invGamma, div;
-
-	invGamma = 1.0 / bound( 0.5, vid_gamma->value, 2.3 );
-	div = (double) 1.0 / 255.5;
-
-	Q_memcpy( glState.gammaRamp, glState.stateRamp, sizeof( glState.gammaRamp ));
-
-	for( i = 0; i < 256; i++ )
-	{
-		v = (int)(65535.0 * pow(((double)i + 0.5 ) * div, invGamma ) + 0.5 );
-
-		glState.gammaRamp[i+0] = ((word)bound( 0, v, 65535 ));
-		glState.gammaRamp[i+256] = ((word)bound( 0, v, 65535 ));
-		glState.gammaRamp[i+512] = ((word)bound( 0, v, 65535 ));
-	}
-}
-
-/*
-===============
 GL_SetDefaultTexState
 ===============
 */
@@ -846,7 +820,7 @@ void R_RenderInfo_f( void )
 
 	Msg( "\n" );
 	Msg( "MODE: %i x %i\n", scr_width->integer, scr_height->integer );
-	Msg( "GAMMA: %s\n", (glConfig.deviceSupportsGamma) ? "hardware" : "software" );
+	Msg( "GAMMA: %s\n", "software" );
 	Msg( "\n" );
 	Msg( "PICMIP: %i\n", gl_picmip->integer );
 	Msg( "SKYMIP: %i\n", gl_skymip->integer );
@@ -891,7 +865,6 @@ void GL_InitCommands( void )
 
 	gl_picmip = Cvar_Get( "gl_picmip", "0", CVAR_GLCONFIG, "reduces resolution of textures by powers of 2" );
 	gl_skymip = Cvar_Get( "gl_skymip", "0", CVAR_GLCONFIG, "reduces resolution of skybox textures by powers of 2" );
-	gl_ignorehwgamma = Cvar_Get( "gl_ignorehwgamma", "1", CVAR_GLCONFIG, "ignore hardware gamma" );
 	gl_allow_software = Cvar_Get( "gl_allow_software", "0", CVAR_ARCHIVE, "allow OpenGL software emulation" );
 	gl_alphabits = Cvar_Get( "gl_alphabits", "8", CVAR_GLCONFIG, "pixelformat alpha bits (0 - auto)" );
 	gl_texturemode = Cvar_Get( "gl_texturemode", "GL_LINEAR_MIPMAP_LINEAR", CVAR_ARCHIVE, "texture filter" );

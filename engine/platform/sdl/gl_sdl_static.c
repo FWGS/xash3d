@@ -475,14 +475,6 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 		MsgDev( D_NOTE, "- ^2enabled\n" );
 	else MsgDev( D_NOTE, "- ^1failed\n" );
 }
-/*
-===============
-GL_UpdateGammaRamp
-===============
-*/
-void GL_UpdateGammaRamp( void )
-{
-}
 
 /*
 ===============
@@ -666,8 +658,6 @@ R_Free_OpenGL
 */
 void R_Free_OpenGL( void )
 {
-	VID_RestoreGamma ();
-
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();

@@ -478,14 +478,6 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 		MsgDev( D_NOTE, "- ^2enabled\n" );
 	else MsgDev( D_NOTE, "- ^1failed\n" );
 }
-/*
-===============
-GL_UpdateGammaRamp
-===============
-*/
-void GL_UpdateGammaRamp( void )
-{
-}
 
 /*
 ===============
@@ -567,24 +559,8 @@ uint VID_EnumerateInstances( void )
 
 void VID_StartupGamma( void )
 {
-	// Device supports gamma anyway, but cannot do anything with it.
-	fs_offset_t	gamma_size;
-	byte	*savedGamma;
-	size_t	gammaTypeSize = sizeof(glState.stateRamp);
-
-	// init gamma ramp
-	Q_memset( glState.stateRamp, 0, gammaTypeSize);
-
-	// force to set cvar
-	Cvar_FullSet( "gl_ignorehwgamma", "1", CVAR_GLCONFIG );
-
-	glConfig.deviceSupportsGamma = false;	// even if supported!
 	BuildGammaTable( vid_gamma->value, vid_texgamma->value );
 	MsgDev( D_NOTE, "VID_StartupGamma: software gamma initialized\n" );
-}
-
-void VID_RestoreGamma( void )
-{
 }
 
 qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
@@ -694,8 +670,6 @@ R_Free_OpenGL
 */
 void R_Free_OpenGL( void )
 {
-	VID_RestoreGamma ();
-
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();

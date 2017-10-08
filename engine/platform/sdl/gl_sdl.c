@@ -396,23 +396,6 @@ void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cv
 	else MsgDev( D_NOTE, "- ^1failed\n" );
 }
 
-
-
-/*
-===============
-GL_UpdateGammaRamp
-===============
-*/
-void GL_UpdateGammaRamp( void )
-{
-	if( !glConfig.deviceSupportsGamma ) return;
-
-	GL_BuildGammaTable();
-#ifdef XASH_SDL
-	SDL_SetWindowGammaRamp( host.hWnd, &glState.gammaRamp[0], &glState.gammaRamp[256], &glState.gammaRamp[512] );
-#endif
-}
-
 /*
 ===============
 GL_UpdateSwapInterval
@@ -453,7 +436,7 @@ void GL_SetupAttributes()
 #ifdef XASH_SDL
 	int samples;
 
-#ifdef XASH_X11
+#if !defined(_WIN32)
 	SDL_SetHint("SDL_VIDEO_X11_XRANDR", "1");
 	SDL_SetHint("SDL_VIDEO_X11_XVIDMODE", "1");
 #endif
@@ -751,8 +734,6 @@ R_Free_OpenGL
 */
 void R_Free_OpenGL( void )
 {
-	VID_RestoreGamma ();
-
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();

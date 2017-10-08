@@ -1146,10 +1146,6 @@ void CL_Crashed( void )
 
 	// send a disconnect message to the server
 	CL_SendDisconnectMessage();
-
-	// never write video.cfg here because reason to crash may be provoked
-	// with some renderer variables
-	VID_RestoreGamma();
 }
 
 /*

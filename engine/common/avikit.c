@@ -323,16 +323,6 @@ byte *AVI_GetVideoFrame( movie_state_t *Avi, long frame )
 	frame_raw = (byte *)frame_info + frame_info->biSize + frame_info->biClrUsed * sizeof( RGBQUAD );
 	pDrawDibDraw( Avi->hDD, Avi->hDC, 0, 0, Avi->video_xres, Avi->video_yres, frame_info, frame_raw, 0, 0, Avi->video_xres, Avi->video_yres, 0 );
 
-	// adjust gamma only if hardware gamma is enabled
-	if( Avi->ignore_hwgamma && glConfig.deviceSupportsGamma )
-	{
-		tmp = Avi->pframe_data;
-
-		// renormalize gamma
-		for( i = 0; i < Avi->video_xres * Avi->video_yres * 4; i++, tmp++ )
-			*tmp = clgame.ds.gammaTable[*tmp];
-	}
-
 	return Avi->pframe_data;
 #else
 	return NULL;

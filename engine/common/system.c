@@ -607,7 +607,6 @@ void Sys_Error( const char *format, ... )
 #ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
 #endif
-		VID_RestoreGamma();
 	}
 
 	if( host.developer > 0 )
@@ -657,7 +656,6 @@ void Sys_Break( const char *format, ... )
 #ifdef XASH_SDL
 		if( host.hWnd ) SDL_HideWindow( host.hWnd );
 #endif
-		VID_RestoreGamma();
 	}
 
 	if( Host_IsDedicated() || host.developer > 0 )

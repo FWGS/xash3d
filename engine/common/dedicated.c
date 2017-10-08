@@ -140,11 +140,6 @@ void CL_ProcessFile( qboolean successfully_received, const char *filename )
 {
 }
 
-void VID_RestoreGamma()
-{
-
-}
-
 void CL_Init()
 {
 

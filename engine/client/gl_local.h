@@ -446,7 +446,6 @@ void R_DrawSkyChain( msurface_t *s );
 #define GL_CheckForErrors() GL_CheckForErrors_( __FILE__, __LINE__ )
 void GL_CheckForErrors_( const char *filename, const int fileline );
 void GL_UpdateSwapInterval( void );
-void GL_UpdateGammaRamp( void );
 qboolean GL_DeleteContext( void );
 qboolean GL_Support( int r_ext );
 void VID_CheckChanges( void );
@@ -592,7 +591,6 @@ typedef struct
 	int		stencil_bits;
 
 	qboolean		softwareGammaUpdate;
-	qboolean		deviceSupportsGamma;
 	int		prev_mode;
 	int		prev_height;
 	int		prev_width;
@@ -600,9 +598,6 @@ typedef struct
 
 typedef struct
 {
-	word		gammaRamp[768];		// current gamma ramp, 0 is red, 1 is green, 2 is blue
-	word		stateRamp[768];		// original gamma ramp
-
 	int		width, height;
 	qboolean		fullScreen;
 	qboolean		wideScreen;
@@ -648,7 +643,6 @@ extern convar_t	*gl_allow_software;
 extern convar_t	*gl_texture_anisotropy;
 extern convar_t	*gl_extensions;
 extern convar_t	*gl_stencilbits;
-extern convar_t	*gl_ignorehwgamma;
 extern convar_t	*gl_swapInterval;
 extern convar_t	*gl_check_errors;
 extern convar_t	*gl_round_down;
