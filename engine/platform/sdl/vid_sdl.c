@@ -20,12 +20,8 @@ GNU General Public License for more details.
 #include "mod_local.h"
 #include "input.h"
 #include "gl_vidnt.h"
-
-
-
-#if (defined(_WIN32) && defined(XASH_SDL))
+#include <SDL.h>
 #include <SDL_syswm.h>
-#endif
 
 typedef enum
 {
@@ -425,7 +421,9 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		if( SDL_SetWindowFullscreen(host.hWnd, 0) )
 			return rserr_invalid_fullscreen;
 		SDL_RestoreWindow( host.hWnd );
+#if SDL_VERSION_ATLEAST( 2, 0, 5 )
 		SDL_SetWindowResizable( host.hWnd, true );
+#endif
 		SDL_SetWindowBordered( host.hWnd, true );
 		SDL_SetWindowSize( host.hWnd, width, height );
 		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
