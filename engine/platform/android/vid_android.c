@@ -397,9 +397,7 @@ void GL_InitExtensions( void )
 	GL_CheckExtension( "GL_EXT_texture_lod_bias", NULL, "gl_ext_texture_lodbias", GL_TEXTURE_LODBIAS );
 	if( GL_Support( GL_TEXTURE_LODBIAS ))
 	{
-		GLdouble max_texture_lodbias;
-		pglGetDoublev( GL_MAX_TEXTURE_LOD_BIAS_EXT, &max_texture_lodbias );
-		glConfig.max_texture_lodbias = max_texture_lodbias;
+		pglGetFloatv( GL_MAX_TEXTURE_LOD_BIAS_EXT, &glConfig.max_texture_lodbias );
 	}
 
 	GL_SetExtension( GL_TEXTURE_COMPRESSION_EXT, false );
