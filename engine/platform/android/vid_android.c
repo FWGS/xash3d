@@ -384,14 +384,27 @@ void GL_InitExtensions( void )
 	}
 	GL_SetExtension( GL_ARB_SEAMLESS_CUBEMAP, false );
 
+	glConfig.max_texture_anisotropy = 0.0f;
+	GL_CheckExtension( "GL_EXT_texture_filter_anisotropic", NULL, "gl_ext_anisotropic_filter", GL_ANISOTROPY_EXT );
+
+	if( GL_Support( GL_ANISOTROPY_EXT ))
+		pglGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.max_texture_anisotropy );
+
+
 	GL_SetExtension( GL_EXT_POINTPARAMETERS, false );
 	GL_CheckExtension( "GL_OES_texture_npot", NULL, "gl_texture_npot", GL_ARB_TEXTURE_NPOT_EXT );
+
+	GL_CheckExtension( "GL_EXT_texture_lod_bias", NULL, "gl_ext_texture_lodbias", GL_TEXTURE_LODBIAS );
+	if( GL_Support( GL_TEXTURE_LODBIAS ))
+	{
+		GLdouble max_texture_lodbias;
+		pglGetDoublev( GL_MAX_TEXTURE_LOD_BIAS_EXT, &max_texture_lodbias );
+		glConfig.max_texture_lodbias = max_texture_lodbias;
+	}
 
 	GL_SetExtension( GL_TEXTURE_COMPRESSION_EXT, false );
 	GL_SetExtension( GL_CUSTOM_VERTEX_ARRAY_EXT, false );
 	GL_SetExtension( GL_CLAMPTOEDGE_EXT, true ); // by gles1 specs
-	GL_SetExtension( GL_ANISOTROPY_EXT, false );
-	GL_SetExtension( GL_TEXTURE_LODBIAS, false );
 	GL_SetExtension( GL_CLAMP_TEXBORDER_EXT, false );
 	GL_SetExtension( GL_BLEND_MINMAX_EXT, false );
 	GL_SetExtension( GL_BLEND_SUBTRACT_EXT, false );
