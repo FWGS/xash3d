@@ -768,9 +768,14 @@ void Host_Frame( float time )
 
 	Host_InputFrame ();	// input frame
 
+#ifndef XASH_DEDICATED
+	Host_ClientBegin(); // prepare client command
+#endif
+
 	Host_GetConsoleCommands ();
 
 	Host_ServerFrame (); // server frame
+
 	if ( !Host_IsDedicated() )
 		Host_ClientFrame (); // client frame
 

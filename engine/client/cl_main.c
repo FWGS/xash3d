@@ -2097,6 +2097,26 @@ void CL_SendCommand( void )
 
 /*
 ==================
+Host_ClientBegin
+
+Send command before server runs frame to prevent frame delay
+==================
+*/
+void Host_ClientBegin( void )
+{
+	if( !cls.initialized )
+		return;
+
+	if( SV_Active() )
+	{
+		CL_SendCommand();
+
+		CL_PredictMovement();
+	}
+}
+
+/*
+==================
 Host_ClientFrame
 
 ==================
@@ -2137,13 +2157,18 @@ void Host_ClientFrame( void )
 		}
 
 		// send a new command message to the server
-		CL_SendCommand();
+		if( !SV_Active() )
+		{
+			CL_SendCommand();
 
-		// predict all unacknowledged movements
-		CL_PredictMovement();
+			// predict all unacknowledged movements
+			CL_PredictMovement();
+		}
 	}
+
 	// update the screen
 	SCR_UpdateScreen ();
+
 	if( cls.initialized )
 	{
 		// update audio

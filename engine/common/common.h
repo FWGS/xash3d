@@ -775,6 +775,7 @@ void CL_Init( void );
 void CL_Shutdown( void );
 void Host_ClientFrame( void );
 void Host_RenderFrame( void );
+void Host_ClientBegin( void );
 qboolean CL_Active( void );
 
 void SV_Init( void );
