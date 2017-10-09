@@ -1719,6 +1719,7 @@ void R_StudioLighting( float *lv, int bone, int flags, vec3_t normal )
 		if( illum[2] <= 0.0f ) illum[2] = 0.0f;
 
 		// now add all dynamic lights
+	//	#pragma omp parallel for
 		for( i = 0; i < plight->numdlights; i++)
 		{
 			lightcos = -DotProduct( normal, plight->dlightvec[i][bone] );
@@ -1726,6 +1727,7 @@ void R_StudioLighting( float *lv, int bone, int flags, vec3_t normal )
 		}
 
 		// now add all entity lights
+		//#pragma omp parallel for
 		for( i = 0; i < plight->numelights; i++)
 		{
 			lightcos = -DotProduct( normal, plight->elightvec[i][bone] );
@@ -2217,7 +2219,6 @@ static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float 
 
 		for( ; i > 0; i--, ptricmds += 4 )
 		{
-
 			GLubyte cl[4];
 			// build in indices
 			if( vertexState++ < 3 )
@@ -2432,7 +2433,7 @@ static void R_StudioDrawMeshes( mstudiotexture_t *ptexture, short *pskinref, flo
 			GL_Bind( XASH_TEXTURE0, ptexture[pskinref[pmesh->skinref]].index );
 		}
 
-		R_StudioDrawMesh(ptricmds, s, t, alpha, scale);
+		R_StudioDrawMesh( ptricmds, s, t, alpha, scale );
 	}
 }
 
@@ -2490,6 +2491,9 @@ static void GAME_EXPORT R_StudioDrawPoints( void )
 	if( m_pSubModel->numverts > MAXSTUDIOVERTS )
 		m_pSubModel->numverts = MAXSTUDIOVERTS;
 
+#ifdef STUDIO_SKINNING_OMP_MIN
+#pragma omp parallel for private(i) if(m_pSubModel->numverts > OMP_SKINNING_OMP_MIN)
+#endif
 	for( i = 0; i < m_pSubModel->numverts; i++ )
 		Matrix3x4_VectorTransform( g_bonestransform[pvertbone[i]], pstudioverts[i], g_xformverts[i] );
 
@@ -2502,6 +2506,7 @@ static void GAME_EXPORT R_StudioDrawPoints( void )
 	}
 
 	lv = (float *)g_lightvalues;
+
 	for( j = 0; j < m_pSubModel->nummesh; j++ )
 	{
 		g_nFaceFlags = ptexture[pskinref[pmesh[j].skinref]].flags;
@@ -2515,7 +2520,9 @@ static void GAME_EXPORT R_StudioDrawPoints( void )
 			R_StudioLighting( lv, *pnormbone, g_nFaceFlags, (float *)pstudionorms );
 
 			if(( g_nFaceFlags & STUDIO_NF_CHROME ) || ( g_nForceFaceFlags & STUDIO_NF_CHROME ))
+			{
 				R_StudioSetupChrome( g_chrome[(float (*)[3])lv - g_lightvalues], *pnormbone, (float *)pstudionorms );
+			}
 		}
 	}
 
