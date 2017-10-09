@@ -22,6 +22,13 @@ GNU General Public License for more details.
 #include <errno.h> // errno
 #include <string.h> // strerror
 
+#ifndef _WIN32
+#include <unistd.h> // fork
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
 #include "netchan.h"
 #include "server.h"
 #include "protocol.h"
@@ -965,6 +972,54 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	// e.g. xash.exe +game xash -game xash
 	// so we clear all cmd_args, but leave dbg states as well
 	Sys_ParseCommandLine( argc, argv );
+
+	// to be accessed later
+	if( ( host.daemonized = Sys_CheckParm( "-daemonize" ) ) )
+	{
+#if defined(_POSIX_VERSION) && !defined(TARGET_OS_IPHONE) && !defined(__ANDROID__)
+		pid_t daemon;
+
+		daemon = fork();
+
+		if( daemon < 0 )
+		{
+			Host_Error( "fork() failed: %s\n", strerror( errno ) );
+		}
+
+		if( daemon > 0 )
+		{
+			// parent
+			MsgDev( D_INFO, "Child pid: %i\n", daemon );
+			exit( 0 );
+		}
+		else
+		{
+			// don't be closed by parent
+			if( setsid() < 0 )
+			{
+				Host_Error( "setsid() failed: %s\n", strerror( errno ) );
+			}
+
+			// set permissions
+			umask( 0 );
+
+			// engine will still use stdin/stdout,
+			// so just redirect them to /dev/null
+			close( STDIN_FILENO );
+			close( STDOUT_FILENO );
+			close( STDERR_FILENO );
+			open("/dev/null", O_RDONLY); // becomes stdin
+			open("/dev/null", O_RDWR); // stdout
+			open("/dev/null", O_RDWR); // stderr
+
+			// fallthrough
+		}
+#else
+		Host_Error( "Daemonize not supported on this platform!" );
+		host.daemonized = false;
+#endif
+	}
+
 	
 	host.enabledll = !Sys_CheckParm( "-nodll" );
 
@@ -1052,9 +1107,19 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	host.type = HOST_DEDICATED; // predict state
 #else
 	if( Sys_CheckParm("-dedicated") || progname[0] == '#' )
+	{
 		 host.type = HOST_DEDICATED;
-	else host.type = HOST_NORMAL;
+	}
+	else
+	{
+		host.type = HOST_NORMAL;
+		if( host.daemonized )
+		{
+			Host_Error( "Can't daemonize client!" );
+		}
+	}
 #endif
+
 	host.con_showalways = true;
 	host.mouse_visible = false;
 
