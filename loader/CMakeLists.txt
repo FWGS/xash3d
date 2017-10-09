@@ -23,24 +23,26 @@
 cmake_minimum_required(VERSION 2.6.0)
 project (LOADER)
 
-set (LOADER_LIBRARY loader)
+set(LOADER_LIBRARY loader)
 
-file (GLOB_RECURSE LOADER_SOURCES *.c)
-include_directories(. wine/ ../engine/common ../engine ../engine/client ../common )
+file(GLOB_RECURSE LOADER_SOURCES *.c)
+include_directories(. wine/ ../engine/common ../engine ../engine/client ../common)
 if(XASH_STATIC)
-	add_library (${LOADER_LIBRARY} STATIC ${LOADER_SOURCES})
+	add_library(${LOADER_LIBRARY} STATIC ${LOADER_SOURCES})
 else()
-	add_library (${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
+	add_library(${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
 endif()
 
-IF (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD" OR CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
+if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD" OR CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
        target_link_libraries (${LOADER_LIBRARY} -lm -pthread -lexecinfo)
-ELSE ()
+else()
 	   target_link_libraries (${LOADER_LIBRARY} -lm -pthread)
-ENDIF ()
+endif()
 
-set_target_properties (${LOADER_SHARED} PROPERTIES
+set_target_properties(${LOADER_LIBRARY} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
-install( TARGETS ${LOADER_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d 
-	        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+install(TARGETS ${LOADER_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d
+	PERMISSIONS OWNER_READ OWNER_WRITE
+	            GROUP_READ
+				WORLD_READ)

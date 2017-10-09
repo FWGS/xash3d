@@ -21,38 +21,50 @@
 #
 
 cmake_minimum_required(VERSION 2.6.0)
-project (VGUI_SUPPORT)
+project(VGUI_SUPPORT)
 
-set (VGUI_SUPPORT_LIBRARY vgui_support)
+set(VGUI_SUPPORT_LIBRARY vgui_support)
 
-file (GLOB VGUI_SUPPORT_SOURCES *.cpp *.c)
-include_directories (. ../common ../engine ../engine/common ../engine/client ../engine/client/vgui ${HL_SDK_DIR}/utils/vgui/include/)
+file(GLOB VGUI_SUPPORT_SOURCES *.cpp *.c)
+include_directories(
+	.
+	../common
+	../engine
+	../engine/common
+	../engine/client
+	../engine/client/vgui
+	${HL_SDK_DIR}/utils/vgui/include/
+)
 
-add_library (${VGUI_SUPPORT_LIBRARY} MODULE ${VGUI_SUPPORT_SOURCES})
+add_library(${VGUI_SUPPORT_LIBRARY} MODULE ${VGUI_SUPPORT_SOURCES})
 
-find_package( VGUI REQUIRED )
+find_package(VGUI REQUIRED)
 
-target_link_vgui_hack( ${VGUI_SUPPORT_LIBRARY} )
+target_link_vgui_hack(${VGUI_SUPPORT_LIBRARY})
 
 add_definitions(-DXASH_VGUI)
-set_target_properties (${VGUI_SUPPORT_SHARED} PROPERTIES
+set_target_properties(${VGUI_SUPPORT_LIBRARY} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
-if( NOT WIN32 )
-	install( TARGETS ${VGUI_SUPPORT_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d
-		    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
-	install( FILES ${VGUI_LIB_PATH} DESTINATION ${LIB_INSTALL_DIR}/xash3d
-	        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
+if(NOT WIN32)
+	install(TARGETS ${VGUI_SUPPORT_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/xash3d
+		    PERMISSIONS OWNER_READ OWNER_WRITE
+			            GROUP_READ
+						WORLD_READ)
+	install(FILES ${VGUI_LIB_PATH} DESTINATION ${LIB_INSTALL_DIR}/xash3d
+		    PERMISSIONS OWNER_READ OWNER_WRITE
+			            GROUP_READ
+						WORLD_READ)
 else()
-	install( TARGETS ${VGUI_SUPPORT_LIBRARY}
+	install(TARGETS ${VGUI_SUPPORT_LIBRARY}
 		CONFIGURATIONS Debug 
 		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Debug/
-		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Debug/ )
-	install( FILES $<TARGET_FILE_DIR:${VGUI_SUPPORT_LIBRARY}>/vgui_support.pdb
+		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Debug/)
+	install(FILES $<TARGET_FILE_DIR:${VGUI_SUPPORT_LIBRARY}>/vgui_support.pdb
 		CONFIGURATIONS Debug 
-		DESTINATION ${LIB_INSTALL_DIR}/Debug/ )
-	install( TARGETS ${VGUI_SUPPORT_LIBRARY}
+		DESTINATION ${LIB_INSTALL_DIR}/Debug/)
+	install(TARGETS ${VGUI_SUPPORT_LIBRARY}
 		CONFIGURATIONS Release 
 		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Release/
-		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Release/ )
+		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Release/)
 endif()

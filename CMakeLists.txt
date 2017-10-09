@@ -48,7 +48,7 @@ option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator."
 option(XASH_NANOGL "Enable NanoGL. Implicitly enables XASH_GLES." OFF)
 
 # For libdl-haters ;)
-option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executaable" OFF)
+option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executable" OFF)
 option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 
 # Shared library loader implementation. Must be checked one of these or both.
@@ -77,7 +77,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 ###################\
 
 if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-	message(FATAL_ERROR "Xash3D doesn't work with 64 bit systems well. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
+	message(FATAL_ERROR "Xash3D doesn't work with 64 bit systems well and there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
 endif()
 
 # Dependencies
@@ -95,8 +95,8 @@ endif()
 
 
 if(NOT DEFINED LIB_INSTALL_DIR)
-	if( WIN32 )
-		set( LIB_INSTALL_DIR "${CMAKE_BUILD_TYPE}" )
+	if(WIN32)
+		set(LIB_INSTALL_DIR "${CMAKE_BUILD_TYPE}")
 	else()
 		set(LIB_INSTALL_DIR "lib${LIB_SUFFIX}")
 	endif()
@@ -109,25 +109,27 @@ if(NOT DEFINED BIN_INSTALL_DIR)
 endif()
 
 if(NOT XASH_DEDICATED)
-	add_subdirectory (mainui)
+	add_subdirectory(mainui)
 	if(XASH_VGUI)
-		add_subdirectory (vgui_support)
+		add_subdirectory(vgui_support)
 	endif()
 endif()
 
 if(XASH_DLL_LOADER)
-	add_subdirectory (loader)
+	add_subdirectory(loader)
 endif()
 
 if(NOT XASH_SINGLE_BINARY)
-	add_subdirectory (game_launch)
+	add_subdirectory(game_launch)
 endif()
 
-add_subdirectory (engine)
+add_subdirectory(engine)
 
 if(NOT WIN32)
 	install(FILES "xash3d.sh"
 	    DESTINATION ${BIN_INSTALL_DIR}
 	    RENAME "xash3d"
-	    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE 	GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+		PERMISSIONS OWNER_READ OWNER_EXECUTE OWNER_WRITE
+		            GROUP_READ GROUP_EXECUTE
+					WORLD_READ WORLD_EXECUTE)
 endif()
