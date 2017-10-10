@@ -505,6 +505,7 @@ void GL_SetupAttributes()
 
 	if( Sys_CheckParm( "-gldebug" ) && host.developer >= 1 )
 	{
+		MsgDev( D_NOTE, "Creating an extended GL context for debug...\n" );
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG );
 		glw_state.extended = true;
 	}
@@ -717,7 +718,10 @@ void GL_InitExtensions( void )
 	if( GL_Support( GL_DEBUG_OUTPUT ))
 	{
 		if( host.developer >= D_ERROR )
+		{
+			MsgDev( D_NOTE, "Installing GL_DebugOutput...\n");
 			pglDebugMessageCallbackARB( GL_DebugOutput, NULL );
+		}
 
 		// force everything to happen in the main thread instead of in a separate driver thread
 		if( host.developer >= D_WARN )
