@@ -86,12 +86,15 @@ void Sys_PrintUsage( void )
 	O("-toconsole       ","start witn console open")
 	O("-nowriteconfig   ","disable config save")
 	O("-casesensitive   ","disable case-insensitive FS emulation")
+	#ifndef XASH_MOBILE_PLATFORM
+		O("-daemonize       ", "run engine in background(only for dedicated)")
+	#endif
 
 	#ifndef XASH_DEDICATED
 		O("-nojoy           ","disable joystick support")
 		O("-nosound         ","disable sound")
 		O("-noenginemouse   ","disable mouse completely")
-	#ifndef __ANDROID__
+	#ifndef XASH_MOBILE_PLATFORM
 			O("-dedicated       ","run in dedicated server mode")
 	#endif
 	#endif
@@ -976,7 +979,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	// to be accessed later
 	if( ( host.daemonized = Sys_CheckParm( "-daemonize" ) ) )
 	{
-#if defined(_POSIX_VERSION) && !defined(TARGET_OS_IPHONE) && !defined(__ANDROID__)
+#if defined(_POSIX_VERSION) && !defined(XASH_MOBILE_PLATFORM)
 		pid_t daemon;
 
 		daemon = fork();
@@ -1014,9 +1017,10 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 
 			// fallthrough
 		}
+#elif defined(XASH_MOBILE_PLATFORM)
+		Sys_Error( "Can't run in background on mobile platforms!" );
 #else
-		Host_Error( "Daemonize not supported on this platform!" );
-		host.daemonized = false;
+		Sys_Error( "Daemonize not supported on this platform!" );
 #endif
 	}
 
@@ -1115,7 +1119,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		host.type = HOST_NORMAL;
 		if( host.daemonized )
 		{
-			Host_Error( "Can't daemonize client!" );
+			Sys_Error( "Can't daemonize client!" );
 		}
 	}
 #endif

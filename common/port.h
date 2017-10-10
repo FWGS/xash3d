@@ -27,6 +27,10 @@ GNU General Public License for more details.
 #define ARCH_SUFFIX
 #endif
 
+#if defined(__ANDROID__) || TARGET_OS_IOS
+#define XASH_MOBILE_PLATFORM
+#endif
+
 #if !defined(_WIN32)
 	#include <limits.h>
 	#include <dlfcn.h>
