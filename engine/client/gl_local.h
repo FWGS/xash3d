@@ -447,6 +447,7 @@ void R_DrawSkyChain( msurface_t *s );
 void GL_CheckForErrors_( const char *filename, const int fileline );
 void GL_UpdateSwapInterval( void );
 qboolean GL_DeleteContext( void );
+void GL_SetExtension( int r_ext, int enable );
 qboolean GL_Support( int r_ext );
 void VID_CheckChanges( void );
 int GL_MaxTextureUnits( void );
@@ -542,6 +543,7 @@ enum
 	GL_ARB_DEPTH_FLOAT_EXT,
 	GL_ARB_SEAMLESS_CUBEMAP,
 	GL_DEPTH_TEXTURE,
+	GL_DEBUG_OUTPUT,
 	GL_SHADOW_EXT,
 	GL_EXTCOUNT,		// must be last
 };
@@ -630,6 +632,7 @@ typedef struct
 
 	qboolean		software;		// OpenGL software emulation
 	qboolean		initialized;	// OpenGL subsystem started
+	qboolean		extended;
 } glwstate_t;
 
 extern glconfig_t		glConfig;

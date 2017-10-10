@@ -572,9 +572,6 @@ qboolean GL_CreateContext( void )
 	nanoGL_Init();
 #endif
 
-	/*if( !Sys_CheckParm( "-gldebug" ) || host.developer < 1 ) // debug bit the kills perfomance
-		return true;*/
-
 #ifdef XASH_SDL
 	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
 	{

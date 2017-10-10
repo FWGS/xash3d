@@ -618,7 +618,7 @@ qboolean VID_CubemapShot( const char *base, uint size, const float *vieworg, qbo
 		{
 			R_DrawCubemapView( vieworg, r_envMapInfo[i].angles, size );
 			flags = r_envMapInfo[i].flags;
-                    }
+		}
 
 		pglReadPixels( 0, 0, size, size, GL_RGB, GL_UNSIGNED_BYTE, temp );
 		r_side->flags = IMAGE_HAS_COLOR;

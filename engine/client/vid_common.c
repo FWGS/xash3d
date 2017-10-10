@@ -578,6 +578,10 @@ void ( APIENTRY *pglGetQueryObjectuivARB) (GLuint id, GLenum pname, GLuint *para
 void ( APIENTRY * pglSelectTextureSGIS) ( GLenum );
 void ( APIENTRY * pglMTexCoord2fSGIS) ( GLenum, GLfloat, GLfloat );
 void ( APIENTRY * pglSwapInterval) ( int interval );
+void ( APIENTRY *pglDebugMessageControlARB)( GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint* ids, GLboolean enabled );
+void ( APIENTRY *pglDebugMessageInsertARB)( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char* buf );
+void ( APIENTRY *pglDebugMessageCallbackARB)( pglDebugProcARB callback, void* userParam );
+GLuint ( APIENTRY *pglGetDebugMessageLogARB)( GLuint count, GLsizei bufsize, GLenum* sources, GLenum* types, GLuint* ids, GLuint* severities, GLsizei* lengths, char* messageLog );
 #endif
 
 /*

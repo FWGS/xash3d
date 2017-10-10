@@ -435,6 +435,12 @@ extern void ( APIENTRY * pglSelectTextureSGIS) ( GLenum );
 extern void ( APIENTRY * pglMTexCoord2fSGIS) ( GLenum, GLfloat, GLfloat );
 extern void ( APIENTRY * pglSwapInterval) ( int interval );
 extern void *pglGetProcAddress( const GLubyte * );
+typedef void ( APIENTRY *pglDebugProcARB)( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB* message, GLvoid* userParam );
+extern void ( APIENTRY *pglDebugMessageControlARB)( GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint* ids, GLboolean enabled );
+extern void ( APIENTRY *pglDebugMessageInsertARB)( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char* buf );
+extern void ( APIENTRY *pglDebugMessageCallbackARB)( pglDebugProcARB callback, void* userParam );
+extern GLuint ( APIENTRY *pglGetDebugMessageLogARB)( GLuint count, GLsizei bufsize, GLenum* sources, GLenum* types, GLuint* ids, GLuint* severities, GLsizei* lengths, char* messageLog );
+
 
 #endif // GL_DYNAMIC_H
 

@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "client.h"
 #include "gl_local.h"
 #include "mod_local.h"
+#include <SDL.h>
 
 #ifdef WIN32
 // Enable NVIDIA High Performance Graphics while using Integrated Graphics.
@@ -162,6 +163,15 @@ static dllfunc_t drawrangeelementsextfuncs[] =
 {
 { "glDrawRangeElementsEXT" , (void **)&pglDrawRangeElementsEXT },
 { NULL, NULL }
+};
+
+static dllfunc_t debugoutputfuncs[] =
+{
+{ "glDebugMessageControlARB"			, (void **)&pglDebugMessageControlARB },
+{ "glDebugMessageInsertARB"			, (void **)&pglDebugMessageInsertARB },
+{ "glDebugMessageCallbackARB"			, (void **)&pglDebugMessageCallbackARB },
+{ "glGetDebugMessageLogARB"			, (void **)&pglGetDebugMessageLogARB },
+{ NULL					, NULL }
 };
 
 static dllfunc_t sgis_multitexturefuncs[] =
@@ -325,6 +335,50 @@ static dllfunc_t texturecompressionfuncs[] =
 };
 
 /*
+========================
+DebugCallback
+For ARB_debug_output
+========================
+*/
+static void GL_DebugOutput( GLuint source, GLuint type, GLuint id, GLuint severity, GLint length, const GLcharARB *message, GLvoid *userParam )
+{
+	switch( type )
+	{
+	case GL_DEBUG_TYPE_ERROR_ARB:
+		if( host.developer < D_ERROR )	// "-dev 2"
+			return;
+		Con_Printf( "^1OpenGL Error:^7 %s\n", message );
+		break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
+		if( host.developer < D_WARN )		// "-dev 3"
+			return;
+		Con_Printf( "^3OpenGL Warning:^7 %s\n", message );
+		break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
+		if( host.developer < D_WARN )		// "-dev 3"
+			return;
+		Con_Printf( "^3OpenGL Warning:^7 %s\n", message );
+		break;
+	case GL_DEBUG_TYPE_PORTABILITY_ARB:
+		if( host.developer < D_NOTE )	// "-dev 4"
+			return;
+		Con_Printf( "^3OpenGL Warning:^7 %s\n", message );
+		break;
+	case GL_DEBUG_TYPE_PERFORMANCE_ARB:
+		if( host.developer < D_NOTE )	// "-dev 4"
+			return;
+		Con_Printf( "OpenGL Notify: %s\n", message );
+		break;
+	case GL_DEBUG_TYPE_OTHER_ARB:
+	default:
+		if( host.developer <= D_NOTE )		// "-dev 5"
+			return;
+		Con_Printf( "OpenGL: %s\n", message );
+		break;
+	}
+}
+
+/*
 =================
 GL_GetProcAddress
 =================
@@ -448,6 +502,12 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+
+	if( Sys_CheckParm( "-gldebug" ) && host.developer >= 1 )
+	{
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG );
+		glw_state.extended = true;
+	}
 
 	switch( gl_msaa->integer )
 	{
@@ -600,6 +660,9 @@ void GL_InitExtensions( void )
 	GL_CheckExtension( "GL_ARB_texture_float", NULL, "gl_arb_texture_float", GL_ARB_TEXTURE_FLOAT_EXT );
 	GL_CheckExtension( "GL_ARB_depth_buffer_float", NULL, "gl_arb_depth_float", GL_ARB_DEPTH_FLOAT_EXT );
 
+	if( glw_state.extended )
+		GL_CheckExtension( "GL_ARB_debug_output", debugoutputfuncs, "gl_debug_output", GL_DEBUG_OUTPUT );
+
 	// occlusion queries
 	GL_CheckExtension( "GL_ARB_occlusion_query", occlusionfunc, "gl_occlusion_queries", GL_OCCLUSION_QUERIES_EXT );
 
@@ -649,6 +712,22 @@ void GL_InitExtensions( void )
 
 	if( GL_Support( GL_TEXTURE_COMPRESSION_EXT ))
 		Image_AddCmdFlags( IL_DDS_HARDWARE );
+
+	// enable gldebug if allowed
+	if( GL_Support( GL_DEBUG_OUTPUT ))
+	{
+		if( host.developer >= D_ERROR )
+			pglDebugMessageCallbackARB( GL_DebugOutput, NULL );
+
+		// force everything to happen in the main thread instead of in a separate driver thread
+		if( host.developer >= D_WARN )
+			pglEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB );
+
+		// enable all the low priority messages
+		if( host.developer >= D_NOTE )
+			pglDebugMessageControlARB( GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true );
+	}
+
 
 	glw_state.initialized = true;
 
