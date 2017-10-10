@@ -66,7 +66,7 @@
 
 message("<FindSDL2.cmake>")
 
-if(WIN32 AND NOT SDL_PATH)
+if(WIN32 AND NOT SDL2_PATH)
 	message(FATAL_ERROR "To find SDL2 correctly, you need to pass SDL2_PATH variable to CMake")
 endif()
 
