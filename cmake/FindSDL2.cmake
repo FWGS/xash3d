@@ -66,6 +66,10 @@
 
 message("<FindSDL2.cmake>")
 
+if(WIN32 AND NOT SDL_PATH)
+	message(FATAL_ERROR "To find SDL2 correctly, you need to pass SDL2_PATH variable to CMake")
+endif()
+
 SET(SDL2_SEARCH_PATHS
 	~/Library/Frameworks
 	/Library/Frameworks
