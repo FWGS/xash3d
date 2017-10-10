@@ -82,7 +82,7 @@ void Sys_PrintUsage( void )
 	" [options] [+command1] [+command2 arg]\n"
 	"Availiable options:\n"
 	O("-dev <level>     ","set developer level")
-	O("-log             ","write log to \"engine.log")
+	O("-log             ","write log to \"engine.log\"")
 	O("-toconsole       ","start witn console open")
 	O("-nowriteconfig   ","disable config save")
 	O("-casesensitive   ","disable case-insensitive FS emulation")
@@ -121,10 +121,9 @@ void Sys_PrintUsage( void )
 	#endif
 	O("-rodir <path>    ","set read-only base directory, experimental")
 
-	// TODO: Enable when -gldebug will be restored for fork
-	//#if !defined(XASH_GLES) || !defined(XASH_NANOGL) || !defined(XASH_DEDICATED)
-	//	O("-gldebug         ","enable OpenGL debug log through GL_EXT_debug_output, depends on platform")
-	//#endif
+	#if !defined(XASH_GLES) || !defined(XASH_NANOGL) || !defined(XASH_DEDICATED)
+		O("-gldebug         ","enable OpenGL debug log through GL_EXT_debug_output, depends on platform")
+	#endif
 	;
 #undef O
 
