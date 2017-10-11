@@ -14,6 +14,7 @@ GNU General Public License for more details.
 */
 
 #include "common.h"
+
 #if defined(XASH_SDL)
 #include <SDL.h>
 #endif
@@ -252,7 +253,7 @@ void Host_Frame( float time );
 void Host_RunFrame()
 {
 	static double	oldtime, newtime;
-#ifdef XASH_SDL
+#if XASH_INPUT == INPUT_SDL
 	SDL_Event event;
 #endif
 	if( !oldtime )
@@ -1111,15 +1112,11 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 #else
 	if( Sys_CheckParm("-dedicated") || progname[0] == '#' )
 	{
-		 host.type = HOST_DEDICATED;
+		host.type = HOST_DEDICATED;
 	}
 	else
 	{
 		host.type = HOST_NORMAL;
-		if( host.daemonized )
-		{
-			Sys_Error( "Can't daemonize client!" );
-		}
 	}
 #endif
 
