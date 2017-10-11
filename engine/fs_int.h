@@ -68,7 +68,7 @@ typedef struct fs_api_s
 	file_t *(*FS_Open)( const char *filepath, const char *mode, qboolean gamedironly );
 
 	// fclose engine equivalent
-	void (*FS_Close)( file_t *file );
+	int (*FS_Close)( file_t *file );
 
 	// ftell engine equivalent
 	fs_offset_t (*FS_Tell)( file_t* file );
