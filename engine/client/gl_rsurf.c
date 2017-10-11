@@ -2736,11 +2736,13 @@ static void R_DrawLightmappedVBO( vboarray_t *vbo, vbotexture_t *vbotex, texture
 			LM_UploadDynamicBlock();
 
 			// draw remaining array
-#ifdef __EMSCRIPTEN__ // WebGL need to know array sizes
-			pglDrawRangeElements( GL_TRIANGLES, 0, vbo->array_len, dlightindex, GL_UNSIGNED_SHORT, dlightarray );
-#else
-			pglDrawElements( GL_TRIANGLES, dlightindex, GL_UNSIGNED_SHORT, dlightarray );
+#if !defined XASH_NANOGL || defined XASH_WES && defined __EMSCRIPTEN__ // WebGL need to know array sizes
+			if( pglDrawRangeElements )
+				pglDrawRangeElements( GL_TRIANGLES, 0, vbo->array_len, dlightindex, GL_UNSIGNED_SHORT, dlightarray );
+			else
 #endif
+				pglDrawElements( GL_TRIANGLES, dlightindex, GL_UNSIGNED_SHORT, dlightarray );
+
 			R_AdditionalPasses( vbo, dlightindex, dlightarray, texture, true );
 
 			// draw remaining decals
