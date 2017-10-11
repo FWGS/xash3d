@@ -477,10 +477,18 @@ void IN_ToggleClientMouse( int newstate, int oldstate )
 	{
 		// reset mouse pos, so cancel effect in game
 #ifdef XASH_SDL
-		SDL_WarpMouseInWindow( host.hWnd, host.window_center_x, host.window_center_y );
-		SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
-		if( clgame.dllFuncs.pfnLookEvent )
-			SDL_SetRelativeMouseMode( SDL_TRUE );
+		if(touch_enable->integer)
+		{
+			SDL_SetRelativeMouseMode( SDL_FALSE );
+			SDL_SetWindowGrab( host.hWnd,  SDL_FALSE );
+		}
+		else
+		{
+			SDL_WarpMouseInWindow( host.hWnd, host.window_center_x, host.window_center_y );
+			SDL_SetWindowGrab( host.hWnd, SDL_TRUE );
+			if( clgame.dllFuncs.pfnLookEvent )
+				SDL_SetRelativeMouseMode( SDL_TRUE );
+		}
 #endif
 		if( cls.initialized )
 			clgame.dllFuncs.IN_ActivateMouse();
