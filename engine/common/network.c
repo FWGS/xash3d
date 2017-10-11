@@ -306,84 +306,81 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 #endif
 }
 
-#if !defined _WIN32 && !defined __EMSCRIPTEN__ && !defined NO_PTHREAD
-#define USE_PTHREAD
+#if !defined XASH_NO_ASYNC_NS_RESOLVE && ( defined _WIN32 || !defined __EMSCRIPTEN__ )
+#define CAN_ASYNC_NS_RESOLVE
 #endif
 
-#ifdef USE_PTHREAD
+#ifdef CAN_ASYNC_NS_RESOLVE
+
+#if !defined _WIN32
 #include <pthread.h>
-
-static struct nspthread_s
-{
-pthread_mutex_t mutexns, mutexres;
-int result;
-string hostname;
-qboolean busy;
-pthread_t thread;
-} nspthread = { PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER };
-
-void *NET_ResolveThread( void *arg )
-{
-	struct hostent *res;
-
-	pthread_mutex_lock( &nspthread.mutexns );
-	res = pGetHostByName( nspthread.hostname );
-	pthread_mutex_lock( &nspthread.mutexres );
-
-	if( res )
-		nspthread.result = *(int *)res->h_addr_list[0];
-	else
-		nspthread.result = 0;
-
-	pthread_mutex_unlock( &nspthread.mutexns );
-	nspthread.busy = false;
-	pthread_mutex_unlock( &nspthread.mutexres );
-	return 0;
-}
-#elif defined _WIN32
+#define mutex_lock pthread_mutex_lock
+#define mutex_unlock pthread_mutex_unlock
+#define exit_thread( x )
+#define create_thread( pfn ) pthread_create( &nsthread.thread, NULL, (pfn), NULL )
+#define mutex_t  pthread_mutex_t
+#define thread_t pthread_t
+typedef void *thread_ret_t;
+#else
 struct cs {
 	void* p1;
-	int i1;
-	int i2;
-	void *p2;
-	void *p3;
-	uint i4;
+	int   i1, i2;
+	void *p2, *p3;
+	uint  i4;
 };
+#define mutex_lock pEnterCriticalSection
+#define mutex_unlock pLeaveCriticalSection
+#define exit_thread( x ) ExitThread( ( x ) )
+#define create_thread( pfn ) pthread_create( NULL, 0, &(pfn), NULL, 0, NULL )
+#define mutex_t  struct cs
+typedef uint thread_ret_t;
+#endif
 
-static struct nswthread_s
+static struct nsthread_s
 {
-struct cs mutexns, mutexres;
-int result;
-string hostname;
-qboolean busy;
-} nswthread;
+	mutex_t mutexns;
+	mutex_t mutexres;
+#ifdef thread_t
+	thread_t thread;
+#endif
+	int     result;
+	string  hostname;
+	qboolean busy;
+} nsthread
+#ifndef _WIN32
+= { PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER }
+#endif
+;
 
+#ifdef _WIN32
 static void NET_InitializeCriticalSections( void )
 {
-	pInitializeCriticalSection( &nswthread.mutexns );
-	pInitializeCriticalSection( &nswthread.mutexres );
+	pInitializeCriticalSection( &nsthread.mutexns );
+	pInitializeCriticalSection( &nsthread.mutexres );
 }
+#endif
 
-uint _stdcall NET_ResolveThread( const void *arg )
+thread_ret_t NET_ResolveThread( void *unused )
 {
 	struct hostent *res;
 
-	pEnterCriticalSection( &nswthread.mutexns );
-	res = pGetHostByName( nswthread.hostname );
-	pEnterCriticalSection( &nswthread.mutexres );
+	mutex_lock( &nsthread.mutexns );
+	res = pGetHostByName( nsthread.hostname );
+	mutex_lock( &nsthread.mutexres );
 
 	if( res )
-		nswthread.result = *(int *)res->h_addr_list[0];
+		nsthread.result = *(int *)res->h_addr_list[0];
 	else
-		nswthread.result = 0;
+		nsthread.result = 0;
 
-	pLeaveCriticalSection( &nswthread.mutexns );
-	nswthread.busy = false;
-	pLeaveCriticalSection( &nswthread.mutexres );
-	ExitThread(0);
+	mutex_unlock( &nsthread.mutexns );
+	nsthread.busy = false;
+	mutex_unlock( &nsthread.mutexres );
+	exit_thread( 0 );
 	return 0;
 }
-#endif
+
+#endif // CAN_ASYNC_NS_RESOLVE
 
 /*
 =============
@@ -454,107 +451,63 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 		else
 		{
 			struct hostent *h;
-#ifdef USE_PTHREAD
-
-		if( !nonblocking )
-		{
-			pthread_mutex_lock( &nspthread.mutexns );
-			h = pGetHostByName( copy );
-			if( !h )
-			{
-				pthread_mutex_unlock( &nspthread.mutexns );
-				return 0;
-			}
-			ip = *(int *)h->h_addr_list[0];
-			pthread_mutex_unlock( &nspthread.mutexns );
-
-		}
-		else
-		{
-			pthread_mutex_lock( &nspthread.mutexres );
-
-			if( nspthread.busy )
-			{
-				pthread_mutex_unlock( &nspthread.mutexres );
-				return 2;
-			}
-
-			if( !Q_strcmp( copy, nspthread.hostname ) )
-			{
-				
-				ip = nspthread.result;
-				nspthread.hostname[0] = 0;
-			}
-			else
-			{
-				Q_strncpy( nspthread.hostname, copy, MAX_STRING );
-				nspthread.busy = true;
-				pthread_mutex_unlock( &nspthread.mutexres );
-
-				pthread_create( &nspthread.thread, NULL, NET_ResolveThread, NULL );
-
-				return 2;
-			}
-
-			pthread_mutex_unlock( &nspthread.mutexres );
-		}
-
-#elif defined _WIN32
+#ifdef CAN_ASYNC_NS_RESOLVE
+#ifdef _WIN32
 			if( pInitializeCriticalSection )
+#endif // _WIN32
 			{
 				if( !nonblocking )
 				{
-					pEnterCriticalSection( &nswthread.mutexns );
+					mutex_lock( &nsthread.mutexns );
 					h = pGetHostByName( copy );
 					if( !h )
 					{
-						pLeaveCriticalSection( &nswthread.mutexns );
+						mutex_unlock( &nsthread.mutexns );
 						return 0;
 					}
 					ip = *(int *)h->h_addr_list[0];
-					pLeaveCriticalSection( &nswthread.mutexns );
+					mutex_unlock( &nsthread.mutexns );
+
 				}
 				else
 				{
-					pEnterCriticalSection( &nswthread.mutexres );
+					mutex_lock( &nsthread.mutexres );
 
-					if( nswthread.busy )
+					if( nsthread.busy )
 					{
-						pLeaveCriticalSection( &nswthread.mutexres );
+						mutex_unlock( &nsthread.mutexres );
 						return 2;
 					}
 
-					if( !Q_strcmp( copy, nswthread.hostname ) )
+					if( !Q_strcmp( copy, nsthread.hostname ) )
 					{
-						ip = nswthread.result;
-						nswthread.hostname[0] = 0;
+						ip = nsthread.result;
+						nsthread.hostname[0] = 0;
 					}
 					else
 					{
+						Q_strncpy( nsthread.hostname, copy, MAX_STRING );
+						nsthread.busy = true;
+						mutex_unlock( &nsthread.mutexres );
 
-						Q_strncpy( nswthread.hostname, copy, MAX_STRING );
-						nswthread.busy = true;
-						pLeaveCriticalSection( &nswthread.mutexres );
-
-						CreateThread( NULL, 0, &NET_ResolveThread, NULL, 0, NULL );
+						create_thread( NET_ResolveThread );
 
 						return 2;
 					}
 
-					pLeaveCriticalSection( &nswthread.mutexres );
+					mutex_unlock( &nsthread.mutexres );
 				}
 			}
+#ifdef _WIN32
 			else
+#endif // _WIN32
+#endif // CAN_ASYNC_NS_RESOLVE
 			{
-				if( !( h = pGetHostByName( copy )) )
+				if(!( h = pGetHostByName( copy )))
 					return 0;
 				ip = *(int *)h->h_addr_list[0];
 			}
-#else
-			if(!( h = pGetHostByName( copy )))
-				return 0;
-			ip = *(int *)h->h_addr_list[0];
-#endif
+
 			if( !ip )
 				return 0;
 

@@ -67,6 +67,9 @@ else()
 	option(XASH_VGUI "Enable VGUI support." ON)
 endif()
 
+# Misc
+option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
+
 # Pre-build analyze step
 option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
 

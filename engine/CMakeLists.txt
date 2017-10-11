@@ -163,6 +163,9 @@ else()
 	add_definitions(-DXASH_RELEASE)
 endif()
 
+if(XASH_NO_ASYNC_NS_RESOLVE)
+	add_definitions(-DXASH_NO_ASYNC_NS_RESOLVE)
+endif()
 
 if(NOT WIN32)
 	target_link_libraries(${XASH_ENGINE_LIBRARY} -lm -lpthread)
