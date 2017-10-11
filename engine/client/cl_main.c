@@ -465,8 +465,8 @@ void CL_CreateCmd( void )
 #ifdef XASH_SDL
 	if( m_ignore->integer )
 	{
-		int x,y;
-		SDL_GetRelativeMouseState(&x,&y);
+		int x, y;
+		SDL_GetRelativeMouseState( &x, &y );
 	}
 #endif
 

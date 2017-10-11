@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include <string.h>
 #include <ctype.h>
 #endif
+
 // timestamp modes
 enum
 {

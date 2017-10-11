@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #ifdef XASH_SDL
 #include <SDL.h>
 #endif
+
 #ifdef _WIN32
 #include "windows.h"
 #endif
@@ -528,7 +529,7 @@ Called when the window gains focus or changes in some way
 */
 void IN_ActivateMouse( qboolean force )
 {
-	static int	oldstate;
+	static qboolean	oldstate;
 
 	if( !in_mouseinitialized )
 		return;
@@ -642,13 +643,16 @@ IN_MouseEvent
 void IN_MouseEvent( int mstate )
 {
 	int	i;
+
 	if( !in_mouseinitialized || !in_mouseactive )
 		return;
+
 	if( m_ignore->integer )
 		return;
+
 	if( cls.key_dest == key_game )
 	{
-#if defined(XASH_SDL)
+#if defined( XASH_SDL )
 		static qboolean ignore; // igonre mouse warp event
 		int x, y;
 		SDL_GetMouseState(&x, &y);
@@ -656,12 +660,17 @@ void IN_MouseEvent( int mstate )
 			SDL_ShowCursor( SDL_TRUE );
 		else
 			SDL_ShowCursor( SDL_FALSE );
-		if( x < host.window_center_x / 2 || y < host.window_center_y / 2 ||  x > host.window_center_x + host.window_center_x/2 || y > host.window_center_y + host.window_center_y / 2 )
+
+		if( x < host.window_center_x / 2 ||
+			y < host.window_center_y / 2 ||
+			x > host.window_center_x + host.window_center_x / 2 ||
+			y > host.window_center_y + host.window_center_y / 2 )
 		{
 			SDL_WarpMouseInWindow(host.hWnd, host.window_center_x, host.window_center_y);
 			ignore = 1; // next mouse event will be mouse warp
 			return;
 		}
+
 		if ( !ignore )
 		{
 			if( !m_enginemouse->integer )

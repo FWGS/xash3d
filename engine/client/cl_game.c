@@ -1943,7 +1943,7 @@ void GAME_EXPORT CL_GetMousePosition( int *mx, int *my )
 #ifdef XASH_SDL
 	SDL_GetMouseState(mx, my);
 #else
-mx=my=0;
+	*mx = *my = 0;
 #endif
 }
 
@@ -2679,7 +2679,7 @@ void GAME_EXPORT pfnGetMousePos( POINT *ppt )
 #ifdef XASH_SDL
 	SDL_GetMouseState(&ppt->x, &ppt->y);
 #else
-	ppt->x=ppt->y=0;
+	ppt->x = ppt->y = 0;
 #endif
 }
 
@@ -2692,7 +2692,7 @@ pfnSetMousePos
 void GAME_EXPORT pfnSetMousePos( int mx, int my )
 {
 #ifdef XASH_SDL
-	SDL_WarpMouseInWindow(host.hWnd, mx, my);
+	SDL_WarpMouseInWindow( host.hWnd, mx, my );
 #endif
 }
 

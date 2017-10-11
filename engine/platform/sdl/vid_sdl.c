@@ -182,7 +182,6 @@ void VID_RestoreScreenResolution( void )
 
 qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
-#ifdef XASH_SDL
 	static string	wndname;
 	Uint32 wndFlags = 0;
 	rgbdata_t *icon = NULL;
@@ -243,8 +242,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	host.window_center_x = width / 2;
 	host.window_center_y = height / 2;
 
-#if defined(_WIN32)
-#if !defined(XASH_64BIT)
+	// Try load .ico on Windows first
+#if defined(_WIN32) && !defined(XASH_64BIT)
 	{
 		HICON ico;
 		SDL_SysWMinfo info;
@@ -270,9 +269,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 			SetClassLong( info.info.win.window, GCL_HICON, (LONG)ico );
 		}
 	}
-#endif // __XASH_64BIT__
-#else // _WIN32
-
+#endif // _WIN32 && !XASH_64BIT
 	Q_strcpy( iconpath, GI->iconpath );
 	FS_StripExtension( iconpath );
 	FS_DefaultExtension( iconpath, ".tga") ;
@@ -300,10 +297,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 		FS_FreeImage( icon );
 	}
-#endif
 
 	SDL_ShowWindow( host.hWnd );
-#endif
 	if( !glw_state.initialized )
 	{
 		if( !GL_CreateContext( ))
@@ -327,12 +322,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 void VID_DestroyWindow( void )
 {
-#ifdef XASH_SDL
-	if( glw_state.context )
-	{
-		SDL_GL_DeleteContext( glw_state.context );
-		glw_state.context = NULL;
-	}
+	GL_DeleteContext();
 
 	VID_RestoreScreenResolution();
 	if( host.hWnd )
@@ -340,7 +330,7 @@ void VID_DestroyWindow( void )
 		SDL_DestroyWindow ( host.hWnd );
 		host.hWnd = NULL;
 	}
-#endif
+
 	if( glState.fullScreen )
 	{
 		glState.fullScreen = false;
@@ -379,7 +369,6 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 
 rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 {
-#ifdef XASH_SDL
 	SDL_DisplayMode displayMode;
 
 	SDL_GetCurrentDisplayMode(0, &displayMode);
@@ -430,7 +419,7 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		R_ChangeDisplaySettingsFast( width, height );
 	}
 #endif
-#endif // XASH_SDL
+
 	return rserr_ok;
 }
 
@@ -443,7 +432,6 @@ Set the described video mode
 */
 qboolean VID_SetMode( void )
 {
-#ifdef XASH_SDL
 	qboolean	fullscreen = false;
 	int iScreenWidth, iScreenHeight;
 	rserr_t	err;
@@ -509,8 +497,7 @@ qboolean VID_SetMode( void )
 			return false;
 		}
 	}
-#endif
 	return true;
 }
 
-#endif //XASH_VIDEO
+#endif // XASH_VIDEO

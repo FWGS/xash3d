@@ -251,8 +251,6 @@ between a deactivate and an activate.
 */
 void S_Activate( qboolean active )
 {
-#ifdef XASH_SDL
 	SDL_PauseAudioDevice( sdl_dev, !active );
-#endif
 }
-#endif
+#endif // XASH_SOUND == SOUND_SDL

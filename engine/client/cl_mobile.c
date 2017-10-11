@@ -23,9 +23,6 @@ GNU General Public License for more details.
 #include "touch.h"
 
 #if defined(__ANDROID__)
-#ifdef XASH_SDL
-#include "SDL_system.h"
-#endif
 #include "platform/android/android-main.h"
 #endif
 

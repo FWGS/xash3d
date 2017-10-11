@@ -332,16 +332,15 @@ GL_GetProcAddress
 */
 void *GL_GetProcAddress( const char *name )
 {
-#ifdef XASH_SDL
-	void *func = SDL_GL_GetProcAddress(name);
-#elif defined (XASH_GLES)
-	void *func = nanoGL_GetProcAddress(name);
-#else //No opengl implementation
-	void *func = NULL;
+#if defined( XASH_GLES )
+	void *func = nanoGL_GetProcAddress( name );
+#else
+	void *func = SDL_GL_GetProcAddress( name );
 #endif
-	if(!func)
+
+	if( !func )
 	{
-		MsgDev(D_ERROR, "Error: GL_GetProcAddress failed for %s", name);
+		MsgDev( D_ERROR, "Error: GL_GetProcAddress failed for %s", name );
 	}
 	return func;
 }
@@ -486,23 +485,9 @@ void GL_UpdateSwapInterval( void )
 	if( gl_swapInterval->modified )
 	{
 		gl_swapInterval->modified = false;
-#ifdef XASH_SDL
 		if( SDL_GL_SetSwapInterval(gl_swapInterval->integer) )
 			MsgDev(D_ERROR, "SDL_GL_SetSwapInterval: %s\n", SDL_GetError());
-#endif
 	}
-}
-
-/*
-===============
-GL_ContextError
-===============
-*/
-static void GL_ContextError( void )
-{
-#ifdef XASH_SDL
-	MsgDev( D_ERROR, "GL_ContextError: %s\n", SDL_GetError() );
-#endif
 }
 
 /*
@@ -512,7 +497,6 @@ GL_SetupAttributes
 */
 void GL_SetupAttributes()
 {
-#ifdef XASH_SDL
 	int samples;
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -558,7 +542,6 @@ void GL_SetupAttributes()
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
 	}
-#endif // XASH_SDL
 }
 
 /*
@@ -572,13 +555,11 @@ qboolean GL_CreateContext( void )
 	nanoGL_Init();
 #endif
 
-#ifdef XASH_SDL
 	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
 	{
 		MsgDev(D_ERROR, "GL_CreateContext: %s\n", SDL_GetError());
 		return GL_DeleteContext();
 	}
-#endif
 
 #ifdef XASH_WES
 	void wes_init();
@@ -595,13 +576,11 @@ GL_UpdateContext
 */
 qboolean GL_UpdateContext( void )
 {
-#ifdef XASH_SDL
 	if(!( SDL_GL_MakeCurrent( host.hWnd, glw_state.context ) ) )
 	{
 		MsgDev(D_ERROR, "GL_UpdateContext: %s", SDL_GetError());
 		return GL_DeleteContext();
 	}
-#endif
 	return true;
 }
 
@@ -617,10 +596,8 @@ GL_DeleteContext
 */
 qboolean GL_DeleteContext( void )
 {
-#ifdef XASH_SDL
 	if( glw_state.context )
 		SDL_GL_DeleteContext(glw_state.context);
-#endif
 	glw_state.context = NULL;
 
 	return false;
@@ -636,13 +613,11 @@ qboolean R_Init_OpenGL( void )
 {
 	GL_SetupAttributes();
 
-#ifdef XASH_SDL
 	if( SDL_GL_LoadLibrary( EGL_LIB ) )
 	{
 		MsgDev( D_ERROR, "Couldn't initialize OpenGL: %s\n", SDL_GetError());
 		return false;
 	}
-#endif
 
 	return VID_SetMode();
 }
@@ -658,9 +633,9 @@ void R_Free_OpenGL( void )
 	GL_DeleteContext ();
 
 	VID_DestroyWindow ();
-#ifdef XASH_SDL
+
 	SDL_GL_UnloadLibrary ();
-#endif
+
 	// now all extensions are disabled
 	Q_memset( glConfig.extension, 0, sizeof( glConfig.extension[0] ) * GL_EXTCOUNT );
 	glw_state.initialized = false;
