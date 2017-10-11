@@ -2492,7 +2492,7 @@ static void GAME_EXPORT R_StudioDrawPoints( void )
 		m_pSubModel->numverts = MAXSTUDIOVERTS;
 
 #ifdef STUDIO_SKINNING_OMP_MIN
-#pragma omp parallel for private(i) if(m_pSubModel->numverts > OMP_SKINNING_OMP_MIN)
+#pragma omp parallel for private(i) if(m_pSubModel->numverts > STUDIO_SKINNING_OMP_MIN)
 #endif
 	for( i = 0; i < m_pSubModel->numverts; i++ )
 		Matrix3x4_VectorTransform( g_bonestransform[pvertbone[i]], pstudioverts[i], g_xformverts[i] );
