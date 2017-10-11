@@ -74,3 +74,5 @@ endmacro()
 
 find_package_handle_standard_args(VGUI REQUIRED_VARS VGUI_LIBRARY VGUI_INCLUDE_DIR)
 
+message("</FindVGUI.cmake>")
+
