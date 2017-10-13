@@ -297,7 +297,7 @@ void Joy_ButtonEvent( int id, byte button, byte down )
 	if( button > 32 )
 	{
 		int origbutton = button;
-		button = button & 31 + K_AUX1;
+		button = ( button & 31 ) + K_AUX1;
 
 		MsgDev( D_INFO, "Only 32 joybuttons is supported, converting %i button ID to %s\n", origbutton, Key_KeynumToString( button ) );
 	}
