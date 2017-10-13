@@ -40,7 +40,7 @@ option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF)
 cmake_dependent_option(XASH_IPX "Enable IPX support for networking. Windows only." ON "WIN32" OFF)
 cmake_dependent_option(XASH_NONSTANDARD_LOAD "Enable own DLL loader in Windows." ON "WIN32" OFF)
 
-# POSIX only. Disable it by default for Linux
+# POSIX only. Disable it by default for Windows
 cmake_dependent_option(XASH_USE_SELECT "Enable reading console commands from stdin." ON "NOT WIN32" OFF)
 
 # GLES hacks
