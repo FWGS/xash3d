@@ -162,6 +162,8 @@ void SV_DirectConnect( netadr_t from )
 	// see if the challenge is valid (LAN clients don't need to challenge)
 	if( !NET_IsLocalAddress( from ))
 	{
+		const char *password;
+
 		for( i = 0; i < MAX_CHALLENGES; i++ )
 		{
 			if( NET_CompareAdr( from, svs.challenges[i].adr ))
@@ -180,6 +182,16 @@ void SV_DirectConnect( netadr_t from )
 
 		MsgDev( D_NOTE, "Client %i connecting with challenge %x\n", i, challenge );
 		svs.challenges[i].connected = true;
+
+		password = sv_password->string;
+
+		if( password[0] && Q_stricmp( password, "none" ) && // does server have password
+			Q_stricmp( password, Info_ValueForKey( userinfo, "password" ) ) ) // does user have match it
+		{
+			Netchan_OutOfBandPrint( NS_SERVER, from, "%s\nInvalid server password.\n", errorpacket );
+			Netchan_OutOfBandPrint( NS_SERVER, from, "disconnect\n" );
+			return;
+		}
 	}
 
 	// force the IP key/value pair so the game can filter based on ip
@@ -268,6 +280,7 @@ gotnewcl:
 		extensions |= NET_EXT_HUFF;
 		newcl->netchan.compress = true;
 	}
+
 	if( sv_allow_split->integer && ( requested_extensions & NET_EXT_SPLIT ) )
 	{
 		unsigned int maxpacket = Q_atoi( Info_ValueForKey( userinfo, "cl_maxpacket") );
@@ -780,6 +793,7 @@ void SV_Info( netadr_t from, int version )
 	char	string[MAX_INFO_STRING];
 	int	i, count = 0;
 	char *gamedir = GI->gamefolder;
+	qboolean havePassword;
 
 	// ignore in single player
 	if( sv_maxclients->integer == 1 || !svs.initialized )
@@ -797,6 +811,8 @@ void SV_Info( netadr_t from, int version )
 			if( svs.clients[i].state >= cs_connected && !svs.clients[i].fakeclient )
 				count++;
 
+		havePassword = sv_password->string[0] && Q_stricmp( sv_password->string, "none" );
+
 		Info_SetValueForKey( string, "host", hostname->string, sizeof( string ) );
 		Info_SetValueForKey( string, "map", sv.name, sizeof( string ) );
 		Info_SetValueForKey( string, "dm", va( "%i", (int)svgame.globals->deathmatch ), sizeof( string ) );
@@ -805,6 +821,9 @@ void SV_Info( netadr_t from, int version )
 		Info_SetValueForKey( string, "numcl", va( "%i", count ), sizeof( string ) );
 		Info_SetValueForKey( string, "maxcl", va( "%i", sv_maxclients->integer ), sizeof( string ) );
 		Info_SetValueForKey( string, "gamedir", gamedir, sizeof( string ) );
+
+		// a1ba: extend to password
+		Info_SetValueForKey( string, "password", havePassword ? "1" : "0", sizeof( string ));
 	}
 
 	Netchan_OutOfBandPrint( NS_SERVER, from, "info\n%s", string );
@@ -866,9 +885,13 @@ void SV_BuildNetAnswer( netadr_t from )
 	}
 	else if( type == NETAPI_REQUEST_DETAILS )
 	{
+		qboolean havePassword;
+
 		for( i = 0; i < sv_maxclients->integer; i++ )
 			if( svs.clients[i].state >= cs_connected )
 				count++;
+
+		havePassword = sv_password->string[0] && Q_stricmp( sv_password->string, "none" );
 
 		string[0] = '\0';
 		Info_SetValueForKey( string, "hostname", hostname->string, sizeof( string ) );
@@ -876,6 +899,9 @@ void SV_BuildNetAnswer( netadr_t from )
 		Info_SetValueForKey( string, "current", va( "%i", count ), sizeof( string ) );
 		Info_SetValueForKey( string, "max", va( "%i", sv_maxclients->integer ), sizeof( string ) );
 		Info_SetValueForKey( string, "map", sv.name, sizeof( string ) );
+
+		// a1ba: add password
+		Info_SetValueForKey( string, "password", havePassword ? "1" : "0", sizeof( string ) );
 
 		// send serverinfo
 		Q_snprintf( answer, sizeof( answer ), "netinfo %i %i %s\n", context, type, string );
@@ -2069,6 +2095,8 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	Q_strncpy( temp2, val, sizeof( temp2 ));
 	TrimSpace( temp2, temp1 );
 
+	Info_RemoveKey( cl->userinfo, "password" ); // hide password from other users
+
 	if( !Q_stricmp( temp1, "console" )) // keyword came from OSHLDS
 	{
 		Info_SetValueForKey( cl->userinfo, "name", "unnamed", sizeof( cl->userinfo ) );
@@ -3040,6 +3068,7 @@ void SV_TSourceEngineQuery( netadr_t from )
 	char answer[1024] = "";
 	sizebuf_t buf;
 	int count = 0, bots = 0, index;
+	int havePassword;
 
 	if( svs.clients )
 	{
@@ -3054,30 +3083,32 @@ void SV_TSourceEngineQuery( netadr_t from )
 		}
 	}
 
+	havePassword = ( sv_password->string[0] && Q_stricmp( sv_password->string, "none" ) ) ? 0 : 1;
+
 	BF_Init( &buf, "TSourceEngineQuery", answer, sizeof( answer ));
 
 #if 1 // Source format
-	BF_WriteLong(&buf, -1);// Fixed this
-	BF_WriteByte( &buf, 'I' );
-	BF_WriteByte( &buf, PROTOCOL_VERSION );
+	BF_WriteLong  ( &buf, -1 ); // Mark as connectionless
+	BF_WriteByte  ( &buf, 'I' );
+	BF_WriteByte  ( &buf, PROTOCOL_VERSION );
 	BF_WriteString( &buf, hostname->string );
 	BF_WriteString( &buf, sv.name );
 	BF_WriteString( &buf, GI->gamefolder );
-	BF_WriteString( &buf, GI->title );
-	BF_WriteShort( &buf, 0 ); // steam id
-	BF_WriteByte( &buf, count );
-	BF_WriteByte( &buf, sv_maxclients->integer );
-	BF_WriteByte( &buf, bots );
-	BF_WriteByte( &buf, Host_IsDedicated() ? 'd' : 'l');
+	BF_WriteString( &buf, svgame.dllFuncs.pfnGetGameDescription() );
+	BF_WriteShort ( &buf, 0 ); // steam id
+	BF_WriteByte  ( &buf, count );
+	BF_WriteByte  ( &buf, sv_maxclients->integer );
+	BF_WriteByte  ( &buf, bots );
+	BF_WriteByte  ( &buf, Host_IsDedicated() ? 'd' : 'l');
 #if defined(_WIN32)
-	BF_WriteByte( &buf, 'w' );
+	BF_WriteByte  ( &buf, 'w' );
 #elif defined(__APPLE__)
-	BF_WriteByte( &buf, 'm' );
+	BF_WriteByte  ( &buf, 'm' );
 #else
-	BF_WriteByte( &buf, 'l' );
+	BF_WriteByte  ( &buf, 'l' );
 #endif
-	BF_WriteByte( &buf, 0 ); // visibility
-	BF_WriteByte( &buf, 0 ); // secure
+	BF_WriteByte  ( &buf, havePassword ); // visibility
+	BF_WriteByte  ( &buf, 0 ); // secure
 #else // GS format
 	/*
 	**	This will work in monitoring,
@@ -3099,7 +3130,8 @@ void SV_TSourceEngineQuery( netadr_t from )
 #else
 	BF_WriteByte( &buf, 'L' );
 #endif
-	if( Q_stricmp(GI->gamedir, "valve") )
+	BF_WriteByte( &buf, havePassword );
+	if( Q_stricmp( GI->gamedir, "valve" ) )
 	{
 		BF_WriteByte( &buf, 1 ); // mod
 		BF_WriteString( &buf, GI->game_url );

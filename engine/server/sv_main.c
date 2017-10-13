@@ -96,6 +96,7 @@ convar_t	*sv_allow_compress;
 convar_t	*sv_maxpacket;
 convar_t	*sv_forcesimulating;
 convar_t	*sv_nat;
+convar_t	*sv_password;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -111,6 +112,8 @@ convar_t	*sv_skydir_y;
 convar_t	*sv_skydir_z;
 convar_t	*sv_skyangle;
 convar_t	*sv_skyspeed;
+
+
 convar_t	*sv_allow_noinputdevices;
 convar_t	*sv_allow_touch;
 convar_t	*sv_allow_mouse;
@@ -787,8 +790,9 @@ Master will validate challenge and this server to public list
 void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 {
 	uint challenge;
-	char s[MAX_INFO_STRING] = "0\n"; // skip 2 bytes of header
+	char s[4096] = "0\n"; // skip 2 bytes of header
 	int clients = 0, bots = 0, index;
+	qboolean havePassword;
 
 	if( svs.clients )
 	{
@@ -804,6 +808,7 @@ void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 	}
 
 	challenge = BF_ReadUBitLong( msg, sizeof( uint ) << 3 );
+	havePassword = sv_password->string[0] && Q_stricmp( sv_password->string, "none" );
 
 	Info_SetValueForKey(s, "protocol",  va( "%d", PROTOCOL_VERSION ), sizeof( s ) ); // protocol version
 	Info_SetValueForKey(s, "challenge", va( "%u", challenge ), sizeof( s )  ); // challenge number
@@ -812,11 +817,8 @@ void SV_AddToMaster( netadr_t from, sizebuf_t *msg )
 	Info_SetValueForKey(s, "bots",      va( "%d", bots ), sizeof( s ) ); // bot count
 	Info_SetValueForKey(s, "gamedir",   GI->gamedir, sizeof( s ) ); // gamedir
 	Info_SetValueForKey(s, "map",       sv.name, sizeof( s ) ); // current map
-	if( Host_IsDedicated() )
-		Info_SetValueForKey(s, "type",  "d", sizeof( s ) ); // dedicated
-	else
-		Info_SetValueForKey(s, "type",  "l", sizeof( s ) ); // local
-	Info_SetValueForKey(s, "password",  "0", sizeof( s ) ); // is password set
+	Info_SetValueForKey(s, "type",      Host_IsDedicated() ? "d" : "l", sizeof( s ) ); // dedicated
+	Info_SetValueForKey(s, "password",  havePassword       ? "1" : "0", sizeof( s ) ); // is password set
 
 #ifdef _WIN32
 	Info_SetValueForKey(s, "os",        "w", sizeof( s ) ); // Windows
@@ -1022,6 +1024,8 @@ void SV_Init( void )
 	sv_allow_touch = Cvar_Get("sv_allow_touch", "1", CVAR_ARCHIVE, "allow connect with touch controls" );
 	sv_allow_vr = Cvar_Get("sv_allow_vr", "1", CVAR_ARCHIVE, "allow connect from vr version" );
 	sv_allow_noinputdevices = Cvar_Get("sv_allow_noinputdevices", "1", CVAR_ARCHIVE, "allow connect from old versions without useragent" );
+
+	sv_password = Cvar_Get("sv_password", "", CVAR_PROTECTED, "server password. Leave blank or set to \"none\" if none" );
 
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 

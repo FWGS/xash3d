@@ -471,6 +471,7 @@ extern	convar_t		*sv_allow_split;
 extern	convar_t		*sv_allow_compress;
 extern	convar_t		*sv_maxpacket;
 extern	convar_t		*sv_forcesimulating;
+extern  convar_t		*sv_password;
 
 //===========================================================
 //
