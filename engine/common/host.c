@@ -1324,7 +1324,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 		Cbuf_Execute(); // apply port cvar
 
-		NET_Config( true );
+		NET_Config( true, true );
 	}
 	else
 	{

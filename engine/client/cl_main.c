@@ -947,7 +947,7 @@ void CL_Connect_f( void )
 		SV_Shutdown( false );
 	}
 
-	NET_Config( true ); // allow remote
+	NET_Config( true, !cl_nat->integer ); // allow remote
 
 	Msg( "server %s\n", server );
 	CL_Disconnect();
@@ -985,7 +985,7 @@ void CL_Rcon_f( void )
 	message[3] = (char)255;
 	message[4] = 0;
 
-	NET_Config( true );	// allow remote
+	NET_Config( true, false );	// allow remote
 
 	Q_strcat( message, "rcon " );
 	Q_strcat( message, rcon_client_password->string );
@@ -1158,7 +1158,7 @@ void CL_LocalServers_f( void )
 	netadr_t	adr;
 
 	MsgDev( D_INFO, "Scanning for servers on the local network area...\n" );
-	NET_Config( true ); // allow remote
+	NET_Config( true, true ); // allow remote
 
 	// send a broadcast packet
 	adr.type = NA_BROADCAST;
@@ -1184,7 +1184,7 @@ void CL_InternetServers_f( void )
 	Info_SetValueForKey( info, "nat", cl_nat->string, 256 );
 	Info_SetValueForKey( info, "gamedir", GI->gamedir, 256 );
 
-	NET_Config( true ); // allow remote
+	NET_Config( true, true ); // allow remote
 
 	res = NET_StringToAdrNB( sv_master->string, &adr );
 
@@ -1228,7 +1228,7 @@ void CL_Packet_f( void )
 		return;
 	}
 
-	NET_Config( true ); // allow remote
+	NET_Config( true, false ); // allow remote
 
 	if( !NET_StringToAdr( Cmd_Argv( 1 ), &adr ))
 	{
@@ -1698,7 +1698,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 
 			MsgDev( D_INFO, "Found server: %s\n", NET_AdrToString( servadr ));
 
-			NET_Config( true ); // allow remote
+			NET_Config( true, false ); // allow remote
 
 			Netchan_OutOfBandPrint( NS_CLIENT, servadr, "info %i", PROTOCOL_VERSION );
 		}

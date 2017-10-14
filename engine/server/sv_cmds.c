@@ -248,7 +248,7 @@ void SV_Map_f( void )
 	}
 
 	// init network stuff
-	NET_Config(( sv_maxclients->integer > 1 ));
+	NET_Config( ( sv_maxclients->integer > 1 ), true );
 
 	// changing singleplayer to multiplayer or back. refresh the player count
 	if(( sv_maxclients->modified ) || ( deathmatch->modified ) || ( coop->modified ) || ( teamplay->modified ))
@@ -356,7 +356,7 @@ void SV_MapBackground_f( void )
 		
 	Q_strncpy( host.finalmsg, "", MAX_STRING );
 	SV_Shutdown( true );
-	NET_Config ( false ); // close network sockets
+	NET_Config ( false, false ); // close network sockets
 
 	sv.changelevel = false;
 	sv.background = true;
@@ -1120,7 +1120,7 @@ void SV_KillServer_f( void )
 	if( !svs.initialized ) return;
 	Q_strncpy( host.finalmsg, "Server was killed", MAX_STRING );
 	SV_Shutdown( false );
-	NET_Config ( false ); // close network sockets
+	NET_Config ( false, false ); // close network sockets
 }
 
 /*

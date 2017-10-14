@@ -714,7 +714,7 @@ void SV_InitGame( void )
 	// client frames will be allocated in SV_DirectConnect
 
 	// init network stuff
-	NET_Config(( sv_maxclients->integer > 1 ));
+	NET_Config( ( sv_maxclients->integer > 1 ), true );
 
 	// copy gamemode into svgame.globals
 	svgame.globals->deathmatch = Cvar_VariableInteger( "deathmatch" );

@@ -1938,7 +1938,7 @@ void SV_ChangeLevel( qboolean loadfromsavedgame, const char *mapname, const char
 	}
 
 	// init network stuff
-	NET_Config(( sv_maxclients->integer > 1 ));
+	NET_Config( ( sv_maxclients->integer > 1 ), false );
 	Q_strncpy( level, mapname, MAX_STRING );
 	Q_strncpy( oldlevel, sv.name, MAX_STRING );
 	sv.background = false;
@@ -2142,8 +2142,7 @@ qboolean SV_LoadGame( const char *pName )
 	if( !FS_FileExists( name, true ))
 		return false;
 
-	// init network stuff
-	NET_Config ( false ); // close network sockets
+	NET_Config ( false, false ); // close network sockets
 
 	if( sv.background || sv_maxclients->integer > 1 )
 		SV_Shutdown( true );

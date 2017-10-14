@@ -955,7 +955,7 @@ static int NET_IPSocket( const char *netInterface, int port )
 NET_OpenIP
 ====================
 */
-static void NET_OpenIP( void )
+static void NET_OpenIP( qboolean changeport )
 {
 	int	port;
 	qboolean sv_nat = Cvar_VariableInteger( "sv_nat" );
@@ -963,7 +963,7 @@ static void NET_OpenIP( void )
 
 	net_ip = Cvar_Get( "ip", "localhost", 0, "network ip address" );
 
-	if( sv_nat || net_port->modified )
+	if( changeport && ( net_port->modified || sv_nat ) )
 	{
 		// reopen socket to set random port
 		if( ip_sockets[NS_SERVER] )
@@ -993,7 +993,7 @@ static void NET_OpenIP( void )
 	// dedicated servers don't need client ports
 	if( Host_IsDedicated() ) return;
 
-	if( cl_nat || net_clientport->modified )
+	if( changeport && ( net_clientport->modified || cl_nat ) )
 	{
 		// reopen socket to set random port
 		if( ip_sockets[NS_CLIENT] )
@@ -1168,7 +1168,7 @@ NET_Config
 A single player game will only use the loopback code
 ====================
 */
-void NET_Config( qboolean multiplayer )
+void NET_Config( qboolean multiplayer, qboolean changeport )
 {
 	static qboolean old_config;
 	static qboolean bFirst = true;
@@ -1202,7 +1202,7 @@ void NET_Config( qboolean multiplayer )
 	else
 	{	
 		// open sockets
-		if( !noip ) NET_OpenIP();
+		if( !noip ) NET_OpenIP( changeport );
 #ifdef XASH_IPX
 		if( !noipx ) NET_OpenIPX();
 #endif
@@ -1301,7 +1301,7 @@ void NET_Shutdown( void )
 	Cmd_RemoveCommand( "net_showip" );
 	Cmd_RemoveCommand( "net_restart" );
 
-	NET_Config( false );
+	NET_Config( false, false );
 #ifdef _WIN32
 	pWSACleanup();
 	NET_FreeWinSock();

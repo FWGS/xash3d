@@ -768,7 +768,7 @@ void Master_Shutdown( void )
 {
 	netadr_t	adr;
 
-	NET_Config( true ); // allow remote
+	NET_Config( true, false ); // allow remote
 
 	if( !NET_StringToAdr( sv_master->string, &adr ))
 	{
