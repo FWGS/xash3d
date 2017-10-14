@@ -1525,36 +1525,13 @@ void SV_ParseResListFile( resourcelist_t *reslist, const char *name )
 	Z_Free( afile );
 }
 
-/*
-=======================
-SV_SendResourceList
-
-NOTE: Sending the list of cached resources.
-g-cont. this is fucking big message!!! i've rewriting this code
-=======================
-*/
-void SV_SendResourceList_f( sv_client_t *cl )
+void SV_UpdateResourceList( void )
 {
-	int		index = 0;
-	size_t		msg_size;
-	int msg_start, msg_end;
-	char mapresfilename[256];
+	int index;
+	string mapresfilename;
 
-	// transfer fastdl servers list
-	if( *sv_downloadurl->string )
-	{
-		char *data = sv_downloadurl->string;
-		char token[256];
-		while( ( data = COM_ParseFile( data, token ) ) )
-		{
-			BF_WriteByte( &cl->netchan.message, svc_stufftext );
-			BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", token ));
-		}
-	}
+	MsgDev( D_INFO, "Updating resource list\n" );
 
-	// generate new resource list, if it's not cached
-	if ( !sv.resourcelistcache )
-	{
 		SV_AppendToResourceList( &sv.reslist, t_world, "NULL" ); // terminator
 
 		// write models
@@ -1606,7 +1583,37 @@ void SV_SendResourceList_f( sv_client_t *cl )
 		SV_ParseResListFile( &sv.reslist, mapresfilename );
 
 		sv.resourcelistcache = true;
+}
+
+/*
+=======================
+SV_SendResourceList
+
+NOTE: Sending the list of cached resources.
+g-cont. this is fucking big message!!! i've rewriting this code
+=======================
+*/
+void SV_SendResourceList_f( sv_client_t *cl )
+{
+	int		index = 0;
+	size_t		msg_size;
+	int msg_start, msg_end;
+
+	// transfer fastdl servers list
+	if( *sv_downloadurl->string )
+	{
+		char *data = sv_downloadurl->string;
+		char token[256];
+		while( ( data = COM_ParseFile( data, token ) ) )
+		{
+			BF_WriteByte( &cl->netchan.message, svc_stufftext );
+			BF_WriteString( &cl->netchan.message, va( "http_addcustomserver %s\n", token ));
+		}
 	}
+
+	// generate new resource list, if it's not cached
+	if ( !sv.resourcelistcache )
+		SV_UpdateResourceList();
 
 	msg_size = BF_GetRealBytesWritten( &cl->netchan.message ); // start
 

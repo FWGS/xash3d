@@ -1204,7 +1204,13 @@ void SV_EntityInfo_f( void )
 		Msg( "\n" );
 	}
 }
+/*
+===================
+SV_SendReconnect_f
 
+Reconnect all clients (useful when adding resources)
+===================
+*/
 void SV_SendReconnect_f( void )
 {
 	char *message = "Reconnect by console request!\n";
@@ -1215,6 +1221,64 @@ void SV_SendReconnect_f( void )
 	SV_FinalMessage( message, true );
 }
 
+void SV_DumpPrecache_f( void )
+{
+	int index;
+	file_t *f = FS_Open( "precache-dump.txt", "w", false );
+
+	if( !f )
+	{
+		Msg( "Could not write precache-dump.txt\n" );
+		return;
+	}
+
+	// write models
+	for ( index = 1; index < MAX_MODELS && sv.model_precache[index][0]; index++ )
+	{
+		if ( sv.model_precache[index][0] == '*' ) // internal bmodel
+			continue;
+
+		FS_Printf( f, "%s\n", sv.model_precache[index] );
+	}
+
+	// write sounds
+	for( index = 1; index < MAX_SOUNDS && sv.sound_precache[index][0]; index++ )
+		FS_Printf( f, "sound/%s\n", sv.sound_precache[index] );
+
+	// write eventscripts
+	for( index = 1; index < MAX_EVENTS && sv.event_precache[index][0]; index++ )
+		FS_Printf( f, "%s\n", sv.event_precache[index] );
+
+	// write generic
+	for( index = 1; index < MAX_CUSTOM && sv.files_precache[index][0]; index++ )
+		FS_Printf( f, "%s\n", sv.files_precache[index] );
+
+	FS_Close( f );
+	Msg( "Successfully created precache-dump.txt\n" );
+}
+
+void SV_DumpResList_f( void )
+{
+	int index;
+	file_t *f = FS_Open( "reslist-dump.txt", "w", false );
+
+	if( !f )
+	{
+		Msg( "Could not write reslist-dump.txt\n" );
+		return;
+	}
+
+	// generate new resource list, if it's not cached
+	if ( !sv.resourcelistcache )
+		SV_UpdateResourceList();
+
+	for( index = 0; index < sv.reslist.rescount; index++ )
+		FS_Printf( f, sv.reslist.restype[index] == t_sound ? "sound/%s\n":"%s\n", sv.reslist.resnames[index] );
+
+	FS_Close( f );
+	Msg( "Successfully created precache-dump.txt\n" );
+
+}
 
 /*
 ================
@@ -1277,6 +1341,10 @@ void SV_InitOperatorCommands( void )
 	Cmd_AddCommand( "killsave", SV_DeleteSave_f, "delete a saved game file and saveshot" );
 	Cmd_AddCommand( "autosave", SV_AutoSave_f, "save the game to 'autosave' file" );
 	Cmd_AddCommand( "redirect", Rcon_Redirect_f, "force enable rcon redirection" );
+	Cmd_AddCommand( "updatereslist", SV_UpdateResourceList, "force update server resource list" );
+	Cmd_AddCommand( "dumpreslist", SV_DumpResList_f, "dump resource list to reslist-dump.txt" );
+	Cmd_AddCommand( "dumpprecache", SV_DumpPrecache_f, "dump precached resources to precache-dump.txt" );
+
 	if( Host_IsDedicated() )
 	{
 		Cmd_AddCommand( "say", SV_ConSay_f, "send a chat message to everyone on the server" );

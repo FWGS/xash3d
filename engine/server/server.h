@@ -570,7 +570,7 @@ void SV_UpdateServerInfo( void );
 void SV_EndRedirect( void );
 void SV_RemoteCommand( netadr_t from, sizebuf_t *msg );
 int SV_CalcPing( sv_client_t *cl );
-
+void SV_UpdateResourceList( void );
 //
 // sv_cmds.c
 //
