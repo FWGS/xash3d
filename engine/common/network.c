@@ -331,7 +331,7 @@ struct cs {
 #define mutex_lock pEnterCriticalSection
 #define mutex_unlock pLeaveCriticalSection
 #define exit_thread( x ) ExitThread( ( x ) )
-#define create_thread( pfn ) pthread_create( NULL, 0, &(pfn), NULL, 0, NULL )
+#define create_thread( pfn ) CreateThread( NULL, 0, &(pfn), NULL, 0, NULL )
 #define mutex_t  struct cs
 typedef uint thread_ret_t;
 #endif
