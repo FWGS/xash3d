@@ -5,6 +5,8 @@ sudo: true
 git:
   depth: 1
   submodules: true
+jdk:
+    - oraclejdk8
 os:
     - linux
     - osx
