@@ -2,58 +2,26 @@ language: c
 cache: ccache
 compiler: gcc
 sudo: true
+git:
+  depth: 1
+  submodules: true
+os:
+    - linux
+    - osx
+  
 before_script:
-    - sudo apt-get -qq update >/dev/null
-    - sudo apt-get -qq install --force-yes binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full >/dev/null
-    - sudo apt-get -qq install --force-yes gcc-multilib >/dev/null
-    - sudo apt-get -qq install --force-yes libx11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-dev >/dev/null
-    - sudo apt-get -qq install --force-yes libasound-dev zlib1g:i386 libstdc++6:i386 >/dev/null
-    - jdk_switcher use oraclejdk8
-    - curl -s http://dl.google.com/android/android-sdk_r22.0.4-linux.tgz | tar xzf -
-    - export ANDROID_HOME=$PWD/android-sdk-linux
-    - export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk
-    - sleep 3s; echo y | android update sdk -u --filter platform-tools,build-tools-19.0.0,android-19,extra-android-support --force --all > /dev/null
-    - wget http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin >/dev/null 2>/dev/null
-    - chmod +x android-ndk-r10e-linux-x86_64.bin && ./android-ndk-r10e-linux-x86_64.bin > /dev/null
-    - mv android-ndk-r10e android-ndk
-    - curl -s http://libsdl.org/release/SDL2-devel-2.0.4-mingw.tar.gz | tar xzf -
-    - mv SDL2-2.0.4 SDL2
-    - curl -s http://libsdl.org/release/SDL2-2.0.4.tar.gz | tar xzf -
-    - git clone --depth 1 https://github.com/FWGS/vgui-dev
-    - git clone --depth 1 https://github.com/FWGS/vgui_support_bin
-    - git clone --depth 1 https://github.com/FWGS/xash3d-android-project
+    - sh scripts/travis_${TRAVIS_OS_NAME}_deps.sh
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export ANDROID_HOME=$PWD/android-sdk-linux; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk; fi
+    - sh scripts/travis_common_deps.sh
 script:
-    - cd xash3d-android-project
-    - git submodule update --init jni/src/NanoGL/nanogl jni/src/hlsdk-xash3d xash-extras
-    - rm -r jni/src/Xash3D/xash3d
-    - ln -s $TRAVIS_BUILD_DIR jni/src/Xash3D/xash3d
-    - sh gen-version.sh travis build
-    - sh gen-config.sh test
-    - python2 makepak.py xash-extras assets/extras.pak
-    - ndk-build -j2 APP_CFLAGS="-w" NDK_CCACHE=ccache
-    - ant debug -Dtest.version=1
-    - cp bin/xashdroid-debug.apk ../engine/xash3d-generic.apk
-    - cd ../engine
-    - make -f Makefile.mingw CC="ccache i686-w64-mingw32-gcc" CXX="ccache i686-w64-mingw32-g++" -j2
-    - cp ../vgui_support_bin/vgui_support.dll .
-    - cp ../SDL2/lib/x86/SDL2.dll .
-    - 7z a -t7z xash3d-mingw.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash_bin.exe SDL2.dll vgui_support.dll
-    - cd ../SDL2-2.0.4
-    - CC="ccache gcc -msse2 -march=i686 -m32 -ggdb -O2" ./configure --disable-dependency-tracking --enable-audio --enable-video --enable-events --disable-render --enable-joystick --disable-haptic --disable-power --enable-threads --enable-timers --enable-loadso --enable-video-opengl --enable-x11-shared --enable-video-x11 --enable-video-x11-xrandr --enable-video-x11-scrnsaver --enable-video-x11-xinput --disable-video-x11-xshape --disable-video-x11-xdbe --disable-libudev --disable-dbus --disable-ibus --enable-sdl-dlopen --disable-video-opengles --disable-cpuinfo --disable-assembly --disable-atomic --enable-alsa
-    - make -j2
-    - cp build/.libs/libSDL2.so ../engine/
-    - cd ../loader
-    - make -f Makefile.linux -j2 CC="ccache gcc -m32 -O1" CFLAGS="-I../SDL-2.0.4/include -w -ggdb" libloader.a
-    - cp libloader.a ../engine
-    - cd ../engine
-    - make -f Makefile.linux -j2 XASH_VGUI=0 XASH_SINGLE_BINARY=1 XASH_DLL_LOADER=1 clean
-    - make -f Makefile.linux -j2 CC="ccache gcc -m32" LDFLAGS="-L. libSDL2.so -static-libgcc" CFLAGS="-O2 -ggdb -I../SDL2-2.0.4/include/ -msse2 -march=i686 -w" XASH_VGUI=1 XASH_SINGLE_BINARY=1 xash
-    - cp ../vgui-dev/lib/vgui.so .
-    - cp ../vgui_support_bin/libvgui_support.so .
-    - mv libSDL2.so libSDL2-2.0.so.0
-    - 7z a -t7z xash3d-linux.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on xash libSDL2-2.0.so.0 libvgui_support.so vgui.so
-    - tar cJf android-debug-symbols.txz ../xash3d-android-project/obj/local/*/*.so
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh scripts/build_android_engine.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh scripts/build_mingw_engine.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh scripts/build_portable_linux_engine.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx"   ]]; then sh scripts/build_osx_engine.sh; fi
 after_script:
-    - ccache --show-stats > ccache_stats.log
-    - sh ../travis-deploy.sh travis xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk android-debug-symbols.txz ccache_stats.log
-    - sh ../travis-upload.sh xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk
+    - cd ${TRAVIS_BUILD_DIR}
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ccache --show-stats > ccache_stats.log; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh scripts/travis-deploy.sh travis xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk android-debug-symbols.txz ccache_stats.log; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh scripts/travis-upload.sh xash3d-mingw.7z xash3d-linux.7z xash3d-generic.apk; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx"   ]]; then sh scripts/travis-deploy.sh z_apple xash3d-osx.tar.bz2; fi

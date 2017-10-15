@@ -62,9 +62,11 @@ option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompil
 if(XASH_DEDICATED) 
 	option(XASH_SDL "Enable SDL." OFF) # Dedicated servers still can use SDL
 	set(XASH_VGUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
+	set(XASH_MAINUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
 else()
 	option(XASH_SDL "Enable SDL." ON)
 	option(XASH_VGUI "Enable VGUI support." ON)
+	option(XASH_MAINUI "Build mainui library" ON) # Totally not recommended to disable
 endif()
 
 # Misc
@@ -112,7 +114,9 @@ if(NOT DEFINED BIN_INSTALL_DIR)
 endif()
 
 if(NOT XASH_DEDICATED)
-	add_subdirectory(mainui)
+	if(XASH_MAINUI)
+		add_subdirectory(mainui)
+	endif()
 	if(XASH_VGUI)
 		add_subdirectory(vgui_support)
 	endif()

@@ -29,7 +29,7 @@ else
  done
  echo $TRAVIS_COMMIT > commit.txt
  git add .
- git commit -m "Laterst travis deploy $TRAVIS_COMMIT"
+ git commit -m "Latest travis deploy $TRAVIS_COMMIT"
  git checkout -b $SOURCE_NAME-$TRAVIS_BRANCH
  git push -q --force travis-deploy-public $SOURCE_NAME-$TRAVIS_BRANCH >/dev/null 2>/dev/null
  git checkout -b $SOURCE_NAME-latest

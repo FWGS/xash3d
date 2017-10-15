@@ -177,10 +177,10 @@ set_target_properties(${XASH_ENGINE_LIBRARY} PROPERTIES
 if(WIN32)
 	if(XASH_DEDICATED)
 		set_target_properties(${XASH_ENGINE_LIBRARY} PROPERTIES
-			OUTPUT_NAME "xash_dedicated")
+			OUTPUT_NAME "xash_dedicated" PREFIX "")
 	else()
 		set_target_properties(${XASH_ENGINE_LIBRARY} PROPERTIES
-			OUTPUT_NAME "xash_sdl")
+			OUTPUT_NAME "xash_sdl" PREFIX "")
 	endif()
 endif()
 

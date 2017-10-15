@@ -69,6 +69,10 @@ extern "C" {
 #define BIT( n )		(1U << ( n ))
 
 #ifndef __cplusplus
+#ifdef NULL
+#undef NULL
+#endif
+
 #define NULL		((void *)0)
 #endif
 

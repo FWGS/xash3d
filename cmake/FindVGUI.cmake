@@ -33,17 +33,27 @@ set(VGUI_SEARCH_PATHS ${HL_SDK_DIR})
 find_path(VGUI_INCLUDE_DIR 
 	VGUI.h
 	HINTS $ENV{VGUIDIR}
-	PATH_SUFFIXES utils/vgui/include/
+	PATH_SUFFIXES
+	    utils/vgui/include/   # HLSDK
+		include/              # vgui-dev
 	PATHS ${VGUI_SEARCH_PATHS}
 )
 
+if(APPLE)
+	set(LIBNAMES vgui.dylib)
+else()
+	set(LIBNAMES vgui vgui.so)
+endif()
+
 find_library(VGUI_LIBRARY
-	NAMES vgui vgui.so
+	NAMES ${LIBNAMES}
 	HINTS $ENV{VGUIDIR}
 	PATH_SUFFIXES 
 		utils/vgui/lib/win32_vc6 # Win32 VC6
 		linux/                   # Linux
 		linux/release            # OSX
+		lib/win32_vc6			 # vgui-dev Win32 VC6
+		lib/                     # vgui-dev Linux & OSX
 	PATHS ${VGUI_SEARCH_PATHS}
 )
 

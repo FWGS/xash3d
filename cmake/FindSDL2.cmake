@@ -71,6 +71,8 @@ if(WIN32 AND NOT SDL2_PATH)
 endif()
 
 SET(SDL2_SEARCH_PATHS
+	${SDL2_PATH}
+	${CMAKE_LIBRARY_PATH}
 	~/Library/Frameworks
 	/Library/Frameworks
 	/usr/local
@@ -79,8 +81,6 @@ SET(SDL2_SEARCH_PATHS
 	/opt/local # DarwinPorts
 	/opt/csw # Blastwave
 	/opt
-	${SDL2_PATH}
-	${CMAKE_LIBRARY_PATH}
 )
 
 FIND_PATH(SDL2_INCLUDE_DIR SDL.h
@@ -94,7 +94,8 @@ FIND_LIBRARY(SDL2_LIBRARY_TEMP
 	NAMES SDL2 SDL2.dll
 	HINTS
 	$ENV{SDL2DIR}
-	PATH_SUFFIXES lib64 lib lib/i386-linux-gnu lib/x86	PATHS ${SDL2_SEARCH_PATHS}
+	PATH_SUFFIXES lib64 lib lib/i386-linux-gnu lib/x86
+	PATHS ${SDL2_SEARCH_PATHS}
 )
 
 # Call sdl2-config if SDL2_LIBRARY still not found
