@@ -2203,21 +2203,32 @@ Look for a file in the filesystem only
 */
 qboolean FS_SysFileExists( const char *path, qboolean caseinsensitive )
 {
+#ifdef _WIN32
 	int desc;
 
 	desc = open( path, O_RDONLY|O_BINARY );
-#ifndef _WIN32
-	// speedup custom path search
-	if( caseinsensitive && ( desc < 0 ) )
-	{
-		const char *fpath = FS_FixFileCase( path );
-		if( fpath != path )
-			desc = open( fpath, O_RDONLY|O_BINARY );
-	}
-#endif
 	if( desc < 0 ) return false;
 	close( desc );
 	return true;
+#else
+	int ret;
+	struct stat buf;
+
+	ret = stat( path, &buf );
+
+	// speedup custom path search
+	if( caseinsensitive && ( ret < 0 ) )
+	{
+		const char *fpath = FS_FixFileCase( path );
+		if( fpath != path )
+			ret = stat( fpath, &buf );
+	}
+
+	if( ret < 0 )
+		return false;
+
+	return S_ISREG( buf.st_mode );
+#endif
 }
 
 /*
