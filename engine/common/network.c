@@ -320,6 +320,7 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 #define create_thread( pfn ) pthread_create( &nsthread.thread, NULL, (pfn), NULL )
 #define mutex_t  pthread_mutex_t
 #define thread_t pthread_t
+#define _stdcall
 typedef void *thread_ret_t;
 #else
 struct cs {
@@ -331,7 +332,7 @@ struct cs {
 #define mutex_lock pEnterCriticalSection
 #define mutex_unlock pLeaveCriticalSection
 #define exit_thread( x ) ExitThread( ( x ) )
-#define create_thread( pfn ) CreateThread( NULL, 0, &(pfn), NULL, 0, NULL )
+#define create_thread( pfn ) CreateThread( NULL, 0, pfn, NULL, 0, NULL )
 #define mutex_t  struct cs
 typedef uint thread_ret_t;
 #endif
@@ -360,7 +361,7 @@ static void NET_InitializeCriticalSections( void )
 }
 #endif
 
-thread_ret_t NET_ResolveThread( void *unused )
+thread_ret_t _stdcall NET_ResolveThread( void *unused )
 {
 	struct hostent *res;
 
