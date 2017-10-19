@@ -151,8 +151,9 @@ void NetGraph_InitColors( void )
 			f = (float)(i - hfrac) / (float)(NETGRAPH_LERP_HEIGHT - hfrac );
 			VectorMA( mincolor[1], f, dc[1], netcolors[NETGRAPH_NET_COLORS + i] );
 		}
-	}
 
+		netcolors[NETGRAPH_NET_COLORS+i][4] = 255;
+	}
 }
 
 /*
@@ -648,10 +649,8 @@ void SCR_DrawNetGraph( void )
 
 	if( net_graph->value < 3 )
 	{
-		pglEnable( GL_BLEND );
+		GL_SetRenderMode( kRenderTransColor );
 		pglDisable( GL_TEXTURE_2D );
-		pglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-		pglBlendFunc( GL_SRC_ALPHA, GL_ONE );
 		pglBegin( GL_QUADS ); // draw all the fills as a long solid sequence of quads for speedup reasons
 
 		// NOTE: fill colors without texture at this point
@@ -661,7 +660,6 @@ void SCR_DrawNetGraph( void )
 		pglEnd();
 		pglColor4ub( 255, 255, 255, 255 );
 		pglEnable( GL_TEXTURE_2D );
-		pglDisable( GL_BLEND );
 	}
 }
 
