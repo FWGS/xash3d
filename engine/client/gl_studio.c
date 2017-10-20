@@ -2280,9 +2280,9 @@ static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float 
 				{
 					color24	*clr;
 					clr = &RI.currententity->curstate.rendercolor;
-					cl[0] = clr->r * 255;
-					cl[1] = clr->g * 255;
-					cl[2] = clr->b * 255;
+					cl[0] = clr->r;
+					cl[1] = clr->g;
+					cl[2] = clr->b;
 					cl[3] = alpha;
 					//pglColor4ub( clr->r, clr->g, clr->b, alpha * 255 );
 				}
@@ -2305,9 +2305,9 @@ static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float 
 			{
 				color24	*clr;
 				clr = &RI.currententity->curstate.rendercolor;
-				cl[0] = clr->r * 255;
-				cl[1] = clr->g * 255;
-				cl[2] = clr->b * 255;
+				cl[0] = clr->r;
+				cl[1] = clr->g;
+				cl[2] = clr->b;
 				cl[3] = alpha;
 			}
 
