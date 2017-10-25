@@ -1497,7 +1497,7 @@ void SV_ParseResListFile( resourcelist_t *reslist, const char *name )
 	{
 		int i;
 
-		if( FS_FileExists( token, true ))
+		if( !FS_FileExists( token, true ))
 			continue;
 
 		if( !Q_memcmp( token, "sound/", 6))

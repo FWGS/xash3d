@@ -128,9 +128,10 @@ void SV_BanID_f( void )
 		{
 			int i;
 			sv_client_t *cl1;
+			int len = Q_strlen( id );
 
 			for( i = 0, cl1 = svs.clients; i < sv_maxclients->integer; i++, cl1++ )
-				if( !Q_strcmp( id, Info_ValueForKey( cl1->useragent, "i") ) )
+				if( !Q_strncmp( id, Info_ValueForKey( cl1->useragent, "i" ), len ) )
 				{
 					cl = cl1;
 					break;
