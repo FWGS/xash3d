@@ -47,7 +47,7 @@ static struct cmdinfo_t
 	qboolean	sent;
 } netstat_cmdinfo[NET_TIMINGS];
 
-static byte netcolors[NETGRAPH_NET_COLORS+NETGRAPH_LERP_HEIGHT][4] =
+static byte netcolors[NETGRAPH_NET_COLORS+NETGRAPH_LERP_HEIGHT + 1][4] =
 {
 	{ 255, 0,   0,   255 },
 	{ 0,   0,   255, 255 },
