@@ -427,6 +427,7 @@ convar_t *Cvar_Set2( const char *var_name, const char *value, qboolean force )
 				if(!Q_strcmp( value, var->latched_string ))
 					return var;
 				Mem_Free( var->latched_string );
+				var->latched_string = NULL;
 			}
 			else
 			{
