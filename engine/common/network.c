@@ -38,6 +38,10 @@ GNU General Public License for more details.
 #define MAX_LOOPBACK	4
 #define MASK_LOOPBACK	(MAX_LOOPBACK - 1)
 
+#ifndef _WIN32 // it seems we need to use WS2 to support it
+#define HAVE_GETADDRINFO
+#endif
+
 #ifdef _WIN32
 // wsock32.dll exports
 static int (_stdcall *pWSACleanup)( void );
@@ -61,6 +65,9 @@ static int (_stdcall *pGetSockName)( SOCKET s, struct sockaddr *name, int *namel
 static int (_stdcall *pSend)( SOCKET s, const char *buf, int len, int flags );
 static int (_stdcall *pRecv)( SOCKET s, char *buf, int len, int flags );
 static int (_stdcall *pGetHostName)( char *name, int namelen );
+#ifdef HAVE_GETADDRINFO // todo: add definitions for msvc6
+int (_stdcall *pGetAddrInfo)(const char *, const char *, const struct addrinfo *, struct addrinfo **);
+#endif
 static dword (_stdcall *pNtohl)( dword netlong );
 static void (_stdcall *pInitializeCriticalSection)( void* );
 static void (_stdcall *pEnterCriticalSection)( void* );
@@ -89,6 +96,9 @@ static dllfunc_t winsock_funcs[] =
 { "gethostname", (void **) &pGetHostName },
 { "getsockname", (void **) &pGetSockName },
 { "gethostbyname", (void **) &pGetHostByName },
+#ifdef HAVE_GETADDRINFO
+{ "getaddrinfo", (void **) &pGetAddrInfo },
+#endif
 { "WSAGetLastError", (void **) &pWSAGetLastError },
 { NULL, NULL }
 };
@@ -144,6 +154,7 @@ void NET_FreeWinSock( void )
 #define pNtohs ntohs
 #define pGetHostByName gethostbyname
 #define pSelect select
+#define pGetAddrInfo getaddrinfo
 #define SOCKET int
 #endif
 
@@ -363,9 +374,35 @@ static void NET_InitializeCriticalSections( void )
 
 thread_ret_t _stdcall NET_ResolveThread( void *unused )
 {
+#ifdef HAVE_GETADDRINFO
+	struct addrinfo *ai = NULL, *cur;
+	struct addrinfo hints;
+	int sin_addr = 0;
+	memset( &hints, 0, sizeof( hints ) );
+	hints.ai_family = AF_INET;
+	if( !pGetAddrInfo( nsthread.hostname, NULL, &hints, &ai ) )
+	{
+		for( cur = ai; cur; cur = cur->ai_next ) {
+			if( cur->ai_family == AF_INET ) {
+				sin_addr = *((int*)&((struct sockaddr_in *)cur->ai_addr)->sin_addr);
+				freeaddrinfo( ai );
+				ai = NULL;
+				break;
+			}
+		}
+
+		if( ai )
+			freeaddrinfo( ai );
+	}
+	mutex_lock( &nsthread.mutexres );
+	nsthread.result = sin_addr;
+	nsthread.busy = false;
+	mutex_unlock( &nsthread.mutexres );
+	exit_thread( 0 );
+
+#else
 	struct hostent *res;
 
-	mutex_lock( &nsthread.mutexns );
 	res = pGetHostByName( nsthread.hostname );
 	mutex_lock( &nsthread.mutexres );
 
@@ -378,6 +415,7 @@ thread_ret_t _stdcall NET_ResolveThread( void *unused )
 	nsthread.busy = false;
 	mutex_unlock( &nsthread.mutexres );
 	exit_thread( 0 );
+#endif
 	return 0;
 }
 
@@ -459,6 +497,27 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 			{
 				if( !nonblocking )
 				{
+#ifdef HAVE_GETADDRINFO
+					struct addrinfo *ai = NULL, *cur;
+					struct addrinfo hints;
+					int sin_addr = 0;
+					memset( &hints, 0, sizeof( hints ) );
+					hints.ai_family = AF_INET;
+					if( !pGetAddrInfo( copy, NULL, &hints, &ai ) )
+					{
+						for( cur = ai; cur; cur = cur->ai_next ) {
+							if( cur->ai_family == AF_INET ) {
+								ip = *((int*)&((struct sockaddr_in *)cur->ai_addr)->sin_addr);
+								freeaddrinfo(ai);
+								ai = NULL;
+								break;
+							}
+						}
+
+						if( ai )
+							freeaddrinfo(ai);
+					}
+#else
 					mutex_lock( &nsthread.mutexns );
 					h = pGetHostByName( copy );
 					if( !h )
@@ -468,7 +527,7 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 					}
 					ip = *(int *)h->h_addr_list[0];
 					mutex_unlock( &nsthread.mutexns );
-
+#endif
 				}
 				else
 				{
@@ -504,9 +563,31 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 #endif // _WIN32
 #endif // CAN_ASYNC_NS_RESOLVE
 			{
+#ifdef HAVE_GETADDRINFO
+				struct addrinfo *ai = NULL, *cur;
+				struct addrinfo hints;
+				int sin_addr = 0;
+				memset( &hints, 0, sizeof( hints ) );
+				hints.ai_family = AF_INET;
+				if( !pGetAddrInfo( copy, NULL, &hints, &ai ) )
+				{
+					for( cur = ai; cur; cur = cur->ai_next ) {
+						if( cur->ai_family == AF_INET ) {
+							ip = *((int*)&((struct sockaddr_in *)cur->ai_addr)->sin_addr);
+							freeaddrinfo(ai);
+							ai = NULL;
+							break;
+						}
+					}
+
+					if( ai )
+						freeaddrinfo(ai);
+				}
+#else
 				if(!( h = pGetHostByName( copy )))
 					return 0;
 				ip = *(int *)h->h_addr_list[0];
+#endif
 			}
 
 			if( !ip )
