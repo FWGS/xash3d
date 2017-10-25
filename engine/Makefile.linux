@@ -42,6 +42,11 @@ ifeq ($(WES),1)
 DEFINES += -DXASH_WES -D__MULTITEXTURE_SUPPORT__  -DEGL_LIB=\"libEGL.so\"
 endif
 
+ifeq ($(REGAL),1)
+DEFINES += -DXASH_REGAL -D__MULTITEXTURE_SUPPORT__  -DEGL_LIB=\"regal/lib/linux-32/libRegal.so\"
+LIBS += regal/lib/linux-32/libRegal.so
+endif
+
 # Some libc implementations cannot use libdl, so disable it by default
 ifeq ($(XASH_STATIC),1)
 

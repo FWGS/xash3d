@@ -128,7 +128,7 @@ Default build-depended cvar and constant values
 // You need add library loading code to library.c when adding new platform
 #endif
 
-#if defined XASH_NANOGL || defined XASH_WES
+#if defined XASH_NANOGL || defined XASH_WES || defined XASH_REGAL
 #define XASH_GL_STATIC
 #endif
 
