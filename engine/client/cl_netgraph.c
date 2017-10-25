@@ -152,7 +152,7 @@ void NetGraph_InitColors( void )
 			VectorMA( mincolor[1], f, dc[1], netcolors[NETGRAPH_NET_COLORS + i] );
 		}
 
-		netcolors[NETGRAPH_NET_COLORS+i][4] = 255;
+		netcolors[NETGRAPH_NET_COLORS+i][3] = 255;
 	}
 }
 
