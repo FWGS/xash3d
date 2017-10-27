@@ -1,7 +1,25 @@
+#############################################
+# Makefile.emscripten - Xash3D Emscripten port
+# Copyright (C) 2017 mittorn
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+##############################################
+
+
 CC = ~//emscripten/emcc --llvm-lto 3 -s INLINING_LIMIT=10
 CXX = ~/emscripten/em++ --llvm-lto 3 -s INLINING_LIMIT=10
+# async mode - produces very large scripts. Unuseful with shared libraries
 ASYNC ?= 0
 
+# emscripten port only works with gl-wes-v2 (WebGL is GLES2)
 WES = 1
 
 ifeq ($(EMSCRIPTEN_SIMD),1)
@@ -116,19 +134,11 @@ SRCS += $(wildcard platform/sdl/*.c)
 endif
 OBJS = $(patsubst %.c,obj/%.o,$(SRCS))
 ifeq ($(XASH_SINGLE_BINARY),0)
-BINARIES = libxash.so
-libxash.so : $(OBJS) $(OBJS_CPP)
-ifeq ($(XASH_DLL_LOADER),1)
-	cp $(TOPDIR)/loader/libloader.so .
-endif
-	$(CC) -fcommon -fvisibility=hidden -o libxash.so $(LDFLAGS) -shared $(OBJS) $(OBJS_CPP) $(LIBS)
-
-else
 BINARIES = xash
 
 ~/xash-em/xash$(SIMD_SUF).html: $(OBJS) $(OBJS_CPP) platform/emscripten/shell.html
 	EMCC_FORCE_STDLIBS=1 $(CXX) -O3 --js-opts 1 -s INLINING_LIMIT=10 -s ELIMINATE_DUPLICATE_FUNCTIONS=1 -s AGGRESSIVE_VARIABLE_ELIMINATION=1 -s LEGACY_GL_CREATE_RESOURCE_ON_BIND=1 -s UNALIGNED_ACCESS_FUNCTION_LIST=\"platform/emscripten/unaligned.txt\"  --shell-file platform/emscripten/shell.html -s NO_EXIT_RUNTIME=0 -s LZ4=1 -s -g0 -o "$@" -s MAIN_MODULE=1 -s USE_SDL=2 -s TOTAL_MEMORY=150994944 -fvisibility=hidden $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
-endif
+
 
 
 DIRS := obj obj/server obj/client/vgui obj/common/sdl obj/common/imagelib obj/common/soundlib/libmpg obj/platform/sdl obj/nanogl
@@ -159,14 +169,3 @@ list:
 	@echo $(SRCS_CPP)
 	@echo Objects:
 	@echo $(OBJS) $(OBJS_CPP)
-
-install: $(BINARIES)
-
-	mkdir -p $(INSTALL_DIR)
-
-ifeq ($(XASH_SINGLE_BINARY),1)
-	cp xash $(INSTALL_DIR)/xash_bin
-else
-	cp libxash.so $(INSTALL_DIR)/
-	cp libloader.so $(INSTALL_DIR)/
-endif
