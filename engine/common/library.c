@@ -1208,7 +1208,12 @@ void *Com_LoadLibraryExt( const char *dllname, int build_ordinals_table, qboolea
 
 		hInst->hInstance = MemoryLoadLibrary( hInst->fullPath );
 	}
-	else hInst->hInstance = LoadLibrary( hInst->fullPath );
+	else
+	{
+		UINT errorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+		hInst->hInstance = LoadLibrary( hInst->fullPath );
+		SetErrorMode(errorMode);
+	}
 
 	if( !hInst->hInstance )
 	{
