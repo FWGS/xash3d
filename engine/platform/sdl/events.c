@@ -298,7 +298,9 @@ void SDLash_EventFilter( void *ev )
 					MsgDev( D_INFO, "SDL reports screen coordinates, workaround enabled!\n");
 				}
 				else
+				{
 					scale = 1;
+				}
 			}
 		}
 		if( scale == 2 )
@@ -358,6 +360,7 @@ void SDLash_EventFilter( void *ev )
 	case SDL_WINDOWEVENT:
 		if( event->window.windowID != SDL_GetWindowID( host.hWnd ) )
 			return;
+
 		if( ( host.state == HOST_SHUTDOWN ) ||
 			( host.state == HOST_RESTART )  ||
 			( host.type  == HOST_DEDICATED ) )
@@ -418,10 +421,20 @@ void SDLash_EventFilter( void *ev )
 			break;
 		case SDL_WINDOWEVENT_RESIZED:
 			if( vid_fullscreen->integer != 0 ) break;
-			Cvar_SetFloat( "vid_mode", -2.0f ); // no mode
+			Cvar_SetFloat( "vid_mode",  VID_NOMODE ); // no mode
 			R_ChangeDisplaySettingsFast( event->window.data1,
 										 event->window.data2 );
 			break;
+		case SDL_WINDOWEVENT_MAXIMIZED:
+		{
+			int w, h;
+			if( vid_fullscreen->integer != 0 ) break;
+			Cvar_SetFloat( "vid_mode", VID_NOMODE ); // no mode
+
+			SDL_GL_GetDrawableSize( host.hWnd, &w, &h );
+			R_ChangeDisplaySettingsFast( w, h );
+			break;
+		}
 		default:
 			break;
 		}
