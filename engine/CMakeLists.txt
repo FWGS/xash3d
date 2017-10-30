@@ -59,15 +59,16 @@ include_directories(
 	../pm_shared
 )
 
+add_definitions(-DXASH_FORCEINLINE)
+
 if(XASH_AUTODETECT_SSE_BUILD)
 	include(CheckSSEFeatures)
 	if(SSE_FLAGS)
-		add_compile_options(${SSE_FLAGS})
+		string(REPLACE " " ";" SSE_FLAGS_LIST ${SSE_FLAGS})
+		add_compile_options(${SSE_FLAGS_LIST})
 		add_definitions(-DVECTORIZE_SINCOS)
 	endif()
 endif()
-
-add_definitions(-DXASH_FORCEINLINE)
 
 # Set executable or library
 if(XASH_SINGLE_BINARY)
@@ -78,6 +79,7 @@ else()
 endif()
 
 # ----- Conditions -----
+
 if(MSVC AND WIN32)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS
 		-D_CRT_NONSTDC_NO_DEPRECATE 

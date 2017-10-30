@@ -57,6 +57,7 @@ option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
 
 # Enable 64-bit build of Xash3D FWGS Engine.
 option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompile game for 64 bit." OFF)
+cmake_dependent_option(XASH_AUTODETECT_SSE_BUILD "Enable SSE features automatically" ON "XASH_64BIT" OFF)
 
 # Desktop-version options
 if(XASH_DEDICATED) 
@@ -71,6 +72,7 @@ endif()
 
 # Misc
 option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
+
 
 # Pre-build analyze step
 option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
