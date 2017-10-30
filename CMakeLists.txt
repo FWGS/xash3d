@@ -29,9 +29,8 @@ project (XASH3D)
 
 set (XASH3D_VERSION 0.19.1)
 
-include( CMakeDependentOption )
-
-include( CPack )
+include(CMakeDependentOption)
+include(CPack)
 
 # Servers must choose this
 option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF)
@@ -58,6 +57,7 @@ option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
 # Enable 64-bit build of Xash3D FWGS Engine.
 option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompile game for 64 bit." OFF)
 cmake_dependent_option(XASH_AUTODETECT_SSE_BUILD "Enable SSE features automatically" ON "XASH_64BIT" OFF)
+cmake_dependent_option(XASH_VECTORIZE_SINCOS "Use vectorized versions of sin(), cos() and sincos()" ON "XASH_64BIT" OFF)
 
 # Desktop-version options
 if(XASH_DEDICATED) 

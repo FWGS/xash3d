@@ -68,6 +68,9 @@ if(XASH_AUTODETECT_SSE_BUILD)
 		add_compile_options(${SSE_FLAGS_LIST})
 		add_definitions(-DVECTORIZE_SINCOS)
 	endif()
+elseif(XASH_VECTORIZE_SINCOS)
+	# I know what I am doing and I want to build version that requires SSE
+	add_definitions(-DVECTORIZE_SINCOS)
 endif()
 
 # Set executable or library
@@ -80,10 +83,13 @@ endif()
 
 # ----- Conditions -----
 
-if(MSVC AND WIN32)
+if(MSVC)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS
-		-D_CRT_NONSTDC_NO_DEPRECATE 
-		-DXASH_CRASHHANDLER=2 -DXASH_W32CON) # dbghelp crashhandler
+		-D_CRT_NONSTDC_NO_DEPRECATE)
+endif()
+
+if((MSVC OR MINGW) AND NOT XASH_64BIT)
+	add_definitions( -DDBGHELP -DXASH_W32CON) # dbghelp crashhandler
 else()
 	if(XASH_USE_SELECT)
 		add_definitions(-DUSE_SELECT)
