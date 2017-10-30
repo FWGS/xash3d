@@ -621,9 +621,12 @@ void GAME_EXPORT CL_EntityParticles( cl_entity_t *ent )
 		if( !p ) return;
 
 #ifdef VECTORIZE_SINCOS
-		SinCosFastVector( cl.time * cl_avelocities[i][0], cl.time * cl_avelocities[i][1], cl.time * cl_avelocities[i][2], 0,
-						  &sy, &sp, &sr, NULL,
-						  &cy, &cp, &cr, NULL);
+		SinCosFastVector3(
+			cl.time * cl_avelocities[i][0],
+			cl.time * cl_avelocities[i][1],
+			cl.time * cl_avelocities[i][2],
+			&sy, &sp, &sr,
+			&cy, &cp, &cr);
 #else
 		angle = cl.time * cl_avelocities[i][0];
 		SinCos( angle, &sy, &cy );

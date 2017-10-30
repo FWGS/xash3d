@@ -204,7 +204,7 @@ void SinCos( float radians, float *sine, float *cosine )
 }
 
 #ifdef VECTORIZE_SINCOS
-void SinCosFastVector(float r1, float r2, float r3, float r4,
+void SinCosFastVector4(float r1, float r2, float r3, float r4,
 					  float *s0, float *s1, float *s2, float *s3,
 					  float *c0, float *c1, float *c2, float *c3)
 {
@@ -216,12 +216,59 @@ void SinCosFastVector(float r1, float r2, float r3, float r4,
 	*s0 = sin_vector[0];
 	*s1 = sin_vector[1];
 	*s2 = sin_vector[2];
-	if(s3) *s3 = sin_vector[3];
+	*s3 = sin_vector[3];
 
 	*c0 = cos_vector[0];
 	*c1 = cos_vector[1];
 	*c2 = cos_vector[2];
-	if(s3) *c3 = cos_vector[3];
+	*c3 = cos_vector[3];
+}
+
+void SinCosFastVector3(float r1, float r2, float r3,
+					  float *s0, float *s1, float *s2,
+					  float *c0, float *c1, float *c2)
+{
+	v4sf rad_vector = {r1, r2, r3, 0};
+	v4sf sin_vector, cos_vector;
+
+	sincos_ps(rad_vector, &sin_vector, &cos_vector);
+
+	*s0 = sin_vector[0];
+	*s1 = sin_vector[1];
+	*s2 = sin_vector[2];
+
+	*c0 = cos_vector[0];
+	*c1 = cos_vector[1];
+	*c2 = cos_vector[2];
+}
+
+void SinCosFastVector2(float r1, float r2,
+					  float *s0, float *s1,
+					  float *c0, float *c1)
+{
+	v4sf rad_vector = {r1, r2, 0, 0};
+	v4sf sin_vector, cos_vector;
+
+	sincos_ps(rad_vector, &sin_vector, &cos_vector);
+
+	*s0 = sin_vector[0];
+	*s1 = sin_vector[1];
+
+	*c0 = cos_vector[0];
+	*c1 = cos_vector[1];
+}
+
+void SinFastVector3(float r1, float r2, float r3,
+					  float *s0, float *s1, float *s2)
+{
+	v4sf rad_vector = {r1, r2, r3, 0};
+	v4sf sin_vector;
+
+	sin_vector = sin_ps(rad_vector);
+
+	*s0 = sin_vector[0];
+	*s1 = sin_vector[1];
+	*s2 = sin_vector[2];
 }
 #endif
 
@@ -268,9 +315,9 @@ void GAME_EXPORT AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right
 	static float	sr, sp, sy, cr, cp, cy;
 
 #ifdef VECTORIZE_SINCOS
-	SinCosFastVector( DEG2RAD(angles[YAW]), DEG2RAD(angles[PITCH]), DEG2RAD(angles[ROLL]), 0,
-					  &sy, &sp, &sr, NULL,
-					  &cy, &cp, &cr, NULL);
+	SinCosFastVector3( DEG2RAD(angles[YAW]), DEG2RAD(angles[PITCH]), DEG2RAD(angles[ROLL]),
+		&sy, &sp, &sr,
+		&cy, &cp, &cr);
 #else
 	SinCos( DEG2RAD( angles[YAW] ), &sy, &cy );
 	SinCos( DEG2RAD( angles[PITCH] ), &sp, &cp );
@@ -517,9 +564,9 @@ void AngleQuaternion( const vec3_t angles, vec4_t q )
 	float	sr, sp, sy, cr, cp, cy;
 
 #ifdef VECTORIZE_SINCOS
-	SinCosFastVector( angles[2] * 0.5f, angles[1] * 0.5f, angles[0] * 0.5f, 0,
-					  &sy, &sp, &sr, NULL,
-					  &cy, &cp, &cr, NULL);
+	SinCosFastVector3( angles[2] * 0.5f, angles[1] * 0.5f, angles[0] * 0.5f,
+		&sy, &sp, &sr,
+		&cy, &cp, &cr);
 #else
 	float	angle;
 
@@ -573,9 +620,18 @@ void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt )
 		if(( 1.0f - cosom ) > 0.000001f )
 		{
 			omega = acos( cosom );
+
+#ifdef VECTORIZE_SINCOS
+			SinFastVector3( omega, ( 1.0f - t ) * omega, t * omega,
+				&sinom, &sclp, &sclq );
+			sclp /= sinom;
+			sclq /= sinom;
+#else
 			sinom = sin( omega );
 			sclp = sin(( 1.0f - t ) * omega ) / sinom;
 			sclq = sin( t * omega ) / sinom;
+#endif
+
 		}
 		else
 		{
