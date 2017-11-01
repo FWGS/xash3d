@@ -181,6 +181,7 @@ static struct jnimethods_s
 	jmethodID saveID;
 	jmethodID loadID;
 	jmethodID showMouse;
+	jmethodID shellExecute;
 	int width, height;
 } jni;
 
@@ -481,6 +482,7 @@ DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 	jni.saveID = (*env)->GetStaticMethodID(env, jni.actcls, "saveID", "(Ljava/lang/String;)V");
 	jni.loadID = (*env)->GetStaticMethodID(env, jni.actcls, "loadID", "()Ljava/lang/String;");
 	jni.showMouse = (*env)->GetStaticMethodID(env, jni.actcls, "showMouse", "(I)V");
+	jni.shellExecute = (*env)->GetStaticMethodID(env, jni.actcls, "shellExecute", "(Ljava/lang/String;)V");
 
 	nanoGL_Init();
 	/* Run the application. */
@@ -1037,5 +1039,22 @@ void Android_ShowMouse( qboolean show )
 		show = true;
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.showMouse, show );
 }
+
+void Android_ShellExecute( const char *path, const char *parms )
+{
+	jstring jstr;
+
+	if( !path )
+		return; // useless
+
+	// get java.lang.String
+	jstr = (*jni.env)->NewStringUTF( jni.env, path );
+
+	// open browser
+	(*jni.env)->CallStaticVoidMethod(jni.env, jni.actcls, jni.shellExecute, jstr);
+
+	// no need to free jstr
+}
+
 
 #endif

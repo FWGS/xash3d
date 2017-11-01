@@ -8,6 +8,8 @@
 void Android_Vibrate( float life, char flags );
 void *Android_GetNativeObject( const char *obj );
 
+void Android_ShellExecute( const char *path, const char *parms );
+
 #ifndef XASH_SDL
 //
 // android_nosdl.c
