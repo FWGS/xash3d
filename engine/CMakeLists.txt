@@ -90,6 +90,9 @@ endif()
 
 if((MSVC OR MINGW) AND NOT XASH_64BIT)
 	add_definitions( -DDBGHELP -DXASH_W32CON) # dbghelp crashhandler
+	if(MINGW)
+		target_link_libraries(${XASH_ENGINE_LIBRARY} -luser32 -lkernel32 -lgdi32 -ldbghelp -lpsapi)
+	endif()
 else()
 	if(XASH_USE_SELECT)
 		add_definitions(-DUSE_SELECT)
