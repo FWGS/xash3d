@@ -20,11 +20,8 @@ LOCAL_CFLAGS += -DXASH_BUILD_COMMIT=\"$(XASH_COMMIT)\"
 LOCAL_CONLYFLAGS += -std=c99
 
 LOCAL_C_INCLUDES := \
-	$(TOUCHCONTROLS_PATH) \
-	$(SDL_PATH)/include \
 	$(NANOGL_PATH)/GL			    \
 	$(NANOGL_PATH)/				    \
-	$(SDL_IMAGE_PATH)/include/		    \
 	$(LOCAL_PATH)/.				    \
 	$(LOCAL_PATH)/common			    \
 	$(LOCAL_PATH)/client			    \
@@ -161,18 +158,10 @@ LOCAL_SRC_FILES := \
 	   common/soundlib/libmpg/layer3.c \
 	   common/soundlib/libmpg/tabinit.c \
 	   common/soundlib/libmpg/common.c \
-	   common/Sequence.c
+	   common/Sequence.c \
+           platform/android/vid_android.c \
+           platform/android/android_nosdl.c
 
-
-ifeq ($(XASH_SDL),1)
-LOCAL_SRC_FILES += platform/sdl/vid_sdl_nanogl.c \
-				platform/android/android.c
-LOCAL_SHARED_LIBRARIES += SDL2
-LOCAL_CFLAGS += -DXASH_SDL
-else
-LOCAL_SRC_FILES += platform/android/vid_android.c \
-		   platform/android/android_nosdl.c
-endif
 LOCAL_STATIC_LIBRARIES := NanoGL
 
 LOCAL_LDLIBS := -ldl -llog
