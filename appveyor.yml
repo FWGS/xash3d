@@ -26,7 +26,7 @@ before_build:
   - git clone https://github.com/ValveSoftware/halflife hlsdk --depth=1
   - cd c:\projects\xash\xash3d
   - git submodule update --init
-  - cmake -G "Visual Studio 14 2015" -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build" -DHL_SDK_DIR="c:\projects\xash\hlsdk"
+  - cmake -G "Visual Studio 14 2015" -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build" -DHL_SDK_DIR="c:\projects\xash\hlsdk" -DXASH_AUTODETECT_SSE_BUILD=OFF -DXASH_VECTORIZE_SINCOS=ON
 
 after_build:
   - copy c:\projects\xash\SDL2\lib\x86\SDL2.dll c:\projects\xash\xash3d\%CONFIGURATION%\SDL2.dll
