@@ -133,8 +133,6 @@ SRCS += $(wildcard client/*.c)
 SRCS += $(wildcard platform/sdl/*.c)
 endif
 OBJS = $(patsubst %.c,obj/%.o,$(SRCS))
-ifeq ($(XASH_SINGLE_BINARY),0)
-BINARIES = xash
 
 ~/xash-em/xash$(SIMD_SUF).html: $(OBJS) $(OBJS_CPP) platform/emscripten/shell.html
 	EMCC_FORCE_STDLIBS=1 $(CXX) -O3 --js-opts 1 -s INLINING_LIMIT=10 -s ELIMINATE_DUPLICATE_FUNCTIONS=1 -s AGGRESSIVE_VARIABLE_ELIMINATION=1 -s LEGACY_GL_CREATE_RESOURCE_ON_BIND=1 -s UNALIGNED_ACCESS_FUNCTION_LIST=\"platform/emscripten/unaligned.txt\"  --shell-file platform/emscripten/shell.html -s NO_EXIT_RUNTIME=0 -s LZ4=1 -s -g0 -o "$@" -s MAIN_MODULE=1 -s USE_SDL=2 -s TOTAL_MEMORY=150994944 -fvisibility=hidden $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
