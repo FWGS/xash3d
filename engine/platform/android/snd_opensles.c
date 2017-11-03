@@ -24,9 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "pthread.h"
 #include "sound.h"
 
-static convar_t *s_bits;
-static convar_t *s_channels;
-
 extern convar_t		*s_primary;
 extern dma_t			dma;
 
@@ -112,22 +109,22 @@ static const char *SNDDMA_Android_Init( void )
 	if( !handle )
 		return "dlopen for libOpenSLES.so";
 
-	pslCreateEngine = dlsym( handle,"slCreateEngine" );
+	pslCreateEngine = dlsym( handle, "slCreateEngine" );
 
 	if( !pslCreateEngine )
 		return "resolve slCreateEngine";
 
-	pSL_IID_ENGINE = dlsym( handle,"SL_IID_ENGINE" );
+	pSL_IID_ENGINE = dlsym( handle, "SL_IID_ENGINE" );
 
 	if( !pSL_IID_ENGINE )
-		return "SL_IID_ENGINE";
+		return "resolve SL_IID_ENGINE";
 
-	pSL_IID_PLAY = dlsym( handle,"SL_IID_PLAY" );
+	pSL_IID_PLAY = dlsym( handle, "SL_IID_PLAY" );
 
 	if( !pSL_IID_PLAY )
 		return "resolve SL_IID_PLAY";
 
-	pSL_IID_BUFFERQUEUE = dlsym( handle,"SL_IID_BUFFERQUEUE" );
+	pSL_IID_BUFFERQUEUE = dlsym( handle, "SL_IID_BUFFERQUEUE" );
 
 	if( !pSL_IID_BUFFERQUEUE )
 		return "resolve SL_IID_BUFFERQUEUE";
@@ -145,22 +142,15 @@ static const char *SNDDMA_Android_Init( void )
 	result = (*snddma_android_outputMix)->Realize( snddma_android_outputMix, SL_BOOLEAN_FALSE );
 	if( result != SL_RESULT_SUCCESS ) return "outputMix->Realize";
 
-	/*if( s_khz->integer >= 44 )
-		freq = 44100;
-	else if( s_khz->integer >= 22 )
-		freq = 22050;
-	else
-		freq = 11025;*/
-
 	freq = SOUND_DMA_SPEED;
 	sourceLocator.locatorType = SL_DATALOCATOR_BUFFERQUEUE;
 	sourceLocator.numBuffers = 2;
 	sourceFormat.formatType = SL_DATAFORMAT_PCM;
-	sourceFormat.numChannels = bound( 1, s_channels->integer, 2 );
+	sourceFormat.numChannels = 2; // always stereo, because engine supports only stereo
 	sourceFormat.samplesPerSec = freq * 1000;
-	sourceFormat.bitsPerSample = 16;
+	sourceFormat.bitsPerSample = 16; // always 16 bit audio
 	sourceFormat.containerSize = sourceFormat.bitsPerSample;
-	sourceFormat.channelMask = ( ( sourceFormat.numChannels == 2 ) ? SL_SPEAKER_FRONT_LEFT|SL_SPEAKER_FRONT_RIGHT : SL_SPEAKER_FRONT_CENTER );
+	sourceFormat.channelMask = SL_SPEAKER_FRONT_LEFT|SL_SPEAKER_FRONT_RIGHT;
 	sourceFormat.endianness = SL_BYTEORDER_LITTLEENDIAN;
 	source.pLocator = &sourceLocator;
 	source.pFormat = &sourceFormat;
@@ -216,11 +206,6 @@ qboolean SNDDMA_Init( void *hwnd)
 	const char *initError;
 
 	MsgDev( D_NOTE, "OpenSL ES audio device initializing...\n" );
-
-
-	s_bits = Cvar_Get( "s_bits", "16", CVAR_ARCHIVE|CVAR_LATCH, "snd bits" );
-	s_channels = Cvar_Get( "s_channels", "2", CVAR_ARCHIVE|CVAR_LATCH, "snd channels" );
-
 
 	initError = SNDDMA_Android_Init();
 	if( initError )
