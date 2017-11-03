@@ -757,10 +757,13 @@ DECLARE_JNI_INTERFACE( int, nativeTestWritePermission, jstring jPath )
 	// maybe generate new file everytime?
 	Q_snprintf( testFile, PATH_MAX, "%s/.testfile", path );
 	
+	__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "nativeTestWritePermission: file=%s", testFile );
+	
 	fd = fopen( testFile, "w+" );
 	
 	if( fd )
 	{
+		__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "nativeTestWritePermission: passed" );
 		ret = 1;
 		fclose( fd );
 		
@@ -768,7 +771,7 @@ DECLARE_JNI_INTERFACE( int, nativeTestWritePermission, jstring jPath )
 	}
 	else
 	{
-		__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "nativeTestWritePermission: file=%s, error=%s", testFile, strerror( errno ) );
+		__android_log_print( ANDROID_LOG_VERBOSE, "Xash", "nativeTestWritePermission: error=%s", strerror( errno ) );
 	}
 	
 	(*env)->ReleaseStringUTFChars( env, jPath, path );

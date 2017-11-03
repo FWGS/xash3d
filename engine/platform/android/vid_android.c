@@ -34,306 +34,6 @@ typedef enum
 	rserr_unknown
 } rserr_t;
 
-static char* opengl_110funcs[] =
-{
- "glClearColor"         ,
- "glClear"              ,
- "glAlphaFunc"          ,
- "glBlendFunc"          ,
- "glCullFace"           ,
- "glDrawBuffer"         ,
- "glReadBuffer"         ,
- "glEnable"             ,
- "glDisable"            ,
- "glEnableClientState"  ,
- "glDisableClientState" ,
- "glGetBooleanv"        ,
- "glGetDoublev"         ,
- "glGetFloatv"          ,
- "glGetIntegerv"        ,
- "glGetError"           ,
- "glGetString"          ,
- "glFinish"             ,
- "glFlush"              ,
- "glClearDepth"         ,
- "glDepthFunc"          ,
- "glDepthMask"          ,
- "glDepthRange"         ,
- "glFrontFace"          ,
- "glDrawElements"       ,
- "glColorMask"          ,
- "glIndexPointer"       ,
- "glVertexPointer"      ,
- "glNormalPointer"      ,
- "glColorPointer"       ,
- "glTexCoordPointer"    ,
- "glArrayElement"       ,
- "glColor3f"            ,
- "glColor3fv"           ,
- "glColor4f"            ,
- "glColor4fv"           ,
- "glColor3ub"           ,
- "glColor4ub"           ,
- "glColor4ubv"          ,
- "glTexCoord1f"         ,
- "glTexCoord2f"         ,
- "glTexCoord3f"         ,
- "glTexCoord4f"         ,
- "glTexGenf"            ,
- "glTexGenfv"           ,
- "glTexGeni"            ,
- "glVertex2f"           ,
- "glVertex3f"           ,
- "glVertex3fv"          ,
- "glNormal3f"           ,
- "glNormal3fv"          ,
- "glBegin"              ,
- "glEnd"                ,
- "glLineWidth"          ,
- "glPointSize"          ,
- "glMatrixMode"         ,
- "glOrtho"              ,
- "glRasterPos2f"        ,
- "glFrustum"            ,
- "glViewport"           ,
- "glPushMatrix"         ,
- "glPopMatrix"          ,
- "glPushAttrib"         ,
- "glPopAttrib"          ,
- "glLoadIdentity"       ,
- "glLoadMatrixd"        ,
- "glLoadMatrixf"        ,
- "glMultMatrixd"        ,
- "glMultMatrixf"        ,
- "glRotated"            ,
- "glRotatef"            ,
- "glScaled"             ,
- "glScalef"             ,
- "glTranslated"         ,
- "glTranslatef"         ,
- "glReadPixels"         ,
- "glDrawPixels"         ,
- "glStencilFunc"        ,
- "glStencilMask"        ,
- "glStencilOp"          ,
- "glClearStencil"       ,
- "glIsEnabled"          ,
- "glIsList"             ,
- "glIsTexture"          ,
- "glTexEnvf"            ,
- "glTexEnvfv"           ,
- "glTexEnvi"            ,
- "glTexParameterf"      ,
- "glTexParameterfv"     ,
- "glTexParameteri"      ,
- "glHint"               ,
- "glPixelStoref"        ,
- "glPixelStorei"        ,
- "glGenTextures"        ,
- "glDeleteTextures"     ,
- "glBindTexture"        ,
- "glTexImage1D"         ,
- "glTexImage2D"         ,
- "glTexSubImage1D"      ,
- "glTexSubImage2D"      ,
- "glCopyTexImage1D"     ,
- "glCopyTexImage2D"     ,
- "glCopyTexSubImage1D"  ,
- "glCopyTexSubImage2D"  ,
- "glScissor"            ,
- "glGetTexEnviv"        ,
- "glPolygonOffset"      ,
- "glPolygonMode"        ,
- "glPolygonStipple"     ,
- "glClipPlane"          ,
- "glGetClipPlane"       ,
- "glShadeModel"         ,
- "glFogfv"              ,
- "glFogf"               ,
- "glFogi"               ,
- NULL
-};
-
-static char* pointparametersfunc[] =
-{
-"glPointParameterfEXT"  ,
-"glPointParameterfvEXT" ,
-NULL
-};
-
-static char* drawrangeelementsfuncs[] =
-{
- "glDrawRangeElements" ,
- NULL
-};
-
-static char* drawrangeelementsextfuncs[] =
-{
- "glDrawRangeElementsEXT" ,
- NULL
-};
-
-static char* sgis_multitexturefuncs[] =
-{
- "glSelectTextureSGIS" ,
- "glMTexCoord2fSGIS"   ,
- NULL
-};
-
-static char* multitexturefuncs[] =
-{
- "glMultiTexCoord1fARB"     ,
- "glMultiTexCoord2fARB"     ,
- "glMultiTexCoord3fARB"     ,
- "glMultiTexCoord4fARB"     ,
- "glActiveTextureARB"       ,
- "glClientActiveTextureARB" ,
- "glClientActiveTextureARB" ,
- NULL
-};
-
-static char* compiledvertexarrayfuncs[] =
-{
- "glLockArraysEXT"   ,
- "glUnlockArraysEXT" ,
- "glDrawArrays"      ,
- NULL
-};
-
-static char* texture3dextfuncs[] =
-{
- "glTexImage3DEXT"        ,
- "glTexSubImage3DEXT"     ,
- "glCopyTexSubImage3DEXT" ,
- NULL
-};
-
-static char* atiseparatestencilfuncs[] =
-{
- "glStencilOpSeparateATI"   ,
- "glStencilFuncSeparateATI" ,
- NULL
-};
-
-static char* gl2separatestencilfuncs[] =
-{
- "glStencilOpSeparate"   ,
- "glStencilFuncSeparate" ,
- NULL
-};
-
-static char* stenciltwosidefuncs[] =
-{
- "glActiveStencilFaceEXT" ,
- NULL
-};
-
-static char* blendequationfuncs[] =
-{
- "glBlendEquationEXT" ,
- NULL
-};
-
-static char* shaderobjectsfuncs[] =
-{
- "glDeleteObjectARB"             ,
- "glGetHandleARB"                ,
- "glDetachObjectARB"             ,
- "glCreateShaderObjectARB"       ,
- "glShaderSourceARB"             ,
- "glCompileShaderARB"            ,
- "glCreateProgramObjectARB"      ,
- "glAttachObjectARB"             ,
- "glLinkProgramARB"              ,
- "glUseProgramObjectARB"         ,
- "glValidateProgramARB"          ,
- "glUniform1fARB"                ,
- "glUniform2fARB"                ,
- "glUniform3fARB"                ,
- "glUniform4fARB"                ,
- "glUniform1iARB"                ,
- "glUniform2iARB"                ,
- "glUniform3iARB"                ,
- "glUniform4iARB"                ,
- "glUniform1fvARB"               ,
- "glUniform2fvARB"               ,
- "glUniform3fvARB"               ,
- "glUniform4fvARB"               ,
- "glUniform1ivARB"               ,
- "glUniform2ivARB"               ,
- "glUniform3ivARB"               ,
- "glUniform4ivARB"               ,
- "glUniformMatrix2fvARB"         ,
- "glUniformMatrix3fvARB"         ,
- "glUniformMatrix4fvARB"         ,
- "glGetObjectParameterfvARB"     ,
- "glGetObjectParameterivARB"     ,
- "glGetInfoLogARB"               ,
- "glGetAttachedObjectsARB"       ,
- "glGetUniformLocationARB"       ,
- "glGetActiveUniformARB"         ,
- "glGetUniformfvARB"             ,
- "glGetUniformivARB"             ,
- "glGetShaderSourceARB"          ,
- "glVertexAttribPointerARB"      ,
- "glEnableVertexAttribArrayARB"  ,
- "glDisableVertexAttribArrayARB" ,
- "glBindAttribLocationARB"       ,
- "glGetActiveAttribARB"          ,
- "glGetAttribLocationARB"        ,
- NULL
-};
-
-static char* vertexshaderfuncs[] =
-{
- "glVertexAttribPointerARB"      ,
- "glEnableVertexAttribArrayARB"  ,
- "glDisableVertexAttribArrayARB" ,
- "glBindAttribLocationARB"       ,
- "glGetActiveAttribARB"          ,
- "glGetAttribLocationARB"        ,
- NULL
-};
-
-static char* vbofuncs[] =
-{
- "glBindBufferARB"    ,
- "glDeleteBuffersARB" ,
- "glGenBuffersARB"    ,
- "glIsBufferARB"      ,
- "glMapBufferARB"     ,
- "glUnmapBufferARB"   ,
- "glBufferDataARB"    ,
- "glBufferSubDataARB" ,
- NULL
-};
-
-static char* occlusionfunc[] =
-{
- "glGenQueriesARB"        ,
- "glDeleteQueriesARB"     ,
- "glIsQueryARB"           ,
- "glBeginQueryARB"        ,
- "glEndQueryARB"          ,
- "glGetQueryivARB"        ,
- "glGetQueryObjectivARB"  ,
- "glGetQueryObjectuivARB" ,
- NULL
-};
-
-static char* texturecompressionfuncs[] =
-{
- "glCompressedTexImage3DARB"    ,
- "glCompressedTexImage2DARB"    ,
- "glCompressedTexImage1DARB"    ,
- "glCompressedTexSubImage3DARB" ,
- "glCompressedTexSubImage2DARB" ,
- "glCompressedTexSubImage1DARB" ,
- "glGetCompressedTexImageARB"   ,
- NULL
-};
-
-
 /*
 =================
 GL_GetProcAddress
@@ -353,7 +53,7 @@ void *GL_GetProcAddress( const char *name )
 void GL_InitExtensions( void )
 {
 	// initialize gl extensions
-	GL_CheckExtension( "OpenGL 1.1.0", (void*)opengl_110funcs, NULL, GL_OPENGL_110 );
+	GL_SetExtension( GL_OPENGL_110, true );
 
 	// get our various GL strings
 	glConfig.vendor_string = pglGetString( GL_VENDOR );
@@ -430,10 +130,6 @@ void GL_InitExtensions( void )
 	pglGetIntegerv( GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, &glConfig.max_vertex_uniforms );
 	pglGetIntegerv( GL_MAX_VERTEX_ATTRIBS_ARB, &glConfig.max_vertex_attribs );
 
-	// MCD has buffering issues
-	if(Q_strstr( glConfig.renderer_string, "gdi" ))
-		Cvar_SetFloat( "gl_finish", 1 );
-
 	Cvar_Set( "gl_anisotropy", va( "%f", bound( 0, gl_texture_anisotropy->value, glConfig.max_texture_anisotropy )));
 
 	// software mipmap generator does wrong result with NPOT textures ...
@@ -454,7 +150,7 @@ void GL_InitExtensions( void )
 GL_CheckExtension
 =================
 */
-void GL_CheckExtension( const char *name, const dllfunc_t *funcs, const char *cvarname, int r_ext )
+void GL_CheckExtension( const char *name, const dllfunc_t * /* funcs */, const char *cvarname, int r_ext )
 {
 	const dllfunc_t	*func;
 	convar_t		*parm;
@@ -662,7 +358,7 @@ qboolean R_Init_OpenGL( void )
 {
 	searchpath_t	*search = FS_FindFile( GI->iconpath, NULL, true );
 
-	if( search )
+	if( search && !search->pack && !search->wad ) // ignore packed icons
 		Android_SetIcon( va( "%s/%s%s", host.rootdir, search->filename, GI->iconpath ) );
 
 	Android_SetTitle( GI->title );
