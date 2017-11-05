@@ -2349,7 +2349,7 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 	}
 
 	// check untraceable entities
-	for ( i = 1; i < svgame.globals->maxEntities; i++, ent++ )
+	for ( i = 1; i < svgame.numEntities; i++, ent++ )
 	{
 		vec3_t vecLOS;
 		vec3_t vecOrigin;
@@ -2471,21 +2471,22 @@ edict_t *SV_EntFindSingle( sv_client_t *cl, const char *pattern )
 {
 	edict_t	*ent = NULL;
 	int	i = 0;
+
 	if( Q_isdigit( pattern ) )
 	{
 		i = Q_atoi( pattern );
 
-		if( ( !sv_enttools_players->integer && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+		if( i >= svgame.numEntities )
 			return NULL;
 	}
 	else if( !Q_stricmp( pattern, "!cross" ) )
 	{
 		ent = SV_GetCrossEnt( cl->edict );
+
 		if( !SV_IsValidEdict( ent ) )
 			return NULL;
+
 		i = NUM_FOR_EDICT( ent );
-		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
-			return NULL;
 	}
 	else if( pattern[0] == '!' ) // Check for correct instanse with !(num)_(serial)
 	{
@@ -2497,10 +2498,11 @@ edict_t *SV_EntFindSingle( sv_client_t *cl, const char *pattern )
 		if( *p++ != '_' )
 			return NULL;
 
-		if( ( !sv_enttools_players->value && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+		if( i >= svgame.numEntities )
 			return NULL;
 
 		ent = EDICT_NUM( i );
+
 		if( ent->serialnumber != Q_atoi( p ) )
 			return NULL;
 	}
@@ -2509,15 +2511,20 @@ edict_t *SV_EntFindSingle( sv_client_t *cl, const char *pattern )
 		for( i = svgame.globals->maxClients + 1; i < svgame.numEntities; i++ )
 		{
 			ent = EDICT_NUM( i );
+
 			if( !SV_IsValidEdict( ent ) )
 				continue;
+
 			if( Q_stricmpext( pattern, STRING( ent->v.targetname ) ) )
 				break;
 		}
 	}
+
 	ent = EDICT_NUM( i );
+
 	if( !SV_IsValidEdict( ent ) )
 		return NULL;
+
 	return ent;
 }
 
@@ -2646,7 +2653,7 @@ void SV_EntFire_f( sv_client_t *cl )
 	{
 		i = Q_atoi( Cmd_Argv( 1 ) );
 
-		if( ( !sv_enttools_players->integer && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+		if( i < 0 || i >= svgame.numEntities )
 			return;
 
 		ent = EDICT_NUM( i );
@@ -2654,11 +2661,11 @@ void SV_EntFire_f( sv_client_t *cl )
 	else if( ( single = !Q_stricmp( Cmd_Argv( 1 ), "!cross" ) ) )
 	{
 		ent = SV_GetCrossEnt( cl->edict );
+
 		if( !SV_IsValidEdict( ent ) )
 			return;
+
 		i = NUM_FOR_EDICT( ent );
-		if( ( !sv_enttools_players->integer && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
-			return;
 	}
 	else if( ( single = ( Cmd_Argv( 1 )[0] == '!') ) ) // Check for correct instanse with !(num)_(serial)
 	{
@@ -2670,7 +2677,7 @@ void SV_EntFire_f( sv_client_t *cl )
 		if( *cmd++ != '_' )
 			return;
 
-		if( ( !sv_enttools_players->integer && ( i <= svgame.globals->maxClients + 1 )) || (i >= svgame.numEntities) )
+		if( i < 0 || i >= svgame.numEntities )
 			return;
 
 		ent = EDICT_NUM( i );
@@ -2679,7 +2686,6 @@ void SV_EntFire_f( sv_client_t *cl )
 	}
 	else
 	{
-		if( !sv_enttools_players->integer )
 		i = svgame.globals->maxClients + 1;
 	}
 
@@ -2717,6 +2723,8 @@ void SV_EntFire_f( sv_client_t *cl )
 			ent->v.targetname = ALLOC_STRING( Cmd_Argv ( 3 ) );
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "settarget" ) )
 			ent->v.target = ALLOC_STRING( Cmd_Argv ( 3 ) );
+		else if( !Q_stricmp( Cmd_Argv( 2 ), "setmodel" ) )
+			SV_SetModel( ent, Cmd_Argv( 3 ) );
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "set" ) )
 		{
 			char keyname[MAX_STRING];
@@ -2843,10 +2851,6 @@ void SV_EntFire_f( sv_client_t *cl )
 			ent->v.angles[1] = Q_atof( Cmd_Argv( 4 ) );
 			ent->v.angles[2] = Q_atof( Cmd_Argv( 5 ) );
 		}
-		else if( !Q_stricmp( Cmd_Argv( 2 ), "setmodel" ) )
-		{
-			ent->v.model = ALLOC_STRING( Cmd_Argv( 3 ) );
-		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "setflag" ) )
 		{
 			ent->v.flags |= 1U << Q_atoi( Cmd_Argv ( 3 ) );
@@ -2885,7 +2889,7 @@ void SV_EntFire_f( sv_client_t *cl )
 				"Actions\n"
 				"    rename: set entity targetname\n"
 				"    settarget: set entity target (only targetnames)\n"
-				"    setmodel: set entity model (does not update)\n"
+				"    setmodel: set entity model\n"
 				"    set: set <key> <value> by server library\n"
 				"        See game FGD to get list.\n"
 				"        command takes two arguments\n"
@@ -2923,7 +2927,8 @@ Create new entity with specified name.
 void SV_EntCreate_f( sv_client_t *cl )
 {
 	edict_t	*ent = NULL;
-	int	i;
+	int	i = 0;
+	string_t classname;
 
 	if( Cmd_Argc() < 2 )
 	{
@@ -2931,37 +2936,79 @@ void SV_EntCreate_f( sv_client_t *cl )
 		return;
 	}
 
-	ent = SV_AllocPrivateData( 0, ALLOC_STRING( Cmd_Argv( 1 ) ) );
+	classname = ALLOC_STRING( Cmd_Argv( 1 ) );
+
+	ent = SV_AllocPrivateData( 0, classname );
+
+	// Xash3D extesion
+	if( !ent && svgame.physFuncs.SV_CreateEntity )
+	{
+		ent = SV_AllocEdict();
+		ent->v.classname = classname;
+		if( svgame.physFuncs.SV_CreateEntity( ent, (char*)STRING( classname ) ) == -1 )
+		{
+			SV_FreeEdict( ent );
+			ent = NULL;
+		}
+	}
+
+	// XashXT does not implement SV_CreateEntity, use saverestore export
+	if( !ent && svgame.physFuncs.pfnCreateEntitiesInRestoreList )
+	{
+		SAVERESTOREDATA data = { 0 };
+		ENTITYTABLE table = { 0 };
+		data.tableCount = 1;
+		data.pTable = &table;
+		table.classname = classname;
+		table.id = -1;
+		table.size = 1;
+		svgame.physFuncs.pfnCreateEntitiesInRestoreList( &data, 0 );
+		ent = table.pent;
+	}
+
 	if( !ent )
 	{
 		SV_ClientPrintf( cl, PRINT_LOW, "Invalid entity!\n" );
 		return;
 	}
+
+	// choose default origin
 	ent->v.origin[2] = cl->edict->v.origin[2] + 25;
 	ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
 	ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
-	//ent->v.spawnflags |= ( 1U << 30 ); //SF_NORESPAWN
+
 	SV_LinkEdict( ent, false );
-	for( i=2; i < Cmd_Argc() - 1; i++ )
+
+	// apply keyvales if supported
+	if( svgame.dllFuncs.pfnKeyValue )
 	{
-		KeyValueData	pkvd;
-		pkvd.fHandled = false;
-		pkvd.szClassName = (char*)STRING( ent->v.classname );
-		pkvd.szKeyName = Cmd_Argv( i );
-		i++;
-		/*if( !Q_stricmp( "model", pkvd.szKeyName  ) && Q_strstr( Cmd_Argv( i ), ".bsp" ) )
+		for( i = 2; i < Cmd_Argc() - 1; i++ )
 		{
+			KeyValueData	pkvd;
+
+			// allow split keyvalues to prespawn and postspawn
+			if( !Q_strcmp( Cmd_Argv( i ), "|" ) )
+			{
+				i++;
+				break;
+			}
+
+			pkvd.fHandled = false;
+			pkvd.szClassName = (char*)STRING( ent->v.classname );
+			pkvd.szKeyName = Cmd_Argv( i );
 			i++;
-			continue;
-		}*/
-		pkvd.szValue = Cmd_Argv( i );
-		svgame.dllFuncs.pfnKeyValue( ent, &pkvd );
-		if( pkvd.fHandled )
-			SV_ClientPrintf( cl, PRINT_LOW, "value \"%s\" set to \"%s\"!\n", pkvd.szKeyName, pkvd.szValue );
+			pkvd.szValue = Cmd_Argv( i );
+			svgame.dllFuncs.pfnKeyValue( ent, &pkvd );
+			if( pkvd.fHandled )
+				SV_ClientPrintf( cl, PRINT_LOW, "value \"%s\" set to \"%s\"!\n", pkvd.szKeyName, pkvd.szValue );
+		}
 	}
+
+	// set default targetname
 	if( !ent->v.targetname )
 	{
 		char newname[256], clientname[256];
+
 		for( i = 0; i < sizeof( cl->name ); i++ )
 		{
 			char c = Q_tolower( cl->name[i] );
@@ -2974,8 +3021,10 @@ void SV_EntCreate_f( sv_client_t *cl )
 			}
 			clientname[i] = c;
 		}
-		// Generate name based on nick name and index
+
+		// generate name based on nick name and index
 		Q_snprintf( newname, 256,  "%s_%i_e%i", clientname, cl->userid, NUM_FOR_EDICT( ent ) );
+
 		// i know, it may break strict aliasing rules
 		// but we will not lose anything in this case.
 		Q_strnlwr( newname, newname, 256 );
@@ -2984,12 +3033,34 @@ void SV_EntCreate_f( sv_client_t *cl )
 	}
 
 	SV_ClientPrintf( cl, PRINT_LOW, "Created %i: %s, targetname %s\n", NUM_FOR_EDICT( ent ), Cmd_Argv( 1 ), STRING( ent->v.targetname ) );
-	svgame.dllFuncs.pfnSpawn( ent );
-	// Now drop entity to floor.
-	// Otherwise given weapon may crash server if player touch it before.
+
+	if( svgame.dllFuncs.pfnSpawn )
+		svgame.dllFuncs.pfnSpawn( ent );
+
+	// now drop entity to floor.
 	pfnDropToFloor( ent );
+
+	// force think. Otherwise given weapon may crash server if player touch it before.
 	svgame.dllFuncs.pfnThink( ent );
 	pfnDropToFloor( ent );
+
+	// apply postspawn keyvales if supported
+	if( svgame.dllFuncs.pfnKeyValue )
+	{
+		for( i = i + 1; i < Cmd_Argc() - 1; i++ )
+		{
+			KeyValueData	pkvd;
+
+			pkvd.fHandled = false;
+			pkvd.szClassName = (char*)STRING( ent->v.classname );
+			pkvd.szKeyName = Cmd_Argv( i );
+			i++;
+			pkvd.szValue = Cmd_Argv( i );
+			svgame.dllFuncs.pfnKeyValue( ent, &pkvd );
+			if( pkvd.fHandled )
+				SV_ClientPrintf( cl, PRINT_LOW, "value \"%s\" set to \"%s\"!\n", pkvd.szKeyName, pkvd.szValue );
+		}
+	}
 
 }
 
