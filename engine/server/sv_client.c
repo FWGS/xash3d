@@ -2325,29 +2325,60 @@ edict_t *pfnFindEntityInSphere( edict_t *pStartEdict, const float *org, float fl
 
 static edict_t *SV_GetCrossEnt( edict_t *player )
 {
-	edict_t *ent = NULL;
+	edict_t *ent = EDICT_NUM(1);
 	edict_t *closest = NULL;
-	float flMaxDot = 0.9;
+	float flMaxDot = 0.94;
 	vec3_t forward;
-	AngleVectors( player->v.v_angle, forward, NULL, NULL );
+	vec3_t viewPos;
+	int i;
+	float maxLen = 1000;
 
-	while( ( ent = pfnFindEntityInSphere( ent, player->v.origin, 192 ) ) != EDICT_NUM( 0 ) )
+	AngleVectors( player->v.v_angle, forward, NULL, NULL );
+	VectorAdd( player->v.origin, player->v.view_ofs, viewPos );
+
+	// find bmodels by trace
+	{
+		trace_t trace;
+		vec3_t target;
+
+		VectorMA( viewPos, 1000, forward, target );
+		trace = SV_Move( viewPos, vec3_origin, vec3_origin, target, 0, player );
+		closest = trace.ent;
+		VectorSubtract( viewPos, trace.endpos, target );
+		maxLen = VectorLength(target) + 30;
+	}
+
+	// check untraceable entities
+	for ( i = 1; i < svgame.globals->maxEntities; i++, ent++ )
 	{
 		vec3_t vecLOS;
-		float flDot;
+		vec3_t vecOrigin;
+		float flDot, traceLen;
 		vec3_t boxSize;
+		trace_t trace;
+		vec3_t vecTrace;
 
-		if( ent == player )
+		if( ent->free )
 			continue;
+
+		if( ent->v.solid == SOLID_BSP || ent->v.movetype == MOVETYPE_PUSHSTEP )
+			continue; //bsp models will be found by trace later
 
 		// do not touch following weapons
 		if( ent->v.movetype == MOVETYPE_FOLLOW )
 			continue;
 
-		VectorAdd( ent->v.absmin, ent->v.absmax, vecLOS );
-		VectorScale( vecLOS, 0.5, vecLOS );
-		VectorSubtract( vecLOS, player->v.origin, vecLOS );
-		VectorSubtract( vecLOS, player->v.view_ofs, vecLOS );
+		if( ent == player )
+			continue;
+
+		VectorAdd( ent->v.absmin, ent->v.absmax, vecOrigin );
+		VectorScale( vecOrigin, 0.5, vecOrigin );
+
+		VectorSubtract( vecOrigin, viewPos, vecLOS );
+		traceLen = VectorLength(vecLOS);
+
+		if( traceLen > maxLen )
+			continue;
 
 		VectorCopy( ent->v.size, boxSize);
 		VectorScale( boxSize, 0.5, boxSize );
@@ -2375,10 +2406,16 @@ static edict_t *SV_GetCrossEnt( edict_t *player )
 		VectorNormalize( vecLOS );
 
 		flDot = DotProduct (vecLOS , forward);
-		if ( flDot > flMaxDot )
-			closest = ent, flMaxDot = flDot;
+		if ( flDot <= flMaxDot )
+			continue;
 
+		trace = SV_Move( viewPos, vec3_origin, vec3_origin, vecOrigin, 0, player );
+		VectorSubtract( trace.endpos, viewPos, vecTrace );
+		if( VectorLength( vecTrace ) + 30 < traceLen )
+			continue;
+		closest = ent, flMaxDot = flDot;
 	}
+
 	return closest;
 }
 
@@ -2393,9 +2430,6 @@ void SV_EntList_f( sv_client_t *cl )
 {
 	edict_t	*ent = NULL;
 	int	i;
-
-	if( ( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->value && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
-		return;
 
 	for( i = 0; i < svgame.numEntities; i++ )
 	{
@@ -2500,9 +2534,6 @@ void SV_EntInfo_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	vec3_t borigin;
 
-	if( ( !Cvar_VariableInteger( "sv_cheats" ) && !sv_enttools_enable->integer && !Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
-		return;
-
 	if( Cmd_Argc() != 2 )
 	{
 		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_info <index|name|inst>\n" );
@@ -2603,12 +2634,6 @@ void SV_EntFire_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	int	i = 1, count = 0;
 	qboolean single; // true if user specified something that match single entity
-
-	if( ( !sv_enttools_enable->integer && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
-		return;
-
-	Msg( "Player %i: %s called ent_fire: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
-		Cmd_Argv( 1 ), Cmd_Argv( 2 ), Cmd_Argv( 3 ), Cmd_Argv( 4 ), Cmd_Argv( 5 ) );
 
 	if( Cmd_Argc() < 3 )
 	{
@@ -2900,12 +2925,6 @@ void SV_EntCreate_f( sv_client_t *cl )
 	edict_t	*ent = NULL;
 	int	i;
 
-	if( ( !sv_enttools_enable->integer && Q_strncmp( cl->name, sv_enttools_godplayer->string, 32 ) ) || sv.background )
-		return;
-	// log all dangerous actions
-	Msg( "Player %i: %s called ent_create: \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"\n", cl->userid, cl->name,
-		Cmd_Argv( 1 ), Cmd_Argv( 2 ), Cmd_Argv( 3 ), Cmd_Argv( 4 ), Cmd_Argv( 5 ), Cmd_Argv( 6 ), Cmd_Argv( 7 ) );
-
 	if( Cmd_Argc() < 2 )
 	{
 		SV_ClientPrintf( cl, PRINT_LOW, "Use ent_create <classname> <key1> <value1> <key2> <value2> ...\n" );
@@ -3020,6 +3039,11 @@ ucmd_t ucmds[] =
 { "getresourcelist", SV_SendResourceList_f },
 { "continueloading", SV_ContinueLoading_f },
 { "kill", SV_Kill_f },
+{ NULL, NULL }
+};
+
+ucmd_t enttoolscmds[] =
+{
 { "ent_list", SV_EntList_f },
 { "ent_info", SV_EntInfo_f },
 { "ent_fire", SV_EntFire_f },
@@ -3049,6 +3073,23 @@ void SV_ExecuteClientCommand( sv_client_t *cl, char *s )
 			MsgDev( D_NOTE, "ucmd->%s()\n", u->name );
 			if( u->func ) u->func( cl );
 			break;
+		}
+	}
+
+	if( !u->name && sv_enttools_enable->integer && !sv.background )
+	{
+		for( u = enttoolscmds; u->name; u++ )
+		{
+			if( !Q_strcmp( Cmd_Argv( 0 ), u->name ))
+			{
+				MsgDev( D_NOTE, "enttools->%s(): %s\n", u->name, s );
+
+				Log_Printf( "\"%s<%i><%s><>\" performed: %s\n", Info_ValueForKey( cl->userinfo, "name" ),
+							cl->userid, SV_GetClientIDString( cl ), NET_AdrToString( cl->netchan.remote_address ), s );
+
+				if( u->func ) u->func( cl );
+				break;
+			}
 		}
 	}
 
