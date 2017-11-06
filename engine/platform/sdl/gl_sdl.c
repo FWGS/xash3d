@@ -13,16 +13,20 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include "common.h"
 #if XASH_VIDEO == VIDEO_SDL && !defined XASH_GL_STATIC
+#include "common.h"
 #include "client.h"
 #include "gl_local.h"
 #include "mod_local.h"
+#include "gl_vidnt.h"
 #include <SDL.h>
 
 #ifdef WIN32
 // Enable NVIDIA High Performance Graphics while using Integrated Graphics.
 __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+
+// Enable AMD High Performance Graphics while using Integrated Graphics.
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 
 
