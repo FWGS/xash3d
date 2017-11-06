@@ -117,6 +117,7 @@ void VID_RestoreScreenResolution( void )
 	}
 }
 #else
+
 static qboolean recreate = false;
 qboolean VID_SetScreenResolution( int width, int height )
 {
@@ -180,21 +181,28 @@ void VID_RestoreScreenResolution( void )
 }
 #endif
 
+#if defined(_WIN32) && !defined(XASH_64BIT) // ICO support only for Win32
+static void WIN_SetWindowIcon( HICON ico )
+{
+	SDL_SysWMinfo wminfo;
+
+	if( !ico )
+		return;
+
+	if( SDL_GetWindowWMInfo( host.hWnd, &wminfo ) )
+	{
+		SetClassLong( wminfo.info.win.window, GCL_HICON, (LONG)ico );
+	}
+}
+#endif
+
 qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
 	static string	wndname;
-	Uint32 wndFlags = 0;
+	Uint32 wndFlags = SDL_WINDOW_OPENGL;
 	rgbdata_t *icon = NULL;
-	char iconpath[64];
-#ifdef XASH_NOMODESWITCH
-	SDL_DisplayMode mode;
-#if !defined DEFAULT_MODE_WIDTH || !defined DEFAULT_MODE_HEIGHT
-	SDL_GetDesktopDisplayMode(0, &mode);
-#else
-	mode.w = DEFAULT_MODE_WIDTH;
-	mode.h = DEFAULT_MODE_HEIGHT;
-#endif
-#endif
+	char iconpath[MAX_STRING];
+
 	if( vid_highdpi->integer ) wndFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
 	Q_strncpy( wndname, GI->title, sizeof( wndname ));
 
@@ -203,13 +211,12 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 #ifndef XASH_SDL_DISABLE_RESIZE
 		wndFlags |= SDL_WINDOW_RESIZABLE;
 #endif
-		host.hWnd = SDL_CreateWindow(wndname, r_xpos->integer,
-		r_ypos->integer, width, height, wndFlags | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_OPENGL );
+		host.hWnd = SDL_CreateWindow( wndname, r_xpos->integer,
+			r_ypos->integer, width, height, wndFlags | SDL_WINDOW_MOUSE_FOCUS );
 	}
 	else
 	{
-		host.hWnd = SDL_CreateWindow(wndname, 0, 0, width, height, wndFlags | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
-		SDL_SetWindowFullscreen( host.hWnd, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS );
+		host.hWnd = SDL_CreateWindow( wndname, 0, 0, width, height, wndFlags | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_GRABBED );
 	}
 
 
@@ -233,69 +240,61 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	if( fullscreen )
 	{
 		if( !VID_SetScreenResolution( width, height ) )
+		{
 			return false;
-
+		}
 	}
 	else
+	{
 		VID_RestoreScreenResolution();
+	}
 
-	host.window_center_x = width / 2;
-	host.window_center_y = height / 2;
-
-	// Try load .ico on Windows first
-#if defined(_WIN32) && !defined(XASH_64BIT)
+#if defined(_WIN32) && !defined(XASH_64BIT) // ICO support only for Win32
+	if( FS_FileExists( GI->iconpath, true ) )
 	{
 		HICON ico;
-		SDL_SysWMinfo info;
+		char	localPath[MAX_PATH];
 
-		if( FS_FileExists( GI->iconpath, true ) )
+		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
+		ico = (HICON)LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
+
+		if( !ico )
 		{
-			char	localPath[MAX_PATH];
-
-			Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
-			ico = LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
-
-			if( !ico )
-			{
-				MsgDev( D_INFO, "Extract %s from pak if you want to see it.\n", GI->iconpath );
-				ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ) );
-			}
+			MsgDev( D_INFO, "Extract %s from pak if you want to see it.\n", GI->iconpath );
+			ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ) );
 		}
-		else ico = LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ) );
 
-		if( SDL_GetWindowWMInfo( host.hWnd, &info ) )
-		{
-			// info.info.info.info.info... Holy shit, SDL?
-			SetClassLong( info.info.win.window, GCL_HICON, (LONG)ico );
-		}
+		WIN_SetWindowIcon( ico );
 	}
+	else
 #endif // _WIN32 && !XASH_64BIT
-	Q_strcpy( iconpath, GI->iconpath );
-	FS_StripExtension( iconpath );
-	FS_DefaultExtension( iconpath, ".tga") ;
-
-	icon = FS_LoadImage( iconpath, NULL, 0 );
-
-	if( icon )
 	{
-		SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
-			icon->buffer,
-			icon->width,
-			icon->height,
-			32,
-			4 * icon->width,
-			0x000000ff,
-			0x0000ff00,
-			0x00ff0000,
-			0xff000000 );
+		Q_strcpy( iconpath, GI->iconpath );
+		FS_StripExtension( iconpath );
+		FS_DefaultExtension( iconpath, ".tga") ;
 
-		if( surface )
+		icon = FS_LoadImage( iconpath, NULL, 0 );
+
+		if( icon )
 		{
-			SDL_SetWindowIcon( host.hWnd, surface );
-			SDL_FreeSurface( surface );
-		}
+			SDL_Surface *surface = SDL_CreateRGBSurfaceFrom( icon->buffer,
+				icon->width, icon->height, 32, 4 * icon->width,
+				0x000000ff, 0x0000ff00, 0x00ff0000,	0xff000000 );
 
-		FS_FreeImage( icon );
+			if( surface )
+			{
+				SDL_SetWindowIcon( host.hWnd, surface );
+				SDL_FreeSurface( surface );
+			}
+
+			FS_FreeImage( icon );
+		}
+#if defined(_WIN32) && !defined(XASH_64BIT) // ICO support only for Win32
+		else
+		{
+			WIN_SetWindowIcon( LoadIcon( host.hInst, MAKEINTRESOURCE( 101 ) ) );
+		}
+#endif
 	}
 
 	SDL_ShowWindow( host.hWnd );
