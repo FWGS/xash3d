@@ -150,7 +150,7 @@ void GL_InitExtensions( void )
 GL_CheckExtension
 =================
 */
-void GL_CheckExtension( const char *name, const dllfunc_t * /* funcs */, const char *cvarname, int r_ext )
+void GL_CheckExtension( const char *name, const dllfunc_t * funcs, const char *cvarname, int r_ext )
 {
 	const dllfunc_t	*func;
 	convar_t		*parm;
