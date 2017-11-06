@@ -1088,7 +1088,6 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Sys_SetupCrashHandler();
 	}
 
-	host.change_game = bChangeGame;
 	host.state = HOST_INIT; // initialization started
 	host.developer = host.old_developer = DEFAULT_DEV;
 	host.textmode = false;
@@ -1223,6 +1222,8 @@ Host_Main
 int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bChangeGame, pfnChangeGame func )
 {
 	pChangeGame = func;	// may be NULL
+
+	host.change_game = bChangeGame;
 
 	Host_InitCommon( argc, argv, progname, bChangeGame );
 
