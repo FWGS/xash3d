@@ -47,14 +47,14 @@ typedef struct dly_s {
 
 	// crossfade
 	int idelayoutputxf;   // output pointer
-	int xfade;               // value
+	int xfade;            // value
 
 	int delaysamples;     // delay setting
 	int delayfeedback;    // feedback setting
 
 	// lowpass
 	int lp;               // is lowpass enabled
-	int lp0, lp1;    // lowpass buffer
+	int lp0, lp1;         // lowpass buffer
 
 	// modulation
 	int mod;

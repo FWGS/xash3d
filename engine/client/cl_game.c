@@ -1408,7 +1408,7 @@ static client_sprite_t *GAME_EXPORT pfnSPR_GetList( char *psz, int *piCount )
 	if( !afile ) return NULL;
 
 	pfile = afile;
-	pfile = COM_ParseFile( pfile, token );          
+	pfile = COM_ParseFile( pfile, token );
 	numSprites = Q_atoi( token );
 
 	if( !cl.video_prepped ) pool = cls.mempool;	// static memory
@@ -4049,7 +4049,7 @@ qboolean CL_LoadProgs( const char *name )
 		// functions are cleared before all the extensions are evaluated
 		if(!( *func->func = (void *)Com_GetProcAddress( clgame.hInstance, func->name )))
 		{
-          		MsgDev( D_NOTE, "CL_LoadProgs: failed to get address of %s proc\n", func->name );
+			MsgDev( D_NOTE, "CL_LoadProgs: failed to get address of %s proc\n", func->name );
 
 			if( critical_exports )
 			{
@@ -4076,7 +4076,7 @@ qboolean CL_LoadProgs( const char *name )
 		// functions are cleared before all the extensions are evaluated
 		// NOTE: new exports can be missed without stop the engine
 		if(!( *func->func = (void *)Com_GetProcAddress( clgame.hInstance, func->name )))
-          		MsgDev( D_NOTE, "CL_LoadProgs: failed to get address of %s proc\n", func->name );
+			MsgDev( D_NOTE, "CL_LoadProgs: failed to get address of %s proc\n", func->name );
 	}
 
 	if( !clgame.dllFuncs.pfnInitialize( &gEngfuncs, CLDLL_INTERFACE_VERSION ))

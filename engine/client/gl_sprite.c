@@ -234,12 +234,12 @@ void Mod_LoadSpriteModel( model_t *mod, byte *buffer, qboolean *loaded, uint tex
 		case SPR_ADDITIVE:
 			pal = FS_LoadImage( "#normal.pal", buffer, 768 );
 			break;
-                    case SPR_INDEXALPHA:
+		case SPR_INDEXALPHA:
 			pal = FS_LoadImage( "#decal.pal", buffer, 768 ); 
 			break;
 		case SPR_ALPHTEST:		
 			pal = FS_LoadImage( "#transparent.pal", buffer, 768 );
-                              break;
+			break;
 		case SPR_NORMAL:
 		default:
 			pal = FS_LoadImage( "#normal.pal", buffer, 768 );
@@ -552,7 +552,7 @@ float R_GetSpriteFrameInterpolant( cl_entity_t *ent, mspriteframe_t **oldframe, 
 	if( frame < 0 )
 	{
 		frame = 0;
-	}          
+	}
 	else if( frame >= psprite->numframes )
 	{
 		MsgDev( D_WARN, "R_GetSpriteFrameInterpolant: no such frame %d (%s)\n", frame, ent->model->name );
@@ -571,7 +571,7 @@ float R_GetSpriteFrameInterpolant( cl_entity_t *ent, mspriteframe_t **oldframe, 
 				ent->latched.prevanimtime = RI.refdef.time;
 				lerpFrac = 1.0f;
 			}
-                              
+
 			if( ent->latched.prevanimtime < RI.refdef.time )
 			{
 				if( frame != ent->latched.prevblending[1] )
@@ -999,7 +999,7 @@ void R_DrawSpriteModel( cl_entity_t *e )
 	color[0] = (float)e->curstate.rendercolor.r * ( 1.0f / 255.0f );
 	color[1] = (float)e->curstate.rendercolor.g * ( 1.0f / 255.0f );
 	color[2] = (float)e->curstate.rendercolor.b * ( 1.0f / 255.0f );
-          
+
 	if( R_SpriteHasLightmap( e, psprite->texFormat ))
 	{
 		color24	lightColor;

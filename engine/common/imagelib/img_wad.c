@@ -473,7 +473,7 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 
 	// check for half-life water texture
 	if( hl_texture && ( mip.name[0] == '!' || !Q_strnicmp( mip.name, "water", 5 )))
-          {
+	{
 		// grab the fog color
 		image.fogParams[0] = pal[3*3+0];
 		image.fogParams[1] = pal[3*3+1];
@@ -481,9 +481,9 @@ qboolean Image_LoadMIP( const char *name, const byte *buffer, size_t filesize )
 
 		// grab the fog density
 		image.fogParams[3] = pal[4*3+0];
-          }
-          else if( hl_texture && host.decal_loading )
-          {
+	}
+	else if( hl_texture && host.decal_loading )
+	{
 		// grab the decal color
 		image.fogParams[0] = pal[255*3+0];
 		image.fogParams[1] = pal[255*3+1];

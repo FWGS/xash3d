@@ -848,7 +848,7 @@ static qboolean SV_CanBlock( edict_t *ent )
 		ent->v.maxs[0] = ent->v.maxs[1] = 0.0f;
 		ent->v.maxs[2] = ent->v.mins[2];
 		return false;
-          }
+	}
 
 	return true;
 }
@@ -1072,7 +1072,7 @@ static edict_t *SV_PushRotate( edict_t *pusher, float movetime )
 			if( lmove[2] != 0.0f ) check->v.flags &= ~FL_ONGROUND;
 			if( lmove[2] < 0.0f && !pusher->v.dmg )
 				lmove[2] = 0.0f; // let's the free falling
-                    }
+		}
 
 		// try moving the contacted entity 
 		pusher->v.solid = SOLID_NOT;
@@ -1410,7 +1410,7 @@ void SV_Physics_Toss( edict_t *ent )
 	if( ent->v.velocity[2] > 0.0f || !SV_IsValidEdict( ground ) || ground->v.flags & (FL_MONSTER|FL_CLIENT) || svgame.globals->changelevel )
 	{
 		ent->v.flags &= ~FL_ONGROUND;
-          }
+	}
 
 	// if on ground and not moving, return.
 	if( ent->v.flags & FL_ONGROUND && VectorIsNull( ent->v.velocity ))
@@ -1760,7 +1760,7 @@ void SV_Physics( void )
 			continue;
 
 		if( i > 0 && i <= svgame.globals->maxClients )
-                   		continue;
+			continue;
 
 		SV_Physics_Entity( ent );
 	}

@@ -704,7 +704,7 @@ void SCR_Init( void )
 	SCR_VidInit();
 
 	if( host.state != HOST_RESTART )
-          {
+	{
 		if( host.developer && Sys_CheckParm( "-toconsole" ))
 			Cbuf_AddText( "toggleconsole\n" );
 		else UI_SetActiveMenu( true );

@@ -800,7 +800,7 @@ int Con_DrawGenericString( int x, int y, const char *string, rgba_t setColor, qb
 		numDraws++;
 		s++;
 	}
-          
+
 	pglColor4ub( 255, 255, 255, 255 );
 	return drawLen;
 }
@@ -898,7 +898,7 @@ void Con_Print( const char *txt )
 
 	// client not running
 	if( Host_IsDedicated() ) return;
-          if( !con.initialized ) return;
+	if( !con.initialized ) return;
 	
 	color = ColorIndex( COLOR_DEFAULT );
 

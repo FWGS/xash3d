@@ -1806,7 +1806,6 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 	if( !found_linux || !found_osx )
 	{
 		// just replace extension from dll to so/dylib
-
 		char gamedll[64];
 		Q_strncpy( gamedll, GameInfo->game_dll, sizeof( gamedll ));
 		FS_StripExtension( gamedll );
@@ -1818,6 +1817,7 @@ static qboolean FS_ParseGameInfo( const char *gamedir, gameinfo_t *GameInfo )
 			snprintf( GameInfo->game_dll_osx, sizeof( GameInfo->game_dll_osx ), "%s.dylib", gamedll );
 	}
 #endif
+
 	// make sure what gamedir is really exist
 	if( !FS_SysFolderExists( va( "%s"PATH_SPLITTER"%s", host.rootdir, GameInfo->gamedir )))
 		Q_strncpy( GameInfo->gamedir, gamedir, sizeof( GameInfo->gamedir ));

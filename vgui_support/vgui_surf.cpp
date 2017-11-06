@@ -234,7 +234,7 @@ void CEngineSurface :: drawPrintText( const char* text, int textLen )
 
 			if( !ClipRect( ul, lr, &clippedRect[0], &clippedRect[1] ))
 				continue;
-                                        
+
 			drawSetTexture( iTexId );
 			g_api->SetupDrawingText( curTextColor );
 			g_api->DrawQuad(  &clippedRect[0], &clippedRect[1] ); // draw the letter

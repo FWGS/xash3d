@@ -167,7 +167,7 @@ bool FontCache::AllocatePageForChar( int charWide, int charTall, int &pageIndex,
 
 		nNextX = charWide;
 
-		// create empty texture                    
+		// create empty texture
 		g_api->CreateTexture( newPage.textureID, 256, 256 );
 	}
 

@@ -89,7 +89,7 @@ void CL_ClearTempEnts( void )
 	{
 		cl_tempents[i].next = &cl_tempents[i+1];
 		cl_tempents[i].entity.trivial_accept = INVALID_HANDLE;
-          }
+	}
 
 	cl_tempents[GI->max_tents-1].next = NULL;
 	cl_free_tents = cl_tempents;
@@ -396,7 +396,7 @@ CL_TempEntAlloc
 
 custom tempentity allocation
 ==============
-*/                                                   
+*/
 TEMPENTITY *GAME_EXPORT CL_TempEntAllocCustom( const vec3_t org, model_t *model, int high, void (*pfn)( TEMPENTITY*, float, float ))
 {
 	TEMPENTITY	*pTemp;
@@ -944,7 +944,7 @@ tryagain:
 			if( ++numtries < 32 )
 				goto tryagain;
 			continue;	// a piece completely stuck in the wall, ignore it
-                    }
+		}
 
 		pTemp = CL_TempEntAlloc( vecSpot, Mod_Handle( modelIndex ));
 		if( !pTemp ) return;
@@ -1488,7 +1488,7 @@ void GAME_EXPORT CL_SparkStreaks( const vec3_t pos, int count, int velocityMin, 
 	{
 		p = CL_AllocParticle( NULL );
 		if( !p ) return;
-            
+
 		p->die += 1.0f;
 		p->color = 0; // black
 

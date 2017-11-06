@@ -1155,7 +1155,7 @@ static void Mod_LoadTexInfo( const dlump_t *l )
 		Host_Error( "Mod_LoadTexInfo: funny lump size in %s\n", loadmodel->name );
 
 	count = l->filelen / sizeof( *in );
-          out = Mem_Alloc( loadmodel->mempool, count * sizeof( *out ));
+	out = Mem_Alloc( loadmodel->mempool, count * sizeof( *out ));
 	
 	loadmodel->texinfo = out;
 	loadmodel->numtexinfo = count;
@@ -1216,7 +1216,7 @@ static void Mod_LoadDeluxemap( void )
 		world.deluxedata = NULL;
 		world.vecdatasize = 0;
 		return;
-          }
+	}
 
 	if( iCompare < 0 ) // this may happen if level-designer used -onlyents key for hlcsg
 		MsgDev( D_WARN, "Mod_LoadDeluxemap: %s is probably out of date\n", path );

@@ -33,6 +33,7 @@ extern "C" {
 #include <setjmp.h>
 #include <stdio.h>
 #include <time.h>
+
 #ifdef XASH_SDL
 #include <SDL_messagebox.h>
 

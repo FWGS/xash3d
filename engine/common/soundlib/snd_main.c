@@ -56,7 +56,7 @@ loading and unpack to wav any known sound
 */
 wavdata_t *FS_LoadSound( const char *filename, const byte *buffer, size_t size )
 {
-          const char	*ext = FS_FileExtension( filename );
+	const char	*ext = FS_FileExtension( filename );
 	string		path, loadname;
 	qboolean		anyformat = true;
 	fs_offset_t		filesize = 0;
@@ -150,7 +150,7 @@ open and read basic info from sound stream
 */
 stream_t *FS_OpenStream( const char *filename )
 {
-          const char	*ext = FS_FileExtension( filename );
+	const char	*ext = FS_FileExtension( filename );
 	string		path, loadname;
 	qboolean		anyformat = true;
 	const streamfmt_t	*format;

@@ -1335,7 +1335,7 @@ qboolean CL_GetEntitySpatialization( int entnum, vec3_t origin, float *pradius )
 		return true;
 	}
 
-	valid_origin = VectorIsNull( origin ) ? false : true;          
+	valid_origin = VectorIsNull( origin ) ? false : true;
 	ent = CL_GetEntityByIndex( entnum );
 
 	// entity is not present on the client but has valid origin

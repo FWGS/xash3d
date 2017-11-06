@@ -402,7 +402,7 @@ void Image_GetPaletteLMP( const byte *pal, int rendermode )
 		d_8to24table[0] = 0;
 		image.d_currentpal = d_8to24table;
 	}
-	else Image_GetPaletteHL(); // default half-life palette          
+	else Image_GetPaletteHL(); // default half-life palette
 }
 
 void Image_ConvertPalTo24bit( rgbdata_t *pic )

@@ -584,7 +584,7 @@ int PM_TestPlayerPosition( playermove_t *pmove, vec3_t pos, pmtrace_t *ptrace, p
 			{
 				if(( check_angles( pe->angles[0] ) || check_angles( pe->angles[2] )) && pmove->usehull != 2 )
 					transform_bbox = true;
-                              }
+			}
 
 			if( transform_bbox )
 				Matrix4x4_CreateFromEntity( matrix, pe->angles, pe->origin, 1.0f );

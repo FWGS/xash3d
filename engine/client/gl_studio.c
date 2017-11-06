@@ -1699,8 +1699,8 @@ void R_StudioLighting( float *lv, int bone, int flags, vec3_t normal )
 	{
 		VectorMA( illum, 0.8f, plight->lightcolor, illum );
 	}
-          else
-          {
+	else
+	{
 		float	r, lightcos;
 		int	i;
 

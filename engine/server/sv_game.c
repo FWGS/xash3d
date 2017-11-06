@@ -644,7 +644,7 @@ void SV_WriteEntityPatch( const char *filename )
 	Q_memset( buf, 0, MAX_SYSPATH );
 	FS_Read( f, buf, MAX_SYSPATH );
 	ver = *(uint *)buf;
-                              
+
 	switch( ver )
 	{
 	case Q1BSP_VERSION:
@@ -712,7 +712,7 @@ char *SV_ReadEntityScript( const char *filename, int *flags )
 	Q_memset( buf, 0, MAX_SYSPATH );
 	FS_Read( f, buf, MAX_SYSPATH );
 	ver = LittleLong(*(uint *)buf);
-                              
+
 	switch( ver )
 	{
 	case Q1BSP_VERSION:
@@ -4031,7 +4031,7 @@ void GAME_EXPORT SV_PlaybackEventFull( int flags, const edict_t *pInvoker, word 
 	}
 
 	if(!( flags & FEV_GLOBAL ) && VectorIsNull( pvspoint ))
-          {
+	{
 		MsgDev( D_ERROR, "%s: not a FEV_GLOBAL event missing origin. Ignored.\n", sv.event_precache[eventindex] );
 		return;
 	}

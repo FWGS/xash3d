@@ -187,7 +187,7 @@ qboolean FS_AddSideToPack( const char *name, int adjust_flags )
 
 	// keep constant size, render.dll expecting it
 	image.size = image.source_width * image.source_height * 4;
-          
+
 	// mixing dds format with any existing ?
 	if( image.type != image.source_type )
 		return false;
@@ -221,7 +221,7 @@ loading and unpack to rgba any known image
 */
 rgbdata_t *FS_LoadImage( const char *filename, const byte *buffer, size_t size )
 {
-          const char	*ext = FS_FileExtension( filename );
+	const char	*ext = FS_FileExtension( filename );
 	string		path, loadname, sidename;
 	qboolean		anyformat = true;
 	qboolean		gamedironly = true;
@@ -374,7 +374,7 @@ writes image as any known format
 */
 qboolean FS_SaveImage( const char *filename, rgbdata_t *pix )
 {
-          const char	*ext = FS_FileExtension( filename );
+	const char	*ext = FS_FileExtension( filename );
 	qboolean		anyformat = !Q_stricmp( ext, "" ) ? true : false;
 	string		path, savename;
 	const savepixformat_t *format;

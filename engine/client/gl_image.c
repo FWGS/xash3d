@@ -1642,7 +1642,7 @@ int GL_LoadTextureInternal( const char *name, rgbdata_t *pic, texFlags_t flags, 
 	GL_TexFilter( tex, update ); // update texture filter, wrap etc
 
 	if( !update )
-          {
+	{
 		// add to hash table
 		hash = Com_HashKey( tex->name, TEXTURES_HASH_SIZE );
 		tex->nextHash = r_texturesHashTable[hash];
@@ -2188,7 +2188,7 @@ static rgbdata_t *R_MakeImageBlock( rgbdata_t *in, int block[4] )
 	yh = yl + h;
 
 	out = fout = Mem_Alloc( r_temppool, w * h * 4 );
-          
+
 	fin = in->buffer + (yl * in->width + xl) * 4;
 	linedelta = (in->width - w) * 4;
 
@@ -3117,7 +3117,7 @@ static rgbdata_t *R_ParseStudioSkin( char **script, const byte *buf, size_t size
 		pic = R_LoadImage( script, va( "#%s.mdl", skinname ), buf, size, samples, flags );
 		if( !pic ) return NULL;
 		goto studio_done;
-          }
+	}
 
 	FS_DefaultExtension( skinname, ".bmp" );
 	f = FS_Open( model_path, "rb", false );

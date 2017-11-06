@@ -1123,7 +1123,7 @@ void R_DrawEntitiesOnList( void )
 	}
 
 	if( !RI.refdef.onlyClientDraw )
-          {
+	{
 		CL_DrawBeams( false );
 	}
 

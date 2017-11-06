@@ -363,7 +363,7 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 
 	// Log saved, now we can try to save configs and close log correctly, it may crash
 	if( host.type == HOST_NORMAL )
-			CL_Crashed();
+		CL_Crashed();
 	host.state = HOST_CRASHED;
 	host.crashed = true;
 

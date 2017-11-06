@@ -237,7 +237,7 @@ void GL_SetupFogColorForSurfaces( void )
 		return;
 
 	if( RI.currententity->curstate.rendermode == kRenderTransTexture )
-          {
+	{
 		pglFogfv( GL_FOG_COLOR, RI.fogColor );
 		return;
 	}
@@ -1172,7 +1172,7 @@ void R_RenderDetails( void )
 			fa = INFO_SURF( p, RI.currentmodel );
 			glt = R_GetTexture( fa->texinfo->texture->gl_texturenum ); // get texture scale
 			DrawGLPoly( fa->polys, glt->xscale, glt->yscale );
-                    }
+		}
 
 		detail_surfaces[i] = NULL;
 		es->detailchain = NULL;		
@@ -1350,7 +1350,7 @@ dynamic:
 				Q_memset( temp, 255, sizeof( temp ) );
 			}
 			R_SetCacheState( fa );
-                              
+
 			GL_Bind( XASH_TEXTURE0, tr.lightmapTextures[fa->lightmaptexturenum] );
 
 			pglTexSubImage2D( GL_TEXTURE_2D, 0, fa->light_s, fa->light_t, smax, tmax,

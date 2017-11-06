@@ -482,7 +482,7 @@ qboolean Sys_LoadLibrary( dll_info_t *dll )
 			goto error;
 		}
 	}
-          MsgDev( D_NOTE, " - ok\n" );
+	MsgDev( D_NOTE, " - ok\n" );
 
 	return true;
 error:

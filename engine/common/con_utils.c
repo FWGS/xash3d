@@ -357,7 +357,7 @@ qboolean Cmd_GetMapList( const char *s, char *completedname, int length )
 			FS_Read( f, buf, sizeof( buf ));
 			header = (dheader_t *)buf;
 			ver = header->version;
-                              
+
 			switch( ver )
 			{
 			case Q1BSP_VERSION:
@@ -1062,7 +1062,7 @@ qboolean Cmd_CheckMapsList_R( qboolean fRefresh, qboolean onlyingamedir )
 			Q_memset( buf, 0, MAX_SYSPATH );
 			FS_Read( f, buf, MAX_SYSPATH );
 			ver = *(uint *)buf;
-                              
+
 			switch( ver )
 			{
 			case Q1BSP_VERSION:
@@ -1140,7 +1140,7 @@ qboolean Cmd_CheckMapsList_R( qboolean fRefresh, qboolean onlyingamedir )
 
 	if( !size )
 	{
-          	if( buffer ) Mem_Free( buffer );
+		if( buffer ) Mem_Free( buffer );
 
 		if( onlyingamedir )
 			return Cmd_CheckMapsList_R( fRefresh, false );
@@ -1150,7 +1150,7 @@ qboolean Cmd_CheckMapsList_R( qboolean fRefresh, qboolean onlyingamedir )
 	// write generated maps.lst
 	if( FS_WriteFile( "maps.lst", buffer, Q_strlen( buffer )))
 	{
-          	if( buffer ) Mem_Free( buffer );
+		if( buffer ) Mem_Free( buffer );
 		return true;
 	}
 	return false;
@@ -1450,7 +1450,7 @@ void Host_WriteOpenGLConfig( void )
 		Cmd_WriteOpenGLVariables( f );
 
 		CFG_END( f, "opengl.cfg" );
-	}                                                
+	}
 	else MsgDev( D_ERROR, "Can't update opengl.cfg.\n" );
 }
 
@@ -1485,7 +1485,7 @@ void Host_WriteVideoConfig( void )
 		Cmd_WriteRenderVariables( f );
 
 		CFG_END( f, "video.cfg" );
-	}                                                
+	}
 	else MsgDev( D_ERROR, "Can't update video.cfg.\n" );
 }
 
