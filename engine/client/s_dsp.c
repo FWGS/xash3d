@@ -54,7 +54,7 @@ typedef struct dly_s {
 
 	// lowpass
 	int lp;               // is lowpass enabled
-	int lp0, lp1, lp2;    // lowpass buffer
+	int lp0, lp1;    // lowpass buffer
 
 	// modulation
 	int mod;
@@ -291,7 +291,7 @@ int DLY_Init( int idelay, float delay )
 
 	// init lowpass
 	cur->lp = 1;
-	cur->lp0 = cur->lp1 = cur->lp2 = 0;
+	cur->lp0 = cur->lp1 = 0;
 
 	cur->idelayinput = 0;
 	cur->idelayoutput = cur->cdelaysamplesmax - cur->delaysamples; // NOTE: delaysamples must be set!!!
@@ -461,7 +461,7 @@ void DLY_CheckNewDelayVal( )
 		if( dly->lpdelayline )
 		{
 			Q_memset( dly->lpdelayline, 0, dly->cdelaysamplesmax * sizeof( int ) );
-			dly->lp0 = dly->lp1 = dly->lp2 = 0;
+			dly->lp0 = dly->lp1 = 0;
 		}
 
 		dly->idelayinput = 0;
@@ -727,27 +727,26 @@ void RVB_DoAMod( int count )
 		portable_samplepair_t res = *paint;
 		if( sxmod_lowpass->integer )
 		{
-			res.left  = rgsxlp[0] + rgsxlp[1] + rgsxlp[2] + rgsxlp[3] + rgsxlp[4] + res.left;
-			res.right = rgsxlp[5] + rgsxlp[6] + rgsxlp[7] + rgsxlp[8] + rgsxlp[9] + res.right;
+			res.left  = ( rgsxlp[0] + rgsxlp[1] + rgsxlp[2] + rgsxlp[3] + rgsxlp[4] + res.left ) >> 2;
+			res.right = ( rgsxlp[5] + rgsxlp[6] + rgsxlp[7] + rgsxlp[8] + rgsxlp[9] + res.right ) >> 2;
 
-			res.left >>= 2;
-			res.right >>= 2;
+			rgsxlp[4] = paint->left;
+			rgsxlp[9] = paint->right;
 
 			rgsxlp[0] = rgsxlp[1];
 			rgsxlp[1] = rgsxlp[2];
 			rgsxlp[2] = rgsxlp[3];
 			rgsxlp[3] = rgsxlp[4];
-			rgsxlp[4] = paint->left;
-
+			rgsxlp[4] = rgsxlp[5];
 			rgsxlp[5] = rgsxlp[6];
 			rgsxlp[6] = rgsxlp[7];
 			rgsxlp[7] = rgsxlp[8];
 			rgsxlp[8] = rgsxlp[9];
-			rgsxlp[9] = paint->right;
 		}
 
 		if( sxmod_mod->integer )
 		{
+#ifndef XASH_DSP_FIXES // code below is useless on current DSP configuring possibilities, so disable it
 			if( --sxmod1cur < 0 )
 				sxmod1cur = sxmod1;
 
@@ -758,11 +757,7 @@ void RVB_DoAMod( int count )
 				sxmod2cur = sxmod2;
 
 			if( !sxmod2 )
-#ifndef XASH_DSP_FIXES
-				sxamodlt = Com_RandomLong( 32, 255 ); // rt maybe???
-#else
 				sxamodrt = Com_RandomLong( 32, 255 );
-#endif
 
 			res.left = (sxamodl * res.left) >> 8;
 			res.right = (sxamodr * res.right) >> 8;
@@ -776,6 +771,11 @@ void RVB_DoAMod( int count )
 				sxamodr++;
 			else if( sxamodr > sxamodrt )
 				sxamodr--;
+#else
+			// NOTE: sxamodr & sxamodl is always set to 255 and this value does not changes
+			res.left = (255 * res.left) >> 8;
+			res.right = (255 * res.right) >> 8;
+#endif
 		}
 
 		paint->left = CLIP(res.left);
@@ -902,18 +902,6 @@ void CheckNewDspPresets( void )
 	RVB_CheckNewReverbVal( );
 	DLY_CheckNewDelayVal( );
 	DLY_CheckNewStereoDelayVal();
-}
-
-/*
-===========
-DSP_GetGain
-
-(xash dsp interface)
-===========
-*/
-float DSP_GetGain( int idsp )
-{
-	return 1.0f;
 }
 
 void SX_Profiling_f( void )

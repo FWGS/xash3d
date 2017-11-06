@@ -293,7 +293,6 @@ qboolean AllocDsps( void );
 void FreeDsps( void );
 void CheckNewDspPresets( void );
 void DSP_Process( int idsp, portable_samplepair_t *pbfront, int sampleCount );
-float DSP_GetGain( int idsp );
 void DSP_ClearState( void );
 
 qboolean S_Init( void );
