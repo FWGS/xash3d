@@ -925,7 +925,7 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 
 	for( frame2 = NULL, i = 0; i < SV_UPDATE_BACKUP; i++, frame2 = frame )
 	{
-		frame = &cl->frames[(cl->netchan.outgoing_sequence - 1) & SV_UPDATE_MASK];
+		frame = &cl->frames[(cl->netchan.outgoing_sequence - (i+1)) & SV_UPDATE_MASK];
 
 		for( j = 0; j < frame->num_entities; j++ )
 		{
