@@ -335,21 +335,21 @@ int CL_DriftInterpolationAmount( float interp_sec )
 {
 	static float interpolationAmount = 0.1f;
 
-	if ( interp_sec != interpolationAmount )
+	if( interp_sec != interpolationAmount )
 	{
 		float maxmove = host.frametime * 0.05;
 		float diff = interp_sec - interpolationAmount;
 
-		if ( diff > 0 )
+		if( diff > 0 )
 		{
-			if ( diff > maxmove )
+			if( diff > maxmove )
 				diff = maxmove;
 		}
 		else
 		{
 			diff = -diff;
 
-			if( -diff > maxmove )
+			if( diff > maxmove )
 				diff = -maxmove;
 		}
 
