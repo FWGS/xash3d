@@ -2766,13 +2766,14 @@ void SV_EntFire_f( sv_client_t *cl )
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "movehere" ) )
 		{
-				ent->v.origin[2] = cl->edict->v.origin[2] + 25;
-				ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
-				ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
+			ent->v.origin[2] = cl->edict->v.origin[2] + 25;
+			ent->v.origin[1] = cl->edict->v.origin[1] + 100 * sin( DEG2RAD( cl->edict->v.angles[1] ) );
+			ent->v.origin[0] = cl->edict->v.origin[0] + 100 * cos( DEG2RAD( cl->edict->v.angles[1] ) );
+			SV_LinkEdict( ent, true );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "drop2floor" ) )
 		{
-				pfnDropToFloor( ent );
+			pfnDropToFloor( ent );
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "moveup" ) )
 		{
@@ -2947,7 +2948,8 @@ void SV_EntCreate_f( sv_client_t *cl )
 		ent->v.classname = classname;
 		if( svgame.physFuncs.SV_CreateEntity( ent, (char*)STRING( classname ) ) == -1 )
 		{
-			SV_FreeEdict( ent );
+			if( ent && !ent->free )
+				SV_FreeEdict( ent );
 			ent = NULL;
 		}
 	}
@@ -2988,10 +2990,7 @@ void SV_EntCreate_f( sv_client_t *cl )
 
 			// allow split keyvalues to prespawn and postspawn
 			if( !Q_strcmp( Cmd_Argv( i ), "|" ) )
-			{
-				i++;
 				break;
-			}
 
 			pkvd.fHandled = false;
 			pkvd.szClassName = (char*)STRING( ent->v.classname );
@@ -3008,18 +3007,19 @@ void SV_EntCreate_f( sv_client_t *cl )
 	if( !ent->v.targetname )
 	{
 		char newname[256], clientname[256];
+		int j;
 
-		for( i = 0; i < sizeof( cl->name ); i++ )
+		for( j = 0; j < sizeof( cl->name ); j++ )
 		{
-			char c = Q_tolower( cl->name[i] );
+			char c = Q_tolower( cl->name[j] );
 			if( c < 'a' || c > 'z' )
 				c = '_';
-			if( !cl->name[i] )
+			if( !cl->name[j] )
 			{
-				clientname[i] = 0;
+				clientname[j] = 0;
 				break;
 			}
-			clientname[i] = c;
+			clientname[j] = c;
 		}
 
 		// generate name based on nick name and index
