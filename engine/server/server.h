@@ -702,7 +702,7 @@ void SV_ServerLog_f( void );
 //
 void SV_InitFilter( void );
 void SV_ShutdownFilter( void );
-// qboolean SV_CheckIP( netadr_t *adr );
+qboolean SV_CheckIP( netadr_t *adr );
 qboolean SV_CheckID( const char *id );
 
 #endif//SERVER_H

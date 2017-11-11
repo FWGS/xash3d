@@ -920,6 +920,7 @@ void SV_Init( void )
 	Cvar_Get ("lservercfgfile","listenserver.cfg", 0, "name of listen server configuration file" );
 	Cvar_Get ("mapchangecfgfile","", 0, "name of map change configuration file" );
 	Cvar_Get ("bannedcfgfile", "banned.cfg", 0, "name of banned.cfg file" );
+	Cvar_Get ("listipcfgfile", "listip.cfg", 0, "name of listip.cfg file" );
 	Cvar_Get ("motdfile", "motd.txt", 0, "name of 'message of the day' file" );
 	Cvar_Get ("sv_language", "0", 0, "game language (currently unused)" );
 	Cvar_Get ("suitvolume", "0.25", CVAR_ARCHIVE, "HEV suit volume" );

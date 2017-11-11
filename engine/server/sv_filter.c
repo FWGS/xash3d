@@ -16,19 +16,18 @@ GNU General Public License for more details.
 #include "common.h"
 #include "server.h"
 
-/*
+
 typedef struct ipfilter_s
 {
 	float time;
 	float endTime; // -1 for permanent ban
-	struct ipban_s *prev;
-	struct ipban_s *next;
+	struct ipfilter_s *next;
 	uint mask;
-	uint compar;
+	uint ip;
 } ipfilter_t;
 
-ipfilter_t *ipfilter = NULL, *ipfilterLast = NULL;
-*/
+ipfilter_t *ipfilter = NULL;
+
 
 // TODO: Is IP filter really needed?
 // TODO: Make it IPv6 compatible, for future expansion
@@ -44,7 +43,7 @@ cidfilter_t *cidfilter = NULL;
 
 void SV_RemoveID( const char *id )
 {
-	cidfilter_t *filter, *prevfilter;
+	cidfilter_t *filter, *prevfilter = NULL;
 
 	for( filter = cidfilter; filter; filter = filter->next )
 	{
@@ -61,7 +60,34 @@ void SV_RemoveID( const char *id )
 			return;
 		}
 
+		if( prevfilter )
 		prevfilter->next = filter->next;
+		Mem_Free( filter );
+		return;
+	}
+}
+
+void SV_RemoveIP( uint ip, uint mask )
+{
+	ipfilter_t *filter, *prevfilter = NULL;
+
+	for( filter = ipfilter; filter; filter = filter->next )
+	{
+		if( filter->ip != ip || mask != filter->mask )
+		{
+			prevfilter = filter;
+			continue;
+		}
+
+		if( filter == ipfilter )
+		{
+			ipfilter = ipfilter->next;
+			Mem_Free( filter );
+			return;
+		}
+
+		if( prevfilter )
+			prevfilter->next = filter->next;
 		Mem_Free( filter );
 		return;
 	}
@@ -96,7 +122,33 @@ qboolean SV_CheckID( const char *id )
 	return ret;
 }
 
-// qboolean SV_CheckIP( netadr_t * ) { }
+qboolean SV_CheckIP( netadr_t *addr )
+{
+	uint ip = addr->ip[0] << 24 | addr->ip[1] << 16 | addr->ip[2] << 8 | addr->ip[3];
+	qboolean ret = false;
+	ipfilter_t *filter;
+
+	for( filter = ipfilter; filter; filter = filter->next )
+	{
+		while( filter->endTime && host.realtime > filter->endTime )
+		{
+			uint rip = filter->ip;
+			uint rmask = filter->mask;
+			SV_RemoveIP( rip, rmask );
+			filter = filter->next;
+			if( !filter )
+				return false;
+		}
+
+		if( (ip & filter->mask) == (filter->ip & filter->mask) )
+		{
+			ret = true;
+			break;
+		}
+	}
+
+	return ret;
+}
 
 void SV_BanID_f( void )
 {
@@ -173,6 +225,7 @@ void SV_BanID_f( void )
 void SV_ListID_f( void )
 {
 	cidfilter_t *filter;
+
 	Msg( "id ban list\n" );
 	Msg( "-----------\n" );
 
@@ -221,7 +274,7 @@ void SV_WriteID_f( void )
 	}
 
 	FS_Printf( f, "//=======================================================================\n" );
-	FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+	FS_Printf( f, "//\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
 	FS_Printf( f, "//\t\t    %s - archive of id blacklist\n", Cvar_VariableString( "bannedcfgfile" ) );
 	FS_Printf( f, "//=======================================================================\n" );
 
@@ -231,10 +284,139 @@ void SV_WriteID_f( void )
 
 	FS_Close( f );
 }
-void SV_AddIP_f( void ) { }
-void SV_ListIP_f( void ) { }
-void SV_RemoveIP_f( void ) { }
-void SV_WriteIP_f( void ) { }
+
+static qboolean StringToIP( const char *str, const char *maskstr, uint *outip, uint *outmask ) 
+{
+	byte ip[4] = {0};
+	byte mask[4] = {0};
+	int i = 0;
+
+	if( *str > '9' || *str < '0' )
+		return false;
+
+	do
+	{
+		while( *str <= '9' && *str >= '0' )
+		{
+			ip[i] *=10;
+			ip[i] += *str - '0';
+			str++;
+		}
+		mask[i] = 255;
+		i++;
+		if( *str != '.' ) break;
+		str++;
+	} while( i < 4 );
+
+	i = 0;
+
+	if( !maskstr ||  *maskstr > '9' || *maskstr < '0' )
+		goto end;
+
+	do
+	{
+		byte mask1 = 0;
+		while( *maskstr <= '9' && *maskstr >= '0' )
+		{
+			mask1 *=10;
+			mask1 += *maskstr - '0';
+			maskstr++;
+		}
+		mask[i] &= mask1;
+		i++;
+		if( *maskstr != '.' ) break;
+		maskstr++;
+	} while( i < 4 );
+
+end:
+	*outip = ip[0] << 24 | ip[1] << 16 | ip[2] << 8 | ip[3];
+	if( outmask )
+		*outmask = mask[0] << 24 | mask[1] << 16 | mask[2] << 8 | mask[3];
+
+	return true;
+}
+#define IPARGS(ip) (ip >> 24) & 0xFF, (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF
+void SV_AddIP_f( void )
+{
+	float time = Q_atof( Cmd_Argv( 1 ) );
+	char *ipstr = Cmd_Argv( 2 );
+	char *maskstr = Cmd_Argv( 3 );
+	uint ip, mask;
+	ipfilter_t *filter;
+
+	if( time )
+		time = host.realtime + time * 60.0f;
+
+	if( !StringToIP( ipstr, maskstr, &ip, &mask ) )
+	{
+		Msg( "Usage: addip <minutes> <ip> [mask]\n0 minutes for permanent ban\n");
+		return;
+	}
+
+	SV_RemoveIP( ip, mask );
+
+	filter = Mem_Alloc( host.mempool, sizeof( ipfilter_t ) );
+	filter->endTime = time;
+	filter->ip = ip;
+	filter->mask = mask;
+	filter->next = ipfilter;
+
+	ipfilter = filter;
+}
+
+void SV_ListIP_f( void )
+{
+	ipfilter_t *filter;
+
+	Msg( "ip ban list\n" );
+	Msg( "-----------\n" );
+
+	for( filter = ipfilter; filter; filter = filter->next )
+	{
+		if( filter->endTime && host.realtime > filter->endTime )
+			continue; // no negative time
+
+		if( filter->endTime )
+			Msg( "%d.%d.%d.%d %d.%d.%d.%d expries in %f minutes\n", IPARGS( filter->ip ), IPARGS( filter->mask ), ( filter->endTime - host.realtime ) / 60.0f );
+		else
+			Msg( "%d.%d.%d.%d %d.%d.%d.%d permanent\n", IPARGS( filter->ip ), IPARGS( filter->mask ) );
+	}
+}
+void SV_RemoveIP_f( void )
+{
+	uint ip, mask;
+
+	if( !StringToIP( Cmd_Argv(1), Cmd_Argv(2), &ip, &mask ) )
+	{
+		Msg( "Usage: removeip <ip> [mask]\n" );
+		return;
+	}
+
+	SV_RemoveIP( ip, mask );
+}
+
+void SV_WriteIP_f( void )
+{
+	file_t *f = FS_Open( Cvar_VariableString( "listipcfgfile" ), "w", false );
+	ipfilter_t *filter;
+
+	if( !f )
+	{
+		MsgDev( D_ERROR, "Could not write %s\n", Cvar_VariableString( "listipcfgfile" ) );
+		return;
+	}
+
+	FS_Printf( f, "//=======================================================================\n" );
+	FS_Printf( f, "//\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
+	FS_Printf( f, "//\t\t    %s - archive of IP blacklist\n", Cvar_VariableString( "listipcfgfile" ) );
+	FS_Printf( f, "//=======================================================================\n" );
+
+	for( filter = ipfilter; filter; filter = filter->next )
+		if( !filter->endTime ) // only permanent
+			FS_Printf( f, "banid 0 %d.%d.%d.%d %d.%d.%d.%d\n", IPARGS(filter->ip), IPARGS(filter->mask) );
+
+	FS_Close( f );
+}
 
 void SV_InitFilter( void )
 {
@@ -242,25 +424,26 @@ void SV_InitFilter( void )
 	Cmd_AddCommand( "listid", SV_ListID_f, "list banned players" );
 	Cmd_AddCommand( "removeid", SV_RemoveID_f, "remove player from banned list" );
 	Cmd_AddCommand( "writeid", SV_WriteID_f, "write banned.cfg" );
-	/*Cmd_AddCommand( "addip", SV_AddIP_f, "add entry to IP filter" );
+	Cmd_AddCommand( "addip", SV_AddIP_f, "add entry to IP filter" );
 	Cmd_AddCommand( "listip", SV_ListIP_f, "list current IP filter" );
 	Cmd_AddCommand( "removeip", SV_RemoveIP_f, "remove IP filter" );
-	Cmd_AddCommand( "writeip", SV_WriteIP_f, "write listip.cfg" );*/
+	Cmd_AddCommand( "writeip", SV_WriteIP_f, "write listip.cfg" );
 }
 
 void SV_ShutdownFilter( void )
 {
-	//ipfilter_t *ipList, *ipNext;
+	ipfilter_t *ipList, *ipNext;
 	cidfilter_t *cidList, *cidNext;
 
+	// should be called manually because banned.cfg is not executed by engine
 	//SV_WriteIP_f();
-	SV_WriteID_f();
+	//SV_WriteID_f();
 
-	/*for( ipList = ipfilter; ipList; ipList = ipNext )
+	for( ipList = ipfilter; ipList; ipList = ipNext )
 	{
 		ipNext = ipList->next;
 		Mem_Free( ipList );
-	}*/
+	}
 
 	for( cidList = cidfilter; cidList; cidList = cidNext )
 	{
