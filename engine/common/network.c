@@ -32,6 +32,7 @@ GNU General Public License for more details.
 #include <fcntl.h>
 #endif
 #include "common.h"
+#include "mathlib.h"
 #include "netchan.h"
 
 #define PORT_ANY		-1
@@ -180,27 +181,39 @@ typedef struct
 	int	get, send;
 } loopback_t;
 
-static loopback_t	loopbacks[2];
-static int	ip_sockets[2];
-#ifdef XASH_IPX
-static int	ipx_sockets[2];
-#endif
+typedef struct packetlag_s
+{
+	byte		*data;	// Raw stream data is stored.
+	int			size;
+	netadr_t	from;
+	float		receivedtime;
+	struct packetlag_s	*next;
+	struct packetlag_s	*prev;
+} packetlag_t;
 
-#ifdef _WIN32
-static WSADATA winsockdata;
-#endif
+static loopback_t	loopbacks[NS_COUNT];
+static packetlag_t lagdata[NS_COUNT];
+static float fakelag = 0.0f; // actual lag value
+static qboolean noip = false;
+static int		ip_sockets[NS_COUNT];
 static qboolean winsockInitialized = false;
 //static const char *net_src[2] = { "client", "server" };
-static qboolean noip = false;
 #ifdef XASH_IPX
-static qboolean noipx = false;
+	static qboolean noipx = false;
+	static int	ipx_sockets[NS_COUNT];
 #endif
 static convar_t *net_ip;
 static convar_t *net_hostport;
 static convar_t *net_clientport;
 static convar_t *net_port;
 extern convar_t *net_showpackets;
+static convar_t	*net_fakelag;
+static convar_t	*net_fakeloss;
 void NET_Restart_f( void );
+
+#ifdef _WIN32
+	static WSADATA winsockdata;
+#endif
 
 #ifdef _WIN32
 /*
@@ -262,6 +275,16 @@ char *NET_ErrorString( void )
 #else
 #define NET_ErrorString(x) strerror(errno)
 #endif
+
+_inline qboolean NET_IsSocketError( int retval )
+{
+#ifdef _WIN32
+	return retval == SOCKET_ERROR ? true : false;
+#else
+	return retval < 0 ? true : false;
+#endif
+}
+
 
 static void NET_NetadrToSockadr( netadr_t *a, struct sockaddr *s )
 {
@@ -851,6 +874,226 @@ static void NET_ClearLoopback( void )
 }
 
 /*
+=============================================================================
+
+LAG & LOSS SIMULATION SYSTEM (network debugging)
+
+=============================================================================
+*/
+/*
+==================
+NET_RemoveFromPacketList
+
+double linked list remove entry
+==================
+*/
+static void NET_RemoveFromPacketList( packetlag_t *p )
+{
+	p->prev->next = p->next;
+	p->next->prev = p->prev;
+	p->prev = NULL;
+	p->next = NULL;
+}
+
+/*
+==================
+NET_ClearLaggedList
+
+double linked list remove queue
+==================
+*/
+static void NET_ClearLaggedList( packetlag_t *list )
+{
+	packetlag_t	*p, *n;
+
+	p = list->next;
+	while( p && p != list )
+	{
+		n = p->next;
+
+		NET_RemoveFromPacketList( p );
+
+		if( p->data )
+		{
+			Mem_Free( p->data );
+			p->data = NULL;
+		}
+
+		Mem_Free( p );
+		p = n;
+	}
+
+	list->prev = list;
+	list->next = list;
+}
+
+/*
+==================
+NET_AddToLagged
+
+add lagged packet to stream
+==================
+*/
+static void NET_AddToLagged( netsrc_t sock, packetlag_t *list, packetlag_t *packet, netadr_t *from, size_t length, const void *data, float timestamp )
+{
+	byte	*pStart;
+
+	if( packet->prev || packet->next )
+		return;
+
+	packet->prev = list->prev;
+	list->prev->next = packet;
+	list->prev = packet;
+	packet->next = list;
+
+	pStart = (byte *)Z_Malloc( length );
+	memcpy( pStart, data, length );
+	packet->data = pStart;
+	packet->size = length;
+	packet->receivedtime = timestamp;
+	memcpy( &packet->from, from, sizeof( netadr_t ));
+}
+
+/*
+==================
+NET_AdjustLag
+
+adjust time to next fake lag
+==================
+*/
+static void NET_AdjustLag( void )
+{
+	static double	lasttime = 0.0;
+	float		diff, converge;
+	double		dt;
+
+	dt = host.realtime - lasttime;
+	dt = bound( 0.0, dt, 0.1 );
+	lasttime = host.realtime;
+
+	if( host.developer >= D_ERROR || !net_fakelag->value )
+	{
+		if( net_fakelag->value != fakelag )
+		{
+			diff = net_fakelag->value - fakelag;
+			converge = dt * 200.0f;
+
+			if( fabs( diff ) < converge )
+				converge = fabs( diff );
+
+			if( diff < 0.0 )
+				converge = -converge;
+
+			fakelag += converge;
+		}
+	}
+	else
+	{
+		MsgDev( D_INFO, "Server must enable dev-mode to activate fakelag\n" );
+		Cvar_SetFloat( "fakelag", 0.0 );
+		fakelag = 0.0f;
+	}
+}
+
+/*
+====================
+NET_ClearLagData
+
+clear fakelag list
+====================
+*/
+void NET_ClearLagData( qboolean bClient, qboolean bServer )
+{
+	if( bClient ) NET_ClearLaggedList( &lagdata[NS_CLIENT] );
+	if( bServer ) NET_ClearLaggedList( &lagdata[NS_SERVER] );
+}
+
+
+/*
+==================
+NET_LagPacket
+
+add fake lagged packet into rececived message
+==================
+*/
+static qboolean NET_LagPacket( qboolean newdata, netsrc_t sock, netadr_t *from, size_t *length, void *data )
+{
+	static int losscount[2];
+	packetlag_t	*newPacketLag;
+	packetlag_t	*packet;
+	int		ninterval;
+	float		curtime;
+
+	if( fakelag <= 0.0f )
+	{
+		NET_ClearLagData( true, true );
+		return newdata;
+	}
+
+	curtime = host.realtime;
+
+	if( newdata )
+	{
+		if( net_fakeloss->value != 0.0f )
+		{
+			if( host.developer >= D_ERROR )
+			{
+				losscount[sock]++;
+				if( net_fakeloss->value <= 0.0f )
+				{
+					ninterval = fabs( net_fakeloss->value );
+					if( ninterval < 2 ) ninterval = 2;
+
+					if(( losscount[sock] % ninterval ) == 0 )
+						return false;
+				}
+				else
+				{
+					if( Com_RandomLong( 0, 100 ) <= net_fakeloss->value )
+						return false;
+				}
+			}
+			else
+			{
+				Cvar_SetFloat( "fakeloss", 0.0 );
+			}
+		}
+
+		newPacketLag = (packetlag_t *)Z_Malloc( sizeof( packetlag_t ));
+		// queue packet to simulate fake lag
+		NET_AddToLagged( sock, &lagdata[sock], newPacketLag, from, *length, data, curtime );
+	}
+
+	packet = lagdata[sock].next;
+
+	while( packet != &lagdata[sock] )
+	{
+		if( packet->receivedtime <= curtime - ( fakelag / 1000.0 ))
+			break;
+
+		packet = packet->next;
+	}
+
+	if( packet == &lagdata[sock] )
+		return false;
+
+	NET_RemoveFromPacketList( packet );
+
+	// delivery packet from fake lag queue
+	memcpy( data, packet->data, packet->size );
+	memcpy( &net_from, &packet->from, sizeof( netadr_t ));
+	*length = packet->size;
+
+	if( packet->data )
+		Mem_Free( packet->data );
+
+	Mem_Free( packet );
+
+	return true;
+}
+
+
+/*
 ==================
 NET_GetPacket
 
@@ -870,8 +1113,13 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 	if( !data || !length )
 		return false;
 
+	NET_AdjustLag();
+
 	if( NET_GetLoopPacket( sock, from, data, length ))
+	{
+		NET_LagPacket( true, sock, from, length, data );
 		return true;
+	}
 
 	for( protocol = 0; protocol < 2; protocol++ )
 	{
@@ -887,17 +1135,14 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 
 		NET_SockadrToNetadr( &addr, from );
 
-#ifdef _WIN32
-		if( ret == SOCKET_ERROR )
+		if( NET_IsSocketError( ret ) )
 		{
+#ifdef _WIN32
 			int err = pWSAGetLastError();
 
 			// WSAEWOULDBLOCK and WSAECONNRESET are silent
 			if( err == WSAEWOULDBLOCK || err == WSAECONNRESET )
 #else
-		if( ret < 0 )
-		{
-
 			// WSAEWOULDBLOCK and WSAECONNRESET are silent
 			if( errno == EWOULDBLOCK || errno == ECONNRESET )
 #endif
@@ -915,6 +1160,11 @@ qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *lengt
 
 		*length = ret;
 		return true;
+	}
+
+	if( NET_IsSocketError( ret ) )
+	{
+		return NET_LagPacket( false, sock, from, length, data );
 	}
 
 	return false;
@@ -1389,6 +1639,7 @@ NET_Init
 */
 void NET_Init( void )
 {
+	int i;
 #ifdef _WIN32
 	int	r;
 
@@ -1410,8 +1661,20 @@ void NET_Init( void )
 	net_clientport = Cvar_Get( "clientport", "27005", 0, "client tcp/ip port" );
 	net_port = Cvar_Get( "port", "27015", 0, "server tcp/ip port" );
 	net_ip = Cvar_Get( "ip", "localhost", 0, "local server ip" );
+
 	Cmd_AddCommand( "net_showip", NET_ShowIP_f,  "show hostname and IPs" );
 	Cmd_AddCommand( "net_restart", NET_Restart_f, "restart the network subsystem" );
+
+	net_fakelag = Cvar_Get( "fakelag", "0", 0, "lag all incoming network data (including loopback) by xxx ms." );
+	net_fakeloss = Cvar_Get( "fakeloss", "0", 0, "act like we dropped the packet this % of the time." );
+
+	// prepare some network data
+	for( i = 0; i < NS_COUNT; i++ )
+	{
+		lagdata[i].prev = &lagdata[i];
+		lagdata[i].next = &lagdata[i];
+	}
+
 
 	if( Sys_CheckParm( "-noip" )) noip = true;
 #ifdef XASH_IPX
@@ -1436,6 +1699,8 @@ void NET_Shutdown( void )
 	Cmd_RemoveCommand( "net_showip" );
 	Cmd_RemoveCommand( "net_restart" );
 
+	NET_ClearLagData( true, true );
+
 	NET_Config( false, false );
 #ifdef _WIN32
 	pWSACleanup();
@@ -1457,7 +1722,9 @@ void NET_Restart_f( void )
 
 /*
 =================================================
+
 HTTP downloader
+
 =================================================
 */
 

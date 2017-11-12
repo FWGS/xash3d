@@ -337,9 +337,9 @@ typedef enum
 
 typedef enum
 {
-	NS_CLIENT,
+	NS_CLIENT = 0,
 	NS_SERVER,
-	NS_MULTICAST
+	NS_COUNT,
 } netsrc_t;
 
 #include "netadr.h"
