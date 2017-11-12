@@ -322,23 +322,24 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 #endif
 
 #ifdef CAN_ASYNC_NS_RESOLVE
-
+static void NET_ResolveThread( void );
 #if !defined _WIN32
 #include <pthread.h>
 #define mutex_lock pthread_mutex_lock
 #define mutex_unlock pthread_mutex_unlock
-#define exit_thread( x )
-#define create_thread( pfn ) pthread_create( &nsthread.thread, NULL, (pfn), NULL )
+#define exit_thread( x ) pthread_exit(x)
+#define create_thread( pfn ) !pthread_create( &nsthread.thread, NULL, (pfn), NULL )
+#define detach_thread( x ) pthread_detach(x)
 #define mutex_t  pthread_mutex_t
 #define thread_t pthread_t
-#define _stdcall
-typedef void *thread_ret_t;
-#ifdef DEBUG_RESOLVE
-#define RESOLVE_DBG(x) Sys_PrintLog(x)
-#else
-#define RESOLVE_DBG(x)
-#endif
-#else
+
+void *Net_ThreadStart( void *unused )
+{
+	NET_ResolveThread();
+	return NULL;
+}
+
+#else // WIN32
 struct cs {
 	void* p1;
 	int   i1, i2;
@@ -347,20 +348,29 @@ struct cs {
 };
 #define mutex_lock pEnterCriticalSection
 #define mutex_unlock pLeaveCriticalSection
-#define exit_thread( x ) ExitThread( ( x ) )
-#define create_thread( pfn ) CreateThread( NULL, 0, pfn, NULL, 0, NULL )
+#define detach_thread( x ) CloseHandle(x)
+#define create_thread( pfn ) nsthread.thread = CreateThread( NULL, 0, pfn, NULL, 0, NULL )
 #define mutex_t  struct cs
-typedef uint thread_ret_t;
-#define RESOLVE_DBG(x)
+#define thread_t HANDLE
+DWORD WINAPI Net_ThreadStart( LPVOID unused )
+{
+	NET_ResolveThread();
+	ExitThread(0);
+	return 0;
+}
 #endif
+
+#ifdef DEBUG_RESOLVE
+#define RESOLVE_DBG(x) Sys_PrintLog(x)
+#else
+#define RESOLVE_DBG(x)
+#endif //  DEBUG_RESOLVE
 
 static struct nsthread_s
 {
 	mutex_t mutexns;
 	mutex_t mutexres;
-#ifdef thread_t
 	thread_t thread;
-#endif
 	int     result;
 	string  hostname;
 	qboolean busy;
@@ -378,7 +388,7 @@ static void NET_InitializeCriticalSections( void )
 }
 #endif
 
-thread_ret_t _stdcall NET_ResolveThread( void *unused )
+void NET_ResolveThread( void )
 {
 #ifdef HAVE_GETADDRINFO
 	struct addrinfo *ai = NULL, *cur;
@@ -415,8 +425,6 @@ thread_ret_t _stdcall NET_ResolveThread( void *unused )
 	RESOLVE_DBG( "[resolve thread] returning result\n" );
 	mutex_unlock( &nsthread.mutexres );
 	RESOLVE_DBG( "[resolve thread] exiting thread\n" );
-	exit_thread( 0 );
-
 #else
 	struct hostent *res;
 
@@ -448,9 +456,7 @@ thread_ret_t _stdcall NET_ResolveThread( void *unused )
 	mutex_unlock( &nsthread.mutexres );
 
 	RESOLVE_DBG( "[resolve thread] exiting thread\n" );
-	exit_thread( 0 );
 #endif
-	return 0;
 }
 
 #endif // CAN_ASYNC_NS_RESOLVE
@@ -523,8 +529,8 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 		}
 		else
 		{
-			struct hostent *h;
 #ifdef CAN_ASYNC_NS_RESOLVE
+			qboolean asyncfailed = false;
 #ifdef _WIN32
 			if( pInitializeCriticalSection )
 #endif // _WIN32
@@ -534,7 +540,7 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 #ifdef HAVE_GETADDRINFO
 					struct addrinfo *ai = NULL, *cur;
 					struct addrinfo hints;
-					int sin_addr = 0;
+
 					memset( &hints, 0, sizeof( hints ) );
 					hints.ai_family = AF_INET;
 					if( !pGetAddrInfo( copy, NULL, &hints, &ai ) )
@@ -552,6 +558,8 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 							freeaddrinfo(ai);
 					}
 #else
+					struct hostent *h;
+
 					mutex_lock( &nsthread.mutexns );
 					h = pGetHostByName( copy );
 					if( !h )
@@ -559,6 +567,7 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 						mutex_unlock( &nsthread.mutexns );
 						return 0;
 					}
+
 					ip = *(int *)h->h_addr_list[0];
 					mutex_unlock( &nsthread.mutexns );
 #endif
@@ -577,6 +586,7 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 					{
 						ip = nsthread.result;
 						nsthread.hostname[0] = 0;
+						detach_thread( nsthread.thread );
 					}
 					else
 					{
@@ -584,9 +594,14 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 						nsthread.busy = true;
 						mutex_unlock( &nsthread.mutexres );
 
-						create_thread( NET_ResolveThread );
-
-						return 2;
+						if( create_thread( Net_ThreadStart ) )
+							return 2;
+						else // failed to create thread
+						{
+							MsgDev( D_ERROR, "NET_StringToSockaddr: failed to create thread!\n");
+							nsthread.busy = false;
+							asyncfailed = true;
+						}
 					}
 
 					mutex_unlock( &nsthread.mutexres );
@@ -594,13 +609,16 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 			}
 #ifdef _WIN32
 			else
+				asyncfailed = true;
+#else
+			if( asyncfailed )
 #endif // _WIN32
 #endif // CAN_ASYNC_NS_RESOLVE
 			{
 #ifdef HAVE_GETADDRINFO
 				struct addrinfo *ai = NULL, *cur;
 				struct addrinfo hints;
-				int sin_addr = 0;
+
 				memset( &hints, 0, sizeof( hints ) );
 				hints.ai_family = AF_INET;
 				if( !pGetAddrInfo( copy, NULL, &hints, &ai ) )
@@ -618,6 +636,7 @@ static int NET_StringToSockaddr( const char *s, struct sockaddr *sadr, qboolean 
 						freeaddrinfo(ai);
 				}
 #else
+				struct hostent *h;
 				if(!( h = pGetHostByName( copy )))
 					return 0;
 				ip = *(int *)h->h_addr_list[0];
@@ -914,7 +933,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 
 	// sequenced packets are shown in netchan, so just show oob
 	if( net_showpackets->integer && *(int *)data == -1 )
-		MsgDev( D_INFO, "send packet %4li\n", length );
+		MsgDev( D_INFO, "send packet %4u\n", length );
 
 	if( to.type == NA_LOOPBACK )
 	{
