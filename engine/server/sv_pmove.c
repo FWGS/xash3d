@@ -68,8 +68,7 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 	if( ed->v.flags & FL_CLIENT )
 	{
 		// client
-		if ( svs.currentPlayer )
-			SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
+		SV_GetTrueOrigin( &svs.clients[pe->info - 1], (pe->info - 1), pe->origin );
 		Q_strncpy( pe->name, "player", sizeof( pe->name ));
 		pe->player = pe->info;
 	}
@@ -258,8 +257,9 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 		if( check->v.flags & FL_CLIENT )
 		{
 			// trying to get interpolated values
-			if( svs.currentPlayer )
-				SV_GetTrueMinMax( svs.currentPlayer, ( NUM_FOR_EDICT( check ) - 1), mins, maxs );
+			int e = NUM_FOR_EDICT( check ) - 1;
+
+			SV_GetTrueMinMax( &svs.clients[e], e, mins, maxs );
 		}
 
 		if( !BoundsIntersect( pmove_mins, pmove_maxs, mins, maxs ))
