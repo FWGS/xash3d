@@ -57,7 +57,9 @@ endif
 
 # Only SDL backend exists on linux
 ifeq ($(XASH_DEDICATED),1)
-    DEFINES += -DXASH_DEDICATED
+   DEFINES += -DXASH_DEDICATED
+# Enable debug messages in resolve thread
+   DEFINES += -DDEBUG_RESOLVE
 else
    DEFINES += -DXASH_SDL
    LIBS += -lSDL2

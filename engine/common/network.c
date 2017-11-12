@@ -333,6 +333,11 @@ static void NET_SockadrToNetadr( struct sockaddr *s, netadr_t *a )
 #define thread_t pthread_t
 #define _stdcall
 typedef void *thread_ret_t;
+#ifdef DEBUG_RESOLVE
+#define RESOLVE_DBG(x) Sys_PrintLog(x)
+#else
+#define RESOLVE_DBG(x)
+#endif
 #else
 struct cs {
 	void* p1;
@@ -346,6 +351,7 @@ struct cs {
 #define create_thread( pfn ) CreateThread( NULL, 0, pfn, NULL, 0, NULL )
 #define mutex_t  struct cs
 typedef uint thread_ret_t;
+#define RESOLVE_DBG(x)
 #endif
 
 static struct nsthread_s
@@ -378,6 +384,10 @@ thread_ret_t _stdcall NET_ResolveThread( void *unused )
 	struct addrinfo *ai = NULL, *cur;
 	struct addrinfo hints;
 	int sin_addr = 0;
+
+	RESOLVE_DBG( "[resolve thread] starting resolve for " );
+	RESOLVE_DBG( nsthread.hostname );
+	RESOLVE_DBG( " with getaddrinfo\n" );
 	memset( &hints, 0, sizeof( hints ) );
 	hints.ai_family = AF_INET;
 	if( !pGetAddrInfo( nsthread.hostname, NULL, &hints, &ai ) )
@@ -394,26 +404,50 @@ thread_ret_t _stdcall NET_ResolveThread( void *unused )
 		if( ai )
 			freeaddrinfo( ai );
 	}
+
+	if( sin_addr )
+		RESOLVE_DBG( "[resolve thread] getaddrinfo success\n" );
+	else
+		RESOLVE_DBG( "[resolve thread] getaddrinfo failed\n" );
 	mutex_lock( &nsthread.mutexres );
 	nsthread.result = sin_addr;
 	nsthread.busy = false;
+	RESOLVE_DBG( "[resolve thread] returning result\n" );
 	mutex_unlock( &nsthread.mutexres );
+	RESOLVE_DBG( "[resolve thread] exiting thread\n" );
 	exit_thread( 0 );
 
 #else
 	struct hostent *res;
 
-	res = pGetHostByName( nsthread.hostname );
-	mutex_lock( &nsthread.mutexres );
+	RESOLVE_DBG( "[resolve thread] starting resolve for " );
+	RESOLVE_DBG( nsthread.hostname );
+	RESOLVE_DBG( " with gethostbyname\n" );
 
+	mutex_lock( &nsthread.mutexns );
+	RESOLVE_DBG( "[resolve thread] locked gethostbyname mutex\n" );
+	res = pGetHostByName( nsthread.hostname );
+	if(res)
+		RESOLVE_DBG( "[resolve thread] gethostbyname success\n" );
+	else
+		RESOLVE_DBG( "[resolve thread] gethostbyname failed\n" );
+
+	mutex_lock( &nsthread.mutexres );
+	RESOLVE_DBG( "[resolve thread] returning result\n" );
 	if( res )
 		nsthread.result = *(int *)res->h_addr_list[0];
 	else
 		nsthread.result = 0;
 
-	mutex_unlock( &nsthread.mutexns );
 	nsthread.busy = false;
+
+	mutex_unlock( &nsthread.mutexns );
+
+	RESOLVE_DBG( "[resolve thread] unlocked gethostbyname mutex\n" );
+
 	mutex_unlock( &nsthread.mutexres );
+
+	RESOLVE_DBG( "[resolve thread] exiting thread\n" );
 	exit_thread( 0 );
 #endif
 	return 0;
