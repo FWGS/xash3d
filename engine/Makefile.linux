@@ -16,10 +16,17 @@
 # Default options - optimized to debug on local machine
 CC ?= gcc
 CXX ?= g++
-CFLAGS ?= -g -O2 -march=native -fno-omit-frame-pointer -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
+CFLAGS ?= -DDEBUG_RESOLVE -g -O2 -march=native -fno-omit-frame-pointer -ggdb -funsigned-char -Wall -Wextra -Wsign-compare -Wno-unknown-pragmas -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-but-set-variable
 LDFLAGS =
 LBITS := $(shell getconf LONG_BIT)
 DEPS :=
+
+XASH_COMMIT := $(firstword $(shell git rev-parse --short=6 HEAD) unknown)
+
+ifeq ($(XASH_COMMIT),unknown)
+$(warning You seems to build xash3d without git)
+$(warning Please use git if you are going to publish your build)
+endif
 
 # Pass 64BIT=1 to make arguments to allow amd64 builds
 ifneq ($(64BIT),1)
@@ -48,6 +55,9 @@ INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient
 # GDB_BREAK - add TRAP's on errors when GDB detected
 #############################
 DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DGDB_BREAK
+
+# Specify commit hash in version string
+DEFINES += -DXASH_BUILD_COMMIT=\"$(XASH_COMMIT)\"
 
 # Enable optimized crt functions for 32-bit systems
 ifneq ($(64BIT),1)

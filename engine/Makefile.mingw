@@ -22,8 +22,15 @@ ifeq ($(CC),cc)
 endif
 
 # Optimized build
-CFLAGS = -O2 -fno-omit-frame-pointer -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse2 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=i686
+CFLAGS = -DDEBUG_RESOLVE -O2 -fno-omit-frame-pointer -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse2 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=i686
 LDFLAGS =
+
+XASH_COMMIT := $(firstword $(shell git rev-parse --short=6 HEAD) unknown)
+
+ifeq ($(XASH_COMMIT),unknown)
+$(warning You seems to build xash3d without git)
+$(warning Please use git if you are going to publish your build)
+endif
 
 # detect 64bit mingw
 MACHINE := $(shell $(CC) -dumpmachine)
@@ -70,6 +77,9 @@ endif
 # DBGHELP - enable crashhandler with dbghelp library
 #############################
 DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FORCEINLINE -DXASH_W32CON -DDBGHELP
+
+# Specify commit hash in version string
+DEFINES += -DXASH_BUILD_COMMIT=\"$(XASH_COMMIT)\"
 
 # Enable optimized crt functions for 32-bit systems
 ifneq ($(64BIT),1)
