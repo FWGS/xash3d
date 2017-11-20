@@ -2197,8 +2197,8 @@ static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float 
 	int i;
 	vec2_t uv;
 	float *av, *lv, *nv;
-
-	g_nNumArrayVerts = g_nNumArrayElems = 0;
+	uint startArrayVerts = g_nNumArrayVerts;
+	uint startArrayElems = g_nNumArrayElems;
 
 	while( ( i = *( ptricmds++ ) ) )
 	{
@@ -2340,10 +2340,11 @@ static void R_StudioDrawMesh( short *ptricmds, float s, float t, float a, float 
 
 #if !defined XASH_NANOGL || defined XASH_WES && defined __EMSCRIPTEN__ // WebGL need to know array sizes
 	if( pglDrawRangeElements )
-		pglDrawRangeElements( GL_TRIANGLES, 0, g_nNumArrayVerts, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
+		pglDrawRangeElements( GL_TRIANGLES, startArrayVerts, g_nNumArrayVerts,
+			g_nNumArrayElems - startArrayElems, GL_UNSIGNED_SHORT, &g_xarrayelems[startArrayElems] );
 	else
 #endif
-		pglDrawElements( GL_TRIANGLES, g_nNumArrayElems, GL_UNSIGNED_SHORT, g_xarrayelems );
+		pglDrawElements( GL_TRIANGLES, g_nNumArrayElems - startArrayElems, GL_UNSIGNED_SHORT, &g_xarrayelems[startArrayElems] );
 	pglDisableClientState( GL_VERTEX_ARRAY );
 	pglDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ) )
@@ -3023,10 +3024,9 @@ void R_StudioDeformShadow( void )
 	dist2 = -1.0f / DotProduct( g_mvShadowVec, g_shadowTrace.plane.normal );
 	VectorScale( g_mvShadowVec, dist2, g_mvShadowVec );
 
-	verts = g_xarrayverts[0];
-	numVerts = g_nNumArrayVerts;
-
-	for( numVerts = 0; numVerts < g_nNumArrayVerts; numVerts++, verts += 3 )
+	for( numVerts = 0, verts = g_xarrayverts[0];
+		 numVerts < g_nNumArrayVerts;
+		 numVerts++, verts += 3 )
 	{
 		dist2 = DotProduct( verts, g_shadowTrace.plane.normal ) - dist;
 		if( dist2 > 0.0f ) VectorMA( verts, dist2, g_mvShadowVec, verts );
@@ -3076,7 +3076,7 @@ static void GAME_EXPORT GL_StudioDrawShadow( void )
 
 	pglDepthMask( GL_TRUE );
 
-	if( r_shadows.value != 0.0f )
+	if( r_shadows.value != 0.0f /* || 1 */ )
 	{
 		if( RI.currententity->baseline.movetype != MOVETYPE_FLY )
 		{
