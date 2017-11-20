@@ -489,6 +489,7 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, gl_stencilbits->integer );
 
 	if( Sys_CheckParm( "-gldebug" ) && host.developer >= 1 )
 	{
@@ -732,11 +733,25 @@ GL_CreateContext
 */
 qboolean GL_CreateContext( void )
 {
+	int colorBits[3];
+
 	if( ( glw_state.context = SDL_GL_CreateContext( host.hWnd ) ) == NULL)
 	{
 		MsgDev(D_ERROR, "GL_CreateContext: %s\n", SDL_GetError());
 		return GL_DeleteContext();
 	}
+
+	SDL_GL_GetAttribute( SDL_GL_RED_SIZE, &colorBits[0] );
+	SDL_GL_GetAttribute( SDL_GL_GREEN_SIZE, &colorBits[1] );
+	SDL_GL_GetAttribute( SDL_GL_BLUE_SIZE, &colorBits[2] );
+	glConfig.color_bits = colorBits[0] + colorBits[1] + colorBits[2];
+
+	SDL_GL_GetAttribute( SDL_GL_ALPHA_SIZE, &glConfig.alpha_bits );
+	SDL_GL_GetAttribute( SDL_GL_DEPTH_SIZE, &glConfig.depth_bits );
+	SDL_GL_GetAttribute( SDL_GL_STENCIL_SIZE, &glConfig.stencil_bits );
+	glState.stencilEnabled = glConfig.stencil_bits ? true : false;
+
+	SDL_GL_GetAttribute( SDL_GL_MULTISAMPLESAMPLES, &glConfig.msaasamples );
 
 	return true;
 }

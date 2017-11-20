@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "joyinput.h"
 #include "touch.h"
 #include "client.h"
+#include "gl_local.h" // glConfig, glState, convars
 #include <android/log.h>
 #include <jni.h>
 #include <EGL/egl.h> // nanogl
@@ -173,6 +174,7 @@ static struct jnimethods_s
 	jmethodID vibrate;
 	jmethodID messageBox;
 	jmethodID createGLContext;
+	jmethodID getGLAttribute;
 	jmethodID deleteGLContext;
 	jmethodID notify;
 	jmethodID setTitle;
@@ -279,7 +281,7 @@ void Android_RunEvents()
 				S_Activate( true );
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 1 );
 				Android_UpdateSurface();
-				Android_SwapInterval( Cvar_VariableInteger( "gl_swapinterval" ) );
+				Android_SwapInterval( gl_swapInterval->integer );
 				host.force_draw_version = true;
 				host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
 			}
@@ -299,7 +301,7 @@ void Android_RunEvents()
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 0 );
 				(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.toggleEGL, 1 );
 				Android_UpdateSurface();
-				Android_SwapInterval( Cvar_VariableInteger( "gl_swapinterval" ) );
+				Android_SwapInterval( gl_swapInterval->integer );
 				VID_SetMode();
 			}
 			break;
@@ -473,7 +475,8 @@ DECLARE_JNI_INTERFACE( int, nativeInit, jobject array )
 	jni.enableTextInput = (*env)->GetStaticMethodID(env, jni.actcls, "showKeyboard", "(I)V");
 	jni.vibrate = (*env)->GetStaticMethodID(env, jni.actcls, "vibrate", "(I)V" );
 	jni.messageBox = (*env)->GetStaticMethodID(env, jni.actcls, "messageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
-	jni.createGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "createGLContext", "()Z");
+	jni.createGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "createGLContext", "(I)Z");
+	jni.getGLAttribute = (*env)->GetStaticMethodID(env, jni.actcls, "getGLAttribute", "(I)I");
 	jni.deleteGLContext = (*env)->GetStaticMethodID(env, jni.actcls, "deleteGLContext", "()Z");
 	jni.notify = (*env)->GetStaticMethodID(env, jni.actcls, "engineThreadNotify", "()V");
 	jni.setTitle = (*env)->GetStaticMethodID(env, jni.actcls, "setTitle", "(Ljava/lang/String;)V");
@@ -866,20 +869,45 @@ void Android_UpdateSurface( void )
 
 /*
 ========================
-Android_InitGL
+Android_GetGLAttribute
 ========================
 */
-qboolean Android_InitGL()
+static int Android_GetGLAttribute( int eglAttr )
 {
-	qboolean result;
-	result = (*jni.env)->CallStaticBooleanMethod( jni.env, jni.actcls, jni.createGLContext );
-	Android_UpdateSurface();
-	return result;
+	int ret = (*jni.env)->CallStaticIntMethod( jni.env, jni.actcls, jni.getGLAttribute, eglAttr );
+	// MsgDev(D_INFO, "Android_GetGLAttribute( %i ) => %i\n", eglAttr, ret );
+	return ret;
 }
 
 /*
 ========================
 Android_InitGL
+========================
+*/
+qboolean Android_InitGL()
+{
+	int colorBits[3];
+	qboolean result;
+	
+	result = (*jni.env)->CallStaticBooleanMethod( jni.env, jni.actcls, jni.createGLContext, (int)gl_stencilbits->integer );
+	
+	colorBits[0] = Android_GetGLAttribute( EGL_RED_SIZE );
+	colorBits[1] = Android_GetGLAttribute( EGL_GREEN_SIZE );
+	colorBits[2] = Android_GetGLAttribute( EGL_BLUE_SIZE );
+	glConfig.color_bits = colorBits[0] + colorBits[1] + colorBits[2];
+	glConfig.alpha_bits = Android_GetGLAttribute( EGL_ALPHA_SIZE );
+	glConfig.depth_bits = Android_GetGLAttribute( EGL_DEPTH_SIZE );
+	glConfig.stencil_bits = Android_GetGLAttribute( EGL_STENCIL_SIZE );
+	glState.stencilEnabled = glConfig.stencil_bits ? true : false;
+	
+	Android_UpdateSurface();
+	
+	return result;
+}
+
+/*
+========================
+Android_ShutdownGL
 ========================
 */
 void Android_ShutdownGL()
@@ -962,8 +990,6 @@ void Android_MessageBox(const char *title, const char *text)
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.messageBox, (*jni.env)->NewStringUTF( jni.env, title ), (*jni.env)->NewStringUTF( jni.env ,text ) );
 }
 
-
-
 /*
 ========================
 Android_SwapInterval
@@ -977,17 +1003,32 @@ void Android_SwapInterval( int interval )
 		eglSwapInterval( negl.dpy, interval );
 }
 
+/*
+========================
+Android_SetTitle
+========================
+*/
 void Android_SetTitle( const char *title )
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.setTitle, (*jni.env)->NewStringUTF( jni.env, title ) );
 }
 
+/*
+========================
+Android_SetIcon
+========================
+*/
 void Android_SetIcon( const char *path )
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.setIcon, (*jni.env)->NewStringUTF( jni.env, path ) );
 
 }
 
+/*
+========================
+Android_GetAndroidID
+========================
+*/
 const char *Android_GetAndroidID( void )
 {
 	static char id[65];
@@ -1006,6 +1047,11 @@ const char *Android_GetAndroidID( void )
 	return id;
 }
 
+/*
+========================
+Android_LoadID
+========================
+*/
 const char *Android_LoadID( void )
 {
 	static char id[65];
@@ -1016,11 +1062,21 @@ const char *Android_LoadID( void )
 	return id;
 }
 
+/*
+========================
+Android_SaveID
+========================
+*/
 void Android_SaveID( const char *id )
 {
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.saveID, (*jni.env)->NewStringUTF( jni.env, id ) );
 }
 
+/*
+========================
+Android_MouseMove
+========================
+*/
 void Android_MouseMove( float *x, float *y )
 {
 	*x = jnimouse.x;
@@ -1030,12 +1086,22 @@ void Android_MouseMove( float *x, float *y )
 	//MsgDev( D_INFO, "Android_MouseMove: %f %f\n", *x, *y );
 }
 
+/*
+========================
+Android_AddMove
+========================
+*/
 void Android_AddMove( float x, float y)
 {
 	jnimouse.x += x;
 	jnimouse.y += y;
 }
 
+/*
+========================
+Android_ShowMouse
+========================
+*/
 void Android_ShowMouse( qboolean show )
 {
 	if( m_ignore->integer )
@@ -1043,6 +1109,11 @@ void Android_ShowMouse( qboolean show )
 	(*jni.env)->CallStaticVoidMethod( jni.env, jni.actcls, jni.showMouse, show );
 }
 
+/*
+========================
+Android_ShellExecute
+========================
+*/
 void Android_ShellExecute( const char *path, const char *parms )
 {
 	jstring jstr;

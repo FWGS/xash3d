@@ -813,7 +813,7 @@ void R_RenderInfo_f( void )
 	if( GL_Support( GL_ANISOTROPY_EXT ))
 		Msg( "GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: %.1f\n", glConfig.max_texture_anisotropy );
 	if( GL_Support( GL_TEXTURE_LODBIAS ))
-		Msg( "GL_MAX_TEXTURE_LODBIAS: %f", glConfig.max_texture_lodbias );
+		Msg( "GL_MAX_TEXTURE_LODBIAS: %f\n", glConfig.max_texture_lodbias );
 	if( glConfig.texRectangle )
 		Msg( "GL_MAX_RECTANGLE_TEXTURE_SIZE_NV: %i\n", glConfig.max_2d_rectangle_size );
 	if( GL_Support( GL_SHADER_GLSL100_EXT ))
@@ -834,6 +834,7 @@ void R_RenderInfo_f( void )
 	Msg( "VERTICAL SYNC: %s\n", gl_swapInterval->integer ? "enabled" : "disabled" );
 	Msg( "Color %d bits, Alpha %d bits, Depth %d bits, Stencil %d bits\n", glConfig.color_bits,
 		glConfig.alpha_bits, glConfig.depth_bits, glConfig.stencil_bits );
+	Msg( "MSAA samples: %d\n", glConfig.msaasamples );
 }
 
 //=======================================================================

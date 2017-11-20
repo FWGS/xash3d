@@ -591,6 +591,7 @@ typedef struct
 	int		alpha_bits;
 	int		depth_bits;
 	int		stencil_bits;
+	int		msaasamples;
 
 	qboolean		softwareGammaUpdate;
 	int		prev_mode;
