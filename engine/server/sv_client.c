@@ -3322,13 +3322,12 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		netadr_t to;
 
 		if( NET_StringToAdr( Cmd_Argv( 1 ), &to ) )
-			SV_Info( to, 48 );
+			SV_Info( to, PROTOCOL_VERSION );
 	}
 	else if( !Q_strcmp( c, "i" ) )
 	{
 		// A2A_PING
-		NET_SendPacket( NS_SERVER, 5, "\xFF\xFF\xFF\xFFj", from );
-
+		Netchan_OutOfBandPrint( NS_SERVER, from, "j" );
 	}
 	else if( svgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{

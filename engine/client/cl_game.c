@@ -2451,7 +2451,7 @@ const char *GAME_EXPORT pfnGetGameDirectory( void )
 {
 	static char	szGetGameDir[MAX_SYSPATH];
 
-	Q_sprintf( szGetGameDir, "%s", GI->gamedir );
+	Q_sprintf( szGetGameDir, "%s", GI->gamefolder );
 	return szGetGameDir;
 }
 
@@ -3972,7 +3972,7 @@ void CL_UnloadProgs( void )
 
 
 	// NOTE: HLFX 0.5 has strange bug: hanging on exit if no map was loaded
-	if( !( !Q_stricmp( GI->gamedir, "hlfx" ) && GI->version == 0.5f ))
+	if( !( !Q_stricmp( GI->gamefolder, "hlfx" ) && GI->version == 0.5f ))
 		clgame.dllFuncs.pfnShutdown();
 
 	Cvar_FullSet( "cl_background", "0", CVAR_READ_ONLY );

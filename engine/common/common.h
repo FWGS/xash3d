@@ -194,7 +194,7 @@ typedef enum
 #define MAX_STATIC_ENTITIES	512	// static entities that moved on the client when level is spawn
 
 #define GI              SI.GameInfo
-#define FS_Gamedir()	SI.GameInfo->gamedir
+#define FS_Gamedir()	SI.GameInfo->gamefolder
 #define FS_Title()		SI.GameInfo->title
 
 #define FORCE_DRAW_VERSION_TIME 5.0f // draw version for 5 seconds
@@ -238,7 +238,6 @@ typedef struct gameinfo_s
 	// filesystem info
 	char		gamefolder[64];	// used for change game '-game x'
 	char		basedir[64];	// base game directory (like 'id1' for Quake or 'valve' for Half-Life)
-	char		gamedir[64];	// game directory (can be match with basedir, used as game dir and as write path)
 	char		falldir[64];	// used as second basedir 
 	char		startmap[64];	// map to start singleplayer game
 	char		trainmap[64];	// map to start hazard course (if specified)
@@ -251,6 +250,7 @@ typedef struct gameinfo_s
 	char		game_dll_linux[64];	// custom path for game.dll
 	char		game_dll_osx[64];	// custom path for game.dll
 	char		client_lib[64];	// custom name of client library
+
 	// .ico path
 	char		iconpath[64];	// "game.ico" by default
 
@@ -280,6 +280,10 @@ typedef struct gameinfo_s
 	int		max_particles;	// min particles is 4096, max particles is 32768
 	qboolean added;
 } gameinfo_t;
+
+#define GAME_NORMAL			0
+#define GAME_SINGLEPLAYER_ONLY	1
+#define GAME_MULTIPLAYER_ONLY		2
 
 typedef struct sysinfo_s
 {

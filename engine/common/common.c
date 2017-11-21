@@ -508,7 +508,7 @@ pfnGetGameDir
 void GAME_EXPORT pfnGetGameDir( char *szGetGameDir )
 {
 	if( !szGetGameDir ) return;
-	Q_sprintf( szGetGameDir, "%s", GI->gamedir );
+	Q_strcpy( szGetGameDir, GI->gamefolder );
 }
 
 /*

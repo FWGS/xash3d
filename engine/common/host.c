@@ -1191,6 +1191,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	Q_strncpy( host.gamefolder, GI->gamefolder, sizeof( host.gamefolder ));
 
 
+#ifdef DEPRECATED_SECURE
 	if( GI->secure )
 	{
 		// clear all developer levels when game is protected
@@ -1198,6 +1199,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		host.developer = host.old_developer = 0;
 		host.con_showalways = false;
 	}
+#endif
 
 	HPAK_Init();
 
@@ -1295,7 +1297,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Wcon_ShowConsole( false ); // hide console
 #endif
 		// execute startup config and cmdline
-		Cbuf_AddText( va( "exec %s.rc\n", GI->gamedir ) );
+		Cbuf_AddText( va( "exec %s.rc\n", GI->gamefolder ) );
 		CSCR_LoadDefaultCVars( "settings.scr" );
 		CSCR_LoadDefaultCVars( "user.scr" );
 		// intentional fallthrough

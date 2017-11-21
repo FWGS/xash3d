@@ -1182,7 +1182,7 @@ void CL_InternetServers_f( void )
 	int res;
 
 	Info_SetValueForKey( info, "nat", cl_nat->string, 256 );
-	Info_SetValueForKey( info, "gamedir", GI->gamedir, 256 );
+	Info_SetValueForKey( info, "gamedir", GI->gamefolder, 256 );
 
 	NET_Config( true, true ); // allow remote
 
