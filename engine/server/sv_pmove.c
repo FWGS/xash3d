@@ -65,17 +65,17 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 	VectorCopy( ed->v.origin, pe->origin );
 	VectorCopy( ed->v.angles, pe->angles );
 
-	if( ed->v.flags & FL_CLIENT )
+	// client or bot
+	if( pe->info > 0 && pe->info <= sv_maxclients->integer)
 	{
-		// client
-		SV_GetTrueOrigin( &svs.clients[pe->info - 1], (pe->info - 1), pe->origin );
-		Q_strncpy( pe->name, "player", sizeof( pe->name ));
-		pe->player = pe->info;
-	}
-	else if( ed->v.flags & FL_FAKECLIENT )
-	{
-		// bot
-		Q_strncpy( pe->name, "bot", sizeof( pe->name ));
+		// bots can unlag too?
+		if( svs.currentPlayer )
+			SV_GetTrueOrigin( svs.currentPlayer, (pe->info - 1), pe->origin );
+
+		if( ed->v.flags & FL_CLIENT )
+			Q_strncpy( pe->name, "player", sizeof( pe->name ));
+		else if( ed->v.flags & FL_FAKECLIENT )
+			Q_strncpy( pe->name, "bot", sizeof( pe->name ));
 		pe->player = pe->info;
 	}
 	else
@@ -144,48 +144,6 @@ qboolean SV_CopyEdictToPhysEnt( physent_t *pe, edict_t *ed )
 	VectorCopy( ed->v.vuser4, pe->vuser4 );
 
 	return true;
-}
-
-void SV_GetTrueOrigin( sv_client_t *cl, int edictnum, vec3_t origin )
-{
-	if( !cl->local_weapons || !cl->lag_compensation )
-		return;
-
-	if( !sv_unlag->integer )
-		return;
-
-	// don't allow unlag in singleplayer
-	if( sv_maxclients->integer <= 1 )
-		return;
-
-	if( cl->state < cs_connected || edictnum < 0 || edictnum >= sv_maxclients->integer )
-		return;
-
-	if( !svgame.interp[edictnum].active || !svgame.interp[edictnum].moving )
-		return;
-
-	VectorCopy( svgame.interp[edictnum].newpos, origin ); 
-}
-
-void SV_GetTrueMinMax( sv_client_t *cl, int edictnum, vec3_t mins, vec3_t maxs )
-{
-	if( !cl->local_weapons || !cl->lag_compensation )
-		return;
-
-	if( !sv_unlag->integer )
-		return;
-
-	// don't allow unlag in singleplayer
-	if( sv_maxclients->integer <= 1 ) return;
-
-	if( cl->state < cs_connected || edictnum < 0 || edictnum >= sv_maxclients->integer )
-		return;
-
-	if( !svgame.interp[edictnum].active || !svgame.interp[edictnum].moving )
-		return;
-
-	VectorCopy( svgame.interp[edictnum].mins, mins );
-	VectorCopy( svgame.interp[edictnum].maxs, maxs );
 }
 
 /*
@@ -259,7 +217,8 @@ void SV_AddLinksToPmove( areanode_t *node, const vec3_t pmove_mins, const vec3_t
 			// trying to get interpolated values
 			int e = NUM_FOR_EDICT( check ) - 1;
 
-			SV_GetTrueMinMax( &svs.clients[e], e, mins, maxs );
+			if( svs.currentPlayer )
+				SV_GetTrueMinMax( svs.currentPlayer, e, mins, maxs );
 		}
 
 		if( !BoundsIntersect( pmove_mins, pmove_maxs, mins, maxs ))
@@ -832,6 +791,82 @@ static void SV_FinishPMove( playermove_t *pmove, sv_client_t *cl )
 	pmove->runfuncs = false;
 }
 
+/*
+=================================================
+
+LAG COMPENSATION
+
+=================================================
+*/
+
+/*
+=================
+SV_ShouldUnlagForPlayer
+
+=================
+*/
+qboolean SV_ShouldUnlagForPlayer( sv_client_t *cl )
+{
+	// unlag disabled globally
+	if( !sv_unlag->integer )
+		return false;
+
+	// can't unlag in singleplayer
+	if( sv_maxclients->integer <= 1 )
+		return false;
+
+	// player not ready
+	if( cl->state != cs_spawned )
+		return false;
+
+	// player have off lag compensation
+	if( !cl->local_weapons || !cl->lag_compensation )
+		return false;
+
+	return true;
+}
+
+/*
+=================
+SV_GetTrueOrigin
+
+Returns noncompensated origin value
+=================
+*/
+void SV_GetTrueOrigin( sv_client_t *cl, int edictnum, vec3_t origin )
+{
+	if( !SV_ShouldUnlagForPlayer( cl ) )
+		return;
+
+	if( svgame.interp[edictnum].active && svgame.interp[edictnum].moving )
+		VectorCopy( svgame.interp[edictnum].oldpos, origin );
+}
+
+/*
+=================
+SV_GetTrueMinMax
+
+Returns noncompensated bbox value
+=================
+*/
+void SV_GetTrueMinMax( sv_client_t *cl, int edictnum, vec3_t mins, vec3_t maxs )
+{
+	if( !SV_ShouldUnlagForPlayer( cl ) )
+		return;
+
+	if( svgame.interp[edictnum].active && svgame.interp[edictnum].moving )
+	{
+		VectorCopy( svgame.interp[edictnum].mins, mins );
+		VectorCopy( svgame.interp[edictnum].maxs, maxs );
+	}
+}
+
+/*
+================
+SV_FindEntInPack
+
+================
+*/
 entity_state_t *SV_FindEntInPack( int index, client_frame_t *frame )
 {
 	entity_state_t	*state;
@@ -847,6 +882,12 @@ entity_state_t *SV_FindEntInPack( int index, client_frame_t *frame )
 	return NULL;
 }
 
+/*
+================
+SV_UnlagCheckTeleport
+
+================
+*/
 qboolean SV_UnlagCheckTeleport( vec3_t old_pos, vec3_t new_pos )
 {
 	int	i;
@@ -859,6 +900,12 @@ qboolean SV_UnlagCheckTeleport( vec3_t old_pos, vec3_t new_pos )
 	return false;
 }
 
+/*
+================
+SV_SetupMoveInterpolant
+
+================
+*/
 void SV_SetupMoveInterpolant( sv_client_t *cl )
 {
 	int		i, j, clientnum;
@@ -873,16 +920,12 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 	Q_memset( svgame.interp, 0, sizeof( svgame.interp ));
 	has_update = false;
 
-	// don't allow unlag in singleplayer
-	if( sv_maxclients->integer <= 1 || cl->state != cs_spawned )
-		return;
-
 	// unlag disabled by game request
-	if( !svgame.dllFuncs.pfnAllowLagCompensation() || !sv_unlag->integer )
+	if( !svgame.dllFuncs.pfnAllowLagCompensation() )
 		return;
 
 	// unlag disabled for current client
-	if( !cl->local_weapons || !cl->lag_compensation )
+	if( !SV_ShouldUnlagForPlayer( cl ))
 		return;
 
 	has_update = true;
@@ -900,30 +943,30 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 		lerp->active = true;
 	}
 
-	latency = max( cl->latency, 1.5f );
+	latency = min( cl->latency, 1.5f );
 
-	if( sv_maxunlag->value != 0.0f )
+	if( sv_maxunlag->value )
 	{
 		if( sv_maxunlag->value < 0.0f )
 			Cvar_SetFloat( "sv_maxunlag", 0.0f );
 
-		if( latency > sv_maxunlag->value )
-			latency = sv_maxunlag->value;
+		latency = min( latency, sv_maxunlag->value );
 	}
 
 	lerp_msec = cl->lastcmd.lerp_msec * 0.001f;
 	if( lerp_msec > 0.1f )
 		lerp_msec = 0.1f;
-	else if( lerp_msec < cl->cl_updaterate )
+
+	if( lerp_msec < cl->cl_updaterate )
 		lerp_msec = cl->cl_updaterate;
 
-	finalpush = ( host.realtime - latency - lerp_msec ) + sv_unlagpush->value;
+	finalpush = host.realtime - latency - lerp_msec + sv_unlagpush->value;
 	if( finalpush > host.realtime )
 		finalpush = host.realtime; // pushed too much ?
 
-	frame = NULL;
+	frame = frame2 = NULL;
 
-	for( frame2 = NULL, i = 0; i < SV_UPDATE_BACKUP; i++, frame2 = frame )
+	for( i = 0; i < SV_UPDATE_BACKUP; i++, frame2 = frame )
 	{
 		frame = &cl->frames[(cl->netchan.outgoing_sequence - (i+1)) & SV_UPDATE_MASK];
 
@@ -942,10 +985,15 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 			if( state->health <= 0 || ( state->effects & EF_NOINTERP ))
 				lerp->nointerp = true;
 
-			if( !lerp->firstframe )
+			if( lerp->firstframe )
+			{
+				if( SV_UnlagCheckTeleport( state->origin, lerp->finalpos ))
+					lerp->nointerp = true;
+			}
+			else
+			{
 				lerp->firstframe = true;
-			else if( SV_UnlagCheckTeleport( state->origin, lerp->finalpos ))
-				lerp->nointerp = true;
+			}
 
 			VectorCopy( state->origin, lerp->finalpos );
 		}
@@ -994,8 +1042,14 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 
 		lerp = &svgame.interp[clientnum];
 
-		if( !lerp->active || lerp->nointerp )
+		if( lerp->nointerp )
 			continue;
+
+		if( !lerp->active )
+		{
+			MsgDev( D_ERROR, "SV_SetupMoveInterpolate: tried to store off position of bogus player %i/%s\n", i, check->name );
+			continue;
+		}
 
 		lerpstate = SV_FindEntInPack( state->number, frame2 );
 
@@ -1014,6 +1068,9 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 
 		if( !VectorCompare( curpos, check->edict->v.origin ))
 		{
+			/*MsgDev(D_NOTE, "Updated position for %i/%s from %.2f/%.2f/%.2f to %.2f/%.2f/%.2f\n",
+				i, check->name, lerp->oldpos[0], lerp->oldpos[1], lerp->oldpos[2],
+				 lerp->curpos[0], lerp->curpos[1], lerp->curpos[2] );*/
 			VectorCopy( curpos, check->edict->v.origin );
 			SV_LinkEdict( check->edict, false );
 			lerp->moving = true;
@@ -1021,6 +1078,12 @@ void SV_SetupMoveInterpolant( sv_client_t *cl )
 	}
 }
 
+/*
+================
+SV_RestoreMoveInterpolant
+
+================
+*/
 void SV_RestoreMoveInterpolant( sv_client_t *cl )
 {
 	sv_client_t	*check;
@@ -1033,16 +1096,11 @@ void SV_RestoreMoveInterpolant( sv_client_t *cl )
 		return;
 	}
 
-	// don't allow unlag in singleplayer
-	if( sv_maxclients->integer <= 1 || cl->state != cs_spawned )
-		return;
-
 	// unlag disabled by game request
-	if( !svgame.dllFuncs.pfnAllowLagCompensation() || !sv_unlag->integer )
+	if( !svgame.dllFuncs.pfnAllowLagCompensation() )
 		return;
 
-	// unlag disabled for current client
-	if( !cl->local_weapons || !cl->lag_compensation )
+	if( !SV_ShouldUnlagForPlayer( cl ))
 		return;
 
 	for( i = 0, check = svs.clients; i < sv_maxclients->integer; i++, check++ )
@@ -1052,11 +1110,14 @@ void SV_RestoreMoveInterpolant( sv_client_t *cl )
 
 		oldlerp = &svgame.interp[i];
 
-		if( VectorCompare( oldlerp->oldpos, oldlerp->newpos ))
+		if( VectorCompare( oldlerp->oldpos, oldlerp->newpos ) || !oldlerp->moving )
 			continue; // they didn't actually move.
 
-		if( !oldlerp->moving || !oldlerp->active )
-			return;
+		if( !oldlerp->active )
+		{
+			MsgDev( D_ERROR, "SV_RestoreMoveInterpolant: tried to restore 'inactive' player %i/%s\n", i, check->name );
+			continue;
+		}
 
 		if( VectorCompare( oldlerp->curpos, check->edict->v.origin ))
 		{
@@ -1081,26 +1142,25 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed )
 	trace_t	trace;
 	vec3_t	oldvel;
    
-	clent = cl->edict;
-
 	if( cl->next_movetime > host.realtime )
 	{
 		cl->last_movetime += ( ucmd->msec * 0.001f );
 		return;
 	}
 
+	clent = cl->edict;
 	cl->next_movetime = 0.0;
+	lastcmd = *ucmd;
 
 	// chop up very long commands
 	if( ucmd->msec > 50 )
 	{
-		lastcmd = *ucmd;
 		oldmsec = ucmd->msec;
-		lastcmd.msec = oldmsec / 2;
 
+		lastcmd.msec = oldmsec / 2;
 		SV_RunCmd( cl, &lastcmd, random_seed );
 
-		lastcmd.msec = oldmsec / 2 + (oldmsec & 1);	// give them back thier msec.
+		lastcmd.msec = oldmsec / 2;
 		lastcmd.impulse = 0;
 		SV_RunCmd( cl, &lastcmd, random_seed );
 		return;
@@ -1111,8 +1171,7 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed )
 		SV_SetupMoveInterpolant( cl );
 	}
 
-	lastcmd = *ucmd;
-	svgame.dllFuncs.pfnCmdStart( cl->edict, ucmd, random_seed );
+	svgame.dllFuncs.pfnCmdStart( clent, ucmd, random_seed );
 
 	frametime = ucmd->msec * 0.001;
 	cl->timebase += frametime;
@@ -1127,12 +1186,14 @@ void SV_RunCmd( sv_client_t *cl, usercmd_t *ucmd, int random_seed )
 
 	// copy player buttons
 	clent->v.button = ucmd->buttons;
-	if( ucmd->impulse ) clent->v.impulse = ucmd->impulse;
-
-	if( ucmd->impulse == 204 )
+	if( ucmd->impulse )
 	{
-		// force client.dll update
-		SV_RefreshUserinfo();
+		clent->v.impulse = ucmd->impulse;
+		if( ucmd->impulse == 204 )
+		{
+			// force client.dll update
+			SV_RefreshUserinfo();
+		}
 	}
 
 	svgame.globals->time = cl->timebase;
