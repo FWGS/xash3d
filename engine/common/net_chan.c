@@ -135,7 +135,10 @@ qboolean NetSplit_GetLong( netsplit_t *ns, netadr_t *from, byte *data, size_t *l
 	{
 		// warn if previous packet not received
 		if( p->received < p->count )
+		{
+			CL_WarnLostSplitPacket();
 			MsgDev( D_WARN, "NetSplit_GetLong: lost packet %d\n", p->id );
+		}
 
 		p->id = packet->id;
 		p->count = packet->count;

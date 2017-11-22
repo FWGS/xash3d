@@ -65,6 +65,8 @@ convar_t	*cl_updaterate;
 convar_t	*cl_nat;
 convar_t	*hud_scale;
 convar_t	*cl_maxpacket;
+convar_t	*cl_maxpayload;
+
 convar_t    *r_bmodelinterp;
 
 convar_t	*hud_utf8;
@@ -937,6 +939,23 @@ void CL_Connect_f( void )
 		cl_maxpacket->flags |= CVAR_USERINFO;
 		userinfo->modified = true;
 	}
+	else if( cl_maxpacket->flags & CVAR_USERINFO )
+	{
+		cl_maxpacket->flags &= ~CVAR_USERINFO;
+		userinfo->modified = true;
+	}
+
+	// allow override payload size for some bad networks
+	if( ( cl_maxpayload->integer < 40000 ) && ( cl_maxpayload->integer > 99 ) )
+		{
+		cl_maxpayload->flags |= CVAR_USERINFO;
+		userinfo->modified = true;
+	}
+	else if( cl_maxpayload->flags & CVAR_USERINFO )
+	{
+		cl_maxpayload->flags &= ~CVAR_USERINFO;
+		userinfo->modified = true;
+	}
 
 	Q_strncpy( server, Cmd_Argv( 1 ), MAX_STRING );
 
@@ -1014,6 +1033,23 @@ void CL_Rcon_f( void )
 	}
 
 	NET_SendPacket( NS_CLIENT, Q_strlen( message ) + 1, message, to );
+}
+
+void CL_WarnLostSplitPacket( void )
+{
+	if( cls.state != ca_connected )
+		return;
+
+	if( Host_IsLocalClient() )
+		return;
+
+	if( ++cl.lostpackets == 8 )
+	{
+		CL_Disconnect();
+		Cbuf_AddText( "menu_connectionwarning" );
+		MsgDev( D_WARN, "Too many lost packets! Showing Network options menu\n" );
+
+	}
 }
 
 
@@ -1975,7 +2011,8 @@ void CL_InitLocal( void )
 	Cvar_Get( "password", "", CVAR_USERINFO, "player password" );
 	// cvar is not registered as userinfo as it not needed usually
 	// it will be set as userinfo only if it has non-default and correct value
-	cl_maxpacket = Cvar_Get( "cl_maxpacket", "40000", CVAR_ARCHIVE, "Max packet size, sent from server durning connection" );
+	cl_maxpacket = Cvar_Get( "cl_maxpacket", "40000", CVAR_ARCHIVE, "split packet size" );
+	cl_maxpayload = Cvar_Get( "cl_maxpayload", "0", CVAR_ARCHIVE, "max netchan size from server durning connection" );
 	name = Cvar_Get( "name", Sys_GetCurrentUser(), CVAR_USERINFO|CVAR_ARCHIVE|CVAR_PRINTABLEONLY, "player name" );
 	model = Cvar_Get( "model", "player", CVAR_USERINFO|CVAR_ARCHIVE, "player model ('player' is a singleplayer model)" );
 	topcolor = Cvar_Get( "topcolor", "0", CVAR_USERINFO|CVAR_ARCHIVE, "player top color" );

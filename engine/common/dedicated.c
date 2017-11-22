@@ -725,4 +725,8 @@ void CL_Crashed()
 {
 
 }
+
+void CL_WarnLostSplitPacket( void )
+{
+}
 #endif

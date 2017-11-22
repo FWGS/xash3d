@@ -208,6 +208,7 @@ typedef struct
 #if 0 // used by SetUpPlayerPrediction
 	predicted_player_t predicted_players[MAX_CLIENTS];
 #endif
+	int lostpackets;					// count lost packets and show dialog in menu
 } client_t;
 
 /*
