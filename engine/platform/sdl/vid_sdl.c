@@ -255,7 +255,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		HICON ico;
 		char	localPath[MAX_PATH];
 
-		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamedir, GI->iconpath );
+		Q_snprintf( localPath, sizeof( localPath ), "%s/%s", GI->gamefolder, GI->iconpath );
 		ico = (HICON)LoadImage( NULL, localPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE );
 
 		if( !ico )
