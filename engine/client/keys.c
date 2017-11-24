@@ -413,6 +413,12 @@ void Key_Bind_f( void )
 
 	if( b == -1 )
 	{
+		// Trigger +mlook when changed from menu
+		if( !Q_strcmp( Cmd_Argv( 1 ), "_force_write" ) )
+		{
+			cls.keybind_changed = true;
+			return;
+		}
 		Msg( "\"%s\" isn't a valid key\n", Cmd_Argv( 1 ));
 		return;
 	}
