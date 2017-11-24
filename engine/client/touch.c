@@ -1578,6 +1578,10 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 #endif
 		return 0;
 	}
+
+	if( clgame.dllFuncs.pfnTouchEvent && clgame.dllFuncs.pfnTouchEvent( type, fingerID, x, y, dx, dy ) )
+		return true;
+
 	return IN_TouchControlsEvent( type, fingerID, x, y, dx, dy );
 }
 
