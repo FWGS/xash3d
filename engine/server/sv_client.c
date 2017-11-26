@@ -2321,6 +2321,11 @@ static void SV_Notarget_f( sv_client_t *cl )
 	else SV_ClientPrintf( cl, PRINT_HIGH, "notarget ON\n" );
 }
 
+static void SV_SendBuildInfo_f( sv_client_t *cl )
+{
+	SV_ClientPrintf( cl, PRINT_HIGH, "Server running Xash3D FWGS %s (build %i-%s, %s-%s)\n", XASH_VERSION, Q_buildnum(), Q_buildcommit(), Q_buildos(), Q_buildarch() );
+}
+
 edict_t *pfnFindEntityInSphere( edict_t *pStartEdict, const float *org, float flRadius );
 
 static edict_t *SV_GetCrossEnt( edict_t *player )
@@ -3110,6 +3115,7 @@ ucmd_t ucmds[] =
 { "getresourcelist", SV_SendResourceList_f },
 { "continueloading", SV_ContinueLoading_f },
 { "kill", SV_Kill_f },
+{ "_sv_build_info", SV_SendBuildInfo_f },
 { NULL, NULL }
 };
 
@@ -3166,10 +3172,11 @@ void SV_ExecuteClientCommand( sv_client_t *cl, char *s )
 
 	if( !u->name && sv.state == ss_active )
 	{
+		qboolean isFullUpdate = !Q_strcmp( Cmd_Argv( 0 ), "fullupdate");
 		// custom client commands
 		svgame.dllFuncs.pfnClientCommand( cl->edict );
 
-		if( !Q_strcmp( Cmd_Argv( 0 ), "fullupdate" ))
+		if( isFullUpdate )
 		{
 			// resend the ambient sounds for demo recording
 			Host_RestartAmbientSounds();

@@ -2653,7 +2653,7 @@ CL_DecalIndexFromName
 get decal global index from decalname
 ===============
 */
-int GAME_EXPORT GAME_EXPORT CL_DecalIndexFromName( const char *name )
+int GAME_EXPORT CL_DecalIndexFromName( const char *name )
 {
 	int	i;
 
