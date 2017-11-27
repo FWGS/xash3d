@@ -16,12 +16,12 @@ else
  echo >> README.md
  echo Short changelog: >> README.md
  echo \`\`\` >> README.md
- (cd ..;git log --pretty=format:'%h %ad %s' --date iso -n 10 HEAD `curl https://raw.githubusercontent.com/FWGS/xash3d-deploy/$SOURCE_NAME-$TRAVIS_BRANCH/commit.txt`.. )| cut -d ' ' -f 1-3,5-100 >> README.md
+ (cd $TRAVIS_BUILD_DIR;git log --pretty=format:'%h %ad %s' --date iso -n 10 HEAD `curl https://raw.githubusercontent.com/FWGS/xash3d-deploy/$SOURCE_NAME-$TRAVIS_BRANCH/commit.txt`.. )| cut -d ' ' -f 1-3,5-100 >> README.md
  echo \`\`\` >> README.md
  echo >> README.md
- echo [code on github]\(https://github.com/FWGS/xash3d/tree/$TRAVIS_COMMIT\) >> README.md
+ echo [Code on GitHub]\(https://github.com/FWGS/xash3d/tree/$TRAVIS_COMMIT\) >> README.md
  echo >> README.md
- echo [full changelog for this build]\(https://github.com/FWGS/xash3d/commits/$TRAVIS_COMMIT\) >> README.md
+ echo [Full changelog for this build]\(https://github.com/FWGS/xash3d/commits/$TRAVIS_COMMIT\) >> README.md
  echo >> README.md
  for arg in $*; do
   echo \* [$arg]\(https://github.com/FWGS/xash3d-deploy/blob/$SOURCE_NAME-$TRAVIS_BRANCH/$arg\?raw\=true\) >> README.md
