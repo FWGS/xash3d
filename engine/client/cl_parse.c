@@ -629,7 +629,7 @@ void CL_ParseServerData( sizebuf_t *msg )
 #endif
 	if( !cls.changedemo )
 		UI_SetActiveMenu( cl.background );
-	if( cl.maxclients > 1 )
+	if( cl.maxclients > 1 && !CL_IsPlaybackDemo() )
 		Cbuf_AddText( "menu_connectionprogress serverinfo server\n" );
 
 	cl.refdef.viewentity = cl.playernum + 1; // always keep viewent an actual
@@ -1157,6 +1157,11 @@ void CL_ParseResourceList( sizebuf_t *msg )
 		Q_strncpy( reslist.resnames[i], BF_ReadString( msg ), CS_SIZE );
 	}
 
+	if( CL_IsPlaybackDemo() )
+	{
+		return;
+	}
+
 	downloadcount = 0;
 
 	HTTP_ResetProcessState();
@@ -1508,7 +1513,7 @@ void CL_ParseStuffText( sizebuf_t *msg )
 	{
 		Msg("^3STUFFTEXT:\n^2%s\n^3END^7\n", s);
 	}
-	if( cls.state != ca_active )
+	if( cls.state != ca_active && !CL_IsPlaybackDemo() )
 	{
 		char token[256], *s2;
 		int i;
@@ -1520,23 +1525,24 @@ void CL_ParseStuffText( sizebuf_t *msg )
 		else if ( !Q_strcmp( token, "cmd" ) )
 		{
 			COM_ParseFile( s2, token );
-		for( i = 0; i < ARRAYSIZE( stufftexttable ); i++ )
-		{
-			float percent;
 
-			if( Q_strcmp( token, stufftexttable[i].command ) )
-				continue;
+			for( i = 0; i < ARRAYSIZE( stufftexttable ); i++ )
+			{
+				float percent;
 
-			percent = stufftexttable[i].percent;
+				if( Q_strcmp( token, stufftexttable[i].command ) )
+					continue;
 
-			if( i == stufftextparser.last )
-				percent += (1 - exp( -( ++stufftextparser.counter )*2 ) ) * stufftexttable[i].step;
-			else
-				stufftextparser.counter = 0;
-			stufftextparser.last = i;
-			Cbuf_AddText( va( "menu_connectionprogress stufftext %f \"%s\"\n", percent, stufftexttable[i].description ) );
-			break;
-		}
+				percent = stufftexttable[i].percent;
+
+				if( i == stufftextparser.last )
+					percent += (1 - exp( -( ++stufftextparser.counter )*2 ) ) * stufftexttable[i].step;
+				else
+					stufftextparser.counter = 0;
+				stufftextparser.last = i;
+				Cbuf_AddText( va( "menu_connectionprogress stufftext %f \"%s\"\n", percent, stufftexttable[i].description ) );
+				break;
+			}
 		}
 	}
 	Cbuf_AddText( s );
@@ -1626,7 +1632,8 @@ void CL_ParseServerMessage( sizebuf_t *msg )
 			}
 			else cls.state = ca_connecting;
 			cls.connect_time = MAX_HEARTBEAT; // CL_CheckForResend() will fire immediately
-			Cbuf_AddText( "menu_connectionprogress changelevel\n" );
+			if( !CL_IsPlaybackDemo() )
+				Cbuf_AddText( "menu_connectionprogress changelevel\n" );
 			break;
 		case svc_setview:
 			cl.refdef.viewentity = BF_ReadWord( msg );

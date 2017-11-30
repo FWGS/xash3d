@@ -3184,6 +3184,8 @@ void SV_ExecuteClientCommand( sv_client_t *cl, char *s )
 			Host_RestartDecals();
 			// resend all the static ents for demo recording
 			SV_RestartStaticEnts();
+			// resend userinfo
+			SV_RefreshUserinfo();
 		}
 	}
 }

@@ -1085,7 +1085,7 @@ void CL_ClearState( void )
 	// restore real developer level
 	host.developer = host.old_developer;
 
-	if( !SV_Active() && !CL_IsPlaybackDemo() )
+	if( !SV_Active() && !CL_IsPlaybackDemo() && !cls.demorecording )
 	{
 		Delta_Shutdown();
 		Delta_InitClient();
