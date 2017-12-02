@@ -1843,7 +1843,9 @@ void CL_ReadPackets( void )
 	cl.lerpFrac = CL_LerpPoint();
 	cl.lerpBack = 1.0f - cl.lerpFrac;
 
-	cl.thirdperson = clgame.dllFuncs.CL_IsThirdPerson();
+	if( clgame.entities )
+		cl.thirdperson = clgame.dllFuncs.CL_IsThirdPerson();
+
 #if 0
 	// keep cheat cvars are unchanged
 	if( cl.maxclients > 1 && cls.state == ca_active && host.developer <= 1 )
