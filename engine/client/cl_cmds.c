@@ -383,7 +383,7 @@ void CL_LevelShot_f( void )
 		ft1 = FS_FileTime( filename, false );
 		ft2 = FS_FileTime( cls.shotname, true );
 	}
-	else
+	else if( cl.worldmodel->name )
 	{
 		Q_sprintf( cls.shotname, "levelshots/%s_%s.bmp", clgame.mapname, glState.wideScreen ? "16x9" : "4x3" );
 
@@ -391,6 +391,7 @@ void CL_LevelShot_f( void )
 		ft1 = FS_FileTime( cl.worldmodel->name, false );
 		ft2 = FS_FileTime( cls.shotname, true );
 	}
+	else ft1 = 0;
 
 	// missing levelshot or level newer than levelshot
 	if( ft2 == (unsigned long)-1 || ft1 > ft2 )
