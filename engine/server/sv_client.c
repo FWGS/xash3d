@@ -2193,21 +2193,17 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 		cl->cl_updaterate = 1.0f / i;
 	}
 
-	if( sv_maxclients->integer > 1 )
-	{
-		const char *model = Info_ValueForKey( cl->userinfo, "model" );
+	const char *model = Info_ValueForKey( cl->userinfo, "model" );
 
-		// apply custom playermodel
-		if( Q_strlen( model ) && Q_stricmp( model, "player" ))
+	// apply custom playermodel
+	if( Q_strlen( model ) && Q_stricmp( model, "player" ))
+	{
+		const char *path = va( "models/player/%s/%s.mdl", model, model );
+		if( FS_FileExists( path, false ))
 		{
-			const char *path = va( "models/player/%s/%s.mdl", model, model );
-			if( FS_FileExists( path, false ))
-			{
-				Mod_RegisterModel( path, SV_ModelIndex( path )); // register model
-				SV_SetModel( ent, path );
-				cl->modelindex = ent->v.modelindex;
-			}
-			else cl->modelindex = 0;
+			Mod_RegisterModel( path, SV_ModelIndex( path )); // register model
+			SV_SetModel( ent, path );
+			cl->modelindex = ent->v.modelindex;
 		}
 		else cl->modelindex = 0;
 	}
