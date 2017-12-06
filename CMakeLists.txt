@@ -72,6 +72,7 @@ endif()
 
 # Misc
 option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
+option(XASH_NO_INSTALL_RUNSCRIPT "Don't install xash3d.sh" OFF)
 
 # Pre-build analyze step
 option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
@@ -83,7 +84,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 ###################\
 
 if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-	message(FATAL_ERROR "Xash3D doesn't work with 64 bit systems well and there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
+        message(FATAL_ERROR "Xash3D doesn't work with 64 bit systems well and there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
 endif()
 
 # Dependencies
@@ -106,6 +107,9 @@ if(NOT DEFINED LIB_INSTALL_DIR)
 	else()
 		set(LIB_INSTALL_DIR "lib${LIB_SUFFIX}")
 	endif()
+endif()
+if(NOT DEFINED LIB_INSTALL_SUBDIR)
+	set(LIB_INSTALL_SUBDIR "xash3d")
 endif()
 if(NOT DEFINED LIBEXEC_INSTALL_DIR)
 	set(LIBEXEC_INSTALL_DIR "libexec")
@@ -133,9 +137,9 @@ endif()
 
 add_subdirectory(engine)
 
-if(NOT WIN32)
+if(NOT WIN32 OR XASH_NO_INSTALL_RUNSCRIPTе )
 	install(FILES "xash3d.sh"
-	    DESTINATION ${BIN_INSTALL_DIR}
+		DESTINATION "${BIN_INSTALL_DIR}"
 	    RENAME "xash3d"
 		PERMISSIONS OWNER_READ OWNER_EXECUTE OWNER_WRITE
 		            GROUP_READ GROUP_EXECUTE
