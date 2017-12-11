@@ -10,6 +10,14 @@ image:
   - Visual Studio 2013
   - Visual Studio 2015
   - Visual Studio 2017
+environment:
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      GENERATOR_NAME: "Visual Studio 12 2013"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      GENERATOR_NAME: "Visual Studio 14 2015"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      GENERATOR_NAME: "Visual Studio 15 2017"
 
 clone_folder: c:\projects\xash\xash3d
 
@@ -28,7 +36,7 @@ before_build:
   - git clone https://github.com/ValveSoftware/halflife hlsdk --depth=1
   - cd c:\projects\xash\xash3d
   - git submodule update --init
-  - cmake -G "Visual Studio 14 2015" -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build" -DHL_SDK_DIR="c:\projects\xash\hlsdk" -DXASH_AUTODETECT_SSE_BUILD=OFF -DXASH_VECTORIZE_SINCOS=ON
+  - cmake -G %GENERATOR_NAME% -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build" -DHL_SDK_DIR="c:\projects\xash\hlsdk" -DXASH_AUTODETECT_SSE_BUILD=OFF -DXASH_VECTORIZE_SINCOS=ON
 
 after_build:
   - copy c:\projects\xash\SDL2\lib\x86\SDL2.dll c:\projects\xash\xash3d\%CONFIGURATION%\SDL2.dll
