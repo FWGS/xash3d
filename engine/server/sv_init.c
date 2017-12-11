@@ -615,9 +615,11 @@ qboolean SV_SpawnServer( const char *mapname, const char *startspot )
 	// clear physics interaction links
 	SV_ClearWorld();
 
+	// unused in GoldSrc
+#if 0
 	// tell dlls about new level started
 	svgame.dllFuncs.pfnParmsNewLevel();
-
+#endif
 	return true;
 }
 
