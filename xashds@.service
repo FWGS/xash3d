@@ -1,0 +1,14 @@
+[Unit]
+Description=%I - Xash3D dedicated server
+After=network.target
+
+[Service]
+User=xashds
+Group=xashds
+WorkingDirectory=/opt/xashds/srv/%I
+EnvironmentFile=-/opt/xashds/srv/%I/env
+ExecStart=/opt/xashds/bin/xashds $EXTRA_OPTS
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
