@@ -10,14 +10,6 @@ image:
   - Visual Studio 2013
   - Visual Studio 2015
   - Visual Studio 2017
-environment:
-  matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-      GENERATOR_NAME: "Visual Studio 12 2013"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      GENERATOR_NAME: "Visual Studio 14 2015"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR_NAME: "Visual Studio 15 2017"
 
 clone_folder: c:\projects\xash\xash3d
 
@@ -29,6 +21,9 @@ configuration:
   - Debug
 
 before_build:
+  - if %APPVEYOR_BUILD_WORKER_IMAGE%=="Visual Studio 2013" set GENERATOR_NAME="Visual Studio 12 2013"
+  - if %APPVEYOR_BUILD_WORKER_IMAGE%=="Visual Studio 2015" set GENERATOR_NAME="Visual Studio 14 2015"
+  - if %APPVEYOR_BUILD_WORKER_IMAGE%=="Visual Studio 2017" set GENERATOR_NAME="Visual Studio 15 2017"
   - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.6-VC.zip
   - 7z x SDL2-devel-2.0.6-VC.zip -oc:\projects\xash
   - cd c:\projects\xash
