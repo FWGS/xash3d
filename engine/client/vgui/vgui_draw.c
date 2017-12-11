@@ -222,6 +222,8 @@ void VGui_Startup( int width, int height )
 	char vguiloader[256];
 	char vguilib[256];
 
+	vguiloader[0] = vguilib[0] = '\0';
+
 	if( failed )
 		return;
 #ifdef XASH_INTERNAL_GAMELIBS
@@ -262,7 +264,7 @@ void VGui_Startup( int width, int height )
 		if( Q_strstr( GI->client_lib, ".dll" ) )
 			Q_strncpy( vguiloader, "vgui_support.dll", 256 );
 
-		if( !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
+		if( !vguiloader[0] && !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
 			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
 
 		lib = Com_LoadLibrary( vguiloader, false );

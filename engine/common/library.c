@@ -159,8 +159,8 @@ static void *IOS_LoadLibrary( const char *dllname )
 
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
-	dll_user_t *hInst;
-	void *pHandle;
+	dll_user_t *hInst = NULL;
+	void *pHandle = NULL;
 
 	// platforms where gameinfo mechanism is impossible
 	// or not implemented
@@ -220,14 +220,25 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	hInst = FS_FindLibrary( dllname, false );
 	if( !hInst )
 	{
-		// try to find by linker(LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, LD_32_LIBRARY_PATH and so on...)
-		pHandle = dlopen( dllname, RTLD_LAZY );
-		if( pHandle )
+		// HACKHACK: direct load dll
+#ifdef DLL_LOADER
+		if( host.enabledll && ( pHandle = Loader_LoadLibrary(dllname)) )
+		{
 			return pHandle;
+		}
+#endif
 
-		Com_PushLibraryError( va( "Failed to find library %s", dllname ));
-		Com_PushLibraryError( dlerror() );
-		return NULL;
+		// try to find by linker(LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, LD_32_LIBRARY_PATH and so on...)
+		if( !pHandle )
+		{
+			pHandle = dlopen( dllname, RTLD_LAZY );
+			if( pHandle )
+				return pHandle;
+
+			Com_PushLibraryError( va( "Failed to find library %s", dllname ));
+			Com_PushLibraryError( dlerror() );
+			return NULL;
+		}
 	}
 
 	if( hInst->custom_loader )
