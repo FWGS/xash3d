@@ -75,7 +75,7 @@ int ModuleName( HANDLE process, char *name, void *address, int len )
 				( (DWORD64)address < (DWORD64)info.lpBaseOfDll + (DWORD64)info.SizeOfImage ) )
 			return GetModuleBaseName( process, moduleArray[i], name, len );
 	}
-	return snprintf(name, len, "???");
+	return Q_snprintf(name, len, "???");
 }
 static void stack_trace( PEXCEPTION_POINTERS pInfo )
 {
@@ -130,18 +130,18 @@ static void stack_trace( PEXCEPTION_POINTERS pInfo )
 	stackframe.AddrStack.Offset = context.IntSp;
 	stackframe.AddrStack.Mode = AddrModeFlat;
 #endif
-	len += snprintf( message + len, 1024 - len, "Sys_Crash: address %p, code %p\n", pInfo->ExceptionRecord->ExceptionAddress, (void*)pInfo->ExceptionRecord->ExceptionCode );
+	len += Q_snprintf( message + len, 1024 - len, "Sys_Crash: address %p, code %p\n", pInfo->ExceptionRecord->ExceptionAddress, (void*)pInfo->ExceptionRecord->ExceptionCode );
 	if( SymGetLineFromAddr64( process, (DWORD64)pInfo->ExceptionRecord->ExceptionAddress, &dline, &line ) )
 	{
-		len += snprintf(message + len, 1024 - len,"Exception: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+		len += Q_snprintf(message + len, 1024 - len,"Exception: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
 	}
 	if( SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line ) )
 	{
-		len += snprintf(message + len, 1024 - len,"PC: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+		len += Q_snprintf(message + len, 1024 - len,"PC: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
 	}
 	if( SymGetLineFromAddr64( process, stackframe.AddrFrame.Offset, &dline, &line ) )
 	{
-		len += snprintf(message + len, 1024 - len,"Frame: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+		len += Q_snprintf(message + len, 1024 - len,"Frame: %s:%d:%d\n", (char*)line.FileName, (int)line.LineNumber, (int)dline);
 	}
 	for( i = 0; i < 25; i++ )
 	{
@@ -160,18 +160,18 @@ static void stack_trace( PEXCEPTION_POINTERS pInfo )
 		symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 		symbol->MaxNameLen = MAX_SYM_NAME;
 
-		len += snprintf( message + len, 1024 - len, "% 2d %p", i, (void*)stackframe.AddrPC.Offset );
+		len += Q_snprintf( message + len, 1024 - len, "% 2d %p", i, (void*)stackframe.AddrPC.Offset );
 		if( SymFromAddr( process, stackframe.AddrPC.Offset, &displacement, symbol ) )
 		{
-			len += snprintf( message + len, 1024 - len, " %s ", symbol->Name );
+			len += Q_snprintf( message + len, 1024 - len, " %s ", symbol->Name );
 		}
 		if( SymGetLineFromAddr64( process, stackframe.AddrPC.Offset, &dline, &line ) )
 		{
-			len += snprintf(message + len, 1024 - len,"(%s:%d:%d) ", (char*)line.FileName, (int)line.LineNumber, (int)dline);
+			len += Q_snprintf(message + len, 1024 - len,"(%s:%d:%d) ", (char*)line.FileName, (int)line.LineNumber, (int)dline);
 		}
-		len += snprintf( message + len, 1024 - len, "(");
+		len += Q_snprintf( message + len, 1024 - len, "(");
 		len += ModuleName( process, message + len, (void*)stackframe.AddrPC.Offset, 1024 - len );
-		len += snprintf( message + len, 1024 - len, ")\n");
+		len += Q_snprintf( message + len, 1024 - len, ")\n");
 	}
 #ifdef XASH_SDL
 	if( host.type != HOST_DEDICATED ) // let system to restart server automaticly
@@ -249,13 +249,13 @@ int printframe( char *buf, int len, int i, void *addr )
 	if( dladdr( addr, &dlinfo ))
 	{
 		if( dlinfo.dli_sname )
-			return snprintf( buf, len, "% 2d: %p <%s+%lu> (%s)\n", i, addr, dlinfo.dli_sname,
+			return Q_snprintf( buf, len, "% 2d: %p <%s+%lu> (%s)\n", i, addr, dlinfo.dli_sname,
 					(unsigned long)addr - (unsigned long)dlinfo.dli_saddr, dlinfo.dli_fname ); // print symbol, module and address
 		else
-			return snprintf( buf, len, "% 2d: %p (%s)\n", i, addr, dlinfo.dli_fname ); // print module and address
+			return Q_snprintf( buf, len, "% 2d: %p (%s)\n", i, addr, dlinfo.dli_fname ); // print module and address
 	}
 	else
-		return snprintf( buf, len, "% 2d: %p\n", i, addr ); // print only address
+		return Q_snprintf( buf, len, "% 2d: %p\n", i, addr ); // print only address
 }
 
 struct sigaction oldFilter;
@@ -300,9 +300,9 @@ static void Sys_Crash( int signal, siginfo_t *si, void *context)
 #endif
 	// Safe actions first, stack and memory may be corrupted
 	#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-		len = snprintf( message, 4096, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
+		len = Q_snprintf( message, 4096, "Sys_Crash: signal %d, err %d with code %d at %p\n", signal, si->si_errno, si->si_code, si->si_addr );
 	#else
-		len = snprintf( message, 4096, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
+		len = Q_snprintf( message, 4096, "Sys_Crash: signal %d, err %d with code %d at %p %p\n", signal, si->si_errno, si->si_code, si->si_addr, si->si_ptr );
 	#endif
 	write(2, message, len);
 	// Flush buffers before writing directly to descriptors
