@@ -391,10 +391,10 @@ void CL_LevelShot_f( void )
 		ft1 = FS_FileTime( cl.worldmodel->name, false );
 		ft2 = FS_FileTime( cls.shotname, true );
 	}
-	else ft1 = 0;
+	else ft1 = ft2 = 0;
 
 	// missing levelshot or level newer than levelshot
-	if( ft2 == (unsigned long)-1 || ft1 > ft2 )
+	if( ft2 == (size_t)-1 || ft1 > ft2 )
 		cls.scrshot_action = scrshot_plaque;	// build new frame for levelshot
 	else cls.scrshot_action = scrshot_inactive;	// disable - not needs
 }

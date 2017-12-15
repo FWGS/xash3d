@@ -123,7 +123,7 @@ Joy_ProcessTrigger
 */
 void Joy_ProcessTrigger( const engineAxis_t engineAxis, short value )
 {
-	int trigButton, trigThreshold;
+	int trigButton = 0, trigThreshold = 0;
 
 	switch( engineAxis )
 	{
@@ -199,7 +199,7 @@ Joy_ProcessStick
 */
 void Joy_ProcessStick( const engineAxis_t engineAxis, short value )
 {
-	int deadzone;
+	int deadzone = 0;
 
 	switch( engineAxis )
 	{

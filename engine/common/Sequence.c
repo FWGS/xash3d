@@ -903,7 +903,7 @@ Sequence_ParseLine
 */
 char Sequence_ParseLine( char start, sequenceEntry_s *entry )
 {
-	char end;
+	char end = '\0';
 
 	switch( start )
 	{

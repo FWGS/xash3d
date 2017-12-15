@@ -218,7 +218,7 @@ int CSCR_WriteGameCVars( file_t *cfg, const char *scriptfilename )
 	fs_offset_t length = 0;
 	char *start;
 	parserstate_t state = {0};
-	qboolean success;
+	qboolean success = false;
 
 	state.filename = scriptfilename;
 
