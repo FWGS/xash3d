@@ -2605,8 +2605,6 @@ static void R_DrawLightmappedVBO( vboarray_t *vbo, vbotexture_t *vbotex, texture
 
 					for( decalsurf = newsurf; ( decali < decalcount ) && ( decalsurf != surf ); decalsurf = decalsurf->lightmapchain )
 					{
-						decal_t *pdecal;
-
 						for( pdecal = decalsurf->pdecals; pdecal; pdecal = pdecal->pnext )
 						{
 							gltexture_t *glt;

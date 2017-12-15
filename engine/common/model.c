@@ -2301,7 +2301,7 @@ static void Mod_LoadEntities( const dlump_t *l )
 {
 	char	*pfile;
 	string	keyname;
-	char	token[4096];
+	char	token[4096] = {0};
 
 	// make sure what we really has terminator
 	loadmodel->entities = Mem_Alloc( loadmodel->mempool, l->filelen + 1 );
