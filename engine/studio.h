@@ -33,14 +33,14 @@ Studio models are position independent, so the cache manager can move them.
 // studio limits
 #define MAXSTUDIOTRIANGLES		32768	// max triangles per model
 #define MAXSTUDIOVERTS		4096	// max vertices per submodel
-#define MAXSTUDIOSEQUENCES		256	// total animation sequences
+#define MAXSTUDIOSEQUENCES		2048	// total animation sequences(was changed in hlsdk 2.4)
 #define MAXSTUDIOSKINS		256	// total textures
 #define MAXSTUDIOSRCBONES		512	// bones allowed at source movement
 #define MAXSTUDIOBONES		128	// total bones actually used
 #define MAXSTUDIOMODELS		32	// sub-models per model
 #define MAXSTUDIOBODYPARTS		32	// body parts per submodel
 #define MAXSTUDIOGROUPS		16	// sequence groups (e.g. barney01.mdl, barney02.mdl, e.t.c)
-#define MAXSTUDIOANIMATIONS		512	// max frames per sequence
+#define MAXSTUDIOANIMATIONS		2048	// max frames per sequence(was changed in hlsdk 2.4)
 #define MAXSTUDIOMESHES		256	// max textures per model
 #define MAXSTUDIOEVENTS		1024	// events per model
 #define MAXSTUDIOPIVOTS		256	// pivot points
@@ -213,11 +213,8 @@ typedef struct
 {
 	char		label[32];	// textual name
 	char		name[64];		// file name
-	cache_user_t	cache;		// cache index pointer
-#if !defined XASH_64BIT
-	// it is not really used, but helps to keep pointer
-	int		data;		// hack for group 0
-#endif
+	int		unused1;		// // was "cache"  - index pointer
+	int		unused2;		//  was "data" -  hack for group 0
 } mstudioseqgroup_t;
 
 // sequence descriptions

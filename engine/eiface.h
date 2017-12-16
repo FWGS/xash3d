@@ -95,7 +95,7 @@ typedef struct
 	int	fPlayTrack;
 } CDStatus;
 		
-typedef unsigned long	CRC32_t;
+typedef unsigned int	CRC32_t;
 struct delta_s;
 
 // Engine hands this to DLLs for functionality callbacks
@@ -164,7 +164,7 @@ typedef struct enginefuncs_s
 	void	(*pfnCVarSetString)( const char *szVarName, const char *szValue );
 	void	(*pfnAlertMessage)( ALERT_TYPE atype, char *szFmt, ... );
 	void	(*pfnEngineFprintf)( FILE *pfile, char *szFmt, ... );
-	void*	(*pfnPvAllocEntPrivateData)( edict_t *pEdict, long cb );
+	void*	(*pfnPvAllocEntPrivateData)( edict_t *pEdict, int cb );
 	void*	(*pfnPvEntPrivateData)( edict_t *pEdict );
 	void	(*pfnFreeEntPrivateData)( edict_t *pEdict );
 	const char *(*pfnSzFromIndex)( int iString );
@@ -191,7 +191,7 @@ typedef struct enginefuncs_s
 	void	(*pfnCRC32_ProcessBuffer)( CRC32_t *pulCRC, void *p, int len );
 	void	(*pfnCRC32_ProcessByte)( CRC32_t *pulCRC, unsigned char ch );
 	CRC32_t	(*pfnCRC32_Final)( CRC32_t pulCRC );
-	long	(*pfnRandomLong)( long lLow, long lHigh );
+	int	(*pfnRandomLong)( int lLow, int lHigh );
 	float	(*pfnRandomFloat)( float flLow, float flHigh );
 	void	(*pfnSetView)( const edict_t *pClient, const edict_t *pViewent );
 	float	(*pfnTime)( void );
@@ -284,7 +284,7 @@ typedef struct KeyValueData_s
 	char	*szClassName;	// in: entity classname
 	char	*szKeyName;	// in: name of key
 	char	*szValue;		// in: value of key
-	long	fHandled;		// out: DLL sets to true if key-value pair was understood
+	int	fHandled;		// out: DLL sets to true if key-value pair was understood
 } KeyValueData;
 
 
@@ -362,7 +362,7 @@ typedef enum _fieldtypes
 	FIELD_TYPECOUNT,		// MUST BE LAST
 } FIELDTYPE;
 
-#ifndef offsetof
+#if !defined(offsetof) && !defined(GNUC)
 #define offsetof(s,m)	(size_t)&(((s *)0)->m)
 #endif
 
