@@ -1144,8 +1144,6 @@ void CL_PredictMovement( void )
 		// restore viewangles from cmd.angles
 		VectorCopy( cl.refdef.cmd->viewangles, cl.refdef.cl_viewangles );
 	}
-
-	if( !CL_IsInGame( )) return;
 	
 	CL_SetUpPlayerPrediction( false, false );
 
