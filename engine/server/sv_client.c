@@ -3216,8 +3216,8 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	c = Cmd_Argv( 0 );
 	MsgDev( D_NOTE, "SV_ConnectionlessPacket: %s : %s\n", NET_AdrToString( from ), c );
 
-	if ( sv_source_queries_enabled->value > 0.0 && SV_SourceQuery_HandleConnnectionlessPacket ( c, from ) ) return;
-	else if ( sv_source_queries_enabled->value <= 0.0 )
+	if ( sv_source_queries_enabled->value && SV_SourceQuery_HandleConnnectionlessPacket ( c, from ) ) return;
+	else if ( !sv_source_queries_enabled->value )
 	{
 		if (!Q_strcmp (c, "ping")) SV_Ping (from);
 		else if( !Q_strcmp( c, "ack" )) SV_Ack( from );
