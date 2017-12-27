@@ -3186,102 +3186,6 @@ void SV_ExecuteClientCommand( sv_client_t *cl, char *s )
 	}
 }
 
-void SV_TSourceEngineQuery( netadr_t from )
-{
-	// A2S_INFO
-	char answer[1024] = "";
-	sizebuf_t buf;
-	int count = 0, bots = 0, index;
-	int havePassword;
-
-	if( svs.clients )
-	{
-		for( index = 0; index < sv_maxclients->integer; index++ )
-		{
-			if( svs.clients[index].state >= cs_connected )
-			{
-				if( svs.clients[index].fakeclient )
-					bots++;
-				else count++;
-			}
-		}
-	}
-
-	havePassword = ( sv_password->string[0] && Q_stricmp( sv_password->string, "none" ) ) ? 0 : 1;
-
-	BF_Init( &buf, "TSourceEngineQuery", answer, sizeof( answer ));
-
-#if 1 // Source format
-	BF_WriteLong  ( &buf, -1 ); // Mark as connectionless
-	BF_WriteByte  ( &buf, 'I' );
-	BF_WriteByte  ( &buf, PROTOCOL_VERSION );
-	BF_WriteString( &buf, hostname->string );
-	BF_WriteString( &buf, sv.name );
-	BF_WriteString( &buf, GI->gamefolder );
-	BF_WriteString( &buf, svgame.dllFuncs.pfnGetGameDescription() );
-	BF_WriteShort ( &buf, 0 ); // steam id
-	BF_WriteByte  ( &buf, count );
-	BF_WriteByte  ( &buf, sv_maxclients->integer );
-	BF_WriteByte  ( &buf, bots );
-	BF_WriteByte  ( &buf, Host_IsDedicated() ? 'd' : 'l');
-#if defined(_WIN32)
-	BF_WriteByte  ( &buf, 'w' );
-#elif defined(__APPLE__)
-	BF_WriteByte  ( &buf, 'm' );
-#else
-	BF_WriteByte  ( &buf, 'l' );
-#endif
-	BF_WriteByte  ( &buf, havePassword ); // visibility
-	BF_WriteByte  ( &buf, 0 ); // secure
-#else // GS format
-	/*
-	**	This will work in monitoring,
-	**	but does not appear in the list of GoldSource servers
-	*/
-	BF_WriteLong(&buf, -1);// Fixed this
-	BF_WriteByte( &buf, 'm' );
-	BF_WriteString( &buf, NET_AdrToString( net_local ) );
-	BF_WriteString( &buf, hostname->string );
-	BF_WriteString( &buf, sv.name );
-	BF_WriteString( &buf, GI->gamefolder );
-	BF_WriteString( &buf, GI->title );
-	BF_WriteByte( &buf, count );
-	BF_WriteByte( &buf, sv_maxclients->integer );
-	BF_WriteByte( &buf, PROTOCOL_VERSION );
-	BF_WriteByte( &buf, Host_IsDedicated() ? 'D' : 'L');
-#if defined(_WIN32)
-	BF_WriteByte( &buf, 'W' );
-#else
-	BF_WriteByte( &buf, 'L' );
-#endif
-	BF_WriteByte( &buf, havePassword );
-	if( Q_stricmp( GI->gamedir, "valve" ) )
-	{
-		BF_WriteByte( &buf, 1 ); // mod
-		BF_WriteString( &buf, GI->game_url );
-		BF_WriteString( &buf, GI->update_url );
-		BF_WriteByte( &buf, 0 );
-		BF_WriteLong( &buf, (long)GI->version );
-		BF_WriteLong( &buf, GI->size );
-		if( GI->gamemode == 2 )
-			BF_WriteByte( &buf, 1 ); // multiplayer_only
-		else
-			BF_WriteByte( &buf, 0 );
-		if( Q_strstr(SI.gamedll, "hl." ) )
-			BF_WriteByte( &buf, 0 ); // Half-Life DLL
-		else
-			BF_WriteByte( &buf, 1 ); // Own DLL
-	}
-	else
-	{
-		BF_WriteByte( &buf, 0 ); // Half-Life
-	}
-	BF_WriteByte( &buf, 0 ); // unsecure
-	BF_WriteByte( &buf, bots );
-#endif
-	NET_SendPacket( NS_SERVER, BF_GetNumBytesWritten( &buf ), BF_GetData( &buf ), from );
-}
-
 /*
 =================
 SV_ConnectionlessPacket
@@ -3312,16 +3216,19 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	c = Cmd_Argv( 0 );
 	MsgDev( D_NOTE, "SV_ConnectionlessPacket: %s : %s\n", NET_AdrToString( from ), c );
 
-	if( !Q_strcmp( c, "ping" )) SV_Ping( from );
-	else if( !Q_strcmp( c, "ack" )) SV_Ack( from );
-	else if( !Q_strcmp( c, "status" )) SV_Status( from );
+	if ( sv_source_queries_enabled->value > 0.0 && SV_SourceQuery_HandleConnnectionlessPacket ( c, from ) ) return;
+	else if ( sv_source_queries_enabled->value <= 0.0 )
+	{
+		if (!Q_strcmp (c, "ping")) SV_Ping (from);
+		else if( !Q_strcmp( c, "ack" )) SV_Ack( from );
+		else if( !Q_strcmp( c, "status" )) SV_Status( from );
+	}
 	else if( !Q_strcmp( c, "info" )) SV_Info( from, Q_atoi( Cmd_Argv(1) ) );
 	else if( !Q_strcmp( c, "getchallenge" )) SV_GetChallenge( from );
 	else if( !Q_strcmp( c, "connect" )) SV_DirectConnect( from );
 	else if( !Q_strcmp( c, "rcon" )) SV_RemoteCommand( from, msg );
 	else if( !Q_strcmp( c, "netinfo" )) SV_BuildNetAnswer( from );
 	else if( !Q_strcmp( c, "s")) SV_AddToMaster( from, msg );
-	else if( !Q_strcmp( c, "T" "Source" ) ) SV_TSourceEngineQuery( from );
 	else if( !Q_strcmp( c, "c" ) )
 	{
 		netadr_t to;

@@ -58,6 +58,7 @@ convar_t	*sv_maxclients;
 convar_t	*sv_check_errors;
 convar_t	*sv_footsteps;
 convar_t	*public_server;			// should heartbeats be sent
+convar_t	*sv_source_queries_enabled; // source queries enabled?
 convar_t	*sv_reconnect_limit;		// minimum seconds between connect messages
 convar_t	*sv_failuretime;
 convar_t	*sv_allow_upload;
@@ -987,6 +988,7 @@ void SV_Init( void )
 	physinfo = Cvar_Get( "@physinfo", "0", CVAR_READ_ONLY, "" ); // use ->modified value only
 	serverinfo = Cvar_Get( "@serverinfo", "0", CVAR_READ_ONLY, "" ); // use ->modified value only
 	public_server = Cvar_Get ("public", "0", 0, "change server type from private to public" );
+	sv_source_queries_enabled = Cvar_Get ( "sv_source_queries_enabled", "1", 1, "enable by default source engine style server query responses" );
 	sv_lighting_modulate = Cvar_Get( "r_lighting_modulate", "0.6", CVAR_ARCHIVE, "lightstyles modulate scale" );
 	sv_reconnect_limit = Cvar_Get ("sv_reconnect_limit", "3", CVAR_ARCHIVE, "max reconnect attempts" );
 	sv_failuretime = Cvar_Get( "sv_failuretime", "0.5", 0, "after this long without a packet from client, don't send any more until client starts sending again" );

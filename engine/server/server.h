@@ -417,6 +417,7 @@ extern	convar_t		*sv_stopspeed;
 extern	convar_t		*sv_check_errors;
 extern	convar_t		*sv_reconnect_limit;
 extern	convar_t		*sv_lighting_modulate;
+extern  convar_t		*sv_source_queries_enabled;
 extern	convar_t		*rcon_password;
 extern	convar_t		*hostname;
 extern	convar_t		*sv_stepsize;
@@ -569,6 +570,12 @@ void SV_EndRedirect( void );
 void SV_RemoteCommand( netadr_t from, sizebuf_t *msg );
 int SV_CalcPing( sv_client_t *cl );
 void SV_UpdateResourceList( void );
+
+//
+// sv_query.c
+//
+qboolean SV_SourceQuery_HandleConnnectionlessPacket ( char *c, netadr_t from );
+
 //
 // sv_cmds.c
 //
