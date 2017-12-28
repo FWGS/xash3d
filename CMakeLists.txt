@@ -21,6 +21,10 @@
 #
 
 cmake_minimum_required(VERSION 2.6.0)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+include(VSForceXPToolchain)
+
 project (XASH3D)
 
 #--------------
@@ -76,8 +80,6 @@ option(XASH_NO_INSTALL_RUNSCRIPT "Don't install xash3d.sh" OFF)
 
 # Pre-build analyze step
 option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 #-----------------
 # MAIN BUILD CODE \
@@ -137,11 +139,23 @@ endif()
 
 add_subdirectory(engine)
 
-if(NOT WIN32 OR XASH_NO_INSTALL_RUNSCRIPTе )
+if(NOT WIN32 OR XASH_NO_INSTALL_RUNSCRIPT )
 	install(FILES "xash3d.sh"
 		DESTINATION "${BIN_INSTALL_DIR}"
 	    RENAME "xash3d"
 		PERMISSIONS OWNER_READ OWNER_EXECUTE OWNER_WRITE
 		            GROUP_READ GROUP_EXECUTE
 					WORLD_READ WORLD_EXECUTE)
+endif()
+
+if(WIN32)
+	if(XASH_SINGLE_BINARY)
+		set_property(DIRECTORY .
+			PROPERTY
+				VS_STARTUP_PROJECT xash)
+	else()
+		set_property(DIRECTORY .
+			PROPERTY
+				VS_STARTUP_PROJECT xash3d)
+	endif()
 endif()
