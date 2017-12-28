@@ -56,6 +56,15 @@ GNU General Public License for more details.
  #include "windows.h" 
 #endif
 
+#ifdef WIN32
+// Enable NVIDIA High Performance Graphics while using Integrated Graphics.
+__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+
+// Enable AMD High Performance Graphics while using Integrated Graphics.
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+#endif
+
+
 #define GAME_PATH	"valve"	// default dir to start from
 
 typedef void (*pfnChangeGame)( const char *progname );
