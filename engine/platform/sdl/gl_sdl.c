@@ -630,9 +630,8 @@ void GL_InitExtensions( void )
 	GL_CheckExtension( "GL_ARB_vertex_buffer_object", vbofuncs, "gl_vertex_buffer_object", GL_ARB_VERTEX_BUFFER_OBJECT_EXT );
 
 	// we don't care if it's an extension or not, they are identical functions, so keep it simple in the rendering code
-#ifndef __ANDROID__
 	if( pglDrawRangeElementsEXT == NULL ) pglDrawRangeElementsEXT = pglDrawRangeElements;
-#endif
+
 	GL_CheckExtension( "GL_ARB_texture_env_add", NULL, "gl_texture_env_add", GL_TEXTURE_ENV_ADD_EXT );
 
 	// vp and fp shaders
