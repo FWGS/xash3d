@@ -54,7 +54,7 @@ To build xash3d for emscripten, clone forked emscripten to home directory
 
 ```
 git clone https://github.com/FWGS/emscripten -b xash3d
-wget https://github.com/FWGS/emscripten-fastcomp/releases/download/xash3d-0.1/fastcomp.txz -O - |tar x
+wget https://github.com/FWGS/emscripten-fastcomp/releases/download/xash3d-0.1/fastcomp.txz -O - |tar xJ
 ```
 
 Set correct emscripten path in ~/.emscripten to make emcc work
@@ -66,7 +66,7 @@ clone xash3d repo:
 ```
 git clone https://github.com/FWGS/xash3d
 cd xash3d
-git sumodule init && git submodule update
+git submodule init && git submodule update
 ```
 
 Switch to branch containing this file
@@ -87,7 +87,7 @@ Edit Makefile.emscripten to ensure using correct output paths (by default, ~/xas
 
 Clone microndk repo
 
-`git clone https://github.com/FWGS/mircondk`
+`git clone https://github.com/FWGS/microndk`
 
 Change dir to mainui_cpp, dlls or cl_dlls directory and do:
 

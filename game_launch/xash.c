@@ -18,22 +18,24 @@ GNU General Public License for more details.
 #include <SDL_main.h>
 #include <SDL_messagebox.h>
 #endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
+
 #if _MSC_VER <= 1600
 #define true 1
 #define false 0
 #else
 #include <stdbool.h>
 #endif
+
 #ifdef __APPLE__
  #include <dlfcn.h>
  #include <errno.h>
  #define XASHLIB                "libxash.dylib"
  #define dlmount(x)          dlopen(x, RTLD_LAZY)
- #define FreeLibrary(x)          dlclose(x)
- #define GetProcAddress(x, y)    dlsym(x, y)
  #define HINSTANCE               void*
 #elif __unix__
  #include <dlfcn.h>
@@ -45,6 +47,7 @@ GNU General Public License for more details.
  #define dlmount(x) LoadLibraryA(x)
  #define dlclose(x) FreeLibrary(x)
  #define dlsym(x,y) GetProcAddress(x,y)
+ #define dlerror() GetStringLastError()
  #ifndef XASH_DEDICATED
   #define XASHLIB                 "xash_sdl.dll"
  #else
@@ -52,6 +55,15 @@ GNU General Public License for more details.
  #endif
  #include "windows.h" 
 #endif
+
+#ifdef WIN32
+// Enable NVIDIA High Performance Graphics while using Integrated Graphics.
+__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+
+// Enable AMD High Performance Graphics while using Integrated Graphics.
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+#endif
+
 
 #define GAME_PATH	"valve"	// default dir to start from
 
@@ -66,32 +78,48 @@ int szArgc;
 char **szArgv;
 HINSTANCE	hEngine;
 
-void Xash_Error( const char *errorstring )
+void Xash_Error( const char *szFmt, ... )
 {
+	static char	buffer[16384];	// must support > 1k messages
+	va_list		args;
+
+	va_start(args, szFmt);
+	vsnprintf(buffer, sizeof(buffer), szFmt, args);
+	va_end(args);
+
 #ifdef XASH_SDL
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", errorstring, NULL);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", buffer, NULL);
+#elif defined(WIN32)
+	MessageBoxA(NULL, buffer, "Xash Error", MB_OK);
 #else
-	fprintf(stderr, "Xash Error: %s\n", errorstring);
+	fprintf(stderr, "Xash Error: %s\n", buffer);
 #endif
 	exit( 1 );
 }
+
+#ifdef _WIN32
+const char *GetStringLastError()
+{
+	static char buf[1024];
+
+	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, GetLastError(), MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
+		buf, sizeof(buf), NULL);
+
+	return buf;
+}
+#endif
 
 void Sys_LoadEngine( void )
 {
 	if(( hEngine = dlmount( XASHLIB )) == NULL )
 	{
-#ifndef _WIN32
-		printf("%s\n", dlerror());
-#endif
-		Xash_Error( "Unable to load the " XASHLIB );
+		Xash_Error("Unable to load the " XASHLIB ": %s", dlerror() );
 	}
 
 	if(( Xash_Main = (pfnInit)dlsym( hEngine, "Host_Main" )) == NULL )
 	{
-#ifndef _WIN32
-		printf("%s\n", dlerror());
-#endif
-		Xash_Error( XASHLIB " missed 'Host_Main' export" );
+		Xash_Error( XASHLIB " missed 'Host_Main' export: %s", dlerror() );
 	}
 
 	// this is non-fatal for us but change game will not working
@@ -146,5 +174,11 @@ int main( int argc, char **argv )
 
 	Sys_LoadEngine();
 
-	return Xash_Main( szArgc, szArgv, GAME_PATH, false, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	int ret = Xash_Main( szArgc, szArgv, GAME_PATH, false, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+
+#if _WIN32 && !__MINGW32__ && _MSC_VER >= 1200
+	for (; i < szArgc; ++i)
+		free(szArgv[i]);
+	free(szArgv);
+#endif
 }

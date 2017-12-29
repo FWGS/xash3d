@@ -552,6 +552,7 @@ GL_CreateContext
 */
 qboolean GL_CreateContext( void )
 {
+	int colorBits[3];
 #ifdef XASH_NANOGL
 	nanoGL_Init();
 #endif

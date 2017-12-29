@@ -2301,7 +2301,7 @@ static void Mod_LoadEntities( const dlump_t *l )
 {
 	char	*pfile;
 	string	keyname;
-	char	token[2048];
+	char	token[4096];
 
 	// make sure what we really has terminator
 	loadmodel->entities = Mem_Alloc( loadmodel->mempool, l->filelen + 1 );
@@ -2346,8 +2346,8 @@ static void Mod_LoadEntities( const dlump_t *l )
 					size_t sizeOfPath, charsCopied;
 
 					char *end = Q_strchr( path, ';' );
-					if( !end )
-						end = path + Q_strlen( path );
+					// if( !end )
+					//	end = path + Q_strlen( path );
 					if( !end )
 					{
 						// if specified only once wad
@@ -2360,7 +2360,8 @@ static void Mod_LoadEntities( const dlump_t *l )
 
 					FS_FileBase( wadpath, wadlist.wadnames[wadlist.count++] );
 					path += (end - path) + 1; // move pointer
-					if( wadlist.count >= 256 ) break; // too many wads...
+					if( wadlist.count >= 256 ) 
+						break; // too many wads...
 				}
 			}
 			else if( !Q_stricmp( keyname, "mapversion" ))
