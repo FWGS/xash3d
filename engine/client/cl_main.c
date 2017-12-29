@@ -2297,9 +2297,7 @@ void CL_Init( void )
 #endif
 		if( !loaded )
 		{
-
 			loaded = CL_LoadProgs( CLIENTDLL );
-
 		}
 	}
 
