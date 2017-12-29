@@ -2343,16 +2343,10 @@ static void Mod_LoadEntities( const dlump_t *l )
 				// parse wad pathes
 				while( path && *path )
 				{
-					size_t sizeOfPath, charsCopied;
-
 					char *end = Q_strchr( path, ';' );
-					// if( !end )
-					//	end = path + Q_strlen( path );
-					if( !end )
+					if( !end ) // last wad
 					{
-						// if specified only once wad
-						if( !wadlist.count )
-							FS_FileBase( path, wadlist.wadnames[wadlist.count++] );
+						FS_FileBase( path, wadlist.wadnames[wadlist.count++] );
 						break;
 					}
 
