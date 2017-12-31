@@ -438,6 +438,22 @@ void GAME_EXPORT GL_SetRenderMode( int mode )
 }
 
 /*
+==================
+GL_DrawRangeElements
+
+==================
+*/
+#if !defined XASH_NANOGL || defined XASH_WES && defined __EMSCRIPTEN__ // WebGL need to know array sizes
+void GL_DrawRangeElements( GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices )
+{
+	if (pglDrawRangeElements)
+		pglDrawRangeElements(mode, start, end, count, type, indices);
+	else
+		pglDrawElements(mode, count, type, indices);
+}
+#endif
+
+/*
 ==============================================================================
 
 SCREEN SHOTS
