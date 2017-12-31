@@ -77,6 +77,7 @@ convar_t	*r_dynamic;
 convar_t	*r_lightmap;
 convar_t	*r_fastsky;
 convar_t	*r_vbo;
+convar_t	*r_vbo_allowmixedarrays;
 convar_t 	*r_bump;
 convar_t	*mp_decals;
 
@@ -1002,6 +1003,7 @@ static void R_CheckVBO( void )
 		def = "0";
 
 	r_vbo = Cvar_Get( "r_vbo", def, flags, "draw world using VBO" );
+	r_vbo_allowmixedarrays = Cvar_Get( "r_vbo_allowmixedarrays", "1", flags, "allow mix client and vbo arrays in GL code" );
 	r_bump = Cvar_Get( "r_bump", def, flags, "enable bump-mapping (r_vbo required)" );
 }
 

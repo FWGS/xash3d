@@ -1865,7 +1865,6 @@ struct vbo_static_s
 	uint dlightvbo;
 	unsigned short *dlight_index; // array
 	vec2_t *dlight_tc; // array
-	size_t dlight_tc_size;
 	vbovertex_t decal_dlight[MAX_RENDER_DECALS * DECAL_VERTS_MAX];
 	int decal_numverts[MAX_RENDER_DECALS * DECAL_VERTS_MAX];
 
@@ -2079,7 +2078,7 @@ void R_GenerateVBO()
 	pglBufferDataARB( GL_ARRAY_BUFFER_ARB, sizeof( vbovertex_t ) * DECAL_VERTS_CUT * MAX_RENDER_DECALS, vbos.decaldata->decalarray, GL_STATIC_DRAW_ARB );
 
 	// prepare dlight array
-	pglGenBuffersARB(1, &vbos.dlightvbo);
+	pglGenBuffersARB( 1, &vbos.dlightvbo );
 
 	// reset state
 	pglBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
@@ -2088,8 +2087,7 @@ void R_GenerateVBO()
 	// select maximum possible length for dlight
 	{
 		vbos.dlight_index = Mem_Alloc(vbos.mempool, maxindex * sizeof(unsigned short) * 6);
-		vbos.dlight_tc_size = (size_t)(vbos.arraylist->next ? (USHRT_MAX + 1) : vbos.arraylist->array_len + 1);
-		vbos.dlight_tc = Mem_Alloc(vbos.mempool, sizeof(vec2_t) * vbos.dlight_tc_size);
+		vbos.dlight_tc = Mem_Alloc(vbos.mempool, sizeof(vec2_t) * (int)(vbos.arraylist->next ? USHRT_MAX + 1 : vbos.arraylist->array_len + 1));
 	}
 
 }
@@ -2144,6 +2142,9 @@ void R_ClearVBO()
 		pglDeleteBuffersARB( 1, &vbo->glindex );
 
 	vbos.arraylist = NULL;
+
+	if( vbos.dlightvbo )
+		pglDeleteBuffersARB( 1, &vbos.dlightvbo );
 
 	if( vbos.decaldata )
 		pglDeleteBuffersARB( 1, &vbos.decaldata->decalvbo );
@@ -2541,10 +2542,12 @@ static void R_DrawLightmappedVBO( vboarray_t *vbo, vbotexture_t *vbotex, texture
 		else GL_Bind( mtst.tmu_lm, tr.dlightTexture );
 
 		// replace lightmap texcoord array by dlight array
-		//pglBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
-		// pglBindBufferARB(GL_ARRAY_BUFFER_ARB, vbos.dlightvbo);
-		// pglBufferDataARB(GL_ARRAY_BUFFER_ARB, vbos.dlight_tc_size * sizeof(vec2_t), vbos.dlight_tc, GL_STREAM_DRAW_ARB);
-		// pglTexCoordPointer(2, GL_FLOAT, 0, 0);
+		if (r_vbo_allowmixedarrays->value)
+		{
+			pglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+			pglTexCoordPointer(2, GL_FLOAT, sizeof(float) * 2, vbos.dlight_tc);
+		}
+
 		// clear the block
 		LM_InitBlock();
 
@@ -2639,7 +2642,11 @@ static void R_DrawLightmappedVBO( vboarray_t *vbo, vbotexture_t *vbotex, texture
 					pglDisable( GL_POLYGON_OFFSET_FILL );
 					if( RI.currententity->curstate.rendermode == kRenderTransAlpha )
 						pglEnable( GL_ALPHA_TEST );
-					// pglBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
+					if (r_vbo_allowmixedarrays->value)
+					{
+						pglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+						pglTexCoordPointer(2, GL_FLOAT, sizeof(float) * 2, vbos.dlight_tc);
+					}
 					R_SetDecalMode( false );
 					GL_SelectTexture( mtst.tmu_lm );
 					
@@ -2681,9 +2688,12 @@ static void R_DrawLightmappedVBO( vboarray_t *vbo, vbotexture_t *vbotex, texture
 				vbos.dlight_tc[index][1] = surf->polys->verts[index - indexbase][6] - ( surf->light_t - info->dlight_t ) * ( 1.0f / (float)BLOCK_SIZE );
 			}
 
-			pglBindBufferARB(GL_ARRAY_BUFFER_ARB, vbos.dlightvbo);
-			pglBufferDataARB(GL_ARRAY_BUFFER_ARB, vbo->array_len * sizeof(vec2_t), vbos.dlight_tc, GL_STREAM_DRAW_ARB);
-			pglTexCoordPointer(2, GL_FLOAT, 0, 0);
+			if (!r_vbo_allowmixedarrays->value)
+			{
+				pglBindBufferARB(GL_ARRAY_BUFFER_ARB, vbos.dlightvbo);
+				pglBufferDataARB(GL_ARRAY_BUFFER_ARB, vbo->array_len * sizeof(vec2_t), vbos.dlight_tc, GL_STREAM_DRAW_ARB);
+				pglTexCoordPointer(2, GL_FLOAT, 0, 0);
+			}
 
 			// if surface has decals, build decal array
 			for( pdecal = surf->pdecals; pdecal; pdecal = pdecal->pnext )
