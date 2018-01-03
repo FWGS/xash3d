@@ -2096,20 +2096,20 @@ qboolean FS_SysFolderExists( const char *path )
 
 	return ( dwFlags != -1 ) && ( dwFlags & FILE_ATTRIBUTE_DIRECTORY );
 #else
-	DIR *dir = opendir(path);
+	DIR *dir = opendir( path );
 
-	if(dir)
+	if( dir )
 	{
-		closedir(dir);
+		closedir( dir );
 		return 1;
 	}
-	else if((errno == ENOENT) || (errno == ENOTDIR))
+	else if( (errno == ENOENT) || (errno == ENOTDIR) )
 	{
 		return 0;
 	}
 	else
 	{
-		MsgDev(D_ERROR, "FS_SysFolderExists: problem while opening dir: %s", strerror(errno));
+		MsgDev( D_ERROR, "FS_SysFolderExists: problem while opening dir: %s\n", strerror(errno) );
 		return 0;
 	}
 #endif
