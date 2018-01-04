@@ -15,17 +15,36 @@ GNU General Public License for more details.
 
 #include "common.h"
 
-typedef struct base_command_hashmap_s
-{
-	base_command_t          *basecmd; // base command: cvar, alias or command
-	const char              *name;    // key for searching
-	base_command_type_e     type;     // type for faster searching
-	struct base_command_hashmap_s *next;
-} base_command_hashmap_t;
-
 #define HASH_SIZE 256 // 256 * 4 * 4 == 4096 bytes
 static base_command_hashmap_t *hashed_cmds[HASH_SIZE];
 
+/*
+============
+BaseCmd_FindInBucket
+
+Find base command in bucket
+============
+*/
+base_command_hashmap_t *BaseCmd_FindInBucket( base_command_hashmap_t *bucket, base_command_type_e type, const char *name )
+{
+	base_command_hashmap_t *i = bucket;
+	for( ; i && ( i->type != type || Q_stricmp( name, i->name ) ); // filter out
+		 i = i->next );
+
+	return i;
+}
+
+/*
+============
+BaseCmd_GetBucket
+
+Get bucket which contain basecmd by given name
+============
+*/
+base_command_hashmap_t *BaseCmd_GetBucket( const char *name )
+{
+	return hashed_cmds[ Com_HashKey( name, HASH_SIZE ) ];
+}
 
 /*
 ============
@@ -36,16 +55,50 @@ Find base command in hashmap
 */
 base_command_t *BaseCmd_Find( base_command_type_e type, const char *name )
 {
-	uint hash = Com_HashKey( name, HASH_SIZE );
-	base_command_hashmap_t *i;
+	base_command_hashmap_t *base = BaseCmd_GetBucket( name );
+	base_command_hashmap_t *found = BaseCmd_FindInBucket( base, type, name );
 
-	for( i = hashed_cmds[hash]; i &&
-		 ( i->type != type || Q_stricmp( name, i->name ) ); // filter out
-		 i = i->next );
-
-	if( i )
-		return i->basecmd;
+	if( found )
+		return found->basecmd;
 	return NULL;
+}
+
+/*
+============
+BaseCmd_Find
+
+Find every type of base command and write into arguments
+============
+*/
+void BaseCmd_FindAll(const char *name, base_command_t **cmd, base_command_t **alias, base_command_t **cvar)
+{
+	base_command_hashmap_t *base = BaseCmd_GetBucket( name );
+	base_command_hashmap_t *i = base;
+
+	ASSERT( cmd && alias && cvar );
+
+	*cmd = *alias = *cvar = NULL;
+
+	for( ; i; i = i->next )
+	{
+		if( !Q_stricmp( i->name, name ) )
+		{
+			switch( i->type )
+			{
+			case HM_CMD:
+				*cmd = i->basecmd;
+				break;
+			case HM_CMDALIAS:
+				*alias = i->basecmd;
+				break;
+			case HM_CVAR:
+				*cvar = i->basecmd;
+				break;
+			default: break;
+			}
+		}
+	}
+
 }
 
 /*
@@ -77,11 +130,9 @@ Used in case, when basecmd has been registered, but gamedll wants to register it
 */
 qboolean BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const char *name )
 {
-	uint hash = Com_HashKey( name, HASH_SIZE );
-	base_command_hashmap_t *i;
+	base_command_hashmap_t *i = BaseCmd_GetBucket( name );
 
-	for( i = hashed_cmds[hash]; i &&
-		 ( i->type != type || Q_stricmp( name, i->name ) ) ; // filter out
+	for( ; i && ( i->type != type || Q_stricmp( name, i->name ) ) ; // filter out
 		 i = i->next );
 
 	if( !i )
