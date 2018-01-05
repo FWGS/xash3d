@@ -1546,7 +1546,7 @@ void CL_ParseStuffText( sizebuf_t *msg )
 			}
 		}
 	}
-	Cbuf_AddText( s );
+	Cbuf_AddFilterText( s );
 }
 
 /*

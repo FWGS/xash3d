@@ -35,6 +35,7 @@ enum
 
 #define CMD_EXTDLL		BIT( 0 )		// added by game.dll
 #define CMD_CLIENTDLL	BIT( 1 )		// added by client.dll
+#define CMD_LOCALONLY   BIT( 2 )        // should be executed only from local buffers
 
 typedef void (*setpair_t)( const char *key, const char *value, void *buffer, void *numpairs );
 typedef void (*xcommand_t)( void );
@@ -43,7 +44,8 @@ typedef enum
 {
 	src_client,	// came in over a net connection as a clc_stringcmd
 			// host_client will be valid during this state.
-	src_command	// from the command buffer
+	src_command,	// from the command buffer
+	src_server, // from svc_stufftext
 } cmd_source_t;
 
 extern cmd_source_t		cmd_source;
@@ -89,6 +91,7 @@ typedef enum
 	CVAR_LATCH_VIDEO	= BIT(17),// save changes until render restart
 	CVAR_USER_CREATED	= BIT(18),// created by a set command (dll's used)
 	CVAR_GLCONFIG	= BIT(19),// set to cause it to be saved to opengl.cfg
+	CVAR_LOCALONLY  = BIT(20), // can be set only from local buffers
 } cvar_flags_t;
 
 #include "cvardef.h"
@@ -124,6 +127,7 @@ void Cvar_Unlink( void );
 void Cbuf_Init( void );
 void Cbuf_Clear( void );
 void Cbuf_AddText( const char *text );
+void Cbuf_AddFilterText( const char *text );
 void Cbuf_InsertText( const char *text );
 void Cbuf_Execute (void);
 int Cmd_Argc( void );

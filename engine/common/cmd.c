@@ -27,6 +27,15 @@ typedef struct
 	int	maxsize;
 } cmdbuf_t;
 
+typedef struct cmd_s
+{
+	char		 *name; // must be first, to match cvar_t
+	struct cmd_s *next;
+	xcommand_t	 function;
+	char		 *desc;
+	int          flags;
+} cmd_t;
+static cmd_t		*cmd_functions;			// possible commands to execute
 static qboolean		cmd_wait;
 static cmdbuf_t		cmd_text;
 static byte		cmd_text_buf[MAX_CMD_BUFFER];
@@ -112,6 +121,138 @@ void Cbuf_AddText( const char *text )
 	{
 		Q_memcpy( Cbuf_GetSpace( &cmd_text, l ), text, l );
 	}
+}
+
+/*
+=================
+Cbuf_AddFilterText
+
+Remove restricted commands from buffer and just add other
+=================
+*/
+void Cbuf_AddFilterText( const char *text )
+{
+	static int aliasDepth = 0;
+	qboolean quotes = false;
+	char	line[MAX_CMD_LINE] = { 0 };
+	int i = 0;
+
+	ASSERT( text );
+
+	if( aliasDepth >= 3 )
+	{
+		MsgDev( D_NOTE, "AddFilterText(alias, recursion)\n" );
+		return;
+	}
+
+	while( *text ) // stufftext should end by newline
+	{
+		if( i >= MAX_CMD_LINE - 2 )
+		{
+			MsgDev( D_ERROR, "Cbuf_AddFilterText: overflow!\n" );
+			return;
+		}
+
+		if( *text == '"' )
+		{
+			quotes = !quotes;
+		}
+
+		if( ( *text == ';' || *text == '\n' ) && !quotes )
+		{
+			// have anything in the buffer
+			if( line[0] )
+			{
+				int arg = 0;
+				cmd_t	*cmd;
+				cmdalias_t	*a;
+				convar_t *cvar;
+				
+				line[i] = '\n';
+				line[++i] = '\0';
+
+				Cmd_TokenizeString( line );
+
+				// prevent changing from "set" commands family
+				if( !Q_strnicmp( Cmd_Argv( 0 ), "set", 3 ) )
+					arg = 1;
+
+				// find commands
+#if defined(XASH_HASHED_VARS)
+				BaseCmd_FindAll( Cmd_Argv( arg ),
+					( base_command_t** ) &cmd,
+					( base_command_t** ) &a,
+					( base_command_t** ) &cvar );
+#else
+				for( a = cmd_alias; a; a = a->next )
+				{
+					if( !Q_stricmp( Cmd_Argv( arg ), a->name ) )
+						break;
+				}
+
+				for( cmd = cmd_functions; cmd; cmd = cmd->next )
+				{
+					if( !Q_stricmp( Cmd_Argv( arg ), cmd->name ) && cmd->function )
+						break;
+				}
+
+				cvar = Cvar_FindVar( Cmd_Argv( arg ) );
+#endif
+
+				if( a )
+				{
+					// recursively expose and validate an alias
+					MsgDev( D_NOTE, "AddFilterText(alias): %s => %s", a->name, a->value );
+					aliasDepth++;
+					Cbuf_AddFilterText( a->value );
+					aliasDepth--;
+				}
+				else if( cmd )
+				{
+					if( !( cmd->flags & CMD_LOCALONLY ) )
+					{
+						MsgDev( D_NOTE, "AddFilterText(cmd, allowed): %s", line );
+						Cbuf_AddText( line );
+					}
+					else
+					{
+						MsgDev( D_NOTE, "AddFilterText(cmd, restricted): %s", line );
+					}
+				}
+				else if( cvar )
+				{
+					if( !( cvar->flags & CVAR_LOCALONLY ) )
+					{
+						MsgDev( D_NOTE, "AddFilterText(cvar, allowed): %ss", line );
+						Cbuf_AddText( line );
+					}
+					else
+					{
+						MsgDev( D_NOTE, "AddFilterText(cvar, restricted): %s", line );
+					}
+				}
+				else
+				{
+					// add server forwards
+					MsgDev( D_NOTE, "AddFilterText(forwards, allowed): %s\n", line );
+					Cbuf_AddText( line );
+				}
+			}
+						
+			// clear buffers
+			i = 0;
+			line[0] = 0;
+		}
+		else
+		{
+			line[i] = *text;
+			i++;
+		}
+
+		text++;
+	}
+
+	// cmd_text.haveServerCmds = true;
 }
 
 /*
@@ -214,6 +355,7 @@ void GAME_EXPORT Cbuf_Execute( void )
 		}
 
 		// execute the command line
+		// Cmd_ExecuteString( line, cmd_text.haveServerCmds ? src_server : src_command );
 		Cmd_ExecuteString( line, src_command );
 
 		if( cmd_wait )
@@ -222,6 +364,11 @@ void GAME_EXPORT Cbuf_Execute( void )
 			// leaving it for next frame
 			cmd_wait = false;
 			break;
+		}
+		else
+		{
+			// completely flushed command buffer, so remove server commands flags
+			// cmd_text.haveServerCmds = false;
 		}
 	}
 }
@@ -462,20 +609,11 @@ static void Cmd_UnAlias_f ( void )
 
 =============================================================================
 */
-typedef struct cmd_s
-{
-	char		 *name; // must be first, to match cvar_t
-	struct cmd_s *next;
-	xcommand_t	 function;
-	char		 *desc;
-	int          flags;
-} cmd_t;
 
 static int		cmd_argc;
 static char		*cmd_args;
 static char		*cmd_argv[MAX_CMD_TOKENS];
 //static char		cmd_tokenized[MAX_CMD_BUFFER];	// will have 0 bytes inserted
-static cmd_t		*cmd_functions;			// possible commands to execute
 cmd_source_t		cmd_source;
 
 /*
@@ -1025,8 +1163,7 @@ void Cmd_ExecuteString( const char *text, cmd_source_t src )
 
 #ifndef XASH_DEDICATED
 	// forward the command line to the server, so the entity DLL can parse it
-	// UCyborg: Is src_client used anywhere?
-	if( cmd_source == src_command && !Host_IsDedicated() )
+	if( cmd_source != src_client && !Host_IsDedicated() )
 	{
 		if( cls.state >= ca_connected )
 			Cmd_ForwardToServer();
@@ -1261,6 +1398,11 @@ void Cmd_Null_f( void )
 {
 }
 
+void Cmd_Test_f( void )
+{
+	Cbuf_AddFilterText( Cmd_Argv( 1 ) );
+}
+
 /*
 ============
 Cmd_Init
@@ -1287,6 +1429,7 @@ void Cmd_Init( void )
 	Cmd_AddCommand( "unalias", Cmd_UnAlias_f, "remove a script function" );
 	Cmd_AddCommand( "if", Cmd_If_f, "compare and set condition bits" );
 	Cmd_AddCommand( "else", Cmd_Else_f, "invert condition bit" );
+	Cmd_AddCommand( "testfilter", Cmd_Test_f, "" );
 }
 
 void Cmd_Shutdown( void )
