@@ -217,12 +217,14 @@ void SNDDMA_Shutdown( void )
 		SDL_PauseAudioDevice( sdl_dev, 1 );
 #ifndef __EMSCRIPTEN__
 		SDL_CloseAudioDevice( sdl_dev );
-#endif
 		SDL_CloseAudio( );
+#endif
 	}
 
+#ifndef __EMSCRIPTEN__
 	if( SDL_WasInit( SDL_INIT_AUDIO ) )
 		SDL_QuitSubSystem( SDL_INIT_AUDIO );
+#endif
 
 	if( dma.buffer )
 	{

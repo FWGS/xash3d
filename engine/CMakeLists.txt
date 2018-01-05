@@ -22,7 +22,7 @@
 cmake_minimum_required( VERSION 2.6.0 )
 project( XASH_ENGINE C )
 
-set(XASH_ENGINE_LIBRARY xash)	    # Lib name
+set(XASH_ENGINE_LIBRARY xash) # Lib name
 file(GLOB_RECURSE XASH_ENGINE_SOURCES         common/*.c server/*.c ) # Minimal sources
 file(GLOB_RECURSE XASH_ENGINE_WIN32_SOURCES   platform/win32/*.c) # Win32 only sources
 file(GLOB_RECURSE XASH_ENGINE_SDL_SOURCES     platform/sdl/*.c) # SDL version sources
@@ -61,6 +61,8 @@ include_directories(
 
 add_definitions(-DXASH_FORCEINLINE)
 
+# ----- Conditions -----
+
 if(XASH_AUTODETECT_SSE_BUILD)
 	include(CheckSSEFeatures)
 	if(SSE_FLAGS)
@@ -80,8 +82,6 @@ if(XASH_SINGLE_BINARY)
 else()
 	add_library(${XASH_ENGINE_LIBRARY} SHARED ${XASH_ENGINE_SOURCES})
 endif()
-
-# ----- Conditions -----
 
 if(MSVC)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS
@@ -104,7 +104,7 @@ if(LINUX)
 	add_definitions(-DGDB_BREAK)
 endif()
 
-if(NOT XASH_64BIT)
+if(NOT XASH_64BIT AND NOT MSVC)
 	add_definitions(-DXASH_FASTSTR)
 endif()
 
@@ -112,8 +112,8 @@ if(XASH_IPX)
 	add_definitions(-DXASH_IPX)
 endif()
 
-if(XASH_NONSTANDART_LOAD)
-	add_definitions(-DXASH_NONSTANDART_LOAD)
+if(XASH_NONSTANDARD_LOAD)
+	add_definitions(-DXASH_NONSTANDARD_LOAD)
 endif()
 
 if(XASH_DEDICATED)
@@ -178,14 +178,15 @@ if(XASH_NO_ASYNC_NS_RESOLVE)
 	add_definitions(-DXASH_NO_ASYNC_NS_RESOLVE)
 endif()
 
-if(NOT WIN32)
-	target_link_libraries(${XASH_ENGINE_LIBRARY} -lm -lpthread)
-endif()
-
 set_target_properties(${XASH_ENGINE_LIBRARY} PROPERTIES
 	POSITION_INDEPENDENT_CODE 1)
 
-if(WIN32)
+if(NOT WIN32)
+	target_link_libraries(${XASH_ENGINE_LIBRARY} -lm -lpthread)
+
+	install(TARGETS ${XASH_ENGINE_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/${LIB_INSTALL_SUBDIR}
+		PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+else()
 	if(XASH_DEDICATED)
 		set_target_properties(${XASH_ENGINE_LIBRARY} PROPERTIES
 			OUTPUT_NAME "xash_dedicated" PREFIX "")
@@ -193,20 +194,16 @@ if(WIN32)
 		set_target_properties(${XASH_ENGINE_LIBRARY} PROPERTIES
 			OUTPUT_NAME "xash_sdl" PREFIX "")
 	endif()
-endif()
 
-# Installing
-if(NOT WIN32)
-	install(TARGETS ${XASH_ENGINE_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/${LIB_INSTALL_SUBDIR}
-		PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
-else()
 	install(TARGETS ${XASH_ENGINE_LIBRARY}
 		CONFIGURATIONS Debug 
 		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Debug/
 		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Debug/)
-	install(FILES $<TARGET_FILE_DIR:${XASH_ENGINE_LIBRARY}>/$<TARGET_PROPERTY:${XASH_ENGINE_LIBRARY},OUTPUT_NAME>.pdb
-		CONFIGURATIONS Debug 
-		DESTINATION ${LIB_INSTALL_DIR}/Debug/ )
+	if(MSVC)
+		install(FILES $<TARGET_PDB_FILE:${XASH_ENGINE_LIBRARY}>
+			CONFIGURATIONS Debug 
+			DESTINATION ${LIB_INSTALL_DIR}/Debug/ )
+	endif()
 	install(TARGETS ${XASH_ENGINE_LIBRARY}
 		CONFIGURATIONS Release 
 		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Release/

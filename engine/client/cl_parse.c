@@ -747,13 +747,14 @@ void CL_ParseClientData( sizebuf_t *msg )
 		weapon_data_t	*wd, *pwd;
 
 		last_predicted = ( cl.last_incoming_sequence + ( cls.netchan.incoming_acknowledged - cl.last_command_ack )) & CL_UPDATE_MASK;
-		pps = &cl.predict[last_predicted].playerstate;
-		pwd = cl.predict[last_predicted].weapondata;
-		ppcd = &cl.predict[last_predicted].client;
-
 		ps = &frame->playerstate[cl.playernum];
+		pps = &cl.predict[last_predicted].playerstate;
+
 		wd = frame->weapondata;
+		pwd = cl.predict[last_predicted].weapondata;
+
 		pcd = &frame->client;
+		ppcd = &cl.predict[last_predicted].client;
 
 		clgame.dllFuncs.pfnTxferPredictionData( ps, pps, pcd, ppcd, wd, pwd );
 	}
@@ -1490,20 +1491,20 @@ char *description;
 float percent;
 float step;
 } stufftexttable[] = {
-{ "getresourcelist", "Getting resource list", .1, .1 },
-{ "modellist", "Getting model list", .2, .1 },
-{ "soundlist", "Getting sound list", .3, .1 },
-{ "eventlist", "Getting event list", .4, .1 },
-{ "lightstyles", "Getting light styles", .5, .1 },
-{ "usermsgs", "Getting user messages", .6, .1 },
-{ "deltainfo", "Getting delta tables", .7, .1 },
-{ "baselines", "Getting baselines", .8, .2 }
+	{ "getresourcelist", "Getting resource list", .1, .1 },
+	{ "modellist",       "Getting model list",    .2, .1 },
+	{ "soundlist",       "Getting sound list",    .3, .1 },
+	{ "eventlist",       "Getting event list",    .4, .1 },
+	{ "lightstyles",     "Getting light styles",  .5, .1 },
+	{ "usermsgs",        "Getting user messages", .6, .1 },
+	{ "deltainfo",       "Getting delta tables",  .7, .1 },
+	{ "baselines",       "Getting baselines",     .8, .2 }
 };
 
 struct stufftextparser_s
 {
-char last;
-int counter;
+	char last;
+	int counter;
 } stufftextparser;
 
 void CL_ParseStuffText( sizebuf_t *msg )

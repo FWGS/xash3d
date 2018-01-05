@@ -84,6 +84,18 @@ qboolean BloomFilter_ContainsString( bloomfilter_t filter, const char *str )
 	return (filter & value) == value;
 }
 
+/*
+=============================================
+
+IDENTIFICATION
+
+=============================================
+*/
+#define MAXBITS_GEN 30
+#define MAXBITS_CHECK MAXBITS_GEN + 6
+
+qboolean ID_ProcessFile( bloomfilter_t *value, const char *path );
+
 void ID_BloomFilter_f( void )
 {
 	bloomfilter_t value = 0;
@@ -187,6 +199,85 @@ qboolean ID_ProcessCPUInfo( bloomfilter_t *value )
 	return true;
 }
 
+qboolean ID_ValidateNetDevice( const char *dev )
+{
+	const char *prefix = "/sys/class/net";
+	byte *pfile;
+	int assignType;
+
+	// These devices are fake, their mac address is generated each boot, while assign_type is 0
+	if( Q_strnicmp( dev, "ccmni", sizeof( "ccmni" ) ) ||
+		Q_strnicmp( dev, "ifb", sizeof( "ifb" ) ) )
+		return false;
+
+	pfile = FS_LoadDirectFile( va( "%s/%s/addr_assign_type", prefix, dev ), NULL );
+
+	// if NULL, it may be old kernel
+	if( pfile )
+	{
+		assignType = Q_atoi( (char*)pfile );
+
+		Mem_Free( pfile );
+
+		// check is MAC address is constant
+		if( assignType != 0 )
+			return false;
+	}
+
+	return true;
+}
+
+int ID_ProcessNetDevices( bloomfilter_t *value )
+{
+	const char *prefix = "/sys/class/net";
+	DIR *dir;
+	struct dirent *entry;
+	int count = 0;
+
+	if( !( dir = opendir( prefix ) ) )
+		return 0;
+
+	while( ( entry = readdir( dir ) ) && BloomFilter_Weight( *value ) < MAXBITS_GEN )
+	{
+		if( !Q_strcmp( entry->d_name, "." ) || !Q_strcmp( entry->d_name, ".." ) )
+			continue;
+
+		if( !ID_ValidateNetDevice( entry->d_name ) )
+			continue;
+
+		count += ID_ProcessFile( value, va( "%s/%s/address", prefix, entry->d_name ) );
+	}
+	closedir( dir );
+	return count;
+}
+
+int ID_CheckNetDevices( bloomfilter_t value )
+{
+	const char *prefix = "/sys/class/net";
+
+	DIR *dir;
+	struct dirent *entry;
+	int count = 0;
+	bloomfilter_t filter = 0;
+
+	if( !( dir = opendir( prefix ) ) )
+		return 0;
+
+	while( ( entry = readdir( dir ) ) )
+	{
+		if( !Q_strcmp( entry->d_name, "." ) || !Q_strcmp( entry->d_name, ".." ) )
+			continue;
+
+		if( !ID_ValidateNetDevice( entry->d_name ) )
+			continue;
+
+		if( ID_ProcessFile( &filter, va( "%s/%s/address", prefix, entry->d_name ) ) )
+			count += ( value & filter ) == filter, filter = 0;
+	}
+
+	closedir( dir );
+	return count;
+}
 
 void ID_TestCPUInfo_f( void )
 {
@@ -226,9 +317,6 @@ qboolean ID_ProcessFile( bloomfilter_t *value, const char *path )
 	return true;
 }
 
-#define MAXBITS_GEN 30
-#define MAXBITS_CHECK MAXBITS_GEN + 6
-
 #ifndef _WIN32
 int ID_ProcessFiles( bloomfilter_t *value, const char *prefix, const char *postfix )
 {
@@ -240,7 +328,12 @@ int ID_ProcessFiles( bloomfilter_t *value, const char *prefix, const char *postf
 	    return 0;
 
 	while( ( entry = readdir( dir ) ) && BloomFilter_Weight( *value ) < MAXBITS_GEN )
+	{
+		if( !Q_strcmp( entry->d_name, "." ) || !Q_strcmp( entry->d_name, ".." ) )
+			continue;
+
 		count += ID_ProcessFile( value, va( "%s/%s/%s", prefix, entry->d_name, postfix ) );
+	}
 	closedir( dir );
 	return count;
 }
@@ -256,8 +349,13 @@ int ID_CheckFiles( bloomfilter_t value, const char *prefix, const char *postfix 
 	    return 0;
 
 	while( ( entry = readdir( dir ) ) )
+	{
+		if( !Q_strcmp( entry->d_name, "." ) || !Q_strcmp( entry->d_name, ".." ) )
+			continue;
+
 		if( ID_ProcessFile( &filter, va( "%s/%s/%s", prefix, entry->d_name, postfix ) ) )
 			count += ( value & filter ) == filter, filter = 0;
+	}
 
 	closedir( dir );
 	return count;
@@ -407,7 +505,7 @@ bloomfilter_t ID_GenerateRawId( void )
 #endif
 	count += ID_ProcessCPUInfo( &value );
 	count += ID_ProcessFiles( &value, "/sys/block", "device/cid" );
-	count += ID_ProcessFiles( &value, "/sys/class/net", "address" );
+	count += ID_ProcessNetDevices( &value );
 #endif
 #ifdef _WIN32
 	count += ID_ProcessWMIC( &value, "wmic path win32_physicalmedia get SerialNumber " );
@@ -439,7 +537,7 @@ uint ID_CheckRawId( bloomfilter_t filter )
 		}
 	}
 #endif
-	count += ID_CheckFiles( filter, "/sys/class/net", "address" );
+	count += ID_CheckNetDevices( filter );
 	count += ID_CheckFiles( filter, "/sys/block", "device/cid" );
 	if( ID_ProcessCPUInfo( &value ) )
 		count += (filter & value) == value;

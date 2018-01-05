@@ -1214,11 +1214,15 @@ void CL_InternetServers_f( void )
 {
 	netadr_t	adr;
 	char	fullquery[512] = MS_SCAN_REQUEST;
-	char info[256] = "";
+	char *info = fullquery + sizeof( MS_SCAN_REQUEST ) - 1;
+	const size_t remaining = sizeof( fullquery ) - sizeof( MS_SCAN_REQUEST );
 	int res;
 
-	Info_SetValueForKey( info, "nat", cl_nat->string, 256 );
-	Info_SetValueForKey( info, "gamedir", GI->gamefolder, 256 );
+	Info_SetValueForKey( info, "nat", cl_nat->string, remaining );
+	Info_SetValueForKey( info, "gamedir", GI->gamefolder, remaining );
+
+	// let master know about client version
+	Info_SetValueForKey( info, "clver", XASH_VERSION, remaining );
 
 	NET_Config( true, true ); // allow remote
 
@@ -1240,7 +1244,34 @@ void CL_InternetServers_f( void )
 	cls.internetservers_wait = false;
 	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
 
-	NET_SendPacket( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strcpy( fullquery + sizeof( MS_SCAN_REQUEST ) - 1, info ), fullquery, adr );
+	NET_SendPacket( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strlen( info ), fullquery, adr );
+}
+
+/*
+====================
+CL_QueryServer_f
+====================
+*/
+void CL_QueryServer_f( void )
+{
+	netadr_t adr;
+
+	if( Cmd_Argc() != 2 )
+	{
+		MsgDev( D_INFO, "Usage: queryserver <adr>\n" );
+		return;
+	}
+
+	NET_Config( true, true ); // allow remote
+
+	if( NET_StringToAdr( Cmd_Argv( 1 ), &adr ) )
+	{
+		Netchan_OutOfBandPrint( NS_CLIENT, adr, "info %i", PROTOCOL_VERSION );
+	}
+	else
+	{
+		Msg( "Bad address\n" );
+	}
 }
 
 /*
@@ -2076,6 +2107,7 @@ void CL_InitLocal( void )
 	Cmd_AddCommand ("pause", NULL, "pause the game (if the server allows pausing)" );
 	Cmd_AddCommand ("localservers", CL_LocalServers_f, "collect info about local servers" );
 	Cmd_AddCommand ("internetservers", CL_InternetServers_f, "collect info about internet servers" );
+	Cmd_AddCommand ("queryserver", CL_QueryServer_f, "collect info about server by address");
 	Cmd_AddCommand ("cd", CL_PlayCDTrack_f, "play cd-track (not real cd-player of course)" );
 	Cmd_AddCommand ("mp3", CL_MP3Command_f, "mp3 command" );
 
@@ -2265,9 +2297,7 @@ void CL_Init( void )
 #endif
 		if( !loaded )
 		{
-
 			loaded = CL_LoadProgs( CLIENTDLL );
-
 		}
 	}
 

@@ -807,13 +807,14 @@ Cvar_Command
 Handles variable inspection and changing from the console
 ============
 */
-qboolean Cvar_Command( void )
+qboolean Cvar_Command( convar_t *v )
 {
-	convar_t	*v;
-
 	// check variables
+#if !defined( XASH_HASHED_VARS ) // if don't have base cmd, ignore argument
 	v = Cvar_FindVar( Cmd_Argv( 0 ));
-	if( !v ) return false;
+#endif
+	if( !v )
+		return false;
 
 	// perform a variable print or set
 	if( Cmd_Argc() == 1 )

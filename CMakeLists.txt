@@ -21,6 +21,10 @@
 #
 
 cmake_minimum_required(VERSION 2.6.0)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+include(VSForceXPToolchain)
+
 project (XASH3D)
 
 #--------------
@@ -77,14 +81,12 @@ option(XASH_NO_INSTALL_RUNSCRIPT "Don't install xash3d.sh" OFF)
 # Pre-build analyze step
 option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-
 #-----------------
 # MAIN BUILD CODE \
 ###################\
 
 if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-        message(FATAL_ERROR "Xash3D doesn't work with 64 bit systems well and there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
+	message(FATAL_ERROR "Xash3D doesn't work with 64 bit systems well and there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
 endif()
 
 # Dependencies
@@ -99,7 +101,6 @@ endif()
 if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER AND NOT XASH_NONSTANDARD_LOAD)
 	message(FATAL_ERROR "You must choose XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
 endif()
-
 
 if(NOT DEFINED LIB_INSTALL_DIR)
 	if(WIN32)
@@ -137,11 +138,23 @@ endif()
 
 add_subdirectory(engine)
 
-if(NOT WIN32 OR XASH_NO_INSTALL_RUNSCRIPTе )
+if(NOT WIN32 OR XASH_NO_INSTALL_RUNSCRIPT)
 	install(FILES "xash3d.sh"
 		DESTINATION "${BIN_INSTALL_DIR}"
 	    RENAME "xash3d"
 		PERMISSIONS OWNER_READ OWNER_EXECUTE OWNER_WRITE
 		            GROUP_READ GROUP_EXECUTE
 					WORLD_READ WORLD_EXECUTE)
+endif()
+
+if(WIN32)
+	if(XASH_SINGLE_BINARY)
+		set_property(DIRECTORY .
+			PROPERTY
+				VS_STARTUP_PROJECT xash)
+	else()
+		set_property(DIRECTORY .
+			PROPERTY
+				VS_STARTUP_PROJECT xash3d)
+	endif()
 endif()

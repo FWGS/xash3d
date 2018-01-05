@@ -2851,20 +2851,15 @@ static void GAME_EXPORT pfnAlertMessage( ALERT_TYPE level, char *szFmt, ... )
 	char	buffer0[2048];	// must support > 1k messages
 	va_list	args;
 	char *buffer = buffer0;
-
-	if( ( level == at_logged ) && sv_maxclients->integer > 1 )
-	{
-		va_start( args, szFmt );
-		Q_vsnprintf( buffer0, 2048, szFmt, args );
-		va_end( args );
-
-		Log_Printf ("%s", buffer0);
-		return;
-	}
-
 	va_start( args, szFmt );
 	Q_vsnprintf( buffer0, 2048, szFmt, args );
 	va_end( args );
+
+	if( ( level == at_logged ) && sv_maxclients->integer > 1 )
+	{
+		Log_Printf("%s", buffer0 );
+		return;
+	}
 
 	// check message for pass
 	switch( level )
@@ -4627,7 +4622,7 @@ void GAME_EXPORT pfnQueryClientCvarValue( const edict_t *player, const char *cva
 		return;
 	}
 
-	if(( cl = SV_ClientFromEdict( player, true )) != NULL )
+	if(( cl = SV_ClientFromEdict( player, false )) != NULL )
 	{
 		BF_WriteByte( &cl->netchan.message, svc_querycvarvalue );
 		BF_WriteString( &cl->netchan.message, cvarName );
@@ -4657,7 +4652,7 @@ void GAME_EXPORT pfnQueryClientCvarValue2( const edict_t *player, const char *cv
 		return;
 	}
 
-	if(( cl = SV_ClientFromEdict( player, true )) != NULL )
+	if(( cl = SV_ClientFromEdict( player, false )) != NULL )
 	{
 		BF_WriteByte( &cl->netchan.message, svc_querycvarvalue2 );
 		BF_WriteLong( &cl->netchan.message, requestID );
