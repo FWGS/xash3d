@@ -1269,6 +1269,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 	Mod_Init();
 	NET_Init();
+	NET_InitMasters();
 	Netchan_Init();
 
 	// allow to change game from the console

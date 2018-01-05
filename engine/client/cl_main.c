@@ -1212,11 +1212,9 @@ CL_InternetServers_f
 */
 void CL_InternetServers_f( void )
 {
-	netadr_t	adr;
 	char	fullquery[512] = MS_SCAN_REQUEST;
 	char *info = fullquery + sizeof( MS_SCAN_REQUEST ) - 1;
 	const size_t remaining = sizeof( fullquery ) - sizeof( MS_SCAN_REQUEST );
-	int res;
 
 	Info_SetValueForKey( info, "nat", cl_nat->string, remaining );
 	Info_SetValueForKey( info, "gamedir", GI->gamefolder, remaining );
@@ -1226,25 +1224,8 @@ void CL_InternetServers_f( void )
 
 	NET_Config( true, true ); // allow remote
 
-	res = NET_StringToAdrNB( sv_master->string, &adr );
-
-	if( !res )
-	{
-		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
-		cls.internetservers_wait = false;
-		return;
-	}
-
-	if( res == 2 )
-	{
-		cls.internetservers_wait = true;
-		return;
-	}
-
-	cls.internetservers_wait = false;
-	MsgDev( D_INFO, "Scanning for servers on the internet area...\n" );
-
-	NET_SendPacket( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strlen( info ), fullquery, adr );
+	cls.internetservers_wait = Net_SendToMasters( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strlen( info ), fullquery );
+	cls.internetservers_pending = true;
 }
 
 /*
@@ -1771,7 +1752,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		}
 
 		// execute at next frame preventing relation on fps
-		Cbuf_AddText("menu_resetping\n");
+		if( cls.internetservers_pending )
+			Cbuf_AddText("menu_resetping\n");
+		cls.internetservers_pending = false;
 	}
 	else if( clgame.dllFuncs.pfnConnectionlessPacket( &from, args, buf, &len ))
 	{
