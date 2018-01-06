@@ -16,7 +16,7 @@ GNU General Public License for more details.
 #include "common.h"
 #include "server.h"
 
-qboolean startingdefmap;
+static qboolean startingdefmap;
 
 /*
 =================
@@ -180,6 +180,7 @@ void SV_Map_f( void )
 	char	*spawn_entity;
 	string	mapname;
 	int	flags;
+	static qboolean mapinit;
 
 	if( Cmd_Argc() != 2 )
 	{
@@ -192,6 +193,12 @@ void SV_Map_f( void )
 		CL_Disconnect();
 		Cbuf_InsertText(va("wait;rcon map %s\n",Cmd_Argv( 1 )));
 		Cbuf_AddText("wait;connect 127.0.0.1\n");
+		return;
+	}
+
+	if( mapinit )
+	{
+		Host_Error("Wrong usage of \"map\" in config files\n");
 		return;
 	}
 
@@ -215,8 +222,10 @@ void SV_Map_f( void )
 	else
 		startingdefmap = false;
 
+	mapinit = true;
 	// make sure that all configs are executed
 	Cbuf_Execute();
+	mapinit = false;
 
 	flags = SV_MapIsValid( mapname, spawn_entity, NULL );
 
