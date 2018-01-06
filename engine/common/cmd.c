@@ -223,7 +223,7 @@ void Cbuf_AddFilterText( const char *text )
 				{
 					if( !( cvar->flags & CVAR_LOCALONLY ) )
 					{
-						MsgDev( D_NOTE, "AddFilterText(cvar, allowed): %ss", line );
+						MsgDev( D_NOTE, "AddFilterText(cvar, allowed): %s", line );
 						Cbuf_AddText( line );
 					}
 					else
@@ -234,7 +234,7 @@ void Cbuf_AddFilterText( const char *text )
 				else
 				{
 					// add server forwards
-					MsgDev( D_NOTE, "AddFilterText(forwards, allowed): %s\n", line );
+					MsgDev( D_NOTE, "AddFilterText(forwards, allowed): %s", line );
 					Cbuf_AddText( line );
 				}
 			}
