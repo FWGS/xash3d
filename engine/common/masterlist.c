@@ -245,8 +245,8 @@ Initialize master server list
 */
 void NET_InitMasters()
 {
-	Cmd_AddCommand( "addmaster", NET_AddMaster_f, "add address to masterserver list" );
-	Cmd_AddCommand( "clearmasters", NET_ClearMasters_f, "clear masterserver list" );
+	Cmd_AddRestrictedCommand( "addmaster", NET_AddMaster_f, "add address to masterserver list" );
+	Cmd_AddRestrictedCommand( "clearmasters", NET_ClearMasters_f, "clear masterserver list" );
 	Cmd_AddCommand( "listmasters", NET_ListMasters_f, "list masterservers" );
 
 	// keep main master always there

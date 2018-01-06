@@ -86,7 +86,6 @@ convar_t	*skill;
 convar_t	*coop;
 convar_t	*sv_skipshield; // HACK for shield
 convar_t	*sv_trace_messages;
-convar_t	*sv_master;
 convar_t	*sv_corpse_solid;
 convar_t	*sv_fixmulticast;
 convar_t	*sv_allow_split;
@@ -982,7 +981,6 @@ void SV_Init( void )
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
 	sv_skipshield = Cvar_Get( "sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
 	sv_trace_messages = Cvar_Get( "sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)" );
-	sv_master = Cvar_Get( "sv_master", DEFAULT_SV_MASTER, CVAR_ARCHIVE|CVAR_LOCALONLY, "master server address" );
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
 	sv_fixmulticast = Cvar_Get( "sv_fixmulticast", "1", CVAR_ARCHIVE, "do not send multicast to not spawned clients" );
 	sv_allow_compress = Cvar_Get( "sv_allow_compress", "1", CVAR_ARCHIVE, "allow Huffman compression on server" );

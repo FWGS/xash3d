@@ -137,6 +137,7 @@ void Cmd_Init( void );
 void Cmd_Shutdown( void );
 void Cmd_Unlink( int group );
 void Cmd_AddCommand( const char *cmd_name, xcommand_t function, const char *cmd_desc );
+void Cmd_AddRestrictedCommand( const char *cmd_name, xcommand_t function, const char *cmd_desc );
 void Cmd_AddGameCommand( const char *cmd_name, xcommand_t function );
 void Cmd_AddClientCommand( const char *cmd_name, xcommand_t function );
 void Cmd_RemoveCommand( const char *cmd_name );
