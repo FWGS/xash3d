@@ -709,7 +709,7 @@ Master_Add
 */
 void Master_Add( void )
 {
-	if( Net_SendToMasters( NS_SERVER, 2, "q\xFF" ) )
+	if( NET_SendToMasters( NS_SERVER, 2, "q\xFF" ) )
 		svs.last_heartbeat = MAX_HEARTBEAT; // try next frame
 }
 
@@ -749,7 +749,7 @@ Informs all masters that this server is going down
 void Master_Shutdown( void )
 {
 	NET_Config( true, false ); // allow remote
-	while( Net_SendToMasters( NS_SERVER, 2, "\x62\x0A" ) );
+	while( NET_SendToMasters( NS_SERVER, 2, "\x62\x0A" ) );
 }
 
 /*

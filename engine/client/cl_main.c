@@ -1224,7 +1224,7 @@ void CL_InternetServers_f( void )
 
 	NET_Config( true, true ); // allow remote
 
-	cls.internetservers_wait = Net_SendToMasters( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strlen( info ), fullquery );
+	cls.internetservers_wait = NET_SendToMasters( NS_CLIENT, sizeof( MS_SCAN_REQUEST ) + Q_strlen( info ), fullquery );
 	cls.internetservers_pending = true;
 }
 

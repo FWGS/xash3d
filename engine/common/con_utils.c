@@ -1387,6 +1387,9 @@ void Host_WriteConfig( void )
 	else
 		MsgDev( D_NOTE, "Keyboard configuration not changed\n" );
 #endif
+
+
+	NET_SaveMasters( );
 }
 
 /*

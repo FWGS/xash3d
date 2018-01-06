@@ -528,7 +528,9 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 // masterlist.c
 //
 void NET_InitMasters();
-qboolean Net_SendToMasters( netsrc_t sock, size_t len, const void *data );
+void NET_SaveMasters();
+qboolean NET_SendToMasters( netsrc_t sock, size_t len, const void *data );
+
 /*
 ========================================================================
 
