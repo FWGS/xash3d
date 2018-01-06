@@ -217,7 +217,6 @@ extern convar_t	*host_maxfps;
 extern convar_t *net_qport;
 extern convar_t *download_types;
 extern convar_t	*host_xashds_hacks;
-extern convar_t	*sv_master;
 /*
 ==============================================================
 
@@ -523,6 +522,12 @@ qboolean NET_CompareBaseAdr( const netadr_t a, const netadr_t b );
 qboolean NET_GetPacket( netsrc_t sock, netadr_t *from, byte *data, size_t *length );
 void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to );
 
+
+//
+// masterlist.c
+//
+void NET_InitMasters();
+qboolean Net_SendToMasters( netsrc_t sock, size_t len, const void *data );
 /*
 ========================================================================
 

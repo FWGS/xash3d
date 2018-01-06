@@ -86,7 +86,6 @@ convar_t	*skill;
 convar_t	*coop;
 convar_t	*sv_skipshield; // HACK for shield
 convar_t	*sv_trace_messages;
-convar_t	*sv_master;
 convar_t	*sv_corpse_solid;
 convar_t	*sv_fixmulticast;
 convar_t	*sv_allow_split;
@@ -709,24 +708,8 @@ Master_Add
 */
 void Master_Add( void )
 {
-	netadr_t	adr;
-	int res;
-
-	res = NET_StringToAdrNB( sv_master->string, &adr );
-
-	if( !res )
-	{
-		MsgDev( D_INFO, "Can't resolve adr: %s\n", sv_master->string );
-		return;
-	}
-
-	if( res == 2 )
-	{
-		svs.last_heartbeat = MAX_HEARTBEAT;
-		return;
-	}
-
-	NET_SendPacket( NS_SERVER, 2, "q\xFF", adr );
+	if( Net_SendToMasters( NS_SERVER, 2, "q\xFF" ) )
+		svs.last_heartbeat = MAX_HEARTBEAT; // try next frame
 }
 
 
@@ -764,17 +747,8 @@ Informs all masters that this server is going down
 */
 void Master_Shutdown( void )
 {
-	netadr_t	adr;
-
 	NET_Config( true, false ); // allow remote
-
-	if( !NET_StringToAdr( sv_master->string, &adr ))
-	{
-		MsgDev( D_INFO, "Can't resolve addr: %s\n", sv_master->string );
-		return;
-	}
-
-	NET_SendPacket( NS_SERVER, 2, "\x62\x0A", adr );
+	while( Net_SendToMasters( NS_SERVER, 2, "\x62\x0A" ) );
 }
 
 /*
@@ -1007,7 +981,6 @@ void SV_Init( void )
 	sv_novis = Cvar_Get( "sv_novis", "0", 0, "disable server-side visibility checking" );
 	sv_skipshield = Cvar_Get( "sv_skipshield", "0", CVAR_ARCHIVE, "skip shield hitbox");
 	sv_trace_messages = Cvar_Get( "sv_trace_messages", "0", CVAR_ARCHIVE|CVAR_LATCH, "enable server usermessages tracing (good for developers)" );
-	sv_master = Cvar_Get( "sv_master", DEFAULT_SV_MASTER, CVAR_ARCHIVE, "master server address" );
 	sv_corpse_solid = Cvar_Get( "sv_corpse_solid", "0", CVAR_ARCHIVE, "make corpses solid" );
 	sv_fixmulticast = Cvar_Get( "sv_fixmulticast", "1", CVAR_ARCHIVE, "do not send multicast to not spawned clients" );
 	sv_allow_compress = Cvar_Get( "sv_allow_compress", "1", CVAR_ARCHIVE, "allow Huffman compression on server" );

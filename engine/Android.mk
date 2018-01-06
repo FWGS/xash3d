@@ -107,6 +107,7 @@ LOCAL_SRC_FILES := \
            common/infostring.c \
            common/identification.c \
            common/library.c \
+           common/masterlist.c \
            common/mathlib.c \
            common/matrixlib.c \
            common/mod_studio.c \
