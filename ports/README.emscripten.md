@@ -69,6 +69,12 @@ cd xash3d
 git submodule init && git submodule update
 ```
 
+Setup makefiles:
+
+```
+./contrib/mittorn/setup.sh
+```
+
 Switch to branch containing this file
 
 Clone nanogl and gl-wes-2 repos:

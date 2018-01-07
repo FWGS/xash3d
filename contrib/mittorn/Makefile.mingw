@@ -1,0 +1,128 @@
+#############################################
+# Makefile.mingw - mingw makefile
+# Copyright (C) 2017 mittorn
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+##############################################
+
+CC ?= gcc
+CXX ?= g++
+
+# Workaround wrong default mingw32-make configuration ($(CC) does not exist)
+ifeq ($(CC),cc)
+ CC = gcc
+endif
+
+# Optimized build
+CFLAGS = -DDEBUG_RESOLVE -O2 -fno-omit-frame-pointer -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse2 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=i686
+LDFLAGS =
+
+XASH_COMMIT := $(firstword $(shell git rev-parse --short=6 HEAD) unknown)
+
+ifeq ($(XASH_COMMIT),unknown)
+$(warning You seems to build xash3d without git)
+$(warning Please use git if you are going to publish your build)
+endif
+
+# detect 64bit mingw
+MACHINE := $(shell $(CC) -dumpmachine)
+ifneq ($(64BIT),1)
+	ifeq ($(MACHINE),x86_64-w64-mingw32)
+		LDFLAGS += -m32
+		CFLAGS += -m32
+	endif
+endif
+
+# You should download SDL2 mingw
+# development libraries to use non-dedicated mode
+SDL_DIR ?= ../SDL2
+
+LIBS = -lm
+TOPDIR = $(PWD)/..
+INCLUDES = -I$(SDL_DIR)/include -Icommon -I../common -Iserver -Iclient -Iclient/vgui -I. -I../pm_shared
+DEFINES =
+
+# win32 dependencies configuration
+ifeq ($(XASH_DEDICATED),1)
+	DEFINES += -DXASH_DEDICATED
+	LIBS += -luser32 -lkernel32 -lgdi32 -ldbghelp -lpsapi
+else
+	DEFINES += -DXASH_SDL
+	LIBS += -lSDL2 -L$(SDL_DIR)/lib/x86 -L$(SDL_DIR)/lib/x64 -luser32 -lkernel32 -lgdi32 -ldbghelp -lpsapi
+endif
+
+# nanogl core profile support (broken, unuseful)
+ifeq ($(NANOGL),1)
+INCLUDES += -I../nanogl -I../nanogl/GL
+DEFINES += -DXASH_GLES -DXASH_NANOGL -DUSE_CORE_PROFILE
+LIBS += -lstdc++
+endif
+#############################
+# Preprocessor defines:
+#############################
+# USE_SELECT - allow asynchronous stdin console input
+# COLORIZE_CONSOLE - enable ANSI console colors
+# DEBUGNAN - report NaN errors in server physics
+# XASH_FORCEINLINE - make crtlib functions inlined
+# SINGLE_BINARY - tells to build xash_bin.exe instead of xash_sdl.dll
+# XASH_W32CON  - enable graphical win32 console
+# DBGHELP - enable crashhandler with dbghelp library
+#############################
+DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FORCEINLINE -DXASH_W32CON -DDBGHELP
+
+# Specify commit hash in version string
+DEFINES += -DXASH_BUILD_COMMIT=\"$(XASH_COMMIT)\"
+
+# Enable optimized crt functions for 32-bit systems
+ifneq ($(64BIT),1)
+DEFINES += -DXASH_FASTSTR
+endif
+
+# Object rules
+%.o : %.c
+	$(CC) -pipe $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
+
+%.o : %.cpp
+	$(CXX) -pipe $(CFLAGS) $(INCLUDES) $(DEFINES) -c $< -o $@
+
+
+# Collect files
+SRCS_CPP =
+
+ifeq ($(NANOGL),1)
+	SRCS_CPP += $(wildcard ../nanogl/*.cpp)
+endif
+
+OBJS_CPP = $(SRCS_CPP:.cpp=.o)
+SRCS = $(wildcard server/*.c)  $(wildcard client/vgui/*.c) $(wildcard common/*.c) $(wildcard common/imagelib/*.c) $(wildcard common/soundlib/*.c) $(wildcard common/soundlib/libmpg/*.c) $(wildcard platform/win32/*.c)
+OBJS = $(SRCS:.c=.o)
+
+
+ifneq ($(XASH_DEDICATED),1)
+	SRCS += $(wildcard client/*.c)
+	SRCS += $(wildcard platform/sdl/*.c)
+endif
+
+# Binary rules
+xash_bin.exe: $(OBJS) $(OBJS_CPP)
+	$(CC) -o xash_bin.exe $(LDFLAGS) $(OBJS) $(OBJS_CPP) $(LIBS)
+
+.PHONY: depend clean list
+clean:
+	-$(RM) $(OBJS) $(OBJS_CPP) xash_bin.exe
+	-cmd /c del $(subst /,\,$(OBJS) $(OBJS_CPP) xash_bin.exe)
+list:
+	@echo Sources:
+	@echo $(SRCS)
+	@echo C++ Sources:
+	@echo $(SRCS_CPP)
+	@echo Objects:
+	@echo $(OBJS) $(OBJS_CPP)

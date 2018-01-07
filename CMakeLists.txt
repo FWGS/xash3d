@@ -139,7 +139,7 @@ endif()
 add_subdirectory(engine)
 
 if(NOT WIN32 OR XASH_NO_INSTALL_RUNSCRIPT)
-	install(FILES "xash3d.sh"
+	install(FILES "scripts/xash3d.sh"
 		DESTINATION "${BIN_INSTALL_DIR}"
 	    RENAME "xash3d"
 		PERMISSIONS OWNER_READ OWNER_EXECUTE OWNER_WRITE

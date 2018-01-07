@@ -93,8 +93,7 @@ Add master to the list
 */
 static void NET_AddMaster( char *addr, qboolean save )
 {
-	master_t *master;
-	master_t *last;
+	master_t *master, *last;
 
 	for( last = ml.list; last && last->next; last = last->next )
 	{
@@ -158,7 +157,7 @@ static void NET_ListMasters_f( void )
 
 	Msg( "Master servers\n=============\n" );
 
-	
+
 	for( i = 1, list = ml.list; list; i++, list = list->next )
 	{
 		Msg( "%d\t%s\n", i, list->address );
@@ -250,7 +249,6 @@ void NET_InitMasters()
 	Cmd_AddCommand( "listmasters", NET_ListMasters_f, "list masterservers" );
 
 	// keep main master always there
-	NET_AddMaster( DEFAULT_SV_MASTER, false ); 
+	NET_AddMaster( DEFAULT_SV_MASTER, false );
 	NET_LoadMasters( );
 }
-

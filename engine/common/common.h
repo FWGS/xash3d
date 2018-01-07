@@ -217,7 +217,6 @@ extern convar_t	*host_maxfps;
 extern convar_t *net_qport;
 extern convar_t *download_types;
 extern convar_t	*host_xashds_hacks;
-extern convar_t	*sv_master;
 /*
 ==============================================================
 
@@ -530,6 +529,7 @@ void NET_SendPacket( netsrc_t sock, size_t length, const void *data, netadr_t to
 void NET_InitMasters();
 void NET_SaveMasters();
 qboolean NET_SendToMasters( netsrc_t sock, size_t len, const void *data );
+
 
 /*
 ========================================================================
