@@ -950,8 +950,13 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 			}
 		}
 
-		if( host.rodir[0] && flags & FS_GAMEDIR_PATH )
-			FS_AddGameDirectory( va( "%s/%s/", host.rodir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		if( host.rodir[0] )
+		{
+			// append new flags to rodir, except FS_GAMEDIR_PATH
+			uint newFlags = FS_NOWRITE_PATH | (flags & (~FS_GAMEDIR_PATH));
+
+			FS_AddGameDirectory( va( "%s/%s/", host.rodir, dir ), newFlags );
+		}
 
 		if( flags & FS_GAMEDIR_PATH )
 			FS_AddGameDirectory( va( "%s%s/downloaded/", fs_basedir, dir ), FS_NOWRITE_PATH | FS_CUSTOM_PATH );
