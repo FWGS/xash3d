@@ -814,6 +814,7 @@ void CL_StopPlayback( void )
 		// let game known about demo state	
 		Cvar_FullSet( "cl_background", "0", CVAR_READ_ONLY );
 		cls.state = ca_disconnected;
+		Q_memset( &cls.serveradr, 0, sizeof( cls.serveradr ) );
 		cl.background = 0;
 		cls.demonum = -1;
 	}

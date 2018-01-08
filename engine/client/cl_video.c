@@ -155,6 +155,7 @@ void SCR_RunCinematic( void )
 		// these can happens when user set +menu_ option to cmdline
 		AVI_CloseVideo( cin_state );
 		cls.state = ca_disconnected;
+		Q_memset( &cls.serveradr, 0, sizeof( cls.serveradr ) );
 		Key_SetKeyDest( key_menu );
 		S_StopStreaming();
 		cls.movienum = -1;
@@ -284,6 +285,7 @@ void SCR_StopCinematic( void )
 	cin_time = 0.0f;
 
 	cls.state = ca_disconnected;
+	Q_memset( &cls.serveradr, 0, sizeof( cls.serveradr ) );
 	UI_SetActiveMenu( true );
 }
 

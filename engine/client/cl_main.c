@@ -879,6 +879,7 @@ void CL_CheckForResend( void )
 		cls.state = ca_connecting;
 		cls.connect_time = host.realtime;
 		Q_strncpy( cls.servername, "loopback", sizeof( cls.servername ) );
+		cls.serveradr.type = NA_LOOPBACK;
 		// we don't need a challenge on the localhost
 		CL_SendConnectPacket();
 		return;
@@ -897,6 +898,7 @@ void CL_CheckForResend( void )
 	{
 		MsgDev( D_ERROR, "CL_CheckForResend: bad server address\n" );
 		cls.state = ca_disconnected;
+		Q_memset( &cls.serveradr, 0, sizeof( cls.serveradr ) );
 		return;
 	}
 
@@ -911,6 +913,7 @@ void CL_CheckForResend( void )
 	cls.connect_time = host.realtime; // for retransmit requests
 
 	// do not make non-blocking requests again
+	cls.serveradr = adr;
 	Q_strncpy( cls.servername, NET_AdrToString( adr ), sizeof( cls.servername ));
 
 	MsgDev( D_NOTE, "Connecting to %s...\n", cls.servername );
@@ -947,7 +950,7 @@ void CL_Connect_f( void )
 
 	// allow override payload size for some bad networks
 	if( ( cl_maxpayload->integer < 40000 ) && ( cl_maxpayload->integer > 99 ) )
-		{
+	{
 		cl_maxpayload->flags |= CVAR_USERINFO;
 		userinfo->modified = true;
 	}
@@ -1149,6 +1152,7 @@ void CL_Disconnect( void )
 	Netchan_Clear( &cls.netchan );
 
 	cls.state = ca_disconnected;
+	Q_memset( &cls.serveradr, 0, sizeof( cls.serveradr ) );
 
 	// restore gamefolder here (in case client was connected to another game)
 	CL_ChangeGame( GI->gamefolder, true );
@@ -1592,6 +1596,19 @@ void CL_PrepVideo( void )
 
 /*
 =================
+CL_IsFromConnectingServer
+
+Used for connectionless packets, when netchan may not be ready.
+=================
+*/
+static qboolean CL_IsFromConnectingServer( netadr_t from )
+{
+	return NET_IsLocalAddress( from ) ||
+		NET_CompareAdr( cls.serveradr, from );
+}
+
+/*
+=================
 CL_ConnectionlessPacket
 
 Responses to broadcasts, etc
@@ -1617,6 +1634,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	// server connection
 	if( !Q_strcmp( c, "client_connect" ))
 	{
+		if( !CL_IsFromConnectingServer( from ) )
+			return;
+
 		unsigned int extensions = Q_atoi( Cmd_Argv( 1 ) );
 		if( cls.state == ca_connected )
 		{
@@ -1701,6 +1721,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	}
 	else if( !Q_strcmp( c, "errormsg" ))
 	{
+		if( !CL_IsFromConnectingServer( from ))
+			return;
+
 		char *str = BF_ReadString( msg );
 		if( UI_IsVisible() )
 			Cmd_ExecuteString( va("menu_showmessagebox \"^3Server message^7\n%s\"", str ), src_command );
@@ -1713,6 +1736,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	}
 	else if( !Q_strcmp( c, "challenge" ))
 	{
+		if( !CL_IsFromConnectingServer( from ))
+			return;
+
 		// challenge from the server we are connecting to
 		cls.challenge = Q_atoi( Cmd_Argv( 1 ));
 		CL_SendConnectPacket();
@@ -1725,6 +1751,9 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	}
 	else if( !Q_strcmp( c, "disconnect" ))
 	{
+		if( !CL_IsFromConnectingServer( from ))
+			return;
+
 		// a disconnect message from the server, which will happen if the server
 		// dropped the connection but it is still getting packets from us
 		CL_Disconnect();
@@ -2001,6 +2030,7 @@ CL_InitLocal
 void CL_InitLocal( void )
 {
 	cls.state = ca_disconnected;
+	Q_memset( &cls.serveradr, 0, sizeof( cls.serveradr ) );
 
 	// register our variables
 	cl_predict = Cvar_Get( "cl_predict", "0", CVAR_ARCHIVE, "enable client movement prediction" );

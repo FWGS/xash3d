@@ -463,6 +463,7 @@ typedef struct
 						// g-cont. this port allow many copies of engine in multiplayer game
 	// connection information
 	string		servername;		// name of server from original connect
+	netadr_t    serveradr;     // for checking some connectionless packets
 	double		connect_time;		// for connection retransmits
 
 

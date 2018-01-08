@@ -256,7 +256,7 @@ qboolean CL_InterpolateModel( cl_entity_t *e )
 	VectorCopy( e->curstate.angles, e->angles );
 
 	// disable interpolating in singleplayer
-	if( cls.timedemo || cls.netchan.remote_address.type == NA_LOOPBACK )
+	if( cls.timedemo || NET_IsLocalAddress( cls.netchan.remote_address ) )
 		return true;
 
 	// disable interpolating non-moving entities
@@ -419,7 +419,8 @@ qboolean CL_UpdateEntityFields( cl_entity_t *ent )
 			return false; // failed to interpolate entity, skip this frame
 	}
 	// this originally was allowed for only cstrike and czero
-	else if( ent->curstate.movetype == MOVETYPE_STEP && cls.netchan.remote_address.type != NA_LOOPBACK )
+	else if( ent->curstate.movetype == MOVETYPE_STEP &&
+			!NET_IsLocalAddress( cls.netchan.remote_address ) )
 	{
 		if( !CL_InterpolateModel( ent ) )
 			return false; // failed to interpolate entity, skip this frame
