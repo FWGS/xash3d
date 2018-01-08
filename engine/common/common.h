@@ -167,6 +167,9 @@ typedef enum
 // since this fork have own version, this is just left for compability
 #define BASED_VERSION	0.98f
 
+// generic update page, see ShellExecute
+#define XASH_UPDATE_PAGE "https://github.com/FWGS/xash3d/releases/latest"
+
 // PERFORMANCE INFO
 #define MIN_FPS         	15.0		// host minimum fps value for maxfps.
 #define MAX_FPS         	500.0		// upper limit for maxfps.
@@ -821,7 +824,7 @@ void pfnGetModelBounds( model_t *mod, float *mins, float *maxs );
 void pfnGetGameDir( char *szGetGameDir );
 int pfnDecalIndex( const char *m );
 int pfnGetModelType( model_t *mod );
-int pfnIsMapValid( char *filename );
+int pfnIsMapValid( const char *filename );
 void Con_DPrintf( char *fmt, ... ) _format(1);
 void Con_Printf( char *szFmt, ... ) _format(1);
 int pfnIsInGame( void );

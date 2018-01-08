@@ -3667,7 +3667,7 @@ pfnIsMapValid
 vaild map must contain one info_player_deatchmatch
 =============
 */
-int GAME_EXPORT pfnIsMapValid( char *filename )
+int GAME_EXPORT pfnIsMapValid( const char *filename )
 {
 	char	*spawn_entity;
 	int	flags;

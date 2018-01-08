@@ -38,6 +38,7 @@ extern char **environ;
 #include <stdlib.h>
 #include <time.h>
 #endif
+#include "menu_int.h" // _UPDATE_PAGE macro
 
 
 qboolean	error_on_exit = false;	// arg for exit();
@@ -309,8 +310,15 @@ Sys_ShellExecute
 void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit )
 {
 #ifdef _WIN32
+	if( !Q_strcmp( path, GENERIC_UPDATE_PAGE ) || !Q_strcmp( path, PLATFORM_UPDATE_PAGE ))
+		path = XASH_UPDATE_PAGE;
+
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
 #elif (defined(__linux__) && !defined (__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+
+	if( !Q_strcmp( path, GENERIC_UPDATE_PAGE ) || !Q_strcmp( path, PLATFORM_UPDATE_PAGE ))
+		path = XASH_UPDATE_PAGE;
+
 	char xdgOpen[128];
 	if( Sys_FindExecutable( OPEN_COMMAND, xdgOpen, sizeof( xdgOpen ) ) )
 	{

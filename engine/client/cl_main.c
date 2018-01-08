@@ -1729,6 +1729,30 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 			Cmd_ExecuteString( va("menu_showmessagebox \"^3Server message^7\n%s\"", str ), src_command );
 		Msg( "%s", str );
 	}
+	else if( !Q_strcmp( c, "updatemsg" ))
+	{
+		// got an update message from master server
+		// show update dialog from menu
+		netadr_t adr;
+		qboolean preferStore = true;
+
+		if( !Q_strcmp( Cmd_Argv( 1 ), "nostore" ) )
+			preferStore = false;
+
+		if( NET_StringToAdr( DEFAULT_SV_MASTER, &adr ) )
+		{
+			if( NET_CompareAdr( from, adr ))
+			{
+				// update from masterserver
+				Cbuf_AddText( va( "menu_updatedialog %s\n", preferStore ? "store" : "nostore" ) );
+			}
+		}
+		else
+		{
+			// in case we don't have master anymore
+			Cbuf_AddText( va( "menu_updatedialog %s\n", preferStore ? "store" : "nostore" ) );
+		}
+	}
 	else if( !Q_strcmp( c, "ping" ))
 	{
 		// ping from somewhere

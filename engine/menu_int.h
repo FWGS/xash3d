@@ -198,4 +198,7 @@ typedef int (*UITEXTAPI)( ui_textfuncs_t* engfuncs );
 
 typedef void (*ADDTOUCHBUTTONTOLIST)( const char *name, const char *texture, const char *command, unsigned char *color, int flags );
 
+#define PLATFORM_UPDATE_PAGE "PlatformUpdatePage"
+#define GENERIC_UPDATE_PAGE "GenericUpdatePage"
+
 #endif//MENU_INT_H
