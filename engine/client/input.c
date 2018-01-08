@@ -143,6 +143,13 @@ float x, y;
 
 int KeycodeFromEvdev(int keycode, int value);
 
+static void Evdev_CheckPermissions()
+{
+#ifdef __ANDROID__
+	system( "su 0 chmod 664 /dev/input/event*" );
+#endif
+}
+
 void Evdev_Setup( void )
 {
 	if( evdev.initialized )
@@ -164,9 +171,7 @@ void Evdev_Autodetect_f( void )
 
 	Evdev_Setup();
 
-#ifdef __ANDROID__
-	system( "su 0 chmod 777 /dev/input/event*" );
-#endif
+	Evdev_CheckPermissions();
 
 	if( !( dir = opendir( "/dev/input" ) ) )
 	    return;
@@ -259,9 +264,8 @@ void Evdev_OpenDevice ( const char *path )
 
 	Evdev_Setup();
 
-#ifdef __ANDROID__ // use root to grant access to evdev
-	system( va( "su 0 chmod 777 %s", Cmd_Argv( 1 ) ) );
-#endif
+	Evdev_CheckPermissions(); // use root to grant access to evdev
+
 	for( i = 0; i < evdev.devices; i++ )
 	{
 		if( !Q_strncmp( evdev.paths[i], path, MAX_STRING ) )
@@ -407,8 +411,11 @@ void Evdev_SetGrab( qboolean grab )
 		evdev.grabtime = host.realtime + 0.5;
 		Key_ClearStates();
 	}
-	else for( i = 0; i < evdev.devices; i++ )
-		ioctl( evdev.fds[i], EVIOCGRAB, (void*) 0 );
+	else
+	{
+		for( i = 0; i < evdev.devices; i++ )
+			ioctl( evdev.fds[i], EVIOCGRAB, (void*) 0 );
+	}
 	evdev.grab = grab;
 }
 
@@ -418,7 +425,6 @@ void IN_EvdevMove( float *yaw, float *pitch )
 	*pitch += evdev.y;
 	evdev.x = evdev.y = 0.0f;
 }
-
 #endif
 
 void IN_StartupMouse( void )
