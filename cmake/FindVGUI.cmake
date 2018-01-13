@@ -49,6 +49,7 @@ find_library(VGUI_LIBRARY
 	NAMES ${LIBNAMES}
 	HINTS $ENV{VGUIDIR}
 	PATH_SUFFIXES 
+	    games/lib/xash3d         # libvgui debian package
 		utils/vgui/lib/win32_vc6 # Win32 VC6
 		linux/                   # Linux
 		linux/release            # OSX
@@ -60,10 +61,11 @@ find_library(VGUI_LIBRARY
 # HACKHACK: as you can see, other compilers and OSes 
 # can easily link to vgui library, no matter how it was placed
 # On Linux just target_link_libraries will give you a wrong
-# binary, which ALWAYS have same path to library!
+# binary, which have ABSOLUTE PATH to vgui.so!
 # Stupid Linux linkers just check for a path and this may give
 # a TWO SAME libraries in memory, which obviously goes to crash engine
-# Without hack:
+
+# EXAMPLE(without hack):
 # $ LD_LIBRARY_PATH=$(pwd) ldd libvgui_support.so
 #       /home/user/projects/hlsdk/linux/vgui.so => /home/user/projects/hlsdk/linux/vgui.so (addr)
 # With hack:

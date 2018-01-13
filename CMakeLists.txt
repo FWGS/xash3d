@@ -77,6 +77,7 @@ endif()
 # Misc
 option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
 option(XASH_NO_INSTALL_RUNSCRIPT "Don't install xash3d.sh" OFF)
+option(XASH_NO_INSTALL_VGUI_BIN "Don't install proprietary VGUI binary" OFF)
 
 # Pre-build analyze step
 option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
