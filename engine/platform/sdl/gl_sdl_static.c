@@ -416,8 +416,14 @@ void GL_InitExtensions( void )
 	pglGetIntegerv( GL_MAX_VERTEX_ATTRIBS_ARB, &glConfig.max_vertex_attribs );
 
 	// MCD has buffering issues
+#ifdef _WIN32
 	if(Q_strstr( glConfig.renderer_string, "gdi" ))
 		Cvar_SetFloat( "gl_finish", 1 );
+#endif
+
+#ifdef XASH_GLES
+	Cvar_FullSet( "gl_allow_mirrors", "0", CVAR_READ_ONLY); // No support for GLES
+#endif
 
 	Cvar_Set( "gl_anisotropy", va( "%f", bound( 0, gl_texture_anisotropy->value, glConfig.max_texture_anisotropy )));
 
