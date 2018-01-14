@@ -1549,9 +1549,9 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 		UI_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
 		//MsgDev( D_NOTE, "touch %d %d\n", TO_SCRN_X(x), TO_SCRN_Y(y) );
 		if( type == event_down )
-			Key_Event(241, 1);
+			Key_Event( K_MOUSE1, true );
 		if( type == event_up )
-			Key_Event(241, 0);
+			Key_Event( K_MOUSE1, false );
 		return 0;
 	}
 

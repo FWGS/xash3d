@@ -141,7 +141,7 @@ void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 	int down = button.type == SDL_MOUSEBUTTONDOWN ? 1 : 0;
 	if( in_mouseinitialized && !m_ignore->integer && button.which != SDL_TOUCH_MOUSEID )
 	{
-		Key_Event( 240 + button.button, down );
+		Key_Event( K_MOUSE1 - 1 + button.button, down );
 	}
 }
 
