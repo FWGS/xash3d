@@ -24,6 +24,8 @@ extern "C" {
 
 #include "backends.h"
 #include "defaults.h"
+//#include "wrect.h"
+
 //
 // check if selected backend not allowed
 //
@@ -1075,6 +1077,18 @@ void Con_ClearAutoComplete();
 //
 // console.c
 //
+
+//#define SolidConsoleX 0
+//#define SolidConsoleY (y - scr_width->value * 3 / 4)
+//#define SolidConsoleW (scr_width->value)
+//#define SolidConsoleH (scr_width->value * 3 / 4)
+//extern wrect_t con_rect; //Float - Int incompatibility
+typedef struct conrect_s
+{
+	float x, y, w, h;
+}conrect_t;
+extern conrect_t con_rect;
+
 void Con_Clear( void );
 
 extern const char *svc_strings[256];

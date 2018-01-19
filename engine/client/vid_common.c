@@ -78,6 +78,7 @@ convar_t	*r_lightmap;
 convar_t	*r_fastsky;
 convar_t	*r_vbo;
 convar_t 	*r_bump;
+convar_t	*r_strobe;
 convar_t	*mp_decals;
 
 convar_t	*vid_displayfrequency;
@@ -1007,6 +1008,18 @@ static void R_CheckVBO( void )
 
 /*
 ===============
+R_initStrobe
+
+register strobe cvar
+===============
+*/
+static inline void R_initStrobe( void )
+{
+	r_strobe = Cvar_Get("r_strobe", "0", CVAR_ARCHIVE, "black frame insertion interval");
+}
+
+/*
+===============
 R_Init
 ===============
 */
@@ -1047,6 +1060,7 @@ qboolean R_Init( void )
 	R_StudioInit();
 	R_ClearDecals();
 	R_ClearScene();
+	R_initStrobe();
 
 	// initialize screen
 	SCR_Init();
