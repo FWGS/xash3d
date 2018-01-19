@@ -59,6 +59,8 @@ void SCR_DrawFPS( void )
 	double		newtime;
 	char		fpsstring[64];
 	int		offset;
+	int strobeInterval = r_strobe->integer; //cvar: r_strobe
+	int eFPS; //Effective FPS (strobing effect)
 
 	if( cls.state != ca_active ) return; 
 	if( !cl_showfps->integer || cl.background ) return;
@@ -101,8 +103,6 @@ void SCR_DrawFPS( void )
 		/*if( !avgrate ) avgrate = ( maxfps - minfps ) / 2.0f;
 		else */avgrate += ( calc - avgrate ) / host.framecount;
 
-		int strobeInterval = r_strobe->integer;
-		int eFPS; //Effective FPS (strobing effect)
 		if (strobeInterval > 0)
 		{
 			eFPS = (int)((curfps) / (strobeInterval + 1));

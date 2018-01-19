@@ -1704,14 +1704,12 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		con_rect.y = y - scr_width->value * 3 / 4;
 		con_rect.w = scr_width->value;
 		con_rect.h = scr_width->value * 3 / 4;
-
 		if( fill )
 		{
 			GL_SetRenderMode( kRenderNormal );
 			if( con_black->integer )
 			{
 				pglColor4ub( 0, 0, 0, 255 );
-				
 				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
