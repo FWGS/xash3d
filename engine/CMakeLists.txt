@@ -61,6 +61,9 @@ include_directories(
 
 add_definitions(-DXASH_FORCEINLINE)
 
+# Important, as HLSDK and engine shares some symbol names!
+add_compile_options(-fvisibility=hidden)
+
 # ----- Conditions -----
 
 if(XASH_AUTODETECT_SSE_BUILD)

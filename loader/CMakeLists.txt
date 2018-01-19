@@ -33,6 +33,8 @@ else()
 	add_library(${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
 endif()
 
+add_compile_options(-mstackrealign  -mpreferred-stack-boundary=12)
+
 if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD" OR CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
        target_link_libraries (${LOADER_LIBRARY} -lm -pthread -lexecinfo)
 else()
