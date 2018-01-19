@@ -62,7 +62,9 @@ include_directories(
 add_definitions(-DXASH_FORCEINLINE)
 
 # Important, as HLSDK and engine shares some symbol names!
-add_compile_options(-fvisibility=hidden)
+if(NOT WIN32) # Windows by default have hidden visibility and better linker
+	add_compile_options(-fvisibility=hidden)
+endif()
 
 # ----- Conditions -----
 
