@@ -2020,6 +2020,19 @@ void CL_Precache_f( void )
 	CL_PrepSound();
 	CL_PrepVideo();
 
+	if( Cmd_Argc() > 2 )
+	{
+		int svCheatState = Q_atoi( Cmd_Argv( 2 ) );
+
+		// don't let server send other values than 1 or 0
+		Cvar_SetFloat("sv_cheats", svCheatState ? 1.0f : 0.0f );
+	}
+	else
+	{
+		// disable just in case for old servers.
+		// TODO: move to a part of new protocol
+		Cvar_SetFloat("sv_cheats", 0.0f );
+	}
 	Cvar_SetCheatState( false );
 
 	BF_WriteByte( &cls.netchan.message, clc_stringcmd );
