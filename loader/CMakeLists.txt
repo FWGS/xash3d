@@ -20,31 +20,31 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 2.6.0)
-project (LOADER)
+cmake_minimum_required(VERSION 3.0.0)
+project(LOADER C)
 
 set(LOADER_LIBRARY loader)
 
 file(GLOB_RECURSE LOADER_SOURCES *.c)
 include_directories(. wine/ ../engine/common ../engine ../engine/client ../common)
-if(XASH_STATIC)
+
+if(XASH_SINGLE_BINARY)
 	add_library(${LOADER_LIBRARY} STATIC ${LOADER_SOURCES})
 else()
 	add_library(${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
 endif()
 
-add_compile_options(-mstackrealign  -mpreferred-stack-boundary=12)
-
-if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD" OR CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
-       target_link_libraries (${LOADER_LIBRARY} -lm -pthread -lexecinfo)
-else()
-	   target_link_libraries (${LOADER_LIBRARY} -lm -pthread)
+if(XASH_SDL)
+	xash_link_sdl2(${LOADER_LIBRARY})
+	add_definitions(-DSDL)
 endif()
 
-set_target_properties(${LOADER_LIBRARY} PROPERTIES
-	POSITION_INDEPENDENT_CODE 1)
+add_compile_options(-mstackrealign  -mpreferred-stack-boundary=12)
+target_link_libraries(${LOADER_LIBRARY} -lm -pthread)
 
-install(TARGETS ${LOADER_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/${LIB_INSTALL_SUBDIR}
-	PERMISSIONS OWNER_READ OWNER_WRITE
-	            GROUP_READ
-				WORLD_READ)
+if(CMAKE_SYSTEM_NAME MATCHES ".+BSD$")
+	target_link_libraries (${LOADER_LIBRARY} -lexecinfo)
+endif()
+
+fwgs_set_default_properties(${LOADER_LIBRARY})
+fwgs_install(${LOADER_LIBRARY})

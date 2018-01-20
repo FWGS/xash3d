@@ -23,58 +23,53 @@
 cmake_minimum_required(VERSION 2.6.0)
 project(VGUI_SUPPORT)
 
-set(VGUI_SUPPORT_LIBRARY vgui_support)
+set(VGUI_SUPPORT vgui_support)
 
-file(GLOB VGUI_SUPPORT_SOURCES *.cpp *.c)
-include_directories(
-	.
-	../common
-	../engine
-	../engine/common
-	../engine/client
-	../engine/client/vgui
-)
+if(NOT MINGW)
+	file(GLOB VGUI_SUPPORT_SOURCES *.cpp *.c)
+else()
+	# Download prebuilt VGUI_support, as there is no way to have same C++ ABI for VC++ and MinGW.
+	# Also there is no way to have a target without source code, so let's just have custom install() rule
 
-add_library(${VGUI_SUPPORT_LIBRARY} SHARED ${VGUI_SUPPORT_SOURCES})
+	# Prebuilt VGUI support is downloaded from github.com/FWGS/vgui_support_bin
+	set(FORCE_UNPACK FALSE)
+	message(STATUS "Downloading prebuilt vgui_support for MinGW... See vgui_support/CMakeLists.txt for details")
+	if(NOT EXISTS ${CMAKE_BINARY_DIR}/vgui_support.zip)
+		file(DOWNLOAD https://github.com/FWGS/vgui_support_bin/archive/master.zip ${CMAKE_BINARY_DIR}/vgui_support.zip)
+		set(FORCE_UNPACK TRUE)
+	endif()
 
-find_package(VGUI REQUIRED)
+	if(NOT EXISTS ${CMAKE_BINARY_DIR}/vgui_support_prebuilt)
+		set(FORCE_UNPACK TRUE)
+	endif()
 
-include_directories(${VGUI_INCLUDE_DIR})
+	if(FORCE_UNPACK)
+		fwgs_unpack_file(${CMAKE_BINARY_DIR}/vgui_support.zip vgui_support_prebuilt)
+	endif()
 
-target_link_vgui_hack(${VGUI_SUPPORT_LIBRARY})
-
-add_definitions(-DXASH_VGUI)
-set_target_properties(${VGUI_SUPPORT_LIBRARY} PROPERTIES
-	POSITION_INDEPENDENT_CODE 1)
-
-if(WIN32)
-	set_target_properties(${VGUI_SUPPORT_LIBRARY} PROPERTIES
-		PREFIX "")
+	# HACKHACK: create empty target
+	execute_process(COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/u_cant_touch_this.cpp)
+	set(VGUI_SUPPORT_SOURCES ${CMAKE_BINARY_DIR}/u_cant_touch_this.cpp)
 endif()
+include_directories( . ../common ../engine ../engine/common ../engine/client ../engine/client/vgui )
 
-if(NOT WIN32)
-	install(TARGETS ${VGUI_SUPPORT_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/${LIB_INSTALL_SUBDIR}
-		    PERMISSIONS OWNER_READ OWNER_WRITE
-			            GROUP_READ
-						WORLD_READ)
-	if(NOT XASH_NO_INSTALL_VGUI_BIN)
+add_library(${VGUI_SUPPORT} SHARED ${VGUI_SUPPORT_SOURCES})
+
+# TODO: VGUI version selector
+fwgs_library_dependency(${VGUI_SUPPORT} VGUI
+	"https://github.com/FWGS/vgui-dev/archive/master.zip" "master.zip" "HL_SDK_DIR" "vgui-dev-master")
+
+fwgs_set_default_properties(${VGUI_SUPPORT})
+if(NOT MINGW)
+	fwgs_install(${VGUI_SUPPORT})
+
+	if(NOT WIN32 AND NOT XASH_NO_INSTALL_VGUI_BIN) # Win32 HLSDK doesn't include VGUI.DLL
 		install(FILES ${VGUI_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/${LIB_INSTALL_SUBDIR}
-			    PERMISSIONS OWNER_READ OWNER_WRITE
-				            GROUP_READ
-							WORLD_READ)
+			PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 	endif()
 else()
-	install(TARGETS ${VGUI_SUPPORT_LIBRARY}
-		CONFIGURATIONS Debug 
-		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Debug/
-		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Debug/)
-	if(MSVC)
-		install(FILES $<TARGET_PDB_FILE:${VGUI_SUPPORT_LIBRARY}>
-			CONFIGURATIONS Debug 
-			DESTINATION ${LIB_INSTALL_DIR}/Debug/)
-	endif()
-	install(TARGETS ${VGUI_SUPPORT_LIBRARY}
-		CONFIGURATIONS Release 
-		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Release/
-		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Release/)
+	# Use prebuilt.
+	# TODO: this allows only HLSDK 2.4 VGUI
+	install(FILES ${CMAKE_BINARY_DIR}/vgui_support_prebuilt/vgui_support_bin-master/vgui_support.dll
+		DESTINATION ${LIB_INSTALL_DIR}/${LIB_INSTALL_SUBDIR})
 endif()

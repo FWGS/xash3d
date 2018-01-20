@@ -22,8 +22,6 @@
 
 include(FindPackageHandleStandardArgs)
 
-message("<FindVGUI.cmake>")
-
 if(NOT HL_SDK_DIR)
 	message( FATAL_ERROR "Pass a HL_SDK_DIR variable to CMake to be able use VGUI" )
 endif()
@@ -38,6 +36,8 @@ find_path(VGUI_INCLUDE_DIR
 		include/              # vgui-dev
 	PATHS ${VGUI_SEARCH_PATHS}
 )
+
+message("<FindVGUI.cmake> ${VGUI_SEARCH_PATHS}")
 
 if(APPLE)
 	set(LIBNAMES vgui.dylib)
@@ -86,5 +86,5 @@ endmacro()
 
 find_package_handle_standard_args(VGUI REQUIRED_VARS VGUI_LIBRARY VGUI_INCLUDE_DIR)
 
-message("</FindVGUI.cmake>")
+message("</FindVGUI.cmake> ${VGUI_LIBRARY}")
 

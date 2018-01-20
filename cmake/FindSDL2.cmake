@@ -64,7 +64,7 @@
 # (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-message("<FindSDL2.cmake>")
+message("<FindSDL2.cmake> ${SDL2_PATH}")
 
 if(WIN32 AND NOT SDL2_PATH)
 	message(FATAL_ERROR "To find SDL2 correctly, you need to pass SDL2_PATH variable to CMake")
@@ -99,9 +99,19 @@ FIND_LIBRARY(SDL2_LIBRARY_TEMP
 )
 
 # Call sdl2-config if SDL2_LIBRARY still not found
-IF(NOT SDL2_LIBRARY_TEMP AND NOT WIN32)
-	EXEC_PROGRAM("sdl2-config" ARGS "--libs" OUTPUT_VARIABLE SDL2_LIBRARY_TEMP)
-ENDIF()
+if(NOT SDL2_LIBRARY_TEMP AND NOT MSVC) # MSVC SDL2 package doesn't provide sdl2-config, but MinGW does
+	find_program(SDL2_CONFIG_PROGRAM
+		sdl2-config
+		PATHS ${SDL2_SEARCH_PATHS}
+		PATH_SUFFIXES bin/)
+	if(SDL2_CONFIG_PROGRAM NOT STREQUAL "SDL2_CONFIG_PROGRAM-NOTFOUND")
+		execute_process(COMMAND sdl2-config --libs
+			OUTPUT_VARIABLE SDL2_LIBRARY_TEMP
+			OUTPUT_STRIP_TRAILING_WHITESPACE)
+	else()
+		message(FATAL_ERROR "No sdl2-config program found. Please, install SDL2 development package or provide a path to SDL2 using -DSDL2_PATH=/path/to/SDL2/")
+	endif()
+endif()
 
 IF(NOT SDL2_BUILDING_LIBRARY)
 	IF(NOT ${SDL2_INCLUDE_DIR} MATCHES ".framework")
@@ -170,8 +180,8 @@ IF(SDL2_LIBRARY_TEMP)
 	SET(SDL2_LIBRARY_TEMP "${SDL2_LIBRARY_TEMP}" CACHE INTERNAL "")
 ENDIF(SDL2_LIBRARY_TEMP)
 
-message("</FindSDL2.cmake>")
 INCLUDE(FindPackageHandleStandardArgs)
 
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SDL2 REQUIRED_VARS SDL2_LIBRARY SDL2_INCLUDE_DIR)
 
+message("</FindSDL2.cmake> ${SDL2_LIBRARY}")

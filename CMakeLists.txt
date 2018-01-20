@@ -20,12 +20,16 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 2.6.0)
+cmake_minimum_required(VERSION 3.0.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 include(VSForceXPToolchain)
 
 project (XASH3D)
+
+include(FWGSLib)
+include(CMakeDependentOption)
+include(CPack)
 
 #--------------
 # USER DEFINES \
@@ -33,129 +37,108 @@ project (XASH3D)
 
 set (XASH3D_VERSION 0.19.1)
 
-include(CMakeDependentOption)
-include(CPack)
-
-# Servers must choose this
-option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF)
+option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF) # Servers must choose this
 
 # Windows only. Enable it by default for Windows.
-cmake_dependent_option(XASH_IPX "Enable IPX support for networking. Windows only." ON "WIN32" OFF)
+option(XASH_IPX "Enable IPX support for networking. Windows only. Deprecated." OFF)
 cmake_dependent_option(XASH_NONSTANDARD_LOAD "Enable own DLL loader in Windows." ON "WIN32" OFF)
 
 # POSIX only. Disable it by default for Windows
 cmake_dependent_option(XASH_USE_SELECT "Enable reading console commands from stdin." ON "NOT WIN32" OFF)
-
-# GLES hacks
-option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator." OFF)
-option(XASH_NANOGL "Enable NanoGL. Implicitly enables XASH_GLES." OFF)
-
-# For libdl-haters ;)
-option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executable" OFF)
-option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
-
-# Shared library loader implementation. Must be checked one of these or both.
 cmake_dependent_option(XASH_LIBDL "Enable libdl use. POSIX only." ON "NOT WIN32" OFF)
 option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
 
+option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator." OFF)
+option(XASH_NANOGL "Enable NanoGL. Implicitly enables XASH_GLES." OFF)
+option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
+option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
+
 # Enable 64-bit build of Xash3D FWGS Engine.
-option(XASH_64BIT "Enable experimental 64-bit build. Note that you must recompile game for 64 bit." OFF)
-cmake_dependent_option(XASH_AUTODETECT_SSE_BUILD "Enable SSE features automatically" ON "XASH_64BIT" OFF)
+option(XASH_64BIT "Enable experimental 64-bit build. Note that you must also provide 64-bit game binaries" OFF)
 cmake_dependent_option(XASH_VECTORIZE_SINCOS "Use vectorized versions of sin(), cos() and sincos()" ON "XASH_64BIT" OFF)
 
-# Desktop-version options
+# Desktop or dedicated version options
 if(XASH_DEDICATED) 
 	option(XASH_SDL "Enable SDL." OFF) # Dedicated servers still can use SDL
+	set(XASH_SINGLE_BINARY ON) # Disable game launcher by default for dedicated
 	set(XASH_VGUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
 	set(XASH_MAINUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
 else()
 	option(XASH_SDL "Enable SDL." ON)
+	option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executable" OFF)
 	option(XASH_VGUI "Enable VGUI support." ON)
 	option(XASH_MAINUI "Build mainui library" ON) # Totally not recommended to disable
 endif()
 
 # Misc
-option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
 option(XASH_NO_INSTALL_RUNSCRIPT "Don't install xash3d.sh" OFF)
-option(XASH_NO_INSTALL_VGUI_BIN "Don't install proprietary VGUI binary" OFF)
+option(XASH_NO_INSTALL_VGUI_BIN "Don't bundle proprietary VGUI" OFF)
+option(XASH_DOWNLOAD_DEPENDENCIES "Download dependencies automatically, if supported" ON)
 
-# Pre-build analyze step
-option(XASH_PVS_ANALYZE "Use PVS-Studio static analyzer" NO)
+# Installing
+if(WIN32)
+	fwgs_string_option(LIB_INSTALL_DIR "Libraries install directory" ${CMAKE_BINARY_DIR})
+else()
+	fwgs_string_option(LIB_INSTALL_DIR "Libraries install directory" "lib")
+endif()
+fwgs_string_option(LIB_INSTALL_SUBDIR "Libraries install subdirectory" "xash3d")
+fwgs_string_option(BIN_INSTALL_DIR "Executables install directory" "bin")
 
-#-----------------
-# MAIN BUILD CODE \
-###################\
+# /*
+# ==============
+# xash_link_sdl2
+#
+# Download and link SDL2, if supported
+# ==============
+# */
+macro(xash_link_sdl2 tgt)
+	if(MSVC)
+		set(SDL2_VER "2.0.7")
+		set(SDL2_DOWNLOAD_URL "http://libsdl.org/release/SDL2-devel-${SDL2_VER}-VC.zip")
+		set(SDL2_SUBDIR "SDL2-${SDL2_VER}")
+
+		fwgs_library_dependency(${tgt} SDL2 ${SDL2_DOWNLOAD_URL} "SDL2.zip" SDL2_PATH ${SDL2_SUBDIR})
+	else()
+		# SDL2 doesn't provide dev packages
+		# TODO: MinGW support
+		fwgs_library_dependency(${tgt} SDL2)
+	endif()
+endmacro()
 
 if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-	message(FATAL_ERROR "Xash3D doesn't work with 64 bit systems well and there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
+	message(FATAL_ERROR "You're building 64 bit Xash3D! Note that there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
+endif()
+
+if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER AND NOT XASH_NONSTANDARD_LOAD)
+	message(FATAL_ERROR "You must enable XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
 endif()
 
 # Dependencies
 if(XASH_STATIC)
-	set(XASH_SINGLE_BINARY "ON")
+	set(XASH_SINGLE_BINARY ON)
 endif()
 
 if(XASH_NANOGL)
-	set(XASH_GLES "ON")
+	set(XASH_GLES ON)
 endif()
 
-if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER AND NOT XASH_NONSTANDARD_LOAD)
-	message(FATAL_ERROR "You must choose XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
-endif()
-
-if(NOT DEFINED LIB_INSTALL_DIR)
-	if(WIN32)
-		set(LIB_INSTALL_DIR "${CMAKE_BUILD_TYPE}")
-	else()
-		set(LIB_INSTALL_DIR "lib${LIB_SUFFIX}")
-	endif()
-endif()
-if(NOT DEFINED LIB_INSTALL_SUBDIR)
-	set(LIB_INSTALL_SUBDIR "xash3d")
-endif()
-if(NOT DEFINED LIBEXEC_INSTALL_DIR)
-	set(LIBEXEC_INSTALL_DIR "libexec")
-endif()
-if(NOT DEFINED BIN_INSTALL_DIR)
-	set(BIN_INSTALL_DIR "bin")
-endif()
-
-if(NOT XASH_DEDICATED)
-	if(XASH_MAINUI)
-		add_subdirectory(mainui)
-	endif()
-	if(XASH_VGUI)
-		add_subdirectory(vgui_support)
-	endif()
-endif()
-
-if(XASH_DLL_LOADER)
-	add_subdirectory(loader)
-endif()
-
-if(NOT XASH_SINGLE_BINARY)
-	add_subdirectory(game_launch)
-endif()
-
+fwgs_conditional_subproject(XASH_MAINUI mainui)
+fwgs_conditional_subproject(XASH_VGUI vgui_support)
+fwgs_conditional_subproject(XASH_DLL_LOADER loader)
+fwgs_conditional_subproject("NOT XASH_SINGLE_BINARY" game_launch)
 add_subdirectory(engine)
 
 if(NOT WIN32 OR XASH_NO_INSTALL_RUNSCRIPT)
 	install(FILES "scripts/xash3d.sh"
 		DESTINATION "${BIN_INSTALL_DIR}"
 	    RENAME "xash3d"
-		PERMISSIONS OWNER_READ OWNER_EXECUTE OWNER_WRITE
-		            GROUP_READ GROUP_EXECUTE
-					WORLD_READ WORLD_EXECUTE)
+		PERMISSIONS OWNER_READ OWNER_EXECUTE OWNER_WRITE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 endif()
 
 if(WIN32)
 	if(XASH_SINGLE_BINARY)
-		set_property(DIRECTORY .
-			PROPERTY
-				VS_STARTUP_PROJECT xash)
+		set_property(DIRECTORY . PROPERTY VS_STARTUP_PROJECT xash) # Engine project
 	else()
-		set_property(DIRECTORY .
-			PROPERTY
-				VS_STARTUP_PROJECT xash3d)
+		set_property(DIRECTORY . PROPERTY VS_STARTUP_PROJECT xash3d) # Game_launch project
 	endif()
 endif()
