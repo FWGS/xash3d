@@ -28,11 +28,7 @@ set(LOADER_LIBRARY loader)
 file(GLOB_RECURSE LOADER_SOURCES *.c)
 include_directories(. wine/ ../engine/common ../engine ../engine/client ../common)
 
-if(XASH_SINGLE_BINARY)
-	add_library(${LOADER_LIBRARY} STATIC ${LOADER_SOURCES})
-else()
-	add_library(${LOADER_LIBRARY} SHARED ${LOADER_SOURCES})
-endif()
+add_library(${LOADER_LIBRARY} STATIC ${LOADER_SOURCES})
 
 if(XASH_SDL)
 	xash_link_sdl2(${LOADER_LIBRARY})

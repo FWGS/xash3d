@@ -330,7 +330,7 @@ static char* texturecompressionfuncs[] =
 GL_GetProcAddress
 =================
 */
-void *GL_GetProcAddress( const char *name )
+void EXPORT *GL_GetProcAddress( const char *name )
 {
 #if defined( XASH_GLES )
 	void *func = nanoGL_GetProcAddress( name );

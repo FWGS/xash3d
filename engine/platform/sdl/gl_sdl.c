@@ -386,7 +386,7 @@ static void GAME_EXPORT APIENTRY GL_DebugOutput( GLuint source, GLuint type, GLu
 GL_GetProcAddress
 =================
 */
-void *GL_GetProcAddress( const char *name )
+void EXPORT *GL_GetProcAddress( const char *name )
 {
 #if defined( XASH_GLES )
 	void *func = nanoGL_GetProcAddress(name);
