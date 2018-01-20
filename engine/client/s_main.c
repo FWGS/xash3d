@@ -1565,7 +1565,8 @@ void S_RenderFrame( ref_params_t *fd )
 		// try to combine static sounds with a previous channel of the same
 		// sound effect so we don't mix five torches every frame
 		// g-cont: perfomance option, probably kill stereo effect in most cases
-		if( i >= MAX_DYNAMIC_CHANNELS && s_combine_sounds->integer )
+		// a1ba: disable for multiplayer, because it breaks a vital function: stereo
+		if( i >= MAX_DYNAMIC_CHANNELS && s_combine_sounds->integer && SV_Active() && CL_GetMaxClients() == 1 )
 		{
 			// see if it can just use the last one
 			if( combine && combine->sfx == ch->sfx )
