@@ -1,8 +1,5 @@
 #!/bin/sh
 
-sudo apt-get -qq update >/dev/null
-# a1ba: remove mingw-w64-i686-dev later, when travis will be updated to xenial, which have mingw with disabled pthread dependency
-sudo apt-get -qq install --force-yes mingw-w64-i686-dev binutils-mingw-w64-i686 gcc-mingw-w64-i686 g++-mingw-w64-i686 p7zip-full gcc-multilib g++-multilib libx11-dev:i386 libxext-dev:i386 x11-utils libgl1-mesa-dev libasound-dev zlib1g:i386 libstdc++6:i386 >/dev/null
 jdk_switcher use oraclejdk8
 curl -s http://dl.google.com/android/android-sdk_r22.0.4-linux.tgz | tar xzf -
 export ANDROID_HOME=$PWD/android-sdk-linux

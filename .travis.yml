@@ -1,7 +1,25 @@
 language: c
 cache: ccache
 compiler: gcc
-sudo: true
+sudo: false
+addons:
+  apt:
+    packages:
+      - cmake
+      - mingw-w64-i686-dev
+      - binutils-mingw-w64-i686
+      - gcc-mingw-w64-i686
+      - g++-mingw-w64-i686
+      - p7zip-full
+      - gcc-multilib
+      - g++-multilib
+      - libx11-dev:i386
+      - libxext-dev:i386
+      - x11-utils
+      - libgl1-mesa-dev
+      - libasound-dev
+      - zlib1g:i386
+      - libstdc++6:i386
 git:
   depth: 1
   submodules: true
