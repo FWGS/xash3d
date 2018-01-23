@@ -84,11 +84,14 @@ endif()
 # Installing
 if(WIN32)
 	fwgs_string_option(LIB_INSTALL_DIR "Libraries install directory" ${CMAKE_BINARY_DIR})
+	fwgs_string_option(LIB_INSTALL_SUBDIR "Libraries install subdirectory" "")
+	fwgs_string_option(BIN_INSTALL_DIR "Executables install directory" ${CMAKE_BINARY_DIR})
 else()
 	fwgs_string_option(LIB_INSTALL_DIR "Libraries install directory" "lib")
+	fwgs_string_option(LIB_INSTALL_SUBDIR "Libraries install subdirectory" "xash3d")
+	fwgs_string_option(BIN_INSTALL_DIR "Executables install directory" "bin")
 endif()
-fwgs_string_option(LIB_INSTALL_SUBDIR "Libraries install subdirectory" "xash3d")
-fwgs_string_option(BIN_INSTALL_DIR "Executables install directory" "bin")
+
 
 # /*
 # ==============

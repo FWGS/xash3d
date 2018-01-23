@@ -22,7 +22,7 @@
 
 include(FindPackageHandleStandardArgs)
 
-if(NOT HL_SDK_DIR)
+if(NOT HL_SDK_DIR AND NOT XASH_DOWNLOAD_DEPENDENCIES)
 	message( FATAL_ERROR "Pass a HL_SDK_DIR variable to CMake to be able use VGUI" )
 endif()
 
