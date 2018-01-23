@@ -55,7 +55,7 @@ include_directories( . ../common ../engine ../engine/common ../engine/client ../
 
 add_library(${VGUI_SUPPORT} SHARED ${VGUI_SUPPORT_SOURCES})
 
-# TODO: VGUI version selector
+# TODO: VGUI version selector for Win32
 fwgs_library_dependency(${VGUI_SUPPORT} VGUI
 	"https://github.com/FWGS/vgui-dev/archive/master.zip" "master.zip" "HL_SDK_DIR" "vgui-dev-master")
 

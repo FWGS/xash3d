@@ -22,8 +22,10 @@
 
 cmake_minimum_required(VERSION 3.0.0)
 
+# Install custom module path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-include(VSForceXPToolchain)
+
+include(VSForceXPToolchain) # Force XP toolchain for Visual Studio
 
 project (XASH3D)
 
@@ -73,7 +75,11 @@ endif()
 # Misc
 option(XASH_NO_INSTALL_RUNSCRIPT "Don't install xash3d.sh" OFF)
 option(XASH_NO_INSTALL_VGUI_BIN "Don't bundle proprietary VGUI" OFF)
-option(XASH_DOWNLOAD_DEPENDENCIES "Download dependencies automatically, if supported" ON)
+if(MSVC) # Autodownload for lazy developers using Visual Studio
+	option(XASH_DOWNLOAD_DEPENDENCIES "Download dependencies automatically, if supported" ON)
+else()
+	option(XASH_DOWNLOAD_DEPENDENCIES "Download dependencies automatically, if supported" OFF)
+endif()
 
 # Installing
 if(WIN32)

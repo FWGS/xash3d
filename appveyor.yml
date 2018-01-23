@@ -25,17 +25,11 @@ configuration:
   - Debug
 
 before_build:
-  - appveyor DownloadFile https://www.libsdl.org/release/SDL2-devel-2.0.6-VC.zip
-  - 7z x SDL2-devel-2.0.6-VC.zip -oc:\projects\xash
-  - cd c:\projects\xash
-  - ren SDL2-2.0.6 SDL2
-  - git clone https://github.com/ValveSoftware/halflife hlsdk --depth=1
-  - cd c:\projects\xash\xash3d
   - git submodule update --init
   - cmake -G "%GENERATOR_NAME%" -DSDL2_PATH="c:\projects\xash\SDL2" -DCMAKE_INSTALL_PREFIX="build" -DHL_SDK_DIR="c:\projects\xash\hlsdk" -DXASH_AUTODETECT_SSE_BUILD=OFF -DXASH_VECTORIZE_SINCOS=ON
 
 after_build:
-  - copy c:\projects\xash\SDL2\lib\x86\SDL2.dll c:\projects\xash\xash3d\%CONFIGURATION%\SDL2.dll
+  - copy c:\projects\xash\SDL2\SDL2-2.0.7\lib\x86\SDL2.dll c:\projects\xash\xash3d\%CONFIGURATION%\SDL2.dll
   - 7z a -t7z xash3d-win.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on c:\projects\xash\xash3d\%CONFIGURATION%
   - curl --upload-file xash3d-win.7z https://transfer.sh/xash3d-win.7z
 

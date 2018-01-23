@@ -7,6 +7,7 @@ mkdir -p osx-build && cd osx-build
 export CFLAGS="-m32"
 export CXXFLAGS="-m32"
 cmake \
+	-DXASH_DOWNLOAD_DEPENDENCIES=yes \
 	-DXASH_SDL=yes \
 	-DXASH_VGUI=yes \
 	-DXASH_DLL_LOADER=no \
@@ -14,7 +15,7 @@ cmake \
 	-DHL_SDK_DIR=../vgui-dev/ \
 	-DCMAKE_OSX_ARCHITECTURES=i386 \
 	-DMAINUI_USE_STB=yes \
-	-DXASH_AUTODETECT_SSE_BUILD=no \
+	-DXASH_VECTORIZE_SINCOS=yes \
 	-DCMAKE_BUILD_TYPE=RelWithDebInfo ../
 make -j2
 cp engine/libxash.dylib mainui/libxashmenu.dylib vgui_support/libvgui_support.dylib ../vgui-dev/lib/vgui.dylib game_launch/xash3d ../scripts/xash3d.sh .

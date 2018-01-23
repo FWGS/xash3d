@@ -2,7 +2,7 @@
 
 # Build custom SDL2
 
-cd $TRAVIS_BUILD_DIR/SDL2-2.0.6
+cd $TRAVIS_BUILD_DIR/SDL2-2.0.7
 export CC="ccache gcc -msse2 -march=i686 -m32 -ggdb -O2"
 ./configure \
 	--disable-dependency-tracking \
@@ -47,12 +47,11 @@ export CFLAGS="-m32"
 export CXXFLAGS="-m32"
 cmake \
 	-DCMAKE_PREFIX_PATH=$TRAVIS_BUILD_DIR/sdl2-linux/usr/local \
+	-DXASH_DOWNLOAD_DEPENDENCIES=yes \
 	-DXASH_STATIC=ON \
 	-DXASH_DLL_LOADER=ON \
 	-DXASH_VGUI=ON \
 	-DMAINUI_USE_STB=ON \
-	-DHL_SDK_DIR=$TRAVIS_BUILD_DIR/vgui-dev \
-	-DXASH_AUTODETECT_SSE_BUILD=OFF \
 	-DCMAKE_BUILD_TYPE=RelWithDebInfo ../
 make -j2
 cp engine/xash mainui/libxashmenu.so vgui_support/libvgui_support.so vgui_support/vgui.so .

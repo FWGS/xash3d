@@ -37,7 +37,7 @@ find_path(VGUI_INCLUDE_DIR
 	PATHS ${VGUI_SEARCH_PATHS}
 )
 
-message("<FindVGUI.cmake> ${VGUI_SEARCH_PATHS}")
+message(STATUS "<FindVGUI.cmake> ${VGUI_SEARCH_PATHS}")
 
 if(APPLE)
 	set(LIBNAMES vgui.dylib)
@@ -86,5 +86,5 @@ endmacro()
 
 find_package_handle_standard_args(VGUI REQUIRED_VARS VGUI_LIBRARY VGUI_INCLUDE_DIR)
 
-message("</FindVGUI.cmake> ${VGUI_LIBRARY}")
+message(STATUS "</FindVGUI.cmake> ${VGUI_LIBRARY}")
 
