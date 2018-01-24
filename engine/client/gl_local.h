@@ -363,6 +363,7 @@ qboolean R_InitRenderAPI( void );
 void R_SetupFrustum( void );
 void R_FindViewLeaf( void );
 void R_DrawFog( void );
+void R_Strobe( void );
 
 #define cmatrix3x4 vec4_t *const
 #define cmatrix4x4 vec4_t *const
@@ -699,6 +700,7 @@ extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
 extern convar_t	*r_vbo;
 extern convar_t	*r_bump;
+extern convar_t	*r_strobe;
 
 extern convar_t *mp_decals;
 
@@ -709,4 +711,4 @@ extern convar_t	*vid_texgamma;
 extern convar_t	*vid_mode;
 extern convar_t *vid_highdpi;
 
-#endif//GL_LOCAL_H
+#endif //GL_LOCAL_H

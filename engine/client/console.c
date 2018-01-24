@@ -33,6 +33,8 @@ convar_t	*con_fontscale;
 convar_t	*con_fontnum;
 convar_t	*vgui_utf8;
 
+conrect_t	con_rect;
+
 static int g_codepage = 0;
 static qboolean g_utf8 = false;
 
@@ -1698,18 +1700,22 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		y *= frac;
 	if( y >= 1 )
 	{
+		con_rect.x = 0;
+		con_rect.y = y - scr_width->value * 3 / 4;
+		con_rect.w = scr_width->value;
+		con_rect.h = scr_width->value * 3 / 4;
 		if( fill )
 		{
 			GL_SetRenderMode( kRenderNormal );
 			if( con_black->integer )
 			{
 				pglColor4ub( 0, 0, 0, 255 );
-				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
 			{
 				pglColor4ub( 255, 255, 255, 255 );
-				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, con.background );
+				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, con.background );
 			}
 		}
 		else
@@ -1718,12 +1724,12 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 			if( con_black->value )
 			{
 				pglColor4ub( 0, 0, 0, 255 * con_alpha->value );
-				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
 			{
 				pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
-				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, con.background );
+				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, con.background );
 			}
 		}
 		pglColor4ub( 255, 255, 255, 255 );

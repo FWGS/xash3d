@@ -1326,6 +1326,84 @@ void R_RenderFrame( const ref_params_t *fd, qboolean drawWorld )
 	GL_BackendEndFrame();
 }
 
+inline static void gl_sBlackFrame( void )
+{
+	if (CL_IsInConsole()) // No strobing on the console
+	{
+		pglEnable(GL_SCISSOR_TEST);
+		pglScissor(con_rect.x, (-con_rect.y) - (con_rect.h*1.25), con_rect.w, con_rect.h); // Preview strobe setting on static
+		pglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		pglClear(GL_COLOR_BUFFER_BIT);
+		pglDisable(GL_SCISSOR_TEST);
+	}
+	else
+	{
+		pglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		pglClear(GL_COLOR_BUFFER_BIT);
+	}
+}
+
+/*
+===============
+R_Strobe
+
+TODO: Consider vsync timings and do not render the supposed black frame at all.
+===============
+*/
+void R_Strobe( void )
+{
+	static int sCounter = 0;
+	int getInterval = r_strobe->integer; // Check through modified tag first?
+	int swapInterval = gl_swapInterval->integer;
+	if ( (getInterval == 0) || ((swapInterval == 0) && (getInterval != 0)) )
+	{
+		if (getInterval != 0) //If v-sync is off, turn off strobing
+		{
+			Cvar_Set("r_strobe", "0");
+			MsgDev(D_WARN, "Strobing (Black Frame Replacement) requires V-SYNC not being turned off! (gl_swapInterval != 0) \n");
+			Msg("Strobing (Black Frame Insertion) requires Vertical Sync to be enabled!\n");
+		}
+		else if (sCounter != 0)
+			sCounter = 0;
+
+		// flush any remaining 2D bits
+		R_Set2DMode(false);
+		return;
+	}
+	
+	// If interval is positive, insert (replace with) black frames.
+	// For example result of interval = 3 will be: "black-black-black-normal-black-black-black-normal-black-black-black-normal"
+	if (getInterval > 0)
+	{
+		if (sCounter < getInterval)
+		{
+			gl_sBlackFrame();
+			++sCounter;
+		}
+		else
+		{
+			sCounter = 0;
+			R_Set2DMode(false);
+		}
+	}
+	// If interval is negative, the procedure will be the opposite reverse.
+	// For example result of interval = -4 will be: "normal-normal-normal-normal-black-normal-normal-normal-normal-black"
+	else
+	{
+		getInterval = abs(getInterval);
+		if (sCounter < getInterval)
+		{
+			++sCounter;
+			R_Set2DMode(false);
+		}
+		else
+		{
+			gl_sBlackFrame();
+			sCounter = 0;
+		}
+	}
+}
+
 /*
 ===============
 R_EndFrame
@@ -1333,8 +1411,9 @@ R_EndFrame
 */
 void R_EndFrame( void )
 {
-	// flush any remaining 2D bits
-	R_Set2DMode( false );
+	if (!CL_IsInMenu())
+		R_Strobe();
+	
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );
 #elif defined __ANDROID__ // For direct android backend
