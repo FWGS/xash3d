@@ -75,7 +75,7 @@ endif()
 # Misc
 option(XASH_NO_INSTALL_RUNSCRIPT "Don't install xash3d.sh" OFF)
 option(XASH_NO_INSTALL_VGUI_BIN "Don't bundle proprietary VGUI" OFF)
-if(MSVC) # Autodownload for lazy developers using Visual Studio
+if(WIN32) # Autodownload for lazy developers using Windows
 	option(XASH_DOWNLOAD_DEPENDENCIES "Download dependencies automatically, if supported" ON)
 else()
 	option(XASH_DOWNLOAD_DEPENDENCIES "Download dependencies automatically, if supported" OFF)
@@ -101,15 +101,25 @@ endif()
 # ==============
 # */
 macro(xash_link_sdl2 tgt)
-	if(MSVC)
+	if(WIN32)
 		set(SDL2_VER "2.0.7")
-		set(SDL2_DOWNLOAD_URL "http://libsdl.org/release/SDL2-devel-${SDL2_VER}-VC.zip")
+		set(SDL2_RUNTIME "VC")
+		set(SDL2_SUBDIR "SDL2-${SDL2_VER}")
+		if(MINGW)
+			if(XASH_64BIT)
+				set(SDL2_SUBDIR "SDL2-${SDL2_VER}/x86_64-w64-mingw32")
+			else()
+				set(SDL2_SUBDIR "SDL2-${SDL2_VER}/i686-w64-mingw32")
+			endif()
+			set(SDL2_RUNTIME "mingw")
+		endif()
+
+		set(SDL2_DOWNLOAD_URL "http://libsdl.org/release/SDL2-devel-${SDL2_VER}-${SDL2_RUNTIME}.zip")
 		set(SDL2_SUBDIR "SDL2-${SDL2_VER}")
 
 		fwgs_library_dependency(${tgt} SDL2 ${SDL2_DOWNLOAD_URL} "SDL2.zip" SDL2_PATH ${SDL2_SUBDIR})
 	else()
-		# SDL2 doesn't provide dev packages
-		# TODO: MinGW support
+		# SDL2 doesn't provide dev packages for nonWin32 targets
 		fwgs_library_dependency(${tgt} SDL2)
 	endif()
 endmacro()

@@ -66,35 +66,34 @@
 
 message(STATUS "<FindSDL2.cmake> ${SDL2_PATH}")
 
-if(WIN32 AND NOT SDL2_PATH)
+if(WIN32 AND (NOT SDL2_PATH AND NOT XASH_DOWNLOAD_DEPENDENCIES))
 	message(FATAL_ERROR "To find SDL2 correctly, you need to pass SDL2_PATH variable to CMake")
 endif()
 
-SET(SDL2_SEARCH_PATHS
+set(SDL2_SEARCH_PATHS
 	${SDL2_PATH}
 	${CMAKE_LIBRARY_PATH}
+
+	# OSX paths
 	~/Library/Frameworks
 	/Library/Frameworks
+
+	# *nix
 	/usr/local
 	/usr
-	/sw # Fink
-	/opt/local # DarwinPorts
-	/opt/csw # Blastwave
-	/opt
 )
 
-FIND_PATH(SDL2_INCLUDE_DIR SDL.h
-	HINTS
-	$ENV{SDL2DIR}
+find_path(SDL2_INCLUDE_DIR SDL.h
 	PATH_SUFFIXES include/SDL2 include
 	PATHS ${SDL2_SEARCH_PATHS}
 )
 
-FIND_LIBRARY(SDL2_LIBRARY_TEMP
+find_library(SDL2_LIBRARY_TEMP
 	NAMES SDL2 SDL2.dll
-	HINTS
-	$ENV{SDL2DIR}
-	PATH_SUFFIXES lib64 lib lib/i386-linux-gnu lib/x86
+	PATH_SUFFIXES
+	    lib
+		lib/i386-linux-gnu
+		lib/x86
 	PATHS ${SDL2_SEARCH_PATHS}
 )
 
