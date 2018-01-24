@@ -106,6 +106,7 @@ if(XASH_DEDICATED)
 endif()
 
 if(XASH_SDL)
+	set(SDL2_BUILDING_EXECUTABLE ${XASH_SINGLE_BINARY}) # link sdl2main, if needed
 	xash_link_sdl2(${XASH_ENGINE})
 	add_definitions(-DXASH_SDL)
 endif()

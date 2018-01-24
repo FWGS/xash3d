@@ -36,6 +36,7 @@ add_executable(${XASH_LAUNCHER} WIN32 ${XASH_LAUNCHER_SOURCES})
 # Win32 uses WinMain() implemented in launcher code and system message boxes
 # Otherwise it prints errors in stdin.
 if(XASH_SDL AND NOT WIN32)
+	set(SDL2_BUILDING_EXECUTABLE YES) # Link SDL2main also
 	xash_link_sdl2(${XASH_LAUNCHER})
 	add_definitions(-DXASH_SDL)
 endif()

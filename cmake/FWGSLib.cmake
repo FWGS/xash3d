@@ -140,7 +140,8 @@ macro(fwgs_library_dependency tgt pkgname)
 		set(FORCE_DOWNLOAD FALSE)
 		set(FORCE_UNPACK FALSE)
 
-		find_package(${pkgname}) # First try to find it in system!
+		# Disabled, due to bugs
+		# find_package(${pkgname}) # First try to find it in system!
 		if(NOT ${${pkgname}_FOUND}) # Not found anything, download it
 			set(FORCE_DOWNLOAD TRUE)
 			set(FORCE_UNPACK TRUE)
