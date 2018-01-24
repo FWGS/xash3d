@@ -59,8 +59,8 @@ void SCR_DrawFPS( void )
 	double		newtime;
 	char		fpsstring[64];
 	int		offset;
-	int strobeInterval = r_strobe->integer; //cvar: r_strobe
-	int eFPS; //Effective FPS (strobing effect)
+	int strobeInterval = r_strobe->integer; // cvar: r_strobe
+	int eFPS; // Effective FPS (strobing effect)
 
 	if( cls.state != ca_active ) return; 
 	if( !cl_showfps->integer || cl.background ) return;
@@ -103,14 +103,14 @@ void SCR_DrawFPS( void )
 		/*if( !avgrate ) avgrate = ( maxfps - minfps ) / 2.0f;
 		else */avgrate += ( calc - avgrate ) / host.framecount;
 
-		if (strobeInterval > 0)
+		if( strobeInterval > 0 )
 		{
-			eFPS = (int)((curfps) / (strobeInterval + 1));
+			eFPS = (int)(( curfps ) / ( strobeInterval + 1 ));
 		}
-		else if (strobeInterval < 0)
+		else if( strobeInterval < 0 )
 		{
-			strobeInterval = abs(strobeInterval);
-			eFPS = (int)((curfps * strobeInterval) / (strobeInterval + 1));
+			strobeInterval = abs( strobeInterval );
+			eFPS = (int)(( curfps * strobeInterval ) / ( strobeInterval + 1 ));
 		}
 
 		switch( cl_showfps->integer )
@@ -123,13 +123,13 @@ void SCR_DrawFPS( void )
 			break;
 		case 1:
 		default:
-			if (strobeInterval == 0)
+			if( !strobeInterval )
 			{
-				Q_snprintf(fpsstring, sizeof(fpsstring), "%4i fps", curfps);
+				Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
 			}
 			else
 			{
-				Q_snprintf(fpsstring, sizeof(fpsstring), "%4i FPS\n%3i eFPS", curfps, eFPS);
+				Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i FPS\n%3i eFPS", curfps, eFPS );
 			}
 		}
 

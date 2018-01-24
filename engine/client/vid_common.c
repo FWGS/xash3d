@@ -1008,18 +1008,6 @@ static void R_CheckVBO( void )
 
 /*
 ===============
-R_initStrobe
-
-register strobe cvar
-===============
-*/
-static inline void R_initStrobe( void )
-{
-	r_strobe = Cvar_Get("r_strobe", "0", CVAR_ARCHIVE, "black frame insertion interval");
-}
-
-/*
-===============
 R_Init
 ===============
 */
@@ -1060,7 +1048,8 @@ qboolean R_Init( void )
 	R_StudioInit();
 	R_ClearDecals();
 	R_ClearScene();
-	R_initStrobe();
+
+	r_strobe = Cvar_Get("r_strobe", "0", CVAR_ARCHIVE, "black frame insertion interval");
 
 	// initialize screen
 	SCR_Init();

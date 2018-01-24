@@ -1086,9 +1086,8 @@ void Con_ClearAutoComplete();
 typedef struct conrect_s
 {
 	float x, y, w, h;
-}conrect_t;
+} conrect_t;
 extern conrect_t con_rect;
-
 void Con_Clear( void );
 
 extern const char *svc_strings[256];
