@@ -115,7 +115,6 @@ macro(xash_link_sdl2 tgt)
 		endif()
 
 		set(SDL2_DOWNLOAD_URL "http://libsdl.org/release/SDL2-devel-${SDL2_VER}-${SDL2_RUNTIME}.zip")
-		set(SDL2_SUBDIR "SDL2-${SDL2_VER}")
 
 		fwgs_library_dependency(${tgt} SDL2 ${SDL2_DOWNLOAD_URL} "SDL2.zip" SDL2_PATH ${SDL2_SUBDIR})
 	else()
