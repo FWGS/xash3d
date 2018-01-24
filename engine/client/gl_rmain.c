@@ -1326,7 +1326,7 @@ void R_RenderFrame( const ref_params_t *fd, qboolean drawWorld )
 	GL_BackendEndFrame();
 }
 
-static inline void GL_InsertBlackFrame( void )
+_inline void GL_InsertBlackFrame( void )
 {
 	// No strobing on the console
 	if( CL_IsInConsole() )

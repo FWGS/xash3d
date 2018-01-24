@@ -128,6 +128,32 @@ macro(fwgs_unpack_file file path)
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${path})
 endmacro()
 
+# HACKHACK: as you can see, other compilers and OSes
+# can easily link to vgui library, no matter how it was placed
+# On Linux just target_link_libraries will give you a wrong
+# binary, which have ABSOLUTE PATH to vgui.so!
+# Stupid Linux linkers just check for a path and this may give
+# a TWO SAME libraries in memory, which obviously goes to crash engine
+
+# EXAMPLE(without hack):
+# $ LD_LIBRARY_PATH=$(pwd) ldd libvgui_support.so
+#       /home/user/projects/hlsdk/linux/vgui.so => /home/user/projects/hlsdk/linux/vgui.so (addr)
+# With hack:
+# $ LD_LIBRARY_PATH=$(pwd) ldd libvgui_support.so
+#       vgui.so => $(pwd)/vgui.so
+
+macro(target_link_vgui_hack arg1)
+	if(WIN32)
+		target_link_libraries(${arg1} ${VGUI_LIBRARY} )
+	elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+		target_link_libraries(${arg1} ${VGUI_LIBRARY} )
+	elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+		add_custom_command(TARGET ${arg1} PRE_LINK COMMAND
+			${CMAKE_COMMAND} -E copy ${VGUI_LIBRARY} $<TARGET_FILE_DIR:${arg1}>)
+		target_link_libraries(${arg1} -L. -L${arg1}/ -l:vgui.so)
+	endif()
+endmacro()
+
 # /*
 # ================
 # fwgs_link_package
