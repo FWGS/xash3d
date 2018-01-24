@@ -9,11 +9,9 @@ export CXX="ccache i686-w64-mingw32-g++"
 export CFLAGS="-static-libgcc -no-pthread"
 export CXXFLAGS="-static-libgcc -static-libstdc++"
 cmake \
-	-DSDL2_PATH=../sdl2-mingw/i686-w64-mingw32 \
 	-DXASH_DOWNLOAD_DEPENDENCIES=ON \
 	-DCMAKE_SYSTEM_NAME=Windows \
 	-DCMAKE_BUILD_TYPE=RelWithDebInfo \
-	-DCMAKE_PREFIX_PATH=../sdl2-mingw/i686-w64-mingw32 \
 	-DXASH_STATIC=ON \
 	-DXASH_VGUI=ON \
 	-DXASH_SDL=ON ../
