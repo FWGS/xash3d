@@ -98,13 +98,13 @@ find_library(SDL2_LIBRARY_TEMP
 )
 
 # Call sdl2-config if SDL2_LIBRARY still not found
-if(NOT SDL2_LIBRARY_TEMP AND NOT MSVC) # MSVC SDL2 package doesn't provide sdl2-config, but MinGW does
+if(NOT SDL2_LIBRARY_TEMP AND NOT WIN32)
 	execute_process(COMMAND sdl2-config --libs
 		RESULT_VARIABLE SDL2_CONFIG_RETVAL
 		OUTPUT_VARIABLE SDL2_LIBRARY_TEMP
 		OUTPUT_STRIP_TRAILING_WHITESPACE)
 	if(SDL2_CONFIG_RETVAL)
-		message(FATAL_ERROR "sdl2-config --libs returned code ${SDL2_CONFIG_RETVAL}. Check that sdl2-config is working.")
+		message(SEND_ERROR "sdl2-config --libs returned code ${SDL2_CONFIG_RETVAL}. Check that sdl2-config is working.")
 	endif()
 endif()
 
