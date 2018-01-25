@@ -1286,6 +1286,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	SV_Init();
 	CL_Init();
 
+#if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined( XASH_DEDICATED )
+	Android_Init();
+#endif
+
 	HTTP_Init();
 
 	ID_Init();
@@ -1363,9 +1367,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	SCR_CheckStartupVids();	// must be last
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
-#endif
-#if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined(XASH_DEDICATED)
-	Android_Init();
 #endif
 
 	if( host.state == HOST_INIT )
