@@ -43,4 +43,5 @@ if(CMAKE_SYSTEM_NAME MATCHES ".+BSD$")
 endif()
 
 fwgs_set_default_properties(${LOADER_LIBRARY})
-fwgs_install(${LOADER_LIBRARY})
+# Don't install, we are static library
+# fwgs_install(${LOADER_LIBRARY})
