@@ -20,7 +20,7 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 2.6.0)
+cmake_minimum_required(VERSION 2.8.0)
 project(VGUI_SUPPORT)
 
 set(VGUI_SUPPORT vgui_support)
