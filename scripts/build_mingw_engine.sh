@@ -15,7 +15,7 @@ cmake \
 	-DXASH_STATIC=ON \
 	-DXASH_VGUI=ON \
 	-DXASH_SDL=ON ../
-make -j2
+make -j2 VERBOSE=1
 make install # Install everything
 cp SDL2/SDL2-2.0.7/i686-w64-mingw32/bin/SDL2.dll . # Install SDL2
 cp /usr/i686-w64-mingw32/lib/libwinpthread-1.dll . # a1ba: remove when travis will be updated to xenial
