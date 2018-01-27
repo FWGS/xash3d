@@ -20,6 +20,18 @@
 # SOFTWARE.
 #
 
+option(FWGSLIB_DEBUG "Print debug messages for FWGSLib" OFF)
+
+# /*
+# ================
+# fwgs_debug
+# ================
+# */
+macro(fwgs_debug)
+	if(FWGSLIB_DEBUG)
+		message(${ARGV})
+	endif()
+endmacro()
 
 # /*
 # ================
@@ -62,10 +74,10 @@ macro(fwgs_conditional_subproject cond subproject)
 	set(TEMP 1)
 	foreach(d ${cond})
 		string(REGEX REPLACE " +" ";" expr "${d}")
-	  if(${expr})
-	  else()
-		set(TEMP 0)
-	  endif()
+		if(${expr})
+		else()
+			set(TEMP 0)
+		endif()
     endforeach()
 	if(TEMP)
 		add_subdirectory(${subproject})
@@ -110,10 +122,10 @@ macro(cond_list_append arg1 arg2 arg3)
 	set(TEMP 1)
 	foreach(d ${arg1})
 		string(REGEX REPLACE " +" ";" expr "${d}")
-	  if(${expr})
-	  else()
-		set(TEMP 0)
-	  endif()
+		if(${expr})
+		else()
+			set(TEMP 0)
+		endif()
     endforeach()
 
 	if(TEMP)
@@ -211,4 +223,30 @@ macro(fwgs_library_dependency tgt pkgname)
 	else()
 		target_link_libraries(${tgt} ${${pkgname}_LIBRARY})
 	endif()
+endmacro()
+
+# /*
+# ================
+# fwgs_add_compile_options
+#
+# add_compile_options, but better with language specification
+# ================
+# */
+macro(fwgs_add_compile_options lang)
+	set(FLAGS ${ARGV})
+	list(REMOVE_AT FLAGS 0) # Get rid of language
+
+	foreach(arg ${FLAGS})
+		if(${lang} STREQUAL "C")
+			fwgs_debug(STATUS "Adding ${arg} for both C/CXX")
+			list(APPEND CMAKE_C_FLAGS ${arg})
+			list(APPEND CMAKE_CXX_FLAGS ${arg})
+		elseif(${lang} STREQUAL "CONLY")
+			fwgs_debug(STATUS "Adding ${arg} for C ONLY")
+			list(APPEND CMAKE_C_FLAGS ${arg})
+		elseif(${lang} STREQUAL "CXX")
+			fwgs_debug(STATUS "Adding ${arg} for CXX")
+			list(APPEND CMAKE_CXX_FLAGS ${arg})
+		endif()
+	endforeach()
 endmacro()

@@ -50,7 +50,7 @@ add_definitions(-DXASH_FORCEINLINE)
 
 # Important, as HLSDK and engine shares some symbol names!
 if(NOT WIN32) # Windows by default have hidden visibility and better linker
-	add_compile_options(-fvisibility=hidden)
+	fwgs_add_compile_options(С -fvisibility=hidden)
 endif()
 
 # ----- Conditions -----
