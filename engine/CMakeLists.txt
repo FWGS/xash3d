@@ -100,7 +100,7 @@ endif()
 
 if(XASH_DEDICATED)
 	add_definitions(-DXASH_DEDICATED)
-	if(LINUX AND NOT XASH_SDL)
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT XASH_SDL)
 		target_link_libraries(${XASH_ENGINE} -lrt)
 	endif()
 endif()
