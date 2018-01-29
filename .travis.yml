@@ -21,7 +21,7 @@ addons:
       - zlib1g:i386
       - libstdc++6:i386
 git:
-  depth: 1
+  depth: 50
   submodules: true
 jdk:
     - oraclejdk8
