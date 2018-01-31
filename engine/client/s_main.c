@@ -361,7 +361,7 @@ channel_t *SND_PickStaticChannel( int entnum, sfx_t *sfx, const vec3_t pos )
 	channel_t	*ch = NULL;
 	int	i;
 
-#if 1
+#if 0 // a1ba: Removed as prediction is done enough to disable this
 	int dupe = 0;
 
 	// TODO: remove this code when predicting is will be done
