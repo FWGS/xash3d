@@ -1,3 +1,18 @@
+/*
+libmpg.h - compact version of famous library mpg123
+Copyright (C) 2017 Uncle Mike
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
 #ifndef LIBMPG_H
 #define LIBMPG_H
 
@@ -5,26 +20,33 @@
 extern "C" {
 #endif
 
-typedef struct mpeg_s
+// error codes
+#define MP3_ERR		-1
+#define MP3_OK		0
+#define MP3_NEED_MORE	1
+
+#define OUTBUF_SIZE		8192	// don't change!
+
+typedef struct
 {
-	void	*state;		// hidden decoder state
-	void	*vbrtag;		// valid for VBR-encoded mpegs
+	int	rate;		// num samples per second (e.g. 11025 - 11 khz)
+	int	channels;		// num channels (1 - mono, 2 - stereo)
+	int	playtime;		// stream size in milliseconds
+} wavinfo_t;
 
-	int	channels;		// num channels
-	int	samples;		// per one second
-	int	play_time;	// stream size in milliseconds
-	int	rate;		// frequency
-	int	outsize;		// current data size
-	char	out[8192];	// temporary buffer
-	size_t	streamsize;	// size in bytes
-} mpeg_t;
+// custom stdio
+typedef long (*pfread)( void *handle, void *buf, size_t count );
+typedef long (*pfseek)( void *handle, long offset, int whence );
 
-extern int create_decoder( mpeg_t *mpg );
-extern int read_mpeg_header( mpeg_t *mpg, const char *data, int bufsize, int streamsize );
-extern int read_mpeg_stream( mpeg_t *mpg, const char *data, int bufsize );
-extern int set_current_pos( mpeg_t *mpg, int newpos, int (*pfnSeek)( void*, int, int ), void *file );
-extern int get_current_pos( mpeg_t *mpg, int curpos );
-extern void close_decoder( mpeg_t *mpg );
+extern void *create_decoder( int *error );
+extern int feed_mpeg_header( void *mpg, const char *data, long bufsize, long streamsize, wavinfo_t *sc );
+extern int feed_mpeg_stream( void *mpg, const char *data, long bufsize, char *outbuf, size_t *outsize );
+extern int open_mpeg_stream( void *mpg, void *file, pfread f_read, pfseek f_seek, wavinfo_t *sc );
+extern int read_mpeg_stream( void *mpg, char *outbuf, size_t *outsize  );
+extern int get_stream_pos( void *mpg );
+extern int set_stream_pos( void *mpg, int curpos );
+extern void close_decoder( void *mpg );
+const char *get_error( void *mpeg );
 
 #ifdef __cplusplus
 }

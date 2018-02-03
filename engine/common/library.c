@@ -39,10 +39,10 @@ void Com_PushLibraryError( const char *error )
 
 void *Com_FunctionFromName_SR( void *hInstance, const char *pName )
 {
-	#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
 	if( !Q_memcmp( pName, "ofs:",4 ) )
 		return svgame.dllFuncs.pfnGameInit + Q_atoi(pName + 4);
-	#endif
+#endif
 	return Com_FunctionFromName( hInstance, pName );
 }
 
