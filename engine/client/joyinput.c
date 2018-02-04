@@ -96,24 +96,35 @@ DPad events
 */
 void Joy_HatMotionEvent( int id, byte hat, byte value )
 {
+	struct
+	{
+		int mask;
+		int key;
+	} keys[] =
+	{
+		{ JOY_HAT_UP, K_UPARROW },
+		{ JOY_HAT_DOWN, K_DOWNARROW },
+		{ JOY_HAT_LEFT, K_LEFTARROW },
+		{ JOY_HAT_RIGHT, K_RIGHTARROW },
+	};
+	int i;
+
 	if( !initialized )
 		return;
 
-	if( value & JOY_HAT_UP )
-		Key_Event( K_UPARROW, true );
-	else Key_Event( K_UPARROW, false );
-
-	if( value & JOY_HAT_DOWN )
-		Key_Event( K_DOWNARROW, true );
-	else Key_Event( K_DOWNARROW, false );
-
-	if( value & JOY_HAT_LEFT )
-		Key_Event( K_LEFTARROW, true );
-	else Key_Event( K_LEFTARROW, false );
-
-	if( value & JOY_HAT_RIGHT )
-		Key_Event( K_RIGHTARROW, true );
-	else Key_Event( K_RIGHTARROW, false );
+	for( i = 0; i < ARRAYSIZE( keys ); i++ )
+	{
+		if( value & keys[i].mask )
+		{
+			if( !Key_IsDown( keys[i].key ))
+				Key_Event( keys[i].key, true );
+		}
+		else
+		{
+			if( Key_IsDown( keys[i].key ))
+				Key_Event( keys[i].key, false );
+		}
+	}
 }
 
 /*
@@ -178,7 +189,6 @@ int Joy_GetHatValueForAxis( const engineAxis_t engineAxis )
 	}
 
 	// similar code in Joy_ProcessTrigger
-
 	if( joyaxis[engineAxis].val > threshold &&
 		joyaxis[engineAxis].prevval <= threshold ) // ignore random press
 	{
@@ -275,10 +285,8 @@ Trackball events. UNDONE
 */
 void Joy_BallMotionEvent( int id, byte ball, short xrel, short yrel )
 {
-	if( !initialized )
-		return;
-
-	MsgDev( D_INFO, "TODO: Write ball motion code!\n" );
+	//if( !initialized )
+	//	return;
 }
 
 /*
