@@ -159,6 +159,7 @@ LOCAL_SRC_FILES := \
 	   common/soundlib/libmpg/index.c \
 	   common/soundlib/libmpg/layer3.c \
 	   common/soundlib/libmpg/libmpg.c \
+	   common/soundlib/libmpg/mpg123.c \
 	   common/soundlib/libmpg/parse.c \
 	   common/soundlib/libmpg/reader.c \
 	   common/soundlib/libmpg/synth.c \
