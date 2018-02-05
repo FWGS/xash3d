@@ -53,20 +53,20 @@ static const int s_android_scantokey[] =
 	0,				'+',			'`',			0,				0,				// 80
 	0,				0,				0,				0,				0,				// 85
 	0,				0,				K_PGUP,			K_PGDN,			0,				// 90
-	0,				K_A_BUTTON,		K_B_BUTTON,		K_C_BUTTON,		K_X_BUTTON,		// 95
-	K_Y_BUTTON,		K_Z_BUTTON,		K_LSHOULDER,	K_RSHOULDER,	K_LTRIGGER,		// 100
-	K_RTRIGGER,		K_LSTICK,		K_RSTICK,		K_ESCAPE,		K_ESCAPE,		// 105
-	0,				K_ESCAPE,		K_DEL,			K_CTRL,			K_CTRL,		// 110
-	K_CAPSLOCK,		0,	0,				0,				0,				// 115
+	0,				K_AUX1,			K_AUX2,			K_AUX14,		K_AUX3,			// 95
+	K_AUX4,			K_AUX15,		K_AUX6,			K_AUX7,			K_JOY1,			// 100
+	K_JOY2,			K_AUX10,		K_AUX11,		K_ESCAPE,		K_ESCAPE,		// 105
+	0,				K_ESCAPE,		K_DEL,			K_CTRL,			K_CTRL,			// 110
+	K_CAPSLOCK,		0,				0,				0,				0,				// 115
 	0,				K_PAUSE,		K_HOME,			K_END,			K_INS,			// 120
 	0,				0,				0,				0,				0,				// 125
 	0,				K_F1,			K_F2,			K_F3,			K_F4,			// 130
 	K_F5,			K_F6,			K_F7,			K_F8,			K_F9,			// 135
 	K_F10,			K_F11,			K_F12,			K_KP_NUMLOCK,		K_KP_INS,			// 140
 	K_KP_END,		K_KP_DOWNARROW,	K_KP_PGDN,		K_KP_LEFTARROW,	K_KP_5,			// 145
-	K_KP_RIGHTARROW,K_KP_HOME,		K_KP_UPARROW,		K_KP_PGUP,		K_KP_SLASH,		// 150
-	0,		K_KP_MINUS,		K_KP_PLUS,		K_KP_DEL,			',',			// 155
-	K_KP_ENTER,		'=',		'(',			')'
+	K_KP_RIGHTARROW,K_KP_HOME,		K_KP_UPARROW,	K_KP_PGUP,		K_KP_SLASH,		// 150
+	0,				K_KP_MINUS,		K_KP_PLUS,		K_KP_DEL,		',',			// 155
+	K_KP_ENTER,		'=',			'(',			')'
 };
 
 
