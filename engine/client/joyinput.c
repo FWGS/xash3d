@@ -86,6 +86,15 @@ convar_t *joy_pitch_deadzone;
 convar_t *joy_yaw_deadzone;
 convar_t *joy_axis_binding;
 
+/*
+============
+Joy_IsActive
+============
+*/
+qboolean Joy_IsActive( void )
+{
+	return !forcedisable && initialized;
+}
 
 /*
 ============

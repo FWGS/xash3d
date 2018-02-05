@@ -20,6 +20,7 @@ enum
 	JOY_HAT_LEFTDOWN  = JOY_HAT_LEFT  | JOY_HAT_DOWN
 };
 
+qboolean Joy_IsActive( void );
 void Joy_HatMotionEvent( int id, byte hat, byte value );
 void Joy_AxisMotionEvent( int id, byte axis, short value );
 void Joy_BallMotionEvent( int id, byte ball, short xrel, short yrel );

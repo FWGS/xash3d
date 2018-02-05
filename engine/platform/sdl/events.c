@@ -31,6 +31,7 @@ extern convar_t *vid_fullscreen;
 extern convar_t *snd_mute_losefocus;
 static int wheelbutton;
 static SDL_Joystick *joy;
+static SDL_GameController *gamecontroller;
 
 void R_ChangeDisplaySettingsFast( int w, int h );
 void SDLash_SendCharEvent( int ch );
@@ -353,6 +354,49 @@ void SDLash_EventFilter( void *ev )
 		Joy_RemoveEvent( event->jdevice.which );
 		break;
 
+	/* GameController API */
+	case SDL_CONTROLLERAXISMOTION:
+		if( event->caxis.axis == SDL_CONTROLLER_AXIS_INVALID )
+			break;
+
+		// Swap axis to follow default axis binding:
+		// LeftX, LeftY, RightX, RightY, TriggerRight, TriggerLeft
+		if( event->caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT )
+			event->caxis.axis = SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
+		else if( event->caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT )
+			event->caxis.axis = SDL_CONTROLLER_AXIS_TRIGGERLEFT;
+
+		Joy_AxisMotionEvent( event->caxis.which, event->caxis.axis, event->caxis.value );
+		break;
+
+	case SDL_CONTROLLERBUTTONDOWN:
+	case SDL_CONTROLLERBUTTONUP:
+	{
+		static int sdlControllerButtonToEngine[] =
+		{
+			K_AUX16, // invalid
+			K_A_BUTTON, K_B_BUTTON, K_X_BUTTON,	K_Y_BUTTON,
+			K_BACK_BUTTON, K_MODE_BUTTON, K_START_BUTTON,
+			K_LSTICK, K_RSTICK,
+			K_L1_BUTTON, K_R1_BUTTON,
+			K_UPARROW, K_DOWNARROW, K_LEFTARROW, K_RIGHTARROW
+		};
+
+		// TODO: Use joyinput funcs, for future multiple gamepads support
+
+		if( Joy_IsActive() )
+			Key_Event( sdlControllerButtonToEngine[event->cbutton.button], event->cbutton.state );
+		break;
+	}
+
+	case SDL_CONTROLLERDEVICEADDED:
+		Joy_AddEvent( event->cdevice.which );
+		break;
+
+	case SDL_CONTROLLERDEVICEREMOVED:
+		Joy_RemoveEvent( event->cdevice.which );
+		break;
+
 	case SDL_QUIT:
 		Sys_Quit();
 		break;
@@ -441,7 +485,7 @@ void SDLash_EventFilter( void *ev )
 	}
 }
 
-int SDLash_JoyInit( int numjoy )
+static int SDLash_JoyInit_Old( int numjoy )
 {
 	int num;
 	int i;
@@ -491,9 +535,85 @@ int SDLash_JoyInit( int numjoy )
 		SDL_JoystickName( joy ), SDL_JoystickNumAxes( joy ), SDL_JoystickNumHats( joy ),
 		SDL_JoystickNumButtons( joy ), SDL_JoystickNumBalls( joy ) );
 
+	SDL_GameControllerEventState( SDL_DISABLE );
 	SDL_JoystickEventState( SDL_ENABLE );
 
 	return num;
 }
+
+static int SDLash_JoyInit_New( int numjoy )
+{
+	int temp, num;
+	int i;
+
+	MsgDev( D_INFO, "Joystick: SDL GameController API\n" );
+
+	if( SDL_WasInit( SDL_INIT_GAMECONTROLLER ) != SDL_INIT_GAMECONTROLLER &&
+		SDL_InitSubSystem( SDL_INIT_GAMECONTROLLER ) )
+	{
+		MsgDev( D_INFO, "Failed to initialize SDL GameController API: %s\n", SDL_GetError() );
+		return 0;
+	}
+
+	// chance to add mappings from file
+	SDL_GameControllerAddMappingsFromFile( "controllermappings.txt" );
+
+	if( gamecontroller )
+	{
+		SDL_GameControllerClose( gamecontroller );
+	}
+
+	temp = SDL_NumJoysticks();
+	num = 0;
+
+	for( i = 0; i < temp; i++ )
+	{
+		if( SDL_IsGameController( i ))
+			num++;
+	}
+
+	if( num > 0 )
+		MsgDev( D_INFO, "%i joysticks found:\n", num );
+	else
+	{
+		MsgDev( D_INFO, "No joystick found.\n" );
+		return 0;
+	}
+
+	for( i = 0; i < num; i++ )
+		MsgDev( D_INFO, "%i\t: %s\n", i, SDL_GameControllerNameForIndex( i ) );
+
+	MsgDev( D_INFO, "Pass +set joy_index N to command line, where N is number, to select active joystick\n" );
+
+	gamecontroller = SDL_GameControllerOpen( numjoy );
+
+	if( !gamecontroller )
+	{
+		MsgDev( D_INFO, "Failed to select joystick: %s\n", SDL_GetError( ) );
+		return 0;
+	}
+
+	MsgDev( D_INFO, "Selected joystick: %s (%i:%i:%i)\n",
+		SDL_GameControllerName( gamecontroller ),
+		SDL_GameControllerGetVendor( gamecontroller ),
+		SDL_GameControllerGetProduct( gamecontroller ),
+		SDL_GameControllerGetProductVersion( gamecontroller ));
+
+	SDL_GameControllerEventState( SDL_ENABLE );
+	SDL_JoystickEventState( SDL_DISABLE );
+
+	return num;
+}
+
+int SDLash_JoyInit( int numjoy )
+{
+	// SDL_Joystick is now an old API
+	// SDL_GameController is preferred
+	if( Sys_CheckParm( "-sdl_joy_old_api" ) )
+		return SDLash_JoyInit_Old(numjoy);
+
+	return SDLash_JoyInit_New(numjoy);
+}
+
 
 #endif // XASH_SDL
