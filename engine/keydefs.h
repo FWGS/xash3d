@@ -24,9 +24,6 @@
 #define K_ESCAPE		27
 #define K_SPACE		32
 
-// android keys
-#define ANDROID_K_BACK 1073742094
-
 // normal keys should be passed as lowercased ascii
 
 #define K_BACKSPACE		127
