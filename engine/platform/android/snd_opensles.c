@@ -176,7 +176,7 @@ static const char *SNDDMA_Android_Init( void )
 
 	samples = s_samplecount->integer;
 	if( !samples )
-		samples = 4096
+		samples = 4096;
 
 	dma.format.channels = sourceFormat.numChannels;
 	dma.samples = samples * sourceFormat.numChannels;
