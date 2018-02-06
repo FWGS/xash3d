@@ -174,12 +174,9 @@ static const char *SNDDMA_Android_Init( void )
 	result = (*snddma_android_bufferQueue)->RegisterCallback( snddma_android_bufferQueue, SNDDMA_Android_Callback, NULL );
 	if( result != SL_RESULT_SUCCESS ) return "bufferQueue->RegisterCallback";
 
-	if( freq <= 11025 )
-		samples = 1024;
-	else if( freq <= 22050 )
-		samples = 2048;
-	else
-		samples = 4096;
+	samples = s_samplecount->integer;
+	if( !samples )
+		samples = 4096
 
 	dma.format.channels = sourceFormat.numChannels;
 	dma.samples = samples * sourceFormat.numChannels;
