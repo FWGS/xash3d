@@ -1355,6 +1355,13 @@ void R_Strobe( void )
 {
 	static int sCounter = 0;
 	int getInterval = r_strobe->integer; // Check through modified tag first?
+
+	if( CL_IsInMenu() )
+	{
+		R_Set2DMode(false);
+		return;
+	}
+
 	if( !getInterval || ( !gl_swapInterval->integer && getInterval ) )
 	{
 		if( getInterval ) //If v-sync is off, turn off strobing
@@ -1410,8 +1417,7 @@ R_EndFrame
 */
 void R_EndFrame( void )
 {
-	if( !CL_IsInMenu() )
-		R_Strobe();
+	R_Strobe();
 	
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );
