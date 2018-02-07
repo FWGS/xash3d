@@ -356,7 +356,7 @@ void SDLash_EventFilter( void *ev )
 
 	/* GameController API */
 	case SDL_CONTROLLERAXISMOTION:
-		if( event->caxis.axis == SDL_CONTROLLER_AXIS_INVALID )
+		if( event->caxis.axis == (Uint8)SDL_CONTROLLER_AXIS_INVALID )
 			break;
 
 		// Swap axis to follow default axis binding:
@@ -592,13 +592,14 @@ static int SDLash_JoyInit_New( int numjoy )
 		MsgDev( D_INFO, "Failed to select joystick: %s\n", SDL_GetError( ) );
 		return 0;
 	}
-
+// was added in SDL2-2.0.6, allow build with earlier versions just in case
+#if SDL_MAJOR_VERSION > 2 || SDL_MINOR_VERSION > 0 || SDL_PATCHLEVEL >= 6
 	MsgDev( D_INFO, "Selected joystick: %s (%i:%i:%i)\n",
 		SDL_GameControllerName( gamecontroller ),
 		SDL_GameControllerGetVendor( gamecontroller ),
 		SDL_GameControllerGetProduct( gamecontroller ),
 		SDL_GameControllerGetProductVersion( gamecontroller ));
-
+#endif
 	SDL_GameControllerEventState( SDL_ENABLE );
 	SDL_JoystickEventState( SDL_DISABLE );
 
