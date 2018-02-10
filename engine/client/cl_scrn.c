@@ -59,6 +59,7 @@ void SCR_DrawFPS( void )
 	double		newtime;
 	char		fpsstring[2048];	//char fpsstring[64];
 	int		offset;
+	int	curfps;
 
 	char diffBar[2][128];
 	char barCounter = 0;
@@ -109,7 +110,7 @@ void SCR_DrawFPS( void )
 	}
 	else
 	{
-		int	curfps = (int)(calc + 0.5f);
+		curfps = (int)(calc + 0.5f);
 
 		if( curfps < minfps ) minfps = curfps;
 		if( curfps > maxfps ) maxfps = curfps;
@@ -140,7 +141,7 @@ void SCR_DrawFPS( void )
 
 			if (strobeInterval == 0)
 			{
-					Q_snprintf(fpsstring, sizeof(fpsstring), "%4i fps", curfps);	
+				Q_snprintf(fpsstring, sizeof(fpsstring), "%4i fps", curfps);	
 			}
 			else if (strobeDebug)
 			{
@@ -232,8 +233,8 @@ void SCR_DrawFPS( void )
 
 				Q_snprintf(fpsstring,
 					sizeof(fpsstring),
-					"%4i FPS\n%3i eFPS\n\n" \
-					"Total Frame Count: %u\n\n" \
+					"%4i FPS\n%3i eFPS\n" \
+					"Total Frame Count: %u\n" \
 					"(+) Phase Frame Count: %u\n" \
 					" |-> Normal Frame Count: %u\n" \
 					" |-> Black Frame Count: %u\n\n" \
@@ -243,14 +244,14 @@ void SCR_DrawFPS( void )
 					"PWM Simulation:\n" \
 					" |->Frequency: %4f Hz\n" \
 					" |->Duty Cycle: %4f%%\n" \
-					"timer.triggered %d\n\n" \
+					"timer.triggered %d\n" \
 					"^5ANALYSIS:\n^3" \
 					"Brightness Reduction:\n" \
 					" |->[Linear] Actual Reduction: %3d%%\n" \
 					" |->[LOG] Realistic Reduction(400 cd / m2 base) : %3d%%\n" \
 					" |->[SQUARE] Realistic Reduction(400 cd / m2 base) : %3f%%\n" \
 					" |->[CUBE] Realistic Reduction(400 cd / m2 base) : %3f%%\n" \
-					"Diff (+): %s\n\nDiff (N): %s\n" \
+					"Diff (+): %s\n\nDiff (-): %s\n" \
 					"Geometric Mean: %f\n" \
 					"G/A Difference: %f\n" \
 					"Badness: %f" \
