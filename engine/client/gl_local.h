@@ -350,7 +350,7 @@ int R_CountSurfaceDlights( msurface_t *surf );
 int R_CountDlights( void );
 
 
-// <STROBE>
+// <STROBE> // Move to different file?
 void R_Strobe(void);
 
 typedef enum {
@@ -371,6 +371,25 @@ extern SwapPhaseInfo_t SwapPhaseInfo;
 // Experimental 'Badness' algorithm
 #define BADNESS(diffP, diffN) \
 	-log(((abs(diffP-diffN)+sqrt((100-diffP)*(100-diffN)))/(abs(diffP-diffN)+sqrt(diffP*diffN))))
+
+// Brightness reductions
+#define calculatePercentage(x, y) \
+	(100 * y / x)
+
+#define actualBrightnessReduction(fps, efps) \
+	((fps - efps) * 100 / fps)
+
+#define logBrightnessReduction(base, fps, efps) \
+	actualBrightnessReduction( log(base) , log(base * calculatePercentage(fps,efps) / 100) )
+
+/* #define log10BrightnessReduction(base, fps, efps) \
+	actualBrightnessReduction( log10(base) , log10(base * calculatePercentage(fps,efps) / 100) ) */
+
+#define squareBrightnessReduction(base, fps, efps) \
+	actualBrightnessReduction( sqrt(base) , sqrt(base * calculatePercentage(fps,efps) / 100) )
+
+#define cubicBrightnessReduction(base, fps, efps) \
+	actualBrightnessReduction( cbrt(base) , cbrt(base * calculatePercentage(fps,efps) / 100) ) 
 
 extern convar_t *r_strobe;
 extern convar_t *r_strobe_swapinterval;

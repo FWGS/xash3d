@@ -57,7 +57,7 @@ void SCR_DrawFPS( void )
 	static int	minfps = 9999;
 	static int	maxfps = 0;
 	double		newtime;
-	char		fpsstring[1024];	//char fpsstring[64];
+	char		fpsstring[2048];	//char fpsstring[64];
 	int		offset;
 
 	char diffBar[2][128];
@@ -142,7 +142,7 @@ void SCR_DrawFPS( void )
 			{
 					Q_snprintf(fpsstring, sizeof(fpsstring), "%4i fps", curfps);	
 			}
-			else if(strobeDebug)
+			else if (strobeDebug)
 			{
 				Q_snprintf(diffBar[0], sizeof(diffBar[0]), "^3[");
 				Q_snprintf(diffBar[1], sizeof(diffBar[1]), "^3[");
@@ -176,7 +176,7 @@ void SCR_DrawFPS( void )
 					{
 						if (pNeg)
 						{
-							if (100-(barCounter *10) <= diffP)
+							if (100 - (barCounter * 10) <= diffP)
 								Q_strcat(diffBar[0], "^4=^3");
 							else
 								Q_strcat(diffBar[0], "^3=^3");
@@ -240,13 +240,25 @@ void SCR_DrawFPS( void )
 					" |-> Black Frame Count: %u\n\n" \
 					"timer.triggered %d\n\n" \
 					"^5ANALYSIS:\n^3" \
-					"Diff (+): %s\n\nDiff (N): %s\nGeometric Mean: %f\nG/A Difference: %f\nBadness: %f" \
+					"Brightness Reduction:\n" \
+					" |->[Linear] Actual Reduction: %3d%%\n" \
+					" |->[LOG] Realistic Reduction(400 cd / m2 base) : %3d%%\n" \
+					" |->[SQUARE] Realistic Reduction(400 cd / m2 base) : %3f%%\n" \
+					" |->[CUBE] Realistic Reduction(400 cd / m2 base) : %3f%%\n" \
+					"Diff (+): %s\n\nDiff (N): %s\n" \
+					"Geometric Mean: %f\n" \
+					"G/A Difference: %f\n" \
+					"Badness: %f" \
 					, curfps \
 					, eFPS \
 					, SwapPhaseInfo.fCounter \
 					, SwapPhaseInfo.pCounter, SwapPhaseInfo.pNCounter, SwapPhaseInfo.pBCounter \
 					, SwapPhaseInfo.nCounter, SwapPhaseInfo.nNCounter, SwapPhaseInfo.nBCounter \
 					, !!(SwapPhaseInfo.frameInfo & p_inverted) \
+					, (int)actualBrightnessReduction(curfps, eFPS) \
+					, (int)logBrightnessReduction(400, curfps, eFPS) \
+					, squareBrightnessReduction(400, curfps, eFPS) \
+					, cubicBrightnessReduction(400, curfps, eFPS) \
 					, diffBar[0], diffBar[1], sqrt(diffP * diffN) \
 					, (diffP + diffN) / 2 - sqrt(diffP * diffN) \
 					,  BADNESS(diffP,diffN));

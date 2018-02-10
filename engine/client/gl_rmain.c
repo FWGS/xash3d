@@ -1356,7 +1356,7 @@ inline static void gl_GenerateBlackFrame( void ) // Generates partial or full bl
 ===============
 R_Strobe
 
-TODO: \
+TODO:
 	*Make swapping transition seamless by rendering non-opaque frames.
 	*Implement high precision timer to keep the internal phase on track with monitor. (In case of freezes etc.)
 ===============
