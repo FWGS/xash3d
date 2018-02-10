@@ -1368,6 +1368,12 @@ void R_Strobe( void )
 	static double recentTime = 0;
 	static double currentTime = 0;
 	static double delta = 0;
+	
+	if (CL_IsInMenu())
+	{
+		R_Set2DMode(false);
+		return;
+	}
 
 	if (((getInterval != r_strobe->integer) && (getInterval != 0)) || 
 		/*((swapInterval != r_strobe_swapinterval->integer) && (swapInterval != 0)) || */
@@ -1550,8 +1556,7 @@ R_EndFrame
 */
 void R_EndFrame( void )
 {
-	if (!CL_IsInMenu())
-		R_Strobe();
+	R_Strobe();
 
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );

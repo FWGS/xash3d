@@ -250,7 +250,7 @@ void SCR_DrawFPS( void )
 					" |->[LOG] Realistic Reduction(400 cd / m2 base) : %3d%%\n" \
 					" |->[SQUARE] Realistic Reduction(400 cd / m2 base) : %3f%%\n" \
 					" |->[CUBE] Realistic Reduction(400 cd / m2 base) : %3f%%\n" \
-					"Diff (+): %s\n\nDiff (N): %s\n" \
+					"Diff (+): %s\n\nDiff (-): %s\n" \
 					"Geometric Mean: %f\n" \
 					"G/A Difference: %f\n" \
 					"Badness: %f" \
