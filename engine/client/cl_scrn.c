@@ -228,6 +228,8 @@ void SCR_DrawFPS( void )
 				Q_strcat(diffBar[0], va("] - %4d%%", (pNeg ? -diffP : diffP)));
 				Q_strcat(diffBar[1], va("] - %4d%%", (nNeg ? -diffN : diffN)));
 
+				strobeInterval = r_strobe->integer;
+
 				Q_snprintf(fpsstring,
 					sizeof(fpsstring),
 					"%4i FPS\n%3i eFPS\n\n" \
@@ -238,6 +240,9 @@ void SCR_DrawFPS( void )
 					"(-) Phase Frame Count:%u\n" \
 					" |-> Normal Frame Count: %u\n" \
 					" |-> Black Frame Count: %u\n\n" \
+					"PWM Simulation:\n" \
+					" |->Frequency: %4f Hz\n" \
+					" |->Duty Cycle: %4f%%\n" \
 					"timer.triggered %d\n\n" \
 					"^5ANALYSIS:\n^3" \
 					"Brightness Reduction:\n" \
@@ -254,6 +259,8 @@ void SCR_DrawFPS( void )
 					, SwapPhaseInfo.fCounter \
 					, SwapPhaseInfo.pCounter, SwapPhaseInfo.pNCounter, SwapPhaseInfo.pBCounter \
 					, SwapPhaseInfo.nCounter, SwapPhaseInfo.nNCounter, SwapPhaseInfo.nBCounter \
+					, (1 / ((1 / (float)(curfps))*(abs(strobeInterval) + 1))) \
+					, ((1 / (float)(abs(strobeInterval)+1)) * 100) * (strobeInterval < 0 ? -strobeInterval : 1) \
 					, !!(SwapPhaseInfo.frameInfo & p_inverted) \
 					, (int)actualBrightnessReduction(curfps, eFPS) \
 					, (int)logBrightnessReduction(400, curfps, eFPS) \
