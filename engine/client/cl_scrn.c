@@ -57,13 +57,22 @@ void SCR_DrawFPS( void )
 	static int	minfps = 9999;
 	static int	maxfps = 0;
 	double		newtime;
-	char		fpsstring[64];
+	char		fpsstring[1024];	//char fpsstring[64];
 	int		offset;
-	int strobeInterval = r_strobe->integer; //cvar: r_strobe
-	int eFPS; //Effective FPS (strobing effect)
+
+	char diffBar[2][128];
+	char barCounter = 0;
+	int diffP_NB = (SwapPhaseInfo.pNCounter - SwapPhaseInfo.pBCounter);
+	int diffN_NB = (SwapPhaseInfo.nNCounter - SwapPhaseInfo.nBCounter);
+	int diffP = 0, diffN = 0;
+	qboolean pNeg = false, nNeg = false;
+	int strobeInterval = r_strobe->integer; // cvar: r_strobe
+	int eFPS; // Effective FPS (strobing effect)
+	qboolean strobeDebug = !!r_strobe_debug->integer ? true : false;
 
 	if( cls.state != ca_active ) return; 
-	if( !cl_showfps->integer || cl.background ) return;
+	if( (!cl_showfps->integer && !strobeDebug) || cl.background ) return;
+
 
 	switch( cls.scrshot_action )
 	{
@@ -73,13 +82,18 @@ void SCR_DrawFPS( void )
 		break;
 	default: return;
 	}
-
+	
 	newtime = Sys_DoubleTime();
 	if( newtime >= nexttime )
 	{
 		framerate = framecount / (newtime - lasttime);
 		lasttime = newtime;
 		nexttime = max( nexttime + 1, lasttime - 1 );
+
+
+		//Msg("Lasttime: %f . Nexttime: %f . %f\n", lasttime, nexttime, newtime - lasttime);
+		//Sleep(150);
+
 		framecount = 0;
 	}
 
@@ -123,21 +137,131 @@ void SCR_DrawFPS( void )
 			break;
 		case 1:
 		default:
+
 			if (strobeInterval == 0)
 			{
-				Q_snprintf(fpsstring, sizeof(fpsstring), "%4i fps", curfps);
+					Q_snprintf(fpsstring, sizeof(fpsstring), "%4i fps", curfps);	
+			}
+			else if(strobeDebug)
+			{
+				Q_snprintf(diffBar[0], sizeof(diffBar[0]), "^3[");
+				Q_snprintf(diffBar[1], sizeof(diffBar[1]), "^3[");
+
+				if (diffP_NB < 0)
+				{
+					pNeg = true;
+					diffP_NB = abs(diffP_NB);
+				}
+
+				if (diffN_NB < 0)
+				{
+					nNeg = true;
+					diffN_NB = abs(diffN_NB);
+				}
+
+				if (SwapPhaseInfo.pCounter != 0)
+					diffP = round(diffP_NB * 100 / SwapPhaseInfo.pCounter);
+
+				if (SwapPhaseInfo.nCounter != 0)
+					diffN = round(diffN_NB * 100 / SwapPhaseInfo.nCounter);
+
+				for (barCounter = 0; barCounter <= 20; ++barCounter)
+				{
+					if (barCounter == 10)
+					{
+						Q_strcat(diffBar[0], "O");
+						Q_strcat(diffBar[1], "O");
+					}
+					else if (barCounter < 10)
+					{
+						if (pNeg)
+						{
+							if (100-(barCounter *10) <= diffP)
+								Q_strcat(diffBar[0], "^4=^3");
+							else
+								Q_strcat(diffBar[0], "^3=^3");
+						}
+						else
+						{
+							Q_strcat(diffBar[0], "^3=^3");
+						}
+
+						if (nNeg)
+						{
+							if (100 - (barCounter * 10) <= diffN)
+								Q_strcat(diffBar[1], "^4=^3");
+							else
+								Q_strcat(diffBar[1], "^3=^3");
+						}
+						else
+						{
+							Q_strcat(diffBar[1], "^3=^3");
+						}
+					}
+					else if (barCounter > 10)
+					{
+						if (pNeg)
+						{
+							Q_strcat(diffBar[0], "^3=^3");
+						}
+						else
+						{
+							if (((barCounter - 10) * 10) > diffP)
+								Q_strcat(diffBar[0], "^3=^3");
+							else
+								Q_strcat(diffBar[0], "^4=^3");
+						}
+
+						if (nNeg)
+						{
+							Q_strcat(diffBar[1], "^3=^3");
+						}
+						else
+						{
+							if (((barCounter - 10) * 10) > diffN)
+								Q_strcat(diffBar[1], "^3=^3");
+							else
+								Q_strcat(diffBar[1], "^4=^3");
+						}
+					}
+				}
+				Q_strcat(diffBar[0], va("] - %4d%%", (pNeg ? -diffP : diffP)));
+				Q_strcat(diffBar[1], va("] - %4d%%", (nNeg ? -diffN : diffN)));
+
+				Q_snprintf(fpsstring,
+					sizeof(fpsstring),
+					"%4i FPS\n%3i eFPS\n\n" \
+					"Total Frame Count: %u\n\n" \
+					"(+) Phase Frame Count: %u\n" \
+					" |-> Normal Frame Count: %u\n" \
+					" |-> Black Frame Count: %u\n\n" \
+					"(-) Phase Frame Count:%u\n" \
+					" |-> Normal Frame Count: %u\n" \
+					" |-> Black Frame Count: %u\n\n" \
+					"timer.triggered %d\n\n" \
+					"^5ANALYSIS:\n^3" \
+					"Diff (+): %s\n\nDiff (N): %s\nGeometric Mean: %f\nG/A Difference: %f\nBadness: %f" \
+					, curfps \
+					, eFPS \
+					, SwapPhaseInfo.fCounter \
+					, SwapPhaseInfo.pCounter, SwapPhaseInfo.pNCounter, SwapPhaseInfo.pBCounter \
+					, SwapPhaseInfo.nCounter, SwapPhaseInfo.nNCounter, SwapPhaseInfo.nBCounter \
+					, !!(SwapPhaseInfo.frameInfo & p_inverted) \
+					, diffBar[0], diffBar[1], sqrt(diffP * diffN) \
+					, (diffP + diffN) / 2 - sqrt(diffP * diffN) \
+					,  BADNESS(diffP,diffN));
 			}
 			else
 			{
 				Q_snprintf(fpsstring, sizeof(fpsstring), "%4i FPS\n%3i eFPS", curfps, eFPS);
 			}
 		}
-
 		MakeRGBA( color, 255, 255, 255, 255 );
 	}
 
 	Con_DrawStringLen( fpsstring, &offset, NULL );
-	Con_DrawString( scr_width->integer - offset - 5, 4, fpsstring, color );
+	//Con_DrawString( scr_width->integer - offset - 5, 4, fpsstring, color );
+	Con_DrawString(scr_width->integer - offset - 75, 4, fpsstring, color); // TODO: Fix alignment for non debug setup!
 }
 
 /*

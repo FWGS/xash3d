@@ -79,6 +79,9 @@ convar_t	*r_fastsky;
 convar_t	*r_vbo;
 convar_t 	*r_bump;
 convar_t	*r_strobe;
+convar_t	*r_strobe_swapinterval;
+convar_t	*r_strobe_debug;
+
 convar_t	*mp_decals;
 
 convar_t	*vid_displayfrequency;
@@ -1015,7 +1018,14 @@ register strobe cvar
 */
 static inline void R_initStrobe( void )
 {
-	r_strobe = Cvar_Get("r_strobe", "0", CVAR_ARCHIVE, "black frame insertion interval");
+	r_strobe = Cvar_Get("r_strobe", "0", CVAR_ARCHIVE, "black frame replacement interval");
+	r_strobe_swapinterval = Cvar_Get("r_strobe_swapinterval", "0", CVAR_ARCHIVE, "swapping phase interval");
+	r_strobe_debug = Cvar_Get("r_strobe_debug", "0", CVAR_ARCHIVE, "show strobe debug information");
+
+	SwapPhaseInfo.pCounter = 0; SwapPhaseInfo.pBCounter = 0; SwapPhaseInfo.pNCounter = 0;
+	SwapPhaseInfo.pCounter = 0; SwapPhaseInfo.nBCounter = 0; SwapPhaseInfo.nNCounter = 0;
+	SwapPhaseInfo.fCounter = 0;
+	SwapPhaseInfo.frameInfo = (p_positive | f_normal);
 }
 
 /*

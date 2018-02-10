@@ -35,6 +35,8 @@ ref_instance_t	RI, prevRI;
 mleaf_t		*r_viewleaf, *r_oldviewleaf;
 mleaf_t		*r_viewleaf2, *r_oldviewleaf2;
 
+SwapPhaseInfo_t SwapPhaseInfo;
+
 static int R_RankForRenderMode( cl_entity_t *ent )
 {
 	switch( ent->curstate.rendermode )
@@ -1326,83 +1328,220 @@ void R_RenderFrame( const ref_params_t *fd, qboolean drawWorld )
 	GL_BackendEndFrame();
 }
 
-inline static void gl_sBlackFrame( void )
+inline static void gl_GenerateBlackFrame( void ) // Generates partial or full black frame
 {
-	if (CL_IsInConsole()) // No strobing on the console
+	if ( CL_IsInConsole() ) // No strobing on the console
 	{
-		pglEnable(GL_SCISSOR_TEST);
-		pglScissor(con_rect.x, (-con_rect.y) - (con_rect.h*1.25), con_rect.w, con_rect.h); // Preview strobe setting on static
-		pglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		pglClear(GL_COLOR_BUFFER_BIT);
-		pglDisable(GL_SCISSOR_TEST);
+		if (!vid_fullscreen->integer) // Disable when not fullscreen due to viewport problems
+		{
+			R_Set2DMode(false);
+			return;
+		}
+		pglEnable( GL_SCISSOR_TEST);
+		pglScissor( con_rect.x, (-con_rect.y) - (con_rect.h*1.25), con_rect.w, con_rect.h ); // Preview strobe setting on static
+		pglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+		pglClear( GL_COLOR_BUFFER_BIT);
+		pglDisable( GL_SCISSOR_TEST);
 	}
 	else
 	{
-		pglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		pglClear(GL_COLOR_BUFFER_BIT);
+		pglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+		pglClear( GL_COLOR_BUFFER_BIT );
 	}
 }
+
+
 
 /*
 ===============
 R_Strobe
 
-TODO: Consider vsync timings and do not render the supposed black frame at all.
+TODO: \
+	*Make swapping transition seamless by rendering non-opaque frames.
+	*Implement high precision timer to keep the internal phase on track with monitor. (In case of freezes etc.)
 ===============
 */
 void R_Strobe( void )
 {
-	static int sCounter = 0;
-	int getInterval = r_strobe->integer; // Check through modified tag first?
-	int swapInterval = gl_swapInterval->integer;
-	if ( (getInterval == 0) || ((swapInterval == 0) && (getInterval != 0)) )
+	static int getInterval = 0;
+	static int swapInterval = 0;
+	static double recentTime = 0;
+	static double currentTime = 0;
+	static double delta = 0;
+
+	if (((getInterval != r_strobe->integer) && (getInterval != 0)) || 
+		/*((swapInterval != r_strobe_swapinterval->integer) && (swapInterval != 0)) || */
+		SwapPhaseInfo.fCounter > 87091200) // Reset stats after some time
 	{
-		if (getInterval != 0) //If v-sync is off, turn off strobing
+		SwapPhaseInfo.pCounter = 0; SwapPhaseInfo.pBCounter = 0; SwapPhaseInfo.pNCounter = 0;
+		SwapPhaseInfo.nCounter = 0; SwapPhaseInfo.nBCounter = 0; SwapPhaseInfo.nNCounter = 0;
+		SwapPhaseInfo.fCounter = 0;
+		SwapPhaseInfo.frameInfo &= ~p_inverted;
+	}
+	getInterval = r_strobe->integer;
+	swapInterval = r_strobe_swapinterval->integer;
+
+	if ((getInterval == 0) ||
+		((gl_swapInterval->integer == 0) && (getInterval != 0)))
+	{
+		if (!gl_swapInterval->integer)
+			MsgDev(D_WARN, "Strobing requires V-SYNC not being turned off! (gl_swapInterval != 0) \n");
+
+		if (getInterval != 0) // If v-sync is off, turn off strobing
 		{
 			Cvar_Set("r_strobe", "0");
-			MsgDev(D_WARN, "Strobing (Black Frame Replacement) requires V-SYNC not being turned off! (gl_swapInterval != 0) \n");
-			Msg("Strobing (Black Frame Insertion) requires Vertical Sync to be enabled!\n");
 		}
-		else if (sCounter != 0)
-			sCounter = 0;
+		SwapPhaseInfo.fCounter = 0;
 
-		// flush any remaining 2D bits
 		R_Set2DMode(false);
 		return;
 	}
-	
-	// If interval is positive, insert (replace with) black frames.
-	// For example result of interval = 3 will be: "black-black-black-normal-black-black-black-normal-black-black-black-normal"
-	if (getInterval > 0)
+
+	if ((SwapPhaseInfo.fCounter % 2) == 0) // First frame starts with internal positive phase (+)
 	{
-		if (sCounter < getInterval)
-		{
-			gl_sBlackFrame();
-			++sCounter;
-		}
-		else
-		{
-			sCounter = 0;
-			R_Set2DMode(false);
-		}
+		++SwapPhaseInfo.pCounter;
+		SwapPhaseInfo.frameInfo |= p_positive;
 	}
-	// If interval is negative, the procedure will be the opposite reverse.
-	// For example result of interval = -4 will be: "normal-normal-normal-normal-black-normal-normal-normal-normal-black"
 	else
 	{
-		getInterval = abs(getInterval);
-		if (sCounter < getInterval)
+		++SwapPhaseInfo.nCounter;
+		SwapPhaseInfo.frameInfo &= ~p_positive;
+	}
+
+	if (swapInterval < 0)
+		swapInterval = abs(swapInterval);
+
+	if ((swapInterval != 0) && (getInterval % 2 != 0)) // Swapping not enabled for even intervals as it is neither necessary nor works as intended
+	{
+		currentTime = Sys_DoubleTime();
+		delta = currentTime - recentTime;
+		if ((delta >= (double)(swapInterval)) && (delta < (double)(2 * swapInterval))) // Basic timer
 		{
-			++sCounter;
-			R_Set2DMode(false);
+			SwapPhaseInfo.frameInfo |= p_inverted;
 		}
-		else
+		else if (delta < (double)(swapInterval))
 		{
-			gl_sBlackFrame();
-			sCounter = 0;
+			SwapPhaseInfo.frameInfo &= ~p_inverted;
+		}
+		else //if (delta >= (double)(2 * swapInterval))
+		{
+			recentTime = currentTime;
 		}
 	}
+	
+
+	// Burnin prevention algorithm will work most effective on r_strobe = 1. Will not work on even intervals.
+	switch (SwapPhaseInfo.frameInfo & (p_positive | p_inverted))
+	{
+	case (p_positive | p_inverted):
+		if ((abs(getInterval) % 2) == 0)
+			SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.pCounter - 1) % (abs(getInterval) + 1)) == (abs(getInterval) / 2)) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //even
+		else
+			SwapPhaseInfo.frameInfo &= ~f_normal;
+		break;
+
+	case(p_positive & ~p_inverted):
+		if (abs(getInterval) % 2 == 0)
+			SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.pCounter - 1) % (abs(getInterval) + 1)) == 0) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //even
+		else
+		{
+			if (abs(getInterval) == 1)
+				SwapPhaseInfo.frameInfo |= f_normal;
+			else
+				SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.pCounter - 1) % ((abs(getInterval) + 1) / 2)) == 0) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //odd
+		}
+		break;
+
+	case(~p_positive & p_inverted):
+		if (abs(getInterval) % 2 == 0)
+			SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.nCounter - 1) % (abs(getInterval) + 1)) == 0) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //even
+		else
+		{
+			if (abs(getInterval) == 1)
+				SwapPhaseInfo.frameInfo |= f_normal;
+			else
+				SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.nCounter - 1) % ((abs(getInterval) + 1) / 2)) == 0) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //odd
+		}
+		break;
+
+	case 0:
+		if ((abs(getInterval) % 2) == 0)
+			SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.nCounter - 1) % (abs(getInterval) + 1)) == (abs(getInterval) / 2)) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //even
+		else
+			SwapPhaseInfo.frameInfo &= ~f_normal;
+		break;
+
+	default:
+		break;
+	}
+
+	// Legacy main algorithm (not flag based) - Will be removed soon
+	/*
+	if (SwapPhaseInfo.isPositive == true && SwapPhaseInfo.isInverted == false)
+	{
+		if (abs(getInterval) % 2 == 0)
+			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.pCounter - 1) % (abs(getInterval) + 1)) == 0) ? true : false; //even
+		else
+			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.pCounter - 1) % ((abs(getInterval) + 1) / 2)) == 0) ? true : false; //odd
+
+		if (abs(getInterval) == 1)
+			SwapPhaseInfo.isNormal = true;
+	}
+	else if (SwapPhaseInfo.isPositive == true && SwapPhaseInfo.isInverted == true)
+	{
+		if ((abs(getInterval) % 2) == 0)
+			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.pCounter - 1) % (abs(getInterval) + 1)) == (abs(getInterval) / 2)) ? true : false; //even
+		else
+			SwapPhaseInfo.isNormal = false;
+		if (abs(getInterval) == 1)
+			SwapPhaseInfo.isNormal = false;
+	}
+	else if (SwapPhaseInfo.isPositive == false && SwapPhaseInfo.isInverted == false)
+	{
+		if ((abs(getInterval) % 2) == 0)
+			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.nCounter - 1) % (abs(getInterval) + 1)) == (abs(getInterval) / 2)) ? true : false; //even
+		else
+			SwapPhaseInfo.isNormal = false;
+		if (abs(getInterval) == 1)
+			SwapPhaseInfo.isNormal = false;
+	}
+	else if (SwapPhaseInfo.isPositive == false && SwapPhaseInfo.isInverted == true)
+	{
+		if (abs(getInterval) % 2 == 0)
+			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.nCounter - 1) % (abs(getInterval) + 1)) == 0) ? true : false; //even
+		else
+			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.nCounter - 1) % ((abs(getInterval) + 1) / 2)) == 0) ? true : false; //odd
+
+		if (abs(getInterval) == 1)
+			SwapPhaseInfo.isNormal = true;
+	}
+	*/
+
+	if (getInterval < 0)
+		SwapPhaseInfo.frameInfo ^= f_normal;
+
+	if (SwapPhaseInfo.frameInfo & f_normal) // Show normal
+	{
+		if (SwapPhaseInfo.frameInfo & p_positive)
+			++SwapPhaseInfo.pNCounter;
+		else
+			++SwapPhaseInfo.nNCounter;
+
+		R_Set2DMode(false);
+	}
+	else // Show black
+	{
+		if (SwapPhaseInfo.frameInfo & p_positive)
+			++SwapPhaseInfo.pBCounter;
+		else
+			++SwapPhaseInfo.nBCounter;
+
+		gl_GenerateBlackFrame();
+	}
+
+	++SwapPhaseInfo.fCounter;
 }
+
 
 /*
 ===============
@@ -1413,7 +1552,7 @@ void R_EndFrame( void )
 {
 	if (!CL_IsInMenu())
 		R_Strobe();
-	
+
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );
 #elif defined __ANDROID__ // For direct android backend

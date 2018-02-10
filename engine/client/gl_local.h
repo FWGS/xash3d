@@ -349,6 +349,35 @@ void R_LightForPoint( const vec3_t point, color24 *ambientLight, qboolean invLig
 int R_CountSurfaceDlights( msurface_t *surf );
 int R_CountDlights( void );
 
+
+// <STROBE>
+void R_Strobe(void);
+
+typedef enum {
+	p_positive = 1, // Phase: Positive
+	p_inverted = 1 << 1, // Phase: Inverted
+	f_normal = 1 << 2 // Frame: Normal
+}fstate_e; // Frame State
+
+typedef struct SwapPhaseInfo_s {
+	unsigned int fCounter; // Frame counter
+	unsigned int pCounter, pNCounter, pBCounter; // Positive phase counters
+	unsigned int nCounter, nNCounter, nBCounter; // Negative phase counters
+	fstate_e frameInfo; // Frame info
+}SwapPhaseInfo_t;
+
+extern SwapPhaseInfo_t SwapPhaseInfo;
+
+// Experimental 'Badness' algorithm
+#define BADNESS(diffP, diffN) \
+	-log(((abs(diffP-diffN)+sqrt((100-diffP)*(100-diffN)))/(abs(diffP-diffN)+sqrt(diffP*diffN))))
+
+extern convar_t *r_strobe;
+extern convar_t *r_strobe_swapinterval;
+extern convar_t *r_strobe_debug;
+// </STROBE>
+
+
 //
 // gl_rmain.c
 //
@@ -363,7 +392,9 @@ qboolean R_InitRenderAPI( void );
 void R_SetupFrustum( void );
 void R_FindViewLeaf( void );
 void R_DrawFog( void );
-void R_Strobe( void );
+
+
+
 
 #define cmatrix3x4 vec4_t *const
 #define cmatrix4x4 vec4_t *const
@@ -700,8 +731,6 @@ extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
 extern convar_t	*r_vbo;
 extern convar_t	*r_bump;
-extern convar_t	*r_strobe;
-
 extern convar_t *mp_decals;
 
 extern convar_t	*vid_displayfrequency;
