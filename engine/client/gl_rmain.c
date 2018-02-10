@@ -1550,7 +1550,11 @@ R_EndFrame
 */
 void R_EndFrame( void )
 {
-	if (!CL_IsInMenu())
+	if (CL_IsInMenu())
+	{
+		R_Set2DMode(false);
+	}
+	else
 		R_Strobe();
 
 #ifdef XASH_SDL
