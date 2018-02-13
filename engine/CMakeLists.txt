@@ -28,11 +28,13 @@ file(GLOB_RECURSE XASH_ENGINE_WIN32_SOURCES   platform/win32/*.c) # Win32 only s
 file(GLOB_RECURSE XASH_ENGINE_SDL_SOURCES     platform/sdl/*.c) # SDL version sources
 file(GLOB_RECURSE XASH_ENGINE_ANDROID_SOURCES platform/android/*.c) # Android sources
 file(GLOB_RECURSE XASH_ENGINE_CLIENT_SOURCES  client/*.c) # Client sources
+file(GLOB_RECURSE XASH_ENGINE_NANOGL_SOURCES  nanogl/*.cpp) # NanoGL version
 
 cond_list_append(WIN32        XASH_ENGINE_SOURCES XASH_ENGINE_WIN32_SOURCES)
 cond_list_append(XASH_SDL     XASH_ENGINE_SOURCES XASH_ENGINE_SDL_SOURCES)
 cond_list_append(ANDROID      XASH_ENGINE_SOURCES XASH_ENGINE_ANDROID_SOURCES)
 cond_list_append("NOT XASH_DEDICATED" XASH_ENGINE_SOURCES XASH_ENGINE_CLIENT_SOURCES)
+cond_list_append(XASH_NANOGL XASH_ENGINE_SOURCES XASH_ENGINE_NANOGL_SOURCES)
 
 include_directories(
 	.
@@ -45,6 +47,11 @@ include_directories(
 	../common
 	../pm_shared
 )
+
+if(XASH_NANOGL)
+	include_directories(nanogl/ nanogl/GL/)
+	add_definitions(-DXASH_NANOGL -D__MULTITEXTURE_SUPPORT__)
+endif()
 
 add_definitions(-DXASH_FORCEINLINE)
 
