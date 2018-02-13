@@ -1274,7 +1274,7 @@ void IN_TouchEditClear( void )
 	touch.selection = NULL;
 }
 
-static void IN_TouchEditMove( touchEventType type, int fingerID, float x, float y, float dx, float dy )
+static void Touch_EditMove( touchEventType type, int fingerID, float x, float y, float dx, float dy )
 {
 	if( touch.edit->finger == fingerID )
 	{
@@ -1321,51 +1321,72 @@ static void IN_TouchEditMove( touchEventType type, int fingerID, float x, float 
 	}
 }
 
-static int IN_TouchControlsEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
+static void Touch_Motion( touchEventType type, int fingerID, float x, float y, float dx, float dy )
 {
-	touchbutton2_t *button;
-
-	if( touch.state == state_edit_move )
+	// walk
+	if( fingerID == touch.move_finger )
 	{
-		IN_TouchEditMove( type, fingerID, x, y, dx, dy );
-		return 1;
+		// check bounds
+		if( touch_forwardzone->value <= 0 )
+			Cvar_SetFloat( "touch_forwardzone", 0.5 );
+		if( touch_sidezone->value <= 0 )
+			Cvar_SetFloat( "touch_sidezone", 0.3 );
+
+		if( !touch.move || touch.move->type == touch_move )
+		{
+			// move relative to touch start
+			touch.forward = ( touch.move_start_y - y ) / touch_forwardzone->value;
+			touch.side = ( x - touch.move_start_x ) / touch_sidezone->value;
+		}
+		else if( touch.move->type == touch_joy )
+		{
+			// move relative to joy center
+			touch.forward = ( ( touch.move->y2 + touch.move->y1 ) - y * 2 ) / ( touch.move->y2 - touch.move->y1 ) * touch_joy_radius->value;
+			touch.side = ( x * 2 - ( touch.move->x2 + touch.move->x1 ) ) / ( touch.move->x2 - touch.move->x1 ) * touch_joy_radius->value;
+		}
+		else if( touch.move->type == touch_dpad )
+		{
+			// like joy, but without acceleration. useful for bhop
+			touch.forward = round( ( (touch.move->y2 + touch.move->y1) - y * 2 ) / ( touch.move->y2 - touch.move->y1 ) * touch_dpad_radius->value );
+			touch.side = round( ( x * 2 - (touch.move->x2 + touch.move->x1) ) / ( touch.move->x2 - touch.move->x1 ) * touch_dpad_radius->value );
+		}
+
+		touch.forward = bound( -1, touch.forward, 1 );
+		touch.side = bound( -1, touch.side, 1 );
 	}
 
-	// edit buttons are on y1
-	if( ( type == event_down ) && ( touch.state == state_edit ) )
+	// process look
+	if( fingerID == touch.look_finger )
 	{
-		if( (x < GRID_X) && (y < GRID_Y) )
+		if( touch.precision )
+			dx *= touch_precise_amount->value, dy *= touch_precise_amount->value;
+			
+		if( touch_nonlinear_look->integer );
 		{
-			touch.showbuttons ^= true;
-			return 1;
-		}
-		if( touch.showbuttons && ( x < GRID_X * 2 ) )
-		{
-			if( ( y > GRID_Y * 2 ) && ( y < GRID_Y * 4 )  ) // close button
-			{
-				IN_TouchDisableEdit_f();
-				if( touch_in_menu->integer )
-				{
-					Cvar_Set("touch_in_menu","0");
-				}
-				else
-					IN_TouchWriteConfig();
-				return 1;
-			}
-			if( ( y > GRID_Y * 5 ) && ( y < GRID_Y * 7 ) ) // reset button
-			{
-				IN_TouchReloadConfig_f();
-				return 1;
-			}
-			if( ( y > GRID_Y * 8 ) && ( y < GRID_Y * 10 ) && touch.selection ) // hide button
-			{
-				touch.selection->flags ^= TOUCH_FL_HIDE;
-				return 1;
-			}
-		}
+			// save angle, modify only velocity
+			float dabs = sqrt( dx*dx+dy*dy );
+			float dcos = dx/dabs;
+			float dsin = dy/dabs;
 		
+			if( touch_exp_mult->value > 1 )
+				dabs = (exp(dabs*touch_exp_mult->value)-1)/touch_exp_mult->value;
+			if( touch_pow_mult->value > 1 && touch_pow_factor->value > 1 )
+				dabs = pow(dabs*touch_pow_mult->value,touch_pow_factor->value)/touch_pow_mult->value;
+
+			dx = dabs * dcos;
+			dy = dabs * dsin;
+		}
+
+		// accumulate
+		touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
 	}
-	for( button = touch.last; button  ; button = button->prev )
+}
+
+
+static qboolean Touch_ButtonPress( touchbutton2_t *button, touchEventType type, int fingerID, float x, float y, float dx, float dy )
+{
+	// run from end(front) to start(back)
+	for(; button; button = button->prev )
 	{
 		if( type == event_down )
 		{
@@ -1375,31 +1396,10 @@ static int IN_TouchControlsEvent( touchEventType type, int fingerID, float x, fl
 				  y > button->y1 ) )
 			{
 				button->finger = fingerID;
-				if( touch.state == state_edit )
-				{
-					// do not edit NOEDIT buttons
-					if( button->flags & TOUCH_FL_NOEDIT )
-						continue;
-					touch.edit = button;
-					touch.selection = NULL;
-					// Make button last to bring it up
-					if( ( button->next ) && ( button->type == touch_command ) )
-					{
-						if( button->prev )
-							button->prev->next = button->next;
-						else 
-							touch.first = button->next;
-						button->next->prev = button->prev;
-						touch.last->next = button;
-						button->prev = touch.last;
-						button->next = NULL;
-						touch.last = button;
-					}
-					touch.state = state_edit_move;
-					return 1;
-				}
+				
 				if( !IN_TouchIsVisible( button ) )
 					continue;
+
 				if( button->type == touch_command )
 				{
 					char command[256];
@@ -1499,56 +1499,112 @@ static int IN_TouchControlsEvent( touchEventType type, int fingerID, float x, fl
 			}
 		}
 	}
-	if( ( type == event_down ) && ( touch.state == state_edit ) )
-		touch.selection = NULL;
-	if( type == event_motion )
+
+	return false;
+}
+
+static qboolean Touch_ButtonEdit( touchEventType type, int fingerID, float x, float y, float dx, float dy )
+{
+	touchbutton2_t *button;
+
+	// edit buttons are on y1
+	if( type == event_down )
 	{
-		if( fingerID == touch.move_finger )
+		if( (x < GRID_X) && (y < GRID_Y) )
 		{
-			if( touch_forwardzone->value <= 0 )
-				Cvar_SetFloat( "touch_forwardzone", 0.5 );
-			if( touch_sidezone->value <= 0 )
-				Cvar_SetFloat( "touch_sidezone", 0.3 );
-			if( !touch.move || touch.move->type == touch_move )
-			{
-				touch.forward = ( touch.move_start_y - y ) / touch_forwardzone->value;
-				touch.side = ( x - touch.move_start_x ) / touch_sidezone->value;
-			}
-			else if( touch.move->type == touch_joy )
-			{
-				touch.forward = ( ( touch.move->y2 + touch.move->y1 ) - y * 2 ) / ( touch.move->y2 - touch.move->y1 ) * touch_joy_radius->value;
-				touch.side = ( x * 2 - ( touch.move->x2 + touch.move->x1 ) ) / ( touch.move->x2 - touch.move->x1 ) * touch_joy_radius->value;
-			}
-			else if( touch.move->type == touch_dpad )
-			{
-				touch.forward = round( ( (touch.move->y2 + touch.move->y1) - y * 2 ) / ( touch.move->y2 - touch.move->y1 ) * touch_dpad_radius->value );
-				touch.side = round( ( x * 2 - (touch.move->x2 + touch.move->x1) ) / ( touch.move->x2 - touch.move->x1 ) * touch_dpad_radius->value );
-			}
-			touch.forward = bound( -1, touch.forward, 1 );
-			touch.side = bound( -1, touch.side, 1 );
+			touch.showbuttons ^= true;
+			return true;
 		}
-		if( fingerID == touch.look_finger )
+		if( touch.showbuttons && ( x < GRID_X * 2 ) )
 		{
-			if( touch.precision )
-				dx *= touch_precise_amount->value, dy *= touch_precise_amount->value;
-			
-			if( touch_nonlinear_look->integer );
+			if( ( y > GRID_Y * 2 ) && ( y < GRID_Y * 4 )  ) // close button
 			{
-				float dabs = sqrt( dx*dx+dy*dy );
-				float dcos = dx/dabs;
-				float dsin = dy/dabs;
-				
-				if(touch_exp_mult->value > 1 )
-					dabs = (exp(dabs*touch_exp_mult->value)-1)/touch_exp_mult->value;
-				if( touch_pow_mult->value > 1 && touch_pow_factor->value > 1 )
-					dabs = pow(dabs*touch_pow_mult->value,touch_pow_factor->value)/touch_pow_mult->value;
-				dx = dabs * dcos;
-				dy = dabs * dsin;
+				IN_TouchDisableEdit_f();
+				if( touch_in_menu->integer )
+				{
+					Cvar_Set( "touch_in_menu", "0" );
+				}
+				else
+					IN_TouchWriteConfig();
+				return true;
 			}
-			touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
+			if( ( y > GRID_Y * 5 ) && ( y < GRID_Y * 7 ) ) // reset button
+			{
+				IN_TouchReloadConfig_f();
+				return true;
+			}
+			if( ( y > GRID_Y * 8 ) && ( y < GRID_Y * 10 ) && touch.selection ) // hide button
+			{
+				touch.selection->flags ^= TOUCH_FL_HIDE;
+				return true;
+			}
 		}
 	}
-	return 1;
+
+	// run from end(front) to start(back)
+	for( button = touch.last; button; button = button->prev )
+	{
+		if( type == event_down )
+		{
+			if( ( x > button->x1 &&
+				 x < button->x2 ) &&
+				( y < button->y2 &&
+				  y > button->y1 ) )
+			{
+				button->finger = fingerID;
+				
+				// do not edit NOEDIT buttons
+				if( button->flags & TOUCH_FL_NOEDIT )
+						continue;
+
+				touch.edit = button;
+				touch.selection = NULL;
+				// Make button last to bring it up
+				if( ( button->next ) && ( button->type == touch_command ) )
+				{
+					if( button->prev )
+						button->prev->next = button->next;
+					else 
+						touch.first = button->next;
+
+					button->next->prev = button->prev;
+					touch.last->next = button;
+					button->prev = touch.last;
+					button->next = NULL;
+					touch.last = button;
+				}
+				touch.state = state_edit_move;
+				return true;
+			}
+		}
+		if( type == event_up )
+			if( fingerID == button->finger )
+				button->finger = -1;
+	}
+
+	if( type == event_down )
+		touch.selection = NULL;
+
+	return false;
+}
+
+static int Touch_ControlsEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
+{
+	touchbutton2_t *button;
+
+	if( touch.state == state_edit_move )
+	{
+		Touch_EditMove( type, fingerID, x, y, dx, dy );
+		return 1;
+	}
+
+	if( touch.state == state_edit && Touch_ButtonEdit( type, fingerID, x, y, dx, dy ) )
+		return true;
+	if( Touch_ButtonPress( touch.last, type, fingerID, x, y, dx, dy ) )
+		return true;
+	if( type == event_motion )
+		Touch_Motion( type, fingerID, x, y, dx, dy );
+	return true;
 }
 
 int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
@@ -1620,7 +1676,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	if( clgame.dllFuncs.pfnTouchEvent && clgame.dllFuncs.pfnTouchEvent( type, fingerID, x, y, dx, dy ) )
 		return true;
 
-	return IN_TouchControlsEvent( type, fingerID, x, y, dx, dy );
+	return Touch_ControlsEvent( type, fingerID, x, y, dx, dy );
 }
 
 void IN_TouchMove( float *forward, float *side, float *yaw, float *pitch )
@@ -1648,7 +1704,7 @@ void IN_TouchKeyEvent( int key, int down )
 	x = xi/SCR_W;
 	y = yi/SCR_H;
 
-	IN_TouchControlsEvent( !down, key == K_MOUSE1?0:1, x, y, 0, 0 );
+	Touch_ControlsEvent( !down, key == K_MOUSE1?0:1, x, y, 0, 0 );
 }
 
 void IN_TouchShutdown( void )
