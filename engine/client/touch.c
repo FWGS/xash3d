@@ -128,6 +128,10 @@ convar_t *touch_pitch;
 convar_t *touch_yaw;
 convar_t *touch_forwardzone;
 convar_t *touch_sidezone;
+convar_t *touch_nonlinear_look;
+convar_t *touch_pow_mult;
+convar_t *touch_pow_factor;
+convar_t *touch_exp_mult;
 convar_t *touch_grid_enable;
 convar_t *touch_grid_count;
 convar_t *touch_config_file;
@@ -179,13 +183,15 @@ void IN_TouchWriteConfig( void )
 		FS_Printf( f, "//=======================================================================\n" );
 		FS_Printf( f, "\ntouch_config_file \"%s\"\n", touch_config_file->string );
 		FS_Printf( f, "\n// touch cvars\n" );
-		FS_Printf( f, "\n// _move sensitivity settings\n" );
-		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
-		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
-		FS_Printf( f, "\n// _look sensitivity settings\n" );
+		FS_Printf( f, "\n// sensitivity settings\n" );
 		FS_Printf( f, "touch_pitch \"%f\"\n", touch_pitch->value );
 		FS_Printf( f, "touch_yaw \"%f\"\n", touch_yaw->value );
-		FS_Printf( f, "\n// grid settings\n" );
+		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
+		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
+		FS_Printf( f, "touch_nonlinear_look \"%d\"\n", touch_nonlinear_look->integer );
+		FS_Printf( f, "touch_pow_factor \"%f\"\n", touch_pow_factor->value );
+		FS_Printf( f, "touch_pow_mult \"%f\"\n", touch_pow_mult->value );
+		FS_Printf( f, "touch_exp_mult \"%f\"\n", touch_exp_mult->value );		FS_Printf( f, "\n// grid settings\n" );
 		FS_Printf( f, "touch_grid_count \"%d\"\n", touch_grid_count->integer );
 		FS_Printf( f, "touch_grid_enable \"%d\"\n", touch_grid_enable->integer );
 		FS_Printf( f, "\n// global overstroke (width, r, g, b, a)\n" );
@@ -266,12 +272,15 @@ void IN_TouchExportConfig_f( void )
 		FS_Printf( f, "//=======================================================================\n" );
 		FS_Printf( f, "\ntouch_config_file \"%s\"\n", profilename );
 		FS_Printf( f, "\n// touch cvars\n" );
-		FS_Printf( f, "\n// _move sensitivity settings\n" );
-		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
-		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
-		FS_Printf( f, "\n// _look sensitivity settings\n" );
+		FS_Printf( f, "\n// sensitivity settings\n" );
 		FS_Printf( f, "touch_pitch \"%f\"\n", touch_pitch->value );
 		FS_Printf( f, "touch_yaw \"%f\"\n", touch_yaw->value );
+		FS_Printf( f, "touch_forwardzone \"%f\"\n", touch_forwardzone->value );
+		FS_Printf( f, "touch_sidezone \"%f\"\n", touch_sidezone->value );
+		FS_Printf( f, "touch_nonlinear_look \"%d\"\n", touch_nonlinear_look->integer );
+		FS_Printf( f, "touch_pow_factor \"%f\"\n", touch_pow_factor->value );
+		FS_Printf( f, "touch_pow_mult \"%f\"\n", touch_pow_mult->value );
+		FS_Printf( f, "touch_exp_mult \"%f\"\n", touch_exp_mult->value );
 		FS_Printf( f, "\n// grid settings\n" );
 		FS_Printf( f, "touch_grid_count \"%d\"\n", touch_grid_count->integer );
 		FS_Printf( f, "touch_grid_enable \"%d\"\n", touch_grid_enable->integer );
@@ -851,11 +860,21 @@ void IN_TouchInit( void )
 	Cmd_AddCommand( "touch_deleteprofile", IN_TouchDeleteProfile_f, "delete profile by name" );
 	Cmd_AddCommand( "touch_generate_code", IN_TouchGenetateCode_f, "create code sample for mobility API" );
 	Cmd_AddCommand( "touch_fade", IN_TouchFade_f, "create code sample for mobility API" );
-	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
+
+	// not saved, just runtime state for scripting
 	touch_in_menu = Cvar_Get( "touch_in_menu", "0", 0, "draw touch in menu (for internal use only)" );
+
+	// sensitivity configuration
+	touch_forwardzone = Cvar_Get( "touch_forwardzone", "0.06", 0, "forward touch zone" );
 	touch_sidezone = Cvar_Get( "touch_sidezone", "0.06", 0, "side touch zone" );
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
 	touch_yaw = Cvar_Get( "touch_yaw", "120", 0, "touch yaw sensitivity" );
+	touch_nonlinear_look = Cvar_Get( "touch_nonlinear_look", "0", 0, "enable nonlinear touch look" );
+	touch_pow_factor = Cvar_Get( "touch_pow_factor", "1.0", 0, "set > 1 to enable" );
+	touch_pow_mult = Cvar_Get( "touch_pow_mult", "300.0", 0, "power multiplier, usually 200-1000" );
+	touch_exp_mult = Cvar_Get( "touch_exp_mult", "0", 0, "exponent multiplier, usually 20-200, 0 to disable" );
+
+	// touch.cfg
 	touch_grid_count = Cvar_Get( "touch_grid_count", "50", 0, "touch grid count" );
 	touch_grid_enable = Cvar_Get( "touch_grid_enable", "1", 0, "enable touch grid" );
 	touch_config_file = Cvar_Get( "touch_config_file", "touch.cfg", CVAR_ARCHIVE, "current touch profile file" );
@@ -869,6 +888,7 @@ void IN_TouchInit( void )
 	touch_move_indicator = Cvar_Get( "touch_move_indicator", "0.0", 0, "indicate move events (0 to disable)" );
 	touch_joy_texture = Cvar_Get( "touch_joy_texture", "touch_default/joy.tga", 0, "texture for move indicator");
 
+	// input devices cvar
 	touch_enable = Cvar_Get( "touch_enable", DEFAULT_TOUCH_ENABLE, CVAR_ARCHIVE, "enable touch controls" );
 #if defined(XASH_SDL) && defined(__ANDROID__)
 	SDL_SetHint( SDL_HINT_ANDROID_SEPARATE_MOUSE_AND_TOUCH, "1" );
@@ -1330,14 +1350,18 @@ static int IN_TouchControlsEvent( touchEventType type, int fingerID, float x, fl
 				}
 				else
 					IN_TouchWriteConfig();
+				return 1;
 			}
 			if( ( y > GRID_Y * 5 ) && ( y < GRID_Y * 7 ) ) // reset button
 			{
 				IN_TouchReloadConfig_f();
+				return 1;
 			}
 			if( ( y > GRID_Y * 8 ) && ( y < GRID_Y * 10 ) && touch.selection ) // hide button
+			{
 				touch.selection->flags ^= TOUCH_FL_HIDE;
-			return 1;
+				return 1;
+			}
 		}
 		
 	}
@@ -1481,9 +1505,9 @@ static int IN_TouchControlsEvent( touchEventType type, int fingerID, float x, fl
 	{
 		if( fingerID == touch.move_finger )
 		{
-			if( !touch_forwardzone->value )
+			if( touch_forwardzone->value <= 0 )
 				Cvar_SetFloat( "touch_forwardzone", 0.5 );
-			if( !touch_sidezone->value )
+			if( touch_sidezone->value <= 0 )
 				Cvar_SetFloat( "touch_sidezone", 0.3 );
 			if( !touch.move || touch.move->type == touch_move )
 			{
@@ -1507,6 +1531,20 @@ static int IN_TouchControlsEvent( touchEventType type, int fingerID, float x, fl
 		{
 			if( touch.precision )
 				dx *= touch_precise_amount->value, dy *= touch_precise_amount->value;
+			
+			if( touch_nonlinear_look->integer );
+			{
+				float dabs = sqrt( dx*dx+dy*dy );
+				float dcos = dx/dabs;
+				float dsin = dy/dabs;
+				
+				if(touch_exp_mult->value > 1 )
+					dabs = (exp(dabs*touch_exp_mult->value)-1)/touch_exp_mult->value;
+				if( touch_pow_mult->value > 1 && touch_pow_factor->value > 1 )
+					dabs = pow(dabs*touch_pow_mult->value,touch_pow_factor->value)/touch_pow_mult->value;
+				dx = dabs * dcos;
+				dy = dabs * dsin;
+			}
 			touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
 		}
 	}
