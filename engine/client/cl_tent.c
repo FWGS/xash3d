@@ -862,7 +862,7 @@ void GAME_EXPORT CL_BloodSprite( const vec3_t org, int colorIndex, int modelInde
 
 			pTemp->entity.curstate.rendermode = kRenderTransTexture;
 			pTemp->entity.curstate.renderfx = kRenderFxClampMinScale; 
-			pTemp->entity.curstate.scale = Com_RandomFloat(( size / 25.0f ), ( size / 15.0f )) * size;
+			pTemp->entity.curstate.scale = Com_RandomFloat(( size / 25.0f ), ( size / 15.0f ));
 			pTemp->entity.curstate.rendercolor.r = clgame.palette[colorIndex][0];
 			pTemp->entity.curstate.rendercolor.g = clgame.palette[colorIndex][1];
 			pTemp->entity.curstate.rendercolor.b = clgame.palette[colorIndex][2];
