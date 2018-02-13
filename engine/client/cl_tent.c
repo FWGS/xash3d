@@ -855,14 +855,14 @@ void GAME_EXPORT CL_BloodSprite( const vec3_t org, int colorIndex, int modelInde
 			VectorMA( offset, Com_RandomFloat( -0.5f, 0.5f ) * size, right, offset ); 
 			VectorMA( offset, Com_RandomFloat( -0.5f, 0.5f ) * size, up, offset ); 
 
-			pTemp = CL_TempEntAlloc( org, Mod_Handle( modelIndex2 ));
+			pTemp = CL_TempEntAlloc( offset, Mod_Handle( modelIndex2 ));
 			if( !pTemp ) return;
 
 			pTemp->flags = FTENT_COLLIDEWORLD|FTENT_SLOWGRAVITY;
 
 			pTemp->entity.curstate.rendermode = kRenderTransTexture;
 			pTemp->entity.curstate.renderfx = kRenderFxClampMinScale; 
-			pTemp->entity.curstate.scale = Com_RandomFloat(( size / 25.0f), ( size / 35.0f ));
+			pTemp->entity.curstate.scale = Com_RandomFloat(( size / 25.0f ), ( size / 15.0f ));
 			pTemp->entity.curstate.rendercolor.r = clgame.palette[colorIndex][0];
 			pTemp->entity.curstate.rendercolor.g = clgame.palette[colorIndex][1];
 			pTemp->entity.curstate.rendercolor.b = clgame.palette[colorIndex][2];
@@ -872,12 +872,12 @@ void GAME_EXPORT CL_BloodSprite( const vec3_t org, int colorIndex, int modelInde
 			pTemp->entity.angles[2] = Com_RandomLong( 0, 360 );
 			pTemp->bounceFactor = 0;
 
-			dir[0] = forward[0] + Com_RandomFloat( -0.8f, 0.8f );
-			dir[1] = forward[1] + Com_RandomFloat( -0.8f, 0.8f );
+			dir[0] = forward[0] + Com_RandomFloat(-0.3f, 0.3f);
+			dir[1] = forward[1] + Com_RandomFloat(-0.3f, 0.3f);
 			dir[2] = forward[2];
-
-			VectorScale( dir, Com_RandomFloat( 8.0f * size, 20.0f * size ), pTemp->entity.baseline.origin );
-			pTemp->entity.baseline.origin[2] += Com_RandomFloat( 4.0f, 16.0f ) * size;
+			
+			VectorScale(dir, Com_RandomFloat(4.0f * size, 40.0f * size), pTemp->entity.baseline.origin);
+			pTemp->entity.baseline.origin[2] = dir[2] + Com_RandomFloat(4.0f, 16.0f) * size;
 		}
 	}
 }
