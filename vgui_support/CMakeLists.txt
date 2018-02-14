@@ -25,6 +25,8 @@ project(VGUI_SUPPORT)
 
 set(VGUI_SUPPORT vgui_support)
 
+cmake_dependent_option(VGUI_SUPPORT_OLD_VGUI_BINARY "Build against old version of VGUI, from HLSDK2.3" OFF "MSVC" OFF)
+
 if(NOT MINGW)
 	file(GLOB VGUI_SUPPORT_SOURCES *.cpp *.c)
 else()
@@ -55,9 +57,12 @@ include_directories( . ../common ../engine ../engine/common ../engine/client ../
 
 add_library(${VGUI_SUPPORT} SHARED ${VGUI_SUPPORT_SOURCES})
 
-# TODO: VGUI version selector for Win32
+set(VGUI_BRANCH "master")
+if(VGUI_SUPPORT_OLD_VGUI_BINARY)
+	set(VGUI_BRANCH "pre-2013")
+endif()
 fwgs_library_dependency(${VGUI_SUPPORT} VGUI
-	"https://github.com/FWGS/vgui-dev/archive/master.zip" "master.zip" "HL_SDK_DIR" "vgui-dev-master")
+	"https://github.com/FWGS/vgui-dev/archive/${VGUI_BRANCH}.zip" "VGUI.zip" "HL_SDK_DIR" "vgui-dev-${VGUI_BRANCH}")
 if(MSVC)
 	string(REGEX REPLACE "lib$" "dll" VGUI_DLL "${VGUI_LIBRARY}")
 	install(FILES ${VGUI_DLL}
@@ -72,7 +77,7 @@ fwgs_set_default_properties(${VGUI_SUPPORT})
 if(NOT MINGW)
 	fwgs_install(${VGUI_SUPPORT})
 
-	if(NOT WIN32 AND NOT XASH_NO_INSTALL_VGUI_BIN) # Win32 HLSDK doesn't include VGUI.DLL
+	if(NOT WIN32 AND NOT XASH_NO_INSTALL_VGUI_BIN)
 		install(FILES ${VGUI_LIBRARY} DESTINATION ${LIB_INSTALL_DIR}/${LIB_INSTALL_SUBDIR}
 			PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 	endif()
