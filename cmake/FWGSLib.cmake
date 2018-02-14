@@ -267,6 +267,8 @@ macro(fwgs_fix_default_msvc_settings)
 		# This replacement code is taken from sample in the CMake Wiki at
 		# http://www.cmake.org/Wiki/CMake_FAQ#Dynamic_Replace.
 		foreach (flag_var
+			CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+			CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
         		CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
 			CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 	        # When Google Test is built as a shared library, it should also use
@@ -276,7 +278,7 @@ macro(fwgs_fix_default_msvc_settings)
 	        # preferable to use CRT as static libraries, as we don't have to rely
 	        # on CRT DLLs being available. CMake always defaults to using shared
 	        # CRT libraries, so we override that default here.
-			string(REPLACE "/MD" "-MT" ${flag_var} "${${flag_var}}")
+			string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
 		endforeach()
 	endif()
 endmacro()
