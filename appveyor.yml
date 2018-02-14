@@ -26,12 +26,9 @@ configuration:
 
 before_build:
   - git submodule update --init --recursive
-  - cmake -G "%GENERATOR_NAME%"
+  - cmake -G "%GENERATOR_NAME%" -DCMAKE_C_FLAGS="/MT" -DCMAKE_CXX_FLAGS="/MT"
 
 after_build:
-  # Bundle SDL2
-  - copy C:\projects\xash\xash3d\SDL2\SDL2-2.0.7\lib\x86\SDL2.dll C:\projects\xash\xash3d\%CONFIGURATION%\SDL2.dll
-
   # Create archive
   - 7z a -t7z xash3d-win.7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on c:\projects\xash\xash3d\%CONFIGURATION%
   - appveyor PushArtifact xash3d-win.7z
