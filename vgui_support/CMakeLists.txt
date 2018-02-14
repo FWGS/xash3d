@@ -24,7 +24,7 @@ cmake_minimum_required(VERSION 2.8.0)
 project(VGUI_SUPPORT)
 
 set(VGUI_SUPPORT vgui_support)
-
+fwgs_fix_default_msvc_settings()
 cmake_dependent_option(VGUI_SUPPORT_OLD_VGUI_BINARY "Build against old version of VGUI, from HLSDK2.3" OFF "MSVC" OFF)
 
 if(NOT MINGW)

@@ -26,7 +26,7 @@ configuration:
 
 before_build:
   - git submodule update --init --recursive
-  - cmake -G "%GENERATOR_NAME%" -DCMAKE_C_FLAGS="/MT" -DCMAKE_CXX_FLAGS="/MT"
+  - cmake -G "%GENERATOR_NAME%"
 
 after_build:
   # Create archive

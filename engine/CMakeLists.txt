@@ -23,6 +23,8 @@ cmake_minimum_required(VERSION  2.8.0)
 project(XASH_ENGINE C)
 
 set(XASH_ENGINE xash) # Lib name
+
+fwgs_fix_default_msvc_settings()
 file(GLOB_RECURSE XASH_ENGINE_SOURCES         common/*.c server/*.c ) # Minimal sources
 file(GLOB_RECURSE XASH_ENGINE_WIN32_SOURCES   platform/win32/*.c) # Win32 only sources
 file(GLOB_RECURSE XASH_ENGINE_SDL_SOURCES     platform/sdl/*.c) # SDL version sources
