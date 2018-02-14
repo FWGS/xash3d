@@ -58,6 +58,15 @@ add_library(${VGUI_SUPPORT} SHARED ${VGUI_SUPPORT_SOURCES})
 # TODO: VGUI version selector for Win32
 fwgs_library_dependency(${VGUI_SUPPORT} VGUI
 	"https://github.com/FWGS/vgui-dev/archive/master.zip" "master.zip" "HL_SDK_DIR" "vgui-dev-master")
+if(MSVC)
+	string(REGEX REPLACE "lib$" "dll" VGUI_DLL "${VGUI_LIBRARY}")
+	install(FILES ${VGUI_DLL}
+		CONFIGURATIONS Debug
+		DESTINATION ${LIB_INSTALL_DIR}/Debug/)
+	install(FILES ${VGUI_DLL}
+		CONFIGURATIONS Release
+		DESTINATION ${LIB_INSTALL_DIR}/Release/)
+endif()
 
 fwgs_set_default_properties(${VGUI_SUPPORT})
 if(NOT MINGW)

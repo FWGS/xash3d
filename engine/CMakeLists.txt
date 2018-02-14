@@ -116,6 +116,15 @@ if(XASH_SDL)
 	set(SDL2_BUILDING_EXECUTABLE ${XASH_SINGLE_BINARY}) # link sdl2main, if needed
 	xash_link_sdl2(${XASH_ENGINE})
 	add_definitions(-DXASH_SDL)
+	if(MSVC)
+		string(REGEX REPLACE "lib$" "dll" SDL2_DLL "${SDL2_LIBRARY}")
+		install(FILES ${SDL2_DLL}
+			CONFIGURATIONS Debug
+			DESTINATION ${LIB_INSTALL_DIR}/Debug/)
+		install(FILES ${SDL2_DLL}
+			CONFIGURATIONS Release
+			DESTINATION ${LIB_INSTALL_DIR}/Release/)
+	endif()
 endif()
 
 if(XASH_GLES)
