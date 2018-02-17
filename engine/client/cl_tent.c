@@ -820,11 +820,11 @@ void GAME_EXPORT CL_BloodSprite( const vec3_t org, int colorIndex, int modelInde
 	// large, single blood sprite is a high-priority tent
 	if(( pTemp = CL_TempEntAllocHigh( org, Mod_Handle( modelIndex ))) != NULL )
 	{
-		int	i, frameCount;
-		vec3_t	offset, dir;
-		vec3_t	forward, right, up;
+		int	i, frameCount, drips;
 
 		colorIndex = bound( 0, colorIndex, 256 );
+
+		drips = size + Com_RandomLong( 1, 16 );
 
 		Mod_GetFrames( modelIndex, &frameCount );
 		pTemp->entity.curstate.rendermode = kRenderTransTexture;
@@ -842,42 +842,35 @@ void GAME_EXPORT CL_BloodSprite( const vec3_t org, int colorIndex, int modelInde
 		pTemp->entity.angles[2] = Com_RandomLong( 0, 360 );
 		pTemp->bounceFactor = 0;
 
-		VectorSet( forward, 0.0f, 0.0f, 1.0f );	// up-vector
-		VectorVectors( forward, right, up );
-
 		Mod_GetFrames( modelIndex2, &frameCount );
 
 		// create blood drops
-		for( i = 0; i < 14; i++ )
+		for( i = 0; i < drips; i++ )
 		{
-			// originate from within a circle 'scale' inches in diameter.
-			VectorCopy( org, offset );
-			VectorMA( offset, Com_RandomFloat( -0.5f, 0.5f ) * size, right, offset ); 
-			VectorMA( offset, Com_RandomFloat( -0.5f, 0.5f ) * size, up, offset ); 
-
 			pTemp = CL_TempEntAlloc( org, Mod_Handle( modelIndex2 ));
-			if( !pTemp ) return;
 
-			pTemp->flags = FTENT_COLLIDEWORLD|FTENT_SLOWGRAVITY;
+			if( !pTemp )
+				return;
+
+			pTemp->flags = FTENT_COLLIDEWORLD|FTENT_SLOWGRAVITY|FTENT_ROTATE;
 
 			pTemp->entity.curstate.rendermode = kRenderTransTexture;
-			pTemp->entity.curstate.renderfx = kRenderFxClampMinScale; 
-			pTemp->entity.curstate.scale = Com_RandomFloat(( size / 25.0f), ( size / 35.0f ));
+			pTemp->entity.curstate.renderfx = kRenderFxClampMinScale;
+			pTemp->entity.curstate.scale = Com_RandomFloat(( size / 25.0f ), ( size / 15.0f ));
 			pTemp->entity.curstate.rendercolor.r = clgame.palette[colorIndex][0];
 			pTemp->entity.curstate.rendercolor.g = clgame.palette[colorIndex][1];
 			pTemp->entity.curstate.rendercolor.b = clgame.palette[colorIndex][2];
 			pTemp->entity.curstate.frame = Com_RandomLong( 0, frameCount - 1 );
-			pTemp->die = cl.time + Com_RandomFloat( 1.0f, 3.0f );
+			pTemp->die = cl.time + Com_RandomFloat( 1.0f, 2.0f );
+
+			VectorSet( pTemp->entity.baseline.origin,
+				Com_RandomFloat( -96, 95 ), Com_RandomFloat( -96, 95 ), Com_RandomFloat( -32, 95 ) );
+
+			VectorSet( pTemp->entity.baseline.angles,
+				Com_RandomFloat( -256, -255 ), Com_RandomFloat( -256, -255 ), Com_RandomFloat( -256, -255 ));
 
 			pTemp->entity.angles[2] = Com_RandomLong( 0, 360 );
 			pTemp->bounceFactor = 0;
-
-			dir[0] = forward[0] + Com_RandomFloat( -0.8f, 0.8f );
-			dir[1] = forward[1] + Com_RandomFloat( -0.8f, 0.8f );
-			dir[2] = forward[2];
-
-			VectorScale( dir, Com_RandomFloat( 8.0f * size, 20.0f * size ), pTemp->entity.baseline.origin );
-			pTemp->entity.baseline.origin[2] += Com_RandomFloat( 4.0f, 16.0f ) * size;
 		}
 	}
 }

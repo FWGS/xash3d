@@ -1744,7 +1744,7 @@ int GAME_EXPORT pfnDrawConsoleString( int x, int y, char *string )
 	clgame.ds.adjust_size = true;
 	Con_SetFont( con_fontsize->integer );
 	drawLen = Con_DrawString( x, y, string, clgame.ds.textColor );
-	MakeRGBA( clgame.ds.textColor, 255, 255, 255, 255 );
+	Vector4Copy( g_color_table[7], clgame.ds.textColor );
 	clgame.ds.adjust_size = false;
 	Con_RestoreFont();
 

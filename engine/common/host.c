@@ -1132,6 +1132,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		host.type = HOST_DEDICATED;
 	}
 	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+#ifdef XASH_GLES
+	SDL_SetHint( SDL_HINT_OPENGL_ES_DRIVER, "1" );
+#endif
 #endif
 
 	if ( !host.rootdir[0] || SetCurrentDirectory( host.rootdir ) != 0)
@@ -1286,6 +1289,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	SV_Init();
 	CL_Init();
 
+#if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined( XASH_DEDICATED )
+	Android_Init();
+#endif
+
 	HTTP_Init();
 
 	ID_Init();
@@ -1363,9 +1370,6 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	SCR_CheckStartupVids();	// must be last
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
-#endif
-#if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined(XASH_DEDICATED)
-	Android_Init();
 #endif
 
 	if( host.state == HOST_INIT )

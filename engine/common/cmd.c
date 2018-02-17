@@ -586,7 +586,7 @@ static void Cmd_UnAlias_f ( void )
 			if( !Q_strcmp( s, a->name ))
 			{
 #if defined( XASH_HASHED_VARS )
-				BaseCmd_Remove( HM_CMDALIAS, p, a->name );
+				BaseCmd_Remove( HM_CMDALIAS, a->name );
 #endif
 				if( a == cmd_alias )
 					cmd_alias = a->next;
@@ -851,7 +851,7 @@ void Cmd_RemoveCommand( const char *cmd_name )
 		if( !Q_strcmp( cmd_name, cmd->name ))
 		{
 #if defined(XASH_HASHED_VARS)
-			BaseCmd_Remove( HM_CMD, cmd, cmd->name );
+			BaseCmd_Remove( HM_CMD, cmd->name );
 #endif
 
 			*prev = cmd->next;
@@ -1315,7 +1315,7 @@ void Cmd_Unlink( int group )
 		}
 
 #if defined(XASH_HASHED_VARS)
-		BaseCmd_Remove( HM_CMD, cmd, cmd->name );
+		BaseCmd_Remove( HM_CMD, cmd->name );
 #endif
 
 		*prev = cmd->next;

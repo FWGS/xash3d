@@ -152,13 +152,18 @@ LOCAL_SRC_FILES := \
            common/soundlib/snd_mp3.c \
            common/soundlib/snd_utils.c \
            common/soundlib/snd_wav.c \
-	   common/soundlib/libmpg/dct64_i386.c \
-	   common/soundlib/libmpg/decode_i386.c \
-	   common/soundlib/libmpg/interface.c \
-	   common/soundlib/libmpg/layer2.c \
+	   common/soundlib/libmpg/dct36.c \
+	   common/soundlib/libmpg/dct64.c \
+	   common/soundlib/libmpg/format.c \
+	   common/soundlib/libmpg/frame.c \
+	   common/soundlib/libmpg/index.c \
 	   common/soundlib/libmpg/layer3.c \
+	   common/soundlib/libmpg/libmpg.c \
+	   common/soundlib/libmpg/mpg123.c \
+	   common/soundlib/libmpg/parse.c \
+	   common/soundlib/libmpg/reader.c \
+	   common/soundlib/libmpg/synth.c \
 	   common/soundlib/libmpg/tabinit.c \
-	   common/soundlib/libmpg/common.c \
 	   common/Sequence.c \
            platform/android/vid_android.c \
            platform/android/android_nosdl.c

@@ -16,9 +16,8 @@ else
  echo >> README.md
  echo Short changelog: >> README.md
  echo \`\`\` >> README.md
- pushd $TRAVIS_BUILD_DIR
- git ---no-pager log --pretty=format:'%h %ad %s' --date iso -n 10 HEAD $(curl -s https://raw.githubusercontent.com/FWGS/xash3d-deploy/$SOURCE_NAME-$TRAVIS_BRANCH/commit.txt).. >> $OLDPWD/README.md
- popd
+ (cd $TRAVIS_BUILD_DIR;git log --pretty=format:'%h %ad %s' --date iso -n 10 HEAD `curl https://raw.githubusercontent.com/FWGS/xash3d-deploy/$SOURCE_NAME-$TRAVIS_BRANCH/commit.txt`
+.. )| cut -d ' ' -f 1-3,5-100 >> README.md
  echo \`\`\` >> README.md
  echo >> README.md
  echo [Code on GitHub]\(https://github.com/FWGS/xash3d/tree/$TRAVIS_COMMIT\) >> README.md

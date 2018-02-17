@@ -65,6 +65,7 @@ Returns false if nothing is found.
 qboolean SNDDMA_Init( void *hInst )
 {
 	SDL_AudioSpec desired, obtained;
+	int samplecount;
 
 	if( SDL_Init( SDL_INIT_AUDIO ) )
 	{
@@ -107,7 +108,10 @@ qboolean SNDDMA_Init( void *hInst )
 	dma.format.speed    = obtained.freq;
 	dma.format.channels = obtained.channels;
 	dma.format.width    = 2;
-	dma.samples         = 0x8000 * obtained.channels;
+	samplecount = s_samplecount->integer;
+	if( !samplecount )
+		samplecount = 0x8000;
+	dma.samples         = samplecount * obtained.channels;
 	dma.buffer          = Z_Malloc( dma.samples * 2 );
 	dma.samplepos       = 0;
 	dma.sampleframes    = dma.samples / dma.format.channels;

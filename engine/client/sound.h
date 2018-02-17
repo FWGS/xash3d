@@ -257,7 +257,7 @@ extern convar_t	*s_test;
 extern convar_t	*s_phs;
 extern convar_t *s_reverse_channels;
 extern convar_t	*dsp_room;
-
+extern convar_t *s_samplecount;
 extern portable_samplepair_t		s_rawsamples[MAX_RAW_SAMPLES];
 
 void S_InitScaletable( void );

@@ -493,7 +493,7 @@ bloomfilter_t ID_GenerateRawId( void )
 	int count = 0;
 
 #ifdef __linux__
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && !defined(XASH_DEDICATED)
 	{
 		const char *androidid = Android_GetAndroidID();
 		if( androidid && ID_VerifyHEX( androidid ) )
@@ -526,7 +526,7 @@ uint ID_CheckRawId( bloomfilter_t filter )
 	int count = 0;
 
 #ifdef __linux__
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && !defined(XASH_DEDICATED)
 	{
 		const char *androidid = Android_GetAndroidID();
 		if( androidid && ID_VerifyHEX( androidid ) )
@@ -621,7 +621,7 @@ void ID_Init( void )
 	Cmd_AddCommand( "testcpuinfo", ID_TestCPUInfo_f, "try read cpu serial" );
 #endif
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && !defined(XASH_DEDICATED)
 	sscanf( Android_LoadID(), "%016llX", &id );
 	if( id )
 	{
@@ -680,7 +680,7 @@ void ID_Init( void )
 	for( i = 0; i < 16; i++ )
 		Q_sprintf( &id_md5[i*2], "%02hhx", md5[i] );
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && !defined(XASH_DEDICATED)
 	Android_SaveID( va("%016llX", id^SYSTEM_XOR_MASK ) );
 #elif defined _WIN32
 	{

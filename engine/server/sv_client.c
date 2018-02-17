@@ -1985,7 +1985,11 @@ void SV_Baselines_f( sv_client_t *cl )
 		start++;
 	}
 
-	if( start == svgame.numEntities ) Q_snprintf( cmd, MAX_STRING, "precache %i\n", svs.spawncount );
+	if( start == svgame.numEntities )
+	{
+		// a1ba: force server cheats value
+		Q_snprintf( cmd, MAX_STRING, "precache %i %i\n", svs.spawncount, Cvar_VariableInteger( "sv_cheats" ) );
+	}
 	else Q_snprintf( cmd, MAX_STRING, "cmd baselines %i %i\n", svs.spawncount, start );
 
 	// send next command

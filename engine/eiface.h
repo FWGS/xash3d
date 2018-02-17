@@ -211,7 +211,7 @@ typedef struct enginefuncs_s
 	char*	(*pfnInfoKeyValue)( char *infobuffer, char *key );
 	void	(*pfnSetKeyValue)( char *infobuffer, char *key, char *value );
 	void	(*pfnSetClientKeyValue)( int clientIndex, char *infobuffer, char *key, char *value );
-	int	(*pfnIsMapValid)( char *filename );
+	int	(*pfnIsMapValid)( const char *filename );
 	void	(*pfnStaticDecal)( const float *origin, int decalIndex, int entityIndex, int modelIndex );
 	int	(*pfnPrecacheGeneric)( char *s );
 	int	(*pfnGetPlayerUserId)( edict_t *e ); // returns the server assigned userid for this player.  useful for logging frags, etc.  returns -1 if the edict couldn't be found in the list of clients

@@ -1,8 +1,28 @@
-#include <stdlib.h>
+/*
+tabinit.c - compact version of famous library mpg123
+Copyright (C) 2017 Uncle Mike
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
 
 #include "mpg123.h"
+#include <math.h>
 
-const int intwinbase[] = {
+static float cos64[16];
+static float cos32[8];
+static float cos16[4];
+static float cos8[2];
+static float cos4[1];
+
+static long intwinbase[] = {
      0,    -1,    -1,    -1,    -1,    -1,    -1,    -2,    -2,    -2,
     -2,    -3,    -3,    -4,    -4,    -5,    -5,    -6,    -7,    -7,
     -8,    -9,   -10,   -11,   -13,   -14,   -16,   -17,   -19,   -21,
@@ -29,42 +49,54 @@ const int intwinbase[] = {
  48390, 50137, 51853, 53534, 55178, 56778, 58333, 59838, 61289, 62684,
  64019, 65290, 66494, 67629, 68692, 69679, 70590, 71420, 72169, 72835,
  73415, 73908, 74313, 74630, 74856, 74992, 75038 };
+ 
+float *pnts[] = { cos64, cos32, cos16, cos8, cos4 };
 
-void make_decode_tables(struct StaticData * psd, int scaleval)
+void prepare_decode_tables( void )
 {
-  int i,j,k,kr,divv;
+	int	i, k, kr, divv;
+	float	*costab;
 
-  float *table,*costab;
+	for( i = 0; i < 5; i++ )
+	{
+		kr = 0x10 >> i;
+		divv = 0x40 >> i;
+		costab = pnts[i];
 
-
-  for(i=0;i<5;i++)
-  {
-    kr=0x10>>i; divv=0x40>>i;
-    costab = psd->pnts[i];
-    for(k=0;k<kr;k++)
-      costab[k] = 1.0 / (2.0 * cos(M_PI * ((double) k * 2.0 + 1.0) / (double) divv));
-  }
-
-  table = psd->decwin;
-  scaleval = -scaleval;
-  for(i=0,j=0;i<256;i++,j++,table+=32)
-  {
-    if(table < psd->decwin+512+16)
-      table[16] = table[0] = (double) intwinbase[j] / 65536.0 * (double) scaleval;
-    if(i % 32 == 31)
-      table -= 1023;
-    if(i % 64 == 63)
-      scaleval = - scaleval;
-  }
-
-  for( /* i=256 */ ;i<512;i++,j--,table+=32)
-  {
-    if(table < psd->decwin+512+16)
-      table[16] = table[0] = (double) intwinbase[j] / 65536.0 * (double) scaleval;
-    if(i % 32 == 31)
-      table -= 1023;
-    if(i % 64 == 63)
-      scaleval = - scaleval;
-  }
+		for( k = 0; k < kr; k++)
+			costab[k] = DOUBLE_TO_REAL( 1.0 / ( 2.0 * cos( M_PI * ((double)k * 2.0 + 1.0 ) / (double)divv )));
+	}
 }
 
+void make_decode_tables( mpg123_handle_t *fr )
+{
+	int	i, j;
+	int	idx = 0;
+	double	scaleval;
+
+	// scale is always based on 1.0.
+	scaleval = -0.5 * (fr->lastscale < 0 ? fr->p.outscale : fr->lastscale);
+
+	for( i = 0, j = 0; i < 256; i++, j++, idx += 32 )
+	{
+		if( idx < 512 + 16 )
+			fr->decwin[idx+16] = fr->decwin[idx] = DOUBLE_TO_REAL( (double)intwinbase[j] * scaleval );
+
+		if( i % 32 == 31 )
+			idx -= 1023;
+
+		if( i % 64 == 63 )
+			scaleval = -scaleval;
+	}
+
+	for( ; i < 512; i++, j--, idx += 32 )
+	{
+		if( idx < 512 + 16 )
+			fr->decwin[idx+16] = fr->decwin[idx] = DOUBLE_TO_REAL( (double)intwinbase[j] * scaleval );
+
+		if( i % 32 == 31 )
+			idx -= 1023;
+		if( i % 64 == 63 )
+			scaleval = -scaleval;
+	}
+}
