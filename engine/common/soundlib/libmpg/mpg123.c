@@ -246,7 +246,7 @@ int mpg123_open_feed( mpg123_handle_t *mh )
 	return open_feed( mh );
 }
 
-int mpg123_replace_reader_handle( mpg123_handle_t *mh, ssize_t (*fread)( void*, void*, size_t), off_t (*lseek)(void*, off_t, int), void(*fclose)(void*))
+int mpg123_replace_reader_handle( mpg123_handle_t *mh, mpg_ssize_t (*fread)( void*, void*, size_t), mpg_off_t (*lseek)(void*, mpg_off_t, int), void(*fclose)(void*))
 {
 	if( mh == NULL )
 		return MPG123_BAD_HANDLE;
@@ -451,9 +451,9 @@ static int init_track( mpg123_handle_t *mh )
 }
 
 // from internal sample number to external.
-static off_t sample_adjust( mpg123_handle_t *mh, off_t x )
+static mpg_off_t sample_adjust( mpg123_handle_t *mh, mpg_off_t x )
 {
-	off_t	s;
+	mpg_off_t	s;
 
 	if( mh->p.flags & MPG123_GAPLESS )
 	{
@@ -476,9 +476,9 @@ static off_t sample_adjust( mpg123_handle_t *mh, off_t x )
 }
 
 // from external samples to internal
-static off_t sample_unadjust( mpg123_handle_t *mh, off_t x )
+static mpg_off_t sample_unadjust( mpg123_handle_t *mh, mpg_off_t x )
 {
-	off_t	s;
+	mpg_off_t	s;
 
 	if( mh->p.flags & MPG123_GAPLESS )
 	{
@@ -518,17 +518,17 @@ static void frame_buffercheck( mpg123_handle_t *fr )
 	if( fr->lastframe > -1 && fr->num >= fr->lastframe )
 	{
 		// there can be more than one frame of padding at the end, so we ignore the whole frame if we are beyond lastframe.
-		off_t byteoff = ( fr->num == fr->lastframe ) ? samples_to_bytes( fr, fr->lastoff ) : 0;
+		mpg_off_t byteoff = ( fr->num == fr->lastframe ) ? samples_to_bytes( fr, fr->lastoff ) : 0;
 
-		if((off_t)fr->buffer.fill > byteoff )
+		if((mpg_off_t)fr->buffer.fill > byteoff )
 			fr->buffer.fill = byteoff;
 	}
 
 	// the first interesting frame: Skip some leading samples.
 	if( fr->firstoff && fr->num == fr->firstframe )
 	{
-		off_t	byteoff = samples_to_bytes( fr, fr->firstoff );
-		if((off_t)fr->buffer.fill > byteoff )
+		mpg_off_t	byteoff = samples_to_bytes( fr, fr->firstoff );
+		if((mpg_off_t)fr->buffer.fill > byteoff )
 		{
 			fr->buffer.fill -= byteoff;
 
@@ -699,9 +699,9 @@ int mpg123_getformat( mpg123_handle_t *mh, int *rate, int *channels, int *encodi
 
 int mpg123_scan( mpg123_handle_t *mh )
 {
-	off_t	track_frames = 0;
-	off_t	track_samples = 0;
-	off_t	oldpos;
+	mpg_off_t	track_frames = 0;
+	mpg_off_t	track_samples = 0;
+	mpg_off_t	oldpos;
 	int	b;
 
 	if( mh == NULL )
@@ -759,9 +759,9 @@ int mpg123_scan( mpg123_handle_t *mh )
 // if not, we have the possibility of mh->num+1 frames being decoded or nothing at all.
 // then, there is firstframe...when we didn't reach it yet, then the next data will come from there.
 // mh->num starts with -1
-off_t mpg123_tell( mpg123_handle_t *mh )
+mpg_off_t mpg123_tell( mpg123_handle_t *mh )
 {
-	off_t	pos = 0;
+	mpg_off_t	pos = 0;
 
 	if( mh == NULL )
 		return MPG123_ERR;
@@ -796,7 +796,7 @@ off_t mpg123_tell( mpg123_handle_t *mh )
 
 static int do_the_seek( mpg123_handle_t *mh )
 {
-	off_t	fnum = SEEKFRAME( mh );
+	mpg_off_t	fnum = SEEKFRAME( mh );
 	int	b;
 
 	mh->buffer.fill = 0;
@@ -842,9 +842,9 @@ static int do_the_seek( mpg123_handle_t *mh )
 	return 0;
 }
 
-off_t mpg123_seek( mpg123_handle_t *mh, off_t sampleoff, int whence )
+mpg_off_t mpg123_seek( mpg123_handle_t *mh, mpg_off_t sampleoff, int whence )
 {
-	off_t	pos;
+	mpg_off_t	pos;
 	int	b;
 
 	pos = mpg123_tell( mh ); // adjusted samples

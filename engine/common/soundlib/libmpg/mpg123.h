@@ -49,13 +49,16 @@ typedef unsigned char	byte;
 typedef unsigned short	word;
 typedef unsigned long	ulong;
 typedef unsigned int	uint;
-typedef long		off_t;
-#ifdef _MSC_VER // a1ba: MSVC don't have ssize_t
-typedef long		ssize_t;
+typedef long		mpg_off_t;
+
+#ifdef _MSC_VER // a1ba: MSVC6 don't have ssize_t
+typedef long		mpg_ssize_t;
+#else
+typedef ssize_t		mpg_ssize_t;
 #endif
+
 typedef short		int16_t;
 typedef unsigned short	uint16_t;
-typedef unsigned int	uintptr_t;
 
 #include "synth.h"
 #include "index.h"
@@ -310,10 +313,10 @@ struct mpg123_handle_s
 	int		framesize;	// computed framesize
 	int		freesize;		// free format frame size
 	int		vbr;		// 1 if variable bitrate was detected
-	off_t		num;		// frame offset ...
-	off_t		input_offset;	// byte offset of this frame in input stream
-	off_t		playnum;		// playback offset... includes repetitions, reset at seeks
-	off_t		audio_start;	// The byte offset in the file where audio data begins.
+	mpg_off_t		num;		// frame offset ...
+	mpg_off_t		input_offset;	// byte offset of this frame in input stream
+	mpg_off_t		playnum;		// playback offset... includes repetitions, reset at seeks
+	mpg_off_t		audio_start;	// The byte offset in the file where audio data begins.
 	int		state_flags;
 	char		silent_resync;	// Do not complain for the next n resyncs.
 	byte		*xing_toc;	// The seek TOC from Xing header.
@@ -340,10 +343,10 @@ struct mpg123_handle_s
 	} rva;
 
 	// input data
-	off_t		track_frames;
-	off_t		track_samples;
+	mpg_off_t		track_frames;
+	mpg_off_t		track_samples;
 	double		mean_framesize;
-	off_t		mean_frames;
+	mpg_off_t		mean_frames;
 	int		fsizeold;
 	int		ssize;
 
@@ -370,18 +373,18 @@ struct mpg123_handle_s
 	size_t		outblock;		// number of bytes that this frame produces (upper bound)
 	int		to_decode;	// this frame holds data to be decoded
 	int		to_ignore;	// the same, somehow
-	off_t		firstframe;	// start decoding from here
-	off_t		lastframe;	// last frame to decode (for gapless or num_frames limit)
-	off_t		ignoreframe;	// frames to decode but discard before firstframe
+	mpg_off_t		firstframe;	// start decoding from here
+	mpg_off_t		lastframe;	// last frame to decode (for gapless or num_frames limit)
+	mpg_off_t		ignoreframe;	// frames to decode but discard before firstframe
 
-	off_t		gapless_frames;	// frame count for the gapless part
-	off_t		firstoff;		// number of samples to ignore from firstframe
-	off_t		lastoff;		// number of samples to use from lastframe
-	off_t		begin_s;		// overall begin offset in samples
-	off_t		begin_os;
-	off_t		end_s;		// overall end offset in samples
-	off_t		end_os;
-	off_t		fullend_os;	// gapless_frames translated to output samples
+	mpg_off_t		gapless_frames;	// frame count for the gapless part
+	mpg_off_t		firstoff;		// number of samples to ignore from firstframe
+	mpg_off_t		lastoff;		// number of samples to use from lastframe
+	mpg_off_t		begin_s;		// overall begin offset in samples
+	mpg_off_t		begin_os;
+	mpg_off_t		end_s;		// overall end offset in samples
+	mpg_off_t		end_os;
+	mpg_off_t		fullend_os;	// gapless_frames translated to output samples
 
 	uint		crc;		// well, I need a safe 16bit type, actually. But wider doesn't hurt.
 
@@ -435,10 +438,10 @@ int mpg123_fmt_all( mpg123_parm_t *mp );
 int mpg123_format_none( mpg123_handle_t *mh );
 int mpg123_format_all( mpg123_handle_t *mh );
 int mpg123_format( mpg123_handle_t *mh, long rate, int channels, int encodings );
-off_t decoder_synth_bytes( mpg123_handle_t *fr, off_t s );
-off_t bytes_to_samples( mpg123_handle_t *fr, off_t b );
-off_t samples_to_bytes( mpg123_handle_t *fr, off_t s );
-off_t outblock_bytes( mpg123_handle_t *fr, off_t s );
+mpg_off_t decoder_synth_bytes( mpg123_handle_t *fr, mpg_off_t s );
+mpg_off_t bytes_to_samples( mpg123_handle_t *fr, mpg_off_t b );
+mpg_off_t samples_to_bytes( mpg123_handle_t *fr, mpg_off_t s );
+mpg_off_t outblock_bytes( mpg123_handle_t *fr, mpg_off_t s );
 
 //
 // layer3.c
@@ -476,16 +479,16 @@ mpg123_handle_t *mpg123_new( int *error );
 mpg123_handle_t *mpg123_parnew( mpg123_parm_t *mp, int *error );
 int mpg123_param( mpg123_handle_t *mh, enum mpg123_parms key, long val );
 int mpg123_open_handle( mpg123_handle_t *mh, void *iohandle );
-int mpg123_replace_reader_handle( mpg123_handle_t *mh, ssize_t (*fread)(void*, void*, size_t), off_t (*lseek)(void*, off_t, int), void(*fclose)(void*));
+int mpg123_replace_reader_handle( mpg123_handle_t *mh, mpg_ssize_t (*fread)(void*, void*, size_t), mpg_off_t (*lseek)(void*, mpg_off_t, int), void(*fclose)(void*));
 int mpg123_decode( mpg123_handle_t *mh, const byte *inmemory, size_t inmemsize, byte *outmemory, size_t outmemsize, size_t *done );
 int mpg123_getformat( mpg123_handle_t *mh, int *rate, int *channels, int *encoding );
 int mpg123_read( mpg123_handle_t *mh, byte *out, size_t size, size_t *done );
-off_t mpg123_seek( mpg123_handle_t *mh, off_t sampleoff, int whence );      
+mpg_off_t mpg123_seek( mpg123_handle_t *mh, mpg_off_t sampleoff, int whence );
 int mpg123_feed( mpg123_handle_t *mh, const byte *in, size_t size );
 const char *mpg123_plain_strerror( int errcode );
 int mpg123_open_feed( mpg123_handle_t *mh );
 void mpg123_delete( mpg123_handle_t *mh );
-off_t mpg123_tell( mpg123_handle_t *mh );
+mpg_off_t mpg123_tell( mpg123_handle_t *mh );
 int mpg123_init( void );
 void mpg123_exit( void );
 

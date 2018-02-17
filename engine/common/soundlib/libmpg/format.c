@@ -381,25 +381,25 @@ void invalidate_format( audioformat_t *af )
 }
 
 // number of bytes the decoder produces.
-off_t decoder_synth_bytes( mpg123_handle_t *fr, off_t s )
+mpg_off_t decoder_synth_bytes( mpg123_handle_t *fr, mpg_off_t s )
 {
 	return s * fr->af.dec_encsize * fr->af.channels;
 }
 
 // samples/bytes for output buffer after post-processing.
 // take into account: channels, bytes per sample -- NOT resampling!
-off_t samples_to_bytes( mpg123_handle_t *fr, off_t s )
+mpg_off_t samples_to_bytes( mpg123_handle_t *fr, mpg_off_t s )
 {
 	return s * fr->af.encsize * fr->af.channels;
 }
 
-off_t bytes_to_samples( mpg123_handle_t *fr, off_t b )
+mpg_off_t bytes_to_samples( mpg123_handle_t *fr, mpg_off_t b )
 {
 	return b / fr->af.encsize / fr->af.channels;
 }
 
 // number of bytes needed for decoding _and_ post-processing.
-off_t outblock_bytes( mpg123_handle_t *fr, off_t s )
+mpg_off_t outblock_bytes( mpg123_handle_t *fr, mpg_off_t s )
 {
 	int encsize = (fr->af.encsize > fr->af.dec_encsize ? fr->af.encsize : fr->af.dec_encsize);
 	return s * encsize * fr->af.channels;

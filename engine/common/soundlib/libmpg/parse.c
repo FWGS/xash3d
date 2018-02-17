@@ -236,7 +236,7 @@ static int check_lame_tag( mpg123_handle_t *fr )
 		else
 		{
 			// check for endless stream, but: TRACK_MAX_FRAMES sensible at all?
-			fr->track_frames = long_tmp > TRACK_MAX_FRAMES ? 0 : (off_t)long_tmp;
+			fr->track_frames = long_tmp > TRACK_MAX_FRAMES ? 0 : (mpg_off_t)long_tmp;
 
 			// all or nothing: Only if encoder delay/padding is known, we'll cut
 			// samples for gapless.
@@ -262,7 +262,7 @@ static int check_lame_tag( mpg123_handle_t *fr )
 			// included, though.
 			if( fr->rdat.filelen < 1 )
 			{
-				fr->rdat.filelen = (off_t)long_tmp + fr->audio_start; // Overflow?
+				fr->rdat.filelen = (mpg_off_t)long_tmp + fr->audio_start; // Overflow?
 			}
 		}
 	}
@@ -298,8 +298,8 @@ static int check_lame_tag( mpg123_handle_t *fr )
 		float	peak = 0;
 		float	gain_offset = 0; // going to be +6 for old lame that used 83dB
 		char	nb[10];
-		off_t	pad_in;
-		off_t	pad_out;
+		mpg_off_t	pad_in;
+		mpg_off_t	pad_out;
 
 		memcpy( nb, fr->bsbuf + lame_offset, 9 );
 		nb[9] = 0;
@@ -409,7 +409,7 @@ static int do_readahead( mpg123_handle_t *fr, ulong newhead )
 {
 	ulong	nexthead = 0;
 	int	hd = 0;
-	off_t	start, oret;
+	mpg_off_t	start, oret;
 	int	ret;
 
 	if(!( !fr->firsthead && fr->rdat.flags & ( READER_SEEKABLE|READER_BUFFERED )))
@@ -858,7 +858,7 @@ int read_frame( mpg123_handle_t *fr )
 	long	headcount = 0;
 	byte	*newbuf;
 	ulong	newhead;
-	off_t	framepos;
+	mpg_off_t	framepos;
 	int	ret;
 
 	fr->fsizeold = fr->framesize;	// for Layer3

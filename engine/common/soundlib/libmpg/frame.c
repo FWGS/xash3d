@@ -21,10 +21,10 @@ static void *aligned_pointer( void *base, uint alignment )
 	// work in unsigned integer realm, explicitly.
 	// tricking the compiler into integer operations like % by invoking base-NULL is dangerous:
 	// it results into ptrdiff_t, which gets negative on big addresses. Big screw up, that.
-	// i try to do it "properly" here: Casting only to uintptr_t and no artihmethic with void*.
+	// i try to do it "properly" here: Casting only to size_t and no artihmethic with void*.
 
-	uintptr_t	baseval = (uintptr_t)(char *)base;
-	uintptr_t	aoff = baseval % alignment;
+	size_t	baseval = (size_t)(char *)base;
+	size_t	aoff = baseval % alignment;
 
 	if( aoff )
 		return (char *)base + alignment - aoff;
@@ -417,9 +417,9 @@ int mpg123_framedata( mpg123_handle_t *mh, ulong *header, byte **bodydata, size_
 // Possibilities:
 //	- use approximate positions from Xing TOC (not yet parsed)
 //	- guess wildly from mean framesize and offset of first frame / beginning of file.
-static off_t frame_fuzzy_find( mpg123_handle_t *fr, off_t want_frame, off_t *get_frame )
+static mpg_off_t frame_fuzzy_find( mpg123_handle_t *fr, mpg_off_t want_frame, mpg_off_t *get_frame )
 {
-	off_t	ret = fr->audio_start; // default is to go to the beginning.
+	mpg_off_t	ret = fr->audio_start; // default is to go to the beginning.
 
 	*get_frame = 0;
 
@@ -437,13 +437,13 @@ static off_t frame_fuzzy_find( mpg123_handle_t *fr, off_t want_frame, off_t *get
 		if( toc_entry > 99 ) toc_entry = 99;
 
 		// now estimate back what frame we get.
-		*get_frame = (off_t)((double)toc_entry / 100.0 * fr->track_frames );
+		*get_frame = (mpg_off_t)((double)toc_entry / 100.0 * fr->track_frames );
 		fr->state_flags &= ~FRAME_ACCURATE;
 		fr->silent_resync = 1;
 
 		// question: Is the TOC for whole file size (with/without ID3) or the "real" audio data only?
 		// ID3v1 info could also matter.
-		ret = (off_t)((double)fr->xing_toc[toc_entry] / 256.0 * fr->rdat.filelen);
+		ret = (mpg_off_t)((double)fr->xing_toc[toc_entry] / 256.0 * fr->rdat.filelen);
 	}
 	else if( fr->mean_framesize > 0 )
 	{	
@@ -452,7 +452,7 @@ static off_t frame_fuzzy_find( mpg123_handle_t *fr, off_t want_frame, off_t *get
 		fr->state_flags &= ~FRAME_ACCURATE; // fuzzy!
 		fr->silent_resync = 1;
 		*get_frame = want_frame;
-		ret = (off_t)(fr->audio_start + fr->mean_framesize * want_frame);
+		ret = (mpg_off_t)(fr->audio_start + fr->mean_framesize * want_frame);
 	}
 
 	return ret;
@@ -463,9 +463,9 @@ static off_t frame_fuzzy_find( mpg123_handle_t *fr, off_t want_frame, off_t *get
 // do not care tabout the stuff that was in buffer but not played back
 // everything that left the decoder is counted as played
 // decide if you want low latency reaction and accurate timing info or stable long-time playback with buffer!
-off_t frame_index_find( mpg123_handle_t *fr, off_t want_frame, off_t* get_frame )
+mpg_off_t frame_index_find( mpg123_handle_t *fr, mpg_off_t want_frame, mpg_off_t* get_frame )
 {
-	off_t	gopos = 0; // default is file start if no index position
+	mpg_off_t	gopos = 0; // default is file start if no index position
 
 	*get_frame = 0;
 
@@ -511,9 +511,9 @@ off_t frame_index_find( mpg123_handle_t *fr, off_t want_frame, off_t* get_frame 
 	return gopos;
 }
 
-off_t frame_ins2outs( mpg123_handle_t *fr, off_t ins )
+mpg_off_t frame_ins2outs( mpg123_handle_t *fr, mpg_off_t ins )
 {	
-	off_t	outs = 0;
+	mpg_off_t	outs = 0;
 
 	switch( fr->down_sample )
 	{
@@ -526,9 +526,9 @@ off_t frame_ins2outs( mpg123_handle_t *fr, off_t ins )
 	return outs;
 }
 
-off_t frame_outs( mpg123_handle_t *fr, off_t num )
+mpg_off_t frame_outs( mpg123_handle_t *fr, mpg_off_t num )
 {
-	off_t	outs = 0;
+	mpg_off_t	outs = 0;
 
 	switch( fr->down_sample )
 	{
@@ -543,9 +543,9 @@ off_t frame_outs( mpg123_handle_t *fr, off_t num )
 
 // compute the number of output samples we expect from this frame.
 // this is either simple spf() or a tad more elaborate for ntom.
-off_t frame_expect_outsamples( mpg123_handle_t *fr )
+mpg_off_t frame_expect_outsamples( mpg123_handle_t *fr )
 {
-	off_t	outs = 0;
+	mpg_off_t	outs = 0;
 
 	switch( fr->down_sample )
 	{
@@ -558,9 +558,9 @@ off_t frame_expect_outsamples( mpg123_handle_t *fr )
 	return outs;
 }
 
-off_t frame_offset( mpg123_handle_t *fr, off_t outs )
+mpg_off_t frame_offset( mpg123_handle_t *fr, mpg_off_t outs )
 {
-	off_t	num = 0;
+	mpg_off_t	num = 0;
 
 	switch( fr->down_sample )
 	{
@@ -574,7 +574,7 @@ off_t frame_offset( mpg123_handle_t *fr, off_t outs )
 }
 
 // input in _input_ samples
-void frame_gapless_init( mpg123_handle_t *fr, off_t framecount, off_t bskip, off_t eskip )
+void frame_gapless_init( mpg123_handle_t *fr, mpg_off_t framecount, mpg_off_t bskip, mpg_off_t eskip )
 {
 	fr->gapless_frames = framecount;
 
@@ -602,9 +602,9 @@ void frame_gapless_realinit( mpg123_handle_t *fr )
 }
 
 // at least note when there is trouble...
-void frame_gapless_update( mpg123_handle_t *fr, off_t total_samples )
+void frame_gapless_update( mpg123_handle_t *fr, mpg_off_t total_samples )
 {
-	off_t gapless_samples = fr->gapless_frames * fr->spf;
+	mpg_off_t gapless_samples = fr->gapless_frames * fr->spf;
 
 	if( fr->gapless_frames < 1 )
 		return;
@@ -620,9 +620,9 @@ void frame_gapless_update( mpg123_handle_t *fr, off_t total_samples )
 }
 
 // compute the needed frame to ignore from, for getting accurate/consistent output for intended firstframe.
-static off_t ignoreframe( mpg123_handle_t *fr )
+static mpg_off_t ignoreframe( mpg123_handle_t *fr )
 {
-	off_t	preshift = fr->p.preframes;
+	mpg_off_t	preshift = fr->p.preframes;
 
 	// layer 3 _really_ needs at least one frame before.
 	if( fr->lay == 3 && preshift < 1 )
@@ -639,14 +639,14 @@ static off_t ignoreframe( mpg123_handle_t *fr )
 // seek to frame offset 1 may be just seek to 200 samples offset in output since the beginning of first frame is delay/padding.
 // hm, is that right? OK for the padding stuff, but actually, should the decoder delay be better totally hidden or not?
 // with gapless, even the whole frame position could be advanced further than requested (since Homey don't play dat).
-void frame_set_frameseek( mpg123_handle_t *fr, off_t fe )
+void frame_set_frameseek( mpg123_handle_t *fr, mpg_off_t fe )
 {
 	fr->firstframe = fe;
 
 	if( fr->p.flags & MPG123_GAPLESS && fr->gapless_frames > 0 )
 	{
 		// take care of the beginning...
-		off_t	beg_f = frame_offset( fr, fr->begin_os );
+		mpg_off_t	beg_f = frame_offset( fr, fr->begin_os );
 
 		if( fe <= beg_f )
 		{
@@ -687,7 +687,7 @@ void frame_skip( mpg123_handle_t *fr )
 
 // sample accurate seek prepare for decoder.
 // this gets unadjusted output samples and takes resampling into account
-void frame_set_seek( mpg123_handle_t *fr, off_t sp )
+void frame_set_seek( mpg123_handle_t *fr, mpg_off_t sp )
 {
 	fr->firstframe = frame_offset( fr, sp );
 	fr->ignoreframe = ignoreframe( fr );

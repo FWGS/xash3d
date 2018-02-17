@@ -17,9 +17,9 @@ GNU General Public License for more details.
 #include "index.h"
 
 // the next expected frame offset, one step ahead.
-static off_t fi_next( frame_index_t *fi )
+static mpg_off_t fi_next( frame_index_t *fi )
 {
-	return (off_t)fi->fill*fi->step;
+	return (mpg_off_t)fi->fill*fi->step;
 }
 
 // shrink down the used index to the half.
@@ -66,7 +66,7 @@ void fi_exit( frame_index_t *fi )
 
 int fi_resize( frame_index_t *fi, size_t newsize )
 {
-	off_t	*newdata = NULL;
+	mpg_off_t	*newdata = NULL;
 
 	if( newsize == fi->size )
 		return 0;
@@ -78,7 +78,7 @@ int fi_resize( frame_index_t *fi, size_t newsize )
 			fi_shrink( fi );
 	}
 
-	newdata = realloc( fi->data, newsize * sizeof( off_t ));
+	newdata = realloc( fi->data, newsize * sizeof( mpg_off_t ));
 	if( newsize == 0 || newdata != NULL )
 	{
 		fi->data = newdata;
@@ -97,11 +97,11 @@ int fi_resize( frame_index_t *fi, size_t newsize )
 	}
 }
 
-void fi_add( frame_index_t *fi, off_t pos )
+void fi_add( frame_index_t *fi, mpg_off_t pos )
 {
 	if( fi->fill == fi->size )
 	{
-		off_t	framenum = fi->fill*fi->step;
+		mpg_off_t	framenum = fi->fill*fi->step;
 
 		// index is full, we need to shrink... or grow.
 		// store the current frame number to check later if we still want it.
@@ -124,7 +124,7 @@ void fi_add( frame_index_t *fi, off_t pos )
 	}
 }
 
-int fi_set( frame_index_t *fi, off_t *offsets, off_t step, size_t fill )
+int fi_set( frame_index_t *fi, mpg_off_t *offsets, mpg_off_t step, size_t fill )
 {
 	if( fi_resize( fi, fill ) == -1 )
 		return -1;
@@ -133,7 +133,7 @@ int fi_set( frame_index_t *fi, off_t *offsets, off_t step, size_t fill )
 
 	if( offsets != NULL )
 	{
-		memcpy( fi->data, offsets, fill * sizeof( off_t ));
+		memcpy( fi->data, offsets, fill * sizeof( mpg_off_t ));
 		fi->fill = fill;
 	}
 	else
