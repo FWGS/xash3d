@@ -827,7 +827,7 @@ void GAME_EXPORT CL_BloodSprite( const vec3_t org, int colorIndex, int modelInde
 		drips = size + Com_RandomLong( 1, 16 );
 
 		Mod_GetFrames( modelIndex, &frameCount );
-		pTemp->entity.curstate.rendermode = kRenderNormal;
+		pTemp->entity.curstate.rendermode = kRenderTransTexture;
 		pTemp->entity.curstate.renderfx = kRenderFxClampMinScale;
 		pTemp->entity.curstate.scale = Com_RandomFloat(( size / 25.0f ), ( size / 35.0f ));
 		pTemp->flags = FTENT_SPRANIMATE;
@@ -854,7 +854,7 @@ void GAME_EXPORT CL_BloodSprite( const vec3_t org, int colorIndex, int modelInde
 
 			pTemp->flags = FTENT_COLLIDEWORLD|FTENT_SLOWGRAVITY|FTENT_ROTATE;
 
-			pTemp->entity.curstate.rendermode = kRenderNormal;
+			pTemp->entity.curstate.rendermode = kRenderTransTexture;
 			pTemp->entity.curstate.renderfx = kRenderFxClampMinScale;
 			pTemp->entity.curstate.scale = Com_RandomFloat(( size / 25.0f ), ( size / 15.0f ));
 			pTemp->entity.curstate.rendercolor.r = clgame.palette[colorIndex][0];
