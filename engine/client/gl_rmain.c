@@ -35,7 +35,7 @@ ref_instance_t	RI, prevRI;
 mleaf_t		*r_viewleaf, *r_oldviewleaf;
 mleaf_t		*r_viewleaf2, *r_oldviewleaf2;
 
-SwapPhaseInfo_t SwapPhaseInfo;
+StrobeInfo_t StrobeInfo;
 
 static int R_RankForRenderMode( cl_entity_t *ent )
 {
@@ -1328,7 +1328,7 @@ void R_RenderFrame( const ref_params_t *fd, qboolean drawWorld )
 	GL_BackendEndFrame();
 }
 
-inline static void gl_GenerateBlackFrame( void ) // Generates partial or full black frame
+static inline void gl_GenerateBlackFrame( void ) // Generates partial or full black frame
 {
 	if ( CL_IsInConsole() ) // No strobing on the console
 	{
@@ -1337,11 +1337,11 @@ inline static void gl_GenerateBlackFrame( void ) // Generates partial or full bl
 			R_Set2DMode(false);
 			return;
 		}
-		pglEnable( GL_SCISSOR_TEST);
-		pglScissor( con_rect.x, (-con_rect.y) - (con_rect.h*1.25), con_rect.w, con_rect.h ); // Preview strobe setting on static
+		pglEnable( GL_SCISSOR_TEST );
+		pglScissor( con_rect.x, (-con_rect.y) - (con_rect.h * 1.25), con_rect.w, con_rect.h ); // Preview strobe setting on static
 		pglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-		pglClear( GL_COLOR_BUFFER_BIT);
-		pglDisable( GL_SCISSOR_TEST);
+		pglClear( GL_COLOR_BUFFER_BIT );
+		pglDisable( GL_SCISSOR_TEST );
 	}
 	else
 	{
@@ -1359,187 +1359,189 @@ R_Strobe
 TODO:
 	*Make swapping transition seamless by rendering non-opaque frames.
 	*Implement high precision timer to keep the internal phase on track with monitor. (In case of freezes etc.)
+	* (?) Call R_Strobe each frame no matter strobe setting and simulate strobing to keep the phases on track (When on menu, ...)
+	* (?) Move "Strobe" to seperate files.
 ===============
 */
 void R_Strobe( void )
 {
-	static int getInterval = 0;
+	static int strobeInterval = 0;
 	static int swapInterval = 0;
 	static double recentTime = 0;
-	static double currentTime = 0;
-	static double delta = 0;
+	double currentTime = 0;
+	double _delta = 0;
 
-	if (((getInterval != r_strobe->integer) && (getInterval != 0)) || 
+	if (((strobeInterval != r_strobe->integer) && (strobeInterval != 0)) || 
 		/*((swapInterval != r_strobe_swapinterval->integer) && (swapInterval != 0)) || */
-		SwapPhaseInfo.fCounter > 87091200) // Reset stats after some time
+		StrobeInfo.fCounter > 87091200) // Reset stats after some time
 	{
-		SwapPhaseInfo.pCounter = 0; SwapPhaseInfo.pBCounter = 0; SwapPhaseInfo.pNCounter = 0;
-		SwapPhaseInfo.nCounter = 0; SwapPhaseInfo.nBCounter = 0; SwapPhaseInfo.nNCounter = 0;
-		SwapPhaseInfo.fCounter = 0;
-		SwapPhaseInfo.frameInfo &= ~p_inverted;
+		StrobeInfo.pCounter = 0; StrobeInfo.pBCounter = 0; StrobeInfo.pNCounter = 0;
+		StrobeInfo.nCounter = 0; StrobeInfo.nBCounter = 0; StrobeInfo.nNCounter = 0;
+		StrobeInfo.fCounter = 0;
+		StrobeInfo.frameInfo &= ~p_inverted;
 	}
-	getInterval = r_strobe->integer;
+	strobeInterval = r_strobe->integer;
 	swapInterval = r_strobe_swapinterval->integer;
 
-	if ((getInterval == 0) ||
-		((gl_swapInterval->integer == 0) && (getInterval != 0)))
+	if ((strobeInterval == 0) ||
+		((gl_swapInterval->integer == 0) && (strobeInterval != 0)))
 	{
 		if (!gl_swapInterval->integer)
 			MsgDev(D_WARN, "Strobing requires V-SYNC not being turned off! (gl_swapInterval != 0) \n");
 
-		if (getInterval != 0) // If v-sync is off, turn off strobing
+		if (strobeInterval != 0) // If v-sync is off, turn off strobing
 		{
 			Cvar_Set("r_strobe", "0");
 		}
-		SwapPhaseInfo.fCounter = 0;
+		StrobeInfo.fCounter = 0;
 
 		R_Set2DMode(false);
 		return;
 	}
 
-	if ((SwapPhaseInfo.fCounter % 2) == 0) // First frame starts with internal positive phase (+)
+	if ((StrobeInfo.fCounter % 2) == 0)
 	{
-		++SwapPhaseInfo.pCounter;
-		SwapPhaseInfo.frameInfo |= p_positive;
+		++StrobeInfo.pCounter;
+		StrobeInfo.frameInfo |= p_positive;
 	}
 	else
 	{
-		++SwapPhaseInfo.nCounter;
-		SwapPhaseInfo.frameInfo &= ~p_positive;
+		++StrobeInfo.nCounter;
+		StrobeInfo.frameInfo &= ~p_positive;
 	}
 
 	if (swapInterval < 0)
 		swapInterval = abs(swapInterval);
 
-	if ((swapInterval != 0) && (getInterval % 2 != 0)) // Swapping not enabled for even intervals as it is neither necessary nor works as intended
+	if ((swapInterval != 0) && (strobeInterval % 2 != 0)) // Swapping not enabled for even intervals as it is neither necessary nor works as intended
 	{
 		currentTime = Sys_DoubleTime();
-		delta = currentTime - recentTime;
-		if ((delta >= (double)(swapInterval)) && (delta < (double)(2 * swapInterval))) // Basic timer
+		_delta = currentTime - recentTime;
+		if ((_delta >= (double)(swapInterval)) && (_delta < (double)(2 * swapInterval))) // Basic timer
 		{
-			SwapPhaseInfo.frameInfo |= p_inverted;
+			StrobeInfo.frameInfo |= p_inverted;
 		}
-		else if (delta < (double)(swapInterval))
+		else if (_delta < (double)(swapInterval))
 		{
-			SwapPhaseInfo.frameInfo &= ~p_inverted;
+			StrobeInfo.frameInfo &= ~p_inverted;
 		}
-		else //if (delta >= (double)(2 * swapInterval))
+		else //if (_delta >= (double)(2 * swapInterval))
 		{
 			recentTime = currentTime;
 		}
 	}
 	
-
-	// Burnin prevention algorithm will work most effective on r_strobe = 1. Will not work on even intervals.
-	switch (SwapPhaseInfo.frameInfo & (p_positive | p_inverted))
+	
+	switch (StrobeInfo.frameInfo & (p_positive | p_inverted))
 	{
 	case (p_positive | p_inverted):
-		if ((abs(getInterval) % 2) == 0)
-			SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.pCounter - 1) % (abs(getInterval) + 1)) == (abs(getInterval) / 2)) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //even
+		if ((abs(strobeInterval) % 2) == 0)
+			StrobeInfo.frameInfo = (((StrobeInfo.pCounter - 1) % (abs(strobeInterval) + 1)) == (abs(strobeInterval) / 2)) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //even
 		else
-			SwapPhaseInfo.frameInfo &= ~f_normal;
+			StrobeInfo.frameInfo &= ~f_normal;
 		break;
 
 	case(p_positive & ~p_inverted):
-		if (abs(getInterval) % 2 == 0)
-			SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.pCounter - 1) % (abs(getInterval) + 1)) == 0) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //even
+		if (abs(strobeInterval) % 2 == 0)
+			StrobeInfo.frameInfo = (((StrobeInfo.pCounter - 1) % (abs(strobeInterval) + 1)) == 0) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //even
 		else
 		{
-			if (abs(getInterval) == 1)
-				SwapPhaseInfo.frameInfo |= f_normal;
+			if (abs(strobeInterval) == 1)
+				StrobeInfo.frameInfo |= f_normal;
 			else
-				SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.pCounter - 1) % ((abs(getInterval) + 1) / 2)) == 0) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //odd
+				StrobeInfo.frameInfo = (((StrobeInfo.pCounter - 1) % ((abs(strobeInterval) + 1) / 2)) == 0) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //odd
 		}
 		break;
 
 	case(~p_positive & p_inverted):
-		if (abs(getInterval) % 2 == 0)
-			SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.nCounter - 1) % (abs(getInterval) + 1)) == 0) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //even
+		if (abs(strobeInterval) % 2 == 0)
+			StrobeInfo.frameInfo = (((StrobeInfo.nCounter - 1) % (abs(strobeInterval) + 1)) == 0) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //even
 		else
 		{
-			if (abs(getInterval) == 1)
-				SwapPhaseInfo.frameInfo |= f_normal;
+			if (abs(strobeInterval) == 1)
+				StrobeInfo.frameInfo |= f_normal;
 			else
-				SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.nCounter - 1) % ((abs(getInterval) + 1) / 2)) == 0) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //odd
+				StrobeInfo.frameInfo = (((StrobeInfo.nCounter - 1) % ((abs(strobeInterval) + 1) / 2)) == 0) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //odd
 		}
 		break;
 
 	case 0:
-		if ((abs(getInterval) % 2) == 0)
-			SwapPhaseInfo.frameInfo = (((SwapPhaseInfo.nCounter - 1) % (abs(getInterval) + 1)) == (abs(getInterval) / 2)) ? SwapPhaseInfo.frameInfo | f_normal : SwapPhaseInfo.frameInfo & ~f_normal; //even
+		if ((abs(strobeInterval) % 2) == 0)
+			StrobeInfo.frameInfo = (((StrobeInfo.nCounter - 1) % (abs(strobeInterval) + 1)) == (abs(strobeInterval) / 2)) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //even
 		else
-			SwapPhaseInfo.frameInfo &= ~f_normal;
+			StrobeInfo.frameInfo &= ~f_normal;
 		break;
 
 	default:
+		StrobeInfo.frameInfo = (p_positive | f_normal);
 		break;
 	}
 
-	// Legacy main algorithm (not flag based) - Will be removed soon
+	// Legacy code - Will be removed soon
 	/*
-	if (SwapPhaseInfo.isPositive == true && SwapPhaseInfo.isInverted == false)
+	if (StrobeInfo.isPositive == true && StrobeInfo.isInverted == false)
 	{
-		if (abs(getInterval) % 2 == 0)
-			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.pCounter - 1) % (abs(getInterval) + 1)) == 0) ? true : false; //even
+		if (abs(strobeInterval) % 2 == 0)
+			StrobeInfo.isNormal = (((StrobeInfo.pCounter - 1) % (abs(strobeInterval) + 1)) == 0) ? true : false; //even
 		else
-			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.pCounter - 1) % ((abs(getInterval) + 1) / 2)) == 0) ? true : false; //odd
+			StrobeInfo.isNormal = (((StrobeInfo.pCounter - 1) % ((abs(strobeInterval) + 1) / 2)) == 0) ? true : false; //odd
 
-		if (abs(getInterval) == 1)
-			SwapPhaseInfo.isNormal = true;
+		if (abs(strobeInterval) == 1)
+			StrobeInfo.isNormal = true;
 	}
-	else if (SwapPhaseInfo.isPositive == true && SwapPhaseInfo.isInverted == true)
+	else if (StrobeInfo.isPositive == true && StrobeInfo.isInverted == true)
 	{
-		if ((abs(getInterval) % 2) == 0)
-			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.pCounter - 1) % (abs(getInterval) + 1)) == (abs(getInterval) / 2)) ? true : false; //even
+		if ((abs(strobeInterval) % 2) == 0)
+			StrobeInfo.isNormal = (((StrobeInfo.pCounter - 1) % (abs(strobeInterval) + 1)) == (abs(strobeInterval) / 2)) ? true : false; //even
 		else
-			SwapPhaseInfo.isNormal = false;
-		if (abs(getInterval) == 1)
-			SwapPhaseInfo.isNormal = false;
+			StrobeInfo.isNormal = false;
+		if (abs(strobeInterval) == 1)
+			StrobeInfo.isNormal = false;
 	}
-	else if (SwapPhaseInfo.isPositive == false && SwapPhaseInfo.isInverted == false)
+	else if (StrobeInfo.isPositive == false && StrobeInfo.isInverted == false)
 	{
-		if ((abs(getInterval) % 2) == 0)
-			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.nCounter - 1) % (abs(getInterval) + 1)) == (abs(getInterval) / 2)) ? true : false; //even
+		if ((abs(strobeInterval) % 2) == 0)
+			StrobeInfo.isNormal = (((StrobeInfo.nCounter - 1) % (abs(strobeInterval) + 1)) == (abs(strobeInterval) / 2)) ? true : false; //even
 		else
-			SwapPhaseInfo.isNormal = false;
-		if (abs(getInterval) == 1)
-			SwapPhaseInfo.isNormal = false;
+			StrobeInfo.isNormal = false;
+		if (abs(strobeInterval) == 1)
+			StrobeInfo.isNormal = false;
 	}
-	else if (SwapPhaseInfo.isPositive == false && SwapPhaseInfo.isInverted == true)
+	else if (StrobeInfo.isPositive == false && StrobeInfo.isInverted == true)
 	{
-		if (abs(getInterval) % 2 == 0)
-			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.nCounter - 1) % (abs(getInterval) + 1)) == 0) ? true : false; //even
+		if (abs(strobeInterval) % 2 == 0)
+			StrobeInfo.isNormal = (((StrobeInfo.nCounter - 1) % (abs(strobeInterval) + 1)) == 0) ? true : false; //even
 		else
-			SwapPhaseInfo.isNormal = (((SwapPhaseInfo.nCounter - 1) % ((abs(getInterval) + 1) / 2)) == 0) ? true : false; //odd
+			StrobeInfo.isNormal = (((StrobeInfo.nCounter - 1) % ((abs(strobeInterval) + 1) / 2)) == 0) ? true : false; //odd
 
-		if (abs(getInterval) == 1)
-			SwapPhaseInfo.isNormal = true;
+		if (abs(strobeInterval) == 1)
+			StrobeInfo.isNormal = true;
 	}
 	*/
 
-	if (getInterval < 0)
-		SwapPhaseInfo.frameInfo ^= f_normal;
+	if (strobeInterval < 0)
+		StrobeInfo.frameInfo ^= f_normal;
 
-	if (SwapPhaseInfo.frameInfo & f_normal) // Show normal
+	if (StrobeInfo.frameInfo & f_normal) // Show normal
 	{
-		if (SwapPhaseInfo.frameInfo & p_positive)
-			++SwapPhaseInfo.pNCounter;
+		if (StrobeInfo.frameInfo & p_positive)
+			++StrobeInfo.pNCounter;
 		else
-			++SwapPhaseInfo.nNCounter;
+			++StrobeInfo.nNCounter;
 
 		R_Set2DMode(false);
 	}
 	else // Show black
 	{
-		if (SwapPhaseInfo.frameInfo & p_positive)
-			++SwapPhaseInfo.pBCounter;
+		if (StrobeInfo.frameInfo & p_positive)
+			++StrobeInfo.pBCounter;
 		else
-			++SwapPhaseInfo.nBCounter;
+			++StrobeInfo.nBCounter;
 
 		gl_GenerateBlackFrame();
 	}
 
-	++SwapPhaseInfo.fCounter;
+	++StrobeInfo.fCounter;
 }
 
 

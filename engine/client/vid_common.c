@@ -1022,10 +1022,10 @@ static inline void R_initStrobe( void )
 	r_strobe_swapinterval = Cvar_Get("r_strobe_swapinterval", "0", CVAR_ARCHIVE, "swapping phase interval");
 	r_strobe_debug = Cvar_Get("r_strobe_debug", "0", CVAR_ARCHIVE, "show strobe debug information");
 
-	SwapPhaseInfo.pCounter = 0; SwapPhaseInfo.pBCounter = 0; SwapPhaseInfo.pNCounter = 0;
-	SwapPhaseInfo.pCounter = 0; SwapPhaseInfo.nBCounter = 0; SwapPhaseInfo.nNCounter = 0;
-	SwapPhaseInfo.fCounter = 0;
-	SwapPhaseInfo.frameInfo = (p_positive | f_normal);
+	StrobeInfo.pCounter = 0; StrobeInfo.pBCounter = 0; StrobeInfo.pNCounter = 0;
+	StrobeInfo.pCounter = 0; StrobeInfo.nBCounter = 0; StrobeInfo.nNCounter = 0;
+	StrobeInfo.fCounter = 0;
+	StrobeInfo.frameInfo = (p_positive | f_normal);
 }
 
 /*

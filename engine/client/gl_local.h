@@ -350,7 +350,19 @@ int R_CountSurfaceDlights( msurface_t *surf );
 int R_CountDlights( void );
 
 
-// <STROBE> // Move to different file?
+/// <STROBE> // Move to different file?
+
+//#define SolidConsoleX 0
+//#define SolidConsoleY (y - scr_width->value * 3 / 4)
+//#define SolidConsoleW (scr_width->value)
+//#define SolidConsoleH (scr_width->value * 3 / 4)
+//extern wrect_t con_rect; //Float - Int incompatibility
+typedef struct _rectf_s
+{
+	float x, y, w, h;
+}_rectf_t;
+extern _rectf_t con_rect;
+
 void R_Strobe(void);
 
 typedef enum {
@@ -359,42 +371,42 @@ typedef enum {
 	f_normal = 1 << 2 // Frame: Normal
 }fstate_e; // Frame State
 
-typedef struct SwapPhaseInfo_s {
+typedef struct StrobeInfo_s {
 	unsigned int fCounter; // Frame counter
 	unsigned int pCounter, pNCounter, pBCounter; // Positive phase counters
 	unsigned int nCounter, nNCounter, nBCounter; // Negative phase counters
 	fstate_e frameInfo; // Frame info
-}SwapPhaseInfo_t;
+}StrobeInfo_t;
 
-extern SwapPhaseInfo_t SwapPhaseInfo;
+extern StrobeInfo_t StrobeInfo;
 
-// Experimental 'Badness' algorithm
-#define BADNESS(diffP, diffN) \
+// Experimental 'Badness' function
+#define STROBE_BADNESS(diffP, diffNs) \
 	-log(((abs(diffP-diffN)+sqrt((100-diffP)*(100-diffN)))/(abs(diffP-diffN)+sqrt(diffP*diffN))))
 
 // Brightness reductions
-#define calculatePercentage(x, y) \
+#define _calculatePercentage(x, y) \
 	(100 * y / x)
 
 #define actualBrightnessReduction(fps, efps) \
 	((fps - efps) * 100 / fps)
 
 #define logBrightnessReduction(base, fps, efps) \
-	actualBrightnessReduction( log(base) , log(base * calculatePercentage(fps,efps) / 100) )
+	actualBrightnessReduction( log(base) , log(base * _calculatePercentage(fps,efps) / 100) )
 
 /* #define log10BrightnessReduction(base, fps, efps) \
 	actualBrightnessReduction( log10(base) , log10(base * calculatePercentage(fps,efps) / 100) ) */
 
 #define squareBrightnessReduction(base, fps, efps) \
-	actualBrightnessReduction( sqrt(base) , sqrt(base * calculatePercentage(fps,efps) / 100) )
+	actualBrightnessReduction( sqrt(base) , sqrt(base * _calculatePercentage(fps,efps) / 100) )
 
 #define cubicBrightnessReduction(base, fps, efps) \
-	actualBrightnessReduction( cbrt(base) , cbrt(base * calculatePercentage(fps,efps) / 100) ) 
+	actualBrightnessReduction( cbrt(base) , cbrt(base * _calculatePercentage(fps,efps) / 100) ) 
 
 extern convar_t *r_strobe;
 extern convar_t *r_strobe_swapinterval;
 extern convar_t *r_strobe_debug;
-// </STROBE>
+/// </STROBE>
 
 
 //

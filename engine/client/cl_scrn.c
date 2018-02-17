@@ -57,23 +57,22 @@ void SCR_DrawFPS( void )
 	static int	minfps = 9999;
 	static int	maxfps = 0;
 	double		newtime;
-	char		fpsstring[2048];	//char fpsstring[64];
+	char		fpsstring[2048];	//char fpsstring[64]; // Heap allocation if 2048 too much ?
 	int		offset;
 	int	curfps;
 
 	char diffBar[2][128];
-	char barCounter = 0;
-	int diffP_NB = (SwapPhaseInfo.pNCounter - SwapPhaseInfo.pBCounter);
-	int diffN_NB = (SwapPhaseInfo.nNCounter - SwapPhaseInfo.nBCounter);
+	char _barCounter = 0;
+	int diffP_NB = (StrobeInfo.pNCounter - StrobeInfo.pBCounter);
+	int diffN_NB = (StrobeInfo.nNCounter - StrobeInfo.nBCounter);
 	int diffP = 0, diffN = 0;
 	qboolean pNeg = false, nNeg = false;
-	int strobeInterval = r_strobe->integer; // cvar: r_strobe
+	int strobeInterval = r_strobe->integer;
 	int eFPS; // Effective FPS (strobing effect)
 	qboolean strobeDebug = !!r_strobe_debug->integer ? true : false;
 
 	if( cls.state != ca_active ) return; 
 	if( (!cl_showfps->integer && !strobeDebug) || cl.background ) return;
-
 
 	switch( cls.scrshot_action )
 	{
@@ -90,7 +89,6 @@ void SCR_DrawFPS( void )
 		framerate = framecount / (newtime - lasttime);
 		lasttime = newtime;
 		nexttime = max( nexttime + 1, lasttime - 1 );
-
 
 		//Msg("Lasttime: %f . Nexttime: %f . %f\n", lasttime, nexttime, newtime - lasttime);
 		//Sleep(150);
@@ -120,12 +118,12 @@ void SCR_DrawFPS( void )
 
 		if (strobeInterval > 0)
 		{
-			eFPS = (int)((curfps) / (strobeInterval + 1));
+			eFPS = (curfps) / (strobeInterval + 1);
 		}
 		else if (strobeInterval < 0)
 		{
 			strobeInterval = abs(strobeInterval);
-			eFPS = (int)((curfps * strobeInterval) / (strobeInterval + 1));
+			eFPS = (curfps * strobeInterval) / (strobeInterval + 1);
 		}
 
 		switch( cl_showfps->integer )
@@ -160,24 +158,24 @@ void SCR_DrawFPS( void )
 					diffN_NB = abs(diffN_NB);
 				}
 
-				if (SwapPhaseInfo.pCounter != 0)
-					diffP = round(diffP_NB * 100 / SwapPhaseInfo.pCounter);
+				if (StrobeInfo.pCounter != 0)
+					diffP = round(diffP_NB * 100 / StrobeInfo.pCounter);
 
-				if (SwapPhaseInfo.nCounter != 0)
-					diffN = round(diffN_NB * 100 / SwapPhaseInfo.nCounter);
+				if (StrobeInfo.nCounter != 0)
+					diffN = round(diffN_NB * 100 / StrobeInfo.nCounter);
 
-				for (barCounter = 0; barCounter <= 20; ++barCounter)
+				for (_barCounter = 0; _barCounter <= 20; ++_barCounter)
 				{
-					if (barCounter == 10)
+					if (_barCounter == 10)
 					{
 						Q_strcat(diffBar[0], "O");
 						Q_strcat(diffBar[1], "O");
 					}
-					else if (barCounter < 10)
+					else if (_barCounter < 10)
 					{
 						if (pNeg)
 						{
-							if (100 - (barCounter * 10) <= diffP)
+							if (100 - (_barCounter * 11) <= diffP)
 								Q_strcat(diffBar[0], "^4=^3");
 							else
 								Q_strcat(diffBar[0], "^3=^3");
@@ -189,7 +187,7 @@ void SCR_DrawFPS( void )
 
 						if (nNeg)
 						{
-							if (100 - (barCounter * 10) <= diffN)
+							if (100 - (_barCounter * 11) <= diffN)
 								Q_strcat(diffBar[1], "^4=^3");
 							else
 								Q_strcat(diffBar[1], "^3=^3");
@@ -199,7 +197,7 @@ void SCR_DrawFPS( void )
 							Q_strcat(diffBar[1], "^3=^3");
 						}
 					}
-					else if (barCounter > 10)
+					else if (_barCounter > 10)
 					{
 						if (pNeg)
 						{
@@ -207,7 +205,7 @@ void SCR_DrawFPS( void )
 						}
 						else
 						{
-							if (((barCounter - 10) * 10) > diffP)
+							if (((_barCounter - 11) * 11) >= diffP)
 								Q_strcat(diffBar[0], "^3=^3");
 							else
 								Q_strcat(diffBar[0], "^4=^3");
@@ -219,7 +217,7 @@ void SCR_DrawFPS( void )
 						}
 						else
 						{
-							if (((barCounter - 10) * 10) > diffN)
+							if (((_barCounter - 11) * 11) >= diffN)
 								Q_strcat(diffBar[1], "^3=^3");
 							else
 								Q_strcat(diffBar[1], "^4=^3");
@@ -237,39 +235,48 @@ void SCR_DrawFPS( void )
 					"Total Frame Count: %u\n" \
 					"(+) Phase Frame Count: %u\n" \
 					" |-> Normal Frame Count: %u\n" \
-					" |-> Black Frame Count: %u\n\n" \
+					" |-> Black Frame Count: %u\n" \
 					"(-) Phase Frame Count:%u\n" \
 					" |-> Normal Frame Count: %u\n" \
-					" |-> Black Frame Count: %u\n\n" \
+					" |-> Black Frame Count: %u\n" \
+					"FrameInfo.isInverted: %d\n" \
+					"^5ANALYSIS:\n^3" \
 					"PWM Simulation:\n" \
 					" |->Frequency: %4f Hz\n" \
 					" |->Duty Cycle: %4f%%\n" \
-					"timer.triggered %d\n" \
-					"^5ANALYSIS:\n^3" \
+					" |->Current Phase Shift: +%4f msec || -%4f msec\n" \
+					" |->Period: %4f msec\n" \
 					"Brightness Reduction:\n" \
-					" |->[Linear] Actual Reduction: %3d%%\n" \
-					" |->[LOG] Realistic Reduction(400 cd / m2 base) : %3d%%\n" \
-					" |->[SQUARE] Realistic Reduction(400 cd / m2 base) : %3f%%\n" \
-					" |->[CUBE] Realistic Reduction(400 cd / m2 base) : %3f%%\n" \
-					"Diff (+): %s\n\nDiff (-): %s\n" \
+					" |-> [LINEAR] Actual Reduction: %3d%%\n" \
+					" |-> [LOG] Realistic Reduction (400 cd/m2 base) : %3f%%\n" \
+					" |-> [SQUARE] Realistic Reduction (400 cd/m2 base) : %3f%%\n" \
+					" |-> [CUBE] Realistic Reduction (400 cd/m2 base) : %3f%%\n" \
+					"Difference (+): %s\nDifference (-): %s\n" \
 					"Geometric Mean: %f\n" \
 					"G/A Difference: %f\n" \
-					"Badness: %f" \
+					"^5Experimental Functions:\n^3" \
+					"[*] Badness: %f\n" \
+					"[*] Badness x PWM Period: %f" \
 					, curfps \
 					, eFPS \
-					, SwapPhaseInfo.fCounter \
-					, SwapPhaseInfo.pCounter, SwapPhaseInfo.pNCounter, SwapPhaseInfo.pBCounter \
-					, SwapPhaseInfo.nCounter, SwapPhaseInfo.nNCounter, SwapPhaseInfo.nBCounter \
-					, (1 / ((1 / (float)(curfps))*(abs(strobeInterval) + 1))) \
-					, ((1 / (float)(abs(strobeInterval)+1)) * 100) * (strobeInterval < 0 ? -strobeInterval : 1) \
-					, !!(SwapPhaseInfo.frameInfo & p_inverted) \
-					, (int)actualBrightnessReduction(curfps, eFPS) \
-					, (int)logBrightnessReduction(400, curfps, eFPS) \
+					, StrobeInfo.fCounter \
+					, StrobeInfo.pCounter, StrobeInfo.pNCounter, StrobeInfo.pBCounter \
+					, StrobeInfo.nCounter, StrobeInfo.nNCounter, StrobeInfo.nBCounter \
+					, !!(StrobeInfo.frameInfo & p_inverted) \
+					, (1 / ((1.0f / curfps)*(abs(strobeInterval) + 1))) \
+					, ((1.0f / (abs(strobeInterval) + 1)) * 100) * (strobeInterval < 0 ? -strobeInterval : 1) \
+					, !!(StrobeInfo.frameInfo & p_inverted) ? (1.0f / curfps) * 1000 : 0.0f \
+					, !!(StrobeInfo.frameInfo & p_inverted) ? abs(strobeInterval) * (1.0f / curfps) * 1000 : 0.0f \
+					, (((1.0f / curfps)*(abs(strobeInterval) + 1)) * 1000) \
+					, actualBrightnessReduction(curfps, eFPS) \
+					, logBrightnessReduction(400, curfps, eFPS) \
 					, squareBrightnessReduction(400, curfps, eFPS) \
 					, cubicBrightnessReduction(400, curfps, eFPS) \
-					, diffBar[0], diffBar[1], sqrt(diffP * diffN) \
+					, diffBar[0], diffBar[1] \
+					, sqrt(diffP * diffN) \
 					, (diffP + diffN) / 2 - sqrt(diffP * diffN) \
-					,  BADNESS(diffP,diffN));
+					, STROBE_BADNESS(diffP, diffN) \
+					, STROBE_BADNESS(diffP, diffN) * ((1.0f / curfps) * (abs(strobeInterval) + 1)));
 			}
 			else
 			{
@@ -280,8 +287,13 @@ void SCR_DrawFPS( void )
 	}
 
 	Con_DrawStringLen( fpsstring, &offset, NULL );
-	//Con_DrawString( scr_width->integer - offset - 5, 4, fpsstring, color );
-	Con_DrawString(scr_width->integer - offset - 75, 4, fpsstring, color); // TODO: Fix alignment for non debug setup!
+	
+	if (strobeInterval == 0)
+		Con_DrawString(scr_width->integer - offset - 2, 4, fpsstring, color);
+	else if (strobeDebug)
+		Con_DrawString(scr_width->integer - offset - 75, 4, fpsstring, color);
+	else
+		Con_DrawString(scr_width->integer - offset - 5, 4, fpsstring, color);
 }
 
 /*
