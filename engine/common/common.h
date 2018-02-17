@@ -53,7 +53,11 @@ extern "C" {
 #include <stdarg.h> // va_list
 #include <stdlib.h> // rand, abs
 
+#ifdef __i386__
+#define EXPORT __attribute__ ((visibility ("default"),force_align_arg_pointer))
+#else
 #define EXPORT __attribute__ ((visibility ("default")))
+#endif
 #else
 #include <sys/types.h> // off_t
 #include <stdio.h>

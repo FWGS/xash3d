@@ -58,7 +58,7 @@ convar_t		*s_cull;		// cull sounds by geometry
 convar_t		*s_test;		// cvar for testing new effects
 convar_t		*s_phs;
 convar_t		*s_reverse_channels;
-
+convar_t		*s_samplecount;
 /*
 =============================================================================
 
@@ -361,7 +361,7 @@ channel_t *SND_PickStaticChannel( int entnum, sfx_t *sfx, const vec3_t pos )
 	channel_t	*ch = NULL;
 	int	i;
 
-#if 1
+#if 0 // a1ba: Removed as prediction is done enough to disable this
 	int dupe = 0;
 
 	// TODO: remove this code when predicting is will be done
@@ -1565,7 +1565,8 @@ void S_RenderFrame( ref_params_t *fd )
 		// try to combine static sounds with a previous channel of the same
 		// sound effect so we don't mix five torches every frame
 		// g-cont: perfomance option, probably kill stereo effect in most cases
-		if( i >= MAX_DYNAMIC_CHANNELS && s_combine_sounds->integer )
+		// a1ba: disable for multiplayer, because it breaks a vital function: stereo
+		if( i >= MAX_DYNAMIC_CHANNELS && s_combine_sounds->integer && SV_Active() && CL_GetMaxClients() == 1 )
 		{
 			// see if it can just use the last one
 			if( combine && combine->sfx == ch->sfx )
@@ -1813,7 +1814,7 @@ qboolean S_Init( void )
 	s_lerping = Cvar_Get( "s_lerping", "0", CVAR_ARCHIVE, "apply interpolation to sound output" );
 	s_ambient_level = Cvar_Get( "ambient_level", "0.3", 0, "volume of environment noises (water and wind)" );
 	s_ambient_fade = Cvar_Get( "ambient_fade", "100", 0, "rate of volume fading when client is moving" );
-	s_combine_sounds = Cvar_Get( "s_combine_channels", "1", CVAR_ARCHIVE, "combine channels with same sounds" ); 
+	s_combine_sounds = Cvar_Get( "s_combine_sounds", "0", CVAR_ARCHIVE, "combine channels with same sounds. Useful for quake, may break stereo sound" );
 	snd_foliage_db_loss = Cvar_Get( "snd_foliage_db_loss", "4", 0, "foliage loss factor" ); 
 	snd_gain_max = Cvar_Get( "snd_gain_max", "1", 0, "gain maximal threshold" );
 	snd_gain_min = Cvar_Get( "snd_gain_min", "0.01", 0, "gain minimal threshold" );
@@ -1825,6 +1826,7 @@ qboolean S_Init( void )
 	s_test = Cvar_Get( "s_test", "0", 0, "engine developer cvar for quick testing of new features" );
 	s_phs = Cvar_Get( "s_phs", "0", CVAR_ARCHIVE, "cull sounds by PHS" );
 	s_reverse_channels = Cvar_Get( "s_reverse_channels", "0", CVAR_ARCHIVE, "reverse left and right channels" );
+	s_samplecount = Cvar_Get( "s_samplecount", "0", CVAR_ARCHIVE, "sample count (0 for default value)" );
 
 #if XASH_SOUND != SOUND_NULL
 	if( Sys_CheckParm( "-nosound" ))

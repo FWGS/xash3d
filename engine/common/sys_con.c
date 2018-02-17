@@ -169,7 +169,10 @@ void Sys_PrintLog( const char *pMsg )
 	crt_tm = localtime( &crt_time );
 #ifdef __ANDROID__
 	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
-#else
+#ifndef XASH_DEDICATED
+	return;
+#endif
+#endif
 
 
 
@@ -220,7 +223,6 @@ void Sys_PrintLog( const char *pMsg )
 	}
 #else
 	printf( "%s %s", logtime, pMsg );
-#endif // !ANDROID
 	fflush( stdout );
 #endif
 	lastchar = pMsg[strlen(pMsg)-1];

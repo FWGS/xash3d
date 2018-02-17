@@ -200,7 +200,7 @@ void SX_Init( void )
 	sxmod1cur = sxmod1 = 350 * ( speed / SOUND_11k );
 	sxmod2cur = sxmod2 = 450 * ( speed / SOUND_11k );
 
-	dsp_off          = Cvar_Get( "dsp_off",        "0",  0, "disable DSP processing" );
+	dsp_off          = Cvar_Get( "dsp_off",        "0",  CVAR_ARCHIVE, "disable DSP processing" );
 	roomwater_type   = Cvar_Get( "waterroom_type", "14", 0, "water room type" );
 	room_type        = Cvar_Get( "room_type",      "0",  0, "current room type preset" );
 

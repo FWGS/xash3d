@@ -116,11 +116,11 @@ void SCR_DrawFPS( void )
 		/*if( !avgrate ) avgrate = ( maxfps - minfps ) / 2.0f;
 		else */avgrate += ( calc - avgrate ) / host.framecount;
 
-		if (strobeInterval > 0)
+		if( strobeInterval > 0 )
 		{
 			eFPS = (curfps) / (strobeInterval + 1);
 		}
-		else if (strobeInterval < 0)
+		else if( strobeInterval < 0 )
 		{
 			strobeInterval = abs(strobeInterval);
 			eFPS = (curfps * strobeInterval) / (strobeInterval + 1);
@@ -280,7 +280,7 @@ void SCR_DrawFPS( void )
 			}
 			else
 			{
-				Q_snprintf(fpsstring, sizeof(fpsstring), "%4i FPS\n%3i eFPS", curfps, eFPS);
+				Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i FPS\n%3i eFPS", curfps, eFPS );
 			}
 		}
 		MakeRGBA( color, 255, 255, 255, 255 );

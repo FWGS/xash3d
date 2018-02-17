@@ -330,7 +330,7 @@ static char* texturecompressionfuncs[] =
 GL_GetProcAddress
 =================
 */
-void *GL_GetProcAddress( const char *name )
+void EXPORT *GL_GetProcAddress( const char *name )
 {
 #if defined( XASH_GLES )
 	void *func = nanoGL_GetProcAddress( name );
@@ -517,15 +517,18 @@ void GL_SetupAttributes()
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 
+#ifdef XASH_GLES
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_EGL, 1);
 #ifdef XASH_NANOGL
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-#endif
+#endif // XASH_NANOGL
 
-#if defined XASH_WES || defined XASH_REGAL
+#if defined( XASH_WES ) || defined( XASH_REGAL )
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#endif
+#endif // defined( XASH_WES ) || defined( XASH_REGAL )
+#endif // XASH_GLES
 
 	switch( gl_msaa->integer )
 	{

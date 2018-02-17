@@ -1159,6 +1159,12 @@ void GAME_EXPORT pfnSetModel( edict_t *e, const char *m )
 		return;
 	}
 
+	if( e == svgame.edicts )
+	{
+		MsgDev( D_ERROR, "SV_SetModel: world model can't be changed\n" );
+		return;
+	}
+
 	if( !m || m[0] <= ' ' )
 	{
 		MsgDev( D_WARN, "SV_SetModel: null name\n" );

@@ -332,7 +332,7 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 		}
 	}
 	else MsgDev( D_WARN, "Could not find "OPEN_COMMAND" utility\n" );
-#elif defined(__ANDROID__)
+#elif defined(__ANDROID__) && !defined(XASH_DEDICATED)
 	Android_ShellExecute( path, parms );
 #endif
 
