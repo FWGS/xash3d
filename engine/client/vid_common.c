@@ -78,9 +78,11 @@ convar_t	*r_lightmap;
 convar_t	*r_fastsky;
 convar_t	*r_vbo;
 convar_t 	*r_bump;
+
 convar_t	*r_strobe;
 convar_t	*r_strobe_swapinterval;
 convar_t	*r_strobe_debug;
+convar_t	*r_strobe_cooldown;
 
 convar_t	*mp_decals;
 
@@ -1016,15 +1018,18 @@ R_initStrobe
 register strobe cvar
 ===============
 */
-static inline void R_initStrobe( void )
+_inline void R_StrobeInit( void )
 {
-	r_strobe = Cvar_Get("r_strobe", "0", CVAR_ARCHIVE, "black frame replacement interval");
-	r_strobe_swapinterval = Cvar_Get("r_strobe_swapinterval", "0", CVAR_ARCHIVE, "swapping phase interval");
-	r_strobe_debug = Cvar_Get("r_strobe_debug", "0", CVAR_ARCHIVE, "show strobe debug information");
+	r_strobe = Cvar_Get( "r_strobe", "0", CVAR_ARCHIVE, "black frame replacement interval" );
+	r_strobe_swapinterval = Cvar_Get( "r_strobe_swapinterval", "0", CVAR_ARCHIVE, "swapping phase interval" );
+	r_strobe_debug = Cvar_Get( "r_strobe_debug", "0", CVAR_ARCHIVE, "show strobe debug information" );
+	r_strobe_cooldown = Cvar_Get( "r_strobe_cooldown", "3", CVAR_ARCHIVE, "strobe cooldown perios in secs" );
 
 	StrobeInfo.pCounter = 0; StrobeInfo.pBCounter = 0; StrobeInfo.pNCounter = 0;
 	StrobeInfo.pCounter = 0; StrobeInfo.nBCounter = 0; StrobeInfo.nNCounter = 0;
 	StrobeInfo.fCounter = 0;
+	StrobeInfo.deviation = 0.0;
+	StrobeInfo.cdTimer = 0.0;
 	StrobeInfo.frameInfo = (p_positive | f_normal);
 }
 
@@ -1068,10 +1073,9 @@ qboolean R_Init( void )
 	R_InitImages();
 	R_SpriteInit();
 	R_StudioInit();
+	R_StrobeInit();
 	R_ClearDecals();
 	R_ClearScene();
-
-	r_strobe = Cvar_Get("r_strobe", "0", CVAR_ARCHIVE, "black frame insertion interval");
 
 	// initialize screen
 	SCR_Init();

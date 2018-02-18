@@ -89,10 +89,6 @@ void SCR_DrawFPS( void )
 		framerate = framecount / (newtime - lasttime);
 		lasttime = newtime;
 		nexttime = max( nexttime + 1, lasttime - 1 );
-
-		//Msg("Lasttime: %f . Nexttime: %f . %f\n", lasttime, nexttime, newtime - lasttime);
-		//Sleep(150);
-
 		framecount = 0;
 	}
 
@@ -103,7 +99,7 @@ void SCR_DrawFPS( void )
 
 	if( calc < 1.0f )
 	{
-		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i spf", (int)(1.0f / calc + 0.5f));
+		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i spf", (int)(1.0f / calc + 0.5f) );
 		MakeRGBA( color, 255, 0, 0, 255 );
 	}
 	else
@@ -118,12 +114,12 @@ void SCR_DrawFPS( void )
 
 		if( strobeInterval > 0 )
 		{
-			eFPS = (curfps) / (strobeInterval + 1);
+			eFPS = ( curfps ) / ( strobeInterval + 1 );
 		}
 		else if( strobeInterval < 0 )
 		{
-			strobeInterval = abs(strobeInterval);
-			eFPS = (curfps * strobeInterval) / (strobeInterval + 1);
+			strobeInterval = abs( strobeInterval );
+			eFPS = ( curfps * strobeInterval ) / ( strobeInterval + 1 );
 		}
 
 		switch( cl_showfps->integer )
@@ -137,95 +133,95 @@ void SCR_DrawFPS( void )
 		case 1:
 		default:
 
-			if (strobeInterval == 0)
+			if ( strobeInterval == 0 )
 			{
-				Q_snprintf(fpsstring, sizeof(fpsstring), "%4i fps", curfps);	
+				Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );	
 			}
-			else if (strobeDebug)
+			else if ( strobeDebug )
 			{
-				Q_snprintf(diffBar[0], sizeof(diffBar[0]), "^3[");
-				Q_snprintf(diffBar[1], sizeof(diffBar[1]), "^3[");
+				Q_snprintf( diffBar[0], sizeof( diffBar[0] ), "^3[" );
+				Q_snprintf( diffBar[1], sizeof( diffBar[1] ), "^3[" );
 
-				if (diffP_NB < 0)
+				if ( diffP_NB < 0 )
 				{
 					pNeg = true;
-					diffP_NB = abs(diffP_NB);
+					diffP_NB = abs( diffP_NB );
 				}
 
-				if (diffN_NB < 0)
+				if ( diffN_NB < 0 )
 				{
 					nNeg = true;
-					diffN_NB = abs(diffN_NB);
+					diffN_NB = abs( diffN_NB );
 				}
 
-				if (StrobeInfo.pCounter != 0)
-					diffP = round(diffP_NB * 100 / StrobeInfo.pCounter);
+				if ( StrobeInfo.pCounter != 0 )
+					diffP = round( diffP_NB * 100 / StrobeInfo.pCounter );
 
-				if (StrobeInfo.nCounter != 0)
-					diffN = round(diffN_NB * 100 / StrobeInfo.nCounter);
+				if ( StrobeInfo.nCounter != 0 )
+					diffN = round( diffN_NB * 100 / StrobeInfo.nCounter );
 
-				for (_barCounter = 0; _barCounter <= 20; ++_barCounter)
+				for ( _barCounter = 0; _barCounter <= 20; ++_barCounter )
 				{
-					if (_barCounter == 10)
+					if ( _barCounter == 10 )
 					{
-						Q_strcat(diffBar[0], "O");
-						Q_strcat(diffBar[1], "O");
+						Q_strcat( diffBar[0], "O" );
+						Q_strcat( diffBar[1], "O" );
 					}
-					else if (_barCounter < 10)
+					else if ( _barCounter < 10 )
 					{
-						if (pNeg)
+						if ( pNeg )
 						{
-							if (100 - (_barCounter * 11) <= diffP)
-								Q_strcat(diffBar[0], "^4=^3");
+							if ( 100 - ( _barCounter * 11 ) <= diffP )
+								Q_strcat( diffBar[0], "^4=^3" );
 							else
-								Q_strcat(diffBar[0], "^3=^3");
+								Q_strcat( diffBar[0], "^3=" );
 						}
 						else
 						{
-							Q_strcat(diffBar[0], "^3=^3");
+							Q_strcat( diffBar[0], "^3=" );
 						}
 
-						if (nNeg)
+						if ( nNeg )
 						{
-							if (100 - (_barCounter * 11) <= diffN)
-								Q_strcat(diffBar[1], "^4=^3");
+							if ( 100 - ( _barCounter * 11 ) <= diffN )
+								Q_strcat( diffBar[1], "^4=^3" );
 							else
-								Q_strcat(diffBar[1], "^3=^3");
+								Q_strcat( diffBar[1], "^3=" );
 						}
 						else
 						{
-							Q_strcat(diffBar[1], "^3=^3");
+							Q_strcat( diffBar[1], "^3=" );
 						}
 					}
-					else if (_barCounter > 10)
+					else if ( _barCounter > 10 )
 					{
-						if (pNeg)
+						if ( pNeg )
 						{
-							Q_strcat(diffBar[0], "^3=^3");
+							Q_strcat( diffBar[0], "^3=" );
 						}
 						else
 						{
-							if (((_barCounter - 11) * 11) >= diffP)
-								Q_strcat(diffBar[0], "^3=^3");
+							if ( ( ( _barCounter - 11 ) * 11 ) >= diffP )
+								Q_strcat( diffBar[0], "^3=" );
 							else
-								Q_strcat(diffBar[0], "^4=^3");
+								Q_strcat( diffBar[0], "^4=^3" );
 						}
 
-						if (nNeg)
+						if ( nNeg )
 						{
-							Q_strcat(diffBar[1], "^3=^3");
+							Q_strcat( diffBar[1], "^3=" );
 						}
 						else
 						{
-							if (((_barCounter - 11) * 11) >= diffN)
-								Q_strcat(diffBar[1], "^3=^3");
+							if ( ( ( _barCounter - 11) * 11 ) >= diffN )
+								Q_strcat( diffBar[1], "^3=" );
 							else
-								Q_strcat(diffBar[1], "^4=^3");
+								Q_strcat( diffBar[1], "^4=^3" );
 						}
 					}
 				}
-				Q_strcat(diffBar[0], va("] - %4d%%", (pNeg ? -diffP : diffP)));
-				Q_strcat(diffBar[1], va("] - %4d%%", (nNeg ? -diffN : diffN)));
+				Q_strcat( diffBar[0], va( "] - %4d%%", ( pNeg ? -diffP : diffP ) ) );
+				Q_strcat( diffBar[1], va( "] - %4d%%", ( nNeg ? -diffN : diffN ) ) );
 
 				strobeInterval = r_strobe->integer;
 
@@ -239,31 +235,34 @@ void SCR_DrawFPS( void )
 					"(-) Phase Frame Count:%u\n" \
 					" |-> Normal Frame Count: %u\n" \
 					" |-> Black Frame Count: %u\n" \
-					"FrameInfo.isInverted: %d\n" \
-					"^5ANALYSIS:\n^3" \
+					"frame.isInverted: %d\n" \
+					"^5=====ANALYSIS=====\n^3" \
 					"PWM Simulation:\n" \
-					" |->Frequency: %4f Hz\n" \
-					" |->Duty Cycle: %4f%%\n" \
-					" |->Current Phase Shift: +%4f msec || -%4f msec\n" \
-					" |->Period: %4f msec\n" \
+					" |-> Frequency: %d Hz\n" \
+					" |-> Duty Cycle: %.2f%%\n" \
+					" |-> Current Phase Shift: +%.4f msec || -%.4f msec\n" \
+					" |-> Period: %.4f msec\n" \
 					"Brightness Reduction:\n" \
 					" |-> [LINEAR] Actual Reduction: %3d%%\n" \
-					" |-> [LOG] Realistic Reduction (400 cd/m2 base) : %3f%%\n" \
-					" |-> [SQUARE] Realistic Reduction (400 cd/m2 base) : %3f%%\n" \
-					" |-> [CUBE] Realistic Reduction (400 cd/m2 base) : %3f%%\n" \
+					" |-> [LOG] Realistic Reduction (400 cd/m2 base) : %.2f%%\n" \
+					" |-> [SQUARE] Realistic Reduction (400 cd/m2 base) : %.2f%%\n" \
+					" |-> [CUBE] Realistic Reduction (400 cd/m2 base) : %.2f%%\n" \
 					"Difference (+): %s\nDifference (-): %s\n" \
-					"Geometric Mean: %f\n" \
-					"G/A Difference: %f\n" \
-					"^5Experimental Functions:\n^3" \
-					"[*] Badness: %f\n" \
-					"[*] Badness x PWM Period: %f" \
+					"Geometric Mean: %.4f\n" \
+					"G/A Difference: %.4f\n" \
+					"[^7EXPERIMENTAL^3] Badness: %f\n" \
+					"[^7EXPERIMENTAL^3] Badness x PWM Period: %f\n" \
+					"Stability:\n" \
+					" |-> Standard Deviation: %s\n" \
+					" |-> Cooldown: %s\n" \
+					"^5=====ANALYSIS=====\n^3" \
 					, curfps \
 					, eFPS \
 					, StrobeInfo.fCounter \
 					, StrobeInfo.pCounter, StrobeInfo.pNCounter, StrobeInfo.pBCounter \
 					, StrobeInfo.nCounter, StrobeInfo.nNCounter, StrobeInfo.nBCounter \
 					, !!(StrobeInfo.frameInfo & p_inverted) \
-					, (1 / ((1.0f / curfps)*(abs(strobeInterval) + 1))) \
+					, (int)round((1 / ((1.0f / curfps)*(abs(strobeInterval) + 1)))) \
 					, ((1.0f / (abs(strobeInterval) + 1)) * 100) * (strobeInterval < 0 ? -strobeInterval : 1) \
 					, !!(StrobeInfo.frameInfo & p_inverted) ? (1.0f / curfps) * 1000 : 0.0f \
 					, !!(StrobeInfo.frameInfo & p_inverted) ? abs(strobeInterval) * (1.0f / curfps) * 1000 : 0.0f \
@@ -276,7 +275,9 @@ void SCR_DrawFPS( void )
 					, sqrt(diffP * diffN) \
 					, (diffP + diffN) / 2 - sqrt(diffP * diffN) \
 					, STROBE_BADNESS(diffP, diffN) \
-					, STROBE_BADNESS(diffP, diffN) * ((1.0f / curfps) * (abs(strobeInterval) + 1)));
+					, STROBE_BADNESS(diffP, diffN) * ((1.0f / curfps) * (abs(strobeInterval) + 1)) \
+					, (StrobeInfo.deviation > STROBE_DEVIATION_LIMIT) ? (va("^1%.4f^3", StrobeInfo.deviation)) : (va("%.4f", StrobeInfo.deviation)) \
+					, ((double)abs(r_strobe_cooldown->integer) - StrobeInfo.cdTimer <= (double)abs(r_strobe_cooldown->integer)) ? (va("^1%.4f secs\n[STROBING DISABLED]^3", (double)abs(r_strobe_cooldown->integer) - StrobeInfo.cdTimer)) : ("0") );
 			}
 			else
 			{
@@ -288,12 +289,12 @@ void SCR_DrawFPS( void )
 
 	Con_DrawStringLen( fpsstring, &offset, NULL );
 	
-	if (strobeInterval == 0)
-		Con_DrawString(scr_width->integer - offset - 2, 4, fpsstring, color);
-	else if (strobeDebug)
-		Con_DrawString(scr_width->integer - offset - 75, 4, fpsstring, color);
+	if ( strobeInterval == 0 )
+		Con_DrawString( scr_width->integer - offset - 2, 4, fpsstring, color );
+	else if ( strobeDebug )
+		Con_DrawString( scr_width->integer - offset - 50, 4, fpsstring, color );
 	else
-		Con_DrawString(scr_width->integer - offset - 5, 4, fpsstring, color);
+		Con_DrawString( scr_width->integer - offset - 5, 4, fpsstring, color );
 }
 
 /*
