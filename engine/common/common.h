@@ -962,7 +962,7 @@ qboolean CL_IsIntermission( void );
 void CL_WarnLostSplitPacket( void );
 float CL_GetServerTime( void );
 float CL_GetLerpFrac( void );
-void CL_CharEvent( int key );
+void CL_CharEvent( int ch );
 qboolean CL_DisableVisibility( void );
 int CL_PointContents( const vec3_t point );
 char *COM_ParseFile( char *data, char *token );

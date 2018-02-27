@@ -34,9 +34,7 @@ static SDL_Joystick *joy;
 static SDL_GameController *gamecontroller;
 
 void R_ChangeDisplaySettingsFast( int w, int h );
-void SDLash_SendCharEvent( int ch );
 
-#define DECLARE_KEY_RANGE( min, max, repl ) if( keynum >= (min) && keynum <= (max) ) { keynum = keynum - (min) + (repl); }
 
 void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 {
@@ -49,16 +47,24 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 			if( keynum >= SDL_SCANCODE_A && keynum <= SDL_SCANCODE_Z )
 			{
 				keynum = keynum - SDL_SCANCODE_A + 1;
-				SDLash_SendCharEvent( keynum );
+				CL_CharEvent( keynum );
 			}
 
 			return;
 		}
 	}
 
+#define DECLARE_KEY_RANGE( min, max, repl ) \
+	if( keynum >= (min) && keynum <= (max) ) \
+	{ \
+		keynum = keynum - (min) + (repl); \
+	}
+
 	DECLARE_KEY_RANGE( SDL_SCANCODE_A, SDL_SCANCODE_Z, 'a' )
 	else DECLARE_KEY_RANGE( SDL_SCANCODE_1, SDL_SCANCODE_9, '1' )
 	else DECLARE_KEY_RANGE( SDL_SCANCODE_F1, SDL_SCANCODE_F12, K_F1 )
+
+#undef DECLARE_KEY_RANGE
 	else
 	{
 		switch( keynum )
@@ -123,6 +129,13 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 			host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
 			break;
 		}
+		// don't console spam on known functional buttons, but not used in engine
+		case SDL_SCANCODE_MUTE:
+		case SDL_SCANCODE_VOLUMEUP:
+		case SDL_SCANCODE_VOLUMEDOWN:
+		case SDL_SCANCODE_BRIGHTNESSDOWN:
+		case SDL_SCANCODE_BRIGHTNESSUP:
+			break;
 		case SDL_SCANCODE_UNKNOWN:
 		{
 			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n" );
@@ -137,7 +150,7 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 	Key_Event( keynum, down );
 }
 
-void SDLash_MouseEvent(SDL_MouseButtonEvent button)
+void SDLash_MouseEvent( SDL_MouseButtonEvent button )
 {
 	int down = button.type == SDL_MOUSEBUTTONDOWN ? 1 : 0;
 	if( in_mouseinitialized && !m_ignore->integer && button.which != SDL_TOUCH_MOUSEID )
@@ -146,13 +159,13 @@ void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 	}
 }
 
-void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
+void SDLash_WheelEvent( SDL_MouseWheelEvent wheel )
 {
 	wheelbutton = wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
 	Key_Event( wheelbutton, true );
 }
 
-void SDLash_InputEvent(SDL_TextInputEvent input)
+void SDLash_InputEvent( SDL_TextInputEvent input )
 {
 	int i;
 
@@ -169,17 +182,8 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 		if( !ch )
 			continue;
 
-		SDLash_SendCharEvent( ch );
+		CL_CharEvent( ch );
 	}
-}
-
-void SDLash_SendCharEvent( int ch )
-{
-	Con_CharEvent( ch );
-	if( cls.key_dest == key_menu )
-		UI_CharEvent ( ch );
-	if( cls.key_dest == key_game )
-		VGui_KeyEvent( ch, 2 );
 }
 
 void SDLash_EnableTextInput( int enable, qboolean force )
@@ -383,7 +387,6 @@ void SDLash_EventFilter( void *ev )
 		};
 
 		// TODO: Use joyinput funcs, for future multiple gamepads support
-
 		if( Joy_IsActive() )
 			Key_Event( sdlControllerButtonToEngine[event->cbutton.button], event->cbutton.state );
 		break;

@@ -846,7 +846,7 @@ CL_CharEvent
 Normal keyboard characters, already shifted / capslocked / etc
 ===================
 */
-void CL_CharEvent( int key )
+void CL_CharEvent( int ch )
 {
 	// the console key should never be used as a char
 #ifdef _WIN32
@@ -861,13 +861,17 @@ void CL_CharEvent( int key )
 #endif
 #endif
 	// distribute the key down event to the apropriate handler
-	if( cls.key_dest == key_console || cls.key_dest == key_message )
+
+	Con_CharEvent( ch ); // a1ba: no need for checks, as Con_CharEvent already it does
+
+	if( cls.key_dest == key_menu )
 	{
-		Con_CharEvent( key );
+		UI_CharEvent( ch );
 	}
-	else if( cls.key_dest == key_menu )
+	else if( cls.key_dest == key_game ) // typing support for VGUI
 	{
-		UI_CharEvent( key );
+		VGui_KeyEvent( ch, 2 );
 	}
+
 }
 #endif
