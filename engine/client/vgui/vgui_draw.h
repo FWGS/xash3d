@@ -33,6 +33,7 @@ void VGui_Paint();
 void VGui_RunFrame();
 void VGui_KeyEvent( int key, int down );
 void VGui_MouseMove( int x, int y );
+qboolean VGui_IsActive( void );
 void *pfnVGui_GetPanel();
 #ifdef __cplusplus
 }
