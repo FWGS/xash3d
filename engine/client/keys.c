@@ -850,7 +850,7 @@ void CL_CharEvent( int ch )
 {
 	// the console key should never be used as a char
 #ifdef _WIN32
-	if( key == '`' || key == '~' ) return;
+	if( ch == '`' || ch == '~' ) return;
 
 #if 0
 	if( cls.key_dest == key_console && !Con_Visible( ))
