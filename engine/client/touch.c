@@ -1678,16 +1678,17 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 	}
 
 
-	VGui_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
+	if( VGui_IsActive() )
+	{
+		VGui_MouseMove( TO_SCRN_X(x), TO_SCRN_Y(y) );
 
-	if( type == event_down )
-			VGui_KeyEvent(241, 1);
-	if( type == event_up )
-			VGui_KeyEvent(241, 0);
+		if( type != event_motion )
+			VGui_KeyEvent( K_MOUSE1, type == event_down ? 1 : 0 );
 
-	// allow scoreboard scroll
-	if( host.mouse_visible && type == event_motion )
-		return 0;
+		// allow scoreboard scroll
+		if( host.mouse_visible && type == event_motion )
+			return 0;
+	}
 
 	if( !touch.initialized || (!touch_enable->integer && !touch.clientonly) )
 	{
