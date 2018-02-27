@@ -837,10 +837,10 @@ R_SetupGL
 */
 static void R_SetupGL( void )
 {
-	if( RI.refdef.waterlevel >= 3 )
+	if( r_underwater_distortion->value && RI.refdef.waterlevel >= 3 )
 	{
 		float	f;
-		f = sin( cl.time * 0.4f * ( M_PI * 2.7f ));
+		f = sin( cl.time * r_underwater_distortion->value * ( M_PI * 2.7f ));
 		RI.refdef.fov_x += f;
 		RI.refdef.fov_y -= f;
 	}
