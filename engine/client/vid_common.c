@@ -127,6 +127,21 @@ vidmode_t vidmode[] =
 
 int num_vidmodes = ( sizeof( vidmode ) / sizeof( vidmode[0] ));
 
+static int FindVidModeIndexFromDimensions(int width, int height)
+{
+	int mode;
+
+	for ( mode = 0; mode < num_vidmodes; ++mode )
+	{
+		if ( vidmode[mode].width == width && vidmode[mode].height == height )
+		{
+			return mode;
+		}
+	}
+
+	return -1;
+}
+
 /*
 =================
 VID_GetModeString
@@ -1008,6 +1023,57 @@ static void R_CheckVBO( void )
 	r_bump = Cvar_Get( "r_bump", def, flags, "enable bump-mapping (r_vbo required)" );
 }
 
+static int GetCommandLineIntegerValue(const char* argName)
+{
+	int argIndex = Sys_CheckParm(argName);
+
+	if ( argIndex < 1 || argIndex + 1 >= host.argc || !host.argv[argIndex + 1] )
+	{
+		return 0;
+	}
+
+	return Q_atoi(host.argv[argIndex + 1]);
+}
+
+static void SetWidthAndHeightFromCommandLine()
+{
+	int vidModeIndex = -1;
+	char vidModeIndexAsString[8];
+	int width = GetCommandLineIntegerValue("-width");
+	int height = GetCommandLineIntegerValue("-height");
+
+	if ( width < 1 || height < 1 )
+	{
+		// Not specified or invalid, so don't bother.
+		return;
+	}
+
+	vidModeIndex = FindVidModeIndexFromDimensions(width, height);
+
+	if ( vidModeIndex < 0 )
+	{
+		Sys_Warn("No supported vidmode found for specified dimensions %dx%d.\n", width, height);
+		return;
+	}
+
+	Q_memset(vidModeIndexAsString, 0, sizeof(vidModeIndexAsString));
+	Q_snprintf(vidModeIndexAsString, sizeof(vidModeIndexAsString) - 1, "%d", vidModeIndex);
+
+	Cvar_Set2("vid_mode", vidModeIndexAsString, true);
+}
+
+static void SetFullscreenModeFromCommandLine()
+{
+	if ( Sys_CheckParm("-fullscreen") )
+	{
+		Cvar_Set2("fullscreen", "1", true);
+	}
+	else if ( Sys_CheckParm("-windowed") )
+	{
+		Cvar_Set2("fullscreen", "0", true);
+	}
+}
+
 /*
 ===============
 R_Init
@@ -1022,6 +1088,12 @@ qboolean R_Init( void )
 	Cbuf_AddText( "exec opengl.cfg\n" );
 
 	GL_InitCommands();
+	
+	// Set screen resolution and fullscreen mode if passed in on command line.
+	// This is done after executing opengl.cfg, as the command line values should take priority.
+	SetWidthAndHeightFromCommandLine();
+	SetFullscreenModeFromCommandLine();
+
 	GL_SetDefaultState();
 
 #ifdef WIN32
