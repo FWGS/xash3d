@@ -1146,7 +1146,7 @@ void Mod_StudioAccumulateBoneVerts( vec3_t mins1, vec3_t maxs1, int *counter1, v
 StudioComputeBounds
 ====================
 */
-void Mod_StudioComputeBounds( void *buffer, vec3_t mins, vec3_t maxs )
+void Mod_StudioComputeBounds( void *buffer, vec3_t mins, vec3_t maxs, qboolean ignore_sequences )
 {
 	int		i, j, k;
 	studiohdr_t	*pstudiohdr;
@@ -1158,6 +1158,7 @@ void Mod_StudioComputeBounds( void *buffer, vec3_t mins, vec3_t maxs )
 	vec3_t		vecmins2, vecmaxs2;
 	int		counter1, counter2;
 	int		bodyCount = 0;
+	int numseq;
 	vec3_t		pos;
 
 	counter1 = counter2 = 0;
@@ -1192,8 +1193,9 @@ void Mod_StudioComputeBounds( void *buffer, vec3_t mins, vec3_t maxs )
 
 	pbones = (mstudiobone_t *)((byte *)pstudiohdr + pstudiohdr->boneindex);
 	pseqdesc = (mstudioseqdesc_t *)((byte *)pstudiohdr + pstudiohdr->seqindex);
+	numseq = ignore_sequences ? 1 : pstudiohdr->numseq;
 
-	for( i = 0; i < pstudiohdr->numseq; i++ )
+	for( i = 0; i < numseq; i++ )
 	{
 		mstudioanim_t *panim = (mstudioanim_t *) (((byte *)buffer) + pseqdesc[i].animindex);
 
@@ -1232,7 +1234,7 @@ qboolean Mod_GetStudioBounds( const char *name, vec3_t mins, vec3_t maxs )
 	{
 		VectorClear( mins );
 		VectorClear( maxs );
-		Mod_StudioComputeBounds( f, mins, maxs );
+		Mod_StudioComputeBounds( f, mins, maxs, false );
 		result = true;
 	}
 	Mem_Free( f );

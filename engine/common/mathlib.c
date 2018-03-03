@@ -39,6 +39,19 @@ GNU General Public License for more details.
 #endif
 
 vec3_t	vec3_origin = { 0, 0, 0 };
+int boxpnt[6][4] =
+{
+{ 0, 4, 6, 2 }, // +X
+{ 0, 1, 5, 4 }, // +Y
+{ 0, 2, 3, 1 }, // +Z
+{ 7, 5, 1, 3 }, // -X
+{ 7, 3, 2, 6 }, // -Y
+{ 7, 6, 4, 5 }, // -Z
+};
+
+#define NUM_HULL_ROUNDS	ARRAYSIZE( hull_table )
+#define HULL_PRECISION	4
+static word hull_table[] = { 2, 4, 6, 8, 12, 16, 18, 24, 28, 32, 36, 40, 48, 54, 56, 60, 64, 72, 80, 112, 120, 128, 140, 176 };
 
 /*
 =================
@@ -95,6 +108,56 @@ float HalfToFloat( word h )
 	}
 
 	return *((float *)&f);
+}
+
+/*
+=================
+RoundUpHullSize
+
+round the hullsize to nearest 'right' value
+=================
+*/
+void RoundUpHullSize( vec3_t size )
+{
+	int	i, j;
+
+	for( i = 0; i < 3; i++)
+	{
+		qboolean	negative = false;
+					float	result, value;
+
+		value = size[i];
+		if( value < 0.0f ) negative = true;
+		value = ceil( fabs( value ));
+
+		// lookup hull table to find nearest supposed value
+		for( j = 0; j < NUM_HULL_ROUNDS; j++ )
+			{
+			if( value > hull_table[j] )
+				continue;	// ceil only
+
+			if( negative )
+			{
+				result = ( value - hull_table[j] );
+				if( result <= HULL_PRECISION )
+				{
+					result = -hull_table[j];
+					break;
+				}
+			}
+			else
+			{
+				result = ( value - hull_table[j] );
+				if( result <= HULL_PRECISION )
+				{
+					result = hull_table[j];
+					break;
+				}
+			}
+		}
+
+		size[i] = result;
+	}
 }
 
 /*

@@ -82,7 +82,7 @@ byte *CL_CreateRawTextureFromPixels( texture_t *tx, size_t *size, int topcolor, 
 	pin.flags = STUDIO_NF_COLORMAP; // just in case :-)
 	//pin.index = (int)(tx + 1); // pointer to pixels
 	// no more pointer-to-int-to-pointer casts
-	Image_SetMDLPointer( (byte*)((texture_t *)tx + 1) );
+	pin.index = (int)(tx + 1); // pointer to pixels
 	pin.width = tx->width;
 	pin.height = tx->height;
 

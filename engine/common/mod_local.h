@@ -143,5 +143,6 @@ void Mod_StudioGetAttachment( const edict_t *e, int iAttachment, float *org, flo
 void Mod_GetBonePosition( const edict_t *e, int iBone, float *org, float *ang );
 hull_t *Mod_HullForStudio( model_t *m, float frame, int seq, vec3_t ang, vec3_t org, vec3_t size, byte *pcnt, byte *pbl, int *hitboxes, edict_t *ed );
 int Mod_HitgroupForStudioHull( int index );
+void Mod_StudioComputeBounds( void *buffer, vec3_t mins, vec3_t maxs, qboolean ignore_sequences );
 
 #endif//MOD_LOCAL_H

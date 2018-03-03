@@ -1002,20 +1002,13 @@ void R_DrawSpriteModel( cl_entity_t *e )
 
 	if( R_SpriteHasLightmap( e, psprite->texFormat ))
 	{
-		color24	lightColor;
-		qboolean	invLight;
-
-		invLight = (e->curstate.effects & EF_INVLIGHT) ? true : false;
-		R_LightForPoint( origin, &lightColor, invLight, true, sprite_radius );
+		colorVec lightColor = R_LightPoint( origin );
+		// FIXME: collect light from dlights?
 		color2[0] = (float)lightColor.r * ( 1.0f / 255.0f );
 		color2[1] = (float)lightColor.g * ( 1.0f / 255.0f );
 		color2[2] = (float)lightColor.b * ( 1.0f / 255.0f );
-
-		if( glState.drawTrans )
-			pglDepthMask( GL_TRUE );
-
 		// NOTE: sprites with 'lightmap' looks ugly when alpha func is GL_GREATER 0.0
-		pglAlphaFunc( GL_GEQUAL, 0.5f );
+		pglAlphaFunc( GL_GREATER, 0.25f );
 	}
 
 	if( e->curstate.rendermode == kRenderNormal || e->curstate.rendermode == kRenderTransAlpha )

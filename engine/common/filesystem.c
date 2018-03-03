@@ -1770,7 +1770,7 @@ void FS_Init( void )
 #ifndef _WIN32
 	if( !fs_caseinsensitive )
 	{
-		if( !Q_strcmp( host.rodir, host.rootdir ) )
+		if( host.rodir[0] && !Q_strcmp( host.rodir, host.rootdir ) )
 		{
 			Sys_Error( "RoDir and default rootdir can't point to same directory!" );
 		}

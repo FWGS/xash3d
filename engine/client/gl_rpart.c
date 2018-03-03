@@ -47,16 +47,6 @@ static int ramp1[8] = { 0x6f, 0x6d, 0x6b, 0x69, 0x67, 0x65, 0x63, 0x61 };
 static int ramp2[8] = { 0x6f, 0x6e, 0x6d, 0x6c, 0x6b, 0x6a, 0x68, 0x66 };
 static int ramp3[6] = { 0x6d, 0x6b, 6, 5, 4, 3 };
 
-static int boxpnt[6][4] =
-{
-{ 0, 4, 6, 2 }, // +X
-{ 0, 1, 5, 4 }, // +Y
-{ 0, 2, 3, 1 }, // +Z
-{ 7, 5, 1, 3 }, // -X
-{ 7, 3, 2, 6 }, // -Y
-{ 7, 6, 4, 5 }, // -Z
-};
-
 static rgb_t gTracerColors[] =
 {
 { 255, 255, 255 },		// White

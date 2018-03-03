@@ -408,7 +408,7 @@ void CL_CreateCmd( void )
 {
 	usercmd_t		cmd = { 0 };
 	runcmd_t		*pcmd;
-	color24		color;
+	colorVec		color;
 	vec3_t		angles;
 	qboolean		active;
 	int		i, ms;
@@ -480,7 +480,9 @@ void CL_CreateCmd( void )
 	// add motion events from engine controls
 	IN_EngineAppendMove( host.frametime, &pcmd->cmd, active);
 
-	R_LightForPoint( cl.frame.client.origin, &color, false, false, 128.0f );
+	tr.ignore_lightgamma = true;
+	color = R_LightPoint( cl.frame.client.origin );
+	tr.ignore_lightgamma = false;
 	cmd.lightlevel = (color.r + color.g + color.b) / 3;
 
 	// never let client.dll calc frametime for player

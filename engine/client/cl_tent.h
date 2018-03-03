@@ -103,6 +103,10 @@ void CL_BeamKill( int deadEntity );
 
 
 // TriAPI
+void TriRenderMode( int mode );
+void TriBegin( int mode );
+void TriEnd( void );
+void TriBrightness( float brightness );
 void TriVertex3fv( const float *v );
 void TriNormal3fv( const float *v );
 void TriColor4f( float r, float g, float b, float a );

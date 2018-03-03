@@ -113,6 +113,7 @@ float rsqrt( float number );
 float anglemod( const float a );
 word FloatToHalf( float v );
 float HalfToFloat( word h );
+void RoundUpHullSize( vec3_t size );
 int SignbitsForPlane( const vec3_t normal );
 int NearestPOW( int value, qboolean roundDown );
 void SinCos( float radians, float *sine, float *cosine );
@@ -201,6 +202,7 @@ void Matrix4x4_Transpose( matrix4x4 out, cmatrix4x4 in1 );
 qboolean Matrix4x4_Invert_Full( matrix4x4 out, cmatrix4x4 in1 );
 
 extern vec3_t		vec3_origin;
+extern int		boxpnt[6][4];
 extern const matrix3x4	matrix3x4_identity;
 extern const matrix4x4	matrix4x4_identity;
 

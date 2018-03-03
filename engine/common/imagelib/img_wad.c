@@ -134,18 +134,6 @@ qboolean Image_LoadFNT( const char *name, const byte *buffer, size_t filesize )
 
 	return Image_AddIndexedImageToPack( fin, image.width, image.height );
 }
-/*
-======================
-Image_SetMDLPointer
-
-Transfer buffer pointer before Image_LoadMDL
-======================
-*/
-void *g_mdltexdata;
-void Image_SetMDLPointer(byte *p)
-{
-	g_mdltexdata = p;
-}
 
 /*
 ============
@@ -166,9 +154,7 @@ qboolean Image_LoadMDL( const char *name, const byte *buffer, size_t filesize )
 	image.height = pin->height;
 	pixels = image.width * image.height;
 
-	fin = (byte *)g_mdltexdata;
-	ASSERT(fin);
-	g_mdltexdata = NULL;
+	fin = pin->index;
 
 	if( !Image_ValidSize( name )) return false;
 
@@ -177,7 +163,7 @@ qboolean Image_LoadMDL( const char *name, const byte *buffer, size_t filesize )
 		if( filesize < ( sizeof( *pin ) + pixels + 768 ))
 			return false;
 
-		if( flags & STUDIO_NF_TRANSPARENT )
+		if( flags & STUDIO_NF_MASKED )
 		{
 			byte	*pal = fin + pixels;
 

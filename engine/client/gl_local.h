@@ -41,6 +41,8 @@ extern byte	*r_temppool;
 
 #define NUMVERTEXNORMALS	162
 #define SHADEDOT_QUANT 	16	// precalculated dot products for quantized angles
+#define SHADE_LAMBERT	1.495f
+
 
 // refparams
 #define RP_NONE		0
@@ -52,6 +54,7 @@ extern byte	*r_temppool;
 
 #define RP_NONVIEWERREF	(RP_MIRRORVIEW|RP_ENVVIEW)
 #define R_StudioOpaque( e )	( e->curstate.rendermode == kRenderNormal || e->curstate.rendermode == kRenderTransAlpha )
+#define R_ModelOpaque( e )	( e == kRenderNormal || e == kRenderTransAlpha )
 #define RP_LOCALCLIENT( e )	(CL_GetLocalPlayer() && ((e)->index == CL_GetLocalPlayer()->index && e->curstate.entityType == ET_PLAYER ))
 #define RP_NORMALPASS()	((RI.params & RP_NONVIEWERREF) == 0 )
 
@@ -219,6 +222,9 @@ typedef struct
 	vec3_t		modelorg;		// relative to viewpoint
 	int		deluxemapTextures[MAX_LIGHTMAPS];
 	color24 *deluxemap;
+
+	qboolean fFlipViewModel;
+	qboolean		ignore_lightgamma;
 } ref_globals_t;
 
 typedef struct
@@ -342,10 +348,10 @@ void R_StoreEfrags( efrag_t **ppefrag, int framecount );
 //
 void R_PushDlights( void );
 void R_AnimateLight( void );
-void R_GetLightSpot( vec3_t lightspot );
+colorVec R_LightVec( const vec3_t start, const vec3_t end, vec3_t lspot );
 void R_MarkLights( dlight_t *light, int bit, mnode_t *node );
+colorVec R_LightPoint( const vec3_t p0 );
 void R_LightDir( const vec3_t origin, vec3_t lightDir, float radius );
-void R_LightForPoint( const vec3_t point, color24 *ambientLight, qboolean invLight, qboolean useAmbient, float radius );
 int R_CountSurfaceDlights( msurface_t *surf );
 int R_CountDlights( void );
 

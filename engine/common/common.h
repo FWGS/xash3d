@@ -73,6 +73,12 @@ extern "C" {
 #define MAX_SYSPATH		PATH_MAX	// system filepath
 #define MAX_MODS		512	// environment games that engine can keep visible
 #define BIT( n )		(1U << ( n ))
+#define SetBits( iBitVector, bits )	((iBitVector) = (iBitVector) | (bits))
+#define ClearBits( iBitVector, bits )	((iBitVector) = (iBitVector) & ~(bits))
+#define FBitSet( iBitVector, bit )	((iBitVector) & (bit))
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(p)	(sizeof(p)/sizeof(p[0]))
+#endif
 
 #ifndef __cplusplus
 #ifdef NULL
@@ -681,7 +687,6 @@ qboolean Image_Process( rgbdata_t **pix, int width, int height, float gamma, uin
 void Image_PaletteHueReplace( byte *palSrc, int newHue, int start, int end );
 void Image_SetForceFlags( uint flags );	// set image force flags on loading
 size_t Image_DXTGetLinearSize( int type, int width, int height, int depth );
-void Image_SetMDLPointer(byte *p);
 
 /*
 ========================================================================
@@ -1105,6 +1110,7 @@ void S_StopAllSounds( void );
 
 // gamma routines
 void BuildGammaTable( float gamma, float texGamma );
+byte LightToTexGamma( byte b );
 byte TextureToTexGamma( byte b );
 byte TextureToGamma( byte b );
 

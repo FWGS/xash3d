@@ -3293,16 +3293,15 @@ NOTE: dlights are ignored
 */
 void GAME_EXPORT TriLightAtPoint( float *pos, float *value )
 {
-	color24	ambient;
+	colorVec	vLightColor;
 
-	if( !pos || !value )
-		return;
+	if( !pos || !value ) return;
 
-	R_LightForPoint( pos, &ambient, false, false, 0.0f );
+	vLightColor = R_LightPoint( pos );
 
-	value[0] = (float)ambient.r * 255.0f;
-	value[1] = (float)ambient.g * 255.0f;
-	value[2] = (float)ambient.b * 255.0f;
+	value[0] = vLightColor.r;
+	value[1] = vLightColor.g;
+	value[2] = vLightColor.b;
 }
 
 /*

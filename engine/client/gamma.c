@@ -22,18 +22,44 @@ GNU General Public License for more details.
 //-----------------------------------------------------------------------------
 static byte	gammatable[256];
 static byte	texgammatable[256];		// palette is sent through this to convert to screen gamma
+static byte	lightgammatable[256];
 
 void BuildGammaTable( float gamma, float texGamma )
 {
 	int	i, inf;
-	float	g1, g = gamma;
+	float	g1, g = gamma, g3;
 	double	f;
+	const float brightness = 1.0f; // HACKHACK: gl_studio 3887 backport
 
 	g = bound( 1.8f, g, 30.0f );
 	texGamma = bound( 1.0f, texGamma, 15.0f ); // In settings only 1.8-7.0, but give user more values with cvar
 
+	if( brightness <= 0.0f )
+		g3 = 0.125f;
+	else if( brightness > 1.0f )
+		g3 = 0.05f;
+	else g3 = 0.125f - (brightness * brightness) * 0.075f;
+
 	g = 1.0f / g;
 	g1 = texGamma * g; 
+
+	for( i = 0; i < 256; i++ )
+	{
+		f = pow( i / 255.f, gamma );
+
+		// scale up
+		if( brightness > 1.0f )
+			f = f * brightness;
+
+		// shift up
+		if( f <= g3 ) f = (f / g3) * 0.125f;
+		else f = 0.125f + ((f - g3) / (1.0f - g3)) * 0.875f;
+
+		// convert linear space to desired gamma space
+		inf = (int)( 255.0 * pow( f, g ));
+
+		lightgammatable[i] = bound( 0, inf, 255 );
+	}
 
 	for( i = 0; i < 256; i++ )
 	{
@@ -47,6 +73,12 @@ void BuildGammaTable( float gamma, float texGamma )
 		inf = (int)(f + 0.5f);
 		gammatable[i] = bound( 0, inf, 255 );
 	}
+}
+
+byte LightToTexGamma( byte b )
+{
+	//b = bound( 0, b, 255 );
+	return lightgammatable[b];
 }
 
 byte TextureToTexGamma( byte b )
