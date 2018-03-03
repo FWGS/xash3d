@@ -33,9 +33,9 @@ See the GNU General Public License for more details.
 #define STROBE_CORE_t STROBE_CORE ## _t
 #define STROBE_CORE_priv_s STROBE_CORE ## _priv_s
 #define STROBE_CORE_priv_t STROBE_CORE ## _priv_t
-#define STROBE_CORE_THIS (*_STROBE_CORE_THIS ## )
+#define STROBE_CORE_THIS (*_STROBE_CORE_THIS)
 #define STROBE_CORE_THIS_PARAM STROBE_CORE_t**_STROBE_CORE_THIS
-#define STROBE_CORE_EXPORTEDFUNC_main STROBE_CORE ## _ ## STROBE_CORE_FUNC_main
+#define STROBE_CORE_EXPORTEDFUNC_main STROBE_CORE ## _STROBE_CORE_FUNC_main
 #define STROBE_CORE_EXPORTEDFUNC_constructor STROBE_CORE ## _constructor
 #define STROBE_CORE_EXPORTEDFUNC_destructor STROBE_CORE ## _destructor
 #define STROBE_CORE_EXPORTEDFUNC_reinit STROBE_CORE ## _reinit

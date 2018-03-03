@@ -1,5 +1,5 @@
 /*
-r_strobe.c - Software based strobing implementation
+r_strobe_api.c - Software based strobing implementation
 
 Copyright (C) 2018 * fuzun
 
