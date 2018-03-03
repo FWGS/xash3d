@@ -222,7 +222,7 @@ static void R_Strobe(STROBE_CORE_THIS_PARAM)
 }
 
 
-static inline void debugDrawer(STROBE_CORE_THIS_PARAM)
+_inline void debugDrawer(STROBE_CORE_THIS_PARAM)
 {
 	rgba_t color;
 	char debugStr[2048]; // Heap allocation ?
@@ -307,13 +307,13 @@ void STROBE_CORE_EXPORTEDFUNC_destructor(void **STROBE_CORE)
 
 void STROBE_CORE_EXPORTEDFUNC_reinit(void **STROBE_CORE)
 {
-	STROBE_CORE_t **instance = *(STROBE_CORE_t ***)&STROBE_CORE;
+	//STROBE_CORE_t **instance = *(STROBE_CORE_t ***)&STROBE_CORE;
 
 	if (!(*STROBE_CORE))
 	{
-		STROBE_CORE_EXPORTEDFUNC_destructor(instance);
+		STROBE_CORE_EXPORTEDFUNC_destructor(STROBE_CORE);
 	}
-	STROBE_CORE_EXPORTEDFUNC_constructor(instance);
+	STROBE_CORE_EXPORTEDFUNC_constructor(STROBE_CORE);
 }
 
 

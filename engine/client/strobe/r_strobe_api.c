@@ -35,7 +35,7 @@ convar_t	*r_strobe_swapinterval;
 convar_t	*r_strobe_debug;
 convar_t	*r_strobe_cooldown;
 
-static inline double func_helper_StandardDeviation(const double *data, int n)
+_inline double func_helper_StandardDeviation(const double *data, int n)
 {
 	double mean = 0.0, sum_deviation = 0.0;
 	int i;
@@ -50,7 +50,7 @@ static inline double func_helper_StandardDeviation(const double *data, int n)
 }
 
 
-static inline void GL_GenerateBlackFrame(void) // Generates partial or full black frame
+_inline void GL_GenerateBlackFrame(void) // Generates partial or full black frame
 {
 	if (CL_IsInConsole()) // No strobing on the console
 	{
@@ -73,7 +73,7 @@ static inline void GL_GenerateBlackFrame(void) // Generates partial or full blac
 	}
 }
 
-static inline double func_helper_getCooldown(StrobeAPI_t *self)
+_inline double func_helper_getCooldown(StrobeAPI_t *self)
 {
 	if ((double)abs(r_strobe_cooldown->integer) - self->protected->cdTimer <= (double)abs(r_strobe_cooldown->integer))
 	{
@@ -85,7 +85,7 @@ static inline double func_helper_getCooldown(StrobeAPI_t *self)
 	}
 }
 
-static inline qboolean func_helper_isPhaseInverted(StrobeAPI_t *self)
+_inline qboolean func_helper_isPhaseInverted(StrobeAPI_t *self)
 {
 	if (!!(self->protected->frameInfo & p_inverted))
 		return true;
@@ -93,7 +93,7 @@ static inline qboolean func_helper_isPhaseInverted(StrobeAPI_t *self)
 		return false;
 }
 
-static inline qboolean func_helper_isNormal(StrobeAPI_t *self)
+_inline qboolean func_helper_isNormal(StrobeAPI_t *self)
 {
 	if (!!(self->protected->frameInfo & f_normal))
 		return true;
@@ -101,7 +101,7 @@ static inline qboolean func_helper_isNormal(StrobeAPI_t *self)
 		return false;
 }
 
-static inline qboolean func_helper_isPositive(StrobeAPI_t *self) // ...
+_inline qboolean func_helper_isPositive(StrobeAPI_t *self) // ...
 {
 	if (!!(self->protected->frameInfo & p_positive))
 		return true;
@@ -109,7 +109,7 @@ static inline qboolean func_helper_isPositive(StrobeAPI_t *self) // ...
 		return false;
 }
 
-static inline double func_helper_effectiveFPS(StrobeAPI_t *self)
+_inline double func_helper_effectiveFPS(StrobeAPI_t *self)
 {
 	int strobeInterval = r_strobe->integer;
 	double eFPS;
@@ -127,7 +127,7 @@ static inline double func_helper_effectiveFPS(StrobeAPI_t *self)
 	return eFPS;
 }
 
-static inline void func_helper_GenerateDiffBar(StrobeAPI_t *self, char *src, int size, char type)
+_inline void func_helper_GenerateDiffBar(StrobeAPI_t *self, char *src, int size, char type)
 {
 	char _barCounter = 0;
 	int diff_NB = 0;
@@ -243,23 +243,23 @@ static inline void func_helper_GenerateDiffBar(StrobeAPI_t *self, char *src, int
 }
 
 
-static inline int func_pwmsimulation_Frequency(StrobeAPI_t *self)
+_inline int func_pwmsimulation_Frequency(StrobeAPI_t *self)
 {
 	return (int)round((1 / ((1.0f / self->get.CurrentFPS(self))*(abs(r_strobe->integer) + 1))));
 }
 
-static inline double func_pwmsimulation_DutyCycle(void)
+_inline double func_pwmsimulation_DutyCycle(void)
 {
 	int strobeInterval = r_strobe->integer;
 	return (((1.0f / (abs(strobeInterval) + 1)) * 100) * (strobeInterval < 0 ? -strobeInterval : 1));
 }
 
-static inline double func_pwmsimulation_PositivePhaseShift(StrobeAPI_t *self)
+_inline double func_pwmsimulation_PositivePhaseShift(StrobeAPI_t *self)
 {
 	return !!(self->protected->frameInfo & p_inverted) ? (1.0f / self->get.CurrentFPS(self)) * 1000 : 0.0f;
 }
 
-static inline double func_pwmsimulation_NegativePhaseShift(StrobeAPI_t *self)
+_inline double func_pwmsimulation_NegativePhaseShift(StrobeAPI_t *self)
 {
 	if (!!(self->protected->frameInfo & p_inverted))
 		return abs(r_strobe->integer) * (1.0f / self->get.CurrentFPS(self)) * 1000;
@@ -267,12 +267,12 @@ static inline double func_pwmsimulation_NegativePhaseShift(StrobeAPI_t *self)
 		return 0.0;
 }
 
-static inline double func_pwmsimulation_Period(StrobeAPI_t *self)
+_inline double func_pwmsimulation_Period(StrobeAPI_t *self)
 {
 	return (((1.0f / self->get.CurrentFPS(self))*(abs(r_strobe->integer) + 1)) * 1000);
 }
 
-static inline double func_helper_GeometricMean(double x, double y)
+_inline double func_helper_GeometricMean(double x, double y)
 {
 	return sqrt(abs(x * y));
 	/*
@@ -284,13 +284,13 @@ static inline double func_helper_GeometricMean(double x, double y)
 	*/
 }
 
-static inline double func_helper_ArithmeticMean(double x, double y)
+_inline double func_helper_ArithmeticMean(double x, double y)
 {
 	return (x + y) / 2;
 }
 
 
-static inline double func_brightnessreduction_ActualBrightnessReduction(StrobeAPI_t *self)
+_inline double func_brightnessreduction_ActualBrightnessReduction(StrobeAPI_t *self)
 {
 	double currentFPS = self->get.CurrentFPS(self);
 	double effectiveFPS = self->Helpers.effectiveFPS(self);
@@ -298,28 +298,28 @@ static inline double func_brightnessreduction_ActualBrightnessReduction(StrobeAP
 	return lossCalculator(currentFPS, effectiveFPS);
 }
 
-static inline double func_brightnessreduction_LogarithmicBrightnessReduction(StrobeAPI_t *self, double base)
+_inline double func_brightnessreduction_LogarithmicBrightnessReduction(StrobeAPI_t *self, double base)
 {
 
 	return lossCalculator( log(base), log(base * self->Helpers.effectiveFPS(self) / self->get.CurrentFPS(self)) );
 }
 
-static inline double func_brightnessreduction_SquareBrightnessReduction(StrobeAPI_t *self, double base)
+_inline double func_brightnessreduction_SquareBrightnessReduction(StrobeAPI_t *self, double base)
 {
 	return lossCalculator( sqrt(base), sqrt(base * self->Helpers.effectiveFPS(self) / self->get.CurrentFPS(self)) );
 }
 
-static inline double func_brightnessreduction_CubeBrightnessReduction(StrobeAPI_t *self, double base)
+_inline double func_brightnessreduction_CubeBrightnessReduction(StrobeAPI_t *self, double base)
 {
 	return lossCalculator( cbrt(base), cbrt(base * self->Helpers.effectiveFPS(self) / self->get.CurrentFPS(self)) );
 }
 
-static inline double func_brightnessreduction_OtherBrightnessReduction(StrobeAPI_t *self, double base, double(*reductionFunction)(double))
+_inline double func_brightnessreduction_OtherBrightnessReduction(StrobeAPI_t *self, double base, double(*reductionFunction)(double))
 {
 	return lossCalculator(reductionFunction(base), reductionFunction(base * self->Helpers.effectiveFPS(self) / self->get.CurrentFPS(self)));
 }
 
-static inline double func_experimental_Badness_Reducted(StrobeAPI_t *self, qboolean PWMInvolved)
+_inline double func_experimental_Badness_Reducted(StrobeAPI_t *self, qboolean PWMInvolved)
 {
 	double badness;
 	int diffP_NB, diffN_NB;
@@ -355,7 +355,7 @@ static inline double func_experimental_Badness_Reducted(StrobeAPI_t *self, qbool
 		return badness;
 }
 
-static inline double func_experimental_Badness(StrobeAPI_t *self, qboolean PWMInvolved)
+_inline double func_experimental_Badness(StrobeAPI_t *self, qboolean PWMInvolved)
 {
 	int diffP_NB, diffN_NB;
 	diffP_NB = (self->protected->pNCounter - self->protected->pBCounter); 
@@ -383,7 +383,7 @@ static inline double func_experimental_Badness(StrobeAPI_t *self, qboolean PWMIn
 
 
 
-static inline size_t get_FrameCounter(StrobeAPI_t *self, counterType type)
+_inline size_t get_FrameCounter(StrobeAPI_t *self, counterType type)
 {
 	switch (type)
 	{
@@ -426,17 +426,17 @@ static inline size_t get_FrameCounter(StrobeAPI_t *self, counterType type)
 	return self->protected->fCounter;
 }
 
-static inline double get_Deviation(StrobeAPI_t *self)
+_inline double get_Deviation(StrobeAPI_t *self)
 {
 	return self->protected->deviation;
 }
 
-static inline double get_CooldownTimer(StrobeAPI_t *self)
+_inline double get_CooldownTimer(StrobeAPI_t *self)
 {
 	return self->protected->cdTimer;
 }
 
-static inline double get_currentFPS(StrobeAPI_t *self)
+_inline double get_currentFPS(StrobeAPI_t *self)
 {
 	// Copied from SCR_DrawFps
 	// This way until current fps becomes global!!!
@@ -458,7 +458,7 @@ static inline double get_currentFPS(StrobeAPI_t *self)
 	return framerate;
 }
 
-static inline void GenerateDebugStatistics(StrobeAPI_t *self, char *src, int size)
+_inline void GenerateDebugStatistics(StrobeAPI_t *self, char *src, int size)
 {
 	char diffBarP[128], diffBarN[128], diffBarT[128];
 
@@ -539,7 +539,7 @@ static inline void GenerateDebugStatistics(StrobeAPI_t *self, char *src, int siz
 }
 
 
-static inline void ProcessFrame(StrobeAPI_t *self)
+_inline void ProcessFrame(StrobeAPI_t *self)
 {
 	if (self->protected->cdTriggered != 0)
 	{

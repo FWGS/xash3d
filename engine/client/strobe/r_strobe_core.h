@@ -52,12 +52,14 @@ typedef struct STROBE_CORE_s {
 	void(*STROBE_CORE_FUNC_debughandler)(STROBE_CORE_THIS_PARAM);
 } STROBE_CORE_t;
 
-extern STROBE_CORE_t *STROBE_CORE;
-
 void STROBE_CORE_EXPORTEDFUNC_constructor(void **STROBE_CORE);
 void STROBE_CORE_EXPORTEDFUNC_destructor(void **STROBE_CORE);
 void STROBE_CORE_EXPORTEDFUNC_reinit(void **STROBE_CORE);
 void STROBE_CORE_EXPORTEDFUNC_main(void **STROBE_CORE);
+
+extern STROBE_CORE_t *STROBE_CORE;
+
+
 
 
 #endif
