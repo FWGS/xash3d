@@ -28,7 +28,6 @@ See the GNU General Public License for more details.
 #define STROBE_CORE_FUNC_main main
 #define STROBE_CORE_FUNC_debughandler debugDrawer
 
-
 #define STROBE_CORE_s STROBE_CORE ## _s
 #define STROBE_CORE_t STROBE_CORE ## _t
 #define STROBE_CORE_priv_s STROBE_CORE ## _priv_s
@@ -40,10 +39,8 @@ See the GNU General Public License for more details.
 #define STROBE_CORE_EXPORTEDFUNC_destructor STROBE_CORE ## _destructor
 #define STROBE_CORE_EXPORTEDFUNC_reinit STROBE_CORE ## _reinit
 
-
 typedef struct STROBE_CORE_s STROBE_CORE_t;
 typedef struct STROBE_CORE_priv_s STROBE_CORE_priv_t;
-
 
 typedef struct STROBE_CORE_s {
 	StrobeAPI_t base;
@@ -58,8 +55,5 @@ void STROBE_CORE_EXPORTEDFUNC_reinit(void **STROBE_CORE);
 void STROBE_CORE_EXPORTEDFUNC_main(void **STROBE_CORE);
 
 extern STROBE_CORE_t *STROBE_CORE;
-
-
-
 
 #endif

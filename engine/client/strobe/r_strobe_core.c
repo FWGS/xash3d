@@ -105,8 +105,8 @@ static void R_Strobe(STROBE_CORE_THIS_PARAM)
 		/*((swapInterval != r_strobe_swapinterval->integer) && (swapInterval != 0)) || */
 		STROBE_CORE_THIS->base.protected->fCounter == UINT_MAX) // Reset stats after some time
 	{
-
-		STROBE_CORE_EXPORTEDFUNC_reinit(&STROBE_CORE_THIS);
+		
+		STROBE_CORE_EXPORTEDFUNC_reinit(*(void***)&_STROBE_CORE_THIS);
 		R_Strobe(&STROBE_CORE_THIS);
 		/*
 		STROBE_CORE_THIS->base.protected->pCounter = 0; STROBE_CORE_THIS->base.protected->pBCounter = 0; STROBE_CORE_THIS->base.protected->pNCounter = 0;
