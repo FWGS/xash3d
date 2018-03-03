@@ -135,7 +135,7 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 		case SDL_SCANCODE_VOLUMEDOWN:
 		case SDL_SCANCODE_BRIGHTNESSDOWN:
 		case SDL_SCANCODE_BRIGHTNESSUP:
-			break;
+			return;
 		case SDL_SCANCODE_UNKNOWN:
 		{
 			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n" );
