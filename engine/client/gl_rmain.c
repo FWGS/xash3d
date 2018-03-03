@@ -24,6 +24,8 @@ GNU General Public License for more details.
 #include "particledef.h"
 #include "entity_types.h"
 
+#include "strobe/r_strobe_core.h"
+
 #define IsLiquidContents( cnt )	( cnt == CONTENTS_WATER || cnt == CONTENTS_SLIME || cnt == CONTENTS_LAVA )
 
 msurface_t	*r_debug_surface;
@@ -34,8 +36,6 @@ ref_instance_t	RI, prevRI;
 
 mleaf_t		*r_viewleaf, *r_oldviewleaf;
 mleaf_t		*r_viewleaf2, *r_oldviewleaf2;
-
-StrobeInfo_t StrobeInfo;
 
 static int R_RankForRenderMode( cl_entity_t *ent )
 {
@@ -1328,245 +1328,6 @@ void R_RenderFrame( const ref_params_t *fd, qboolean drawWorld )
 	GL_BackendEndFrame();
 }
 
-_inline void GL_GenerateBlackFrame( void ) // Generates partial or full black frame
-{
-	if ( CL_IsInConsole() ) // No strobing on the console
-	{
-		if (!vid_fullscreen->integer) // Disable when not fullscreen due to viewport problems
-		{
-			R_Set2DMode(false);
-			return;
-		}
-		pglEnable( GL_SCISSOR_TEST );
-		pglScissor( con_rect.x, (-con_rect.y) - (con_rect.h * 1.25), con_rect.w, con_rect.h ); // Preview strobe setting on static
-		pglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-		pglClear( GL_COLOR_BUFFER_BIT );
-		pglDisable( GL_SCISSOR_TEST );
-	}
-	else
-	{
-		//pglFlush(); // ?
-		pglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-		pglClear( GL_COLOR_BUFFER_BIT );
-	}
-}
-
-_inline double standard_deviation(double data[], int n) // From the internet
-{
-	double mean = 0.0, sum_deviation = 0.0;
-	int i;
-	for (i = 0; i < n; ++i)
-	{
-		mean += data[i];
-	}
-	mean = mean / n;
-	for (i = 0; i < n; ++i)
-		sum_deviation += (data[i] - mean)*(data[i] - mean);
-	return sqrt(sum_deviation / n);
-}
-
-/*
-===============
-R_Strobe
-
-TODO:
-	* (?) Move "Strobe" to separate files.
-	* Make swapping transition seamless by rendering non-opaque frames.
-	* Implement high precision timer to keep the internal phase on track with monitor. (In case of freezes etc.)
-	* (?) Call R_Strobe each frame no matter strobe setting and simulate strobing to keep the phases on track (When on menu, ...)
-===============
-*/
-void R_Strobe( void )
-{
-	static int strobeInterval = 0;
-	static int swapInterval = 0;
-	static double recentTime = 0.0, recentTime2 = 0.0;
-	double _delta = 0.0, _delta2 = 0.0;
-	static qboolean cdTriggered = false;
-	static double delta[STROBE_DEVIATION_SIZE] = { 0.0 };
-	static unsigned int fCounterSnapshot = 0;
-	double currentTime = Sys_DoubleTime();
-	
-	_delta2 = currentTime - recentTime2;
-	recentTime2 = currentTime;
-
-	if (CL_IsInMenu())
-	{
-		R_Set2DMode(false);
-		return;
-	}
-
-	if( StrobeInfo.cdTimer >= 0.0)
-		StrobeInfo.cdTimer += _delta2;
-	if (StrobeInfo.fCounter - fCounterSnapshot == 1)
-	{
-		delta[StrobeInfo.fCounter % ARRAYSIZE(delta)] = _delta2;
-		StrobeInfo.deviation = standard_deviation(delta, ARRAYSIZE(delta)) * 1000;
-	}
-	fCounterSnapshot = StrobeInfo.fCounter;
-	
-	
-	if (r_strobe_cooldown->integer > 0)
-	{
-		if (StrobeInfo.cdTimer > (double)abs(r_strobe_cooldown->integer) && cdTriggered == true)
-		{
-			cdTriggered = false;
-			StrobeInfo.cdTimer = -1.0;
-		}
-
-		if (StrobeInfo.fCounter > ARRAYSIZE(delta))
-		{
-			if (StrobeInfo.deviation > STROBE_DEVIATION_LIMIT)
-			{
-				cdTriggered = true;
-				StrobeInfo.cdTimer = 0.0;
-			}
-		}
-	}
-	else
-	{
-		cdTriggered = false;
-	}
-
-	//Msg("Snapshot: %d - Deviation: %f - timer %f - delta %f\n\n", snapshot, standard_deviation(data, 10) * 1000, StrobeInfo.cdTimer, _delta2);
-
-	if ( ((strobeInterval != r_strobe->integer) && (strobeInterval != 0) ) || 
-		/*((swapInterval != r_strobe_swapinterval->integer) && (swapInterval != 0)) || */
-		StrobeInfo.fCounter > UINT_MAX - 2U) // Reset stats after some time
-	{
-		StrobeInfo.pCounter = 0; StrobeInfo.pBCounter = 0; StrobeInfo.pNCounter = 0;
-		StrobeInfo.nCounter = 0; StrobeInfo.nBCounter = 0; StrobeInfo.nNCounter = 0;
-		StrobeInfo.fCounter = 0;
-		StrobeInfo.deviation = 0.0;
-		Q_memset(delta, 0, ARRAYSIZE(delta));
-		StrobeInfo.frameInfo &= ~p_inverted;
-	}
-	strobeInterval = r_strobe->integer;
-	swapInterval = r_strobe_swapinterval->integer;
-
-	if ( (strobeInterval == 0) ||
-		((gl_swapInterval->integer == 0) && (strobeInterval != 0)) )
-	{
-		if ( !gl_swapInterval->integer )
-			MsgDev( D_WARN, "Strobing requires V-SYNC not being turned off! (gl_swapInterval != 0) \n" );
-
-		if ( strobeInterval != 0 ) // If v-sync is off, turn off strobing
-		{
-			Cvar_Set( "r_strobe", "0" );
-		}
-		StrobeInfo.fCounter = 0;
-
-		R_Set2DMode( false );
-		return;
-	}
-
-	if ( ( StrobeInfo.fCounter % 2 ) == 0 )
-	{
-		++StrobeInfo.pCounter;
-		StrobeInfo.frameInfo |= p_positive;
-	}
-	else
-	{
-		++StrobeInfo.nCounter;
-		StrobeInfo.frameInfo &= ~p_positive;
-	}
-
-	if ( swapInterval < 0 )
-		swapInterval = abs( swapInterval );
-
-	if ( ( swapInterval != 0 ) && ( strobeInterval % 2 != 0 ) ) // Swapping not enabled for even intervals as it is neither necessary nor works as intended
-	{
-		_delta = currentTime - recentTime; // New Currenttime for _delta ?
-		if ( (_delta >= (double)(swapInterval) ) && ( _delta < (double)(2 * swapInterval) ) ) // Basic timer
-		{
-			StrobeInfo.frameInfo |= p_inverted;
-		}
-		else if ( _delta < (double)(swapInterval) )
-		{
-			StrobeInfo.frameInfo &= ~p_inverted;
-		}
-		else //if (_delta >= (double)(2 * swapInterval))
-		{
-			recentTime = currentTime;
-		}
-	}
-	
-	switch ( StrobeInfo.frameInfo & (p_positive | p_inverted) )
-	{
-	case ( p_positive | p_inverted ):
-		if ((abs(strobeInterval) % 2) == 0)
-			StrobeInfo.frameInfo = (((StrobeInfo.pCounter - 1) % (abs(strobeInterval) + 1)) == (abs(strobeInterval) / 2)) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //even
-		else
-			StrobeInfo.frameInfo &= ~f_normal;
-		break;
-
-	case( p_positive & ~p_inverted ):
-		if (abs(strobeInterval) % 2 == 0)
-			StrobeInfo.frameInfo = (((StrobeInfo.pCounter - 1) % (abs(strobeInterval) + 1)) == 0) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //even
-		else
-		{
-			if (abs(strobeInterval) == 1)
-				StrobeInfo.frameInfo |= f_normal;
-			else
-				StrobeInfo.frameInfo = (((StrobeInfo.pCounter - 1) % ((abs(strobeInterval) + 1) / 2)) == 0) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //odd
-		}
-		break;
-
-	case( ~p_positive & p_inverted ):
-		if (abs(strobeInterval) % 2 == 0)
-			StrobeInfo.frameInfo = (((StrobeInfo.nCounter - 1) % (abs(strobeInterval) + 1)) == 0) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //even
-		else
-		{
-			if (abs(strobeInterval) == 1)
-				StrobeInfo.frameInfo |= f_normal;
-			else
-				StrobeInfo.frameInfo = (((StrobeInfo.nCounter - 1) % ((abs(strobeInterval) + 1) / 2)) == 0) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //odd
-		}
-		break;
-
-	case 0:
-		if ((abs(strobeInterval) % 2) == 0)
-			StrobeInfo.frameInfo = (((StrobeInfo.nCounter - 1) % (abs(strobeInterval) + 1)) == (abs(strobeInterval) / 2)) ? StrobeInfo.frameInfo | f_normal : StrobeInfo.frameInfo & ~f_normal; //even
-		else
-			StrobeInfo.frameInfo &= ~f_normal;
-		break;
-
-	default:
-		StrobeInfo.frameInfo = (p_positive | f_normal);
-		break;
-	}
-
-	if ( strobeInterval < 0 )
-		StrobeInfo.frameInfo ^= f_normal;
-
-	if ( cdTriggered != false )
-	{
-		StrobeInfo.frameInfo = f_normal | (StrobeInfo.frameInfo & p_positive);
-	}
-
-	if ( StrobeInfo.frameInfo & f_normal ) // Show normal
-	{
-		if (StrobeInfo.frameInfo & p_positive)
-			++StrobeInfo.pNCounter;
-		else
-			++StrobeInfo.nNCounter;
-
-		R_Set2DMode(false);
-	}
-	else // Show black
-	{
-		if (StrobeInfo.frameInfo & p_positive)
-			++StrobeInfo.pBCounter;
-		else
-			++StrobeInfo.nBCounter;
-
-		GL_GenerateBlackFrame();
-	}
-
-	++StrobeInfo.fCounter;
-}
-
-
 /*
 ===============
 R_EndFrame
@@ -1574,7 +1335,13 @@ R_EndFrame
 */
 void R_EndFrame( void )
 {
-	R_Strobe();
+#ifdef STROBE_ENABLED
+	Strobe_Invoker((void**)(&STROBE_CORE), STROBE_CORE_EXPORTEDFUNC_constructor, STROBE_CORE_EXPORTEDFUNC_main, STROBE_CORE_EXPORTEDFUNC_destructor);
+#else
+	// flush any remaining 2D bits
+	R_Set2DMode(false);
+#endif
+	
 
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );

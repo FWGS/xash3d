@@ -24,7 +24,7 @@ extern "C" {
 
 #include "backends.h"
 #include "defaults.h"
-//#include "wrect.h"
+#include "wrect.h"
 
 //
 // check if selected backend not allowed
@@ -1081,6 +1081,8 @@ void Con_ClearAutoComplete();
 //
 // console.c
 //
+extern rectf_t con_rect;
+
 void Con_Clear( void );
 
 extern const char *svc_strings[256];

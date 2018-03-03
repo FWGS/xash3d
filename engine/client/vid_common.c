@@ -23,6 +23,8 @@ GNU General Public License for more details.
 #include "input.h"
 #include "gl_vidnt.h"
 
+#include "strobe/r_strobe_core.h"
+
 extern convar_t *renderinfo;
 convar_t	*gl_allow_software;
 convar_t	*gl_extensions;
@@ -78,11 +80,6 @@ convar_t	*r_lightmap;
 convar_t	*r_fastsky;
 convar_t	*r_vbo;
 convar_t 	*r_bump;
-
-convar_t	*r_strobe;
-convar_t	*r_strobe_swapinterval;
-convar_t	*r_strobe_debug;
-convar_t	*r_strobe_cooldown;
 
 convar_t	*mp_decals;
 
@@ -1011,27 +1008,6 @@ static void R_CheckVBO( void )
 	r_bump = Cvar_Get( "r_bump", def, flags, "enable bump-mapping (r_vbo required)" );
 }
 
-/*
-===============
-R_initStrobe
-
-register strobe cvar
-===============
-*/
-_inline void R_StrobeInit( void )
-{
-	r_strobe = Cvar_Get( "r_strobe", "0", CVAR_ARCHIVE, "black frame replacement interval" );
-	r_strobe_swapinterval = Cvar_Get( "r_strobe_swapinterval", "0", CVAR_ARCHIVE, "swapping phase interval" );
-	r_strobe_debug = Cvar_Get( "r_strobe_debug", "0", CVAR_ARCHIVE, "show strobe debug information" );
-	r_strobe_cooldown = Cvar_Get( "r_strobe_cooldown", "3", CVAR_ARCHIVE, "strobe cooldown perios in secs" );
-
-	StrobeInfo.pCounter = 0; StrobeInfo.pBCounter = 0; StrobeInfo.pNCounter = 0;
-	StrobeInfo.pCounter = 0; StrobeInfo.nBCounter = 0; StrobeInfo.nNCounter = 0;
-	StrobeInfo.fCounter = 0;
-	StrobeInfo.deviation = 0.0;
-	StrobeInfo.cdTimer = 0.0;
-	StrobeInfo.frameInfo = (p_positive | f_normal);
-}
 
 /*
 ===============
@@ -1073,7 +1049,12 @@ qboolean R_Init( void )
 	R_InitImages();
 	R_SpriteInit();
 	R_StudioInit();
-	R_StrobeInit();
+	
+#ifdef STROBE_ENABLED
+	R_InitStrobe();
+	//StrobeInfo = new_Strobe();
+#endif
+
 	R_ClearDecals();
 	R_ClearScene();
 

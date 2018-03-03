@@ -1,0 +1,111 @@
+/*
+r_strobe_template.c - Software based strobing implementation
+
+Copyright (C) 2018 - fuzun * github.com/fuzun
+
+For information:
+https://forums.blurbusters.com
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+*/
+
+
+#if !defined XASH_DEDICATED && !defined STROBE_DISABLED
+
+
+#include "r_strobe_base_protected_.h"
+#include "r_strobe_template.h"
+// #include "gl_local.h"
+#include "client.h"
+
+
+STROBE_TEMPLATE_t *STROBE_TEMPLATE = NULL;
+
+typedef struct STROBE_TEMPLATE_priv_s {
+	// Private members
+} STROBE_TEMPLATE_priv_t;
+
+
+void STROBE_TEMPLATE_EXPORTEDFUNC_constructor(void **STROBE_TEMPLATE);
+void STROBE_TEMPLATE_EXPORTEDFUNC_destructor(void **STROBE_TEMPLATE);
+void STROBE_TEMPLATE_EXPORTEDFUNC_reinit(void **STROBE_TEMPLATE);
+void STROBE_TEMPLATE_EXPORTEDFUNC_main(void **STROBE_TEMPLATE);
+
+
+
+static void main(STROBE_TEMPLATE_THIS_PARAM)
+{
+	STROBE_TEMPLATE_THIS->base.protected->frameInfo = (p_positive | f_normal);
+	STROBE_TEMPLATE_THIS->base.ProcessFrame(&STROBE_TEMPLATE_THIS->base);
+}
+
+
+static inline void debugHandler(STROBE_TEMPLATE_THIS_PARAM)
+{
+	char debugstr[2048];
+	STROBE_TEMPLATE_THIS->base.Helpers.GenerateDebugStatistics(&STROBE_TEMPLATE_THIS->base, debugstr, 2048);
+}
+
+void STROBE_TEMPLATE_EXPORTEDFUNC_constructor(void **STROBE_TEMPLATE)
+{
+	STROBE_TEMPLATE_t **instance = *(STROBE_TEMPLATE_t ***)&STROBE_TEMPLATE;
+	*instance = (STROBE_TEMPLATE_t *)malloc(sizeof(STROBE_TEMPLATE_t));
+
+	(*instance)->private = (STROBE_TEMPLATE_priv_t *)malloc(sizeof(STROBE_TEMPLATE_priv_t));
+	(*instance)->STROBE_TEMPLATE_FUNC_main = main;
+	(*instance)->STROBE_TEMPLATE_FUNC_debughandler = debugHandler;
+
+	StrobeAPI_constructor(&(*instance)->base);
+}
+
+
+void STROBE_TEMPLATE_EXPORTEDFUNC_destructor(void **STROBE_TEMPLATE)
+{
+	STROBE_TEMPLATE_t **instance = *(STROBE_TEMPLATE_t ***)&STROBE_TEMPLATE;
+	
+	if (*instance)
+	{
+		StrobeAPI_destructor(&(*instance)->base);
+		if ((*instance)->private)
+		{
+			free((*instance)->private);
+			(*instance)->private = NULL;
+		}
+		free(*instance);
+		*instance = NULL;
+	}
+}
+
+void STROBE_TEMPLATE_EXPORTEDFUNC_reinit(void **STROBE_TEMPLATE)
+{
+	STROBE_TEMPLATE_t **instance = *(STROBE_TEMPLATE_t ***)&STROBE_TEMPLATE;
+
+	if (!(*STROBE_TEMPLATE))
+	{
+		STROBE_TEMPLATE_EXPORTEDFUNC_destructor(instance);
+	}
+	STROBE_TEMPLATE_EXPORTEDFUNC_constructor(instance);
+}
+
+
+void STROBE_TEMPLATE_EXPORTEDFUNC_main(void **STROBE_TEMPLATE)
+{
+	STROBE_TEMPLATE_t **instance = *(STROBE_TEMPLATE_t ***)&STROBE_TEMPLATE;
+
+	if (*instance)
+	{
+		(*instance)->STROBE_TEMPLATE_FUNC_main(instance);
+	}
+}
+
+
+#endif

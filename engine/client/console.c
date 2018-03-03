@@ -33,7 +33,7 @@ convar_t	*con_fontscale;
 convar_t	*con_fontnum;
 convar_t	*vgui_utf8;
 
-_rectf_t	con_rect;
+rectf_t	con_rect;
 
 static int g_codepage = 0;
 static qboolean g_utf8 = false;

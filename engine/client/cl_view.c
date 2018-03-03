@@ -21,8 +21,12 @@ GNU General Public License for more details.
 #include "entity_types.h"
 #include "gl_local.h"
 #include "vgui_draw.h"
+
+#include "strobe/r_strobe_core.h"
+
 #include "touch.h" // IN_TouchDraw( )
 #include "joyinput.h" // Joy_DrawOnScreenKeyboard( )
+
 
 /*
 ===============
@@ -417,6 +421,12 @@ void V_PostRender( void )
 		SCR_RSpeeds();
 		SCR_NetSpeeds();
 		SCR_DrawFPS();
+
+#ifdef STROBE_ENABLED
+		if (STROBE_CORE)
+			STROBE_CORE->STROBE_CORE_FUNC_debughandler(&STROBE_CORE);
+#endif
+
 		SCR_DrawPos();
 		SCR_DrawNetGraph();
 		SV_DrawOrthoTriangles();
