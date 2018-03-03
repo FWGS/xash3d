@@ -92,6 +92,10 @@ void Sys_PrintUsage( void )
 	#endif
 
 	#ifndef XASH_DEDICATED
+		O("-width <n>       ","specifies width of engine window")
+		O("-height <n>      ","specifies height of engine window")
+		O("-fullscreen      ","runs engine in fullscreen mode")
+		O("-windowed        ","runs engine in windowed mode")
 		O("-nojoy           ","disable joystick support")
 		O("-nosound         ","disable sound")
 		O("-noenginemouse   ","disable mouse completely")
