@@ -73,6 +73,7 @@ else()
 endif()
 
 # Misc
+option(XASH_USE_STB_SPRINTF "Use stb_sprintf implementation for sprintf" ON)
 option(XASH_NO_INSTALL_RUNSCRIPT "Don't install xash3d.sh" OFF)
 option(XASH_NO_INSTALL_VGUI_BIN "Don't bundle proprietary VGUI" OFF)
 if(WIN32) # Autodownload for lazy developers using Windows
