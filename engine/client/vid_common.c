@@ -1064,6 +1064,7 @@ static void SetWidthAndHeightFromCommandLine()
 
 static void SetFullscreenModeFromCommandLine()
 {
+#ifndef __ANDROID__
 	if ( Sys_CheckParm("-fullscreen") )
 	{
 		Cvar_Set2("fullscreen", "1", true);
@@ -1072,6 +1073,7 @@ static void SetFullscreenModeFromCommandLine()
 	{
 		Cvar_Set2("fullscreen", "0", true);
 	}
+#endif
 }
 
 /*
