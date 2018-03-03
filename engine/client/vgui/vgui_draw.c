@@ -34,6 +34,7 @@ static enum VGUI_DefaultCursor s_currentCursor;
 #include "platform/sdl/events.h"
 static SDL_Cursor* s_pDefaultCursor[20];
 #endif
+static void *s_pVGuiSupport; // vgui_support library
 
 void VGUI_DrawInit( void );
 void VGUI_DrawShutdown( void );
@@ -77,7 +78,7 @@ void GAME_EXPORT VGUI_GetMousePos( int *_x, int *_y )
 {
 	float xscale = scr_width->value / (float)clgame.scrInfo.iWidth;
 	float yscale = scr_height->value / (float)clgame.scrInfo.iHeight;
-	int x,y;
+	int x, y;
 
 	CL_GetMousePosition( &x, &y );
 	*_x = x / xscale, *_y = y / yscale;
@@ -133,7 +134,7 @@ void GAME_EXPORT VGUI_CursorSelect(enum VGUI_DefaultCursor cursor )
 	{
 		SDL_ShowCursor( false );
 		if( host.mouse_visible )
-			SDL_GetRelativeMouseState( 0, 0 );
+			SDL_GetRelativeMouseState( NULL, NULL );
 	}
 	//SDL_SetRelativeMouseMode(false);
 #endif
@@ -151,12 +152,14 @@ byte GAME_EXPORT VGUI_GetColor( int i, int j)
 
 // Define and initialize vgui API
 
-void GAME_EXPORT VGUI_SetVisible ( qboolean state )
+void GAME_EXPORT VGUI_SetVisible( qboolean state )
 {
 	host.mouse_visible=state;
 #ifdef XASH_SDL
 	SDL_ShowCursor( state );
-	if(!state) SDL_GetRelativeMouseState( 0, 0 );
+	if( !state )
+		SDL_GetRelativeMouseState( NULL, NULL );
+
 	SDLash_EnableTextInput( state, true );
 #endif
 }
@@ -171,7 +174,7 @@ int GAME_EXPORT VGUI_UtfProcessChar( int in )
 
 vguiapi_t vgui =
 {
-	false, //Not initialized yet
+	false, // Not initialized yet
 	VGUI_DrawInit,
 	VGUI_DrawShutdown,
 	VGUI_SetupDrawingText,
@@ -201,11 +204,12 @@ vguiapi_t vgui =
 	NULL,
 	NULL,
 	NULL,
-} ;
+};
 
-
-void *lib; //vgui_support library
-
+qboolean VGui_IsActive( void )
+{
+	return vgui.initialized;
+}
 
 /*
 ================
@@ -226,14 +230,15 @@ void VGui_Startup( int width, int height )
 
 	if( failed )
 		return;
-#ifdef XASH_INTERNAL_GAMELIBS
+
 	if( !vgui.initialized )
 	{
-		lib = Com_LoadLibrary( "client", false );
+#ifdef XASH_INTERNAL_GAMELIBS
+		s_pVGuiSupport = Com_LoadLibrary( "client", false );
 
-		if( lib )
+		if( s_pVGuiSupport )
 		{
-			F = Com_GetProcAddress( lib, "InitVGUISupportAPI" );
+			F = Com_GetProcAddress( s_pVGuiSupport, "InitVGUISupportAPI" );
 			if( F )
 			{
 				F( &vgui );
@@ -242,14 +247,11 @@ void VGui_Startup( int width, int height )
 				MsgDev( D_INFO, "vgui_support: found interal client support\n" );
 			}
 		}
-	}
-#endif
+#endif // XASH_INTERNAL_GAMELIBS
 
-	if( !vgui.initialized )
-	{
 		Com_ResetLibraryError();
 
-		// hack: load vgui with correct path first if specified.
+		// HACKHACK: load vgui with correct path first if specified.
 		// it will be reused while resolving vgui support and client deps
 		if( Sys_GetParmFromCmdLine( "-vguilib", vguilib ) )
 		{
@@ -257,6 +259,7 @@ void VGui_Startup( int width, int height )
 				Q_strncpy( vguiloader, "vgui_support.dll", 256 );
 			else
 				Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
+
 			if( !Com_LoadLibrary( vguilib, false ) )
 				MsgDev( D_WARN, "VGUI preloading failed. Default library will be used!\n");
 		}
@@ -267,14 +270,14 @@ void VGui_Startup( int width, int height )
 		if( !vguiloader[0] && !Sys_GetParmFromCmdLine( "-vguiloader", vguiloader ) )
 			Q_strncpy( vguiloader, VGUI_SUPPORT_DLL, 256 );
 
-		lib = Com_LoadLibrary( vguiloader, false );
+		s_pVGuiSupport = Com_LoadLibrary( vguiloader, false );
 
-		if( !lib )
+		if( !s_pVGuiSupport )
 		{
-			lib = Com_LoadLibrary( va( "../%s", vguiloader ), false );
+			s_pVGuiSupport = Com_LoadLibrary( va( "../%s", vguiloader ), false );
 		}
 
-		if( !lib )
+		if( !s_pVGuiSupport )
 		{
 			if( FS_SysFileExists( vguiloader, false ) )
 				MsgDev( D_ERROR, "Failed to load vgui_support library: %s", Com_GetLibraryError() );
@@ -283,7 +286,7 @@ void VGui_Startup( int width, int height )
 		}
 		else
 		{
-			F = Com_GetProcAddress( lib, "InitAPI" );
+			F = Com_GetProcAddress( s_pVGuiSupport, "InitAPI" );
 			if( F )
 			{
 				F( &vgui );
@@ -338,9 +341,11 @@ void VGui_Shutdown( void )
 {
 	if( vgui.Shutdown )
 		vgui.Shutdown();
-	if( lib )
-		Com_FreeLibrary( lib );
-	lib = NULL;
+
+	if( s_pVGuiSupport )
+		Com_FreeLibrary( s_pVGuiSupport );
+	s_pVGuiSupport = NULL;
+
 	vgui.initialized = false;
 }
 
@@ -349,7 +354,8 @@ void VGUI_InitKeyTranslationTable( void )
 {
 	static qboolean bInitted = false;
 
-	if( bInitted ) return;
+	if( bInitted )
+		return;
 	bInitted = true;
 
 	// set virtual key translation table
@@ -480,10 +486,12 @@ void VGui_KeyEvent( int key, int down )
 {
 	if( !vgui.initialized )
 		return;
+
 #ifdef XASH_SDL
 	if( host.mouse_visible )
 		SDLash_EnableTextInput( 1, false );
 #endif
+
 	switch( key )
 	{
 	case K_MOUSE1:
@@ -546,7 +554,7 @@ void GAME_EXPORT VGUI_DrawShutdown( void )
 
 	for( i = 1; i < g_textureId; i++ )
 	{
-		GL_FreeImage( va(  "*vgui%i", i ));
+		GL_FreeImage( va( "*vgui%i", i ));
 	}
 }
 
@@ -753,8 +761,6 @@ void VGui_Paint()
 	if(vgui.initialized)
 		vgui.Paint();
 }
-
-
 
 void VGui_RunFrame()
 {

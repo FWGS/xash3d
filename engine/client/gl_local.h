@@ -699,6 +699,7 @@ extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
 extern convar_t	*r_vbo;
 extern convar_t	*r_bump;
+extern convar_t *r_underwater_distortion;
 
 extern convar_t *mp_decals;
 

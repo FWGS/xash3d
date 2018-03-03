@@ -398,9 +398,7 @@ void Android_RunEvents()
 		}
 
 		// otherwise just push it by char, text render will decode unicode strings
-		Con_CharEvent( ch );
-		if( cls.key_dest == key_menu )
-			UI_CharEvent ( ch );
+		CL_CharEvent( ch );
 	}
 	events.inputtext[0] = 0; // no more text
 

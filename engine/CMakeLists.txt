@@ -171,6 +171,10 @@ if(XASH_NO_ASYNC_NS_RESOLVE)
 	add_definitions(-DXASH_NO_ASYNC_NS_RESOLVE)
 endif()
 
+if(XASH_USE_STB_SPRINTF)
+	add_definitions(-DXASH_USE_STB_SPRINTF)
+endif()
+
 fwgs_set_default_properties(${XASH_ENGINE})
 
 if(NOT WIN32)
