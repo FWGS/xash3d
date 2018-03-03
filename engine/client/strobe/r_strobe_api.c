@@ -383,7 +383,7 @@ static inline double func_experimental_Badness(StrobeAPI_t *self, qboolean PWMIn
 
 
 
-size_t get_FrameCounter(StrobeAPI_t *self, counterType type)
+static inline size_t get_FrameCounter(StrobeAPI_t *self, counterType type)
 {
 	switch (type)
 	{
@@ -426,17 +426,17 @@ size_t get_FrameCounter(StrobeAPI_t *self, counterType type)
 	return self->protected->fCounter;
 }
 
-double get_Deviation(StrobeAPI_t *self)
+static inline double get_Deviation(StrobeAPI_t *self)
 {
 	return self->protected->deviation;
 }
 
-double get_CooldownTimer(StrobeAPI_t *self)
+static inline double get_CooldownTimer(StrobeAPI_t *self)
 {
 	return self->protected->cdTimer;
 }
 
-double get_currentFPS(StrobeAPI_t *self)
+static inline double get_currentFPS(StrobeAPI_t *self)
 {
 	// Copied from SCR_DrawFps
 	// This way until current fps becomes global!!!
