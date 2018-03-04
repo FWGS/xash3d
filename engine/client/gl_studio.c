@@ -759,56 +759,6 @@ float CL_GetSequenceDuration( cl_entity_t *ent, int sequence )
 
 /*
 ====================
-StudioGetAnim
-
-====================
-*/
-void *R_StudioGetAnim( studiohdr_t *m_pStudioHeader, model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc )
-{
-	mstudioseqgroup_t	*pseqgroup;
-	cache_user_t	*paSequences;
-	fs_offset_t		filesize;
-	byte		*buf;
-
-	pseqgroup = (mstudioseqgroup_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
-	if( pseqdesc->seqgroup == 0 )
-		return ((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
-
-	paSequences = (cache_user_t *)m_pSubModel->submodels;
-
-	if( paSequences == NULL )
-	{
-		paSequences = (cache_user_t *)Mem_Alloc( com_studiocache, MAXSTUDIOGROUPS * sizeof( cache_user_t ));
-		m_pSubModel->submodels = (void *)paSequences;
-	}
-
-	// check for already loaded
-	if( !Mod_CacheCheck(( cache_user_t *)&( paSequences[pseqdesc->seqgroup] )))
-	{
-		string	filepath, modelname, modelpath;
-
-		FS_FileBase( m_pSubModel->name, modelname );
-		FS_ExtractFilePath( m_pSubModel->name, modelpath );
-
-		// NOTE: here we build real sub-animation filename because stupid user may rename model without recompile
-		Q_snprintf( filepath, sizeof( filepath ), "%s/%s%i%i.mdl", modelpath, modelname, pseqdesc->seqgroup / 10, pseqdesc->seqgroup % 10 );
-
-		buf = FS_LoadFile( filepath, &filesize, false );
-		if( !buf || !filesize ) Host_Error( "StudioGetAnim: can't load %s\n", filepath );
-		if( IDSEQGRPHEADER != *(uint *)buf ) Host_Error( "StudioGetAnim: %s is corrupted\n", filepath );
-
-		MsgDev( D_INFO, "loading: %s\n", filepath );
-
-		paSequences[pseqdesc->seqgroup].data = Mem_Alloc( com_studiocache, filesize );
-		memcpy( paSequences[pseqdesc->seqgroup].data, buf, filesize );
-		Mem_Free( buf );
-	}
-
-	return ((byte *)paSequences[pseqdesc->seqgroup].data + pseqdesc->animindex);
-}
-
-/*
-====================
 StudioFxTransform
 
 ====================
@@ -918,197 +868,6 @@ void R_StudioCalcBoneAdj( float dadt, float *adj, const byte *pcontroller1, cons
 
 /*
 ====================
-StudioCalcBoneQuaternion
-
-====================
-*/
-void R_StudioCalcBoneQuaternion( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *adj, vec4_t q )
-{
-	vec3_t	angles1;
-	vec3_t	angles2;
-	int	j, k;
-
-	for( j = 0; j < 3; j++ )
-	{
-		if( !panim || panim->offset[j+3] == 0 )
-		{
-			angles2[j] = angles1[j] = pbone->value[j+3]; // default;
-		}
-		else
-		{
-			mstudioanimvalue_t *panimvalue = (mstudioanimvalue_t *)((byte *)panim + panim->offset[j+3]);
-
-			k = frame;
-
-			// debug
-			if( panimvalue->num.total < panimvalue->num.valid )
-				k = 0;
-
-			// find span of values that includes the frame we want
-			while( panimvalue->num.total <= k )
-			{
-				k -= panimvalue->num.total;
-				panimvalue += panimvalue->num.valid + 1;
-
-				// debug
-				if( panimvalue->num.total < panimvalue->num.valid )
-					k = 0;
-			}
-
-			// bah, missing blend!
-			if( panimvalue->num.valid > k )
-			{
-				angles1[j] = panimvalue[k+1].value;
-
-				if( panimvalue->num.valid > k + 1 )
-				{
-					angles2[j] = panimvalue[k+2].value;
-				}
-				else
-				{
-					if( panimvalue->num.total > k + 1 )
-						angles2[j] = angles1[j];
-					else angles2[j] = panimvalue[panimvalue->num.valid+2].value;
-				}
-			}
-			else
-			{
-				angles1[j] = panimvalue[panimvalue->num.valid].value;
-				if( panimvalue->num.total > k + 1 )
-					angles2[j] = angles1[j];
-				else angles2[j] = panimvalue[panimvalue->num.valid+2].value;
-			}
-
-			angles1[j] = pbone->value[j+3] + angles1[j] * pbone->scale[j+3];
-			angles2[j] = pbone->value[j+3] + angles2[j] * pbone->scale[j+3];
-		}
-
-		if( pbone->bonecontroller[j+3] != -1 && adj != NULL )
-		{
-			angles1[j] += adj[pbone->bonecontroller[j+3]];
-			angles2[j] += adj[pbone->bonecontroller[j+3]];
-		}
-	}
-
-	if( !VectorCompare( angles1, angles2 ))
-	{
-		vec4_t	q1, q2;
-
-		AngleQuaternion( angles1, q1 );
-		AngleQuaternion( angles2, q2 );
-		QuaternionSlerp( q1, q2, s, q );
-	}
-	else
-	{
-		AngleQuaternion( angles1, q );
-	}
-}
-
-/*
-====================
-StudioCalcBonePosition
-
-====================
-*/
-void R_StudioCalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *adj, vec3_t pos )
-{
-	vec3_t	origin1;
-	vec3_t	origin2;
-	int	j, k;
-
-	for( j = 0; j < 3; j++ )
-	{
-		if( !panim || panim->offset[j] == 0 )
-		{
-			origin2[j] = origin1[j] = pbone->value[j]; // default;
-		}
-		else
-		{
-			mstudioanimvalue_t	*panimvalue = (mstudioanimvalue_t *)((byte *)panim + panim->offset[j]);
-
-			k = frame;
-
-			// debug
-			if( panimvalue->num.total < panimvalue->num.valid )
-				k = 0;
-
-			// find span of values that includes the frame we want
-			while( panimvalue->num.total <= k )
-			{
-				k -= panimvalue->num.total;
-				panimvalue += panimvalue->num.valid + 1;
-
-				// debug
-				if( panimvalue->num.total < panimvalue->num.valid )
-					k = 0;
-			}
-
-			// bah, missing blend!
-			if( panimvalue->num.valid > k )
-			{
-				origin1[j] = panimvalue[k+1].value;
-
-				if( panimvalue->num.valid > k + 1 )
-				{
-					origin2[j] = panimvalue[k+2].value;
-				}
-				else
-				{
-					if( panimvalue->num.total > k + 1 )
-						origin2[j] = origin1[j];
-					else origin2[j] = panimvalue[panimvalue->num.valid+2].value;
-				}
-			}
-			else
-			{
-				origin1[j] = panimvalue[panimvalue->num.valid].value;
-				if( panimvalue->num.total > k + 1 )
-					origin2[j] = origin1[j];
-				else origin2[j] = panimvalue[panimvalue->num.valid+2].value;
-			}
-
-			origin1[j] = pbone->value[j] + origin1[j] * pbone->scale[j];
-			origin2[j] = pbone->value[j] + origin2[j] * pbone->scale[j];
-		}
-
-		if( pbone->bonecontroller[j] != -1 && adj != NULL )
-		{
-			origin1[j] += adj[pbone->bonecontroller[j]];
-			origin2[j] += adj[pbone->bonecontroller[j]];
-		}
-	}
-
-	if( !VectorCompare( origin1, origin2 ))
-	{
-		VectorLerp( origin1, s, origin2, pos );
-	}
-	else
-	{
-		VectorCopy( origin1, pos );
-	}
-}
-
-/*
-====================
-StudioSlerpBones
-
-====================
-*/
-void R_StudioSlerpBones( int numbones, vec4_t q1[], float pos1[][3], vec4_t q2[], float pos2[][3], float s )
-{
-	int	i;
-
-	s = bound( 0.0f, s, 1.0f );
-
-	for( i = 0; i < numbones; i++ )
-	{
-		QuaternionSlerp( q1[i], q2[i], s, q1[i] );
-		VectorLerp( pos1[i], s, pos2[i], pos1[i] );
-	}
-}
-
-/*
-====================
 StudioCalcRotations
 
 ====================
@@ -1145,8 +904,8 @@ void R_StudioCalcRotations( cl_entity_t *e, float pos[][3], vec4_t *q, mstudiose
 
 	for( i = 0; i < m_pStudioHeader->numbones; i++, pbone++, panim++ )
 	{
-		R_StudioCalcBoneQuaternion( frame, s, pbone, panim, adj, q[i] );
-		R_StudioCalcBonePosition( frame, s, pbone, panim, adj, pos[i] );
+		Mod_StudioCalcBoneQuaternion( frame, s, pbone, panim, adj, q[i] );
+		Mod_StudioCalcBonePosition( frame, s, pbone, panim, adj, pos[i] );
 	}
 
 	if( pseqdesc->motiontype & STUDIO_X ) pos[pseqdesc->motionbone][0] = 0.0f;
@@ -1178,7 +937,7 @@ void R_StudioMergeBones( cl_entity_t *e, model_t *m_pSubModel )
 
 	f = R_StudioEstimateFrame( e, pseqdesc );
 
-	panim = R_StudioGetAnim( m_pStudioHeader, m_pSubModel, pseqdesc );
+	panim = Mod_StudioGetAnim( m_pStudioHeader, m_pSubModel, pseqdesc );
 	R_StudioCalcRotations( e, pos, q, pseqdesc, panim, f );
 	pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
 
@@ -1244,7 +1003,7 @@ void R_StudioSetupBones( cl_entity_t *e )
 
 	f = R_StudioEstimateFrame( e, pseqdesc );
 
-	panim = R_StudioGetAnim( m_pStudioHeader, RI.currentmodel, pseqdesc );
+	panim = Mod_StudioGetAnim( m_pStudioHeader, RI.currentmodel, pseqdesc );
 	R_StudioCalcRotations( e, pos, q, pseqdesc, panim, f );
 
 	if( pseqdesc->numblends > 1 )
@@ -1258,7 +1017,7 @@ void R_StudioSetupBones( cl_entity_t *e )
 		dadt = R_StudioEstimateInterpolant( e );
 		s = (e->curstate.blending[0] * dadt + e->latched.prevblending[0] * (1.0f - dadt)) / 255.0f;
 
-		R_StudioSlerpBones( m_pStudioHeader->numbones, q, pos, q2, pos2, s );
+		Mod_StudioSlerpBones( m_pStudioHeader->numbones, q, pos, q2, pos2, s );
 
 		if( pseqdesc->numblends == 4 )
 		{
@@ -1269,10 +1028,10 @@ void R_StudioSetupBones( cl_entity_t *e )
 			R_StudioCalcRotations( e, pos4, q4, pseqdesc, panim, f );
 
 			s = (e->curstate.blending[0] * dadt + e->latched.prevblending[0] * (1.0f - dadt)) / 255.0f;
-			R_StudioSlerpBones( m_pStudioHeader->numbones, q3, pos3, q4, pos4, s );
+			Mod_StudioSlerpBones( m_pStudioHeader->numbones, q3, pos3, q4, pos4, s );
 
 			s = (e->curstate.blending[1] * dadt + e->latched.prevblending[1] * (1.0f - dadt)) / 255.0f;
-			R_StudioSlerpBones( m_pStudioHeader->numbones, q, pos, q3, pos3, s );
+			Mod_StudioSlerpBones( m_pStudioHeader->numbones, q, pos, q3, pos3, s );
 		}
 	}
 
@@ -1284,7 +1043,7 @@ void R_StudioSetupBones( cl_entity_t *e )
 		float		s;
 
 		pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + e->latched.prevsequence;
-		panim = R_StudioGetAnim( m_pStudioHeader, RI.currentmodel, pseqdesc );
+		panim = Mod_StudioGetAnim( m_pStudioHeader, RI.currentmodel, pseqdesc );
 
 		// clip prevframe
 		R_StudioCalcRotations( e, pos1b, q1b, pseqdesc, panim, e->latched.prevframe );
@@ -1295,7 +1054,7 @@ void R_StudioSetupBones( cl_entity_t *e )
 			R_StudioCalcRotations( e, pos2, q2, pseqdesc, panim, e->latched.prevframe );
 
 			s = (e->latched.prevseqblending[0]) / 255.0f;
-			R_StudioSlerpBones( m_pStudioHeader->numbones, q1b, pos1b, q2, pos2, s );
+			Mod_StudioSlerpBones( m_pStudioHeader->numbones, q1b, pos1b, q2, pos2, s );
 
 			if( pseqdesc->numblends == 4 )
 			{
@@ -1306,15 +1065,15 @@ void R_StudioSetupBones( cl_entity_t *e )
 				R_StudioCalcRotations( e, pos4, q4, pseqdesc, panim, e->latched.prevframe );
 
 				s = (e->latched.prevseqblending[0]) / 255.0f;
-				R_StudioSlerpBones( m_pStudioHeader->numbones, q3, pos3, q4, pos4, s );
+				Mod_StudioSlerpBones( m_pStudioHeader->numbones, q3, pos3, q4, pos4, s );
 
 				s = (e->latched.prevseqblending[1]) / 255.0f;
-				R_StudioSlerpBones( m_pStudioHeader->numbones, q1b, pos1b, q3, pos3, s );
+				Mod_StudioSlerpBones( m_pStudioHeader->numbones, q1b, pos1b, q3, pos3, s );
 			}
 		}
 
 		s = 1.0f - ( g_studio.time - e->latched.sequencetime ) / 0.2f;
-		R_StudioSlerpBones( m_pStudioHeader->numbones, q, pos, q1b, pos1b, s );
+		Mod_StudioSlerpBones( m_pStudioHeader->numbones, q, pos, q1b, pos1b, s );
 	}
 	else
 	{
@@ -1334,7 +1093,7 @@ void R_StudioSetupBones( cl_entity_t *e )
 
 		pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pPlayerInfo->gaitsequence;
 
-		panim = R_StudioGetAnim( m_pStudioHeader, RI.currentmodel, pseqdesc );
+		panim = Mod_StudioGetAnim( m_pStudioHeader, RI.currentmodel, pseqdesc );
 		R_StudioCalcRotations( e, pos2, q2, pseqdesc, panim, m_pPlayerInfo->gaitframe );
 
 		for( i = 0; i < m_pStudioHeader->numbones; i++ )

@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #include "edict.h"
 #include "eiface.h"
 #include "com_model.h"
+#include "studio.h"
 
 // 1/32 epsilon to keep floating point happy
 #define DIST_EPSILON		(1.0f / 32.0f)
@@ -138,11 +139,15 @@ struct wadlist_s *Mod_WadList( void );
 void Mod_InitStudioAPI( void );
 void Mod_InitStudioHull( void );
 void Mod_ResetStudioAPI( void );
+void Mod_StudioSlerpBones( int numbones, vec4_t q1[], float pos1[][3], vec4_t q2[], float pos2[][3], float s );
+void *Mod_StudioGetAnim( studiohdr_t *m_pStudioHeader, model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc );
 qboolean Mod_GetStudioBounds( const char *name, vec3_t mins, vec3_t maxs );
 void Mod_StudioGetAttachment( const edict_t *e, int iAttachment, float *org, float *ang );
 void Mod_GetBonePosition( const edict_t *e, int iBone, float *org, float *ang );
 hull_t *Mod_HullForStudio( model_t *m, float frame, int seq, vec3_t ang, vec3_t org, vec3_t size, byte *pcnt, byte *pbl, int *hitboxes, edict_t *ed );
 int Mod_HitgroupForStudioHull( int index );
 void Mod_StudioComputeBounds( void *buffer, vec3_t mins, vec3_t maxs, qboolean ignore_sequences );
+void Mod_StudioCalcBonePosition( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *adj, float *pos );
+void Mod_StudioCalcBoneQuaternion( int frame, float s, mstudiobone_t *pbone, mstudioanim_t *panim, float *adj, float *q );
 
 #endif//MOD_LOCAL_H

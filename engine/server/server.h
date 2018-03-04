@@ -450,7 +450,6 @@ extern	convar_t		*sv_skyangle;
 extern	convar_t		*sv_quakehulls;
 extern	convar_t		*sv_validate_changelevel;
 extern	convar_t		*sv_downloadurl;
-extern 	convar_t		*sv_skipshield; // HACK for shield (cstrike)
 extern	convar_t		*sv_trace_messages;
 extern	convar_t		*mp_consistency;
 extern	convar_t		*public_server;
