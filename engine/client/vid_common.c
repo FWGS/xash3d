@@ -127,21 +127,6 @@ vidmode_t vidmode[] =
 
 int num_vidmodes = ( sizeof( vidmode ) / sizeof( vidmode[0] ));
 
-static int FindVidModeIndexFromDimensions(int width, int height)
-{
-	int mode;
-
-	for ( mode = 0; mode < num_vidmodes; ++mode )
-	{
-		if ( vidmode[mode].width == width && vidmode[mode].height == height )
-		{
-			return mode;
-		}
-	}
-
-	return -1;
-}
-
 /*
 =================
 VID_GetModeString
@@ -1037,8 +1022,6 @@ static int GetCommandLineIntegerValue(const char* argName)
 
 static void SetWidthAndHeightFromCommandLine()
 {
-	int vidModeIndex = -1;
-	char vidModeIndexAsString[8];
 	int width = GetCommandLineIntegerValue("-width");
 	int height = GetCommandLineIntegerValue("-height");
 
@@ -1048,18 +1031,9 @@ static void SetWidthAndHeightFromCommandLine()
 		return;
 	}
 
-	vidModeIndex = FindVidModeIndexFromDimensions(width, height);
-
-	if ( vidModeIndex < 0 )
-	{
-		Sys_Warn("No supported vidmode found for specified dimensions %dx%d.\n", width, height);
-		return;
-	}
-
-	Q_memset(vidModeIndexAsString, 0, sizeof(vidModeIndexAsString));
-	Q_snprintf(vidModeIndexAsString, sizeof(vidModeIndexAsString) - 1, "%d", vidModeIndex);
-
-	Cvar_Set2("vid_mode", vidModeIndexAsString, true);
+	Cvar_SetFloat("vid_mode", VID_NOMODE);
+	Cvar_SetFloat("width", width);
+	Cvar_SetFloat("height", height);
 }
 
 static void SetFullscreenModeFromCommandLine()
