@@ -423,8 +423,8 @@ void V_PostRender( void )
 		SCR_DrawFPS();
 
 #ifdef STROBE_ENABLED
-		if (STROBE_CORE)
-			STROBE_CORE->STROBE_CORE_FUNC_debughandler(&STROBE_CORE);
+		if ( STROBE_CORE )
+			STROBE_CORE->STROBE_CORE_FUNC_debughandler( &STROBE_CORE );
 #endif
 
 		SCR_DrawPos();

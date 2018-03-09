@@ -4,7 +4,7 @@ r_strobe_base_protected_.h - Software based strobing implementation
 Copyright (C) 2018 - fuzun * github/fuzun
 
 For information:
-	https://forums.blurbusters.com
+	https://forums.blurbusters.com/viewtopic.php?f=7&t=3815&p=30401
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -23,22 +23,24 @@ See the GNU General Public License for more details.
 
 #include "common.h"
 
-typedef enum {
-	p_positive = BIT(0), // Phase: Positive
-	p_inverted = BIT(1), // Phase: Inverted
-	f_normal = BIT(2) // Frame: Normal
-} fstate_e; // Frame State
+typedef enum
+{
+	p_positive = BIT( 0 ), // Phase: Positive
+	p_inverted = BIT( 1 ), // Phase: Inverted
+	f_normal   = BIT( 2 )  // Frame: Normal
+} fstate_e;                // Frame State
 
-
-typedef struct StrobeAPI_protected_s {
-	size_t fCounter; // Frame counter
+typedef struct StrobeAPI_protected_s
+{
+	size_t fCounter;                       // Frame counter
 	size_t pCounter, pNCounter, pBCounter; // Positive phase counters
 	size_t nCounter, nNCounter, nBCounter; // Negative phase counters
+	int strobeInterval;
+	int swapInterval;
 	double deviation; // deviation
-	double cdTimer; // Cooldown timer
-	char cdTriggered;
-	fstate_e frameInfo; // Frame info
+	double cdTimer;   // Cooldown timer
+	qboolean cdTriggered;
+	fstate_e frameInfo;  // Frame info
 } StrobeAPI_protected_t; // Protected members
-
 
 #endif

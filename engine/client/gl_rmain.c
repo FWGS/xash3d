@@ -1336,12 +1336,11 @@ R_EndFrame
 void R_EndFrame( void )
 {
 #ifdef STROBE_ENABLED
-	Strobe_Invoker((void**)(&STROBE_CORE), STROBE_CORE_EXPORTEDFUNC_constructor, STROBE_CORE_EXPORTEDFUNC_main, STROBE_CORE_EXPORTEDFUNC_destructor);
+	StrobeAPI.Invoker( (void **)( &STROBE_CORE ), STROBE_CORE_EXPORTEDFUNC_constructor, STROBE_CORE_EXPORTEDFUNC_main, STROBE_CORE_EXPORTEDFUNC_destructor );
 #else
 	// flush any remaining 2D bits
-	R_Set2DMode(false);
+	R_Set2DMode( false );
 #endif
-	
 
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );

@@ -1,10 +1,10 @@
 /*
 r_strobe_template.c - Software based strobing implementation
 
-Copyright (C) 2018 - fuzun * github.com/fuzun
+Copyright (C) 2018 - fuzun * github/fuzun
 
 For information:
-https://forums.blurbusters.com
+	https://forums.blurbusters.com/viewtopic.php?f=7&t=3815&p=30401
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -21,46 +21,36 @@ See the GNU General Public License for more details.
 
 #if !defined XASH_DEDICATED && !defined STROBE_DISABLED
 
-
-#include "r_strobe_base_protected_.h"
-#include "r_strobe_template.h"
-// #include "gl_local.h"
+#include "r_strobe_core.h"
 #include "client.h"
-
+#include "gl_local.h"
+#include "r_strobe_base_protected_.h"
 
 STROBE_TEMPLATE_t *STROBE_TEMPLATE = NULL;
 
-typedef struct STROBE_TEMPLATE_priv_s {
-	// Private members
-} STROBE_TEMPLATE_priv_t;
-
-
-void STROBE_TEMPLATE_EXPORTEDFUNC_constructor(void **STROBE_TEMPLATE);
-void STROBE_TEMPLATE_EXPORTEDFUNC_destructor(void **STROBE_TEMPLATE);
-void STROBE_TEMPLATE_EXPORTEDFUNC_reinit(void **STROBE_TEMPLATE);
-void STROBE_TEMPLATE_EXPORTEDFUNC_main(void **STROBE_TEMPLATE);
-
-
-
-static void main(STROBE_TEMPLATE_THIS_PARAM)
+typedef struct STROBE_TEMPLATE_private_s
 {
-	STROBE_TEMPLATE_THIS->base.protected->frameInfo = (p_positive | f_normal);
-	STROBE_TEMPLATE_THIS->base.ProcessFrame(&STROBE_TEMPLATE_THIS->base);
+	// Private members
+} STROBE_TEMPLATE_private_t;
+
+static void main( STROBE_TEMPLATE_THIS_PARAM )
+{
+	STROBE_TEMPLATE_THIS->base.protected->frameInfo = ( p_positive | f_normal );
+	STROBE_TEMPLATE_THIS->base.ProcessFrame( &STROBE_TEMPLATE_THIS->base );
 }
 
-
-static inline void debugHandler(STROBE_TEMPLATE_THIS_PARAM)
+static void debugHandler( STROBE_TEMPLATE_THIS_PARAM )
 {
 	char debugstr[2048];
-	STROBE_TEMPLATE_THIS->base.Helpers.GenerateDebugStatistics(&STROBE_TEMPLATE_THIS->base, debugstr, 2048);
+	STROBE_TEMPLATE_THIS->base.Helpers.GenerateDebugStatistics( &STROBE_TEMPLATE_THIS->base, debugstr, 2048 );
 }
 
-void STROBE_TEMPLATE_EXPORTEDFUNC_constructor(void **STROBE_TEMPLATE)
+void STROBE_TEMPLATE_EXPORTEDFUNC_constructor( void **STROBE_TEMPLATE )
 {
 	STROBE_TEMPLATE_t **instance = *(STROBE_TEMPLATE_t ***)&STROBE_TEMPLATE;
 	*instance = (STROBE_TEMPLATE_t *)malloc(sizeof(STROBE_TEMPLATE_t));
 
-	(*instance)->private = (STROBE_TEMPLATE_priv_t *)malloc(sizeof(STROBE_TEMPLATE_priv_t));
+	(*instance)->private = (STROBE_TEMPLATE_private_t *)malloc(sizeof(STROBE_TEMPLATE_private_t));
 	(*instance)->STROBE_TEMPLATE_FUNC_main = main;
 	(*instance)->STROBE_TEMPLATE_FUNC_debughandler = debugHandler;
 
@@ -68,7 +58,7 @@ void STROBE_TEMPLATE_EXPORTEDFUNC_constructor(void **STROBE_TEMPLATE)
 }
 
 
-void STROBE_TEMPLATE_EXPORTEDFUNC_destructor(void **STROBE_TEMPLATE)
+void STROBE_TEMPLATE_EXPORTEDFUNC_destructor( void **STROBE_TEMPLATE )
 {
 	STROBE_TEMPLATE_t **instance = *(STROBE_TEMPLATE_t ***)&STROBE_TEMPLATE;
 	
@@ -85,7 +75,7 @@ void STROBE_TEMPLATE_EXPORTEDFUNC_destructor(void **STROBE_TEMPLATE)
 	}
 }
 
-void STROBE_TEMPLATE_EXPORTEDFUNC_reinit(void **STROBE_TEMPLATE)
+void STROBE_TEMPLATE_EXPORTEDFUNC_reinit( void **STROBE_TEMPLATE )
 {
 	STROBE_TEMPLATE_t **instance = *(STROBE_TEMPLATE_t ***)&STROBE_TEMPLATE;
 

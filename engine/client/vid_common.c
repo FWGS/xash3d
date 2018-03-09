@@ -1097,10 +1097,9 @@ qboolean R_Init( void )
 	R_InitImages();
 	R_SpriteInit();
 	R_StudioInit();
-	
+
 #ifdef STROBE_ENABLED
-	R_InitStrobe();
-	//StrobeInfo = new_Strobe();
+	R_InitStrobeAPI();
 #endif
 
 	R_ClearDecals();
