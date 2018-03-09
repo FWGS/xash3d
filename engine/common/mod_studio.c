@@ -899,7 +899,11 @@ void *Mod_StudioGetAnim( studiohdr_t *m_pStudioHeader, model_t *m_pSubModel, mst
 
 	pseqgroup = (mstudioseqgroup_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqgroupindex) + pseqdesc->seqgroup;
 	if( pseqdesc->seqgroup == 0 )
+#ifdef XASH_64BIT
+		return ((byte *)m_pStudioHeader + pseqdesc->animindex);
+#else
 		return ((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
+#endif
 
 	paSequences = (cache_user_t *)m_pSubModel->submodels;
 

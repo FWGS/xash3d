@@ -1246,6 +1246,7 @@ void IN_TouchDraw( void )
 			Touch_DrawTexture( 0, GRID_Y * 2, GRID_X * 2, GRID_Y * 4, touch.closetexture, 255, 255, 255, 255 );
 			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 2.5 ), "Close", color );
 			Touch_DrawText( GRID_X * 2.5, GRID_Y * 2.5, 0, 0, "Close", color, 1.5 );
+
 			// reset
 			Touch_DrawTexture( 0, GRID_Y * 5, GRID_X * 2, GRID_Y * 7, touch.resettexture, 255, 255, 255, 255 );
 			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 5.5 ), "Reset", color );
@@ -1255,13 +1256,14 @@ void IN_TouchDraw( void )
 	pglColor4ub( 255, 255, 255, 255 );
 	if( ( touch.move_finger != -1 ) && touch.move && touch_move_indicator->value )
 	{
-		float width;
-		float height;
+		float width, height;
+
 		if( touch_joy_texture->modified )
 		{
 			touch_joy_texture->modified = false;
 			touch.joytexture = GL_LoadTexture( touch_joy_texture->string, NULL, 0, TF_NOPICMIP, NULL );
 		}
+
 		if( touch.move->type == touch_move )
 		{
 			width =  touch_sidezone->value;
@@ -1272,6 +1274,7 @@ void IN_TouchDraw( void )
 			width = (touch.move->x2 - touch.move->x1)/2;
 			height = (touch.move->y2 - touch.move->y1)/2;
 		}
+
 		pglColor4ub( 255, 255, 255, 128 );
 		R_DrawStretchPic( TO_SCRN_X( touch.move_start_x - GRID_X * touch_move_indicator->value ),
 						  TO_SCRN_Y( touch.move_start_y - GRID_Y * touch_move_indicator->value ),
@@ -1293,8 +1296,10 @@ void IN_TouchEditClear( void )
 	if( touch.state < state_edit )
 		return;
 	touch.state = state_edit;
+
 	if( touch.edit )
 		touch.edit->finger = -1;
+
 	touch.resize_finger = -1;
 	touch.edit = NULL;
 	touch.selection = NULL;

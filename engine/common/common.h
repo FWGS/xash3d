@@ -687,6 +687,7 @@ qboolean Image_Process( rgbdata_t **pix, int width, int height, float gamma, uin
 void Image_PaletteHueReplace( byte *palSrc, int newHue, int start, int end );
 void Image_SetForceFlags( uint flags );	// set image force flags on loading
 size_t Image_DXTGetLinearSize( int type, int width, int height, int depth );
+void Image_SetMDLPointer( void *ptr );
 
 /*
 ========================================================================

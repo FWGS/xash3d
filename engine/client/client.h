@@ -204,7 +204,7 @@ typedef struct
 	float weaponstarttime;
 	int weaponseq;
 	int     scr_fov;
-	model_t *playermodels[32];
+	model_t *playermodels[MAX_CLIENTS];
 #if 0 // used by SetUpPlayerPrediction
 	predicted_player_t predicted_players[MAX_CLIENTS];
 #endif
@@ -574,6 +574,7 @@ extern convar_t	*cl_draw_particles;
 extern convar_t	*cl_levelshot_name;
 extern convar_t	*cl_draw_beams;
 extern convar_t *cl_cmdrate;
+extern convar_t	*cl_righthand;
 extern convar_t	*cl_lw;
 extern convar_t *cl_trace_events;
 extern convar_t *cl_trace_stufftext;

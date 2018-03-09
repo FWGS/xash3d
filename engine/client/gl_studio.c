@@ -28,7 +28,6 @@ GNU General Public License for more details.
 #define MAX_LOCALLIGHTS	4
 
 
-
 cvar_t			r_glowshellfreq = { "r_glowshellfreq", "2.2", 0, 0 };
 cvar_t			r_shadows = { "r_shadows", "0", 0, 0 };	// dead cvar. especially disabled
 cvar_t			r_shadowalpha = { "r_shadowalpha", "0.5", 0, 0.8f };
@@ -105,10 +104,19 @@ typedef struct
 	vec4_t		lightpos[MAXSTUDIOVERTS][MAX_LOCALLIGHTS];
 	vec3_t		lightbonepos[MAXSTUDIOBONES][MAX_LOCALLIGHTS];
 	float		locallightR2[MAX_LOCALLIGHTS];
+
+	// drawelements renderer
+	vec3_t			arrayverts[MAXSTUDIOVERTS];
+	vec2_t			arraycoord[MAXSTUDIOVERTS];
+	unsigned short	arrayelems[MAXSTUDIOVERTS*6];
+	GLubyte			arraycolor[MAXSTUDIOVERTS][4];
+	uint			numverts;
+	uint			numelems;
 } studio_draw_state_t;
 
 // studio-related cvars
 convar_t			*r_studio_sort_textures;
+convar_t			*r_studio_drawelements;
 convar_t			*r_drawviewmodel;
 convar_t			*cl_righthand = NULL;
 convar_t			*cl_himodels;
@@ -137,6 +145,7 @@ void R_StudioInit( void )
 {
 	cl_himodels = Cvar_Get( "cl_himodels", "1", FCVAR_ARCHIVE, "draw high-resolution player models in multiplayer" );
 	r_studio_sort_textures = Cvar_Get( "r_studio_sort_textures", "0", FCVAR_ARCHIVE, "change draw order for additive meshes" );
+	r_studio_drawelements = Cvar_Get( "r_studio_drawelements", "1", FCVAR_ARCHIVE, "Use glDrawElements for studio render" );
 	r_drawviewmodel = Cvar_Get( "r_drawviewmodel", "1", 0, "draw firstperson weapon model" );
 
 	Matrix3x4_LoadIdentity( g_studio.rotationmatrix );
@@ -144,6 +153,7 @@ void R_StudioInit( void )
 
 // g-cont. especially not registered
 //	Cvar_RegisterVariable( &r_shadows );
+//	Cvar_RegisterVariable( &r_shadowalpha );
 
 	g_studio.interpolate = true;
 	g_studio.framecount = 0;
@@ -1766,8 +1776,9 @@ R_LightLambert
 
 ====================
 */
-void R_LightLambert( vec4_t light[MAX_LOCALLIGHTS], vec3_t normal, vec3_t color, float alpha )
+GLubyte *R_LightLambert( vec4_t light[MAX_LOCALLIGHTS], vec3_t normal, vec3_t color, float alpha )
 {
+	static GLubyte cl[4];
 	vec3_t	finalLight;
 	vec3_t	localLight;
 	int	i;
@@ -1804,7 +1815,12 @@ void R_LightLambert( vec4_t light[MAX_LOCALLIGHTS], vec3_t normal, vec3_t color,
 		}
 	}
 
-	pglColor4f( finalLight[0], finalLight[1], finalLight[2], alpha );
+	cl[0] = finalLight[0] * 255;
+	cl[1] = finalLight[1] * 255;
+	cl[2] = finalLight[2] * 255;
+	cl[3] = alpha * 255;
+
+	return cl;
 }
 
 /*
@@ -1943,8 +1959,10 @@ R_StudioMeshCompare
 Sorting opaque entities by model type
 ===============
 */
-static int R_StudioMeshCompare( const sortedmesh_t *a, const sortedmesh_t *b )
+static int R_StudioMeshCompare( const void *_a, const void *_b )
 {
+	sortedmesh_t *a = (sortedmesh_t*)_a;
+
 	if( FBitSet( a->flags, STUDIO_NF_ADDITIVE ))
 		return 1;
 
@@ -1980,8 +1998,13 @@ _inline void R_StudioDrawNormalMesh( short *ptricmds, vec3_t *pstudionorms, floa
 			lv = (float *)g_studio.lightvalues[ptricmds[1]];
 
 			if( g_studio.numlocallights )
-				R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
-			else pglColor4f( lv[0], lv[1], lv[2], alpha );
+			{
+				pglColor4ubv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
+			}
+			else
+			{
+				pglColor4f( lv[0], lv[1], lv[2], alpha );
+			}
 			pglTexCoord2f( ptricmds[2] * s, ptricmds[3] * t );
 			pglVertex3fv( g_studio.verts[ptricmds[0]] );
 		}
@@ -2015,7 +2038,9 @@ _inline void R_StudioDrawFloatMesh( short *ptricmds, vec3_t *pstudionorms, float
 		{
 			lv = (float *)g_studio.lightvalues[ptricmds[1]];
 			if( g_studio.numlocallights )
-				R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
+			{
+				pglColor4ubv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
+			}
 			else pglColor4f( lv[0], lv[1], lv[2], alpha );
 			pglTexCoord2f( HalfToFloat( ptricmds[2] ), HalfToFloat( ptricmds[3] ));
 			pglVertex3fv( g_studio.verts[ptricmds[0]] );
@@ -2055,6 +2080,7 @@ _inline void R_StudioDrawChromeMesh( short *ptricmds, vec3_t *pstudionorms, floa
 				idx = g_studio.normaltable[ptricmds[0]];
 				av = g_studio.verts[ptricmds[0]];
 				lv = g_studio.norms[ptricmds[0]];
+
 				VectorMA( av, scale, lv, vert );
 				pglTexCoord2f( g_studio.chrome[idx][0] * s, g_studio.chrome[idx][1] * t );
 				pglVertex3fv( vert );
@@ -2064,7 +2090,9 @@ _inline void R_StudioDrawChromeMesh( short *ptricmds, vec3_t *pstudionorms, floa
 				idx = ptricmds[1];
 				lv = (float *)g_studio.lightvalues[ptricmds[1]];
 				if( g_studio.numlocallights )
-					R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
+				{
+					pglColor4ubv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
+				}
 				else pglColor4f( lv[0], lv[1], lv[2], alpha );
 				pglTexCoord2f( g_studio.chrome[idx][0] * s, g_studio.chrome[idx][1] * t );
 				pglVertex3fv( g_studio.verts[ptricmds[0]] );
@@ -2073,6 +2101,249 @@ _inline void R_StudioDrawChromeMesh( short *ptricmds, vec3_t *pstudionorms, floa
 
 		pglEnd();
 	}
+}
+
+_inline int R_StudioBuildIndices( qboolean tri_strip, int vertexState )
+{
+	// build in indices
+	if( vertexState++ < 3 )
+	{
+		g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts;
+	}
+	else if( tri_strip )
+	{
+		// flip triangles between clockwise and counter clockwise
+		if( vertexState & 1 )
+		{
+			// draw triangle [n-2 n-1 n]
+			g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts - 2;
+			g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts - 1;
+			g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts;
+		}
+		else
+		{
+			// draw triangle [n-1 n-2 n]
+			g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts - 1;
+			g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts - 2;
+			g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts;
+		}
+	}
+	else
+	{
+		// draw triangle fan [0 n-1 n]
+		g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts - ( vertexState - 1 );
+		g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts - 1;
+		g_studio.arrayelems[g_studio.numelems++] = g_studio.numverts;
+	}
+
+	return vertexState;
+}
+
+/*
+===============
+R_StudioDrawNormalMesh
+
+generic path
+===============
+*/
+_inline void R_StudioBuildArrayNormalMesh( short *ptricmds, vec3_t *pstudionorms, float s, float t, float alpha )
+{
+	float	*lv;
+	int	i;
+
+	while( i = *( ptricmds++ ))
+	{
+		int vertexState = 0;
+		qboolean tri_strip = true;
+
+		if( i < 0 )
+		{
+			tri_strip = false;
+			i = -i;
+		}
+
+		for( ; i > 0; i--, ptricmds += 4 )
+		{
+			GLubyte *cl;
+			cl = g_studio.arraycolor[g_studio.numverts];
+			lv = (float *)g_studio.lightvalues[ptricmds[1]];
+
+			vertexState = R_StudioBuildIndices( tri_strip, vertexState );
+
+			if( g_studio.numlocallights )
+			{
+				Q_memcpy( cl, R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ), 4 );
+			}
+			else
+			{
+				cl[0] = lv[0] * 255;
+				cl[1] = lv[1] * 255;
+				cl[2] = lv[2] * 255;
+				cl[3] = alpha * 255;
+			}
+
+			g_studio.arraycoord[g_studio.numverts][0] = ptricmds[2] * s;
+			g_studio.arraycoord[g_studio.numverts][1] = ptricmds[3] * t;
+
+			VectorCopy( g_studio.verts[ptricmds[0]], g_studio.arrayverts[g_studio.numverts] );
+			g_studio.numverts++;
+		}
+	}
+}
+
+/*
+===============
+R_StudioDrawNormalMesh
+
+generic path
+===============
+*/
+_inline void R_StudioBuildArrayFloatMesh( short *ptricmds, vec3_t *pstudionorms, float alpha )
+{
+	float	*lv;
+	int	i;
+
+	while( i = *( ptricmds++ ))
+	{
+		int vertexState = 0;
+		qboolean tri_strip = true;
+
+		if( i < 0 )
+		{
+			tri_strip = false;
+			i = -i;
+		}
+
+		for( ; i > 0; i--, ptricmds += 4 )
+		{
+			GLubyte *cl;
+			cl = g_studio.arraycolor[g_studio.numverts];
+			lv = (float *)g_studio.lightvalues[ptricmds[1]];
+
+			vertexState = R_StudioBuildIndices( tri_strip, vertexState );
+
+			if( g_studio.numlocallights )
+			{
+				Q_memcpy( cl, R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ), 4 );
+			}
+			else
+			{
+				cl[0] = lv[0] * 255;
+				cl[1] = lv[1] * 255;
+				cl[2] = lv[2] * 255;
+				cl[3] = alpha * 255;
+			}
+
+			g_studio.arraycoord[g_studio.numverts][0] = HalfToFloat( ptricmds[2] );
+			g_studio.arraycoord[g_studio.numverts][1] = HalfToFloat( ptricmds[3] );
+
+			VectorCopy( g_studio.verts[ptricmds[0]], g_studio.arrayverts[g_studio.numverts] );
+			g_studio.numverts++;
+		}
+	}
+}
+
+/*
+===============
+R_StudioDrawNormalMesh
+
+generic path
+===============
+*/
+_inline void R_StudioBuildArrayChromeMesh( short *ptricmds, vec3_t *pstudionorms, float s, float t, float scale, float alpha )
+{
+	float	*lv, *av;
+	int	i, idx;
+	qboolean	glowShell = (scale > 0.0f) ? true : false;
+	vec3_t	vert;
+
+	while( i = *( ptricmds++ ))
+	{
+		int vertexState = 0;
+		qboolean tri_strip = true;
+
+		if( i < 0 )
+		{
+			tri_strip = false;
+			i = -i;
+		}
+
+		for( ; i > 0; i--, ptricmds += 4 )
+		{
+			GLubyte *cl;
+			cl = g_studio.arraycolor[g_studio.numverts];
+			lv = (float *)g_studio.lightvalues[ptricmds[1]];
+
+			vertexState = R_StudioBuildIndices( tri_strip, vertexState );
+
+			if( glowShell )
+			{
+				idx = g_studio.normaltable[ptricmds[0]];
+				av = g_studio.verts[ptricmds[0]];
+				lv = g_studio.norms[ptricmds[0]];
+
+				cl[0] = RI.currententity->curstate.rendercolor.r;
+				cl[1] = RI.currententity->curstate.rendercolor.g;
+				cl[2] = RI.currententity->curstate.rendercolor.b;
+				cl[3] = 255;
+
+				VectorMA( av, scale, lv, vert );
+				VectorCopy( vert, g_studio.arrayverts[g_studio.numverts] );
+			}
+			else
+			{
+				idx = ptricmds[1];
+				lv = (float *)g_studio.lightvalues[ptricmds[1]];
+
+				if( g_studio.numlocallights )
+				{
+					Q_memcpy( cl, R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ), 4 );
+				}
+				else
+				{
+					cl[0] = lv[0] * 255;
+					cl[1] = lv[1] * 255;
+					cl[2] = lv[2] * 255;
+					cl[3] = 255;
+				}
+
+
+				VectorCopy( g_studio.verts[ptricmds[0]], g_studio.arrayverts[g_studio.numverts] );
+			}
+
+			g_studio.arraycoord[g_studio.numverts][0] = g_studio.chrome[idx][0] * s;
+			g_studio.arraycoord[g_studio.numverts][1] = g_studio.chrome[idx][1] * t;
+
+			g_studio.numverts++;
+		}
+	}
+}
+
+_inline void R_StudioDrawArrays( uint startverts, uint startelems )
+{
+	pglEnableClientState( GL_VERTEX_ARRAY );
+	pglVertexPointer( 3, GL_FLOAT, 12, g_studio.arrayverts );
+
+	pglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	pglTexCoordPointer( 2, GL_FLOAT, 0, g_studio.arraycoord );
+
+	if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ) )
+	{
+		pglEnableClientState( GL_COLOR_ARRAY );
+		pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_studio.arraycolor );
+	}
+
+#if !defined XASH_NANOGL || defined XASH_WES && defined __EMSCRIPTEN__ // WebGL need to know array sizes
+	if( pglDrawRangeElements )
+		pglDrawRangeElements( GL_TRIANGLES, startverts, g_studio.numverts,
+			g_studio.numelems - startelems, GL_UNSIGNED_SHORT, &g_studio.arrayelems[startelems] );
+	else
+#endif
+		pglDrawElements( GL_TRIANGLES, g_studio.numelems - startelems, GL_UNSIGNED_SHORT, &g_studio.arrayelems[startelems] );
+	pglDisableClientState( GL_VERTEX_ARRAY );
+	pglDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ) )
+		pglDisableClientState( GL_COLOR_ARRAY );
 }
 
 /*
@@ -2095,6 +2366,8 @@ static void R_StudioDrawPoints( void )
 	short		*pskinref;
 	float		lv_tmp;
 	float	alpha;
+
+	g_studio.numverts = g_studio.numelems = 0;
 
 	if( !m_pStudioHeader ) return;
 
@@ -2196,6 +2469,9 @@ static void R_StudioDrawPoints( void )
 
 	for( j = 0; j < m_pSubModel->nummesh; j++ )
 	{
+		uint startArrayVerts = g_studio.numverts;
+		uint startArrayElems = g_studio.numelems;
+
 		short	*ptricmds;
 		float	s, t;
 
@@ -2209,6 +2485,8 @@ static void R_StudioDrawPoints( void )
 
 		if( FBitSet( g_nFaceFlags, STUDIO_NF_MASKED ))
 		{
+			MsgDev( D_INFO, "MEOW\n");
+
 			pglEnable( GL_ALPHA_TEST );
 			pglDepthMask( GL_TRUE );
 			if( R_ModelOpaque( RI.currententity->curstate.rendermode ))
@@ -2216,6 +2494,7 @@ static void R_StudioDrawPoints( void )
 		}
 		else if( FBitSet( g_nFaceFlags, STUDIO_NF_ADDITIVE ))
 		{
+
 			if( R_ModelOpaque( RI.currententity->curstate.rendermode ))
 			{
 				pglBlendFunc( GL_ONE, GL_ONE );
@@ -2227,11 +2506,26 @@ static void R_StudioDrawPoints( void )
 
 		R_StudioSetupSkin( m_pStudioHeader, pskinref[pmesh->skinref] );
 
-		if( FBitSet( g_nFaceFlags, STUDIO_NF_CHROME ))
-			R_StudioDrawChromeMesh( ptricmds, pstudionorms, s, t, shellscale, alpha );
-		else if( FBitSet( g_nFaceFlags, STUDIO_NF_UV_COORDS ))
-			R_StudioDrawFloatMesh( ptricmds, pstudionorms, alpha );
-		else R_StudioDrawNormalMesh( ptricmds, pstudionorms, s, t, alpha );
+		if( r_studio_drawelements->value )
+		{
+			if( FBitSet( g_nFaceFlags, STUDIO_NF_CHROME ))
+				R_StudioBuildArrayChromeMesh( ptricmds, pstudionorms, s, t, shellscale, alpha );
+			else if( FBitSet( g_nFaceFlags, STUDIO_NF_UV_COORDS ))
+				R_StudioBuildArrayFloatMesh( ptricmds, pstudionorms, alpha );
+			else R_StudioBuildArrayNormalMesh( ptricmds, pstudionorms, s, t, alpha );
+
+			R_StudioDrawArrays( startArrayVerts, startArrayElems );
+		}
+		else
+		{
+			if( FBitSet( g_nFaceFlags, STUDIO_NF_CHROME ))
+				R_StudioDrawChromeMesh( ptricmds, pstudionorms, s, t, shellscale, alpha );
+			else if( FBitSet( g_nFaceFlags, STUDIO_NF_UV_COORDS ))
+				R_StudioDrawFloatMesh( ptricmds, pstudionorms, alpha );
+			else R_StudioDrawNormalMesh( ptricmds, pstudionorms, s, t, alpha );
+		}
+
+
 
 		if( FBitSet( g_nFaceFlags, STUDIO_NF_MASKED ))
 		{
@@ -2802,7 +3096,7 @@ void R_StudioRenderFinal( void )
 	{
 		for( i = 0; i < m_pStudioHeader->numbodyparts; i++ )
 		{
-			R_StudioSetupModel( i, &m_pBodyPart, &m_pSubModel );
+			R_StudioSetupModel( i, (void**)&m_pBodyPart, (void**)&m_pSubModel );
 
 			GL_SetRenderMode( rendermode );
 			R_StudioDrawPoints();
@@ -3459,7 +3753,8 @@ static void R_StudioLoadTexture( model_t *mod, studiohdr_t *phdr, mstudiotexture
 		SetBits( flags, TF_NOMIPMAP );
 
 	// NOTE: replace index with pointer to start of imagebuffer, ImageLib expected it
-	ptexture->index = (int)((byte *)phdr) + ptexture->index;
+	// no more pointer-to-int-to-pointer casts
+	Image_SetMDLPointer(((byte *)phdr) + ptexture->index);
 	size = sizeof( mstudiotexture_t ) + ptexture->width * ptexture->height + 768;
 
 	if( FBitSet( host.features, ENGINE_LOAD_DELUXEDATA ) && FBitSet( ptexture->flags, STUDIO_NF_MASKED ))

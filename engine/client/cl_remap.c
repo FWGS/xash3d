@@ -80,9 +80,10 @@ byte *CL_CreateRawTextureFromPixels( texture_t *tx, size_t *size, int topcolor, 
 	// fill header
 	if( !pin.name[0] ) Q_strncpy( pin.name, "#raw_remap_image.mdl", sizeof( pin.name ));
 	pin.flags = STUDIO_NF_COLORMAP; // just in case :-)
-	//pin.index = (int)(tx + 1); // pointer to pixels
+
 	// no more pointer-to-int-to-pointer casts
-	pin.index = (int)(tx + 1); // pointer to pixels
+	Image_SetMDLPointer( (byte*)((texture_t*)tx + 1) );
+
 	pin.width = tx->width;
 	pin.height = tx->height;
 

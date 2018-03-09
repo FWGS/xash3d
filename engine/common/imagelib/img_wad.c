@@ -20,6 +20,8 @@ GNU General Public License for more details.
 #include "sprite.h"
 #include "qfont.h"
 
+static void *g_pMDLTex;
+
 /*
 ============
 Image_LoadPAL
@@ -137,6 +139,16 @@ qboolean Image_LoadFNT( const char *name, const byte *buffer, size_t filesize )
 
 /*
 ============
+Image_SetMDLPointer
+============
+*/
+void Image_SetMDLPointer( void *ptr )
+{
+	g_pMDLTex = ptr;
+}
+
+/*
+============
 Image_LoadMDL
 ============
 */
@@ -154,7 +166,9 @@ qboolean Image_LoadMDL( const char *name, const byte *buffer, size_t filesize )
 	image.height = pin->height;
 	pixels = image.width * image.height;
 
-	fin = pin->index;
+	ASSERT( g_pMDLTex );
+	fin = g_pMDLTex;
+	g_pMDLTex = NULL;
 
 	if( !Image_ValidSize( name )) return false;
 
