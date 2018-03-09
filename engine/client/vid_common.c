@@ -1009,6 +1009,47 @@ static void R_CheckVBO( void )
 	r_bump = Cvar_Get( "r_bump", def, flags, "enable bump-mapping (r_vbo required)" );
 }
 
+static int GetCommandLineIntegerValue(const char* argName)
+{
+	int argIndex = Sys_CheckParm(argName);
+
+	if ( argIndex < 1 || argIndex + 1 >= host.argc || !host.argv[argIndex + 1] )
+	{
+		return 0;
+	}
+
+	return Q_atoi(host.argv[argIndex + 1]);
+}
+
+static void SetWidthAndHeightFromCommandLine()
+{
+	int width = GetCommandLineIntegerValue("-width");
+	int height = GetCommandLineIntegerValue("-height");
+
+	if ( width < 1 || height < 1 )
+	{
+		// Not specified or invalid, so don't bother.
+		return;
+	}
+
+	Cvar_SetFloat("vid_mode", VID_NOMODE);
+	Cvar_SetFloat("width", width);
+	Cvar_SetFloat("height", height);
+}
+
+static void SetFullscreenModeFromCommandLine()
+{
+#ifndef __ANDROID__
+	if ( Sys_CheckParm("-fullscreen") )
+	{
+		Cvar_Set2("fullscreen", "1", true);
+	}
+	else if ( Sys_CheckParm("-windowed") )
+	{
+		Cvar_Set2("fullscreen", "0", true);
+	}
+#endif
+}
 
 /*
 ===============
@@ -1024,6 +1065,12 @@ qboolean R_Init( void )
 	Cbuf_AddText( "exec opengl.cfg\n" );
 
 	GL_InitCommands();
+	
+	// Set screen resolution and fullscreen mode if passed in on command line.
+	// This is done after executing opengl.cfg, as the command line values should take priority.
+	SetWidthAndHeightFromCommandLine();
+	SetFullscreenModeFromCommandLine();
+
 	GL_SetDefaultState();
 
 #ifdef WIN32
