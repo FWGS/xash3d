@@ -49,78 +49,85 @@ static qboolean	scr_init = false;
 SCR_DrawFPS
 ==============
 */
-void SCR_DrawFPS(void)
+void SCR_DrawFPS( void )
 {
-	float		calc;
-	rgba_t		color;
-	static double	nexttime = 0, lasttime = 0;
-	static double	framerate = 0, avgrate = 0;
-	static int	framecount = 0;
-	static int	minfps = 9999;
-	static int	maxfps = 0;
-	double		newtime;
-	char		fpsstring[64];
-	int		offset;
+	float calc;
+	rgba_t color;
+	static double nexttime = 0, lasttime = 0;
+	static double framerate = 0, avgrate = 0;
+	static int framecount = 0;
+	static int minfps     = 9999;
+	static int maxfps     = 0;
+	double newtime;
+	char fpsstring[64];
+	int offset;
 
-	if (cls.state != ca_active) return;
-	if (!cl_showfps->integer || cl.background) return;
+	if ( cls.state != ca_active )
+		return;
+	if ( !cl_showfps->integer || cl.background )
+		return;
 
-	switch (cls.scrshot_action)
+	switch ( cls.scrshot_action )
 	{
 	case scrshot_normal:
 	case scrshot_snapshot:
 	case scrshot_inactive:
 		break;
-	default: return;
+	default:
+		return;
 	}
 
-	newtime = Sys_DoubleTime();
-	if (newtime >= nexttime)
+	newtime = Sys_DoubleTime( );
+	if ( newtime >= nexttime )
 	{
-		framerate = framecount / (newtime - lasttime);
-		lasttime = newtime;
-		nexttime = max(nexttime + 1, lasttime - 1);
+		framerate  = framecount / ( newtime - lasttime );
+		lasttime   = newtime;
+		nexttime   = max( nexttime + 1, lasttime - 1 );
 		framecount = 0;
 	}
 
 	framecount++;
 	calc = framerate;
 
-	if (calc == 0) return;
+	if ( calc == 0 )
+		return;
 
-	if (calc < 1.0f)
+	if ( calc < 1.0f )
 	{
-		Q_snprintf(fpsstring, sizeof(fpsstring), "%4i spf", (int)(1.0f / calc + 0.5f));
-		MakeRGBA(color, 255, 0, 0, 255);
+		Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i spf", (int)( 1.0f / calc + 0.5f ) );
+		MakeRGBA( color, 255, 0, 0, 255 );
 	}
 	else
 	{
-		int	curfps = (int)(calc + 0.5f);
+		int curfps = (int)( calc + 0.5f );
 
-		if (curfps < minfps) minfps = curfps;
-		if (curfps > maxfps) maxfps = curfps;
+		if ( curfps < minfps )
+			minfps = curfps;
+		if ( curfps > maxfps )
+			maxfps = curfps;
 
 		/*if( !avgrate ) avgrate = ( maxfps - minfps ) / 2.0f;
-		else */avgrate += (calc - avgrate) / host.framecount;
+		else */
+		avgrate += ( calc - avgrate ) / host.framecount;
 
-		switch (cl_showfps->integer)
+		switch ( cl_showfps->integer )
 		{
 		case 3:
-			Q_snprintf(fpsstring, sizeof(fpsstring), "fps: ^1%4i min, ^3%4i cur, ^2%4i max | ^3%.2f avg", minfps, curfps, maxfps, avgrate);
+			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max | ^3%.2f avg", minfps, curfps, maxfps, avgrate );
 			break;
 		case 2:
-			Q_snprintf(fpsstring, sizeof(fpsstring), "fps: ^1%4i min, ^3%4i cur, ^2%4i max", minfps, curfps, maxfps);
+			Q_snprintf( fpsstring, sizeof( fpsstring ), "fps: ^1%4i min, ^3%4i cur, ^2%4i max", minfps, curfps, maxfps );
 			break;
 		case 1:
 		default:
-			Q_snprintf(fpsstring, sizeof(fpsstring), "%4i fps", curfps);
+			Q_snprintf( fpsstring, sizeof( fpsstring ), "%4i fps", curfps );
 		}
 
-		MakeRGBA(color, 255, 255, 255, 255);
+		MakeRGBA( color, 255, 255, 255, 255 );
 	}
 
-	Con_DrawStringLen(fpsstring, &offset, NULL);
-	Con_DrawString(scr_width->integer - offset - 2, 4, fpsstring, color);
+	Con_DrawStringLen( fpsstring, &offset, NULL );
+	Con_DrawString( scr_width->integer - offset - 2, 4, fpsstring, color );
 }
 
 /*

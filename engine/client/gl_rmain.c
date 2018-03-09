@@ -1336,7 +1336,7 @@ R_EndFrame
 void R_EndFrame( void )
 {
 #ifdef STROBE_ENABLED
-	StrobeAPI.Invoker( (void **)( &STROBE_CORE ), STROBE_CORE_EXPORTEDFUNC_constructor, STROBE_CORE_EXPORTEDFUNC_main, STROBE_CORE_EXPORTEDFUNC_destructor );
+	StrobeAPI.Invoker( STROBE_INVOKE(STROBE_CORE,STROBE_CORE_EXPORTEDFUNC_constructor,STROBE_CORE_EXPORTEDFUNC_main,STROBE_CORE_EXPORTEDFUNC_destructor) );
 #else
 	// flush any remaining 2D bits
 	R_Set2DMode( false );

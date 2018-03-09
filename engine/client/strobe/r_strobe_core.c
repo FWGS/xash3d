@@ -200,7 +200,9 @@ _inline void debugDrawer( STROBE_CORE_THIS_PARAM )
 {
 	rgba_t color;
 	char debugStr[2048]; // Heap allocation ?
-	int offsetX, offsetY;
+	static int offsetX;
+	int offsetY;
+	int fixer;
 
 	qboolean strobeDebug = StrobeAPI.r_strobe_debug->integer ? true : false;
 
@@ -229,11 +231,13 @@ _inline void debugDrawer( STROBE_CORE_THIS_PARAM )
 	}
 
 	MakeRGBA( color, 255, 255, 255, 255 );
-	Con_DrawStringLen( debugStr, &offsetX, &offsetY );
+	Con_DrawStringLen( debugStr, &fixer, &offsetY );
 	if ( strobeDebug )
 		Con_DrawString( scr_width->integer - offsetX - 50, 4, debugStr, color );
 	else
 		Con_DrawString( scr_width->integer - offsetX - 2, offsetY + 8, debugStr, color );
+	if(abs(fixer - offsetX) > 30 || offsetX == 0)
+		offsetX = fixer;
 }
 
 void STROBE_CORE_EXPORTEDFUNC_constructor( void **STROBE_CORE )

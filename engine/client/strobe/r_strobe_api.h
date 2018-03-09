@@ -26,6 +26,8 @@ See the GNU General Public License for more details.
 #include "common.h"
 #include "wrect.h"
 
+#define STROBE_INVOKE(IMPL,CONSTRUCTOR,MAIN,DESTRUCTOR) (void**)(&IMPL##),CONSTRUCTOR,##MAIN,##DESTRUCTOR
+
 typedef struct StrobeAPI_s StrobeAPI_t;
 
 typedef enum
