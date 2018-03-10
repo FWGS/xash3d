@@ -35,8 +35,13 @@ static SDL_GameController *gamecontroller;
 
 void R_ChangeDisplaySettingsFast( int w, int h );
 
+/*
+=============
+SDLash_KeyEvent
 
-void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
+=============
+*/
+static void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 {
 	int keynum = key.keysym.scancode;
 
@@ -150,7 +155,13 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 	Key_Event( keynum, down );
 }
 
-void SDLash_MouseEvent( SDL_MouseButtonEvent button )
+/*
+=============
+SDLash_MouseEvent
+
+=============
+*/
+static void SDLash_MouseEvent( SDL_MouseButtonEvent button )
 {
 	int down = button.type == SDL_MOUSEBUTTONDOWN ? 1 : 0;
 	if( in_mouseinitialized && !m_ignore->integer && button.which != SDL_TOUCH_MOUSEID )
@@ -159,13 +170,13 @@ void SDLash_MouseEvent( SDL_MouseButtonEvent button )
 	}
 }
 
-void SDLash_WheelEvent( SDL_MouseWheelEvent wheel )
-{
-	wheelbutton = wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
-	Key_Event( wheelbutton, true );
-}
+/*
+=============
+SDLash_InputEvent
 
-void SDLash_InputEvent( SDL_TextInputEvent input )
+=============
+*/
+static void SDLash_InputEvent( SDL_TextInputEvent input )
 {
 	int i;
 
@@ -186,6 +197,12 @@ void SDLash_InputEvent( SDL_TextInputEvent input )
 	}
 }
 
+/*
+=============
+SDLash_EnableTextInput
+
+=============
+*/
 void SDLash_EnableTextInput( int enable, qboolean force )
 {
 	if( force )
@@ -210,10 +227,16 @@ void SDLash_EnableTextInput( int enable, qboolean force )
 	}
 }
 
-void SDLash_EventFilter( void *ev )
+/*
+=============
+SDLash_EventFilter
+
+=============
+*/
+static void SDLash_EventFilter( SDL_Event *event )
 {
-	SDL_Event *event = (SDL_Event*)ev;
 	static int mdown;
+
 	if( wheelbutton )
 	{
 		Key_Event( wheelbutton, false );
@@ -259,7 +282,8 @@ void SDLash_EventFilter( void *ev )
 		break;
 
 	case SDL_MOUSEWHEEL:
-		SDLash_WheelEvent( event->wheel );
+		wheelbutton = event->wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
+		Key_Event( wheelbutton, true );
 		break;
 
 	/* Keyboard events */
@@ -488,6 +512,26 @@ void SDLash_EventFilter( void *ev )
 	}
 }
 
+/*
+=============
+SDLash_RunEvents
+
+=============
+*/
+void SDLash_RunEvents( void )
+{
+	SDL_Event event;
+
+	while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
+		SDLash_EventFilter( &event );
+}
+
+/*
+=============
+SDLash_JoyInit_Old
+
+=============
+*/
 static int SDLash_JoyInit_Old( int numjoy )
 {
 	int num;
@@ -544,6 +588,12 @@ static int SDLash_JoyInit_Old( int numjoy )
 	return num;
 }
 
+/*
+=============
+SDLash_JoyInit_New
+
+=============
+*/
 static int SDLash_JoyInit_New( int numjoy )
 {
 	int temp, num;
@@ -609,6 +659,12 @@ static int SDLash_JoyInit_New( int numjoy )
 	return num;
 }
 
+/*
+=============
+SDLash_JoyInit
+
+=============
+*/
 int SDLash_JoyInit( int numjoy )
 {
 	// SDL_Joystick is now an old API
