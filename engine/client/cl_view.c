@@ -418,7 +418,6 @@ void V_PostRender( void )
 		SCR_NetSpeeds();
 		SCR_DrawFPS();
 		SCR_DrawPos();
-		SCR_DrawNetGraph();
 		SV_DrawOrthoTriangles();
 		CL_DrawDemoRecording();
 		R_ShowTextures();
@@ -426,6 +425,7 @@ void V_PostRender( void )
 		
 		Con_DrawConsole();
 		UI_UpdateMenu( host.realtime );
+		SCR_DrawNetGraph();
 		Con_DrawVersion();
 #if 0
 		Joy_DrawOnScreenKeyboard();
