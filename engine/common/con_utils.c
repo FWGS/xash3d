@@ -21,18 +21,20 @@ GNU General Public License for more details.
 #include "touch.h"
 
 extern convar_t	*con_gamemaps;
+
 #define CON_MAXCMDS		4096	// auto-complete intermediate list
+
 typedef struct
 {
-// console auto-complete
-string		shortestMatch;
-field_t		*completionField;	// con.input or dedicated server fake field-line
-char		*completionString;
-char		*cmds[CON_MAXCMDS];
-int		matchCount;
-}
-autocomlete_t;
+	// console auto-complete
+	string		shortestMatch;
+	field_t		*completionField;	// con.input or dedicated server fake field-line
+	char		*completionString;
+	char		*cmds[CON_MAXCMDS];
+	int		matchCount;
+} autocomlete_t;
 static autocomlete_t con;
+
 #ifdef _DEBUG
 void DBG_AssertFunction( qboolean fExpr, const char* szExpr, const char* szFile, int szLine, const char* szMessage )
 {
