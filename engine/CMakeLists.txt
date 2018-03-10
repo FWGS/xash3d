@@ -30,13 +30,12 @@ file(GLOB_RECURSE XASH_ENGINE_WIN32_SOURCES   platform/win32/*.c) # Win32 only s
 file(GLOB_RECURSE XASH_ENGINE_SDL_SOURCES     platform/sdl/*.c) # SDL version sources
 file(GLOB_RECURSE XASH_ENGINE_ANDROID_SOURCES platform/android/*.c) # Android sources
 file(GLOB_RECURSE XASH_ENGINE_CLIENT_SOURCES  client/*.c) # Client sources
-file(GLOB_RECURSE XASH_ENGINE_NANOGL_SOURCES  nanogl/*.cpp) # NanoGL version
 
 cond_list_append(WIN32        XASH_ENGINE_SOURCES XASH_ENGINE_WIN32_SOURCES)
 cond_list_append(XASH_SDL     XASH_ENGINE_SOURCES XASH_ENGINE_SDL_SOURCES)
 cond_list_append(ANDROID      XASH_ENGINE_SOURCES XASH_ENGINE_ANDROID_SOURCES)
 cond_list_append("NOT XASH_DEDICATED" XASH_ENGINE_SOURCES XASH_ENGINE_CLIENT_SOURCES)
-cond_list_append(XASH_NANOGL XASH_ENGINE_SOURCES XASH_ENGINE_NANOGL_SOURCES)
+
 
 include_directories(
 	.
@@ -51,8 +50,17 @@ include_directories(
 )
 
 if(XASH_NANOGL)
+	file(GLOB_RECURSE XASH_ENGINE_GLESWRAP_SOURCES  nanogl/*.cpp) # NanoGL version
+	list(APPEND XASH_ENGINE_SOURCES ${XASH_ENGINE_GLESWRAP_SOURCES})
+
 	include_directories(nanogl/ nanogl/GL/)
 	add_definitions(-DXASH_NANOGL -D__MULTITEXTURE_SUPPORT__)
+elseif(XASH_WES)
+	file(GLOB XASH_ENGINE_GLESWRAP_SOURCES  gl-wes-v2/src/*.c) # wesgl version
+	list(APPEND XASH_ENGINE_SOURCES ${XASH_ENGINE_GLESWRAP_SOURCES})
+
+	include_directories(nanogl/ nanogl/GL/ gl-wes-v2/src/)
+	add_definitions(-DXASH_WES)
 endif()
 
 add_definitions(-DXASH_FORCEINLINE)

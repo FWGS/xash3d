@@ -398,7 +398,7 @@ GL_GetProcAddress
 */
 void EXPORT *GL_GetProcAddress( const char *name )
 {
-#if defined( XASH_GLES )
+#if defined( XASH_NANOGL )
 	void *func = nanoGL_GetProcAddress(name);
 #else
 	void *func = SDL_GL_GetProcAddress(name);
