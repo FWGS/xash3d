@@ -50,8 +50,9 @@ cmake_dependent_option(XASH_USE_SELECT "Enable reading console commands from std
 cmake_dependent_option(XASH_LIBDL "Enable libdl use. POSIX only." ON "NOT WIN32" OFF)
 option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
 
-option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator." OFF)
-option(XASH_NANOGL "Enable NanoGL. Implicitly enables XASH_GLES." OFF)
+option(XASH_GLES   "Enable if Xash3D is running over GL to GLES translator." OFF)
+option(XASH_NANOGL "Use NanoGL(GLES1). Implicitly enables XASH_GLES." OFF)
+option(XASH_WES    "Use gl-wes-v2(GLES2). Implicitly enables XASH_GLES." OFF)
 option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
 
@@ -139,7 +140,7 @@ if(XASH_STATIC)
 	set(XASH_SINGLE_BINARY ON)
 endif()
 
-if(XASH_NANOGL)
+if(XASH_NANOGL OR XASH_WES)
 	set(XASH_GLES ON)
 endif()
 
