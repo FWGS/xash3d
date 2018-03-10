@@ -1826,9 +1826,11 @@ static int GAME_EXPORT pfnGetWindowCenterX( void )
 		return pos.x;
 	}
 #endif
+
 #ifdef XASH_SDL
 	SDL_GetWindowPosition( host.hWnd, &x, NULL );
 #endif
+
 	return host.window_center_x + x;
 }
 
@@ -1849,9 +1851,11 @@ static int GAME_EXPORT pfnGetWindowCenterY( void )
 		return pos.y;
 	}
 #endif
+
 #ifdef XASH_SDL
 	SDL_GetWindowPosition( host.hWnd, NULL, &y );
 #endif
+
 	return host.window_center_y + y;
 }
 
@@ -1990,7 +1994,7 @@ pfnCalcShake
 
 =============
 */
-void GAME_EXPORT pfnCalcShake( void )
+static void GAME_EXPORT pfnCalcShake( void )
 {
 	int	i;
 	float	fraction, freq;
@@ -2052,7 +2056,7 @@ pfnApplyShake
 
 =============
 */
-void GAME_EXPORT pfnApplyShake( float *origin, float *angles, float factor )
+static void GAME_EXPORT pfnApplyShake( float *origin, float *angles, float factor )
 {
 	if( origin ) VectorMA( origin, factor, clgame.shake.applied_offset, origin );
 	if( angles ) angles[ROLL] += clgame.shake.applied_angle * factor;
@@ -2209,7 +2213,7 @@ pfnPlaySound
 
 =============
 */
-void GAME_EXPORT pfnPlaySound( int ent, float *org, int chan, const char *samp, float vol, float attn, int flags, int pitch )
+static void GAME_EXPORT pfnPlaySound( int ent, float *org, int chan, const char *samp, float vol, float attn, int flags, int pitch )
 {
 	S_StartSound( org, ent, chan, S_RegisterSound( samp ), vol, attn, pitch, flags );
 }
@@ -2247,7 +2251,7 @@ pfnIsLocal
 
 =============
 */
-int GAME_EXPORT pfnIsLocal( int playernum )
+static int GAME_EXPORT pfnIsLocal( int playernum )
 {
 	if( playernum == cl.playernum )
 		return true;
@@ -2260,7 +2264,7 @@ pfnLocalPlayerDucking
 
 =============
 */
-int GAME_EXPORT pfnLocalPlayerDucking( void )
+static int GAME_EXPORT pfnLocalPlayerDucking( void )
 {
 	return cl.predicted.usehull == 1;
 }
@@ -2271,7 +2275,7 @@ pfnLocalPlayerViewheight
 
 =============
 */
-void GAME_EXPORT pfnLocalPlayerViewheight( float *view_ofs )
+static void GAME_EXPORT pfnLocalPlayerViewheight( float *view_ofs )
 {
 	// predicted or smoothed
 	if( !view_ofs ) return;
@@ -2287,7 +2291,7 @@ pfnLocalPlayerBounds
 
 =============
 */
-void GAME_EXPORT pfnLocalPlayerBounds( int hull, float *mins, float *maxs )
+static void GAME_EXPORT pfnLocalPlayerBounds( int hull, float *mins, float *maxs )
 {
 	if( hull >= 0 && hull < 4 )
 	{
@@ -2318,7 +2322,7 @@ pfnGetPhysent
 
 =============
 */
-physent_t *GAME_EXPORT pfnGetPhysent( int idx )
+static physent_t *GAME_EXPORT pfnGetPhysent( int idx )
 {
 	if( idx >= 0 && idx < clgame.pmove->numphysent )
 	{
@@ -2408,7 +2412,7 @@ pfnStopAllSounds
 
 =============
 */
-void GAME_EXPORT pfnStopAllSounds( int ent, int entchannel )
+static void GAME_EXPORT pfnStopAllSounds( int ent, int entchannel )
 {
 	S_StopSound( ent, entchannel, NULL );
 }
@@ -2419,7 +2423,7 @@ CL_LoadModel
 
 =============
 */
-model_t *GAME_EXPORT CL_LoadModel( const char *modelname, int *index )
+static model_t *GAME_EXPORT CL_LoadModel( const char *modelname, int *index )
 {
 	int	idx;
 
@@ -2447,7 +2451,7 @@ pfnGetGameDirectory
 
 =============
 */
-const char *GAME_EXPORT pfnGetGameDirectory( void )
+static const char *GAME_EXPORT pfnGetGameDirectory( void )
 {
 	static char	szGetGameDir[MAX_SYSPATH];
 
@@ -2461,7 +2465,7 @@ Key_LookupBinding
 
 =============
 */
-const char *GAME_EXPORT Key_LookupBinding( const char *pBinding )
+static const char *GAME_EXPORT Key_LookupBinding( const char *pBinding )
 {
 	return Key_KeynumToString( Key_GetKey( pBinding ));
 }
@@ -2511,7 +2515,7 @@ pfnLoadMapSprite
 
 =============
 */
-model_t *GAME_EXPORT pfnLoadMapSprite( const char *filename )
+static model_t *GAME_EXPORT pfnLoadMapSprite( const char *filename )
 {
 	char	name[64];
 	int	i;
@@ -2569,7 +2573,7 @@ PlayerInfo_ValueForKey
 
 =============
 */
-const char *GAME_EXPORT PlayerInfo_ValueForKey( int playerNum, const char *key )
+static const char *GAME_EXPORT PlayerInfo_ValueForKey( int playerNum, const char *key )
 {
 	// find the player
 	if(( playerNum > cl.maxclients ) || ( playerNum < 1 ))
@@ -2587,7 +2591,7 @@ PlayerInfo_SetValueForKey
 
 =============
 */
-void GAME_EXPORT PlayerInfo_SetValueForKey( const char *key, const char *value )
+static void GAME_EXPORT PlayerInfo_SetValueForKey( const char *key, const char *value )
 {
 	cvar_t	*var;
 
@@ -2604,7 +2608,7 @@ pfnGetPlayerUniqueID
 
 =============
 */
-qboolean GAME_EXPORT pfnGetPlayerUniqueID( int iPlayer, char playerID[16] )
+static qboolean GAME_EXPORT pfnGetPlayerUniqueID( int iPlayer, char playerID[16] )
 {
 	// TODO: implement
 
@@ -2618,7 +2622,7 @@ pfnGetTrackerIDForPlayer
 
 =============
 */
-int GAME_EXPORT pfnGetTrackerIDForPlayer( int playerSlot )
+static int GAME_EXPORT pfnGetTrackerIDForPlayer( int playerSlot )
 {
 	playerSlot -= 1;	// make into a client index
 
@@ -2633,7 +2637,7 @@ pfnGetPlayerForTrackerID
 
 =============
 */
-int GAME_EXPORT pfnGetPlayerForTrackerID( int trackerID )
+static int GAME_EXPORT pfnGetPlayerForTrackerID( int trackerID )
 {
 	int	i;
 
@@ -2657,7 +2661,7 @@ pfnServerCmdUnreliable
 
 =============
 */
-int GAME_EXPORT pfnServerCmdUnreliable( char *szCmdString )
+static int GAME_EXPORT pfnServerCmdUnreliable( char *szCmdString )
 {
 	if( !szCmdString || !szCmdString[0] )
 		return 0;
@@ -2674,7 +2678,7 @@ pfnGetMousePos
 
 =============
 */
-void GAME_EXPORT pfnGetMousePos( POINT *ppt )
+static void GAME_EXPORT pfnGetMousePos( POINT *ppt )
 {
 #ifdef XASH_SDL
 	SDL_GetMouseState(&ppt->x, &ppt->y);
@@ -2689,7 +2693,7 @@ pfnSetMousePos
 
 =============
 */
-void GAME_EXPORT pfnSetMousePos( int mx, int my )
+static void GAME_EXPORT pfnSetMousePos( int mx, int my )
 {
 #ifdef XASH_SDL
 	SDL_WarpMouseInWindow( host.hWnd, mx, my );
@@ -2702,7 +2706,7 @@ pfnSetMouseEnable
 
 =============
 */
-void GAME_EXPORT pfnSetMouseEnable( qboolean fEnable )
+static void GAME_EXPORT pfnSetMouseEnable( qboolean fEnable )
 {
 	if( fEnable ) IN_ActivateMouse( false );
 	else IN_DeactivateMouse();
@@ -2714,7 +2718,7 @@ pfnGetServerTime
 
 =============
 */
-float GAME_EXPORT pfnGetClientOldTime( void )
+static float GAME_EXPORT pfnGetClientOldTime( void )
 {
 	return cl.oldtime;
 }
@@ -2725,7 +2729,7 @@ pfnGetGravity
 
 =============
 */
-float GAME_EXPORT pfnGetGravity( void )
+static float GAME_EXPORT pfnGetGravity( void )
 {
 	return clgame.movevars.gravity;
 }
@@ -2737,7 +2741,7 @@ pfnEnableTexSort
 TODO: implement
 =============
 */
-void GAME_EXPORT pfnEnableTexSort( int enable )
+static void GAME_EXPORT pfnEnableTexSort( int enable )
 {
 }
 
@@ -2748,7 +2752,7 @@ pfnSetLightmapColor
 TODO: implement
 =============
 */
-void GAME_EXPORT pfnSetLightmapColor( float red, float green, float blue )
+static void GAME_EXPORT pfnSetLightmapColor( float red, float green, float blue )
 {
 }
 
@@ -2759,7 +2763,7 @@ pfnSetLightmapScale
 TODO: implement
 =============
 */
-void GAME_EXPORT pfnSetLightmapScale( float scale )
+static void GAME_EXPORT pfnSetLightmapScale( float scale )
 {
 }
 
@@ -2769,7 +2773,7 @@ pfnSPR_DrawGeneric
 
 =============
 */
-void GAME_EXPORT pfnSPR_DrawGeneric( int frame, int x, int y, const wrect_t *prc, int blendsrc, int blenddst, int width, int height )
+static void GAME_EXPORT pfnSPR_DrawGeneric( int frame, int x, int y, const wrect_t *prc, int blendsrc, int blenddst, int width, int height )
 {
 	pglEnable( GL_BLEND );
 	pglBlendFunc( blendsrc, blenddst ); // g-cont. are params is valid?
@@ -2782,7 +2786,7 @@ LocalPlayerInfo_ValueForKey
 
 =============
 */
-const char *GAME_EXPORT LocalPlayerInfo_ValueForKey( const char* key )
+static const char *GAME_EXPORT LocalPlayerInfo_ValueForKey( const char* key )
 {
 	return Info_ValueForKey( Cvar_Userinfo(), key );
 }
@@ -2793,7 +2797,7 @@ pfnVGUI2DrawCharacter
 
 =============
 */
-int GAME_EXPORT pfnVGUI2DrawCharacter( int x, int y, int number, unsigned int font )
+static int GAME_EXPORT pfnVGUI2DrawCharacter( int x, int y, int number, unsigned int font )
 {
 	if( !cls.creditsFont.valid )
 		return 0;
@@ -2820,7 +2824,7 @@ pfnVGUI2DrawCharacterAdditive
 
 =============
 */
-int GAME_EXPORT pfnVGUI2DrawCharacterAdditive( int x, int y, int ch, int r, int g, int b, unsigned int font )
+static int GAME_EXPORT pfnVGUI2DrawCharacterAdditive( int x, int y, int ch, int r, int g, int b, unsigned int font )
 {
 	if( !hud_utf8->integer )
 		ch = Con_UtfProcessChar( ch );
@@ -2834,7 +2838,7 @@ pfnDrawString
 
 =============
 */
-int GAME_EXPORT pfnDrawString( int x, int y, const char *str, int r, int g, int b )
+static int GAME_EXPORT pfnDrawString( int x, int y, const char *str, int r, int g, int b )
 {
 	Con_UtfProcessChar(0);
 
@@ -2853,7 +2857,7 @@ pfnDrawStringReverse
 
 =============
 */
-int GAME_EXPORT pfnDrawStringReverse( int x, int y, const char *str, int r, int g, int b )
+static int GAME_EXPORT pfnDrawStringReverse( int x, int y, const char *str, int r, int g, int b )
 {
 	// find the end of the string
 	char *szIt;
@@ -2869,7 +2873,7 @@ GetCareerGameInterface
 
 =============
 */
-void *GAME_EXPORT GetCareerGameInterface( void )
+static void *GAME_EXPORT GetCareerGameInterface( void )
 {
 	Msg( "^1Career GameInterface called!\n" );
 	return NULL;
@@ -2881,7 +2885,7 @@ pfnPlaySoundVoiceByName
 
 =============
 */
-void GAME_EXPORT pfnPlaySoundVoiceByName( char *filename, float volume, int pitch )
+static void GAME_EXPORT pfnPlaySoundVoiceByName( char *filename, float volume, int pitch )
 {
 	int hSound = S_RegisterSound( filename );
 	S_StartSound( NULL, cl.refdef.viewentity, CHAN_AUTO, hSound, volume, ATTN_NORM, pitch, SND_STOP_LOOPING );
@@ -2893,7 +2897,7 @@ pfnMP3_InitStream
 
 =============
 */
-void GAME_EXPORT pfnMP3_InitStream( char *filename, int looping )
+static void GAME_EXPORT pfnMP3_InitStream( char *filename, int looping )
 {
 	if( !filename )
 	{
@@ -2917,7 +2921,7 @@ pfnPlaySoundByNameAtPitch
 
 =============
 */
-void GAME_EXPORT pfnPlaySoundByNameAtPitch( char *filename, float volume, int pitch )
+static void GAME_EXPORT pfnPlaySoundByNameAtPitch( char *filename, float volume, int pitch )
 {
 	int hSound = S_RegisterSound( filename );
 	S_StartSound( NULL, cl.refdef.viewentity, CHAN_STATIC, hSound, volume, ATTN_NORM, pitch, SND_STOP_LOOPING );
@@ -2951,11 +2955,9 @@ pfnGetAppID
 
 =============
 */
-int GAME_EXPORT pfnGetAppID( void )
+static int GAME_EXPORT pfnGetAppID( void )
 {
-	return 130;
-
-	//return 220; // standard Valve value
+	return 70; // Half-Life AppID
 }
 
 /*
@@ -2965,7 +2967,7 @@ pfnVguiWrap2_GetMouseDelta
 TODO: implement
 =============
 */
-void GAME_EXPORT pfnVguiWrap2_GetMouseDelta( int *x, int *y )
+static void GAME_EXPORT pfnVguiWrap2_GetMouseDelta( int *x, int *y )
 {
 }
 
@@ -3392,18 +3394,18 @@ NetAPI_InitNetworking
 
 =================
 */
-void GAME_EXPORT NetAPI_InitNetworking( void )
+static void GAME_EXPORT NetAPI_InitNetworking( void )
 {
 	NET_Config( true, false ); // allow remote
 }
 
 /*
 =================
-NetAPI_InitNetworking
+NetAPI_Status
 
 =================
 */
-void GAME_EXPORT NetAPI_Status( net_status_t *status )
+static void GAME_EXPORT NetAPI_Status( net_status_t *status )
 {
 	ASSERT( status != NULL );
 
@@ -3422,7 +3424,7 @@ NetAPI_SendRequest
 
 =================
 */
-void GAME_EXPORT NetAPI_SendRequest( int context, int request, int flags, double timeout, netadr_t *remote_address, net_api_response_func_t response )
+static void GAME_EXPORT NetAPI_SendRequest( int context, int request, int flags, double timeout, netadr_t *remote_address, net_api_response_func_t response )
 {
 	net_request_t	*nr = NULL;
 	string		req;
@@ -3489,7 +3491,7 @@ NetAPI_CancelRequest
 
 =================
 */
-void GAME_EXPORT NetAPI_CancelRequest( int context )
+static void GAME_EXPORT NetAPI_CancelRequest( int context )
 {
 	int	i;
 
@@ -3511,7 +3513,7 @@ NetAPI_CancelAllRequests
 
 =================
 */
-void GAME_EXPORT NetAPI_CancelAllRequests( void )
+static void GAME_EXPORT NetAPI_CancelAllRequests( void )
 {
 	Q_memset( clgame.net_requests, 0, sizeof( clgame.net_requests ));
 }
@@ -3522,7 +3524,7 @@ NetAPI_AdrToString
 
 =================
 */
-char *GAME_EXPORT NetAPI_AdrToString( netadr_t *a )
+static char *GAME_EXPORT NetAPI_AdrToString( netadr_t *a )
 {
 	return NET_AdrToString( *a );
 }
@@ -3533,7 +3535,7 @@ NetAPI_CompareAdr
 
 =================
 */
-int GAME_EXPORT NetAPI_CompareAdr( netadr_t *a, netadr_t *b )
+static int GAME_EXPORT NetAPI_CompareAdr( netadr_t *a, netadr_t *b )
 {
 	return NET_CompareAdr( *a, *b );
 }
@@ -3544,7 +3546,7 @@ NetAPI_StringToAdr
 
 =================
 */
-int GAME_EXPORT NetAPI_StringToAdr( char *s, netadr_t *a )
+static int GAME_EXPORT NetAPI_StringToAdr( char *s, netadr_t *a )
 {
 	return NET_StringToAdr( s, a );
 }
@@ -3555,7 +3557,7 @@ NetAPI_ValueForKey
 
 =================
 */
-const char *GAME_EXPORT NetAPI_ValueForKey( const char *s, const char *key )
+static const char *GAME_EXPORT NetAPI_ValueForKey( const char *s, const char *key )
 {
 	return Info_ValueForKey( s, key );
 }
@@ -3566,7 +3568,7 @@ NetAPI_RemoveKey
 
 =================
 */
-void GAME_EXPORT NetAPI_RemoveKey( char *s, const char *key )
+static void GAME_EXPORT NetAPI_RemoveKey( char *s, const char *key )
 {
 	Info_RemoveKey( s, key );
 }
@@ -3577,14 +3579,14 @@ NetAPI_SetValueForKey
 
 =================
 */
-void GAME_EXPORT NetAPI_SetValueForKey( char *s, const char *key, const char *value, int maxsize )
+static void GAME_EXPORT NetAPI_SetValueForKey( char *s, const char *key, const char *value, int maxsize )
 {
 	if( key[0] == '*' ) return;
 	Info_SetValueForStarKey( s, key, value, maxsize );
 }
 
 
-void GAME_EXPORT VGui_ViewportPaintBackground( int extents[4] )
+static void GAME_EXPORT VGui_ViewportPaintBackground( int extents[4] )
 {
 	// stub
 }
@@ -3601,7 +3603,7 @@ Voice_StartVoiceTweakMode
 
 =================
 */
-int GAME_EXPORT Voice_StartVoiceTweakMode( void )
+static int GAME_EXPORT Voice_StartVoiceTweakMode( void )
 {
 	// TODO: implement
 	return 0;
@@ -3613,7 +3615,7 @@ Voice_EndVoiceTweakMode
 
 =================
 */
-void GAME_EXPORT Voice_EndVoiceTweakMode( void )
+static void GAME_EXPORT Voice_EndVoiceTweakMode( void )
 {
 	// TODO: implement
 }
@@ -3624,7 +3626,7 @@ Voice_SetControlFloat
 
 =================
 */	
-void GAME_EXPORT Voice_SetControlFloat( VoiceTweakControl iControl, float value )
+static void GAME_EXPORT Voice_SetControlFloat( VoiceTweakControl iControl, float value )
 {
 	// TODO: implement
 }
@@ -3635,7 +3637,7 @@ Voice_GetControlFloat
 
 =================
 */
-float GAME_EXPORT Voice_GetControlFloat( VoiceTweakControl iControl )
+static float GAME_EXPORT Voice_GetControlFloat( VoiceTweakControl iControl )
 {
 	// TODO: implement
 	return 1.0f;
@@ -3647,7 +3649,7 @@ Voice_GetSpeakingVolume
 
 =================
 */
-int GAME_EXPORT Voice_GetSpeakingVolume( void )
+static int GAME_EXPORT Voice_GetSpeakingVolume( void )
 {
 	// TODO: implement
 	return 255;
