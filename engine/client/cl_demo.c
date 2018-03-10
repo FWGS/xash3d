@@ -930,9 +930,9 @@ CL_DemoGetName
 */  
 void CL_DemoGetName( int lastnum, char *filename )
 {
-	int	a, b, c, d;
+	if( !filename )
+		return;
 
-	if( !filename ) return;
 	if( lastnum < 0 || lastnum > 9999 )
 	{
 		// bound
@@ -940,15 +940,8 @@ void CL_DemoGetName( int lastnum, char *filename )
 		return;
 	}
 
-	a = lastnum / 1000;
-	lastnum -= a * 1000;
-	b = lastnum / 100;
-	lastnum -= b * 100;
-	c = lastnum / 10;
-	lastnum -= c * 10;
-	d = lastnum;
 
-	Q_sprintf( filename, "demo%i%i%i%i", a, b, c, d );
+	Q_sprintf( filename, "demo%04d", lastnum );
 }
 
 /*
