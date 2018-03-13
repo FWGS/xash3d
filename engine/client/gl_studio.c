@@ -1776,9 +1776,9 @@ R_LightLambert
 
 ====================
 */
-GLubyte *R_LightLambert( vec4_t light[MAX_LOCALLIGHTS], vec3_t normal, vec3_t color, float alpha )
+float *R_LightLambert( vec4_t light[MAX_LOCALLIGHTS], vec3_t normal, vec3_t color, float alpha )
 {
-	static GLubyte cl[4];
+	static float cl[4];
 	vec3_t	finalLight;
 	vec3_t	localLight;
 	int	i;
@@ -1815,10 +1815,10 @@ GLubyte *R_LightLambert( vec4_t light[MAX_LOCALLIGHTS], vec3_t normal, vec3_t co
 		}
 	}
 
-	cl[0] = finalLight[0] * 255;
-	cl[1] = finalLight[1] * 255;
-	cl[2] = finalLight[2] * 255;
-	cl[3] = alpha * 255;
+	cl[0] = finalLight[0];
+	cl[1] = finalLight[1];
+	cl[2] = finalLight[2];
+	cl[3] = alpha;
 
 	return cl;
 }
@@ -1999,12 +1999,13 @@ _inline void R_StudioDrawNormalMesh( short *ptricmds, vec3_t *pstudionorms, floa
 
 			if( g_studio.numlocallights )
 			{
-				pglColor4ubv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
+				pglColor4fv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
 			}
 			else
 			{
 				pglColor4f( lv[0], lv[1], lv[2], alpha );
 			}
+
 			pglTexCoord2f( ptricmds[2] * s, ptricmds[3] * t );
 			pglVertex3fv( g_studio.verts[ptricmds[0]] );
 		}
@@ -2039,7 +2040,7 @@ _inline void R_StudioDrawFloatMesh( short *ptricmds, vec3_t *pstudionorms, float
 			lv = (float *)g_studio.lightvalues[ptricmds[1]];
 			if( g_studio.numlocallights )
 			{
-				pglColor4ubv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
+				pglColor4fv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
 			}
 			else pglColor4f( lv[0], lv[1], lv[2], alpha );
 			pglTexCoord2f( HalfToFloat( ptricmds[2] ), HalfToFloat( ptricmds[3] ));
@@ -2091,7 +2092,7 @@ _inline void R_StudioDrawChromeMesh( short *ptricmds, vec3_t *pstudionorms, floa
 				lv = (float *)g_studio.lightvalues[ptricmds[1]];
 				if( g_studio.numlocallights )
 				{
-					pglColor4ubv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
+					pglColor4fv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
 				}
 				else pglColor4f( lv[0], lv[1], lv[2], alpha );
 				pglTexCoord2f( g_studio.chrome[idx][0] * s, g_studio.chrome[idx][1] * t );
@@ -2172,15 +2173,13 @@ _inline void R_StudioBuildArrayNormalMesh( short *ptricmds, vec3_t *pstudionorms
 
 			if( g_studio.numlocallights )
 			{
-				Q_memcpy( cl, R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ), 4 );
+				lv = R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
 			}
-			else
-			{
-				cl[0] = lv[0] * 255;
-				cl[1] = lv[1] * 255;
-				cl[2] = lv[2] * 255;
-				cl[3] = alpha * 255;
-			}
+
+			cl[0] = bound( 0, lv[0] * 255, 255 );
+			cl[1] = bound( 0, lv[1] * 255, 255 );
+			cl[2] = bound( 0, lv[2] * 255, 255 );
+			cl[3] = alpha * 255;
 
 			g_studio.arraycoord[g_studio.numverts][0] = ptricmds[2] * s;
 			g_studio.arraycoord[g_studio.numverts][1] = ptricmds[3] * t;
@@ -2224,15 +2223,13 @@ _inline void R_StudioBuildArrayFloatMesh( short *ptricmds, vec3_t *pstudionorms,
 
 			if( g_studio.numlocallights )
 			{
-				Q_memcpy( cl, R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ), 4 );
+				lv = R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
 			}
-			else
-			{
-				cl[0] = lv[0] * 255;
-				cl[1] = lv[1] * 255;
-				cl[2] = lv[2] * 255;
-				cl[3] = alpha * 255;
-			}
+
+			cl[0] = bound( 0, lv[0] * 255, 255 );
+			cl[1] = bound( 0, lv[1] * 255, 255 );
+			cl[2] = bound( 0, lv[2] * 255, 255 );
+			cl[3] = alpha * 255;
 
 			g_studio.arraycoord[g_studio.numverts][0] = HalfToFloat( ptricmds[2] );
 			g_studio.arraycoord[g_studio.numverts][1] = HalfToFloat( ptricmds[3] );
@@ -2297,16 +2294,13 @@ _inline void R_StudioBuildArrayChromeMesh( short *ptricmds, vec3_t *pstudionorms
 
 				if( g_studio.numlocallights )
 				{
-					Q_memcpy( cl, R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ), 4 );
-				}
-				else
-				{
-					cl[0] = lv[0] * 255;
-					cl[1] = lv[1] * 255;
-					cl[2] = lv[2] * 255;
-					cl[3] = 255;
+					lv = R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
 				}
 
+				cl[0] = bound( 0, lv[0] * 255, 255 );
+				cl[1] = bound( 0, lv[1] * 255, 255 );
+				cl[2] = bound( 0, lv[2] * 255, 255 );
+				cl[3] = alpha * 255;
 
 				VectorCopy( g_studio.verts[ptricmds[0]], g_studio.arrayverts[g_studio.numverts] );
 			}
@@ -2330,7 +2324,7 @@ _inline void R_StudioDrawArrays( uint startverts, uint startelems )
 	if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ) )
 	{
 		pglEnableClientState( GL_COLOR_ARRAY );
-		pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_studio.arraycolor );
+		pglColorPointer( 4, GL_FLOAT, 0, g_studio.arraycolor );
 	}
 
 #if !defined XASH_NANOGL || defined XASH_WES && defined __EMSCRIPTEN__ // WebGL need to know array sizes
