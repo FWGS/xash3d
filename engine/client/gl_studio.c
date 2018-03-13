@@ -2324,7 +2324,7 @@ _inline void R_StudioDrawArrays( uint startverts, uint startelems )
 	if( !( g_nForceFaceFlags & STUDIO_NF_CHROME ) )
 	{
 		pglEnableClientState( GL_COLOR_ARRAY );
-		pglColorPointer( 4, GL_FLOAT, 0, g_studio.arraycolor );
+		pglColorPointer( 4, GL_UNSIGNED_BYTE, 0, g_studio.arraycolor );
 	}
 
 #if !defined XASH_NANOGL || defined XASH_WES && defined __EMSCRIPTEN__ // WebGL need to know array sizes
