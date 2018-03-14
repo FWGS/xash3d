@@ -681,14 +681,12 @@ float R_StudioEstimateFrame( cl_entity_t *e, mstudioseqdesc_t *pseqdesc )
 	if( pseqdesc->flags & STUDIO_LOOPING )
 	{
 		if( pseqdesc->numframes > 1 )
-			f -= (int)(f / (pseqdesc->numframes - 1)) *  (pseqdesc->numframes - 1);
+			f -= (int)(f / (pseqdesc->numframes - 1)) * (pseqdesc->numframes - 1);
 		if( f < 0 ) f += (pseqdesc->numframes - 1);
 	}
 	else
 	{
-		if( f >= pseqdesc->numframes - 1.001 )
-			f = pseqdesc->numframes - 1.001;
-		if( f < 0.0 )  f = 0.0;
+		f = bound( 0.0, f, pseqdesc->numframes - 1.001 );
 	}
 	return f;
 }
@@ -3838,8 +3836,8 @@ void Mod_LoadStudioModel( model_t *mod, const void *buffer, qboolean *loaded )
 			MsgDev( D_WARN, "Mod_LoadStudioModel: %s missing textures file\n", mod->name );
 			if( buffer2 ) Mem_Free( buffer2 );
 		}
-					else
-					{
+		else
+		{
 			// give space for textures and skinrefs
 			size1 = thdr->numtextures * sizeof( mstudiotexture_t );
 			size2 = thdr->numskinfamilies * thdr->numskinref * sizeof( short );
