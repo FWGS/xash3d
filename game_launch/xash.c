@@ -52,6 +52,10 @@ GNU General Public License for more details.
 	#include "windows.h"
 #endif
 
+#ifndef USE_WINMAIN // use for MSVC check here
+#define _inline static inline
+#endif
+
 #ifdef WIN32
 // Enable NVIDIA High Performance Graphics while using Integrated Graphics.
 __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
@@ -147,7 +151,7 @@ static void Sys_ChangeGame( const char *progname )
 	Xash_Main( szArgc, szArgv, szGameDir, true, Sys_ChangeGame );
 }
 
-static inline int Sys_Start( void )
+_inline int Sys_Start( void )
 {
 	int ret;
 
