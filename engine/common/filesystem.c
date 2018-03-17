@@ -76,9 +76,9 @@ struct file_s
 byte		*fs_mempool;
 searchpath_t	*fs_searchpaths = NULL;
 searchpath_t	fs_directpath;		// static direct path
-char		fs_rootdir[MAX_SYSPATH];	// engine root directory
+// char		fs_rootdir[MAX_SYSPATH];	// engine root directory
 char		fs_basedir[MAX_SYSPATH];	// base directory of game
-char		fs_falldir[MAX_SYSPATH];	// game falling directory
+// char		fs_falldir[MAX_SYSPATH];	// game falling directory
 char		fs_gamedir[MAX_SYSPATH];	// game current directory
 char		gs_basedir[MAX_SYSPATH];	// initial dir before loading gameinfo.txt (used for compilers too)
 
