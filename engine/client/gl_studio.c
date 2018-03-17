@@ -2477,8 +2477,6 @@ static void R_StudioDrawPoints( void )
 
 		if( FBitSet( g_nFaceFlags, STUDIO_NF_MASKED ))
 		{
-			MsgDev( D_INFO, "MEOW\n");
-
 			pglEnable( GL_ALPHA_TEST );
 			pglDepthMask( GL_TRUE );
 			if( R_ModelOpaque( RI.currententity->curstate.rendermode ))
