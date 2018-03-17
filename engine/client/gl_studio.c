@@ -30,7 +30,7 @@ GNU General Public License for more details.
 
 cvar_t			r_glowshellfreq = { "r_glowshellfreq", "2.2", 0, 0 };
 cvar_t			r_shadows = { "r_shadows", "0", 0, 0 };	// dead cvar. especially disabled
-cvar_t			r_shadowalpha = { "r_shadowalpha", "0.5", 0, 0.8f };
+cvar_t			r_shadowalpha = { "r_shadowalpha", "0.8", 0, 0.8f };
 
 static vec3_t hullcolor[8] =
 {
@@ -2174,9 +2174,9 @@ _inline void R_StudioBuildArrayNormalMesh( short *ptricmds, vec3_t *pstudionorms
 				lv = R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
 			}
 
-			cl[0] = bound( 0, lv[0] * 255, 255 );
-			cl[1] = bound( 0, lv[1] * 255, 255 );
-			cl[2] = bound( 0, lv[2] * 255, 255 );
+			cl[0] = lv[0] * 255;
+			cl[1] = lv[1] * 255;
+			cl[2] = lv[2] * 255;
 			cl[3] = alpha * 255;
 
 			g_studio.arraycoord[g_studio.numverts][0] = ptricmds[2] * s;
@@ -2224,9 +2224,9 @@ _inline void R_StudioBuildArrayFloatMesh( short *ptricmds, vec3_t *pstudionorms,
 				lv = R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
 			}
 
-			cl[0] = bound( 0, lv[0] * 255, 255 );
-			cl[1] = bound( 0, lv[1] * 255, 255 );
-			cl[2] = bound( 0, lv[2] * 255, 255 );
+			cl[0] = lv[0] * 255;
+			cl[1] = lv[1] * 255;
+			cl[2] = lv[2] * 255;
 			cl[3] = alpha * 255;
 
 			g_studio.arraycoord[g_studio.numverts][0] = HalfToFloat( ptricmds[2] );
@@ -2295,9 +2295,9 @@ _inline void R_StudioBuildArrayChromeMesh( short *ptricmds, vec3_t *pstudionorms
 					lv = R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
 				}
 
-				cl[0] = bound( 0, lv[0] * 255, 255 );
-				cl[1] = bound( 0, lv[1] * 255, 255 );
-				cl[2] = bound( 0, lv[2] * 255, 255 );
+				cl[0] = lv[0] * 255;
+				cl[1] = lv[1] * 255;
+				cl[2] = lv[2] * 255;
 				cl[3] = alpha * 255;
 
 				VectorCopy( g_studio.verts[ptricmds[0]], g_studio.arrayverts[g_studio.numverts] );
@@ -2413,7 +2413,7 @@ static void R_StudioDrawPoints( void )
 		R_StudioGenerateNormals();
 	}
 
-	alpha = R_ComputeFxBlend( RI.currententity );
+	alpha = R_ComputeFxBlend( RI.currententity ) / 255.0f;
 
 	for( j = k = 0; j < m_pSubModel->nummesh; j++ )
 	{
