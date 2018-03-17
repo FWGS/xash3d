@@ -171,7 +171,7 @@ int main( int argc, char **argv )
 int __stdcall WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow )
 {
 	LPWSTR* lpArgv;
-	int ret;
+	int ret, i;
 
 	lpArgv = CommandLineToArgvW( GetCommandLineW(), &szArgc );
 	szArgv = ( char** )malloc( szArgc * sizeof( char* ));
