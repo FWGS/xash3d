@@ -27,7 +27,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 include(VSForceXPToolchain) # Force XP toolchain for Visual Studio
 
-project (XASH3D)
+project(XASH3D)
 
 include(FWGSLib)
 include(CMakeDependentOption)
@@ -58,7 +58,7 @@ option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OF
 
 # Enable 64-bit build of Xash3D FWGS Engine.
 option(XASH_64BIT "Enable experimental 64-bit build. Note that you must also provide 64-bit game binaries" OFF)
-cmake_dependent_option(XASH_VECTORIZE_SINCOS "Use vectorized versions of sin(), cos() and sincos()" ON "XASH_64BIT" OFF)
+option(XASH_VECTORIZE_SINCOS "Try to use vectorized versions of sin(), cos() and sincos()" ON)
 
 # Desktop or dedicated version options
 if(XASH_DEDICATED) 
@@ -131,6 +131,10 @@ if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 	message(FATAL_ERROR "You're building 64 bit Xash3D! Note that there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
 endif()
 
+if(XASH_64BIT AND NOT (CMAKE_SIZEOF_VOID_P EQUAL 8))
+	message(FATAL_ERROR "You enabled XASH_64BIT, but compiler can't create 64 bit code!")
+endif()
+
 if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER AND NOT XASH_NONSTANDARD_LOAD)
 	message(FATAL_ERROR "You must enable XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
 endif()
@@ -145,8 +149,8 @@ if(XASH_NANOGL OR XASH_WES)
 endif()
 
 fwgs_conditional_subproject(XASH_MAINUI mainui)
-fwgs_conditional_subproject(XASH_VGUI vgui_support)
-fwgs_conditional_subproject(XASH_DLL_LOADER loader)
+fwgs_conditional_subproject("NOT XASH_64BIT AND XASH_VGUI" vgui_support)
+fwgs_conditional_subproject("NOT XASH_64BIT AND XASH_DLL_LOADER" loader)
 fwgs_conditional_subproject("NOT XASH_SINGLE_BINARY" game_launch)
 add_subdirectory(engine)
 

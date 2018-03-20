@@ -620,7 +620,7 @@ void GAME_EXPORT CL_EntityParticles( cl_entity_t *ent )
 		p = CL_AllocParticle( NULL );
 		if( !p ) return;
 
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 		SinCosFastVector3(
 			cl.time * cl_avelocities[i][0],
 			cl.time * cl_avelocities[i][1],
