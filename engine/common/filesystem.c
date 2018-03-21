@@ -954,6 +954,8 @@ void FS_AddGameHierarchy( const char *dir, int flags )
 		{
 			// append new flags to rodir, except FS_GAMEDIR_PATH
 			uint newFlags = FS_NOWRITE_PATH | (flags & (~FS_GAMEDIR_PATH));
+			if( flags & FS_GAMEDIR_PATH )
+				newFlags |= FS_CUSTOM_PATH;
 
 			FS_AddGameDirectory( va( "%s/%s/", host.rodir, dir ), newFlags );
 		}
