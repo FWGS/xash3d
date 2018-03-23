@@ -270,6 +270,10 @@ typedef struct sv_client_s
 	int		resources_count;
 	char	useragent[MAX_INFO_STRING];
 	char	auth_id[64];
+
+	float	userinfo_next_changetime;
+	float	userinfo_penalty;
+	int		userinfo_change_attempts;
 } sv_client_t;
 
 
@@ -470,6 +474,10 @@ extern	convar_t		*sv_allow_compress;
 extern	convar_t		*sv_maxpacket;
 extern	convar_t		*sv_forcesimulating;
 extern  convar_t		*sv_password;
+extern  convar_t		*sv_userinfo_enable_penalty;
+extern  convar_t		*sv_userinfo_penalty_time;
+extern  convar_t		*sv_userinfo_penalty_multiplier;
+extern  convar_t		*sv_userinfo_penalty_attempts;
 
 //===========================================================
 //
@@ -486,7 +494,6 @@ int SV_CalcPacketLoss( sv_client_t *cl );
 void SV_ExecuteUserCommand (char *s);
 void SV_InitOperatorCommands( void );
 void SV_KillOperatorCommands( void );
-void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo );
 void SV_PrepWorldFrame( void );
 void SV_ProcessFile( sv_client_t *cl, char *filename );
 void SV_SendResourceList_f( sv_client_t *cl );

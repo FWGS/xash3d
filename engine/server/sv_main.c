@@ -94,6 +94,10 @@ convar_t	*sv_maxpacket;
 convar_t	*sv_forcesimulating;
 convar_t	*sv_nat;
 convar_t	*sv_password;
+convar_t	*sv_userinfo_enable_penalty;
+convar_t	*sv_userinfo_penalty_time;
+convar_t	*sv_userinfo_penalty_multiplier;
+convar_t	*sv_userinfo_penalty_attempts;
 
 // sky variables
 convar_t	*sv_skycolor_r;
@@ -989,13 +993,18 @@ void SV_Init( void )
 	sv_forcesimulating = Cvar_Get( "sv_forcesimulating", DEFAULT_SV_FORCESIMULATING, 0, "forcing world simulating when server don't have active players" );
 	sv_nat = Cvar_Get( "sv_nat", "0", 0, "enable NAT bypass for this server" );
 
-	sv_allow_joystick = Cvar_Get("sv_allow_joystick", "1", CVAR_ARCHIVE, "allow connect with joystick enabled" );
-	sv_allow_mouse = Cvar_Get("sv_allow_mouse", "1", CVAR_ARCHIVE, "allow connect with mouse" );
-	sv_allow_touch = Cvar_Get("sv_allow_touch", "1", CVAR_ARCHIVE, "allow connect with touch controls" );
-	sv_allow_vr = Cvar_Get("sv_allow_vr", "1", CVAR_ARCHIVE, "allow connect from vr version" );
-	sv_allow_noinputdevices = Cvar_Get("sv_allow_noinputdevices", "1", CVAR_ARCHIVE, "allow connect from old versions without useragent" );
+	sv_allow_joystick = Cvar_Get( "sv_allow_joystick", "1", CVAR_ARCHIVE, "allow connect with joystick enabled" );
+	sv_allow_mouse = Cvar_Get( "sv_allow_mouse", "1", CVAR_ARCHIVE, "allow connect with mouse" );
+	sv_allow_touch = Cvar_Get( "sv_allow_touch", "1", CVAR_ARCHIVE, "allow connect with touch controls" );
+	sv_allow_vr = Cvar_Get( "sv_allow_vr", "1", CVAR_ARCHIVE, "allow connect from vr version" );
+	sv_allow_noinputdevices = Cvar_Get( "sv_allow_noinputdevices", "1", CVAR_ARCHIVE, "allow connect from old versions without useragent" );
 
-	sv_password = Cvar_Get("sv_password", "", CVAR_PROTECTED, "server password. Leave blank or set to \"none\" if none" );
+	sv_password = Cvar_Get( "sv_password", "", CVAR_PROTECTED, "server password. Leave blank or set to \"none\" if none" );
+
+	sv_userinfo_enable_penalty = Cvar_Get( "sv_userinfo_enable_penalty", "1", CVAR_ARCHIVE, "enable penalty time for too fast userinfo updates(name, model, etc)" );
+	sv_userinfo_penalty_time = Cvar_Get( "sv_userinfo_penalty_time", "1.0", CVAR_ARCHIVE, "initial penalty time" );
+	sv_userinfo_penalty_multiplier = Cvar_Get( "sv_userinfo_penalty_multiplier", "2.0", CVAR_ARCHIVE, "penalty time multiplier" );
+	sv_userinfo_penalty_attempts = Cvar_Get( "sv_userinfo_penalty_attempts", "4", CVAR_ARCHIVE, "if max attempts count was exceeded, penalty time will be increased" );
 
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
 
