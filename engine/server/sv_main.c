@@ -1002,8 +1002,8 @@ void SV_Init( void )
 	sv_password = Cvar_Get( "sv_password", "", CVAR_PROTECTED, "server password. Leave blank or set to \"none\" if none" );
 
 	sv_userinfo_enable_penalty = Cvar_Get( "sv_userinfo_enable_penalty", "1", CVAR_ARCHIVE, "enable penalty time for too fast userinfo updates(name, model, etc)" );
-	sv_userinfo_penalty_time = Cvar_Get( "sv_userinfo_penalty_time", "1.0", CVAR_ARCHIVE, "initial penalty time" );
-	sv_userinfo_penalty_multiplier = Cvar_Get( "sv_userinfo_penalty_multiplier", "2.0", CVAR_ARCHIVE, "penalty time multiplier" );
+	sv_userinfo_penalty_time = Cvar_Get( "sv_userinfo_penalty_time", "0.3", CVAR_ARCHIVE, "initial penalty time" );
+	sv_userinfo_penalty_multiplier = Cvar_Get( "sv_userinfo_penalty_multiplier", "2", CVAR_ARCHIVE, "penalty time multiplier" );
 	sv_userinfo_penalty_attempts = Cvar_Get( "sv_userinfo_penalty_attempts", "4", CVAR_ARCHIVE, "if max attempts count was exceeded, penalty time will be increased" );
 
 	Cmd_AddCommand( "download_resources", SV_DownloadResources_f, "try to download missing resources to server");
