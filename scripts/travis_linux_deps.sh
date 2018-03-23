@@ -15,3 +15,10 @@ mv android-ndk-r10e android-ndk
 
 curl -s http://libsdl.org/release/SDL2-2.0.7.tar.gz | tar xzf -
 git clone --depth 1 https://github.com/FWGS/xash3d-android-project
+cd $TRAVIS_BUILD_DIR/xash3d-android-project
+cp debug.keystore ~/.android/debug.keystore
+git submodule update --init jni/src/NanoGL/nanogl xash-extras
+git clone --depth 1 https://github.com/FWGS/hlsdk-xash3d jni/src/hlsdk-xash3d
+rm -r jni/src/Xash3D/xash3d
+ln -s $TRAVIS_BUILD_DIR jni/src/Xash3D/xash3d
+cd $TRAVIS_BUIL_DIR
