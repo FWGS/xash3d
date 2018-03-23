@@ -125,7 +125,7 @@ void CL_PlayCDTrack_f( void )
 			if( paused ) Msg( "Paused %s track %u\n", looped ? "looping" : "playing", track );
 			else Msg( "Currently %s track %u\n", looped ? "looping" : "playing", track );
 		}
-		Msg( "Volume is %f\n", Cvar_VariableValue( "musicvolume" ));
+		Msg( "Volume is %f\n", Cvar_VariableValue( "MP3Volume" ));
 		return;
 	}
 	else Msg( "cd: unknown command %s\n", command );
