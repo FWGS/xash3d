@@ -63,7 +63,7 @@ option(XASH_VECTORIZE_SINCOS "Try to use vectorized versions of sin(), cos() and
 # Desktop or dedicated version options
 if(XASH_DEDICATED) 
 	option(XASH_SDL "Enable SDL." OFF) # Dedicated servers still can use SDL
-	set(XASH_SINGLE_BINARY ON) # Disable game launcher by default for dedicated
+	option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executable" ON)
 	set(XASH_VGUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
 	set(XASH_MAINUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
 else()
