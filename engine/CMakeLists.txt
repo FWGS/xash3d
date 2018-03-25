@@ -147,10 +147,12 @@ if(XASH_DLL_LOADER)
 	include_directories(../loader)
 
 	# See target_link_vgui_hack
-	add_custom_command(TARGET ${XASH_ENGINE} PRE_LINK COMMAND
-		${CMAKE_COMMAND} -E copy $<TARGET_FILE:loader> $<TARGET_FILE_DIR:${XASH_ENGINE}>)
 
-	target_link_libraries(${XASH_ENGINE} -L. -lloader)
+	# Not needed anymore, loader is static always
+	# add_custom_command(TARGET ${XASH_ENGINE} PRE_LINK COMMAND
+	#    ${CMAKE_COMMAND} -E copy $<TARGET_FILE:loader> $<TARGET_FILE_DIR:${XASH_ENGINE}>)
+
+	target_link_libraries(${XASH_ENGINE} loader)
 endif()
 
 if(XASH_LIBDL)

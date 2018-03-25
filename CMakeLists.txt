@@ -41,6 +41,9 @@ set (XASH3D_VERSION 0.19.1)
 
 option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF) # Servers must choose this
 
+# Enable 64-bit build of Xash3D FWGS Engine.
+option(XASH_64BIT "Enable experimental 64-bit build. Note that you must also provide 64-bit game binaries" OFF)
+
 # Windows only. Enable it by default for Windows.
 option(XASH_IPX "Enable IPX support for networking. Windows only. Deprecated." OFF)
 cmake_dependent_option(XASH_NONSTANDARD_LOAD "Enable own DLL loader in Windows." ON "WIN32" OFF)
@@ -48,7 +51,9 @@ cmake_dependent_option(XASH_NONSTANDARD_LOAD "Enable own DLL loader in Windows."
 # POSIX only. Disable it by default for Windows
 cmake_dependent_option(XASH_USE_SELECT "Enable reading console commands from stdin." ON "NOT WIN32" OFF)
 cmake_dependent_option(XASH_LIBDL "Enable libdl use. POSIX only." ON "NOT WIN32" OFF)
-option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
+
+# Disable for Windows and 64Bit
+cmake_dependent_option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF "NOT WIN32 AND NOT XASH_64BIT" OFF)
 
 option(XASH_GLES   "Enable if Xash3D is running over GL to GLES translator." OFF)
 option(XASH_NANOGL "Use NanoGL(GLES1). Implicitly enables XASH_GLES." OFF)
@@ -56,20 +61,18 @@ option(XASH_WES    "Use gl-wes-v2(GLES2). Implicitly enables XASH_GLES." OFF)
 option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
 
-# Enable 64-bit build of Xash3D FWGS Engine.
-option(XASH_64BIT "Enable experimental 64-bit build. Note that you must also provide 64-bit game binaries" OFF)
 option(XASH_VECTORIZE_SINCOS "Try to use vectorized versions of sin(), cos() and sincos()" ON)
 
 # Desktop or dedicated version options
 if(XASH_DEDICATED) 
 	option(XASH_SDL "Enable SDL." OFF) # Dedicated servers still can use SDL
 	option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executable" ON)
-	set(XASH_VGUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
+	set(XASH_VGUI OFF)   # But these dedicated can't use at all, so hardcode it as disabled
 	set(XASH_MAINUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
 else()
 	option(XASH_SDL "Enable SDL." ON)
 	option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executable" OFF)
-	option(XASH_VGUI "Enable VGUI support." ON)
+	cmake_dependent_option(XASH_VGUI "Enable VGUI support." ON "NOT XASH_64BIT" OFF)
 	option(XASH_MAINUI "Build mainui library" ON) # Totally not recommended to disable
 endif()
 
