@@ -22,8 +22,6 @@ GNU General Public License for more details.
 #include "qfont.h"
 #include "library.h"
 
-#include "strobe/r_strobe_core.h"
-
 convar_t *scr_centertime;
 convar_t *scr_loading;
 convar_t *scr_download;
