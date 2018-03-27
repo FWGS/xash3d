@@ -23,9 +23,9 @@ See the GNU General Public License for more details.
 #include "r_strobe_api.h"
 #include "client.h"
 #include "gl_local.h"
-#include "r_strobe_base_protected_.h"
+#include "r_strobe_api_protected_.h"
 
-#define lossCalculator( x, y ) ( ( ( x ) - ( y ) ) * 100.0 / ( x ) ) // x : supposed y : current
+#define lossCalculator( x, y ) ( ( ( x ) - ( y ) ) * 100.0 / ( x ) )
 
 StrobeAPI_EXPORTS_t StrobeAPI;
 
@@ -224,17 +224,17 @@ _inline void func_helper_GenerateDiffBar( StrobeAPI_t *self, char *src, int size
 	}
 	if ( type == 2 )
 	{
-		Q_strcat( src, va( "] - %4d", diff ) );
+		Q_strcat( src, va( "] - %d / 200", diff ) );
 	}
 	else
 	{
-		Q_strcat( src, va( "] - %4d%%", ( Neg ? -diff : diff ) ) );
+		Q_strcat( src, va( "] - %d%%", ( Neg ? -diff : diff ) ) );
 	}
 }
 
-_inline int func_pwmsimulation_Frequency( StrobeAPI_t *self )
+_inline double func_pwmsimulation_Frequency( StrobeAPI_t *self )
 {
-	return (int)round( ( 1 / ( ( 1.0f / self->Helpers.CurrentFPS( self ) ) * ( abs( StrobeAPI.r_strobe->integer ) + 1 ) ) ) );
+	return ( 1 / ( ( 1.0f / self->Helpers.CurrentFPS( self ) ) * ( abs( StrobeAPI.r_strobe->integer ) + 1 ) ) );
 }
 
 _inline double func_pwmsimulation_DutyCycle( void )
@@ -245,7 +245,10 @@ _inline double func_pwmsimulation_DutyCycle( void )
 
 _inline double func_pwmsimulation_PositivePhaseShift( StrobeAPI_t *self )
 {
-	return !!( self->protected->frameInfo & p_inverted ) ? ( 1.0f / self->Helpers.CurrentFPS( self ) ) * 1000 : 0.0f;
+	if ( !!( self->protected->frameInfo & p_inverted ) )
+		return ( 1.0f / self->Helpers.CurrentFPS( self ) ) * 1000;
+	else
+		return 0.0f;
 }
 
 _inline double func_pwmsimulation_NegativePhaseShift( StrobeAPI_t *self )
@@ -264,13 +267,6 @@ _inline double func_pwmsimulation_Period( StrobeAPI_t *self )
 _inline double func_helper_GeometricMean( double x, double y )
 {
 	return sqrt( abs( x * y ) );
-	/*
-	int multiply = (x * y);
-	if (multiply >= 0)
-		return sqrt(multiply);
-	else
-		return sqrt(abs(multiply));
-	*/
 }
 
 _inline double func_helper_ArithmeticMean( double x, double y )
@@ -280,10 +276,7 @@ _inline double func_helper_ArithmeticMean( double x, double y )
 
 _inline double func_brightnessreduction_ActualBrightnessReduction( StrobeAPI_t *self )
 {
-	double currentFPS   = self->Helpers.CurrentFPS( self );
-	double effectiveFPS = self->Helpers.effectiveFPS( self );
-	//return ((currentFPS - effectiveFPS) * 100.0 / currentFPS);
-	return lossCalculator( currentFPS, effectiveFPS );
+	return lossCalculator( self->Helpers.CurrentFPS( self ), self->Helpers.effectiveFPS( self ) );
 }
 
 _inline double func_brightnessreduction_LogarithmicBrightnessReduction( StrobeAPI_t *self, double base )
@@ -308,18 +301,17 @@ _inline double func_brightnessreduction_OtherBrightnessReduction( StrobeAPI_t *s
 
 _inline double func_experimental_Badness_Reducted( StrobeAPI_t *self, qboolean PWMInvolved )
 {
-	double badness;
+	double badness, Diff;
 	int diffP_NB, diffN_NB;
-	diffP_NB     = ( self->protected->pNCounter - self->protected->pBCounter );
-	diffN_NB     = ( self->protected->nNCounter - self->protected->nBCounter );
 	double diffP = 0.0, diffN = 0.0;
-	double Diff;
+	diffP_NB = ( self->protected->pNCounter - self->protected->pBCounter );
+	diffN_NB = ( self->protected->nNCounter - self->protected->nBCounter );
 
 	if ( self->protected->pCounter )
-		diffP = round( abs( diffP_NB ) * 100 / self->protected->pCounter );
+		diffP = abs( diffP_NB ) * 100.0 / self->protected->pCounter;
 
 	if ( self->protected->nCounter )
-		diffN = round( abs( diffN_NB ) * 100 / self->protected->nCounter );
+		diffN = abs( diffN_NB ) * 100.0 / self->protected->nCounter;
 
 	if ( diffP_NB < 0.0 )
 		diffP = -diffP;
@@ -344,29 +336,33 @@ _inline double func_experimental_Badness_Reducted( StrobeAPI_t *self, qboolean P
 _inline double func_experimental_Badness( StrobeAPI_t *self, qboolean PWMInvolved )
 {
 	int diffP_NB, diffN_NB;
+	double diffP = 0.0, diffN = 0.0;
+	double absoluteDifference = 0.0;
+	double badness            = 0.0;
+
 	diffP_NB = ( self->protected->pNCounter - self->protected->pBCounter );
 	diffN_NB = ( self->protected->nNCounter - self->protected->nBCounter );
 
-	double diffP = 0.0, diffN = 0.0;
-
 	if ( self->protected->pCounter )
-		diffP = round( abs( diffP_NB ) * 100 / self->protected->pCounter );
+		diffP = abs( diffP_NB ) * 100.0 / self->protected->pCounter;
 
 	if ( self->protected->nCounter )
-		diffN = round( abs( diffN_NB ) * 100 / self->protected->nCounter );
+		diffN = abs( diffN_NB ) * 100.0 / self->protected->nCounter;
 
-	double absoluteDifference = fabs( diffP - diffN );
+	absoluteDifference = fabs( diffP - diffN );
 	if ( absoluteDifference > 100.0 )
 		absoluteDifference = 100.0;
-	double badness =
+
+	badness =
 	    -log( ( ( absoluteDifference + func_helper_GeometricMean( ( 100.0 - diffP ), ( 100.0 - diffN ) ) ) / ( absoluteDifference + func_helper_GeometricMean( diffP, diffN ) ) ) );
+
 	if ( PWMInvolved )
 		return ( badness * func_pwmsimulation_Period( self ) );
 	else
 		return badness;
 }
 
-_inline size_t get_FrameCounter( StrobeAPI_t *self, STROBE_counterType type )
+_inline size_t func_get_FrameCounter( StrobeAPI_t *self, STROBE_counterType type )
 {
 	switch ( type )
 	{
@@ -405,10 +401,9 @@ _inline size_t get_FrameCounter( StrobeAPI_t *self, STROBE_counterType type )
 		return self->protected->fCounter;
 		break;
 	}
-	return self->protected->fCounter;
 }
 
-_inline double get_currentFPS( StrobeAPI_t *self )
+_inline double func_get_currentFPS( StrobeAPI_t *self )
 {
 	// Copied from SCR_DrawFps
 	// This way until current fps becomes global!!!
@@ -423,7 +418,7 @@ _inline double get_currentFPS( StrobeAPI_t *self )
 	{
 		framerate = ( self->protected->fCounter - mark ) / ( newtime - lasttime );
 		lasttime  = newtime;
-		nexttime  = max( nexttime + 0.5, lasttime - 0.5 ); // Make Update tick configurable ?
+		nexttime  = max( nexttime + 0.35, lasttime - 0.35 );
 		mark      = self->protected->fCounter;
 	}
 
@@ -433,54 +428,59 @@ _inline double get_currentFPS( StrobeAPI_t *self )
 _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 {
 	char diffBarP[128], diffBarN[128], diffBarT[128];
-
+	static size_t PositiveNormal, PositiveBlack, NegativeNormal, NegativeBlack;
+	size_t nPositiveNormal, nPositiveBlack, nNegativeNormal, nNegativeBlack;
 	int diffP_NB, diffN_NB;
+	double diffP = 0.0, diffN = 0.0;
+	double cooldown = self->protected->cdTimer;
+
 	diffP_NB = ( self->protected->pNCounter - self->protected->pBCounter );
 	diffN_NB = ( self->protected->nNCounter - self->protected->nBCounter );
 
-	double diffP = 0.0, diffN = 0.0;
-
 	if ( self->protected->pCounter )
-		diffP = round( abs( diffP_NB ) * 100 / self->protected->pCounter );
+		diffP = abs( diffP_NB ) * 100.0 / self->protected->pCounter; // round( abs( diffP_NB ) * 100 / self->protected->pCounter );
 
 	if ( self->protected->nCounter )
-		diffN = round( abs( diffN_NB ) * 100 / self->protected->nCounter );
+		diffN = abs( diffN_NB ) * 100.0 / self->protected->nCounter; // round( abs( diffN_NB ) * 100 / self->protected->nCounter );
 
 	self->Helpers.GenerateDiffBar( self, diffBarP, sizeof( diffBarP ), 0 );
 	self->Helpers.GenerateDiffBar( self, diffBarN, sizeof( diffBarN ), 1 );
 	self->Helpers.GenerateDiffBar( self, diffBarT, sizeof( diffBarT ), 2 );
 
-	double cooldown = self->protected->cdTimer;
+	nPositiveNormal = self->get.FrameCounter( self, STROBE_CT_PositiveNormalFrame );
+	nPositiveBlack  = self->get.FrameCounter( self, STROBE_CT_PositiveBlackFrame );
+	nNegativeNormal = self->get.FrameCounter( self, STROBE_CT_NegativeNormalFrame );
+	nNegativeBlack  = self->get.FrameCounter( self, STROBE_CT_NegativeBlackFrame );
 
 	Q_snprintf( src,
 	            size,
 	            "%.2f FPS\n%.2f eFPS\n"
-	            "Total Frame Count: %u\n"
-	            "(+) Phase Frame Count: %u\n"
-	            " |-> Normal Frame Count: %u\n"
-	            " |-> Black Frame Count: %u\n"
-	            "(-) Phase Frame Count: %u\n"
-	            " |-> Normal Frame Count: %u\n"
-	            " |-> Black Frame Count: %u\n"
-	            ".isPhaseInverted: %d\n"
+	            "Total Frame Count: %zu\n"
+	            "isPhaseInverted = %d\n"
+	            "^7(+) Phase Frame Count: %zu\n"
+	            "%s\n"
+	            "%s\n"
+	            "(-) Phase Frame Count: %zu\n"
+	            "%s\n"
+	            "%s\n"
 	            "^5=====ANALYSIS=====\n^3"
 	            "PWM Simulation:\n"
-	            " |-> Frequency: %d Hz\n"
+	            " |-> Frequency: %.2f Hz\n"
 	            " |-> Duty Cycle: %.2f%%\n"
 	            " |-> Current Phase Shift: +%.4f msec || -%.4f msec\n"
 	            " |-> Period: %.4f msec\n"
 	            "Brightness Reduction:\n"
-	            " |-> [^7LINEAR^3] Actual Reduction: %3f%%\n"
+	            " |-> [^7LINEAR^3] Actual Reduction: %.2f%%\n"
 	            " |-> [^7LOG^3] Realistic Reduction (400 cd/m2 base): %.2f%%\n"
 	            " |-> [^7SQUARE^3] Realistic Reduction (400 cd/m2 base): %.2f%%\n"
 	            " |-> [^7CUBE^3] Realistic Reduction (400 cd/m2 base): %.2f%%\n"
-	            "Difference (+): %s\nDifference (-): %s\nDifference (+ & -): %s\n" /* Diff 3 (Total): |Diff + - Diff -| . Max 200  Min 0*/
+	            "Difference (+): %s\nDifference (-): %s\nDifference (+ & -): %s\n"
 	            "Geometric Mean: %.4f\n"
 	            "G/A Difference: %.4f\n"
 	            "[^7EXPERIMENTAL^3] Badness: %.4f\n"
 	            "[^7EXPERIMENTAL^3] Badness x PWM Period: %.4f\n"
 	            "[^7EXPERIMENTAL^3] Badness (Reducted): %.4f\n"
-	            "[^7EXPERIMENTAL^3] Badness (Reducted) x PWM Period: %.4f\n" /* Badness -log((200-n)/n) */
+	            "[^7EXPERIMENTAL^3] Badness (Reducted) x PWM Period: %.4f\n"
 	            "Stability:\n"
 	            " |-> Standard Deviation: %.3f\n"
 	            " |-> Cooldown: %s\n"
@@ -488,13 +488,13 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	            self->Helpers.CurrentFPS( self ),
 	            self->Helpers.effectiveFPS( self ),
 	            self->get.FrameCounter( self, STROBE_CT_TotalFrame ),
-	            self->get.FrameCounter( self, STROBE_CT_PositiveFrame ),
-	            self->get.FrameCounter( self, STROBE_CT_PositiveNormalFrame ),
-	            self->get.FrameCounter( self, STROBE_CT_PositiveBlackFrame ),
-	            self->get.FrameCounter( self, STROBE_CT_NegativeFrame ),
-	            self->get.FrameCounter( self, STROBE_CT_NegativeNormalFrame ),
-	            self->get.FrameCounter( self, STROBE_CT_NegativeBlackFrame ),
 	            self->Helpers.isPhaseInverted( self ),
+	            self->get.FrameCounter( self, STROBE_CT_PositiveFrame ),
+	            ( nPositiveNormal > PositiveNormal ? va( "^2|-> Normal Frame Count: %zu^7", nPositiveNormal ) : va( "|-> Normal Frame Count: %zu", nPositiveNormal ) ), // Should be white instead of ^7 but white is not available in the color table
+	            ( nPositiveBlack > PositiveBlack ? va( "^2|-> Black Frame Count: %zu^7", nPositiveBlack ) : va( "|-> Black Frame Count: %zu", nPositiveBlack ) ),
+	            self->get.FrameCounter( self, STROBE_CT_NegativeFrame ),
+	            ( nNegativeNormal > NegativeNormal ? va( "^2|-> Normal Frame Count: %zu^7", nNegativeNormal ) : va( "|-> Normal Frame Count: %zu", nNegativeNormal ) ),
+	            ( nNegativeBlack > NegativeBlack ? va( "^2|-> Black Frame Count: %zu^7", nNegativeBlack ) : va( "|-> Black Frame Count: %zu", nNegativeBlack ) ),
 	            self->PWM.Frequency( self ),
 	            self->PWM.DutyCycle( ),
 	            self->PWM.PositivePhaseShift( self ),
@@ -514,7 +514,12 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	            self->Experimentals.BADNESS_REDUCTED( self, false ),
 	            self->Experimentals.BADNESS_REDUCTED( self, true ),
 	            self->protected->deviation,
-	            ( cooldown > 0.0 && self->protected->cdTriggered ? va( "^1 %.2f secs\n[STROBING DISABLED] ^3", (double)StrobeAPI.r_strobe_cooldown->integer - cooldown ) : "0" ) );
+	            ( cooldown >= 0.0 && self->protected->cdTriggered ? va( "^1 %.2f secs\n[STROBING DISABLED] ^3", (double)StrobeAPI.r_strobe_cooldown->integer - cooldown ) : "0" ) );
+
+	PositiveNormal = self->get.FrameCounter( self, STROBE_CT_PositiveNormalFrame );
+	PositiveBlack  = self->get.FrameCounter( self, STROBE_CT_PositiveBlackFrame );
+	NegativeNormal = self->get.FrameCounter( self, STROBE_CT_NegativeNormalFrame );
+	NegativeBlack  = self->get.FrameCounter( self, STROBE_CT_NegativeBlackFrame );
 }
 
 _inline void ProcessFrame( StrobeAPI_t *self )
@@ -560,7 +565,6 @@ _inline void StrobeAPI_constructor( StrobeAPI_t *self )
 	self->Helpers.GenerateDiffBar                             = func_helper_GenerateDiffBar;
 	self->Helpers.GeometricMean                               = func_helper_GeometricMean;
 	self->Helpers.Cooldown                                    = func_helper_getCooldown;
-	self->Helpers.CurrentFPS                                  = get_currentFPS;
 	self->Helpers.isPhaseInverted                             = func_helper_isPhaseInverted;
 	self->Helpers.isNormal                                    = func_helper_isNormal;
 	self->Helpers.isPositive                                  = func_helper_isPositive;
@@ -577,10 +581,11 @@ _inline void StrobeAPI_constructor( StrobeAPI_t *self )
 	self->PWM.PositivePhaseShift                              = func_pwmsimulation_PositivePhaseShift;
 	self->PWM.NegativePhaseShift                              = func_pwmsimulation_NegativePhaseShift;
 	self->PWM.Period                                          = func_pwmsimulation_Period;
+	self->Helpers.CurrentFPS                                  = func_get_currentFPS;
+	self->get.FrameCounter                                    = func_get_FrameCounter;
 	self->GenerateBlackFrame                                  = GL_GenerateBlackFrame;
 	self->ProcessFrame                                        = ProcessFrame;
 	self->Helpers.GenerateDebugStatistics                     = GenerateDebugStatistics;
-	self->get.FrameCounter                                    = get_FrameCounter;
 }
 
 _inline void StrobeAPI_destructor( StrobeAPI_t *self )

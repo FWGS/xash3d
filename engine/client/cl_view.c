@@ -424,7 +424,7 @@ void V_PostRender( void )
 
 #ifdef STROBE_ENABLED
 		if ( STROBE_CORE )
-			STROBE_CORE->STROBE_CORE_FUNC_debughandler( &STROBE_CORE );
+			STROBE_CORE->STROBE_IMPL_FUNC_DEBUGHANDLER( &STROBE_CORE );
 #endif
 
 		SCR_DrawPos();

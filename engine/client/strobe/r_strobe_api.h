@@ -21,12 +21,35 @@ See the GNU General Public License for more details.
 #if !defined R_STROBE_API_H && !defined STROBE_DISABLED
 #define R_STROBE_API_H
 
-#define STROBE_ENABLED
-
 #include "common.h"
 #include "wrect.h"
 
-#define STROBE_INVOKE(IMPL,CONSTRUCTOR,MAIN,DESTRUCTOR) (void**)(&IMPL),CONSTRUCTOR,MAIN,DESTRUCTOR
+
+#define STROBE_ENABLED
+
+// MACROS FOR STROBE IMPLEMENTATIONS
+#define STROBE_IMPL(_IMPL) STROBE_##_IMPL
+#define STROBE_IMPL_(IMPL) IMPL_
+#define _STROBE_IMPL_THIS STROBE_self
+#define STROBE_IMPL_FUNC_MAIN STROBE_main
+#define STROBE_IMPL_FUNC_DEBUGHANDLER STROBE_debugHandler
+#define STROBE_IMPL_FUNC_CONSTRUCTOR STROBE_constructor
+#define STROBE_IMPL_FUNC_DESTRUCTOR STROBE_destructor
+#define STROBE_IMPL_FUNC_REINIT STROBE_reinit
+
+#define STROBE_IMPL_STRUCT_S(IMPL) IMPL##_s
+#define STROBE_IMPL_STRUCT_T(IMPL) IMPL##_t
+#define STROBE_IMPL_PRIVATE_S(IMPL) IMPL##_private_s
+#define STROBE_IMPL_PRIVATE_T(IMPL) IMPL##_private_t
+#define STROBE_IMPL_THIS(IMPL) ( *_STROBE_IMPL_THIS )
+#define STROBE_IMPL_THIS_PARAM(IMPL) STROBE_IMPL_STRUCT_T(IMPL) **_STROBE_IMPL_THIS
+#define STROBE_IMPL_EXPORTEDFUNC_main(IMPL) STROBE_IMPL_(IMPL)STROBE_IMPL_FUNC_MAIN
+#define STROBE_IMPL_EXPORTEDFUNC_constructor(IMPL) STROBE_IMPL_(IMPL)STROBE_IMPL_FUNC_CONSTRUCTOR
+#define STROBE_IMPL_EXPORTEDFUNC_destructor(IMPL) STROBE_IMPL_(IMPL)STROBE_IMPL_FUNC_DESTRUCTOR
+#define STROBE_IMPL_EXPORTEDFUNC_reinit(IMPL) STROBE_IMPL_(IMPL)STROBE_IMPL_FUNC_REINIT
+
+#define STROBE_INVOKE(IMPL) (void**)(&IMPL),STROBE_IMPL_EXPORTEDFUNC_constructor(IMPL),STROBE_IMPL_EXPORTEDFUNC_main(IMPL),STROBE_IMPL_EXPORTEDFUNC_destructor(IMPL)
+// MACROS FOR STROBE IMPLEMENTATIONS
 
 typedef struct StrobeAPI_s StrobeAPI_t;
 
@@ -58,7 +81,7 @@ typedef struct StrobeAPI_funcs_EXPERIMENTAL_s
 
 typedef struct StrobeAPI_funcs_PWMSIMULATION_s
 {
-	int ( *Frequency )( StrobeAPI_t *self );
+	double ( *Frequency )( StrobeAPI_t *self );
 	double ( *DutyCycle )( void );
 	double ( *PositivePhaseShift )( StrobeAPI_t *self );
 	double ( *NegativePhaseShift )( StrobeAPI_t *self );
@@ -74,16 +97,16 @@ typedef struct StrobeAPI_funcs_HELPER_s
 	double ( *CurrentFPS )( StrobeAPI_t *self );
 	void ( *GenerateDebugStatistics )( StrobeAPI_t *self, char *src, int size );
 	void ( *GenerateDiffBar )( StrobeAPI_t *self, char *src, int size, char type );
-	double ( *GeometricMean )( double, double );
-	double ( *ArithmeticMean )( double, double );
+	double ( *GeometricMean )( double x, double y );
+	double ( *ArithmeticMean )( double x, double y );
 	double ( *StandardDeviation )( const double *data, int size );
 	double ( *Cooldown )( StrobeAPI_t *self );
 } StrobeAPI_funcs_HELPER_t;
 
-typedef struct StrobeAPI_GET_s
+typedef struct StrobeAPI_funcs_GET_s
 {
 	size_t ( *FrameCounter )( StrobeAPI_t *self, STROBE_counterType );
-} StrobeAPI_GET_t;
+} StrobeAPI_funcs_GET_t;
 
 typedef struct StrobeAPI_protected_s StrobeAPI_protected_t;
 
@@ -94,7 +117,7 @@ typedef struct StrobeAPI_s
 	StrobeAPI_funcs_BRIGHTNESSREDUCTION_t BrightnessReductions;
 	StrobeAPI_funcs_PWMSIMULATION_t PWM;
 	StrobeAPI_funcs_HELPER_t Helpers;
-	StrobeAPI_GET_t get;
+	StrobeAPI_funcs_GET_t get;
 	void ( *GenerateBlackFrame )( void );
 	void ( *ProcessFrame )( StrobeAPI_t *self );
 } StrobeAPI_t;
@@ -105,7 +128,6 @@ typedef struct StrobeAPI_EXPORTS_s
 	void ( *Constructor )( StrobeAPI_t *self );
 	void ( *Destructor )( StrobeAPI_t *self );
 
-	// Strobe related convars should be in StrobeAPI derived implementations!
 	convar_t *r_strobe;
 	convar_t *r_strobe_swapinterval;
 	convar_t *r_strobe_debug;
