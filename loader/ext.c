@@ -442,7 +442,7 @@ LPVOID WINAPI VirtualAlloc(LPVOID address, DWORD size, DWORD type,  DWORD protec
 
     if (type&MEM_RESERVE && (unsigned)address&0xffff) {
 	size += (unsigned)address&0xffff;
-	address = (void*)(unsigned)address&~0xffff;
+	address = (void*)((unsigned)address&~0xffff);
     }
     pgsz = sysconf(_SC_PAGESIZE);
     if (type&MEM_COMMIT && (unsigned)address%pgsz) {
