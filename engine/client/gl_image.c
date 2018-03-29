@@ -394,7 +394,7 @@ void R_TextureList_f( void )
 
 		Msg( "%4i: ", i );
 		Msg( "%4i %4i ", image->width, image->height );
-		Msg( "%5ik ", image->size >> 10 );
+		Msg( "%5lik ", image->size >> 10 );
 
 		switch( image->format )
 		{

@@ -24,36 +24,36 @@ GNU General Public License for more details.
 #include <stdlib.h>
 #include <stdarg.h>
 
-#if _MSC_VER <= 1600
-#define true 1
-#define false 0
-#else
-#include <stdbool.h>
+#ifdef __APPLE__
+	#include <dlfcn.h>
+	#include <errno.h>
+	#define XASHLIB    "libxash.dylib"
+	#define dlmount(x) dlopen(x, RTLD_NOW)
+	#define HINSTANCE  void*
+#elif __unix__
+	#include <dlfcn.h>
+	#include <errno.h>
+	#define XASHLIB    "libxash.so"
+	#define dlmount(x) dlopen(x, RTLD_NOW)
+	#define HINSTANCE  void*
+#elif _WIN32
+	#define dlmount(x) LoadLibraryA(x)
+	#define dlclose(x) FreeLibrary(x)
+	#define dlsym(x,y) GetProcAddress(x,y)
+	#define dlerror()  GetStringLastError()
+	#if !__MINGW32__ && _MSC_VER >= 1200
+		#define USE_WINMAIN
+	#endif
+	#ifndef XASH_DEDICATED
+		#define XASHLIB "xash_sdl.dll"
+	#else
+		#define XASHLIB "xash_dedicated.dll"
+	#endif
+	#include "windows.h"
 #endif
 
-#ifdef __APPLE__
- #include <dlfcn.h>
- #include <errno.h>
- #define XASHLIB                "libxash.dylib"
- #define dlmount(x)          dlopen(x, RTLD_LAZY)
- #define HINSTANCE               void*
-#elif __unix__
- #include <dlfcn.h>
- #include <errno.h>
- #define XASHLIB                "libxash.so"
- #define dlmount(x)         dlopen(x, RTLD_NOW)
- #define HINSTANCE               void*
-#elif _WIN32
- #define dlmount(x) LoadLibraryA(x)
- #define dlclose(x) FreeLibrary(x)
- #define dlsym(x,y) GetProcAddress(x,y)
- #define dlerror() GetStringLastError()
- #ifndef XASH_DEDICATED
-  #define XASHLIB                 "xash_sdl.dll"
- #else
-  #define XASHLIB                 "xash_dedicated.dll"
- #endif
- #include "windows.h" 
+#ifndef USE_WINMAIN // use for MSVC check here
+#define _inline static inline
 #endif
 
 #ifdef WIN32
@@ -64,53 +64,53 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #endif
 
-
 #define GAME_PATH	"valve"	// default dir to start from
 
 typedef void (*pfnChangeGame)( const char *progname );
-typedef int (*pfnInit)( int argc, char **argv, const char *progname, int bChangeGame, pfnChangeGame func );
+typedef int  (*pfnInit)( int argc, char **argv, const char *progname, int bChangeGame, pfnChangeGame func );
 typedef void (*pfnShutdown)( void );
+typedef enum { false, true } qboolean;
 
-pfnInit Xash_Main;
-pfnShutdown Xash_Shutdown = NULL;
-char szGameDir[128]; // safe place to keep gamedir
-int szArgc;
-char **szArgv;
-HINSTANCE	hEngine;
+static pfnInit     Xash_Main;
+static pfnShutdown Xash_Shutdown = NULL;
+static char        szGameDir[128]; // safe place to keep gamedir
+static int         szArgc;
+static char        **szArgv;
+static HINSTANCE	hEngine;
 
-void Xash_Error( const char *szFmt, ... )
+static void Xash_Error( const char *szFmt, ... )
 {
 	static char	buffer[16384];	// must support > 1k messages
 	va_list		args;
 
-	va_start(args, szFmt);
-	vsnprintf(buffer, sizeof(buffer), szFmt, args);
-	va_end(args);
+	va_start( args, szFmt );
+	vsnprintf( buffer, sizeof(buffer), szFmt, args );
+	va_end( args );
 
 #ifdef XASH_SDL
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Xash Error", buffer, NULL);
-#elif defined(WIN32)
-	MessageBoxA(NULL, buffer, "Xash Error", MB_OK);
+	SDL_ShowSimpleMessageBox( SDL_MESSAGEBOX_ERROR, "Xash Error", buffer, NULL );
+#elif defined( _WIN32 )
+	MessageBoxA( NULL, buffer, "Xash Error", MB_OK );
 #else
-	fprintf(stderr, "Xash Error: %s\n", buffer);
+	fprintf( stderr, "Xash Error: %s\n", buffer );
 #endif
 	exit( 1 );
 }
 
 #ifdef _WIN32
-const char *GetStringLastError()
+static const char *GetStringLastError()
 {
 	static char buf[1024];
 
-	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL, GetLastError(), MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),
-		buf, sizeof(buf), NULL);
+	FormatMessageA( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, GetLastError(), MAKELANGID( LANG_ENGLISH, SUBLANG_DEFAULT ),
+		buf, sizeof( buf ), NULL );
 
 	return buf;
 }
 #endif
 
-void Sys_LoadEngine( void )
+static void Sys_LoadEngine( void )
 {
 	if(( hEngine = dlmount( XASHLIB )) == NULL )
 	{
@@ -126,7 +126,7 @@ void Sys_LoadEngine( void )
 	Xash_Shutdown = (pfnShutdown)dlsym( hEngine, "Host_Shutdown" );
 }
 
-void Sys_UnloadEngine( void )
+static void Sys_UnloadEngine( void )
 {
 	if( Xash_Shutdown ) Xash_Shutdown( );
 	if( hEngine ) dlclose( hEngine );
@@ -135,50 +135,66 @@ void Sys_UnloadEngine( void )
 	Xash_Shutdown = NULL;
 }
 
-void Sys_ChangeGame( const char *progname )
+static void Sys_ChangeGame( const char *progname )
 {
-	if( !progname || !progname[0] ) Xash_Error( "Sys_ChangeGame: NULL gamedir" );
-	if( Xash_Shutdown == NULL ) Xash_Error( "Sys_ChangeGame: missed 'Host_Shutdown' export\n" );
+	if( !progname || !progname[0] )
+		Xash_Error( "Sys_ChangeGame: NULL gamedir" );
+
+	if( Xash_Shutdown == NULL )
+		Xash_Error( "Sys_ChangeGame: missed 'Host_Shutdown' export\n" );
+
 	strncpy( szGameDir, progname, sizeof( szGameDir ) - 1 );
 
 	Sys_UnloadEngine ();
 	Sys_LoadEngine ();
 
-	Xash_Main( szArgc, szArgv, szGameDir, true, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
+	Xash_Main( szArgc, szArgv, szGameDir, true, Sys_ChangeGame );
 }
 
-
-#if _WIN32 && !__MINGW32__ && _MSC_VER >= 1200 
-//#pragma comment(lib, "shell32.lib")
-int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow)
-#else // _WIN32
-int main( int argc, char **argv )
-#endif
+_inline int Sys_Start( void )
 {
-
-#if _WIN32 && !__MINGW32__ && _MSC_VER >= 1200
-	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
-	int size, i = 0;
-	szArgv = (char**)malloc(szArgc*sizeof(char*));
-	for (; i < szArgc; ++i)
-	{
-		size = wcslen(lpArgv[i]) + 1;
-		szArgv[i] = (char*)malloc(size);
-		wcstombs(szArgv[i], lpArgv[i], size);
-	}
-	LocalFree(lpArgv);
-#else
-	szArgc = argc;
-	szArgv = argv;
-#endif
+	int ret;
 
 	Sys_LoadEngine();
+	ret = Xash_Main( szArgc, szArgv, GAME_PATH, false, Xash_Shutdown ? Sys_ChangeGame : NULL );
+	Sys_UnloadEngine();
 
-	int ret = Xash_Main( szArgc, szArgv, GAME_PATH, false, ( Xash_Shutdown != NULL ) ? Sys_ChangeGame : NULL );
-
-#if _WIN32 && !__MINGW32__ && _MSC_VER >= 1200
-	for (; i < szArgc; ++i)
-		free(szArgv[i]);
-	free(szArgv);
-#endif
+	return ret;
 }
+
+#ifndef USE_WINMAIN
+int main( int argc, char **argv )
+{
+	szArgc = argc;
+	szArgv = argv;
+
+	return Sys_Start();
+}
+#else
+//#pragma comment(lib, "shell32.lib")
+int __stdcall WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int nShow )
+{
+	LPWSTR* lpArgv;
+	int ret, i;
+
+	lpArgv = CommandLineToArgvW( GetCommandLineW(), &szArgc );
+	szArgv = ( char** )malloc( szArgc * sizeof( char* ));
+
+	for( i = 0; i < szArgc; ++i )
+	{
+		int size = wcslen(lpArgv[i]) + 1;
+		szArgv[i] = ( char* )malloc( size );
+		wcstombs( szArgv[i], lpArgv[i], size );
+	}
+
+	LocalFree( lpArgv );
+
+	ret = Sys_Start();
+
+	for( ; i < szArgc; ++i )
+		free( szArgv[i] );
+	free( szArgv );
+
+	return ret;
+}
+#endif

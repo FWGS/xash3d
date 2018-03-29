@@ -2195,9 +2195,9 @@ SV_SaveGetName
 */  
 void SV_SaveGetName( int lastnum, char *filename )
 {
-	int	a, b, c;
+	if( !filename )
+		return;
 
-	if( !filename ) return;
 	if( lastnum < 0 || lastnum > 999 )
 	{
 		// bound
@@ -2205,12 +2205,7 @@ void SV_SaveGetName( int lastnum, char *filename )
 		return;
 	}
 
-	a = lastnum / 100;
-	lastnum -= a * 100;
-	b = lastnum / 10;
-	c = lastnum % 10;
-
-	Q_sprintf( filename, "save%i%i%i", a, b, c );
+	Q_sprintf( filename, "save%03d", lastnum );
 }
 
 void SV_SaveGame( const char *pName )

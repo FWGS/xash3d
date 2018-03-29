@@ -22,6 +22,18 @@ GNU General Public License for more details.
 #pragma warning(disable : 4201)	// nonstandard extension used
 #endif
 
+#ifdef VECTORIZE_SINCOS
+// on x86 it isn't so effective
+#if defined(__SSE__) || defined(_M_IX86_FP) || defined(__SSE2__)
+#define XASH_VECTORIZE_SINCOS
+#endif
+
+#if defined(__ARM_NEON__) || defined(__NEON__)
+#define XASH_VECTORIZE_SINCOS
+#endif
+#endif
+
+
 // euler angle order
 #define PITCH		0
 #define YAW		1
@@ -116,7 +128,7 @@ float HalfToFloat( word h );
 int SignbitsForPlane( const vec3_t normal );
 int NearestPOW( int value, qboolean roundDown );
 void SinCos( float radians, float *sine, float *cosine );
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 void SinCosFastVector4(float r1, float r2, float r3, float r4,
 					  float *s0, float *s1, float *s2, float *s3,
 					  float *c0, float *c1, float *c2, float *c3)

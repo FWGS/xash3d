@@ -1,7 +1,9 @@
 #!/bin/sh
 
 SCRIPT_DIR=${PWD##*/}
+SCRIPT_NAME=$(basename $0)
 IS64BIT=$(getconf LONG_BIT)
+ISDEDICATED=false
 
 if [ "$IS64BIT" = "64" ]; then
 	LIBPREFIX="lib32"
@@ -9,12 +11,24 @@ else
 	LIBPREFIX="lib"
 fi
 
+if [ "$SCRIPT_NAME" = "xashds" ]; then
+	ISDEDICATED=true
+fi
+
+if [ -z "$GAMEEXE" ]; then
+	if [ "$ISDEDICATED" = "true" ]; then
+		GAMEEXE=xashds
+	else
+		GAMEEXE=xash3d
+	fi
+fi
+
 if [ "$SCRIPT_DIR" = "bin" ]; then
-# Xash3D SDL is installed in system, so run it from lib/xash3d/ directory with Steam HL basedir if XASH3D_BASEDIR is not set
+	# Xash3D SDL is installed in system, so run it from lib/xash3d/ directory with Steam HL basedir if XASH3D_BASEDIR is not set
 	if [ -z "$XASH3D_BASEDIR" ]; then
 		export XASH3D_BASEDIR="$HOME/.steam/steam/steamapps/common/Half-Life/"
 	fi
-	GAMEROOT=${PWD}/../${LIBPREFIX}/xash3d
+	GAMEROOT=${PWD}/../${LIBPREFIX}/${GAMEEXE}
 	echo "Xash3D SDL is installed in system."
 else
 	GAMEROOT=$(dirname -- "$(readlink -f -- "$0")")
@@ -30,16 +44,6 @@ elif [ "$UNAME" = "Linux" ]; then
 	export LD_LIBRARY_PATH=${GAMEROOT}:$LD_LIBRARY_PATH
 elif [ "$UNAME" = "FreeBSD" ]; then
 	export LD_LIBRARY_PATH=${GAMEROOT}:$LD_LIBRARY_PATH
-fi
-
-if [ -z "$GAMEEXE" ]; then
-	if [ "$UNAME" = "Darwin" ]; then
-		GAMEEXE=xash3d
-	elif [ "$UNAME" = "Linux" ]; then
-		GAMEEXE=xash3d
-	elif [ "$UNAME" = "FreeBSD" ]; then
-		GAMEEXE=xash3d
-	fi
 fi
 
 # and launch the game

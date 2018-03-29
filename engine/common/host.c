@@ -30,6 +30,10 @@ GNU General Public License for more details.
 #include <fcntl.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#endif
+
 #include "netchan.h"
 #include "server.h"
 #include "protocol.h"
@@ -254,30 +258,25 @@ Host_AbortCurrentFrame
 aborts the current host frame and goes on with the next one
 ================
 */
-#ifdef __EMSCRIPTEN__
-#include <emscripten/emscripten.h>
-#endif
 void Host_Frame( float time );
 void Host_RunFrame()
 {
 	static double	oldtime, newtime;
-#if XASH_INPUT == INPUT_SDL
-	SDL_Event event;
-#endif
+
 	if( !oldtime )
 		oldtime = Sys_DoubleTime();
 
-
 #if XASH_INPUT == INPUT_SDL
-		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
-			SDLash_EventFilter( &event );
+	SDLash_RunEvents();
 #elif XASH_INPUT == INPUT_ANDROID
-		Android_RunEvents();
+	Android_RunEvents();
 #endif
-		newtime = Sys_DoubleTime ();
-		Host_Frame( newtime - oldtime );
 
-		oldtime = newtime;
+	newtime = Sys_DoubleTime ();
+
+	Host_Frame( newtime - oldtime );
+
+	oldtime = newtime;
 #ifdef __EMSCRIPTEN__
 #ifdef EMSCRIPTEN_ASYNC
 	emscripten_sleep(1);
@@ -477,7 +476,8 @@ void Host_MemStats_f( void )
 void Host_Minimize_f( void )
 {
 #ifdef XASH_SDL
-	if( host.hWnd ) SDL_MinimizeWindow( host.hWnd );
+	if( host.hWnd )
+		SDL_MinimizeWindow( host.hWnd );
 #endif
 }
 
@@ -1336,7 +1336,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 		Cbuf_AddText( "exec config.cfg\n" );
 
-		if( !Sys_CheckParm("+map") )
+		if( !Sys_CheckParm( "+map" ) )
 				Cbuf_AddText( "startdefaultmap" );
 
 		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
@@ -1372,7 +1372,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Host_Userconfigd_f();
 
 	// in case of empty init.rc
-	if( !host.stuffcmdsrun ) Cbuf_AddText( "stuffcmds\n" );
+	if( !host.stuffcmdsrun )
+		Cbuf_AddText( "stuffcmds\n" );
 
 	IN_TouchInitConfig();
 	SCR_CheckStartupVids();	// must be last

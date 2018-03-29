@@ -27,7 +27,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 include(VSForceXPToolchain) # Force XP toolchain for Visual Studio
 
-project (XASH3D)
+project(XASH3D)
 
 include(FWGSLib)
 include(CMakeDependentOption)
@@ -41,6 +41,9 @@ set (XASH3D_VERSION 0.19.1)
 
 option(XASH_DEDICATED "Enable dedicated build. Servers must choose this." OFF) # Servers must choose this
 
+# Enable 64-bit build of Xash3D FWGS Engine.
+option(XASH_64BIT "Enable experimental 64-bit build. Note that you must also provide 64-bit game binaries" OFF)
+
 # Windows only. Enable it by default for Windows.
 option(XASH_IPX "Enable IPX support for networking. Windows only. Deprecated." OFF)
 cmake_dependent_option(XASH_NONSTANDARD_LOAD "Enable own DLL loader in Windows." ON "WIN32" OFF)
@@ -48,27 +51,28 @@ cmake_dependent_option(XASH_NONSTANDARD_LOAD "Enable own DLL loader in Windows."
 # POSIX only. Disable it by default for Windows
 cmake_dependent_option(XASH_USE_SELECT "Enable reading console commands from stdin." ON "NOT WIN32" OFF)
 cmake_dependent_option(XASH_LIBDL "Enable libdl use. POSIX only." ON "NOT WIN32" OFF)
-option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF)
 
-option(XASH_GLES "Enable fixes if Xash3D is running over GL to GLES translator." OFF)
-option(XASH_NANOGL "Enable NanoGL. Implicitly enables XASH_GLES." OFF)
+# Disable for Windows and 64Bit
+cmake_dependent_option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." OFF "NOT WIN32 AND NOT XASH_64BIT" OFF)
+
+option(XASH_GLES   "Enable if Xash3D is running over GL to GLES translator." OFF)
+option(XASH_NANOGL "Use NanoGL(GLES1). Implicitly enables XASH_GLES." OFF)
+option(XASH_WES    "Use gl-wes-v2(GLES2). Implicitly enables XASH_GLES." OFF)
 option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
 
-# Enable 64-bit build of Xash3D FWGS Engine.
-option(XASH_64BIT "Enable experimental 64-bit build. Note that you must also provide 64-bit game binaries" OFF)
-cmake_dependent_option(XASH_VECTORIZE_SINCOS "Use vectorized versions of sin(), cos() and sincos()" ON "XASH_64BIT" OFF)
+option(XASH_VECTORIZE_SINCOS "Try to use vectorized versions of sin(), cos() and sincos()" ON)
 
 # Desktop or dedicated version options
 if(XASH_DEDICATED) 
 	option(XASH_SDL "Enable SDL." OFF) # Dedicated servers still can use SDL
-	set(XASH_SINGLE_BINARY ON) # Disable game launcher by default for dedicated
-	set(XASH_VGUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
+	option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executable" ON)
+	set(XASH_VGUI OFF)   # But these dedicated can't use at all, so hardcode it as disabled
 	set(XASH_MAINUI OFF) # But these dedicated can't use at all, so hardcode it as disabled
 else()
 	option(XASH_SDL "Enable SDL." ON)
 	option(XASH_SINGLE_BINARY "Don't build game launcher and build engine as executable" OFF)
-	option(XASH_VGUI "Enable VGUI support." ON)
+	cmake_dependent_option(XASH_VGUI "Enable VGUI support." ON "NOT XASH_64BIT" OFF)
 	option(XASH_MAINUI "Build mainui library" ON) # Totally not recommended to disable
 endif()
 
@@ -129,23 +133,29 @@ endmacro()
 if(NOT XASH_64BIT AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 	message(FATAL_ERROR "You're building 64 bit Xash3D! Note that there is almost no games compiled for 64-bit. Please, set CMake to build for 32 system. If you still want 64bit build, pass -DXASH_64BIT=1 to CMake")
 endif()
-
 if(NOT XASH_LIBDL AND NOT XASH_DLL_LOADER AND NOT XASH_NONSTANDARD_LOAD)
 	message(FATAL_ERROR "You must enable XASH_LIBDL, XASH_DLL_LOADER or both. Otherwise engine is useless.")
 endif()
+
+if(XASH_64BIT)
+	message(STATUS "Building for 64 Bit")
+else()
+	message(STATUS "Building for 32 Bit")
+endif()
+
 
 # Dependencies
 if(XASH_STATIC)
 	set(XASH_SINGLE_BINARY ON)
 endif()
 
-if(XASH_NANOGL)
+if(XASH_NANOGL OR XASH_WES)
 	set(XASH_GLES ON)
 endif()
 
 fwgs_conditional_subproject(XASH_MAINUI mainui)
-fwgs_conditional_subproject(XASH_VGUI vgui_support)
-fwgs_conditional_subproject(XASH_DLL_LOADER loader)
+fwgs_conditional_subproject("NOT XASH_64BIT AND XASH_VGUI" vgui_support)
+fwgs_conditional_subproject("NOT XASH_64BIT AND XASH_DLL_LOADER" loader)
 fwgs_conditional_subproject("NOT XASH_SINGLE_BINARY" game_launch)
 add_subdirectory(engine)
 

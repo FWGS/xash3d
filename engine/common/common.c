@@ -142,8 +142,9 @@ void GAME_EXPORT COM_AddAppDirectoryToSearchPath( const char *pszBaseDir, const 
 		return;
 	}
 
-	Q_snprintf( dir, sizeof( dir ), "%s/%s", pszBaseDir, appName );
-	FS_AddGameDirectory( dir, FS_GAMEDIR_PATH );
+	// appName is unused in GoldSrc
+	Q_snprintf( dir, sizeof( dir ), "%s/", pszBaseDir );
+	FS_AddGameDirectory( dir, FS_CUSTOM_PATH | FS_NOWRITE_PATH );
 }
 
 /*

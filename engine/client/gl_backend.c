@@ -77,7 +77,7 @@ void GL_BackendEndFrame( void )
 		r_stats.c_world_polys, r_stats.c_brush_polys, r_stats.c_studio_polys, r_stats.c_sprite_polys );
 		break;		
 	case 2:
-		Q_snprintf( r_speeds_msg, sizeof( r_speeds_msg ), "visible leafs:\n%3i leafs\ncurrent leaf %3i",
+		Q_snprintf( r_speeds_msg, sizeof( r_speeds_msg ), "visible leafs:\n%3i leafs\ncurrent leaf %3li",
 		r_stats.c_world_leafs, r_viewleaf - cl.worldmodel->leafs );
 		break;
 	case 3:

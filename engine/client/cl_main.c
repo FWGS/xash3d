@@ -695,7 +695,7 @@ void CL_WritePacket( void )
 		BF_Clear( &cls.datagram );
 
 		// deliver the message (or update reliable)
-		Netchan_Transmit( &cls.netchan, BF_GetNumBytesWritten( &buf ), BF_GetData( &buf ));
+		Netchan_TransmitBits( &cls.netchan, BF_GetNumBitsWritten( &buf ), BF_GetData( &buf ));
 	}
 	else
 	{

@@ -119,7 +119,7 @@ void Matrix3x4_CreateFromEntity( matrix3x4 out, const vec3_t angles, const vec3_
 
 	if( angles[ROLL] )
 	{
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 		SinCosFastVector3( DEG2RAD(angles[YAW]), DEG2RAD(angles[PITCH]), DEG2RAD(angles[ROLL]),
 						  &sy, &sp, &sr,
 						  &cy, &cp, &cr);
@@ -147,7 +147,7 @@ void Matrix3x4_CreateFromEntity( matrix3x4 out, const vec3_t angles, const vec3_
 	}
 	else if( angles[PITCH] )
 	{
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 		SinCosFastVector2( DEG2RAD(angles[YAW]), DEG2RAD(angles[PITCH]),
 						  &sy, &sp,
 						  &cy, &cp);
@@ -348,7 +348,7 @@ void Matrix4x4_CreateFromEntity( matrix4x4 out, const vec3_t angles, const vec3_
 
 	if( angles[ROLL] )
 	{
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 		SinCosFastVector3( DEG2RAD(angles[YAW]), DEG2RAD(angles[PITCH]), DEG2RAD(angles[ROLL]),
 			&sy, &sp, &sr,
 			&cy, &cp, &cr);
@@ -380,7 +380,7 @@ void Matrix4x4_CreateFromEntity( matrix4x4 out, const vec3_t angles, const vec3_
 	}
 	else if( angles[PITCH] )
 	{
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 		SinCosFastVector2( DEG2RAD(angles[YAW]), DEG2RAD(angles[PITCH]),
 						  &sy, &sp,
 						  &cy, &cp);

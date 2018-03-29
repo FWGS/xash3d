@@ -2045,15 +2045,15 @@ static DWORD WINAPI expSignalObjectAndWait(HANDLE hObjectToSignal,
         expSetEvent(mlist);
         break;
     case 1:  // Semaphore
-        expReleaseSemaphore(mlist, 1, NULL);
+		expReleaseSemaphore((long)mlist, 1, NULL);
         break;
     case 2:  // Mutex
-        expReleaseMutex(mlist);
+		expReleaseMutex((HANDLE)mlist);
         break;
     default:
         dbgprintf("Signalling unknown object type %d!\n", hObjectToSignal);
     }
-    return expWaitForSingleObject(hObjectToWaitOn, dwMilliseconds);
+	return (DWORD)expWaitForSingleObject((void*)hObjectToWaitOn, dwMilliseconds);
 }
 
 static long WINAPI expRegOpenKeyExA(long key, const char* subkey, long reserved, long access, int* newkey)
@@ -2786,7 +2786,7 @@ static int WINAPI expEnumDisplayMonitors(void *dc, RECT *r,
 {
     dbgprintf("EnumDisplayMonitors(0x%x, 0x%x, 0x%x, 0x%x) => ?\n",
 	dc, r, callback_proc, callback_param);
-    return callback_proc(0, dc, r, callback_param);
+	return callback_proc(0, (HDC)dc, r, (LPARAM)callback_param);
 }
 
 #if 0
@@ -2886,8 +2886,8 @@ static int WINAPI expEnumWindows(int (*callback_func)(HWND, LPARAM), void *callb
 {
     int i, i2;
     dbgprintf("EnumWindows(0x%x, 0x%x) => 1\n", callback_func, callback_param);
-    i = callback_func(0, callback_param);
-    i2 = callback_func(1, callback_param);
+	i = callback_func(0, (LPARAM)callback_param);
+	i2 = callback_func(1, (LPARAM)callback_param);
     return i && i2;
 }
 
@@ -2964,7 +2964,7 @@ static HFONT WINAPI expCreateFontA(int     nHeight,
 	LPCTSTR lpszFace
 )
 {
-	return NULL;
+	return 0;
 }
 
 /* tried to get pvmjpg work in a different way - no success */
@@ -3232,6 +3232,8 @@ static int WINAPI expGetCursorPos(LPPOINT cp)
     cp->y=mousepos.y;
     return 1;
 #endif
+
+	return 1;
 }
 
 static WIN_BOOL WINAPI expSetCursorPos(int x, int y)
@@ -5030,7 +5032,7 @@ static HPALETTE WINAPI expCreatePalette(CONST LOGPALETTE *lpgpl)
     dbgprintf("CreatePalette(%x) => NULL\n", lpgpl);
 
     i = sizeof(LOGPALETTE)+((lpgpl->palNumEntries-1)*sizeof(PALETTEENTRY));
-    test = malloc(i);
+	test = (HPALETTE)malloc(i);
     memcpy((void *)test, lpgpl, i);
 
     return test;

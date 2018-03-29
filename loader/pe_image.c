@@ -327,7 +327,7 @@ const char * PE_FindNearFunctionName(
 		//printf("%p %p %s\n", function[index], funcAddr, RVA(name[j]));
 		if(((void*)last_func >= funcAddr-load_addr ) && ((void*)function[index] < funcAddr-load_addr ) ) 
 		return  (char*)RVA(name[j-1]);
-		last_func = function[index];
+		last_func = (void*)function[index];
 	}
 	//printf("PE_FindFunctionName: could not resolve %p\n", funcAddr);
   return 0;

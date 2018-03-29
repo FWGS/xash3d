@@ -125,7 +125,7 @@ void CL_PlayCDTrack_f( void )
 			if( paused ) Msg( "Paused %s track %u\n", looped ? "looping" : "playing", track );
 			else Msg( "Currently %s track %u\n", looped ? "looping" : "playing", track );
 		}
-		Msg( "Volume is %f\n", Cvar_VariableValue( "musicvolume" ));
+		Msg( "Volume is %f\n", Cvar_VariableValue( "MP3Volume" ));
 		return;
 	}
 	else Msg( "cd: unknown command %s\n", command );
@@ -183,8 +183,6 @@ CL_ScreenshotGetName
 */  
 void CL_ScreenshotGetName( int lastnum, char *filename )
 {
-	int	a, b, c, d;
-
 	if( lastnum < 0 || lastnum > 9999 )
 	{
 		// bound
@@ -192,15 +190,7 @@ void CL_ScreenshotGetName( int lastnum, char *filename )
 		return;
 	}
 
-	a = lastnum / 1000;
-	lastnum -= a * 1000;
-	b = lastnum / 100;
-	lastnum -= b * 100;
-	c = lastnum / 10;
-	lastnum -= c * 10;
-	d = lastnum;
-
-	Q_sprintf( filename, "scrshots/%s_shot%i%i%i%i.bmp", clgame.mapname, a, b, c, d );
+	Q_sprintf( filename, "scrshots/%s_shot%04d.bmp", clgame.mapname, lastnum );
 }
 
 /* 
@@ -210,8 +200,6 @@ CL_SnapshotGetName
 */  
 qboolean CL_SnapshotGetName( int lastnum, char *filename )
 {
-	int	a, b, c, d;
-
 	if( lastnum < 0 || lastnum > 9999 )
 	{
 		MsgDev( D_ERROR, "unable to write snapshot\n" );
@@ -219,15 +207,7 @@ qboolean CL_SnapshotGetName( int lastnum, char *filename )
 		return false;
 	}
 
-	a = lastnum / 1000;
-	lastnum -= a * 1000;
-	b = lastnum / 100;
-	lastnum -= b * 100;
-	c = lastnum / 10;
-	lastnum -= c * 10;
-	d = lastnum;
-
-	Q_sprintf( filename, "%s_%i%i%i%i.bmp", clgame.mapname, a, b, c, d );
+	Q_sprintf( filename, "%s_%04d.bmp", clgame.mapname, lastnum );
 
 	return true;
 }

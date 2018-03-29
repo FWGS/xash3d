@@ -398,7 +398,7 @@ GL_GetProcAddress
 */
 void EXPORT *GL_GetProcAddress( const char *name )
 {
-#if defined( XASH_GLES )
+#if defined( XASH_NANOGL )
 	void *func = nanoGL_GetProcAddress(name);
 #else
 	void *func = SDL_GL_GetProcAddress(name);
@@ -808,8 +808,13 @@ void GL_InitExtensions( void )
 
 	// MCD has buffering issues
 #ifdef _WIN32
-	if(Q_strstr( glConfig.renderer_string, "gdi" ))
+	if( Q_strstr( glConfig.renderer_string, "gdi" ))
 		Cvar_SetFloat( "gl_finish", 1 );
+
+	// NVIDIA Windows drivers have a problem with mixing VBO and client arrays
+	// Disable it, as there is no suitable workaround here
+	if( Q_stristr( glConfig.vendor_string, "nvidia" ))
+		Cvar_FullSet( "r_vbo", "0", CVAR_READ_ONLY );
 #endif
 
 	glw_state.initialized = true;
