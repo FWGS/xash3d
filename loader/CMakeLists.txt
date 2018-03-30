@@ -35,7 +35,14 @@ if(XASH_SDL)
 	add_definitions(-DSDL)
 endif()
 
-fwgs_add_compile_options(C -mstackrealign  -mpreferred-stack-boundary=12)
+fwgs_add_compile_options(C -mstackrealign)
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") # Compiler-dependent options
+	fwgs_add_compile_options(C -mstack-alignment=12)
+else()
+	fwgs_add_compile_options(C -mpreferred-stack-boundary=12)
+endif()
+
 target_link_libraries(${LOADER_LIBRARY} -lm -pthread)
 
 if(CMAKE_SYSTEM_NAME MATCHES ".+BSD$")
