@@ -51,6 +51,14 @@ typedef __m128i v4si; // vector of 4 int (sse2)
 typedef __m64 v2si;   // vector of 2 int (mmx)
 #endif
 
+#if defined(USE_SSE2)
+/// Swizzles/permutes a single SSE register into another SSE register. Requires SSE2. This has the advantage of not destroying the input operand, but the disadvantage is that it requires a
+/// float->int->float pipe transition, which costs a clock cycle. Profiling shows this to be a very small win.
+#define shuffle1_ps(reg, shuffle) _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128((reg)), (shuffle)))
+#else // We only have SSE 1, so must use the slightly worse shufps instruction, which always destroys the input operand - or we have AVX where we can use this operation without destroying input
+#define shuffle1_ps(reg, shuffle) _mm_shuffle_ps((simd4f)(reg), (simd4f)(reg), (shuffle))
+#endif
+
 /// Returns the lowest element of the given sse register as a float.
 /// @note When compiling with /arch:SSE or newer, it is expected that this function is a no-op "cast", since
 /// the resulting float is represented in an XMM register as well.
