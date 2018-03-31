@@ -1396,7 +1396,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	}
 	else
 	{
-	#ifndef __ANDROID__
+	#ifdef __ANDROID__
 		time_t timeval;
 		struct tm *timeinfo;
 
