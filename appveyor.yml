@@ -23,6 +23,7 @@ build:
 
 configuration:
   - Debug
+  - Release
 
 before_build:
   - git submodule update --init --recursive
