@@ -455,8 +455,9 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	Q_snprintf( src,
 	            size,
 	            "%.2f FPS\n%.2f eFPS\n"
+	            "Elapsed Time: %.2f\n"
+				"isPhaseInverted = %d\n"
 	            "Total Frame Count: %zu\n"
-	            "isPhaseInverted = %d\n"
 	            "^7(+) Phase Frame Count: %zu\n"
 	            "%s\n"
 	            "%s\n"
@@ -487,8 +488,9 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	            "^5=====ANALYSIS=====\n^3",
 	            self->Helpers.CurrentFPS( self ),
 	            self->Helpers.effectiveFPS( self ),
+	            self->protected->elapsedTime,
+				self->Helpers.isPhaseInverted(self),
 	            self->get.FrameCounter( self, STROBE_CT_TotalFrame ),
-	            self->Helpers.isPhaseInverted( self ),
 	            self->get.FrameCounter( self, STROBE_CT_PositiveFrame ),
 	            ( nPositiveNormal > PositiveNormal ? va( "^2|-> Normal Frame Count: %zu^7", nPositiveNormal ) : va( "|-> Normal Frame Count: %zu", nPositiveNormal ) ), // Should be white instead of ^7 but white is not available in the color table
 	            ( nPositiveBlack > PositiveBlack ? va( "^2|-> Black Frame Count: %zu^7", nPositiveBlack ) : va( "|-> Black Frame Count: %zu", nPositiveBlack ) ),
@@ -560,6 +562,7 @@ _inline void StrobeAPI_constructor( StrobeAPI_t *self )
 		return; // Fix handling!
 	}
 	self->protected->frameInfo                                = ( p_positive | f_normal );
+	self->protected->initialTime                              = Sys_DoubleTime( );
 	self->Helpers.ArithmeticMean                              = func_helper_ArithmeticMean;
 	self->Helpers.effectiveFPS                                = func_helper_effectiveFPS;
 	self->Helpers.GenerateDiffBar                             = func_helper_GenerateDiffBar;

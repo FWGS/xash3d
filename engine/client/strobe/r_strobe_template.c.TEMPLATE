@@ -56,8 +56,8 @@ void STROBE_IMPL_EXPORTEDFUNC_constructor(STROBE_TEMPLATE)( void **STROBE_TEMPLA
 
 	*instance                                    = (STROBE_IMPL_STRUCT_T(STROBE_TEMPLATE) *)malloc( sizeof( STROBE_IMPL_STRUCT_T(STROBE_TEMPLATE) ) );
 	( *instance )->private                       = (STROBE_IMPL_PRIVATE_T(STROBE_TEMPLATE) *)calloc( 1, sizeof( STROBE_IMPL_PRIVATE_T(STROBE_TEMPLATE) ) );
-	( *instance )->STROBE_IMPL_FUNC_MAIN = R_Strobe;
-	( *instance )->STROBE_IMPL_FUNC_DEBUGHANDLER = debugDrawer;
+	( *instance )->STROBE_IMPL_FUNC_MAIN = main;
+	( *instance )->STROBE_IMPL_FUNC_DEBUGHANDLER = debugHandler;
 
 	StrobeAPI.Constructor( &( *instance )->base );
 }

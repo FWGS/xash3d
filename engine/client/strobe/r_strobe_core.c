@@ -55,6 +55,7 @@ static void R_Strobe( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 	double currentTime          = Sys_DoubleTime( );
 	delta2                      = currentTime - _this->private->recentTime2;
 	_this->private->recentTime2 = currentTime;
+	_this->base.protected->elapsedTime = currentTime - _this->base.protected->initialTime;
 
 	if ( CL_IsInMenu( ) )
 	{
@@ -248,7 +249,7 @@ _inline void debugDrawer( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 		Con_DrawString( scr_width->integer - offsetX - 50, 4, debugStr, color );
 	else
 		Con_DrawString( scr_width->integer - offsetX - 2, offsetY + 8, debugStr, color );
-	if ( abs( fixer - offsetX ) > 30 || offsetX == 0 )
+	if ( abs( fixer - offsetX ) > 50 || offsetX == 0 ) // 50 is for 1080p ! Needs to be dynamic !
 		offsetX = fixer;
 }
 

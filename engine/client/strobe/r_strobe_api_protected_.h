@@ -37,11 +37,12 @@ typedef struct StrobeAPI_protected_s
 	size_t nCounter, nNCounter, nBCounter; // Negative phase counters
 	int strobeInterval;
 	int swapInterval;
+	double initialTime, elapsedTime;
 	fstate_e frameInfo; // Frame info
 
-	double deviation;     // deviation - Should be in implementation!
-	double cdTimer;       // Cooldown timer - Should be in implementation!
-	qboolean cdTriggered; // Cooldown trigger flag - Should be in implementation!
+	double deviation;     // deviation
+	double cdTimer;       // Cooldown timer
+	qboolean cdTriggered; // Cooldown trigger status
 } StrobeAPI_protected_t;  // Protected members
 
 #endif
