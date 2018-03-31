@@ -30,14 +30,14 @@ See the GNU General Public License for more details.
 #endif
 #define _this STROBE_IMPL_THIS( STROBE_CORE )
 
-STROBE_IMPL_STRUCT_T( STROBE_CORE ) *STROBE_CORE = NULL;
+struct STROBE_IMPL_STRUCT( STROBE_CORE ) *STROBE_CORE = NULL;
 
-typedef struct STROBE_IMPL_PRIVATE_S( STROBE_CORE )
+struct STROBE_IMPL_PRIVATE_STRUCT( STROBE_CORE )
 {
 	double recentTime, recentTime2;
 	double delta[STROBE_CORE_DEVIATION_SIZE];
 	size_t fCounterSnapshot;
-} STROBE_IMPL_PRIVATE_T( STROBE_CORE );
+};
 
 /*
 ===============
@@ -255,10 +255,10 @@ _inline void debugDrawer( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 
 void STROBE_IMPL_EXPORTEDFUNC_constructor( STROBE_CORE )( void **STROBE_CORE )
 {
-	STROBE_IMPL_STRUCT_T( STROBE_CORE ) **instance = *(STROBE_IMPL_STRUCT_T( STROBE_CORE ) ***)&STROBE_CORE;
+	struct STROBE_IMPL_STRUCT( STROBE_CORE ) **instance = *(struct STROBE_IMPL_STRUCT( STROBE_CORE ) ***)&STROBE_CORE;
 
-	*instance                                    = (STROBE_IMPL_STRUCT_T( STROBE_CORE ) *)malloc( sizeof( STROBE_IMPL_STRUCT_T( STROBE_CORE ) ) );
-	( *instance )->private                       = (STROBE_IMPL_PRIVATE_T( STROBE_CORE ) *)calloc( 1, sizeof( STROBE_IMPL_PRIVATE_T( STROBE_CORE ) ) );
+	*instance                                    = (struct STROBE_IMPL_STRUCT( STROBE_CORE ) *)malloc( sizeof(struct STROBE_IMPL_STRUCT(STROBE_CORE)) );
+	( *instance )->private                       = (struct STROBE_IMPL_PRIVATE_STRUCT( STROBE_CORE ) *)calloc( 1, sizeof(struct STROBE_IMPL_PRIVATE_STRUCT(STROBE_CORE)) );
 	( *instance )->STROBE_IMPL_FUNC_MAIN         = R_Strobe;
 	( *instance )->STROBE_IMPL_FUNC_DEBUGHANDLER = debugDrawer;
 
@@ -267,7 +267,7 @@ void STROBE_IMPL_EXPORTEDFUNC_constructor( STROBE_CORE )( void **STROBE_CORE )
 
 void STROBE_IMPL_EXPORTEDFUNC_destructor( STROBE_CORE )( void **STROBE_CORE )
 {
-	STROBE_IMPL_STRUCT_T( STROBE_CORE ) **instance = *(STROBE_IMPL_STRUCT_T( STROBE_CORE ) ***)&STROBE_CORE;
+	struct STROBE_IMPL_STRUCT( STROBE_CORE ) **instance = *(struct STROBE_IMPL_STRUCT( STROBE_CORE ) ***)&STROBE_CORE;
 
 	if ( *instance )
 	{
@@ -293,7 +293,7 @@ void STROBE_IMPL_EXPORTEDFUNC_reinit( STROBE_CORE )( void **STROBE_CORE )
 
 void STROBE_IMPL_EXPORTEDFUNC_main( STROBE_CORE )( void **STROBE_CORE )
 {
-	STROBE_IMPL_STRUCT_T( STROBE_CORE ) **instance = *(STROBE_IMPL_STRUCT_T( STROBE_CORE ) ***)&STROBE_CORE;
+	struct STROBE_IMPL_STRUCT( STROBE_CORE ) **instance = *(struct STROBE_IMPL_STRUCT( STROBE_CORE ) ***)&STROBE_CORE;
 	if ( *instance )
 	{
 		( *instance )->STROBE_IMPL_FUNC_MAIN( instance );
