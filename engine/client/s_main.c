@@ -764,6 +764,7 @@ SND_Spatialize
 void SND_Spatialize( channel_t *ch )
 {
 	vec3_t	source_vec;
+	vec3_t right;
 	float	dist, dot, gain = 1.0f;
 	qboolean	fplayersound = false;
 	qboolean	looping = false;
@@ -810,7 +811,11 @@ void SND_Spatialize( channel_t *ch )
 
 	// normalize source_vec and get distance from listener to source
 	dist = VectorNormalizeLength( source_vec );
-	dot = DotProduct( s_listener.right, source_vec );
+	if( host.joke )
+		VectorNegate( s_listener.right, right );
+	else
+		VectorCopy( s_listener.right, right );
+	dot = DotProduct( right, source_vec );
 
 	// for sounds with a radius, spatialize left/right evenly within the radius
 

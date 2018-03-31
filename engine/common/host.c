@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include <stdarg.h>  // va_args
 #include <errno.h> // errno
 #include <string.h> // strerror
+#include <time.h>
 
 #ifndef _WIN32
 #include <unistd.h> // fork
@@ -69,6 +70,9 @@ convar_t	*build, *ver; // original xash3d info
 convar_t	*host_build, *host_ver; // fork info
 convar_t	*host_mapdesign_fatal;
 convar_t 	*cmd_scripting = NULL;
+
+static convar_t *host_nojoke;
+static convar_t *host_forcejoke;
 
 static int num_decals;
 
@@ -1265,6 +1269,8 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	host_ver = Cvar_Get( "host_ver", va("%i %s %s %s %s", Q_buildnum(), XASH_VERSION, Q_buildos(), Q_buildarch(), Q_buildcommit() ), CVAR_INIT, "detailed info about this build" );
 	host_mapdesign_fatal = Cvar_Get( "host_mapdesign_fatal", "1", CVAR_ARCHIVE, "make map design errors fatal" );
 	host_xashds_hacks = Cvar_Get( "xashds_hacks", "0", 0, "hacks for xashds in singleplayer" );
+	host_nojoke = Cvar_Get( "host_nojoke", "0", CVAR_ARCHIVE, "disable april fools joke");
+	host_forcejoke = Cvar_Get( "host_forcejoke", "0", 0, "let april fools continue" );
 
 	// content control
 	Cvar_Get( "violence_hgibs", "1", CVAR_ARCHIVE, "show human gib entities" );
@@ -1384,6 +1390,24 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	if( host.state == HOST_INIT )
 		host.state = HOST_FRAME; // initialization is finished
 
+	if( host_forcejoke->value )
+	{
+		host.joke = true;
+	}
+	else
+	{
+	#ifndef __ANDROID__
+		time_t timeval;
+		struct tm *timeinfo;
+
+		timeval = time( NULL );
+		timeinfo = localtime( &timeval );
+
+		host.joke = !host_nojoke->value && ( timeinfo->tm_year == 118 && timeinfo->tm_mday == 1 && timeinfo->tm_mon == 3 );
+	#else
+		host.joke = false;
+	#endif
+	}
 	Host_FrameLoop();
 
 	// never reached
