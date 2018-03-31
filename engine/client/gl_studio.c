@@ -2958,7 +2958,7 @@ static void GAME_EXPORT R_StudioSetupRenderer( int rendermode )
 
 	// was done before, in R_DrawViewModel
 	if( g_iBackFaceCull )
-		GL_FrontFace( true );
+		GL_FrontFace( !glState.frontFace );
 }
 
 /*
@@ -2979,7 +2979,7 @@ static void GAME_EXPORT R_StudioRestoreRenderer( void )
 
 	// was done before, in R_DrawViewModel
 	if( g_iBackFaceCull )
-		GL_FrontFace( false );
+		GL_FrontFace( !glState.frontFace );
 
 	g_iBackFaceCull = false;
 	m_fDoRemap = false;
