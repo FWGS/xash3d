@@ -20,6 +20,6 @@ cmake \
 	-DXASH_NO_INSTALL_RUNSCRIPT=yes ../
 make -j2 VERBOSE=1
 mkdir -p pkg/
-cp engine/libxash.dylib game_launch/xash3d mainui/libxashmenu.dylib vgui_support/libvgui_support.dylib vgui_support/vgui.dylib ../scripts/xash3d.sh pkg/
+cp engine/libxash.dylib game_launch/xash3d mainui/libxashmenu.dylib vgui_support/libvgui_support.dylib VGUI/vgui-dev-master/lib/vgui.dylib ../scripts/xash3d.sh pkg/
 cp ~/Library/Frameworks/SDL2.framework/SDL2 pkg/libSDL2.dylib
 tar -cjf $TRAVIS_BUILD_DIR/xash3d-osx.tar.bz2 pkg/*
