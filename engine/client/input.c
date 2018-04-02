@@ -947,12 +947,6 @@ void Host_InputFrame( void )
 			inputstate.lastyaw = yaw;
 		}
 
-		if( host.joke )
-		{
-			yaw  = -yaw;
-			side = -side;
-		}
-
 		if( cls.key_dest == key_game )
 		{
 			clgame.dllFuncs.pfnLookEvent( yaw, pitch );
