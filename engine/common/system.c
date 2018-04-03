@@ -578,9 +578,9 @@ void Sys_Warn( const char *format, ... )
 	va_start( argptr, format );
 	Q_vsnprintf( text, MAX_SYSPATH, format, argptr );
 	va_end( argptr );
+	Msg( "Sys_Warn: %s\n", text );
 	if( !Host_IsDedicated() ) // dedicated server should not hang on messagebox
 		MSGBOX(text);
-	Msg( "Sys_Warn: %s\n", text );
 }
 
 /*
@@ -619,7 +619,7 @@ void Sys_Error( const char *format, ... )
 #endif
 	}
 
-	if( host.developer > 0 )
+	if( host.developer > 0 || host.state != HOST_FRAME )
 	{
 #ifdef XASH_W32CON
 		Wcon_ShowConsole( true );
