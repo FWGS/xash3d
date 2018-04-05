@@ -1995,7 +1995,9 @@ _inline void R_StudioDrawNormalMesh( short *ptricmds, vec3_t *pstudionorms, floa
 		{
 			lv = (float *)g_studio.lightvalues[ptricmds[1]];
 
-			if( g_studio.numlocallights )
+			if( RI.currententity->curstate.rendermode == kRenderTransColor )
+				pglColor3ubv((byte*)&RI.currententity->curstate.rendercolor);
+			else if( g_studio.numlocallights )
 			{
 				pglColor4fv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
 			}
@@ -2036,7 +2038,9 @@ _inline void R_StudioDrawFloatMesh( short *ptricmds, vec3_t *pstudionorms, float
 		for( ; i > 0; i--, ptricmds += 4 )
 		{
 			lv = (float *)g_studio.lightvalues[ptricmds[1]];
-			if( g_studio.numlocallights )
+			if( RI.currententity->curstate.rendermode == kRenderTransColor )
+				pglColor3ubv((byte*)&RI.currententity->curstate.rendercolor);
+			else if( g_studio.numlocallights )
 			{
 				pglColor4fv( R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha ) );
 			}
