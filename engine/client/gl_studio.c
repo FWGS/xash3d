@@ -2174,9 +2174,18 @@ _inline void R_StudioBuildArrayNormalMesh( short *ptricmds, vec3_t *pstudionorms
 				lv = R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
 			}
 
-			cl[0] = lv[0] * 255;
-			cl[1] = lv[1] * 255;
-			cl[2] = lv[2] * 255;
+			if( RI.currententity->curstate.rendermode == kRenderTransColor )
+			{
+				cl[0] = RI.currententity->curstate.rendercolor.r;
+				cl[1] = RI.currententity->curstate.rendercolor.g;
+				cl[2] = RI.currententity->curstate.rendercolor.b;
+			}
+			else
+			{
+				cl[0] = lv[0] * 255;
+				cl[1] = lv[1] * 255;
+				cl[2] = lv[2] * 255;
+			}
 			cl[3] = alpha * 255;
 
 			g_studio.arraycoord[g_studio.numverts][0] = ptricmds[2] * s;
@@ -2224,9 +2233,18 @@ _inline void R_StudioBuildArrayFloatMesh( short *ptricmds, vec3_t *pstudionorms,
 				lv = R_LightLambert( g_studio.lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, alpha );
 			}
 
-			cl[0] = lv[0] * 255;
-			cl[1] = lv[1] * 255;
-			cl[2] = lv[2] * 255;
+			if( RI.currententity->curstate.rendermode == kRenderTransColor )
+			{
+				cl[0] = RI.currententity->curstate.rendercolor.r;
+				cl[1] = RI.currententity->curstate.rendercolor.g;
+				cl[2] = RI.currententity->curstate.rendercolor.b;
+			}
+			else
+			{
+				cl[0] = lv[0] * 255;
+				cl[1] = lv[1] * 255;
+				cl[2] = lv[2] * 255;
+			}
 			cl[3] = alpha * 255;
 
 			g_studio.arraycoord[g_studio.numverts][0] = HalfToFloat( ptricmds[2] );
