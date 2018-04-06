@@ -142,7 +142,7 @@ static void *IOS_LoadLibrary( const char *dllname )
 	char *postfix = g_szLibrarySuffix;
 	char *pHandle;
 
-	if( !postfix ) postfix = GI->gamedir;
+	if( !postfix ) postfix = GI->gamefolder;
 
 	Q_snprintf( name, MAX_STRING, "%s_%s", dllname, postfix );
 	pHandle = IOS_LoadLibraryInternal( name );
