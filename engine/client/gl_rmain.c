@@ -1343,6 +1343,7 @@ R_EndFrame
 void R_EndFrame( void )
 {
 #ifdef STROBE_ENABLED
+	// StrobeAPI.Invoker( STROBE_INVOKE(STROBE_TEMPLATE) );
 	StrobeAPI.Invoker( STROBE_INVOKE(STROBE_CORE) );
 #else
 	// flush any remaining 2D bits

@@ -32,10 +32,17 @@ See the GNU General Public License for more details.
 
 struct STROBE_IMPL_STRUCT( STROBE_CORE ) *STROBE_CORE = NULL;
 
+#ifdef _DEBUG
+#define DEVIATION_LIMIT 2.0
+#else
+#define DEVIATION_LIMIT 0.75
+#endif
+#define DEVIATION_SIZE 120
+
 struct STROBE_IMPL_PRIVATE_STRUCT( STROBE_CORE )
 {
 	double recentTime, recentTime2;
-	double delta[STROBE_CORE_DEVIATION_SIZE];
+	double delta[DEVIATION_SIZE];
 	size_t fCounterSnapshot;
 	char debugStr[2048]; // Heap allocation ?
 	int offsetX;
@@ -88,7 +95,7 @@ static void R_Strobe( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 
 		if ( this->base.protected->fCounter > ARRAYSIZE( this->private->delta ) )
 		{
-			if ( this->base.protected->deviation > STROBE_CORE_DEVIATION_LIMIT )
+			if ( this->base.protected->deviation > DEVIATION_LIMIT )
 			{
 				this->base.protected->cdTriggered = true;
 				this->base.protected->cdTimer     = 0.0;

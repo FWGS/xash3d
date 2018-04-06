@@ -478,7 +478,7 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *const self, char *src, int si
 	            " |-> [^7LOG^3] Realistic Reduction (400 cd/m2 base): %.2f%%\n"
 	            " |-> [^7SQUARE^3] Realistic Reduction (400 cd/m2 base): %.2f%%\n"
 	            " |-> [^7CUBE^3] Realistic Reduction (400 cd/m2 base): %.2f%%\n"
-	            "Difference (+): %s\nDifference (-): %s\nDifference (+ & -): %s\n"
+	            "Difference (+): %s\nDifference (-): %s\nDifference (TOTAL): %s\n"
 	            "Geometric Mean: %.4f\n"
 	            "G/A Difference: %.4f\n"
 	            "[^7EXPERIMENTAL^3] Badness: %.4f\n"

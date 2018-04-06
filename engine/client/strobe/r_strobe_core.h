@@ -20,13 +20,11 @@ See the GNU General Public License for more details.
 
 #if !defined R_STROBE_CORE_H && !defined STROBE_DISABLED
 #define R_STROBE_CORE_H
-
 #include "r_strobe_api.h"
+
 
 #define STROBE_CORE STROBE_IMPL( CORE )
 
-#define STROBE_CORE_DEVIATION_LIMIT 2.5
-#define STROBE_CORE_DEVIATION_SIZE 60
 
 struct STROBE_IMPL_STRUCT( STROBE_CORE );
 struct STROBE_IMPL_PRIVATE_STRUCT( STROBE_CORE );
