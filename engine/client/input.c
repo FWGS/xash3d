@@ -38,7 +38,7 @@ int	in_mouse_oldbuttonstate;
 int	in_mouse_buttons;
 static struct inputstate_s
 {
-float lastpitch, lastyaw;
+	float lastpitch, lastyaw;
 } inputstate;
 
 extern convar_t *vid_fullscreen;
