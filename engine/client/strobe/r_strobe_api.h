@@ -42,14 +42,14 @@ See the GNU General Public License for more details.
 #define STROBE_IMPL_STRUCT(IMPL) STROBE_CONCAT(IMPL, _s)
 #define STROBE_IMPL_PRIVATE_STRUCT(IMPL) STROBE_CONCAT(IMPL, _private_s)
 #define STROBE_IMPL_THIS(IMPL) ( *_STROBE_IMPL_THIS )
-#define STROBE_IMPL_THIS_PARAM(IMPL) struct STROBE_IMPL_STRUCT(IMPL) **_STROBE_IMPL_THIS
+#define STROBE_IMPL_THIS_PARAM(IMPL) struct STROBE_IMPL_STRUCT(IMPL) *const *const _STROBE_IMPL_THIS
 
 #define STROBE_IMPL_EXPORTEDFUNC_main(IMPL) STROBE_IMPL_EXPORTFUNC(IMPL, STROBE_IMPL_FUNC_MAIN)
 #define STROBE_IMPL_EXPORTEDFUNC_constructor(IMPL) STROBE_IMPL_EXPORTFUNC(IMPL, STROBE_IMPL_FUNC_CONSTRUCTOR)
 #define STROBE_IMPL_EXPORTEDFUNC_destructor(IMPL) STROBE_IMPL_EXPORTFUNC(IMPL, STROBE_IMPL_FUNC_DESTRUCTOR)
 #define STROBE_IMPL_EXPORTEDFUNC_reinit(IMPL) STROBE_IMPL_EXPORTFUNC(IMPL, STROBE_IMPL_FUNC_REINIT)
 
-#define STROBE_INVOKE(IMPL) (void**)(&IMPL),STROBE_IMPL_EXPORTEDFUNC_constructor(IMPL),STROBE_IMPL_EXPORTEDFUNC_main(IMPL),STROBE_IMPL_EXPORTEDFUNC_destructor(IMPL)
+#define STROBE_INVOKE(IMPL) (const void *const *const)(&IMPL),STROBE_IMPL_EXPORTEDFUNC_constructor(IMPL),STROBE_IMPL_EXPORTEDFUNC_main(IMPL),STROBE_IMPL_EXPORTEDFUNC_destructor(IMPL)
 // MACROS FOR STROBE IMPLEMENTATIONS
 
 typedef struct StrobeAPI_s StrobeAPI_t;
@@ -67,46 +67,46 @@ typedef enum
 
 typedef struct StrobeAPI_funcs_BRIGHTNESSREDUCTION_s
 {
-	double ( *ActualBrightnessReduction )( StrobeAPI_t *self );
-	double ( *LogarithmicBrightnessReduction )( StrobeAPI_t *self, double base );
-	double ( *SquareBrightnessReduction )( StrobeAPI_t *self, double base );
-	double ( *CubeBrightnessReduction )( StrobeAPI_t *self, double base );
-	double ( *OtherBrightnessReduction )( StrobeAPI_t *self, double base, double ( *reductionFunction )( double ) );
+	double ( *ActualBrightnessReduction )( StrobeAPI_t *const self );
+	double ( *LogarithmicBrightnessReduction )( StrobeAPI_t *const self, double base );
+	double ( *SquareBrightnessReduction )( StrobeAPI_t *const self, double base );
+	double ( *CubeBrightnessReduction )( StrobeAPI_t *const self, double base );
+	double ( *OtherBrightnessReduction )( StrobeAPI_t *const self, double base, double ( *reductionFunction )( double ) );
 } StrobeAPI_funcs_BRIGHTNESSREDUCTION_t;
 
 typedef struct StrobeAPI_funcs_EXPERIMENTAL_s
 {
-	double ( *BADNESS )( StrobeAPI_t *self, qboolean PWMInvolved );
-	double ( *BADNESS_REDUCTED )( StrobeAPI_t *self, qboolean PWMInvolved );
+	double ( *BADNESS )( StrobeAPI_t *const self, qboolean PWMInvolved );
+	double ( *BADNESS_REDUCTED )( StrobeAPI_t *const self, qboolean PWMInvolved );
 } StrobeAPI_funcs_EXPERIMENTAL_t;
 
 typedef struct StrobeAPI_funcs_PWMSIMULATION_s
 {
-	double ( *Frequency )( StrobeAPI_t *self );
+	double ( *Frequency )( StrobeAPI_t *const self );
 	double ( *DutyCycle )( void );
-	double ( *PositivePhaseShift )( StrobeAPI_t *self );
-	double ( *NegativePhaseShift )( StrobeAPI_t *self );
-	double ( *Period )( StrobeAPI_t *self );
+	double ( *PositivePhaseShift )( StrobeAPI_t *const self );
+	double ( *NegativePhaseShift )( StrobeAPI_t *const self );
+	double ( *Period )( StrobeAPI_t *const self );
 } StrobeAPI_funcs_PWMSIMULATION_t;
 
 typedef struct StrobeAPI_funcs_HELPER_s
 {
-	qboolean ( *isPhaseInverted )( StrobeAPI_t *self );
-	qboolean ( *isNormal )( StrobeAPI_t *self );
-	qboolean ( *isPositive )( StrobeAPI_t *self );
-	double ( *effectiveFPS )( StrobeAPI_t *self );
-	double ( *CurrentFPS )( StrobeAPI_t *self );
-	void ( *GenerateDebugStatistics )( StrobeAPI_t *self, char *src, int size );
-	void ( *GenerateDiffBar )( StrobeAPI_t *self, char *src, int size, char type );
+	qboolean ( *isPhaseInverted )( StrobeAPI_t *const self );
+	qboolean ( *isNormal )( StrobeAPI_t *const self );
+	qboolean ( *isPositive )( StrobeAPI_t *const self );
+	double ( *effectiveFPS )( StrobeAPI_t *const self );
+	double ( *CurrentFPS )( StrobeAPI_t *const self );
+	void ( *GenerateDebugStatistics )( StrobeAPI_t *const self, char *src, int size );
+	void ( *GenerateDiffBar )( StrobeAPI_t *const self, char *src, int size, char type );
 	double ( *GeometricMean )( double x, double y );
 	double ( *ArithmeticMean )( double x, double y );
 	double ( *StandardDeviation )( const double *data, int size );
-	double ( *Cooldown )( StrobeAPI_t *self );
+	double ( *Cooldown )( StrobeAPI_t *const self );
 } StrobeAPI_funcs_HELPER_t;
 
 typedef struct StrobeAPI_funcs_GET_s
 {
-	size_t ( *FrameCounter )( StrobeAPI_t *self, STROBE_counterType );
+	size_t ( *FrameCounter )( StrobeAPI_t *const self, STROBE_counterType );
 } StrobeAPI_funcs_GET_t;
 
 typedef struct StrobeAPI_protected_s StrobeAPI_protected_t;
@@ -123,14 +123,14 @@ typedef struct StrobeAPI_s
 	StrobeAPI_funcs_HELPER_t Helpers;
 	StrobeAPI_funcs_GET_t get;
 	void ( *GenerateBlackFrame )( void );
-	void ( *ProcessFrame )( StrobeAPI_t *self );
+	void ( *ProcessFrame )( StrobeAPI_t *const self );
 } StrobeAPI_t;
 
 typedef struct StrobeAPI_EXPORTS_s
 {
-	void ( *Invoker )( void **self, void ( *constructor )( void ** ), void ( *main )( void ** ), void ( *destructor )( void ** ) ); // Strobe Invoker
-	void ( *Constructor )( StrobeAPI_t *self );
-	void ( *Destructor )( StrobeAPI_t *self );
+	void ( *Invoker )( const void *const *const self, void ( *constructor )( const void *const *const ), void ( *main )( const void *const *const ), void ( *destructor )( const void *const *const ) ); // Strobe Invoker
+	void ( *Constructor )( StrobeAPI_t *const self );
+	void ( *Destructor )( StrobeAPI_t *const self );
 
 	convar_t *r_strobe;
 	convar_t *r_strobe_swapinterval;

@@ -34,7 +34,7 @@ typedef struct StrobeAPI_private_s
 	double nexttime, lasttime, framerate;
 	size_t mark;
 	size_t PositiveNormal, PositiveBlack, NegativeNormal, NegativeBlack;
-}StrobeAPI_private_t;
+} StrobeAPI_private_t;
 
 _inline double func_helper_StandardDeviation( const double *data, int n )
 {
@@ -73,7 +73,7 @@ _inline void GL_GenerateBlackFrame( void ) // Generates partial or full black fr
 	}
 }
 
-_inline double func_helper_getCooldown( StrobeAPI_t *self )
+_inline double func_helper_getCooldown( StrobeAPI_t *const self )
 {
 	if ( 0 <= self->protected->cdTimer )
 	{
@@ -85,7 +85,7 @@ _inline double func_helper_getCooldown( StrobeAPI_t *self )
 	}
 }
 
-_inline qboolean func_helper_isPhaseInverted( StrobeAPI_t *self )
+_inline qboolean func_helper_isPhaseInverted( StrobeAPI_t *const self )
 {
 	if ( self->protected->frameInfo & PHASE_INVERTED )
 		return true;
@@ -93,7 +93,7 @@ _inline qboolean func_helper_isPhaseInverted( StrobeAPI_t *self )
 		return false;
 }
 
-_inline qboolean func_helper_isNormal( StrobeAPI_t *self )
+_inline qboolean func_helper_isNormal( StrobeAPI_t *const self )
 {
 	if ( self->protected->frameInfo & FRAME_RENDER )
 		return true;
@@ -101,7 +101,7 @@ _inline qboolean func_helper_isNormal( StrobeAPI_t *self )
 		return false;
 }
 
-_inline qboolean func_helper_isPositive( StrobeAPI_t *self ) // ...
+_inline qboolean func_helper_isPositive( StrobeAPI_t *const self ) // ...
 {
 	if ( self->protected->frameInfo & PHASE_POSITIVE )
 		return true;
@@ -109,7 +109,7 @@ _inline qboolean func_helper_isPositive( StrobeAPI_t *self ) // ...
 		return false;
 }
 
-_inline double func_helper_effectiveFPS( StrobeAPI_t *self )
+_inline double func_helper_effectiveFPS( StrobeAPI_t *const self )
 {
 	int strobeInterval = StrobeAPI.r_strobe->integer;
 	double eFPS;
@@ -127,7 +127,7 @@ _inline double func_helper_effectiveFPS( StrobeAPI_t *self )
 	return eFPS;
 }
 
-_inline void func_helper_GenerateDiffBar( StrobeAPI_t *self, char *src, int size, char type )
+_inline void func_helper_GenerateDiffBar( StrobeAPI_t *const self, char *src, int size, char type )
 {
 	char _barCounter = 0;
 	int diff_NB      = 0;
@@ -239,7 +239,7 @@ _inline void func_helper_GenerateDiffBar( StrobeAPI_t *self, char *src, int size
 	}
 }
 
-_inline double func_pwmsimulation_Frequency( StrobeAPI_t *self )
+_inline double func_pwmsimulation_Frequency( StrobeAPI_t *const self )
 {
 	return ( 1 / ( ( 1.0f / self->Helpers.CurrentFPS( self ) ) * ( abs( StrobeAPI.r_strobe->integer ) + 1 ) ) );
 }
@@ -250,7 +250,7 @@ _inline double func_pwmsimulation_DutyCycle( void )
 	return ( ( ( 1.0f / ( abs( strobeInterval ) + 1 ) ) * 100 ) * ( strobeInterval < 0 ? -strobeInterval : 1 ) );
 }
 
-_inline double func_pwmsimulation_PositivePhaseShift( StrobeAPI_t *self )
+_inline double func_pwmsimulation_PositivePhaseShift( StrobeAPI_t *const self )
 {
 	if ( !!( self->protected->frameInfo & PHASE_INVERTED ) )
 		return ( 1.0f / self->Helpers.CurrentFPS( self ) ) * 1000;
@@ -258,7 +258,7 @@ _inline double func_pwmsimulation_PositivePhaseShift( StrobeAPI_t *self )
 		return 0.0f;
 }
 
-_inline double func_pwmsimulation_NegativePhaseShift( StrobeAPI_t *self )
+_inline double func_pwmsimulation_NegativePhaseShift( StrobeAPI_t *const self )
 {
 	if ( !!( self->protected->frameInfo & PHASE_INVERTED ) )
 		return abs( StrobeAPI.r_strobe->integer ) * ( 1.0f / self->Helpers.CurrentFPS( self ) ) * 1000;
@@ -266,7 +266,7 @@ _inline double func_pwmsimulation_NegativePhaseShift( StrobeAPI_t *self )
 		return 0.0;
 }
 
-_inline double func_pwmsimulation_Period( StrobeAPI_t *self )
+_inline double func_pwmsimulation_Period( StrobeAPI_t *const self )
 {
 	return ( ( ( 1.0f / self->Helpers.CurrentFPS( self ) ) * ( abs( StrobeAPI.r_strobe->integer ) + 1 ) ) * 1000 );
 }
@@ -281,32 +281,32 @@ _inline double func_helper_ArithmeticMean( double x, double y )
 	return ( x + y ) / 2;
 }
 
-_inline double func_brightnessreduction_ActualBrightnessReduction( StrobeAPI_t *self )
+_inline double func_brightnessreduction_ActualBrightnessReduction( StrobeAPI_t *const self )
 {
 	return lossCalculator( self->Helpers.CurrentFPS( self ), self->Helpers.effectiveFPS( self ) );
 }
 
-_inline double func_brightnessreduction_LogarithmicBrightnessReduction( StrobeAPI_t *self, double base )
+_inline double func_brightnessreduction_LogarithmicBrightnessReduction( StrobeAPI_t *const self, double base )
 {
 	return lossCalculator( log( base ), log( base * self->Helpers.effectiveFPS( self ) / self->Helpers.CurrentFPS( self ) ) );
 }
 
-_inline double func_brightnessreduction_SquareBrightnessReduction( StrobeAPI_t *self, double base )
+_inline double func_brightnessreduction_SquareBrightnessReduction( StrobeAPI_t *const self, double base )
 {
 	return lossCalculator( sqrt( base ), sqrt( base * self->Helpers.effectiveFPS( self ) / self->Helpers.CurrentFPS( self ) ) );
 }
 
-_inline double func_brightnessreduction_CubeBrightnessReduction( StrobeAPI_t *self, double base )
+_inline double func_brightnessreduction_CubeBrightnessReduction( StrobeAPI_t *const self, double base )
 {
 	return lossCalculator( cbrt( base ), cbrt( base * self->Helpers.effectiveFPS( self ) / self->Helpers.CurrentFPS( self ) ) );
 }
 
-_inline double func_brightnessreduction_OtherBrightnessReduction( StrobeAPI_t *self, double base, double ( *reductionFunction )( double ) )
+_inline double func_brightnessreduction_OtherBrightnessReduction( StrobeAPI_t *const self, double base, double ( *reductionFunction )( double ) )
 {
 	return lossCalculator( reductionFunction( base ), reductionFunction( base * self->Helpers.effectiveFPS( self ) / self->Helpers.CurrentFPS( self ) ) );
 }
 
-_inline double func_experimental_Badness_Reducted( StrobeAPI_t *self, qboolean PWMInvolved )
+_inline double func_experimental_Badness_Reducted( StrobeAPI_t *const self, qboolean PWMInvolved )
 {
 	double badness, Diff;
 	int diffP_NB, diffN_NB;
@@ -340,7 +340,7 @@ _inline double func_experimental_Badness_Reducted( StrobeAPI_t *self, qboolean P
 		return badness;
 }
 
-_inline double func_experimental_Badness( StrobeAPI_t *self, qboolean PWMInvolved )
+_inline double func_experimental_Badness( StrobeAPI_t *const self, qboolean PWMInvolved )
 {
 	int diffP_NB, diffN_NB;
 	double diffP = 0.0, diffN = 0.0;
@@ -369,7 +369,7 @@ _inline double func_experimental_Badness( StrobeAPI_t *self, qboolean PWMInvolve
 		return badness;
 }
 
-_inline size_t func_get_FrameCounter( StrobeAPI_t *self, STROBE_counterType type )
+_inline size_t func_get_FrameCounter( StrobeAPI_t *const self, STROBE_counterType type )
 {
 	switch ( type )
 	{
@@ -410,7 +410,7 @@ _inline size_t func_get_FrameCounter( StrobeAPI_t *self, STROBE_counterType type
 	}
 }
 
-_inline double func_get_currentFPS( StrobeAPI_t *self )
+_inline double func_get_currentFPS( StrobeAPI_t *const self )
 {
 	// Copied from SCR_DrawFps
 	// This way until current fps becomes global!!!
@@ -421,15 +421,15 @@ _inline double func_get_currentFPS( StrobeAPI_t *self )
 	if ( newtime >= self->private->nexttime )
 	{
 		self->private->framerate = ( self->protected->fCounter - self->private->mark ) / ( newtime - self->private->lasttime );
-		self->private->lasttime = newtime;
-		self->private->nexttime  = max(self->private->nexttime + 0.35, self->private->lasttime - 0.35 );
+		self->private->lasttime  = newtime;
+		self->private->nexttime  = max( self->private->nexttime + 0.35, self->private->lasttime - 0.35 );
 		self->private->mark      = self->protected->fCounter;
 	}
 
 	return self->private->framerate;
 }
 
-_inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
+_inline void GenerateDebugStatistics( StrobeAPI_t *const self, char *src, int size )
 {
 	char diffBarP[128], diffBarN[128], diffBarT[128];
 	size_t nPositiveNormal, nPositiveBlack, nNegativeNormal, nNegativeBlack;
@@ -459,7 +459,7 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	            size,
 	            "%.2f FPS\n%.2f eFPS\n"
 	            "Elapsed Time: %.2f\n"
-				"isPhaseInverted = %d\n"
+	            "isPhaseInverted = %d\n"
 	            "Total Frame Count: %zu\n"
 	            "^7(+) Phase Frame Count: %zu\n"
 	            "%s\n"
@@ -492,7 +492,7 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	            self->Helpers.CurrentFPS( self ),
 	            self->Helpers.effectiveFPS( self ),
 	            self->protected->elapsedTime,
-				self->Helpers.isPhaseInverted(self),
+	            self->Helpers.isPhaseInverted( self ),
 	            self->get.FrameCounter( self, STROBE_CT_TotalFrame ),
 	            self->get.FrameCounter( self, STROBE_CT_PositiveFrame ),
 	            ( nPositiveNormal > self->private->PositiveNormal ? va( "^2|-> Normal Frame Count: %zu^7", nPositiveNormal ) : va( "|-> Normal Frame Count: %zu", nPositiveNormal ) ), // Should be white instead of ^7 but white is not available in the color table
@@ -527,7 +527,7 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	self->private->NegativeBlack  = self->get.FrameCounter( self, STROBE_CT_NegativeBlackFrame );
 }
 
-_inline void ProcessFrame( StrobeAPI_t *self )
+_inline void ProcessFrame( StrobeAPI_t *const self )
 {
 	if ( self->protected->cdTriggered != false )
 	{
@@ -557,12 +557,12 @@ _inline void ProcessFrame( StrobeAPI_t *self )
 	++self->protected->fCounter;
 }
 
-_inline void StrobeAPI_constructor( StrobeAPI_t *self )
+_inline void StrobeAPI_constructor( StrobeAPI_t *const self )
 {
 	self->protected = (StrobeAPI_protected_t *)calloc( 1, sizeof( StrobeAPI_protected_t ) );
-	self->private = (StrobeAPI_private_t *)calloc(1, sizeof(StrobeAPI_private_t));
+	self->private   = (StrobeAPI_private_t *)calloc( 1, sizeof( StrobeAPI_private_t ) );
 
-	if (self->protected == NULL || self->private == NULL)
+	if ( self->protected == NULL || self->private == NULL )
 	{
 		return; // Fix handling!
 	}
@@ -596,9 +596,9 @@ _inline void StrobeAPI_constructor( StrobeAPI_t *self )
 	self->Helpers.GenerateDebugStatistics                     = GenerateDebugStatistics;
 }
 
-_inline void StrobeAPI_destructor( StrobeAPI_t *self )
+_inline void StrobeAPI_destructor( StrobeAPI_t *const self )
 {
-	if (self->private)
+	if ( self->private )
 	{
 		free( self->private );
 		self->private = NULL;
@@ -610,7 +610,7 @@ _inline void StrobeAPI_destructor( StrobeAPI_t *self )
 	}
 }
 
-_inline void StrobeAPI_Invoker( void **self, void ( *constructor )( void ** ), void ( *main )( void ** ), void ( *destructor )( void ** ) )
+_inline void StrobeAPI_Invoker( const void *const *const self, void ( *constructor )( const void *const *const ), void ( *main )( const void *const *const ), void ( *destructor )( const void *const *const ) )
 {
 	if ( StrobeAPI.r_strobe->integer )
 	{
