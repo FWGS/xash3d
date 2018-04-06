@@ -111,8 +111,11 @@ typedef struct StrobeAPI_funcs_GET_s
 
 typedef struct StrobeAPI_protected_s StrobeAPI_protected_t;
 
+typedef struct StrobeAPI_private_s StrobeAPI_private_t;
+
 typedef struct StrobeAPI_s
 {
+	StrobeAPI_private_t *private;
 	StrobeAPI_protected_t *protected; // r_strobe_base_protected_.h
 	StrobeAPI_funcs_EXPERIMENTAL_t Experimentals;
 	StrobeAPI_funcs_BRIGHTNESSREDUCTION_t BrightnessReductions;

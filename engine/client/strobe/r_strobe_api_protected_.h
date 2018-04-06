@@ -25,9 +25,9 @@ See the GNU General Public License for more details.
 
 typedef enum
 {
-	p_positive = BIT( 0 ), // Phase: Positive
-	p_inverted = BIT( 1 ), // Phase: Inverted
-	f_normal   = BIT( 2 )  // Frame: Normal
+	PHASE_POSITIVE = BIT( 0 ), // Phase: Positive
+	PHASE_INVERTED = BIT( 1 ), // Phase: Inverted
+	FRAME_RENDER   = BIT( 2 )  // Frame: Rendered
 } fstate_e;                // Frame State
 
 typedef struct StrobeAPI_protected_s
@@ -35,14 +35,11 @@ typedef struct StrobeAPI_protected_s
 	size_t fCounter;                       // Frame counter
 	size_t pCounter, pNCounter, pBCounter; // Positive phase counters
 	size_t nCounter, nNCounter, nBCounter; // Negative phase counters
-	int strobeInterval;
-	int swapInterval;
-	double initialTime, elapsedTime;
-	fstate_e frameInfo; // Frame info
-
+	double elapsedTime;
 	double deviation;     // deviation
 	double cdTimer;       // Cooldown timer
 	qboolean cdTriggered; // Cooldown trigger status
+	fstate_e frameInfo; // Frame info
 } StrobeAPI_protected_t;  // Protected members
 
 #endif
