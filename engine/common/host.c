@@ -1144,7 +1144,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		host.type = HOST_DEDICATED;
 	}
 	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
-#ifdef XASH_GLES
+#if defined XASH_GLES && !defined __EMSCRIPTEN__
 	SDL_SetHint( SDL_HINT_OPENGL_ES_DRIVER, "1" );
 #endif
 #endif
