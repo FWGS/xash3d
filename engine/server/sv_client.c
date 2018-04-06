@@ -2149,6 +2149,7 @@ static void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 	string		temp1, temp2;
 	sv_client_t	*current;
 	char		*val;
+	const char *model;
 
 	if( !userinfo || !userinfo[0] ) return; // ignored
 
@@ -2251,7 +2252,7 @@ static void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 		cl->cl_updaterate = 1.0f / i;
 	}
 
-	const char *model = Info_ValueForKey( cl->userinfo, "model" );
+	model = Info_ValueForKey( cl->userinfo, "model" );
 
 	// apply custom playermodel
 	if( Q_strlen( model ) && Q_stricmp( model, "player" ))

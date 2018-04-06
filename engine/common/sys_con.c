@@ -169,9 +169,6 @@ void Sys_PrintLog( const char *pMsg )
 	crt_tm = localtime( &crt_time );
 #ifdef __ANDROID__
 	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
-#ifndef XASH_DEDICATED
-	return;
-#endif
 #endif
 
 
@@ -222,8 +219,10 @@ void Sys_PrintLog( const char *pMsg )
 		printf( "\033[34m%s\033[0m%s\033[0m", logtime, colored );
 	}
 #else
+#if !defined __ANDROID__ || defined XASH_DEDICATED
 	printf( "%s %s", logtime, pMsg );
 	fflush( stdout );
+#endif
 #endif
 	lastchar = pMsg[strlen(pMsg)-1];
 	if( !s_ld.logfile )

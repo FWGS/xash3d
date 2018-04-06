@@ -51,6 +51,34 @@ typedef __m128i v4si; // vector of 4 int (sse2)
 typedef __m64 v2si;   // vector of 2 int (mmx)
 #endif
 
+#if defined(USE_SSE2)
+/// Swizzles/permutes a single SSE register into another SSE register. Requires SSE2. This has the advantage of not destroying the input operand, but the disadvantage is that it requires a
+/// float->int->float pipe transition, which costs a clock cycle. Profiling shows this to be a very small win.
+#define shuffle1_ps(reg, shuffle) _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128((reg)), (shuffle)))
+#else // We only have SSE 1, so must use the slightly worse shufps instruction, which always destroys the input operand - or we have AVX where we can use this operation without destroying input
+#define shuffle1_ps(reg, shuffle) _mm_shuffle_ps((simd4f)(reg), (simd4f)(reg), (shuffle))
+#endif
+
+/// Returns the lowest element of the given sse register as a float.
+/// @note When compiling with /arch:SSE or newer, it is expected that this function is a no-op "cast", since
+/// the resulting float is represented in an XMM register as well.
+#ifndef __GNUC__
+#define s4f_x(s4f) _mm_cvtss_f32((s4f))
+// Given a 4-channel single-precision simd4f variable [w z y x], returns the second channel 'y' as a float.
+#define s4f_y(s4f) _mm_cvtss_f32(shuffle1_ps((s4f), _MM_SHUFFLE(1,1,1,1)))
+// Given a 4-channel single-precision simd4f variable [w z y x], returns the third channel 'z' as a float.
+// @note The intrinsic _mm_movehl_ps() is theoretically better than _mm_unpackhi_ps() or a shuffle to extract the z channel because it has throughput latency of 0.33 compared to 1.0 that the
+//       other have. However using _mm_movehl_ps() is tricky since in a blind use, VS2013 compiler easily emits a redundant movaps when targeting pre-AVX, so it might not be worth it.
+#define s4f_z(s4f) _mm_cvtss_f32(_mm_unpackhi_ps((s4f), (s4f)))
+// Given a 4-channel single-precision simd4f variable [w z y x], returns the fourth channel 'w' as a float.
+#define s4f_w(s4f) _mm_cvtss_f32(shuffle1_ps((s4f), _MM_SHUFFLE(3,3,3,3)))
+#else
+#define s4f_x(s4f) (s4f)[0]
+#define s4f_y(s4f) (s4f)[1]
+#define s4f_z(s4f) (s4f)[2]
+#define s4f_w(s4f) (s4f)[3]
+#endif
+
 /* declare some SSE constants -- why can't I figure a better way to do that? */
 #define _PS_CONST(Name, Val)                                            \
   static const ALIGN16_BEG float _ps_##Name[4] ALIGN16_END = { Val, Val, Val, Val }

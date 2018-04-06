@@ -1634,10 +1634,12 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	// server connection
 	if( !Q_strcmp( c, "client_connect" ))
 	{
+		unsigned int extensions;
+
 		if( !CL_IsFromConnectingServer( from ) )
 			return;
 
-		unsigned int extensions = Q_atoi( Cmd_Argv( 1 ) );
+		extensions = Q_atoi( Cmd_Argv( 1 ) );
 		if( cls.state == ca_connected )
 		{
 			MsgDev( D_INFO, "Dup connect received. Ignored.\n");
@@ -1721,10 +1723,12 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	}
 	else if( !Q_strcmp( c, "errormsg" ))
 	{
+		char *str;
+
 		if( !CL_IsFromConnectingServer( from ))
 			return;
 
-		char *str = BF_ReadString( msg );
+		str = BF_ReadString( msg );
 		if( UI_IsVisible() )
 			Cmd_ExecuteString( va("menu_showmessagebox \"^3Server message^7\n%s\"", str ), src_command );
 		Msg( "%s", str );

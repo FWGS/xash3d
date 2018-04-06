@@ -517,13 +517,14 @@ void GL_SetupAttributes()
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 0 );
 #endif
 
-#else // XASH_GLES
+#elif !defined XASH_GL_STATIC
 	if( Sys_CheckParm( "-gldebug" ) && host.developer >= 1 )
 	{
 		MsgDev( D_NOTE, "Creating an extended GL context for debug...\n" );
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG );
 		glw_state.extended = true;
 	}
+
 #endif // XASH_GLES
 
 	switch( gl_msaa->integer )
@@ -699,9 +700,10 @@ void GL_InitExtensionsBigGL()
 	GL_CheckExtension( "GL_EXT_stencil_two_side", stenciltwosidefuncs, "gl_stenciltwoside", GL_STENCILTWOSIDE_EXT );
 	GL_CheckExtension( "GL_ARB_vertex_buffer_object", vbofuncs, "gl_vertex_buffer_object", GL_ARB_VERTEX_BUFFER_OBJECT_EXT );
 
+#ifndef XASH_GL_STATIC
 	// we don't care if it's an extension or not, they are identical functions, so keep it simple in the rendering code
 	if( pglDrawRangeElementsEXT == NULL ) pglDrawRangeElementsEXT = pglDrawRangeElements;
-
+#endif
 	GL_CheckExtension( "GL_ARB_texture_env_add", NULL, "gl_texture_env_add", GL_TEXTURE_ENV_ADD_EXT );
 
 	// vp and fp shaders
@@ -747,7 +749,7 @@ void GL_InitExtensionsBigGL()
 	else glConfig.texRectangle = glConfig.max_2d_rectangle_size = 0; // no rectangle
 
 	Cvar_Set( "gl_anisotropy", va( "%f", bound( 0, gl_texture_anisotropy->value, glConfig.max_texture_anisotropy )));
-
+#ifndef XASH_GL_STATIC
 	// enable gldebug if allowed
 	if( GL_Support( GL_DEBUG_OUTPUT ))
 	{
@@ -765,6 +767,7 @@ void GL_InitExtensionsBigGL()
 		if( host.developer >= D_NOTE )
 			pglDebugMessageControlARB( GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_LOW_ARB, 0, NULL, true );
 	}
+#endif
 }
 #endif
 
