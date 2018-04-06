@@ -158,7 +158,7 @@ static TYPEDESCRIPTION gEntityTable[] =
 	DEFINE_FIELD( ENTITYTABLE, classname, FIELD_STRING ),
 };
 
-TYPEDESCRIPTION gEntvarsDescription[] = 
+static TYPEDESCRIPTION gEntvarsDescription[] =
 {
 	DEFINE_ENTITY_FIELD( classname, FIELD_STRING ),
 	DEFINE_ENTITY_GLOBAL_FIELD( globalname, FIELD_STRING ),

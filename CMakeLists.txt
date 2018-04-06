@@ -159,7 +159,7 @@ fwgs_conditional_subproject("NOT XASH_64BIT AND XASH_DLL_LOADER" loader)
 fwgs_conditional_subproject("NOT XASH_SINGLE_BINARY" game_launch)
 add_subdirectory(engine)
 
-if(NOT WIN32 OR XASH_NO_INSTALL_RUNSCRIPT)
+if(NOT (WIN32 OR XASH_NO_INSTALL_RUNSCRIPT))
 	install(FILES "scripts/xash3d.sh"
 		DESTINATION "${BIN_INSTALL_DIR}"
 	    RENAME "xash3d"

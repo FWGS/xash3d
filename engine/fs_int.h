@@ -41,15 +41,14 @@ typedef struct
 		char    *filenamesbuffer;
 } search_t;
 
-struct searchpath_s
+typedef struct searchpath_s
 {
 	    char            filename[PATH_MAX];
 		struct pack_s   *pack;
 		struct wfile_s  *wad;
 		int             flags;
 		struct searchpath_s *next;
-};
-typedef struct searchpath_s searchpath_t;
+} searchpath_t;
 
 // filesystem flags
 #define FS_STATIC_PATH  ( 1U << 0 )  // FS_ClearSearchPath will be ignore this path

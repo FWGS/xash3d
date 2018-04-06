@@ -69,6 +69,8 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 typedef void (*pfnChangeGame)( const char *progname );
 typedef int  (*pfnInit)( int argc, char **argv, const char *progname, int bChangeGame, pfnChangeGame func );
 typedef void (*pfnShutdown)( void );
+#undef false
+#undef true
 typedef enum { false, true } qboolean;
 
 static pfnInit     Xash_Main;
