@@ -172,6 +172,7 @@ void Sys_PrintLog( const char *pMsg )
 #endif
 
 #if TARGET_OS_IOS
+	void IOS_Log(const char*);
 	IOS_Log(pMsg);
 #endif
 
