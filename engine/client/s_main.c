@@ -802,21 +802,23 @@ void SND_Spatialize( channel_t *ch )
 	dot = DotProduct( s_listener.right, source_vec );
 
 	// for sounds with a radius, spatialize left/right evenly within the radius
-	/*if( ch->radius > 0 && dist < ch->radius )
+#if 0
+	if( ch->radius > 0 && dist < ch->radius )
 	{
 		float	interval = ch->radius * 0.5f;
 		float	blend = dist - interval;
 
-		if( blend < 0 )
-			blend = 0;
+		if( blend > 0 )
+		{
+			blend /= interval;
 
-		blend /= interval;
-
-		// blend is 0.0 - 1.0, from 50% radius -> 100% radius
-		// at radius * 0.5, dot is 0 (ie: sound centered left/right)
-		// at radius dot == dot
-		dot *= blend;
-	}*/
+			// blend is 0.0 - 1.0, from 50% radius -> 100% radius
+			// at radius * 0.5, dot is 0 (ie: sound centered left/right)
+			// at radius dot == dot
+			dot *= blend;
+		}
+	}
+#endif
 
 	if( s_cull->integer )
 	{

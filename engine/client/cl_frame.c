@@ -1346,7 +1346,10 @@ qboolean CL_GetEntitySpatialization( channel_t *ch )
 	if( !ent || !ent->index || ent->curstate.messagenum == 0 )
 		return valid_origin;
 
-#if 0
+	// a1ba: enabled this, as svc_sound does send it's own origin
+	// which is preferred, when entity isn't in PVS and curstate.origin does not update
+	// meanwhile, GS always trust svc_sound origin
+#if 1
 	// uncomment this if you want enable additional check by PVS
 	if( ent->curstate.messagenum != cl.parsecount )
 		return valid_origin;
