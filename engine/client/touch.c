@@ -1384,16 +1384,18 @@ static void Touch_Motion( touchEventType type, int fingerID, float x, float y, f
 	// process look
 	if( fingerID == touch.look_finger )
 	{
+		Msg( "ty1 %f %f\n", touch.yaw , touch.pitch );
+		Msg( "t1 %f %f\n", dx , dy );
 		if( touch.precision )
 			dx *= touch_precise_amount->value, dy *= touch_precise_amount->value;
-			
+		Msg( "t2 %f %f\n", dx , dy );
 		if( touch_nonlinear_look->integer );
 		{
 			// save angle, modify only velocity
 			float dabs = sqrt( dx*dx+dy*dy );
 			float dcos = dx/dabs;
 			float dsin = dy/dabs;
-		
+			
 			if( touch_exp_mult->value > 1 )
 				dabs = (exp(dabs*touch_exp_mult->value)-1)/touch_exp_mult->value;
 			if( touch_pow_mult->value > 1 && touch_pow_factor->value > 1 )
@@ -1402,9 +1404,11 @@ static void Touch_Motion( touchEventType type, int fingerID, float x, float y, f
 			dx = dabs * dcos;
 			dy = dabs * dsin;
 		}
+		Msg( "t3 %f %f\n", dx , dy );
 
 		// accumulate
 		touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
+		Msg( "ty2 %f %f\n", touch.yaw , touch.pitch );
 	}
 }
 
@@ -1710,6 +1714,7 @@ int IN_TouchEvent( touchEventType type, int fingerID, float x, float y, float dx
 
 void IN_TouchMove( float *forward, float *side, float *yaw, float *pitch )
 {
+	Msg( "te %f %f\n", touch.pitch , touch.yaw );
 	*forward += touch.forward;
 	*side += touch.side;
 	*yaw += touch.yaw;
