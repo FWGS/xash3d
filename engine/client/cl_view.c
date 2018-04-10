@@ -113,18 +113,6 @@ void V_SetupRefDef( void )
 		cl.refdef.onground   = cl.frame.client.flags & FL_ONGROUND ? 1 : 0;
 		cl.refdef.waterlevel = cl.frame.client.waterlevel;
 	}
-	//VectorCopy( cl.frame.playerstate[1].origin, cl.refdef.simorg );
-	//cl.refdef.spectator = true;
-	//cl.refdef.health = 100;
-	//VectorCopy( cl.frame.playerstate[1].angles, cl.refdef.cl_viewangles );
-	//VectorCopy( cl.frame.playerstate[1].angles, cl.refdef.viewangles );
-	//cl.refdef.viewheight[1] = cos(cl.frame.playerstate[1].angles[1]/180*M_PI) * 100;
-	//cl.refdef.viewheight[0] = sin(cl.frame.playerstate[1].angles[1]/180*M_PI) * 100;
-	//VectorScale(cl.frame.playerstate[1].angles,-1, cl.refdef.cl_viewangles);
-	//VectorInverse( cl.refdef.cl_viewangles );
-
-	//CL_TraceLine(cl.frame.playerstate[1].origin, )
-
 }
 
 /*
