@@ -1022,7 +1022,10 @@ static void R_CheckVBO( void )
 #endif
 
 	if( disable )
+	{
 		flags = 0;
+		def = "0";
+	}
 
 	r_vbo = Cvar_Get( "r_vbo", def, flags, "draw world using VBO" );
 	r_bump = Cvar_Get( "r_bump", def, CVAR_ARCHIVE, "enable bump-mapping (r_vbo required)" );
