@@ -38,7 +38,7 @@ int	in_mouse_oldbuttonstate;
 int	in_mouse_buttons;
 static struct inputstate_s
 {
-float lastpitch, lastyaw;
+	float lastpitch, lastyaw;
 } inputstate;
 
 extern convar_t *vid_fullscreen;
@@ -945,12 +945,6 @@ void Host_InputFrame( void )
 			yaw = ( inputstate.lastyaw + yaw ) / 2;
 			inputstate.lastpitch = pitch;
 			inputstate.lastyaw = yaw;
-		}
-
-		if( host.joke )
-		{
-			yaw  = -yaw;
-			side = -side;
 		}
 
 		if( cls.key_dest == key_game )

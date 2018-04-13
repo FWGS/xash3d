@@ -845,17 +845,11 @@ static void R_SetupGL( void )
 		f = sin( cl.time * r_underwater_distortion->value * ( M_PI * 2.7f ));
 		RI.refdef.fov_x += f;
 		RI.refdef.fov_y -= f;
-
-
 	}
 
 	R_SetupModelviewMatrix( &RI.refdef, RI.worldviewMatrix );
 	R_SetupProjectionMatrix( &RI.refdef, RI.projectionMatrix );
 //	if( RI.params & RP_MIRRORVIEW ) RI.projectionMatrix[0][0] = -RI.projectionMatrix[0][0];
-	if( host.joke )
-	{
-		RI.projectionMatrix[0][0] = -RI.projectionMatrix[0][0];
-	}
 
 	Matrix4x4_Concat( RI.worldviewProjectionMatrix, RI.projectionMatrix, RI.worldviewMatrix );
 
@@ -1301,7 +1295,6 @@ void R_RenderFrame( const ref_params_t *fd, qboolean drawWorld )
 	if( drawWorld ) r_lastRefdef = *fd;
 
 	RI.params = RP_NONE;
-	if( host.joke ) RI.params |= RP_FLIPFRONTFACE;
 	RI.farClip = 0;
 	RI.clipFlags = 15;
 	RI.drawWorld = drawWorld;

@@ -44,6 +44,7 @@ SDLash_KeyEvent
 static void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 {
 	int keynum = key.keysym.scancode;
+	qboolean numLock = SDL_GetModState() & KMOD_NUM;
 
 	if( SDL_IsTextInputActive() && down )
 	{
@@ -68,7 +69,6 @@ static void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 	DECLARE_KEY_RANGE( SDL_SCANCODE_A, SDL_SCANCODE_Z, 'a' )
 	else DECLARE_KEY_RANGE( SDL_SCANCODE_1, SDL_SCANCODE_9, '1' )
 	else DECLARE_KEY_RANGE( SDL_SCANCODE_F1, SDL_SCANCODE_F12, K_F1 )
-
 #undef DECLARE_KEY_RANGE
 	else
 	{
@@ -104,16 +104,16 @@ static void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 		case SDL_SCANCODE_PAGEUP: keynum = K_PGUP; break;
 		case SDL_SCANCODE_HOME: keynum = K_HOME; break;
 		case SDL_SCANCODE_END: keynum = K_END; break;
-		case SDL_SCANCODE_KP_7: keynum = K_KP_HOME; break;
-		case SDL_SCANCODE_KP_8: keynum = K_KP_UPARROW; break;
-		case SDL_SCANCODE_KP_9: keynum = K_KP_PGUP; break;
-		case SDL_SCANCODE_KP_4: keynum = K_KP_LEFTARROW; break;
-		case SDL_SCANCODE_KP_5: keynum = K_KP_5; break;
-		case SDL_SCANCODE_KP_6: keynum = K_KP_RIGHTARROW; break;
-		case SDL_SCANCODE_KP_1: keynum = K_KP_END; break;
-		case SDL_SCANCODE_KP_2: keynum = K_KP_DOWNARROW; break;
-		case SDL_SCANCODE_KP_3: keynum = K_KP_PGDN; break;
-		case SDL_SCANCODE_KP_0: keynum = K_KP_INS; break;
+		case SDL_SCANCODE_KP_1: keynum = numLock ? '1' : K_KP_END; break;
+		case SDL_SCANCODE_KP_2: keynum = numLock ? '2' : K_KP_DOWNARROW; break;
+		case SDL_SCANCODE_KP_3: keynum = numLock ? '3' : K_KP_PGDN; break;
+		case SDL_SCANCODE_KP_4: keynum = numLock ? '4' : K_KP_LEFTARROW; break;
+		case SDL_SCANCODE_KP_5: keynum = numLock ? '5' : K_KP_5; break;
+		case SDL_SCANCODE_KP_6: keynum = numLock ? '6' : K_KP_RIGHTARROW; break;
+		case SDL_SCANCODE_KP_7: keynum = numLock ? '7' : K_KP_HOME; break;
+		case SDL_SCANCODE_KP_8: keynum = numLock ? '8' : K_KP_UPARROW; break;
+		case SDL_SCANCODE_KP_9: keynum = numLock ? '9' : K_KP_PGUP; break;
+		case SDL_SCANCODE_KP_0: keynum = numLock ? '0' : K_KP_INS; break;
 		case SDL_SCANCODE_KP_PERIOD: keynum = K_KP_DEL; break;
 		case SDL_SCANCODE_KP_ENTER: keynum = K_KP_ENTER; break;
 		case SDL_SCANCODE_KP_PLUS: keynum = K_KP_PLUS; break;

@@ -141,11 +141,6 @@ void GL_InitExtensions( void )
 	if( GL_Support( GL_TEXTURE_COMPRESSION_EXT ))
 		Image_AddCmdFlags( IL_DDS_HARDWARE );
 
-	// VideoCore4 drivers have a problem with mixing VBO and client arrays
-	// Disable it, as there is no suitable workaround here
-	if( Q_stristr( glConfig.renderer_string, "VideoCore IV" ) || Q_stristr( glConfig.renderer_string, "vc4" ) )
-		Cvar_FullSet( "r_vbo", "0", CVAR_READ_ONLY );
-
 	glw_state.initialized = true;
 
 	tr.framecount = tr.visframecount = 1;

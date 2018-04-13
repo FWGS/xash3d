@@ -80,6 +80,7 @@ convar_t	*r_lightmap;
 convar_t	*r_fastsky;
 convar_t	*r_vbo;
 convar_t 	*r_bump;
+convar_t	*r_vbo_dlightmode;
 convar_t	*r_underwater_distortion;
 convar_t	*mp_decals;
 
@@ -1000,13 +1001,40 @@ static void R_CheckVBO( void )
 {
 	const char *def = "1";
 	int flags = CVAR_ARCHIVE;
+	qboolean disable = false;
 
 	// some bad GLES1 implementations breaks dlights completely
 	if( glConfig.max_texture_units < 3 )
+		disable = true;
+
+#ifdef _WIN32
+	// NVIDIA Windows drivers have a problem with mixing VBO and client arrays
+	// Disable it, as there is no suitable workaround here
+	if( Q_stristr( glConfig.vendor_string, "nvidia" ) )
+		disable = true;
+
+#endif
+
+#ifdef __ANDROID__
+	// VideoCore4 drivers have a problem with mixing VBO and client arrays
+	// Disable it, as there is no suitable workaround here
+	if( Q_stristr( glConfig.renderer_string, "VideoCore IV" ) || Q_stristr( glConfig.renderer_string, "vc4" ) )
+		disable = true;
+#endif
+
+	if( disable )
+	{
+		flags = 0;
 		def = "0";
+	}
 
 	r_vbo = Cvar_Get( "r_vbo", def, flags, "draw world using VBO" );
-	r_bump = Cvar_Get( "r_bump", def, flags, "enable bump-mapping (r_vbo required)" );
+	r_bump = Cvar_Get( "r_bump", def, CVAR_ARCHIVE, "enable bump-mapping (r_vbo required)" );
+	r_vbo_dlightmode = Cvar_Get( "r_vbo_dlightmode", "0", CVAR_ARCHIVE, "vbo dlight rendering mode(0-1)" );
+
+	// check if enabled manually
+	if( r_vbo->integer && host.developer > 3 )
+		r_vbo->flags |= CVAR_ARCHIVE;
 }
 
 static int GetCommandLineIntegerValue(const char* argName)

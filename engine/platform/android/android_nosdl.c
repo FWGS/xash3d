@@ -69,7 +69,6 @@ static const int s_android_scantokey[] =
 	K_KP_ENTER,		'=',			'(',			')'
 };
 
-
 #define ANDROID_MAX_EVENTS 64
 #define MAX_FINGERS 10
 

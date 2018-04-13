@@ -813,11 +813,6 @@ void GL_InitExtensions( void )
 #ifdef _WIN32
 	if( Q_strstr( glConfig.renderer_string, "gdi" ))
 		Cvar_SetFloat( "gl_finish", 1 );
-
-	// NVIDIA Windows drivers have a problem with mixing VBO and client arrays
-	// Disable it, as there is no suitable workaround here
-	if( Q_stristr( glConfig.vendor_string, "nvidia" ))
-		Cvar_FullSet( "r_vbo", "0", CVAR_READ_ONLY );
 #endif
 
 	glw_state.initialized = true;

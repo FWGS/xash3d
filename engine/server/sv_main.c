@@ -1011,6 +1011,10 @@ void SV_Init( void )
 	Cmd_AddCommand( "logaddress", SV_SetLogAddress_f, "sets address and port for remote logging host" );
 	Cmd_AddCommand( "log", SV_ServerLog_f, "enables logging to file" );
 
+#ifdef XASH_64BIT
+	Cmd_AddCommand( "str64stats", SV_PrintStr64Stats_f, "show 64 bit string pool stats" );
+#endif
+
 	SV_InitFilter();
 	SV_ClearSaveDir ();	// delete all temporary *.hl files
 	BF_Init( &net_message, "NetMessage", net_message_buffer, sizeof( net_message_buffer ));
