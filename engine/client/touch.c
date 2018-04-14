@@ -1387,21 +1387,32 @@ static void Touch_Motion( touchEventType type, int fingerID, float x, float y, f
 		if( touch.precision )
 			dx *= touch_precise_amount->value, dy *= touch_precise_amount->value;
 			
-		if( touch_nonlinear_look->integer );
+		if( touch_nonlinear_look->integer )
 		{
+			float dabs, dcos, dsin;
+
 			// save angle, modify only velocity
-			float dabs = sqrt( dx*dx+dy*dy );
-			float dcos = dx/dabs;
-			float dsin = dy/dabs;
+			dabs = sqrt( dx * dx + dy * dy );
+
+			if( dabs < 0.000001 )
+				return; // no motion, avoid division by zero
+
+			dcos = dx / dabs;
+			dsin = dy / dabs;
 		
 			if( touch_exp_mult->value > 1 )
-				dabs = (exp(dabs*touch_exp_mult->value)-1)/touch_exp_mult->value;
+				dabs = ( exp( dabs * touch_exp_mult->value ) - 1 ) / touch_exp_mult->value;
+
 			if( touch_pow_mult->value > 1 && touch_pow_factor->value > 1 )
-				dabs = pow(dabs*touch_pow_mult->value,touch_pow_factor->value)/touch_pow_mult->value;
+				dabs = pow( dabs * touch_pow_mult->value, touch_pow_factor->value ) / touch_pow_mult->value;
 
 			dx = dabs * dcos;
 			dy = dabs * dsin;
 		}
+
+		// prevent breaking engine/client with bad values
+		if( IS_NAN( dx ) || IS_NAN( dy ) )
+			return;
 
 		// accumulate
 		touch.yaw -= dx * touch_yaw->value, touch.pitch += dy * touch_pitch->value;
