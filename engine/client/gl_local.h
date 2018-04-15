@@ -635,6 +635,7 @@ typedef struct
 	qboolean		software;		// OpenGL software emulation
 	qboolean		initialized;	// OpenGL subsystem started
 	qboolean		extended;
+	int		safe;
 } glwstate_t;
 
 extern glconfig_t		glConfig;
