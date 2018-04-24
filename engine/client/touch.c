@@ -32,7 +32,7 @@ typedef enum
 	touch_move,    // like a joystick stick
 	touch_joy,     // like a joystick stick, centered
 	touch_dpad,    // only two directions
-	touch_look     // like a touchpad
+	touch_look,     // like a touchpad
 } touchButtonType;
 
 typedef enum
@@ -55,8 +55,10 @@ typedef struct touch_button_s
 {
 	// Touch button type: tap, stick or slider
 	touchButtonType type;
+
 	// Field of button in pixels
 	float x1, y1, x2, y2;
+
 	// Button texture
 	int texture;
 	rgba_t color;
@@ -69,6 +71,7 @@ typedef struct touch_button_s
 	float fadespeed;
 	float fadeend;
 	float aspect;
+
 	// Double-linked list
 	struct touch_button_s *next;
 	struct touch_button_s *prev;
@@ -96,7 +99,7 @@ typedef struct touchbuttonlist_s
 struct touch_s
 {
 	qboolean initialized;
-	touchbuttonlist_t list_user;
+	touchbuttonlist_t list_user, list_edit;
 	byte *mempool;
 	touchState state;
 	int look_finger;
@@ -108,9 +111,11 @@ struct touch_s
 	float side;
 	float yaw;
 	float pitch;
+
 	// editing
 	touch_button_t *edit;
 	touch_button_t *selection;
+	touch_button_t *hidebutton;
 	int resize_finger;
 	qboolean showbuttons;
 	qboolean clientonly;
@@ -118,10 +123,6 @@ struct touch_s
 	int swidth;
 	qboolean precision;
 	// textures
-	int showtexture;
-	int hidetexture;
-	int resettexture;
-	int closetexture;
 	int joytexture; // touch indicator
 	qboolean configchanged;
 } touch;
@@ -218,13 +219,17 @@ void Touch_WriteConfig( void )
 		FS_Printf( f, "touch_setclientonly 0\n" );
 		FS_Printf( f, "\n// touch buttons\n" );
 		FS_Printf( f, "touch_removeall\n" );
+
 		for( button = touch.list_user.first; button; button = button->next )
 		{
 			int flags = button->flags;
+
 			if( flags & TOUCH_FL_CLIENT )
 				continue; //skip temporary buttons
+
 			if( flags & TOUCH_FL_DEF_SHOW )
 				flags &= ~TOUCH_FL_HIDE;
+
 			if( flags & TOUCH_FL_DEF_HIDE )
 				flags |= TOUCH_FL_HIDE;
 
@@ -235,6 +240,7 @@ void Touch_WriteConfig( void )
 		}
 
 		FS_Close( f );
+
 		FS_Delete( oldconfigfile );
 		FS_Rename( touch_config_file->string, oldconfigfile );
 		FS_Delete( touch_config_file->string );
@@ -475,16 +481,21 @@ void IN_TouchRemoveButton_f( void )
 	Touch_RemoveButton( Cmd_Argv( 1 ) );
 }
 
+void Touch_ClearList( touchbuttonlist_t *list )
+{
+	while( list->first )
+	{
+		touch_button_t *remove = list->first;
+		list->first = list->first->next;
+		Mem_Free ( remove );
+	}
+	list->first= list->last = NULL;
+}
+
 void Touch_RemoveAll_f( void )
 {
 	IN_TouchEditClear();
-	while( touch.list_user.first )
-	{
-		touch_button_t *remove = touch.list_user.first;
-		touch.list_user.first = touch.list_user.first->next;
-		Mem_Free ( remove );
-	}
-	touch.list_user.last = NULL;
+	Touch_ClearList( &touch.list_user );
 }
 
 void Touch_SetColor( touchbuttonlist_t *list, const char *name, byte *color )
@@ -541,6 +552,13 @@ void Touch_HideButtons( const char *name, qboolean hide )
 	}
 	
 }
+
+void Touch_ToggleSelection_f( void )
+{
+	if( touch.selection )
+		touch.selection->flags ^= TOUCH_FL_HIDE;
+}
+
 void Touch_Hide_f( void )
 {
 	Touch_HideButtons( Cmd_Argv( 1 ), true );
@@ -620,6 +638,14 @@ void Touch_SetCommand_f( void )
 }
 void Touch_ReloadConfig_f( void )
 {
+	touch.state = state_none;
+	if( touch.edit )
+		touch.edit->finger = -1;
+	if( touch.selection )
+		touch.selection->finger = -1;
+	touch.edit = touch.selection = NULL;
+	touch.resize_finger = touch.move_finger = touch.look_finger = -1;
+
 	Cbuf_AddText( va("exec %s\n", touch_config_file->string ) );
 }
 
@@ -800,6 +826,13 @@ void Touch_DisableEdit_f( void )
 		touch.selection->finger = -1;
 	touch.edit = touch.selection = NULL;
 	touch.resize_finger = touch.move_finger = touch.look_finger = -1;
+
+	if( touch_in_menu->integer )
+	{
+		Cvar_Set( "touch_in_menu", "0" );
+	}
+	else  if( cls.key_dest ==  key_game )
+		Touch_WriteConfig();
 }
 
 void Touch_DeleteProfile_f( void )
@@ -814,6 +847,22 @@ void Touch_DeleteProfile_f( void )
 	FS_Delete( va( "touch_profiles/%s.cfg", Cmd_Argv( 1 )));
 }
 
+void Touch_InitEditor( void )
+{
+	float x = 0.1 * (SCR_H/SCR_W);
+	float y = 0.05;
+
+	Touch_ClearList( &touch.list_edit );
+
+	Touch_AddButton( &touch.list_edit, "close", "touch_default/edit_close.tga", "touch_disableedit", 0, y, x, y + 0.1, (byte*)"\xff\xff\xff\xff" )->flags |= TOUCH_FL_NOEDIT;
+	Touch_AddButton( &touch.list_edit, "close", "#Close and save", "", x, y, x + 0.2, y + 0.1, (byte*)"\xff\xff\xff\xff" )->flags |= TOUCH_FL_NOEDIT;
+	y += 0.2;
+	Touch_AddButton( &touch.list_edit, "cancel", "touch_default/edit_reset.tga", "touch_reloadconfig", 0, y, x, y + 0.1, (byte*)"\xff\xff\xff\xff" )->flags |= TOUCH_FL_NOEDIT;
+	Touch_AddButton( &touch.list_edit, "close", "#Cancel and reset", "", x, y, x + 0.2, y + 0.1, (byte*)"\xff\xff\xff\xff" )->flags |= TOUCH_FL_NOEDIT;
+	y += 0.2;
+	touch.hidebutton = Touch_AddButton( &touch.list_edit, "showhide", "touch_default/edit_hide.tga", "touch_toggleselection", 0, y, x, y + 0.1, (byte*)"\xff\xff\xff\xff" );
+	touch.hidebutton->flags |= TOUCH_FL_HIDE | TOUCH_FL_NOEDIT;
+}
 
 void Touch_Init( void )
 {
@@ -876,7 +925,8 @@ void Touch_Init( void )
 	Cmd_AddCommand( "touch_writeconfig", Touch_WriteConfig, "save current config" );
 	Cmd_AddCommand( "touch_deleteprofile", Touch_DeleteProfile_f, "delete profile by name" );
 	Cmd_AddCommand( "touch_generate_code", Touch_GenetateCode_f, "create code sample for mobility API" );
-	Cmd_AddCommand( "touch_fade", Touch_Fade_f, "create code sample for mobility API" );
+	Cmd_AddCommand( "touch_fade", Touch_Fade_f, "start fade animation for selected buttons" );
+	Cmd_AddCommand( "touch_toggleselection", Touch_ToggleSelection_f, "toggle vidibility on selected button in editor" );
 
 	// not saved, just runtime state for scripting
 	touch_in_menu = Cvar_Get( "touch_in_menu", "0", 0, "draw touch in menu (for internal use only)" );
@@ -923,10 +973,8 @@ void Touch_InitConfig( void )
 	if( FS_FileExists( touch_config_file->string, true ) )
 		Cbuf_AddText( va( "exec \"%s\"\n", touch_config_file->string ) );
 	else Touch_LoadDefaults_f( );
-	touch.closetexture = GL_LoadTexture( "touch_default/edit_close.tga", NULL, 0, TF_NOPICMIP, NULL );
-	touch.hidetexture = GL_LoadTexture( "touch_default/edit_hide.tga", NULL, 0, TF_NOPICMIP, NULL );
-	touch.showtexture = GL_LoadTexture( "touch_default/edit_show.tga", NULL, 0, TF_NOPICMIP, NULL );
-	touch.resettexture = GL_LoadTexture( "touch_default/edit_reset.tga", NULL, 0, TF_NOPICMIP, NULL );
+
+	Touch_InitEditor();
 	touch.joytexture = GL_LoadTexture( touch_joy_texture->string, NULL, 0, TF_NOPICMIP, NULL );
 	touch.configchanged = false;
 }
@@ -1151,7 +1199,7 @@ void Touch_DrawButtons( touchbuttonlist_t *list )
 				pglColor4ub( 255, 255, 255, 255 );
 			}
 		}
-		if( touch.state >= state_edit )
+		if( touch.state >= state_edit && !( button->flags & TOUCH_FL_NOEDIT )  )
 		{
 			rgba_t color;
 			if( !( button->flags & TOUCH_FL_HIDE ) )
@@ -1204,7 +1252,9 @@ void Touch_Draw( void )
 	if( touch.state >= state_edit )
 	{
 		rgba_t color;
+
 		MakeRGBA( color, 255, 255, 255, 255 );
+
 		if( touch.edit )
 		{
 			float	x1 = touch.edit->x1,
@@ -1214,24 +1264,19 @@ void Touch_Draw( void )
 			IN_TouchCheckCoords( &x1, &y1, &x2, &y2 );
 			Touch_DrawTexture( x1, y1, x2, y2, cls.fillImage, 0, 255, 0, 32 );
 		}
+
 		Touch_DrawTexture( 0, 0, GRID_X, GRID_Y, cls.fillImage, 255, 255, 255, 64 );
+
+
+		if( touch.showbuttons )
+			Touch_DrawButtons( &touch.list_edit );
+
+		/// TODO: move to mainui
 		if( touch.selection )
 		{
 			button = touch.selection;
 			Touch_DrawTexture( B(x1), B(y1), B(x2), B(y2), cls.fillImage, 255, 0, 0, 64 );
-			if( touch.showbuttons )
-			{
-				if( button->flags & TOUCH_FL_HIDE )
-				{
-					Touch_DrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, touch.showtexture, 255, 255, 255, 255 );
-					Touch_DrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Show", color, 1.5 );
-				}
-				else
-				{
-					Touch_DrawTexture( 0, GRID_Y * 8, GRID_X * 2, GRID_Y * 10, touch.hidetexture, 255, 255, 255, 255 );
-					Touch_DrawText( GRID_X * 2.5, GRID_Y * 8.5, 0, 0, "Hide", color, 1.5 );
-				}
-			}
+
 			Con_DrawString( 0, TO_SCRN_Y(GRID_Y * 11), "Selection:", color );
 			Con_DrawString( Con_DrawString( 0, TO_SCRN_Y(GRID_Y*12), "Name: ", color ),
 											   TO_SCRN_Y(GRID_Y*12), B(name), color );
@@ -1240,19 +1285,10 @@ void Touch_Draw( void )
 			Con_DrawString( Con_DrawString( 0, TO_SCRN_Y(GRID_Y*14), "Command: ", color ),
 											   TO_SCRN_Y(GRID_Y*14), B(command), color );
 		}
-		if( touch.showbuttons )
-		{
-			// close
-			Touch_DrawTexture( 0, GRID_Y * 2, GRID_X * 2, GRID_Y * 4, touch.closetexture, 255, 255, 255, 255 );
-			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 2.5 ), "Close", color );
-			Touch_DrawText( GRID_X * 2.5, GRID_Y * 2.5, 0, 0, "Close", color, 1.5 );
-			// reset
-			Touch_DrawTexture( 0, GRID_Y * 5, GRID_X * 2, GRID_Y * 7, touch.resettexture, 255, 255, 255, 255 );
-			//Con_DrawString( TO_SCRN_X( GRID_X * 2.5 ), TO_SCRN_Y( GRID_Y * 5.5 ), "Reset", color );
-			Touch_DrawText( GRID_X * 2.5, GRID_Y * 5.5, 0, 0, "Reset", color, 1.5 );
-		}
 	}
+
 	pglColor4ub( 255, 255, 255, 255 );
+
 	if( ( touch.move_finger != -1 ) && touch.move && touch_move_indicator->value )
 	{
 		float width;
@@ -1288,13 +1324,17 @@ void Touch_Draw( void )
 // clear move and selection state
 void IN_TouchEditClear( void )
 {
-	// Allow keep move/look fingers when doing touch_removeall
+	// allow keep move/look fingers when doing touch_removeall
 	//touch.move_finger = touch.look_finger = -1;
+
 	if( touch.state < state_edit )
 		return;
+
 	touch.state = state_edit;
+
 	if( touch.edit )
 		touch.edit->finger = -1;
+
 	touch.resize_finger = -1;
 	touch.edit = NULL;
 	touch.selection = NULL;
@@ -1310,7 +1350,18 @@ static void Touch_EditMove( touchEventType type, int fingerID, float x, float y,
 			IN_TouchCheckCoords( &B(x1), &B(y1), &B(x2), &B(y2) );
 			IN_TouchEditClear();
 			if( button->type == touch_command )
+			{
 				touch.selection = button;
+
+				// update "hide" editor button
+				touch.hidebutton->texture = -1;
+				touch.hidebutton->flags &= ~TOUCH_FL_HIDE;
+
+				if( button->flags & TOUCH_FL_HIDE )
+					Q_strcpy( touch.hidebutton->texturefile, "touch_default/edit_show.tga" );
+				else
+					Q_strcpy( touch.hidebutton->texturefile, "touch_default/edit_hide.tga" );
+			}
 		}
 		if( type == event_motion ) // shutdown button move
 		{
@@ -1423,6 +1474,7 @@ static void Touch_Motion( touchEventType type, int fingerID, float x, float y, f
 static qboolean Touch_ButtonPress( touchbuttonlist_t *list, touchEventType type, int fingerID, float x, float y, float dx, float dy )
 {
 	touch_button_t *button;
+	qboolean result = false;
 
 	// run from end(front) to start(back)
 	for( button = list->last; button; button = button->prev )
@@ -1453,6 +1505,8 @@ static qboolean Touch_ButtonPress( touchbuttonlist_t *list, touchEventType type,
 					// increase precision
 					if( B(flags) & TOUCH_FL_PRECISION )
 						touch.precision = true;
+
+					result = true;
 				}
 
 				// initialize motion when player touched motion zone
@@ -1465,6 +1519,8 @@ static qboolean Touch_ButtonPress( touchbuttonlist_t *list, touchEventType type,
 						button->finger = touch.move_finger;
 						continue;
 					}
+
+					result = true;
 
 					if( touch.look_finger == fingerID )
 					{
@@ -1525,6 +1581,8 @@ static qboolean Touch_ButtonPress( touchbuttonlist_t *list, touchEventType type,
 						continue;
 					}
 
+					result = true;
+
 					if( touch.move_finger == fingerID )
 					{
 						touch_button_t *newbutton;
@@ -1569,6 +1627,8 @@ static qboolean Touch_ButtonPress( touchbuttonlist_t *list, touchEventType type,
 					// disable precision mode
 					if( B(flags) & TOUCH_FL_PRECISION )
 						touch.precision = false;
+
+					result = true;
 				}
 
 				// release motion buttons
@@ -1588,7 +1648,7 @@ static qboolean Touch_ButtonPress( touchbuttonlist_t *list, touchEventType type,
 		}
 	}
 
-	return false;
+	return result;
 }
 
 static qboolean Touch_ButtonEdit( touchEventType type, int fingerID, float x, float y, float dx, float dy )
@@ -1603,30 +1663,9 @@ static qboolean Touch_ButtonEdit( touchEventType type, int fingerID, float x, fl
 			touch.showbuttons ^= true;
 			return true;
 		}
-		if( touch.showbuttons && ( x < GRID_X * 2 ) )
-		{
-			if( ( y > GRID_Y * 2 ) && ( y < GRID_Y * 4 )  ) // close button
-			{
-				Touch_DisableEdit_f();
-				if( touch_in_menu->integer )
-				{
-					Cvar_Set( "touch_in_menu", "0" );
-				}
-				else
-					Touch_WriteConfig();
-				return true;
-			}
-			if( ( y > GRID_Y * 5 ) && ( y < GRID_Y * 7 ) ) // reset button
-			{
-				Touch_ReloadConfig_f();
-				return true;
-			}
-			if( ( y > GRID_Y * 8 ) && ( y < GRID_Y * 10 ) && touch.selection ) // hide button
-			{
-				touch.selection->flags ^= TOUCH_FL_HIDE;
-				return true;
-			}
-		}
+
+		if( Touch_ButtonPress( &touch.list_edit, type, fingerID, x, y, dx, dy ) )
+			return true;
 	}
 
 	// run from end(front) to start(back)
@@ -1647,7 +1686,8 @@ static qboolean Touch_ButtonEdit( touchEventType type, int fingerID, float x, fl
 
 				touch.edit = button;
 				touch.selection = NULL;
-				// Make button last to bring it up
+
+				// make button last to bring it up
 				if( ( button->next ) && ( button->type == touch_command ) )
 				{
 					if( button->prev )
@@ -1671,15 +1711,16 @@ static qboolean Touch_ButtonEdit( touchEventType type, int fingerID, float x, fl
 	}
 
 	if( type == event_down )
+	{
 		touch.selection = NULL;
+		touch.hidebutton->flags |= TOUCH_FL_HIDE;
+	}
 
 	return false;
 }
 
 static int Touch_ControlsEvent( touchEventType type, int fingerID, float x, float y, float dx, float dy )
 {
-	touch_button_t *button;
-
 	if( touch.state == state_edit_move )
 	{
 		Touch_EditMove( type, fingerID, x, y, dx, dy );

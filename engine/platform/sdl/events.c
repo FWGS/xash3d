@@ -256,7 +256,7 @@ static void SDLash_EventFilter( SDL_Event *event )
 						   event->motion.y/scr_height->value,
 						   event->motion.xrel/scr_width->value,
 						   event->motion.yrel/scr_height->value );
-		SDL_ShowCursor( true );
+
 #endif
 		break;
 
@@ -266,6 +266,9 @@ static void SDLash_EventFilter( SDL_Event *event )
 		IN_TouchEvent( event_up, 0,
 					   event->button.x/scr_width->value,
 					   event->button.y/scr_height->value, 0, 0);
+		SDL_SetRelativeMouseMode( SDL_FALSE );
+		SDL_ShowCursor( true );
+		IN_DeactivateMouse();
 #else
 		SDLash_MouseEvent( event->button );
 #endif
@@ -276,6 +279,9 @@ static void SDLash_EventFilter( SDL_Event *event )
 		IN_TouchEvent( event_down, 0,
 					   event->button.x/scr_width->value,
 					   event->button.y/scr_height->value, 0, 0);
+		SDL_SetRelativeMouseMode( SDL_FALSE );
+		SDL_ShowCursor( true );
+		IN_DeactivateMouse();
 #else
 		SDLash_MouseEvent( event->button );
 #endif
