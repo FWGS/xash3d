@@ -2336,7 +2336,7 @@ void CL_Init( void )
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
-	IN_TouchInit();
+	Touch_Init();
 
 	{
 		char clientlib[256];
@@ -2382,7 +2382,7 @@ void CL_Shutdown( void )
 		Host_WriteOpenGLConfig ();
 		Host_WriteVideoConfig ();
 	}
-	IN_TouchShutdown();
+	Touch_Shutdown();
 	CL_CloseDemoHeader();
 	IN_Shutdown ();
 	Mobile_Shutdown();

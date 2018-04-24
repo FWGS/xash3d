@@ -1375,7 +1375,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	if( !host.stuffcmdsrun )
 		Cbuf_AddText( "stuffcmds\n" );
 
-	IN_TouchInitConfig();
+	Touch_InitConfig();
 	SCR_CheckStartupVids();	// must be last
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
@@ -1418,7 +1418,7 @@ void EXPORT Host_Shutdown( void )
 			// restore all latched cheat cvars
 			Cvar_SetCheatState( true );
 			Host_WriteConfig();
-			IN_TouchWriteConfig();
+			Touch_WriteConfig();
 			host.skip_configs = false;
 		}
 #endif

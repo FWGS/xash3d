@@ -413,7 +413,7 @@ void V_PostRender( void )
 
 	if( draw_2d )
 	{
-		IN_TouchDraw();
+		Touch_Draw();
 		SCR_RSpeeds();
 		SCR_NetSpeeds();
 		SCR_DrawFPS();
