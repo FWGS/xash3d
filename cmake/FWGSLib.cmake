@@ -282,3 +282,35 @@ macro(fwgs_fix_default_msvc_settings)
 		endforeach()
 	endif()
 endmacro()
+
+# /*
+# ==============
+# xash_link_sdl2
+#
+# Download and link SDL2, if supported
+# ==============
+# */
+macro(xash_link_sdl2 tgt)
+        if(WIN32)
+                set(SDL2_VER "2.0.7")
+                set(SDL2_DEVELPKG "VC.zip")
+                set(SDL2_SUBDIR "SDL2-${SDL2_VER}")
+                set(SDL2_ARCHIVE "SDL2.zip")
+                if(MINGW)
+                        if(XASH_64BIT)
+                                set(SDL2_SUBDIR "SDL2-${SDL2_VER}/x86_64-w64-mingw32")
+                        else()
+                                set(SDL2_SUBDIR "SDL2-${SDL2_VER}/i686-w64-mingw32")
+                        endif()
+                        set(SDL2_DEVELPKG "mingw.tar.gz")
+                        set(SDL2_ARCHIVE "SDL2.tar.gz")
+                endif()
+
+                set(SDL2_DOWNLOAD_URL "http://libsdl.org/release/SDL2-devel-${SDL2_VER}-${SDL2_DEVELPKG}")
+
+                fwgs_library_dependency(${tgt} SDL2 ${SDL2_DOWNLOAD_URL} ${SDL2_ARCHIVE} SDL2_PATH ${SDL2_SUBDIR})
+        else()
+                # SDL2 doesn't provide dev packages for nonWin32 targets
+                fwgs_library_dependency(${tgt} SDL2)
+        endif()
+endmacro()
