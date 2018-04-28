@@ -218,7 +218,7 @@ int CL_GetMaxClients()
 	return 0;
 }
 
-void IN_TouchInitConfig()
+void Touch_InitConfig()
 {
 
 }
