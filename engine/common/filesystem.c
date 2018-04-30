@@ -95,12 +95,6 @@ static int FS_SysFileTime( const char *filename );
 static signed char W_TypeFromExt( const char *lumpname );
 static const char *W_ExtFromType( signed char lumptype );
 
-#ifdef _WIN32
-#define PATH_SPLITTER "\\"
-#else
-#define PATH_SPLITTER "/"
-#endif
-
 /*
 =============================================================================
 
