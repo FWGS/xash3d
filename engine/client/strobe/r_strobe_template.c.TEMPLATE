@@ -26,10 +26,10 @@ See the GNU General Public License for more details.
 #include "client.h"
 #include "gl_local.h"
 
-#ifdef this
-#undef this
+#ifdef _this
+#undef _this
 #endif
-#define this STROBE_IMPL_THIS(STROBE_TEMPLATE)
+#define _this STROBE_IMPL_THIS(STROBE_TEMPLATE)
 
 struct STROBE_IMPL_STRUCT(STROBE_TEMPLATE) *STROBE_TEMPLATE = NULL;
 
@@ -40,17 +40,17 @@ struct STROBE_IMPL_PRIVATE_STRUCT(STROBE_TEMPLATE)
 
 static void main( STROBE_IMPL_THIS_PARAM( STROBE_TEMPLATE ) )
 {
-	this->base.protected->frameInfo = ( p_positive | f_normal );
-	this->base.ProcessFrame( &this->base );
+	_this->base.protected->frameInfo = ( p_positive | f_normal );
+	_this->base.ProcessFrame( &_this->base );
 }
 
 static void debugHandler( STROBE_IMPL_THIS_PARAM( STROBE_TEMPLATE ) )
 {
 	char debugstr[2048] = {0};
-	this->base.Helpers.GenerateDebugStatistics( &this->base, debugstr, 2048 );
+	_this->base.Helpers.GenerateDebugStatistics( &_this->base, debugstr, 2048 );
 }
 
-void STROBE_IMPL_EXPORTEDFUNC_constructor(STROBE_TEMPLATE)( const void * const * const STROBE_TEMPLATE )
+void STROBE_IMPL_EXPORTEDFUNC_constructor(STROBE_TEMPLATE)( void **STROBE_TEMPLATE )
 {
 	struct STROBE_IMPL_STRUCT(STROBE_TEMPLATE) **instance = *(struct STROBE_IMPL_STRUCT(STROBE_TEMPLATE) ***)&STROBE_TEMPLATE;
 
@@ -62,7 +62,7 @@ void STROBE_IMPL_EXPORTEDFUNC_constructor(STROBE_TEMPLATE)( const void * const *
 	StrobeAPI.Constructor( &( *instance )->base );
 }
 
-void STROBE_IMPL_EXPORTEDFUNC_destructor(STROBE_TEMPLATE)( const void * const * const STROBE_TEMPLATE )
+void STROBE_IMPL_EXPORTEDFUNC_destructor(STROBE_TEMPLATE)( void **STROBE_TEMPLATE )
 {
 	struct STROBE_IMPL_STRUCT(STROBE_TEMPLATE) **instance = *(struct STROBE_IMPL_STRUCT(STROBE_TEMPLATE) ***)&STROBE_TEMPLATE;
 
@@ -79,7 +79,7 @@ void STROBE_IMPL_EXPORTEDFUNC_destructor(STROBE_TEMPLATE)( const void * const * 
 	}
 }
 
-void STROBE_IMPL_EXPORTEDFUNC_reinit(STROBE_TEMPLATE)( const void * const * const STROBE_TEMPLATE )
+void STROBE_IMPL_EXPORTEDFUNC_reinit(STROBE_TEMPLATE)( void **STROBE_TEMPLATE )
 {
 	if ( !( *STROBE_TEMPLATE ) )
 	{
@@ -88,7 +88,7 @@ void STROBE_IMPL_EXPORTEDFUNC_reinit(STROBE_TEMPLATE)( const void * const * cons
 	STROBE_IMPL_EXPORTEDFUNC_constructor(STROBE_TEMPLATE)( STROBE_TEMPLATE );
 }
 
-void STROBE_IMPL_EXPORTEDFUNC_main(STROBE_TEMPLATE)( const void * const * const STROBE_TEMPLATE )
+void STROBE_IMPL_EXPORTEDFUNC_main(STROBE_TEMPLATE)( void **STROBE_TEMPLATE )
 {
 	struct STROBE_IMPL_STRUCT(STROBE_TEMPLATE) **instance = *(struct STROBE_IMPL_STRUCT(STROBE_TEMPLATE) ***)&STROBE_TEMPLATE;
 	if ( *instance )
@@ -98,6 +98,6 @@ void STROBE_IMPL_EXPORTEDFUNC_main(STROBE_TEMPLATE)( const void * const * const 
 }
 
 
-#undef this
+#undef _this
 
 #endif

@@ -25,10 +25,10 @@ See the GNU General Public License for more details.
 #include "gl_local.h"
 #include "r_strobe_api_protected_.h"
 
-#ifdef this
-#undef this
+#ifdef _this
+#undef _this
 #endif
-#define this STROBE_IMPL_THIS( STROBE_CORE )
+#define _this STROBE_IMPL_THIS( STROBE_CORE )
 
 struct STROBE_IMPL_STRUCT( STROBE_CORE ) *STROBE_CORE = NULL;
 
@@ -65,10 +65,10 @@ TODO:
 static void R_Strobe( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 {
 	double delta, delta2;
-	double currentTime                = Sys_DoubleTime( );
-	delta2                            = currentTime - this->private->recentTime2;
-	this->private->recentTime2        = currentTime;
-	this->base.protected->elapsedTime = currentTime - this->private->initialTime;
+	double currentTime          = Sys_DoubleTime( );
+	delta2                      = currentTime - _this->private->recentTime2;
+	_this->private->recentTime2 = currentTime;
+	_this->base.protected->elapsedTime = currentTime - _this->base.protected->initialTime;
 
 	if ( CL_IsInMenu( ) )
 	{
@@ -76,143 +76,143 @@ static void R_Strobe( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 		return;
 	}
 
-	if ( this->base.protected->cdTimer >= 0.0 && delta2 > 0.0 )
-		this->base.protected->cdTimer += delta2;
-	if ( this->base.protected->fCounter - this->private->fCounterSnapshot == 1 )
+	if ( _this->base.protected->cdTimer >= 0.0 && delta2 > 0.0 )
+		_this->base.protected->cdTimer += delta2;
+	if ( _this->base.protected->fCounter - _this->private->fCounterSnapshot == 1 )
 	{
-		this->private->delta[this->base.protected->fCounter % ARRAYSIZE( this->private->delta )] = delta2;
-		this->base.protected->deviation                                                          = this->base.Helpers.StandardDeviation( this->private->delta, ARRAYSIZE( this->private->delta ) ) * 1000;
+		_this->private->delta[_this->base.protected->fCounter % ARRAYSIZE( _this->private->delta )] = delta2;
+		_this->base.protected->deviation                                                            = _this->base.Helpers.StandardDeviation( _this->private->delta, ARRAYSIZE( _this->private->delta ) ) * 1000;
 	}
-	this->private->fCounterSnapshot = this->base.protected->fCounter;
+	_this->private->fCounterSnapshot = _this->base.protected->fCounter;
 
 	if ( StrobeAPI.r_strobe_cooldown->integer > 0 )
 	{
-		if ( ( this->base.protected->cdTimer > (double)abs( StrobeAPI.r_strobe_cooldown->integer ) ) && this->base.protected->cdTriggered == true )
+		if ( ( _this->base.protected->cdTimer > (double)abs( StrobeAPI.r_strobe_cooldown->integer ) ) && _this->base.protected->cdTriggered == true )
 		{
-			this->base.protected->cdTriggered = false;
-			this->base.protected->cdTimer     = -1.0;
+			_this->base.protected->cdTriggered = false;
+			_this->base.protected->cdTimer     = -1.0;
 		}
 
-		if ( this->base.protected->fCounter > ARRAYSIZE( this->private->delta ) )
+		if ( _this->base.protected->fCounter > ARRAYSIZE( _this->private->delta ) )
 		{
-			if ( this->base.protected->deviation > DEVIATION_LIMIT )
+			if ( _this->base.protected->deviation > STROBE_CORE_DEVIATION_LIMIT )
 			{
-				this->base.protected->cdTriggered = true;
-				this->base.protected->cdTimer     = 0.0;
+				_this->base.protected->cdTriggered = true;
+				_this->base.protected->cdTimer     = 0.0;
 			}
 		}
 	}
 	else
 	{
-		this->base.protected->cdTriggered = false;
+		_this->base.protected->cdTriggered = false;
 	}
 
-	if ( ( ( this->private->strobeInterval != StrobeAPI.r_strobe->integer ) && ( this->private->strobeInterval ) ) ||
+	if ( ( ( _this->private->strobeInterval != StrobeAPI.r_strobe->integer ) && ( _this->private->strobeInterval ) ) ||
 	     /*((swapInterval != r_strobe_swapinterval->integer) && (swapInterval != 0)) || */
-	     this->base.protected->fCounter == UINT_MAX )
+	     _this->base.protected->fCounter == UINT_MAX )
 	{
 		STROBE_IMPL_EXPORTEDFUNC_reinit( STROBE_CORE )( *(void ***)&_STROBE_IMPL_THIS );
-		R_Strobe( &this );
+		R_Strobe( &_this );
 	}
 
-	this->private->strobeInterval = StrobeAPI.r_strobe->integer;
-	this->private->swapInterval   = StrobeAPI.r_strobe_swapinterval->integer;
+	_this->private->strobeInterval = StrobeAPI.r_strobe->integer;
+	_this->private->swapInterval   = StrobeAPI.r_strobe_swapinterval->integer;
 
-	if ( ( this->private->strobeInterval == 0 ) ||
-	     ( ( gl_swapInterval->integer == 0 ) && ( this->private->strobeInterval ) ) )
+	if ( ( _this->private->strobeInterval == 0 ) ||
+	     ( ( gl_swapInterval->integer == 0 ) && ( _this->private->strobeInterval ) ) )
 	{
 		if ( !gl_swapInterval->integer )
 			MsgDev( D_WARN, "Strobing requires V-SYNC not being turned off! (gl_swapInterval != 0) \n" );
 
-		if ( this->private->strobeInterval ) // If v-sync is off, turn off strobing
+		if ( _this->private->strobeInterval ) // If v-sync is off, turn off strobing
 		{
 			Cvar_Set( "r_strobe", "0" );
 		}
-		this->base.protected->fCounter = 0;
+		_this->base.protected->fCounter = 0;
 
 		R_Set2DMode( false );
 		return;
 	}
 
-	if ( ( this->base.protected->fCounter % 2 ) == 0 )
+	if ( ( _this->base.protected->fCounter % 2 ) == 0 )
 	{
-		++this->base.protected->pCounter;
-		this->base.protected->frameInfo |= PHASE_POSITIVE;
+		++_this->base.protected->pCounter;
+		_this->base.protected->frameInfo |= PHASE_POSITIVE;
 	}
 	else
 	{
-		++this->base.protected->nCounter;
-		this->base.protected->frameInfo &= ~PHASE_POSITIVE;
+		++_this->base.protected->nCounter;
+		_this->base.protected->frameInfo &= ~PHASE_POSITIVE;
 	}
 
-	if ( this->private->swapInterval < 0 )
-		this->private->swapInterval = abs( this->private->swapInterval );
+	if ( _this->private->swapInterval < 0 )
+		_this->private->swapInterval = abs( _this->private->swapInterval );
 
-	if ( ( this->private->swapInterval ) && ( this->private->strobeInterval % 2 ) ) // Swapping not enabled for even intervals as it is neither necessary nor works as intended
+	if ( ( _this->private->swapInterval ) && ( _this->private->strobeInterval % 2 ) ) // Swapping not enabled for even intervals as it is neither necessary nor works as intended
 	{
-		delta = currentTime - this->private->recentTime;                                                                       // New Currenttime for _delta ?
-		if ( ( delta >= (double)( this->private->swapInterval ) ) && ( delta < (double)( 2 * this->private->swapInterval ) ) ) // Basic timer
+		delta = currentTime - _this->private->recentTime;                                                                                      // New Currenttime for _delta ?
+		if ( ( delta >= (double)( _this->private->swapInterval ) ) && ( delta < (double)( 2 * _this->private->swapInterval ) ) ) // Basic timer
 		{
-			this->base.protected->frameInfo |= PHASE_INVERTED;
+			_this->base.protected->frameInfo |= PHASE_INVERTED;
 		}
-		else if ( delta < (double)( this->private->swapInterval ) )
+		else if ( delta < (double)( _this->private->swapInterval ) )
 		{
-			this->base.protected->frameInfo &= ~PHASE_INVERTED;
+			_this->base.protected->frameInfo &= ~PHASE_INVERTED;
 		}
 		else //if (delta >= (double)(2 * swapInterval))
 		{
-			this->private->recentTime = currentTime;
+			_this->private->recentTime = currentTime;
 		}
 	}
 
-	switch ( this->base.protected->frameInfo & ( PHASE_POSITIVE | PHASE_INVERTED ) )
+	switch ( _this->base.protected->frameInfo & ( PHASE_POSITIVE | PHASE_INVERTED ) )
 	{
 	case ( PHASE_POSITIVE | PHASE_INVERTED ):
-		if ( ( abs( this->private->strobeInterval ) % 2 ) == 0 )
-			this->base.protected->frameInfo = ( ( ( this->base.protected->pCounter - 1 ) % ( abs( this->private->strobeInterval ) + 1 ) ) == ( abs( this->private->strobeInterval ) / 2 ) ) ? this->base.protected->frameInfo | FRAME_RENDER : this->base.protected->frameInfo & ~FRAME_RENDER; //even
+		if ( ( abs( _this->private->strobeInterval ) % 2 ) == 0 )
+			_this->base.protected->frameInfo = ( ( ( _this->base.protected->pCounter - 1 ) % ( abs( _this->private->strobeInterval ) + 1 ) ) == ( abs( _this->private->strobeInterval ) / 2 ) ) ? _this->base.protected->frameInfo | FRAME_RENDER : _this->base.protected->frameInfo & ~FRAME_RENDER; //even
 		else
-			this->base.protected->frameInfo &= ~FRAME_RENDER;
+			_this->base.protected->frameInfo &= ~FRAME_RENDER;
 		break;
 
 	case ( PHASE_POSITIVE & ~PHASE_INVERTED ):
-		if ( abs( this->private->strobeInterval ) % 2 == 0 )
-			this->base.protected->frameInfo = ( ( ( this->base.protected->pCounter - 1 ) % ( abs( this->private->strobeInterval ) + 1 ) ) == 0 ) ? this->base.protected->frameInfo | FRAME_RENDER : this->base.protected->frameInfo & ~FRAME_RENDER; //even
+		if ( abs( _this->private->strobeInterval ) % 2 == 0 )
+			_this->base.protected->frameInfo = ( ( ( _this->base.protected->pCounter - 1 ) % ( abs( _this->private->strobeInterval ) + 1 ) ) == 0 ) ? _this->base.protected->frameInfo | FRAME_RENDER : _this->base.protected->frameInfo & ~FRAME_RENDER; //even
 		else
 		{
-			if ( abs( this->private->strobeInterval ) == 1 )
-				this->base.protected->frameInfo |= FRAME_RENDER;
+			if ( abs( _this->private->strobeInterval ) == 1 )
+				_this->base.protected->frameInfo |= FRAME_RENDER;
 			else
-				this->base.protected->frameInfo = ( ( ( this->base.protected->pCounter - 1 ) % ( ( abs( this->private->strobeInterval ) + 1 ) / 2 ) ) == 0 ) ? this->base.protected->frameInfo | FRAME_RENDER : this->base.protected->frameInfo & ~FRAME_RENDER; //odd
+				_this->base.protected->frameInfo = ( ( ( _this->base.protected->pCounter - 1 ) % ( ( abs( _this->private->strobeInterval ) + 1 ) / 2 ) ) == 0 ) ? _this->base.protected->frameInfo | FRAME_RENDER : _this->base.protected->frameInfo & ~FRAME_RENDER; //odd
 		}
 		break;
 
 	case ( ~PHASE_POSITIVE & PHASE_INVERTED ):
-		if ( abs( this->private->strobeInterval ) % 2 == 0 )
-			this->base.protected->frameInfo = ( ( ( this->base.protected->nCounter - 1 ) % ( abs( this->private->strobeInterval ) + 1 ) ) == 0 ) ? this->base.protected->frameInfo | FRAME_RENDER : this->base.protected->frameInfo & ~FRAME_RENDER; //even
+		if ( abs( _this->private->strobeInterval ) % 2 == 0 )
+			_this->base.protected->frameInfo = ( ( ( _this->base.protected->nCounter - 1 ) % ( abs( _this->private->strobeInterval ) + 1 ) ) == 0 ) ? _this->base.protected->frameInfo | FRAME_RENDER : _this->base.protected->frameInfo & ~FRAME_RENDER; //even
 		else
 		{
-			if ( abs( this->private->strobeInterval ) == 1 )
-				this->base.protected->frameInfo |= FRAME_RENDER;
+			if ( abs( _this->private->strobeInterval ) == 1 )
+				_this->base.protected->frameInfo |= FRAME_RENDER;
 			else
-				this->base.protected->frameInfo = ( ( ( this->base.protected->nCounter - 1 ) % ( ( abs( this->private->strobeInterval ) + 1 ) / 2 ) ) == 0 ) ? this->base.protected->frameInfo | FRAME_RENDER : this->base.protected->frameInfo & ~FRAME_RENDER; //odd
+				_this->base.protected->frameInfo = ( ( ( _this->base.protected->nCounter - 1 ) % ( ( abs( _this->private->strobeInterval ) + 1 ) / 2 ) ) == 0 ) ? _this->base.protected->frameInfo | FRAME_RENDER : _this->base.protected->frameInfo & ~FRAME_RENDER; //odd
 		}
 		break;
 
 	case 0:
-		if ( ( abs( this->private->strobeInterval ) % 2 ) == 0 )
-			this->base.protected->frameInfo = ( ( ( this->base.protected->nCounter - 1 ) % ( abs( this->private->strobeInterval ) + 1 ) ) == ( abs( this->private->strobeInterval ) / 2 ) ) ? this->base.protected->frameInfo | FRAME_RENDER : this->base.protected->frameInfo & ~FRAME_RENDER; //even
+		if ( ( abs( _this->private->strobeInterval ) % 2 ) == 0 )
+			_this->base.protected->frameInfo = ( ( ( _this->base.protected->nCounter - 1 ) % ( abs( _this->private->strobeInterval ) + 1 ) ) == ( abs( _this->private->strobeInterval ) / 2 ) ) ? _this->base.protected->frameInfo | FRAME_RENDER : _this->base.protected->frameInfo & ~FRAME_RENDER; //even
 		else
-			this->base.protected->frameInfo &= ~FRAME_RENDER;
+			_this->base.protected->frameInfo &= ~FRAME_RENDER;
 		break;
 
 	default:
-		this->base.protected->frameInfo = ( PHASE_POSITIVE | FRAME_RENDER );
+		_this->base.protected->frameInfo = ( PHASE_POSITIVE | FRAME_RENDER );
 	}
 
-	if ( this->private->strobeInterval < 0 )
-		this->base.protected->frameInfo ^= FRAME_RENDER;
+	if ( _this->private->strobeInterval < 0 )
+		_this->base.protected->frameInfo ^= FRAME_RENDER;
 
-	this->base.ProcessFrame( &this->base );
+	_this->base.ProcessFrame( &_this->base );
 }
 
 _inline void debugDrawer( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
@@ -241,42 +241,42 @@ _inline void debugDrawer( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 	if ( strobeDebug )
 	{
 		newtime = Sys_DoubleTime( );
-		if ( newtime >= this->private->nexttime )
+		if ( newtime >= _this->private->nexttime )
 		{
-			this->base.Helpers.GenerateDebugStatistics( &this->base, this->private->debugStr, ARRAYSIZE( this->private->debugStr ) );
-			this->private->lasttime = newtime;
-			this->private->nexttime = max( this->private->nexttime + 0.15, this->private->lasttime - 0.15 ); // Make this configurable
+			_this->base.Helpers.GenerateDebugStatistics( &_this->base, _this->private->debugStr, ARRAYSIZE( _this->private->debugStr ) );
+			_this->private->lasttime = newtime;
+			_this->private->nexttime = max( _this->private->nexttime + 0.15, _this->private->lasttime - 0.15 ); // Make this configurable
 		}
 	}
 	else if ( cl_showfps->integer )
 	{
-		Q_snprintf( this->private->debugStr, sizeof( this->private->debugStr ), "%3d eFPS", (int)round( this->base.Helpers.effectiveFPS( &this->base ) ) );
+		Q_snprintf( _this->private->debugStr, sizeof( _this->private->debugStr ), "%3d eFPS", (int)round( _this->base.Helpers.effectiveFPS( &_this->base ) ) );
 	}
 
 	MakeRGBA( color, 255, 255, 255, 255 );
-	Con_DrawStringLen( this->private->debugStr, &fixer, &offsetY );
+	Con_DrawStringLen( _this->private->debugStr, &fixer, &offsetY );
 	if ( strobeDebug )
-		Con_DrawString( scr_width->integer - this->private->offsetX - 50, 4, this->private->debugStr, color );
+		Con_DrawString( scr_width->integer - _this->private->offsetX - 50, 4, _this->private->debugStr, color );
 	else
-		Con_DrawString( scr_width->integer - this->private->offsetX - 2, offsetY + 8, this->private->debugStr, color );
-	if ( abs( fixer - this->private->offsetX ) > 50 || this->private->offsetX == 0 ) // 50 is for 1080p ! Needs to be dynamic !
-		this->private->offsetX = fixer;
+		Con_DrawString( scr_width->integer - _this->private->offsetX - 2, offsetY + 8, _this->private->debugStr, color );
+	if ( abs( fixer - _this->private->offsetX ) > 50 || _this->private->offsetX == 0 ) // 50 is for 1080p ! Needs to be dynamic !
+		_this->private->offsetX = fixer;
 }
 
-void STROBE_IMPL_EXPORTEDFUNC_constructor( STROBE_CORE )( const void *const *const STROBE_CORE )
+void STROBE_IMPL_EXPORTEDFUNC_constructor( STROBE_CORE )( void **STROBE_CORE )
 {
 	struct STROBE_IMPL_STRUCT( STROBE_CORE ) **instance = *(struct STROBE_IMPL_STRUCT( STROBE_CORE ) ***)&STROBE_CORE;
 
-	*instance                                    = (struct STROBE_IMPL_STRUCT( STROBE_CORE ) *)malloc( sizeof( struct STROBE_IMPL_STRUCT( STROBE_CORE ) ) );
-	( *instance )->private                       = (struct STROBE_IMPL_PRIVATE_STRUCT( STROBE_CORE ) *)calloc( 1, sizeof( struct STROBE_IMPL_PRIVATE_STRUCT( STROBE_CORE ) ) );
-	( *instance )->private->initialTime          = Sys_DoubleTime( );
+	*instance                                    = (struct STROBE_IMPL_STRUCT( STROBE_CORE ) *)malloc( sizeof(struct STROBE_IMPL_STRUCT(STROBE_CORE)) );
+	( *instance )->private                       = (struct STROBE_IMPL_PRIVATE_STRUCT( STROBE_CORE ) *)calloc( 1, sizeof(struct STROBE_IMPL_PRIVATE_STRUCT(STROBE_CORE)) );
+	( *instance )->private->initialTime =		Sys_DoubleTime();
 	( *instance )->STROBE_IMPL_FUNC_MAIN         = R_Strobe;
 	( *instance )->STROBE_IMPL_FUNC_DEBUGHANDLER = debugDrawer;
 
 	StrobeAPI.Constructor( &( *instance )->base );
 }
 
-void STROBE_IMPL_EXPORTEDFUNC_destructor( STROBE_CORE )( const void *const *const STROBE_CORE )
+void STROBE_IMPL_EXPORTEDFUNC_destructor( STROBE_CORE )( void **STROBE_CORE )
 {
 	struct STROBE_IMPL_STRUCT( STROBE_CORE ) **instance = *(struct STROBE_IMPL_STRUCT( STROBE_CORE ) ***)&STROBE_CORE;
 
@@ -293,7 +293,7 @@ void STROBE_IMPL_EXPORTEDFUNC_destructor( STROBE_CORE )( const void *const *cons
 	}
 }
 
-void STROBE_IMPL_EXPORTEDFUNC_reinit( STROBE_CORE )( const void *const *const STROBE_CORE )
+void STROBE_IMPL_EXPORTEDFUNC_reinit( STROBE_CORE )( void **STROBE_CORE )
 {
 	if ( !( *STROBE_CORE ) )
 	{
@@ -302,7 +302,7 @@ void STROBE_IMPL_EXPORTEDFUNC_reinit( STROBE_CORE )( const void *const *const ST
 	STROBE_IMPL_EXPORTEDFUNC_constructor( STROBE_CORE )( STROBE_CORE );
 }
 
-void STROBE_IMPL_EXPORTEDFUNC_main( STROBE_CORE )( const void *const *const STROBE_CORE )
+void STROBE_IMPL_EXPORTEDFUNC_main( STROBE_CORE )( void **STROBE_CORE )
 {
 	struct STROBE_IMPL_STRUCT( STROBE_CORE ) **instance = *(struct STROBE_IMPL_STRUCT( STROBE_CORE ) ***)&STROBE_CORE;
 	if ( *instance )
@@ -311,6 +311,6 @@ void STROBE_IMPL_EXPORTEDFUNC_main( STROBE_CORE )( const void *const *const STRO
 	}
 }
 
-#undef this
+#undef _this
 
 #endif

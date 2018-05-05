@@ -28,7 +28,7 @@ typedef enum
 	PHASE_POSITIVE = BIT( 0 ), // Phase: Positive
 	PHASE_INVERTED = BIT( 1 ), // Phase: Inverted
 	FRAME_RENDER   = BIT( 2 )  // Frame: Rendered
-} fstate_e;                    // Frame State
+} fstate_e;                // Frame State
 
 typedef struct StrobeAPI_protected_s
 {
@@ -39,7 +39,7 @@ typedef struct StrobeAPI_protected_s
 	double deviation;     // deviation
 	double cdTimer;       // Cooldown timer
 	qboolean cdTriggered; // Cooldown trigger status
-	fstate_e frameInfo;   // Frame info
+	fstate_e frameInfo; // Frame info
 } StrobeAPI_protected_t;  // Protected members
 
 #endif
