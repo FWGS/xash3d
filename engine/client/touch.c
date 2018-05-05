@@ -937,8 +937,8 @@ void Touch_Init( void )
 	touch_pitch = Cvar_Get( "touch_pitch", "90", 0, "touch pitch sensitivity" );
 	touch_yaw = Cvar_Get( "touch_yaw", "120", 0, "touch yaw sensitivity" );
 	touch_nonlinear_look = Cvar_Get( "touch_nonlinear_look", "0", 0, "enable nonlinear touch look" );
-	touch_pow_factor = Cvar_Get( "touch_pow_factor", "1.0", 0, "set > 1 to enable" );
-	touch_pow_mult = Cvar_Get( "touch_pow_mult", "300.0", 0, "power multiplier, usually 200-1000" );
+	touch_pow_factor = Cvar_Get( "touch_pow_factor", "1.3", 0, "set > 1 to enable" );
+	touch_pow_mult = Cvar_Get( "touch_pow_mult", "400.0", 0, "power multiplier, usually 200-1000" );
 	touch_exp_mult = Cvar_Get( "touch_exp_mult", "0", 0, "exponent multiplier, usually 20-200, 0 to disable" );
 
 	// touch.cfg
