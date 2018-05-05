@@ -2124,7 +2124,7 @@ static pmtrace_t *GAME_EXPORT pfnTraceLine( float *start, float *end, int flags,
 static void GAME_EXPORT pfnPlaySoundByNameAtLocation( char *szSound, float volume, float *origin )
 {
 	int hSound = S_RegisterSound( szSound );
-	S_StartSound( origin, 0, CHAN_AUTO, hSound, volume, ATTN_NORM, PITCH_NORM, 0 );
+	S_StartSound( origin, 0, CHAN_ITEM, hSound, volume, 1.0, PITCH_NORM, 0 );
 }
 
 /*
@@ -2888,7 +2888,8 @@ pfnPlaySoundVoiceByName
 static void GAME_EXPORT pfnPlaySoundVoiceByName( char *filename, float volume, int pitch )
 {
 	int hSound = S_RegisterSound( filename );
-	S_StartSound( NULL, cl.refdef.viewentity, CHAN_AUTO, hSound, volume, ATTN_NORM, pitch, SND_STOP_LOOPING );
+
+	S_StartSound( NULL, cl.refdef.viewentity, CHAN_NETWORKVOICE_END + 1, hSound, volume, 1.0, pitch, SND_STOP_LOOPING );
 }
 
 /*
@@ -2924,7 +2925,7 @@ pfnPlaySoundByNameAtPitch
 static void GAME_EXPORT pfnPlaySoundByNameAtPitch( char *filename, float volume, int pitch )
 {
 	int hSound = S_RegisterSound( filename );
-	S_StartSound( NULL, cl.refdef.viewentity, CHAN_STATIC, hSound, volume, ATTN_NORM, pitch, SND_STOP_LOOPING );
+	S_StartSound( NULL, cl.refdef.viewentity, CHAN_ITEM, hSound, volume, 1.0, pitch, SND_STOP_LOOPING );
 }
 
 /*

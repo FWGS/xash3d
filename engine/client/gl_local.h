@@ -698,6 +698,8 @@ extern convar_t	*r_dynamic;
 extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
 extern convar_t	*r_vbo;
+extern convar_t	*r_vbo_dlightmode;
+
 extern convar_t	*r_bump;
 extern convar_t *r_underwater_distortion;
 

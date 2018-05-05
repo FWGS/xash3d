@@ -171,6 +171,10 @@ void Sys_PrintLog( const char *pMsg )
 	__android_log_print( ANDROID_LOG_DEBUG, "Xash", "%s", pMsg );
 #endif
 
+#if TARGET_OS_IOS
+	void IOS_Log(const char*);
+	IOS_Log(pMsg);
+#endif
 
 
 	if( !lastchar || lastchar == '\n')

@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "pm_local.h"
 #include "cl_tent.h"
 #include "studio.h"
+#include "sound.h"
 #include "dlight.h"
 #include "input.h"
 
@@ -1321,48 +1322,46 @@ void CL_AddEntities( void )
 //
 // sound engine implementation
 //
-qboolean CL_GetEntitySpatialization( int entnum, vec3_t origin, float *pradius )
+qboolean CL_GetEntitySpatialization( channel_t *ch )
 {
 	cl_entity_t	*ent;
 	qboolean		valid_origin;
 
-	ASSERT( origin != NULL );
-
-	if( entnum == 0 ) return true; // static sound
-
-	if(( entnum - 1 ) == cl.playernum )
+	if( ch->entnum == 0 )
 	{
-		VectorCopy( cl.frame.client.origin, origin );
+		ch->staticsound = true;
+		return true; // static sound
+	}
+
+	if(( ch->entnum - 1 ) == cl.playernum )
+	{
+		VectorCopy( RI.vieworg, ch->origin );
 		return true;
 	}
 
-	valid_origin = VectorIsNull( origin ) ? false : true;
-	ent = CL_GetEntityByIndex( entnum );
+	valid_origin = VectorIsNull( ch->origin ) ? false : true;
+	ent = CL_GetEntityByIndex( ch->entnum );
 
 	// entity is not present on the client but has valid origin
-	if( !ent || !ent->index ) return valid_origin;
-
-	if( ent->curstate.messagenum == 0 )
-	{
-		// entity is never has updates on the client
-		// so we should use static origin instead
+	if( !ent || !ent->index || ent->curstate.messagenum == 0 )
 		return valid_origin;
-	}
-#if 0
+
+	// a1ba: enabled this, as svc_sound does send it's own origin
+	// which is preferred, when entity isn't in PVS and curstate.origin does not update
+	// meanwhile, GS always trust svc_sound origin
+#if 1
 	// uncomment this if you want enable additional check by PVS
 	if( ent->curstate.messagenum != cl.parsecount )
 		return valid_origin;
 #endif
+
 	// setup origin
-	VectorAverage( ent->curstate.mins, ent->curstate.maxs, origin );
-	VectorAdd( origin, ent->curstate.origin, origin );
+	VectorAverage( ent->curstate.mins, ent->curstate.maxs, ch->origin );
+	VectorAdd( ch->origin, ent->curstate.origin, ch->origin );
 
 	// setup radius
-	if( pradius )
-	{
-		if( ent->model != NULL && ent->model->radius ) *pradius = ent->model->radius;
-		else *pradius = RadiusFromBounds( ent->curstate.mins, ent->curstate.maxs );
-	}
+	if( ent->model != NULL && ent->model->radius ) ch->radius = ent->model->radius;
+	else ch->radius = RadiusFromBounds( ent->curstate.mins, ent->curstate.maxs );
 
 	return true;
 }

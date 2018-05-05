@@ -447,8 +447,6 @@ typedef struct host_parm_s
 	qboolean enabledll;
 	qboolean textmode;
 	qboolean daemonized;
-
-	qboolean joke; // 1st April 2018
 } host_parm_t;
 
 extern host_parm_t	host;

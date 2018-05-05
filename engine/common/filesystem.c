@@ -1826,6 +1826,18 @@ void FS_Init( void )
 		listdirectory( &dirs, "./", false );
 		stringlistsort( &dirs );
 
+		MsgDev( D_NOTE, "%d gamedirs found\n", dirs.numstrings );
+
+#ifndef _WIN32
+		if( dirs.maxstrings == 0 )
+		{
+			char cwd[1024];
+			getcwd(cwd, 1023);
+			cwd[1023] = 0;
+			MsgDev( D_ERROR, "No gamedirs found, cwd is is \"%s\"\n", cwd);
+		}
+#endif
+
 		// validate directories
 		for( i = 0; i < dirs.numstrings; i++ )
 		{
@@ -1851,7 +1863,7 @@ void FS_Init( void )
 			if( !Q_strcmp( dirs.strings[i], "." ) || (!Q_strcmp( dirs.strings[i], ".." ) && !fs_ext_path) )
 				continue;
 
-			// is this check really should be here?
+			// check if it is folder, not file
 			if( !FS_SysFolderExists( dirs.strings[i] ) )
 				continue;
 
