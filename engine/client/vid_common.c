@@ -999,6 +999,7 @@ register VBO cvars and get default value
 static void R_CheckVBO( void )
 {
 	const char *def = "1";
+	const char *dlightmode = "1";
 	int flags = CVAR_ARCHIVE;
 	qboolean disable = false;
 
@@ -1006,30 +1007,27 @@ static void R_CheckVBO( void )
 	if( glConfig.max_texture_units < 3 )
 		disable = true;
 
-#ifdef _WIN32
-	// NVIDIA Windows drivers have a problem with mixing VBO and client arrays
-	// Disable it, as there is no suitable workaround here
-	if( Q_stristr( glConfig.vendor_string, "nvidia" ) )
-		disable = true;
-
-#endif
-
 #ifdef __ANDROID__
 	// VideoCore4 drivers have a problem with mixing VBO and client arrays
 	// Disable it, as there is no suitable workaround here
 	if( Q_stristr( glConfig.renderer_string, "VideoCore IV" ) || Q_stristr( glConfig.renderer_string, "vc4" ) )
 		disable = true;
+
+	// dlightmode 1 is not too much tested on android
+	// so better to left it off
+	dlightmode = "0";
 #endif
 
 	if( disable )
 	{
+		// do not keep in config unless dev > 3 and enabled
 		flags = 0;
 		def = "0";
 	}
 
 	r_vbo = Cvar_Get( "r_vbo", def, flags, "draw world using VBO" );
 	r_bump = Cvar_Get( "r_bump", def, CVAR_ARCHIVE, "enable bump-mapping (r_vbo required)" );
-	r_vbo_dlightmode = Cvar_Get( "r_vbo_dlightmode", "0", CVAR_ARCHIVE, "vbo dlight rendering mode(0-1)" );
+	r_vbo_dlightmode = Cvar_Get( "r_vbo_dlightmode", dlightmode, CVAR_ARCHIVE, "vbo dlight rendering mode(0-1)" );
 
 	// check if enabled manually
 	if( r_vbo->integer && host.developer > 3 )
