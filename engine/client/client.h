@@ -32,6 +32,7 @@ GNU General Public License for more details.
 #include "netchan.h"
 #include "net_api.h"
 #include "world.h"
+#include "qfont.h"
 
 #define MAX_DEMOS		32
 #define MAX_MOVIES		8
@@ -271,8 +272,8 @@ typedef struct
 typedef struct
 {
 	int		hFontTexture;		// handle to texture
-	wrect_t		fontRc[256];		// rectangles
-	byte		charWidths[256];
+	wrect_t		fontRc[NUM_GLYPHS];		// rectangles
+	byte		charWidths[NUM_GLYPHS];
 	int		charHeight;
 	qboolean		valid;			// all rectangles are valid
 } cl_font_t;

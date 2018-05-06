@@ -562,7 +562,7 @@ void SCR_LoadCreditsFont( void )
 		cls.creditsFont.charHeight = clgame.scrInfo.iCharHeight = src->rowheight;
 
 		// build rectangles
-		for( i = 0; i < 256; i++ )
+		for( i = 0; i < NUM_GLYPHS; i++ )
 		{
 			cls.creditsFont.fontRc[i].left = (word)src->fontinfo[i].startoffset % fontWidth;
 			cls.creditsFont.fontRc[i].right = cls.creditsFont.fontRc[i].left + src->fontinfo[i].charwidth;
