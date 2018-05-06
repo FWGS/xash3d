@@ -1971,6 +1971,9 @@ void Con_RunConsole( void )
 
 	if( con_charset->modified || con_fontscale->modified || con_fontnum->modified || cl_charset->modified )
 	{
+		if( con_fontscale->integer <= 0 )
+			Cvar_SetFloat( "con_fontscale", 1 );
+
 		// update codepage parameters
 		g_codepage = 0;
 		if( !Q_stricmp( con_charset->string, "cp1251" ) )
