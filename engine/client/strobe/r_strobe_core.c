@@ -33,7 +33,7 @@ See the GNU General Public License for more details.
 struct STROBE_IMPL_STRUCT( STROBE_CORE ) *STROBE_CORE = NULL;
 
 #ifdef _DEBUG
-#define DEVIATION_LIMIT 2.0
+#define DEVIATION_LIMIT 1.5
 #else
 #define DEVIATION_LIMIT 0.75
 #endif
@@ -80,8 +80,8 @@ static void R_Strobe( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 		_this->base.protected->cdTimer += delta2;
 	if ( _this->base.protected->fCounter - _this->private->fCounterSnapshot == 1 )
 	{
-		_this->private->delta[_this->base.protected->fCounter % ARRAYSIZE( _this->private->delta )] = delta2;
-		_this->base.protected->deviation                                                            = _this->base.Helpers.StandardDeviation( _this->private->delta, ARRAYSIZE( _this->private->delta ) ) * 1000;
+		_this->private->delta[_this->base.protected->fCounter % ARRAYSIZE( _this->private->delta )] = _this->base.Helpers.CurrentFPS(&_this->base);
+		_this->base.protected->deviation                                                            = _this->base.Helpers.StandardDeviation( _this->private->delta, ARRAYSIZE( _this->private->delta ) );
 	}
 	_this->private->fCounterSnapshot = _this->base.protected->fCounter;
 
