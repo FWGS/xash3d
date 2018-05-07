@@ -35,6 +35,7 @@ typedef struct StrobeAPI_private_s
 	size_t mark;
 	size_t PositiveNormal, PositiveBlack, NegativeNormal, NegativeBlack;
 	qboolean firstInverted;
+	char strobemethod[128];
 }StrobeAPI_private_t;
 
 _inline double func_helper_StandardDeviation( const double *data, int n )
@@ -440,6 +441,7 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	int diffP_NB, diffN_NB;
 	double diffP = 0.0, diffN = 0.0;
 	double cooldown = self->protected->cdTimer;
+	int strobeMethod = StrobeAPI.r_strobe->integer;
 
 	diffP_NB = ( self->protected->pNCounter - self->protected->pBCounter );
 	diffN_NB = ( self->protected->nNCounter - self->protected->nBCounter );
@@ -459,9 +461,23 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	nNegativeNormal = self->get.FrameCounter( self, STROBE_CT_NegativeNormalFrame );
 	nNegativeBlack  = self->get.FrameCounter( self, STROBE_CT_NegativeBlackFrame );
 
+
+	if (!strlen(self->private->strobemethod))
+	{
+		Q_snprintf(self->private->strobemethod, sizeof(self->private->strobemethod), (strobeMethod > 0 ? "%d [NORMAL" : "%d [BLACK"), strobeMethod);
+		for (int k = 1; k <= abs(strobeMethod); ++k)
+		{
+			Q_strcat(self->private->strobemethod, (strobeMethod > 0 ? " - BLACK" : " - NORMAL"));
+		}
+		Q_strcat(self->private->strobemethod, "]");
+	}
+
 	Q_snprintf( src,
 	            size,
 	            "%.2f FPS\n%.2f eFPS\n"
+				"Strobe Method: %s\n"
+				"Strobe Swap Interval: %d\n"
+				"Strobe Cooldown Delay: %d\n"
 	            "Elapsed Time: %.2f\n"
 				"isPhaseInverted = %d\n"
 	            "Total Frame Count: %zu\n"
@@ -476,7 +492,7 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	            " |-> Frequency: %.2f Hz\n"
 	            " |-> Duty Cycle: %.2f%%\n"
 	            " |-> Current Phase Shift: +%.4f msec || -%.4f msec\n"
-	            " |-> Period: %.4f msec\n"
+	            " |-> Period: %.2f msec\n"
 	            "Brightness Reduction:\n"
 	            " |-> [^7LINEAR^3] Actual Reduction: %.2f%%\n"
 	            " |-> [^7LOG^3] Realistic Reduction (400 cd/m2 base): %.2f%%\n"
@@ -495,6 +511,9 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	            "^5=====ANALYSIS=====\n^3",
 	            self->Helpers.CurrentFPS( self ),
 	            self->Helpers.effectiveFPS( self ),
+				self->private->strobemethod,
+				StrobeAPI.r_strobe_swapinterval->integer,
+				StrobeAPI.r_strobe_cooldown->integer,
 	            self->protected->elapsedTime,
 				self->Helpers.isPhaseInverted(self),
 	            self->get.FrameCounter( self, STROBE_CT_TotalFrame ),
@@ -533,13 +552,16 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 
 _inline void ProcessFrame( StrobeAPI_t *self )
 {
-	if ((self->private->firstInverted && self->Helpers.isPhaseInverted(self)) || !self->Helpers.isPhaseInverted(self))
-		self->private->firstInverted = false;
-	else if (self->Helpers.isPhaseInverted(self) && (StrobeAPI.r_strobe->integer == 1 || StrobeAPI.r_strobe->integer == -1))
+	static qboolean phase = 0;
+	if (phase != self->Helpers.isPhaseInverted(self) && (StrobeAPI.r_strobe->integer == 1 || StrobeAPI.r_strobe->integer == -1) && !self->protected->cdTriggered)
 		self->private->firstInverted = true;
+	else
+		self->private->firstInverted = false;
 
-	if ( self->protected->cdTriggered != false )
-		self->protected->frameInfo = FRAME_RENDER | ( self->protected->frameInfo & PHASE_POSITIVE );
+	if (self->protected->cdTriggered)
+	{
+		self->protected->frameInfo = FRAME_RENDER | (self->protected->frameInfo & PHASE_POSITIVE);
+	}
 
 	if ( self->protected->frameInfo & FRAME_RENDER ) // Show normal
 	{
@@ -567,7 +589,8 @@ _inline void ProcessFrame( StrobeAPI_t *self )
 		R_Set2DMode(false);
 		self->GenerateBlackFrame(0.5f);
 	}
-
+	
+	phase = self->Helpers.isPhaseInverted(self);
 	++self->protected->fCounter;
 }
 

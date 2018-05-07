@@ -68,7 +68,7 @@ static void R_Strobe( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 	double currentTime          = Sys_DoubleTime( );
 	delta2                      = currentTime - _this->private->recentTime2;
 	_this->private->recentTime2 = currentTime;
-	_this->base.protected->elapsedTime = currentTime - _this->base.protected->initialTime;
+	_this->base.protected->elapsedTime = currentTime - _this->private->initialTime;
 
 	if ( CL_IsInMenu( ) )
 	{
@@ -95,7 +95,7 @@ static void R_Strobe( STROBE_IMPL_THIS_PARAM( STROBE_CORE ) )
 
 		if ( _this->base.protected->fCounter > ARRAYSIZE( _this->private->delta ) )
 		{
-			if ( _this->base.protected->deviation > STROBE_CORE_DEVIATION_LIMIT )
+			if ( _this->base.protected->deviation > DEVIATION_LIMIT )
 			{
 				_this->base.protected->cdTriggered = true;
 				_this->base.protected->cdTimer     = 0.0;
