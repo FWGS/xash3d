@@ -122,7 +122,7 @@ typedef struct StrobeAPI_s
 	StrobeAPI_funcs_PWMSIMULATION_t PWM;
 	StrobeAPI_funcs_HELPER_t Helpers;
 	StrobeAPI_funcs_GET_t get;
-	void ( *GenerateBlackFrame )( void );
+	void ( *GenerateBlackFrame )( float opacity );
 	void ( *ProcessFrame )( StrobeAPI_t *self );
 } StrobeAPI_t;
 

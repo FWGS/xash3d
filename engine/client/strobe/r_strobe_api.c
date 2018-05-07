@@ -34,6 +34,7 @@ typedef struct StrobeAPI_private_s
 	double nexttime, lasttime, framerate;
 	size_t mark;
 	size_t PositiveNormal, PositiveBlack, NegativeNormal, NegativeBlack;
+	qboolean firstInverted;
 }StrobeAPI_private_t;
 
 _inline double func_helper_StandardDeviation( const double *data, int n )
@@ -50,8 +51,11 @@ _inline double func_helper_StandardDeviation( const double *data, int n )
 	return sqrt( sum_deviation / n );
 }
 
-_inline void GL_GenerateBlackFrame( void ) // Generates partial or full black frame
+_inline void GL_GenerateBlackFrame( float opacity ) // Generates partial or full black frame
 {
+	if (opacity < 0.0f || opacity > 1.0f)
+		opacity = 1.0f;
+
 	if ( CL_IsInConsole( ) ) // No strobing on the console
 	{
 		if ( !vid_fullscreen->integer ) // Disable when not fullscreen due to viewport problems
@@ -61,7 +65,7 @@ _inline void GL_GenerateBlackFrame( void ) // Generates partial or full black fr
 		}
 		pglEnable( GL_SCISSOR_TEST );
 		pglScissor( con_rect.x, ( -con_rect.y ) - ( con_rect.h * 1.25 ), con_rect.w, con_rect.h ); // Preview strobe setting on static
-		pglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+		pglClearColor( 0.0f, 0.0f, 0.0f, opacity );
 		pglClear( GL_COLOR_BUFFER_BIT );
 		pglDisable( GL_SCISSOR_TEST );
 	}
@@ -529,10 +533,13 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 
 _inline void ProcessFrame( StrobeAPI_t *self )
 {
+	if ((self->private->firstInverted && self->Helpers.isPhaseInverted(self)) || !self->Helpers.isPhaseInverted(self))
+		self->private->firstInverted = false;
+	else if (self->Helpers.isPhaseInverted(self) && (StrobeAPI.r_strobe->integer == 1 || StrobeAPI.r_strobe->integer == -1))
+		self->private->firstInverted = true;
+
 	if ( self->protected->cdTriggered != false )
-	{
 		self->protected->frameInfo = FRAME_RENDER | ( self->protected->frameInfo & PHASE_POSITIVE );
-	}
 
 	if ( self->protected->frameInfo & FRAME_RENDER ) // Show normal
 	{
@@ -541,7 +548,8 @@ _inline void ProcessFrame( StrobeAPI_t *self )
 		else
 			++self->protected->nNCounter;
 
-		R_Set2DMode( false );
+		if(!self->private->firstInverted)
+			R_Set2DMode( false );
 	}
 	else // Show black
 	{
@@ -550,8 +558,14 @@ _inline void ProcessFrame( StrobeAPI_t *self )
 		else
 			++self->protected->nBCounter;
 
-		//GL_GenerateBlackFrame();
-		self->GenerateBlackFrame( );
+		if(!self->private->firstInverted)
+			self->GenerateBlackFrame( 1.0f );
+	}
+
+	if (self->private->firstInverted)
+	{
+		R_Set2DMode(false);
+		self->GenerateBlackFrame(0.5f);
 	}
 
 	++self->protected->fCounter;
