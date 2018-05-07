@@ -880,7 +880,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		}
 #endif
 		Joy_FinalizeMove( &forward, &side, &dyaw, &dpitch );
-		IN_TouchMove( &forward, &side, &dyaw, &dpitch );
+		Touch_GetMove( &forward, &side, &dyaw, &dpitch );
 		IN_JoyAppendMove( cmd, forward, side );
 #ifdef USE_EVDEV
 		IN_EvdevMove( &dyaw, &dpitch );
@@ -935,7 +935,7 @@ void Host_InputFrame( void )
 #endif
 
 		Joy_FinalizeMove( &forward, &side, &yaw, &pitch );
-		IN_TouchMove( &forward, &side, &yaw, &pitch );
+		Touch_GetMove( &forward, &side, &yaw, &pitch );
 #ifdef USE_EVDEV
 		IN_EvdevMove( &yaw, &pitch );
 #endif

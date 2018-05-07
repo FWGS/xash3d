@@ -481,6 +481,13 @@ void GL_UpdateSwapInterval( void )
 	}
 }
 
+#define SAFE_NO 0
+#define SAFE_NOACC 1
+#define SAFE_NODEPTH 2
+#define SAFE_NOATTRIB 3
+#define SAFE_DONTCARE 4
+
+
 /*
 ==================
 GL_SetupAttributes
@@ -495,15 +502,8 @@ void GL_SetupAttributes()
 	SDL_SetHint( "SDL_VIDEO_X11_XVIDMODE", "1" );
 #endif
 
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+	SDL_GL_ResetAttributes();
 
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
-	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, gl_stencilbits->integer );
 
 #ifdef XASH_GLES
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES );
@@ -526,6 +526,52 @@ void GL_SetupAttributes()
 	}
 
 #endif // XASH_GLES
+
+	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+
+	if( glw_state.safe > SAFE_DONTCARE )
+	{
+		glw_state.safe = -1;
+		return;
+	}
+
+	if( glw_state.safe > SAFE_NO )
+		Msg("Trying safe opengl mode %d\n", glw_state.safe );
+
+	if( glw_state.safe >= SAFE_NOACC )
+		SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+
+	Msg ("bpp %d\n", glw_state.desktopBitsPixel );
+
+	if( glw_state.safe < SAFE_NODEPTH )
+		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 24 );
+	else if( glw_state.safe < 5 )
+		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 8 );
+
+
+	if( glw_state.safe < SAFE_NOATTRIB )
+	{
+		if( glw_state.desktopBitsPixel >= 24 )
+		{
+			if( glw_state.desktopBitsPixel == 32 )
+				SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
+
+			SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
+			SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
+			SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
+		}
+		else
+		{
+			SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
+			SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 6 );
+			SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
+		}
+	}
+
+	if( glw_state.safe >= SAFE_DONTCARE )
+		return;
+
+	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, gl_stencilbits->integer );
 
 	switch( gl_msaa->integer )
 	{
@@ -904,6 +950,24 @@ R_Init_OpenGL
 */
 qboolean R_Init_OpenGL( void )
 {
+	SDL_DisplayMode displayMode;
+	string safe;
+
+	SDL_GetCurrentDisplayMode(0, &displayMode);
+	glw_state.desktopBitsPixel = SDL_BITSPERPIXEL(displayMode.format);
+	glw_state.desktopWidth = displayMode.w;
+	glw_state.desktopHeight = displayMode.h;
+
+	if( !glw_state.safe && Sys_GetParmFromCmdLine( "-safegl", safe ) )
+	{
+		glw_state.safe = Q_atoi( safe );
+		if( glw_state.safe < SAFE_NOACC || glw_state.safe > SAFE_DONTCARE  )
+			glw_state.safe = SAFE_DONTCARE;
+	}
+
+	if( glw_state.safe < SAFE_NO || glw_state.safe > SAFE_DONTCARE  )
+		return false;
+
 	GL_SetupAttributes();
 
 	if( SDL_GL_LoadLibrary( EGL_LIB ) )

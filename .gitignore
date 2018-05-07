@@ -307,3 +307,6 @@ build-*
 
 # Android
 *.apk
+
+# Visual Studio CMake support
+CMakeSettings.json
