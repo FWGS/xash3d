@@ -1351,7 +1351,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_AddText( "exec config.cfg\n" );
 		// listenserver/multiplayer config.
 		// need load it to update menu options.
-		Cbuf_AddText( "exec game.cfg\n" );
+		if( FS_FileExists( "game.cfg", true ) )
+			Cbuf_AddText( "exec game.cfg\n" );
+		Cbuf_AddText( "exec gamesettings.cfg\n" );
 		Cmd_AddCommand( "host_writeconfig", Host_WriteConfig, "force save configs. use with care" );
 	}
 
