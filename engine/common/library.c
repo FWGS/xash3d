@@ -153,10 +153,6 @@ static void *IOS_LoadLibrary( const char *dllname )
 
 #endif
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
 	dll_user_t *hInst = NULL;

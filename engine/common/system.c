@@ -314,6 +314,12 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 		path = XASH_UPDATE_PAGE;
 
 	ShellExecute( NULL, "open", path, parms, NULL, SW_SHOW );
+#elif __EMSCRIPTEN__
+	EM_ASM_INT({
+				if( confirm( "Open game page?\n"+Pointer_stringify($0) ) )
+					document.location.href = Pointer_stringify($0);
+				return 0;
+			}, (int)path );
 #elif (defined(__linux__) && !defined (__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 
 	if( !Q_strcmp( path, GENERIC_UPDATE_PAGE ) || !Q_strcmp( path, PLATFORM_UPDATE_PAGE ))
@@ -694,7 +700,6 @@ void Sys_Break( const char *format, ... )
 _exit->_Exit->asm._exit->_exit
 As we do not need atexit(), just throw hidden exception
 */
-#include <emscripten.h>
 #define exit my_exit
 void my_exit(int ret)
 {
