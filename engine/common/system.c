@@ -42,10 +42,10 @@ extern char **environ;
 
 
 qboolean	error_on_exit = false;	// arg for exit();
-#define DEBUG_BREAK
 #if defined _WIN32 && !defined XASH_SDL
 #include <winbase.h>
 #endif
+
 /*
 ================
 Sys_DoubleTime
@@ -108,20 +108,19 @@ double GAME_EXPORT Sys_DoubleTime( void )
 
 #define DEBUG_BREAK
 
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-
+#if (defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)) && defined(GDB_BREAK)
 #include <fcntl.h>
 qboolean Sys_DebuggerPresent( void )
 {
 	char buf[1024];
 
 	int status_fd = open( "/proc/self/status", O_RDONLY );
-	if ( status_fd == -1 )
+	if( status_fd == -1 )
 		return 0;
 
 	ssize_t num_read = read( status_fd, buf, sizeof( buf ) );
 
-	if ( num_read > 0 )
+	if( num_read > 0 )
 	{
 		static const char TracerPid[] = "TracerPid:";
 		const byte *tracer_pid;
