@@ -161,7 +161,7 @@ else()
 	add_definitions(-DNO_LIBDL)
 endif()
 
-if( ${CMAKE_BUILD_TYPE} STREQUAL "Debug" )
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	add_definitions(-D_DEBUG)
 endif()
 
