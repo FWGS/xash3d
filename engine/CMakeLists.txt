@@ -97,7 +97,7 @@ else()
 		add_definitions(-DUSE_SELECT)
 	endif()
 	add_definitions(-DCOLORIZE_CONSOLE)
-endif() 
+endif()
 
 if(LINUX)
 	add_definitions(-DGDB_BREAK)
@@ -164,6 +164,7 @@ endif()
 if(XASH_RELEASE)
 	add_definitions(-DXASH_RELEASE)
 else()
+	add_definitions(-D_DEBUG)
 	execute_process(COMMAND "git" "rev-parse" "--short" "HEAD"
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 		OUTPUT_VARIABLE SHORT_HASH
