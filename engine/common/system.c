@@ -107,7 +107,9 @@ double GAME_EXPORT Sys_DoubleTime( void )
 #endif
 
 #define DEBUG_BREAK
-#ifdef GDB_BREAK
+
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+
 #include <fcntl.h>
 qboolean Sys_DebuggerPresent( void )
 {
@@ -148,21 +150,76 @@ qboolean Sys_DebuggerPresent( void )
 #define DEBUG_BREAK \
 	if( Sys_DebuggerPresent() ) \
 		raise( SIGINT )
-#endif
-#endif
+#endif // __i386__
+// __linux__/__FreeBSD__/__NetBSD__/__OpenBSD__
 
-#if defined _WIN32 && !defined XASH_64BIT
+#elif defined(_WIN32) && !defined(XASH_64BIT)
+
 #ifdef _MSC_VER
-
-
 BOOL WINAPI IsDebuggerPresent(void);
 #define DEBUG_BREAK	if( IsDebuggerPresent() ) \
 		_asm{ int 3 }
 #else
 #define DEBUG_BREAK	if( IsDebuggerPresent() ) \
 		asm volatile("int $3;")
-#endif
-#endif
+#endif // _MSC_VER
+// _WIN32 && !XASH_64BIT
+
+#elif defined(__APPLE__) && defined(_DEBUG)
+
+// For more information, see https://developer.apple.com/library/content/qa/qa1361/_index.html
+// This must be protected by #if defined(_DEBUG), as the kinfo_proc structure is only available
+// in debug.
+
+#include <assert.h>
+#include <stdbool.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/sysctl.h>
+
+static qboolean Sys_DebuggerPresent(void)
+// Returns true if the current process is being debugged (either
+// running under the debugger or has a debugger attached post facto).
+{
+	int                 junk;
+	int                 mib[4];
+	struct kinfo_proc   info;
+	size_t              size;
+
+	// Initialize the flags so that, if sysctl fails for some bizarre
+	// reason, we get a predictable result.
+
+	info.kp_proc.p_flag = 0;
+
+	// Initialize mib, which tells sysctl the info we want, in this case
+	// we're looking for information about a specific process ID.
+
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_PROC;
+	mib[2] = KERN_PROC_PID;
+	mib[3] = getpid();
+
+	// Call sysctl.
+
+	size = sizeof(info);
+	junk = sysctl(mib, sizeof(mib) / sizeof(*mib), &info, &size, NULL, 0);
+	assert(junk == 0);
+
+	// We're being debugged if the P_TRACED flag is set.
+
+	return ( (info.kp_proc.p_flag & P_TRACED) != 0 );
+}
+
+#undef DEBUG_BREAK
+#ifdef __i386__
+#define DEBUG_BREAK \
+	if( Sys_DebuggerPresent() ) { __asm__("int $3"); }
+#else
+#define DEBUG_BREAK \
+	if( Sys_DebuggerPresent() ) { __asm__("trap"); }
+#endif // __i386__
+
+#endif // __APPLE__
 
 /*
 ================
@@ -431,7 +488,7 @@ qboolean _Sys_GetParmFromCmdLine( char *parm, char *out, size_t size )
 	int	argc = Sys_CheckParm( parm );
 
 	if( !argc ) return false;
-	if( !out ) return false;	
+	if( !out ) return false;
 	if( !host.argv[argc + 1] ) return false;
 	Q_strncpy( out, host.argv[argc+1], size );
 
@@ -448,8 +505,8 @@ void Sys_SendKeyEvents( void )
 		if( !GetMessage( &msg, NULL, 0, 0 ))
 			Sys_Quit ();
 
-      		TranslateMessage( &msg );
-      		DispatchMessage( &msg );
+		TranslateMessage( &msg );
+		DispatchMessage( &msg );
 	}
 #endif
 }
@@ -471,7 +528,7 @@ qboolean Sys_LoadLibrary( dll_info_t *dll )
 
 	MsgDev( D_NOTE, "Sys_LoadLibrary: Loading %s", dll->name );
 
-	if( dll->fcts ) 
+	if( dll->fcts )
 	{
 		// lookup export table
 		for( func = dll->fcts; func && func->name != NULL; func++ )
@@ -481,7 +538,7 @@ qboolean Sys_LoadLibrary( dll_info_t *dll )
 	if( !dll->link ) dll->link = LoadLibrary ( dll->name ); // environment pathes
 
 	// no DLL found
-	if( !dll->link ) 
+	if( !dll->link )
 	{
 		Q_snprintf( errorstring, sizeof( errorstring ), "Sys_LoadLibrary: couldn't load %s\n", dll->name );
 		goto error;
@@ -501,7 +558,7 @@ qboolean Sys_LoadLibrary( dll_info_t *dll )
 	return true;
 error:
 	MsgDev( D_NOTE, " - failed\n" );
-	Sys_FreeLibrary( dll ); // trying to free 
+	Sys_FreeLibrary( dll ); // trying to free
 	if( dll->crash ) Sys_Error( "%s", errorstring );
 	else MsgDev( D_ERROR, "%s", errorstring );
 
@@ -561,7 +618,7 @@ void Sys_WaitForQuit( void )
 		{
 			TranslateMessage( &msg );
 			DispatchMessage( &msg );
-		} 
+		}
 		else Sys_Sleep( 20 );
 	}
 #endif
@@ -611,7 +668,7 @@ void Sys_Error( const char *format, ... )
 	if( host.change_game ) Sys_Sleep( 200 );
 
 	error_on_exit = true;
-	host.state = HOST_ERR_FATAL;	
+	host.state = HOST_ERR_FATAL;
 	va_start( argptr, format );
 	Q_vsnprintf( text, sizeof( text ), format, argptr );
 	va_end( argptr );
@@ -661,8 +718,8 @@ void Sys_Break( const char *format, ... )
 	if( host.state == HOST_ERR_FATAL )
 		return; // don't multiple executes
 
-	error_on_exit = true;	
-	host.state = HOST_ERR_FATAL;         
+	error_on_exit = true;
+	host.state = HOST_ERR_FATAL;
 	va_start( argptr, format );
 	Q_vsnprintf( text, sizeof( text ), format, argptr );
 	va_end( argptr );
@@ -811,7 +868,7 @@ void Msg( const char *pMsg, ... )
 {
 	va_list	argptr;
 	char	text[8192];
-	
+
 	va_start( argptr, pMsg );
 	Q_vsnprintf( text, sizeof( text ), pMsg, argptr );
 	va_end( argptr );
