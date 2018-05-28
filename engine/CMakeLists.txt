@@ -161,10 +161,13 @@ else()
 	add_definitions(-DNO_LIBDL)
 endif()
 
+if( ${CMAKE_BUILD_TYPE} STREQUAL "Debug" )
+	add_definitions(-D_DEBUG)
+endif()
+
 if(XASH_RELEASE)
 	add_definitions(-DXASH_RELEASE)
 else()
-	add_definitions(-D_DEBUG)
 	execute_process(COMMAND "git" "rev-parse" "--short" "HEAD"
 		WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
 		OUTPUT_VARIABLE SHORT_HASH
