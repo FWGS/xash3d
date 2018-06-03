@@ -366,7 +366,7 @@ void Touch_GenetateCode_f( void )
 		aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_H/SCR_W) );
 		if( Q_memcmp( &c, &B(color), sizeof( rgba_t ) ) )
 		{
-			Msg( "MakeRGBA( color, %d, %d, %d, %d );\n", B(color[0]), B(color[1]), B(color[2]), B(color[3]) );
+			Msg( "unsigned char color[] = { %d, %d, %d, %d };\n", B(color[0]), B(color[1]), B(color[2]), B(color[3]) );
 			Q_memcpy( &c, &B(color), sizeof( rgba_t ) );
 		}
 		Msg( "TOUCH_ADDDEFAULT( \"%s\", \"%s\", \"%s\", %f, %f, %f, %f, color, %d, %f, %d );\n",
