@@ -430,6 +430,10 @@ void Touch_SetClientOnly( qboolean state )
 {
 	touch.clientonly = state;
 	host.mouse_visible = state;
+
+	touch.move_finger = touch.look_finger = -1;
+	touch.forward = touch.side = 0;
+
 #ifdef XASH_SDL
 	if( state )
 	{
