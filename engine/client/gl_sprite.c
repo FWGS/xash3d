@@ -873,7 +873,7 @@ static void R_DrawSpriteQuad( mspriteframe_t *frame, vec3_t org, vec3_t v_right,
 		VectorMA( org, frame->up * scale, v_up, point );
 		VectorMA( point, frame->right * scale, v_right, point );
 		pglVertex3fv( point );
- 	        	pglTexCoord2f( 1.0f, 1.0f );
+		pglTexCoord2f( 1.0f, 1.0f );
 		VectorMA( org, frame->down * scale, v_up, point );
 		VectorMA( point, frame->right * scale, v_right, point );
 		pglVertex3fv( point );

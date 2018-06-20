@@ -493,7 +493,7 @@ void Touch_ClearList( touchbuttonlist_t *list )
 		list->first = list->first->next;
 		Mem_Free ( remove );
 	}
-	list->first= list->last = NULL;
+	list->first = list->last = NULL;
 }
 
 void Touch_RemoveAll_f( void )
@@ -884,6 +884,9 @@ void Touch_Init( void )
 	MakeRGBA( touch.scolor, 255, 255, 255, 255 );
 	touch.swidth = 1;
 	g_LastDefaultButton = 0;
+
+	touch.list_edit.first = touch.list_edit.last = NULL;
+	touch.list_user.first = touch.list_user.last = NULL;
 
 	// fill default buttons list
 	MakeRGBA( color, 255, 255, 255, 255 );
