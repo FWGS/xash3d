@@ -454,8 +454,11 @@ void FS_Path_f( void )
 		else if( s->wad ) Msg( "%s (%i files)", s->wad->filename, s->wad->numlumps );
 		else Msg( "%s", s->filename );
 
-		if( s->flags & FS_GAMEDIR_PATH ) Msg( " ^2gamedir^7\n" );
-		else Msg( "\n" );
+		if( s->flags & FS_GAMERODIR_PATH ) Msg( " ^2rodir^7" );
+		if( s->flags & FS_GAMEDIR_PATH ) Msg( " ^2gamedir^7" );
+		if( s->flags & FS_CUSTOM_PATH ) Msg ( " ^2custom^7" );
+
+		Msg( "\n" );
 	}
 }
 
@@ -3228,7 +3231,7 @@ search_t *FS_Search( const char *pattern, int caseinsensitive, int gamedironly )
 	// search through the path, one element at a time
 	for( searchpath = fs_searchpaths; searchpath; searchpath = searchpath->next )
 	{
-		if( gamedironly && !( searchpath->flags & (FS_GAMEDIR_PATH | FS_CUSTOM_PATH )))
+		if( gamedironly && !( searchpath->flags & ( FS_GAMEDIRONLY_SEARCH_FLAGS )))
 			continue;
 
 		// is the element a pak file?
