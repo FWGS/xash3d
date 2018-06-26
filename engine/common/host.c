@@ -1085,6 +1085,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 			Sys_PrintUsage();
 	    }
 	}
+
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
