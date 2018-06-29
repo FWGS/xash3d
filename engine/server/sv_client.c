@@ -3358,7 +3358,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	char	*args;
 	char	*c, buf[MAX_SYSPATH];
 	int	len = sizeof( buf );
-	char *gamedir = GI->gamefolder;
 
 	// prevent flooding from banned address
 	if( SV_CheckIP( &from ) )

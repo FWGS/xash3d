@@ -138,7 +138,7 @@ if(XASH_SDL)
 endif()
 
 if(XASH_GLES)
-	add_definitions(-DXASH_GLES)
+	add_definitions(-DXASH_GLES -DXASH_GL_STATIC)
 endif()
 
 if(XASH_DLL_LOADER)
