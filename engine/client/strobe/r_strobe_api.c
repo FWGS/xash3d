@@ -587,7 +587,7 @@ _inline void ProcessFrame( StrobeAPI_t *self )
 	if (self->private->firstInverted)
 	{
 		R_Set2DMode(false);
-		self->GenerateBlackFrame(0.5f);
+		self->GenerateBlackFrame(0.8f);
 	}
 	
 	phase = self->Helpers.isPhaseInverted(self);
