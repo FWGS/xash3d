@@ -1,6 +1,6 @@
 /*
 touch.c - touchscreen support prototype
-Copyright (C) 2015 a1batross
+Copyright (C) 2015-2018 mittorn
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -366,7 +366,7 @@ void Touch_GenetateCode_f( void )
 		aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_H/SCR_W) );
 		if( Q_memcmp( &c, &B(color), sizeof( rgba_t ) ) )
 		{
-			Msg( "MakeRGBA( color, %d, %d, %d, %d );\n", B(color[0]), B(color[1]), B(color[2]), B(color[3]) );
+			Msg( "unsigned char color[] = { %d, %d, %d, %d };\n", B(color[0]), B(color[1]), B(color[2]), B(color[3]) );
 			Q_memcpy( &c, &B(color), sizeof( rgba_t ) );
 		}
 		Msg( "TOUCH_ADDDEFAULT( \"%s\", \"%s\", \"%s\", %f, %f, %f, %f, color, %d, %f, %d );\n",
@@ -430,6 +430,10 @@ void Touch_SetClientOnly( qboolean state )
 {
 	touch.clientonly = state;
 	host.mouse_visible = state;
+
+	touch.move_finger = touch.look_finger = -1;
+	touch.forward = touch.side = 0;
+
 #ifdef XASH_SDL
 	if( state )
 	{
@@ -489,7 +493,7 @@ void Touch_ClearList( touchbuttonlist_t *list )
 		list->first = list->first->next;
 		Mem_Free ( remove );
 	}
-	list->first= list->last = NULL;
+	list->first = list->last = NULL;
 }
 
 void Touch_RemoveAll_f( void )
@@ -880,6 +884,9 @@ void Touch_Init( void )
 	MakeRGBA( touch.scolor, 255, 255, 255, 255 );
 	touch.swidth = 1;
 	g_LastDefaultButton = 0;
+
+	touch.list_edit.first = touch.list_edit.last = NULL;
+	touch.list_user.first = touch.list_user.last = NULL;
 
 	// fill default buttons list
 	MakeRGBA( color, 255, 255, 255, 255 );

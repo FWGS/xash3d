@@ -1405,16 +1405,23 @@ void Host_WriteGameConfig( const char *name )
 {
 	/* Old Xash3D behaviour is writing listenserver config
 	every time when starting server from ui.
-	WON Half-Life uses game.cfg for this purpose*/
+	WON Half-Life used game.cfg for this purpose
+	but this causes reseting all cvars on map change.
+	since server not unloaded, we do not need to restore cvars
+	*/
 	file_t	*f;
+	string oldconfigfile, newconfigfile;
+
+	Q_snprintf( oldconfigfile, MAX_STRING, "%s.bak", name );
+	Q_snprintf( newconfigfile, MAX_STRING, "%s.new", name );
 
 	SV_InitGameProgs();	// collect user variables
 	
-	if(( f = FS_Open( "game.cfg", "w", false )) != NULL )
+	if(( f = FS_Open( newconfigfile, "w", false )) != NULL )
 	{
 		FS_Printf( f, "//=======================================================================\n" );
 		FS_Printf( f, "//\t\t\tCopyright Flying With Gauss Team %s ©\n", Q_timestamp( TIME_YEAR_ONLY ));
-		FS_Printf( f, "//\t\t\tgame.cfg - multiplayer config\n" );
+		FS_Printf( f, "//\t\t\t%s - multiplayer config\n", name );
 		FS_Printf( f, "//=======================================================================\n" );
 
 		Cmd_WriteServerVariables( f );
@@ -1422,10 +1429,13 @@ void Host_WriteGameConfig( const char *name )
 		CSCR_WriteGameCVars( f, "settings.scr" );
 
 		FS_Close( f );
-	}
-	else MsgDev( D_ERROR, "Couldn't write game.cfg.\n" );
 
-	//SV_FreeGameProgs();	// release progs with all variables
+		FS_Rename( name, oldconfigfile );
+		FS_Delete( name );
+		FS_Rename( newconfigfile, name );
+		FS_Delete( oldconfigfile );
+	}
+	else MsgDev( D_ERROR, "Couldn't write game settings file %s.\n", name );
 }
 /*
 ===============

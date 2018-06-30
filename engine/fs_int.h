@@ -55,6 +55,9 @@ typedef struct searchpath_s
 #define FS_NOWRITE_PATH ( 1U << 1 )  // default behavior - last added gamedir set as writedir. This flag disables it
 #define FS_GAMEDIR_PATH ( 1U << 2 )  // just a marker for gamedir path
 #define FS_CUSTOM_PATH  ( 1U << 3 )  // map search allowed
+#define FS_GAMERODIR_PATH	( 1U << 4 ) // caseinsensitive
+
+#define FS_GAMEDIRONLY_SEARCH_FLAGS ( FS_GAMEDIR_PATH | FS_CUSTOM_PATH | FS_GAMERODIR_PATH )
 
 
 typedef struct fs_api_s

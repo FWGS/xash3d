@@ -21,7 +21,7 @@ GNU General Public License for more details.
 /*
 ===================================================================
 
-SETUP BACKENDS DEFINATIONS
+SETUP BACKENDS DEFINITIONS
 
 ===================================================================
 */
@@ -129,10 +129,16 @@ Default build-depended cvar and constant values
 #endif
 
 #if defined XASH_NANOGL || defined XASH_WES || defined XASH_REGAL
+#ifndef XASH_GLES
+#define XASH_GLES
+#endif // XASH_GLES
+#ifndef XASH_GL_STATIC
 #define XASH_GL_STATIC
-#endif
+#endif // XASH_GL_STATIC
+#endif // XASH_NANOGL || XASH_WES || XASH_REGAL
 
-#define DEFAULT_SV_MASTER "ms.xash.su:27010"
+#define DEFAULT_PRIMARY_MASTER "ms.xash.su:27010"
+#define DEFAULT_SECONDARY_MASTER "ms2.xash.su:27010"
 // Set ForceSimulating to 1 by default for dedicated, because AMXModX timers require this
 // TODO: enable simulating for any server?
 #ifdef XASH_DEDICATED
@@ -151,7 +157,7 @@ Default build-depended cvar and constant values
 #endif
 
 #if TARGET_OS_IPHONE
-    #define DEFAULT_CON_MAXFRAC "0.5"
+	#define DEFAULT_CON_MAXFRAC "0.5"
 #else
 	#define DEFAULT_CON_MAXFRAC "1"
 #endif

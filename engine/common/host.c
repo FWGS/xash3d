@@ -1085,6 +1085,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 			Sys_PrintUsage();
 	    }
 	}
+
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
@@ -1140,7 +1141,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		host.type = HOST_DEDICATED;
 	}
 	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
-#if defined XASH_GLES && !defined __EMSCRIPTEN__ && !TARGET_OS_IOS
+#if defined XASH_GLES && !defined __EMSCRIPTEN__ && !TARGET_OS_IOS && defined SDL_HINT_OPENGL_ES_DRIVER
 	SDL_SetHint( SDL_HINT_OPENGL_ES_DRIVER, "1" );
 #endif
 #endif
@@ -1351,7 +1352,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_AddText( "exec config.cfg\n" );
 		// listenserver/multiplayer config.
 		// need load it to update menu options.
-		Cbuf_AddText( "exec game.cfg\n" );
+		if( FS_FileExists( "game.cfg", true ) )
+			Cbuf_AddText( "exec game.cfg\n" );
+		Cbuf_AddText( "exec gamesettings.cfg\n" );
 		Cmd_AddCommand( "host_writeconfig", Host_WriteConfig, "force save configs. use with care" );
 	}
 

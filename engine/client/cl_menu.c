@@ -955,6 +955,16 @@ static void pfnCvarSetValue( const char *name, float value )
 	Cvar_Set2( name, val, false );
 }
 
+static void pfnWriteGameConfig( const char *name )
+{
+	// do not use game.cfg or listenserver.cfg
+	// as it will be executed from hlsdk
+	Host_WriteGameConfig( "gamesettings.cfg" );
+
+	// remove old game.cfg, prevent it from resetting settings
+	FS_Delete( "game.cfg" );
+}
+
 // engine callbacks
 static ui_enginefuncs_t gEngfuncs = 
 {
@@ -1028,7 +1038,7 @@ static ui_enginefuncs_t gEngfuncs =
 	pfnCheckGameDll,
 	pfnGetClipboardData,
 	(void*)Sys_ShellExecute,
-	Host_WriteGameConfig,
+	pfnWriteGameConfig,
 	pfnChangeInstance,
 	pfnStartBackgroundTrack,
 	pfnHostEndGame,

@@ -209,7 +209,7 @@ qboolean CSCR_ParseHeader( parserstate_t *ps )
 ======================
 CSCR_WriteGameCVars
 
-Print all cvars declared in script to game.cfg file
+Print all cvars declared in script to gamesettings.cfg file
 ======================
 */
 int CSCR_WriteGameCVars( file_t *cfg, const char *scriptfilename )
@@ -251,7 +251,7 @@ int CSCR_WriteGameCVars( file_t *cfg, const char *scriptfilename )
 			convar_t *cvar = Cvar_FindVar( var.name );
 			if( cvar && !( cvar->flags & ( CVAR_SERVERNOTIFY | CVAR_ARCHIVE ) ) )
 			{
-				// cvars will be placed in game.cfg and restored on map start
+				// cvars will be placed in gamesettings.cfg and restored on map start
 				if( var.flags & CVAR_USERINFO )
 					FS_Printf( cfg, "// %s ( %s )\nsetu %s \"%s\"\n", var.desc, var.value, var.name, cvar->string );
 				else

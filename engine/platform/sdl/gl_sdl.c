@@ -500,6 +500,10 @@ void GL_SetupAttributes()
 #if !defined(_WIN32)
 	SDL_SetHint( "SDL_VIDEO_X11_XRANDR", "1" );
 	SDL_SetHint( "SDL_VIDEO_X11_XVIDMODE", "1" );
+
+	// Hints for Sailfish OS
+	// NOTE: landscape is just a hint to compositor, it will NOT rotate window
+	SDL_SetHint( "SDL_QTWAYLAND_CONTENT_ORIENTATION", "landscape" );
 #endif
 
 	SDL_GL_ResetAttributes();

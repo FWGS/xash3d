@@ -73,9 +73,9 @@ convar_t *Cvar_FindVar( const char *var_name )
 		if( !Q_stricmp( var_name, var->name ))
 			return var;
 	}
-#endif
 
 	return NULL;
+#endif
 }
 
 /*
