@@ -1,6 +1,6 @@
 /*
 touch.h - natoive touch controls
-Copyright (C) 2015 mittorn
+Copyright (C) 2015-2018 mittorn
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

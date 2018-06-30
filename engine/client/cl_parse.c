@@ -1103,7 +1103,6 @@ void CL_CheckingResFile( char *pResFileName )
 
 	downloadcount++;
 
-	
 	if( cl_allow_fragment->integer )
 	{
 		Msg( "Starting file download: %s\n", pResFileName );
@@ -1119,8 +1118,7 @@ void CL_CheckingResFile( char *pResFileName )
 		// make sure message will be delivered
 		Netchan_Transmit( &cls.netchan, BF_GetNumBytesWritten( &buf ), BF_GetData( &buf ));
 	}
-	else
-	HTTP_AddDownload( pResFileName, -1, true );
+	else HTTP_AddDownload( pResFileName, -1, true );
 
 }
 

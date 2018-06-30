@@ -97,7 +97,7 @@ else()
 		add_definitions(-DUSE_SELECT)
 	endif()
 	add_definitions(-DCOLORIZE_CONSOLE)
-endif() 
+endif()
 
 if(LINUX)
 	add_definitions(-DGDB_BREAK)
@@ -138,7 +138,7 @@ if(XASH_SDL)
 endif()
 
 if(XASH_GLES)
-	add_definitions(-DXASH_GLES)
+	add_definitions(-DXASH_GLES -DXASH_GL_STATIC)
 endif()
 
 if(XASH_DLL_LOADER)
@@ -159,6 +159,10 @@ if(XASH_LIBDL)
 	target_link_libraries(${XASH_ENGINE} ${CMAKE_DL_LIBS})
 else()
 	add_definitions(-DNO_LIBDL)
+endif()
+
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+	add_definitions(-D_DEBUG)
 endif()
 
 if(XASH_RELEASE)

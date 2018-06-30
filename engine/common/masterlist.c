@@ -249,6 +249,7 @@ void NET_InitMasters()
 	Cmd_AddCommand( "listmasters", NET_ListMasters_f, "list masterservers" );
 
 	// keep main master always there
-	NET_AddMaster( DEFAULT_SV_MASTER, false );
+	NET_AddMaster( DEFAULT_PRIMARY_MASTER, false );
+	NET_AddMaster( DEFAULT_SECONDARY_MASTER, false );
 	NET_LoadMasters( );
 }

@@ -1743,7 +1743,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		if( !Q_strcmp( Cmd_Argv( 1 ), "nostore" ) )
 			preferStore = false;
 
-		if( NET_StringToAdr( DEFAULT_SV_MASTER, &adr ) )
+		if( NET_StringToAdr( DEFAULT_PRIMARY_MASTER, &adr ) )
 		{
 			if( NET_CompareAdr( from, adr ))
 			{

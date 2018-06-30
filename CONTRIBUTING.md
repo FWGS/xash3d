@@ -33,10 +33,14 @@ But if you want your patch to be accepted, we can give you few guidelines.
 
 | OS | Macro |
 | -- | ----- |
-| Linux | `defined(__linux__)`|
-| *BSD | `defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)` |
+| Linux | `defined(__linux__)` |
+| FreeBSD | `defined(__FreeBSD__)` |
+| NetBSD | `defined(__NetBSD__)` |
+| OpenBSD | `defined(__OpenBSD__)` |
+| OS X/iOS | `defined(__APPLE__)` and TargetConditionals macros |
 | Windows | `defined(_WIN32)` |
 | Android | `defined(__ANDROID__)` |
+| Emscripten | `defined(__EMSCRIPTEN__)` |
 
 ### Licensing
 

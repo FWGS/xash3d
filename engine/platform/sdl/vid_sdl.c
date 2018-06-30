@@ -420,6 +420,13 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
 		R_ChangeDisplaySettingsFast( width, height );
 	}
+	else
+	{
+		SDL_SetWindowSize( host.hWnd, width, height );
+		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
+		R_ChangeDisplaySettingsFast( width, height );
+	}
+
 #endif
 
 	return rserr_ok;
