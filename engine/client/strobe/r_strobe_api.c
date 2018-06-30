@@ -465,7 +465,8 @@ _inline void GenerateDebugStatistics( StrobeAPI_t *self, char *src, int size )
 	if (!strlen(self->private->strobemethod))
 	{
 		Q_snprintf(self->private->strobemethod, sizeof(self->private->strobemethod), (strobeMethod > 0 ? "%d [NORMAL" : "%d [BLACK"), strobeMethod);
-		for (int k = 1; k <= abs(strobeMethod); ++k)
+		int _k;
+		for (_k = 1; _k <= abs(strobeMethod); ++_k)
 		{
 			Q_strcat(self->private->strobemethod, (strobeMethod > 0 ? " - BLACK" : " - NORMAL"));
 		}
