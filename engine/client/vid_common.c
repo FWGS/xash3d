@@ -23,6 +23,8 @@ GNU General Public License for more details.
 #include "input.h"
 #include "gl_vidnt.h"
 
+#include "strobe/r_strobe_core.h"
+
 extern convar_t *renderinfo;
 convar_t	*gl_allow_software;
 convar_t	*gl_extensions;
@@ -79,7 +81,6 @@ convar_t	*r_fastsky;
 convar_t	*r_vbo;
 convar_t 	*r_bump;
 convar_t	*r_vbo_dlightmode;
-convar_t	*r_strobe;
 convar_t	*r_underwater_distortion;
 convar_t	*mp_decals;
 
@@ -1122,10 +1123,13 @@ qboolean R_Init( void )
 	R_InitImages();
 	R_SpriteInit();
 	R_StudioInit();
+
+#ifdef STROBE_ENABLED
+	R_InitStrobeAPI();
+#endif
+
 	R_ClearDecals();
 	R_ClearScene();
-
-	r_strobe = Cvar_Get("r_strobe", "0", CVAR_ARCHIVE, "black frame insertion interval");
 
 	// initialize screen
 	SCR_Init();

@@ -363,7 +363,6 @@ qboolean R_InitRenderAPI( void );
 void R_SetupFrustum( void );
 void R_FindViewLeaf( void );
 void R_DrawFog( void );
-void R_Strobe( void );
 
 #define cmatrix3x4 vec4_t *const
 #define cmatrix4x4 vec4_t *const
@@ -703,7 +702,6 @@ extern convar_t	*r_vbo;
 extern convar_t	*r_vbo_dlightmode;
 
 extern convar_t	*r_bump;
-extern convar_t	*r_strobe;
 extern convar_t *r_underwater_distortion;
 
 extern convar_t *mp_decals;

@@ -24,6 +24,8 @@ GNU General Public License for more details.
 #include "particledef.h"
 #include "entity_types.h"
 
+#include "strobe/r_strobe_core.h"
+
 #define IsLiquidContents( cnt )	( cnt == CONTENTS_WATER || cnt == CONTENTS_SLIME || cnt == CONTENTS_LAVA )
 
 msurface_t	*r_debug_surface;
@@ -1326,90 +1328,6 @@ void R_RenderFrame( const ref_params_t *fd, qboolean drawWorld )
 	GL_BackendEndFrame();
 }
 
-_inline void GL_InsertBlackFrame( void )
-{
-	// No strobing on the console
-	if( CL_IsInConsole() )
-	{
-		pglEnable( GL_SCISSOR_TEST );
-		pglScissor( con_rect.x, (-con_rect.y) - (con_rect.h*1.25), con_rect.w, con_rect.h ); // Preview strobe setting on static
-		pglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-		pglClear( GL_COLOR_BUFFER_BIT );
-		pglDisable( GL_SCISSOR_TEST );
-	}
-	else
-	{
-		pglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-		pglClear( GL_COLOR_BUFFER_BIT );
-	}
-}
-
-/*
-===============
-R_Strobe
-
-TODO: Consider vsync timings and do not render the supposed black frame at all.
-===============
-*/
-void R_Strobe( void )
-{
-	static int sCounter = 0;
-	int getInterval = r_strobe->integer; // Check through modified tag first?
-
-	if( CL_IsInMenu() )
-	{
-		R_Set2DMode(false);
-		return;
-	}
-
-	if( !getInterval || ( !gl_swapInterval->integer && getInterval ) )
-	{
-		if( getInterval ) //If v-sync is off, turn off strobing
-		{
-			Cvar_Set( "r_strobe", "0" );
-			MsgDev( D_WARN, "Strobing (Black Frame Replacement) requires V-Sync not being turned off! (gl_swapInterval != 0)\n" );
-		}
-		else if( sCounter )
-			sCounter = 0;
-
-		// flush any remaining 2D bits
-		R_Set2DMode(false);
-		return;
-	}
-	
-	// If interval is positive, insert (replace with) black frames.
-	// For example result of interval = 3 will be: "black-black-black-normal-black-black-black-normal-black-black-black-normal"
-	if( getInterval > 0 )
-	{
-		if( sCounter < getInterval )
-		{
-			GL_InsertBlackFrame();
-			++sCounter;
-		}
-		else
-		{
-			sCounter = 0;
-			R_Set2DMode( false );
-		}
-	}
-	// If interval is negative, the procedure will be the opposite reverse.
-	// For example result of interval = -4 will be: "normal-normal-normal-normal-black-normal-normal-normal-normal-black"
-	else
-	{
-		getInterval = abs( getInterval );
-		if( sCounter < getInterval )
-		{
-			++sCounter;
-			R_Set2DMode( false );
-		}
-		else
-		{
-			GL_InsertBlackFrame();
-			sCounter = 0;
-		}
-	}
-}
-
 /*
 ===============
 R_EndFrame
@@ -1417,8 +1335,14 @@ R_EndFrame
 */
 void R_EndFrame( void )
 {
-	R_Strobe();
-	
+#ifdef STROBE_ENABLED
+	// StrobeAPI.Invoker( STROBE_INVOKE(STROBE_TEMPLATE) );
+	StrobeAPI.Invoker( STROBE_INVOKE(STROBE_CORE) );
+#else
+	// flush any remaining 2D bits
+	R_Set2DMode( false );
+#endif
+
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );
 #elif defined __ANDROID__ // For direct android backend
