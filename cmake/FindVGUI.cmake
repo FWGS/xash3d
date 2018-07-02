@@ -50,6 +50,7 @@ find_library(VGUI_LIBRARY
 	HINTS $ENV{VGUIDIR}
 	PATH_SUFFIXES 
 	    games/lib/xash3d         # libvgui debian package
+	    lib/xash3d               # Maybe installed in system?
 		utils/vgui/lib/win32_vc6 # Win32 VC6
 		linux/                   # Linux
 		linux/release            # OSX
