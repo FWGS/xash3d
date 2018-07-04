@@ -21,47 +21,31 @@
 #
 
 cmake_minimum_required(VERSION 2.6.0)
-project (XASH_LAUNCHER)
+project(XASH_LAUNCHER C)
 
-set(XASH_LAUNCHER_EXECUTABLE xash3d)
-
+set(XASH_LAUNCHER xash3d)
+fwgs_fix_default_msvc_settings()
 file(GLOB XASH_LAUNCHER_SOURCES *.c)
 if(WIN32)
 	list(APPEND XASH_LAUNCHER_SOURCES game.rc)
 endif()
 
-add_executable(${XASH_LAUNCHER_EXECUTABLE} WIN32 ${XASH_LAUNCHER_SOURCES})
+add_executable(${XASH_LAUNCHER} WIN32 ${XASH_LAUNCHER_SOURCES})
 
-if(XASH_SDL AND NOT WIN32) # WinMain is used
-	find_package(SDL2 REQUIRED sdl2)
-	include_directories(${SDL2_INCLUDE_DIR})
-
+# SDL2 provides it's own crossplatform main() implementation and simple message boxes
+# Win32 uses WinMain() implemented in launcher code and system message boxes
+# Otherwise it prints errors in stdin.
+if(XASH_SDL AND NOT WIN32)
+	set(SDL2_BUILDING_EXECUTABLE YES) # Link SDL2main also
+	xash_link_sdl2(${XASH_LAUNCHER})
 	add_definitions(-DXASH_SDL)
-
-	target_link_libraries(${XASH_LAUNCHER_EXECUTABLE} ${SDL2_LIBRARY})
 endif()
 
 if(WIN32)
-	set_target_properties(${XASH_LAUNCHER_EXECUTABLE} PROPERTIES
-		OUTPUT_NAME xash)
+	set_target_properties(${XASH_LAUNCHER} PROPERTIES
+		OUTPUT_NAME xash) # Change name to your gamedir, if you building a standalone game
 endif()
 
-target_link_libraries(${XASH_LAUNCHER_EXECUTABLE} ${CMAKE_DL_LIBS})
+target_link_libraries(${XASH_LAUNCHER} ${CMAKE_DL_LIBS})
 
-if(NOT WIN32)
-	install(TARGETS ${XASH_LAUNCHER_EXECUTABLE} DESTINATION ${LIB_INSTALL_DIR}/${LIB_INSTALL_SUBDIR})
-else()
-	install(TARGETS ${XASH_LAUNCHER_EXECUTABLE}
-		CONFIGURATIONS Debug 
-		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Debug/
-		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Debug/)
-	if(MSVC)
-		install(FILES $<TARGET_PDB_FILE:${XASH_LAUNCHER_EXECUTABLE}>
-			CONFIGURATIONS Debug 
-			DESTINATION ${LIB_INSTALL_DIR}/Debug/)
-	endif()
-	install(TARGETS ${XASH_LAUNCHER_EXECUTABLE}
-		CONFIGURATIONS Release 
-		RUNTIME DESTINATION ${LIB_INSTALL_DIR}/Release/
-		LIBRARY DESTINATION ${LIB_INSTALL_DIR}/Release/)
-endif()
+fwgs_install(${XASH_LAUNCHER})

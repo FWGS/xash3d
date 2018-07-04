@@ -30,6 +30,10 @@ GNU General Public License for more details.
 #include <fcntl.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#endif
+
 #include "netchan.h"
 #include "server.h"
 #include "protocol.h"
@@ -92,6 +96,14 @@ void Sys_PrintUsage( void )
 	#endif
 
 	#ifndef XASH_DEDICATED
+		O("-width <n>       ","specifies width of engine window")
+		O("-height <n>      ","specifies height of engine window")
+
+	#ifndef __ANDROID__
+		O("-fullscreen      ","runs engine in fullscreen mode")
+		O("-windowed        ","runs engine in windowed mode")
+	#endif
+
 		O("-nojoy           ","disable joystick support")
 		O("-nosound         ","disable sound")
 		O("-noenginemouse   ","disable mouse completely")
@@ -246,30 +258,25 @@ Host_AbortCurrentFrame
 aborts the current host frame and goes on with the next one
 ================
 */
-#ifdef __EMSCRIPTEN__
-#include <emscripten/emscripten.h>
-#endif
 void Host_Frame( float time );
 void Host_RunFrame()
 {
 	static double	oldtime, newtime;
-#if XASH_INPUT == INPUT_SDL
-	SDL_Event event;
-#endif
+
 	if( !oldtime )
 		oldtime = Sys_DoubleTime();
 
-
 #if XASH_INPUT == INPUT_SDL
-		while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
-			SDLash_EventFilter( &event );
+	SDLash_RunEvents();
 #elif XASH_INPUT == INPUT_ANDROID
-		Android_RunEvents();
+	Android_RunEvents();
 #endif
-		newtime = Sys_DoubleTime ();
-		Host_Frame( newtime - oldtime );
 
-		oldtime = newtime;
+	newtime = Sys_DoubleTime ();
+
+	Host_Frame( newtime - oldtime );
+
+	oldtime = newtime;
 #ifdef __EMSCRIPTEN__
 #ifdef EMSCRIPTEN_ASYNC
 	emscripten_sleep(1);
@@ -469,7 +476,8 @@ void Host_MemStats_f( void )
 void Host_Minimize_f( void )
 {
 #ifdef XASH_SDL
-	if( host.hWnd ) SDL_MinimizeWindow( host.hWnd );
+	if( host.hWnd )
+		SDL_MinimizeWindow( host.hWnd );
 #endif
 }
 
@@ -1040,7 +1048,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 	}
 	else
 	{
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IOS
 		const char *IOS_GetDocsDir();
 		Q_strncpy( host.rootdir, IOS_GetDocsDir(), sizeof(host.rootdir) );
 #elif defined(XASH_SDL)
@@ -1077,6 +1085,7 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 			Sys_PrintUsage();
 	    }
 	}
+
 	if( host.rootdir[Q_strlen( host.rootdir ) - 1] == '/' )
 		host.rootdir[Q_strlen( host.rootdir ) - 1] = 0;
 
@@ -1132,6 +1141,9 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		host.type = HOST_DEDICATED;
 	}
 	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
+#if defined XASH_GLES && !defined __EMSCRIPTEN__ && !TARGET_OS_IOS && defined SDL_HINT_OPENGL_ES_DRIVER
+	SDL_SetHint( SDL_HINT_OPENGL_ES_DRIVER, "1" );
+#endif
 #endif
 
 	if ( !host.rootdir[0] || SetCurrentDirectory( host.rootdir ) != 0)
@@ -1286,6 +1298,10 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	SV_Init();
 	CL_Init();
 
+#if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined( XASH_DEDICATED )
+	Android_Init();
+#endif
+
 	HTTP_Init();
 
 	ID_Init();
@@ -1321,7 +1337,7 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 
 		Cbuf_AddText( "exec config.cfg\n" );
 
-		if( !Sys_CheckParm("+map") )
+		if( !Sys_CheckParm( "+map" ) )
 				Cbuf_AddText( "startdefaultmap" );
 
 		Cvar_FullSet( "xashds_hacks", "0", CVAR_READ_ONLY );
@@ -1336,7 +1352,9 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 		Cbuf_AddText( "exec config.cfg\n" );
 		// listenserver/multiplayer config.
 		// need load it to update menu options.
-		Cbuf_AddText( "exec game.cfg\n" );
+		if( FS_FileExists( "game.cfg", true ) )
+			Cbuf_AddText( "exec game.cfg\n" );
+		Cbuf_AddText( "exec gamesettings.cfg\n" );
 		Cmd_AddCommand( "host_writeconfig", Host_WriteConfig, "force save configs. use with care" );
 	}
 
@@ -1357,15 +1375,13 @@ int EXPORT Host_Main( int argc, const char **argv, const char *progname, int bCh
 	Host_Userconfigd_f();
 
 	// in case of empty init.rc
-	if( !host.stuffcmdsrun ) Cbuf_AddText( "stuffcmds\n" );
+	if( !host.stuffcmdsrun )
+		Cbuf_AddText( "stuffcmds\n" );
 
-	IN_TouchInitConfig();
+	Touch_InitConfig();
 	SCR_CheckStartupVids();	// must be last
 #ifdef XASH_SDL
 	SDL_StopTextInput(); // disable text input event. Enable this in chat/console?
-#endif
-#if defined(__ANDROID__) && !defined( XASH_SDL ) && !defined(XASH_DEDICATED)
-	Android_Init();
 #endif
 
 	if( host.state == HOST_INIT )
@@ -1405,7 +1421,7 @@ void EXPORT Host_Shutdown( void )
 			// restore all latched cheat cvars
 			Cvar_SetCheatState( true );
 			Host_WriteConfig();
-			IN_TouchWriteConfig();
+			Touch_WriteConfig();
 			host.skip_configs = false;
 		}
 #endif

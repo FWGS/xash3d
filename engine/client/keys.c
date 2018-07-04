@@ -95,21 +95,21 @@ keyname_t keynames[] =
 {"KP_MINUS",	K_KP_MINUS,	""		},
 {"KP_PLUS",	K_KP_PLUS,	""		},
 {"PAUSE",		K_PAUSE,		"pause"		},
-{"A_BUTTON", K_AUX1, ""}, // they match xbox controller
-{"B_BUTTON", K_AUX2, ""},
-{"X_BUTTON", K_AUX3, ""},
-{"Y_BUTTON", K_AUX4, ""},
-{"L1_BUTTON",  K_AUX5, ""},
-{"R1_BUTTON",  K_AUX6, ""},
-{"BACK",   K_AUX7, ""},
-{"MODE",   K_AUX8, ""},
-{"START",  K_AUX9, ""},
-{"STICK1", K_AUX10, ""},
-{"STICK2", K_AUX11, ""},
-{"L2_BUTTON", K_AUX12, ""}, // in case...
-{"R2_BUTTON", K_AUX13, ""},
-{"C_BUTTON", K_AUX14, ""},
-{"Z_BUTTON", K_AUX15, ""},
+{"A_BUTTON", K_A_BUTTON, ""}, // they match xbox controller
+{"B_BUTTON", K_B_BUTTON, ""},
+{"X_BUTTON", K_X_BUTTON, ""},
+{"Y_BUTTON", K_Y_BUTTON, ""},
+{"L1_BUTTON",  K_L1_BUTTON, ""},
+{"R1_BUTTON",  K_R1_BUTTON, ""},
+{"BACK",   K_BACK_BUTTON, ""},
+{"MODE",   K_MODE_BUTTON, ""},
+{"START",  K_START_BUTTON, ""},
+{"STICK1", K_LSTICK, ""},
+{"STICK2", K_RSTICK, ""},
+{"L2_BUTTON", K_L2_BUTTON, ""}, // in case...
+{"R2_BUTTON", K_R2_BUTTON, ""},
+{"C_BUTTON", K_C_BUTTON, ""},
+{"Z_BUTTON", K_Z_BUTTON, ""},
 {"AUX16", K_AUX16, ""}, // generic
 {"AUX17", K_AUX17, ""},
 {"AUX18", K_AUX18, ""},
@@ -599,7 +599,7 @@ void GAME_EXPORT Key_Event( int key, qboolean down )
 	}
 
 	VGui_KeyEvent( key, down );
-	IN_TouchKeyEvent( key, down );
+	Touch_KeyEvent( key, down );
 
 	// console key is hardcoded, so the user can never unbind it
 	if( key == '`' || key == '~' )
@@ -846,11 +846,11 @@ CL_CharEvent
 Normal keyboard characters, already shifted / capslocked / etc
 ===================
 */
-void CL_CharEvent( int key )
+void CL_CharEvent( int ch )
 {
 	// the console key should never be used as a char
 #ifdef _WIN32
-	if( key == '`' || key == '~' ) return;
+	if( ch == '`' || ch == '~' ) return;
 
 #if 0
 	if( cls.key_dest == key_console && !Con_Visible( ))
@@ -861,13 +861,17 @@ void CL_CharEvent( int key )
 #endif
 #endif
 	// distribute the key down event to the apropriate handler
-	if( cls.key_dest == key_console || cls.key_dest == key_message )
+
+	Con_CharEvent( ch ); // a1ba: no need for checks, as Con_CharEvent already it does
+
+	if( cls.key_dest == key_menu )
 	{
-		Con_CharEvent( key );
+		UI_CharEvent( ch );
 	}
-	else if( cls.key_dest == key_menu )
+	else if( cls.key_dest == key_game ) // typing support for VGUI
 	{
-		UI_CharEvent( key );
+		VGui_KeyEvent( ch, 2 );
 	}
+
 }
 #endif

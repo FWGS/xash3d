@@ -1159,6 +1159,12 @@ void GAME_EXPORT pfnSetModel( edict_t *e, const char *m )
 		return;
 	}
 
+	if( e == svgame.edicts )
+	{
+		MsgDev( D_ERROR, "SV_SetModel: world model can't be changed\n" );
+		return;
+	}
+
 	if( !m || m[0] <= ' ' )
 	{
 		MsgDev( D_WARN, "SV_SetModel: null name\n" );
@@ -2988,20 +2994,31 @@ void GAME_EXPORT pfnFreeEntPrivateData( edict_t *pEdict )
 }
 
 #ifdef XASH_64BIT
-#define MAX_STRING_ARRAY 65536
 static struct str64_s
 {
-	char staticstringarray[MAX_STRING_ARRAY * 2];
+	size_t maxstringarray;
+	qboolean allowdup;
+	char *staticstringarray;
 	char *pstringarray;
 	char *pstringarraystatic;
 	char *pstringbase;
 	char *poldstringbase;
 	char *plast;
 	qboolean dynamic;
+	size_t maxalloc;
+	size_t numdups;
+	size_t numoverflows;
+	size_t totalalloc;
 } str64;
 #endif
 
+/*
+==================
+SV_EmptyStringPool
 
+Free strings on server stop. Reset string pointer on 64 bits
+==================
+*/
 void SV_EmptyStringPool( void )
 {
 #ifdef XASH_64BIT
@@ -3017,12 +3034,13 @@ void SV_EmptyStringPool( void )
 #endif
 }
 
-
 /*
 ===============
 SV_SetStringArrayMode
 
 use different arrays on 64 bit platforms
+set dynamic after complete server spawn
+this helps not to lose strings that belongs to static game part
 ===============
 */
 void SV_SetStringArrayMode( qboolean dynamic )
@@ -3046,16 +3064,37 @@ void SV_SetStringArrayMode( qboolean dynamic )
 #endif
 #endif
 
+/*
+==================
+SV_AllocStringPool
+
+alloc string pool on 32bit platforms
+alloc string array near the server library on 64bit platforms if possible
+alloc string array somewhere if not (MAKE_STRING will not work. Always call ALLOC_STRING instead, or crash)
+this case need patched game dll with MAKE_STRING checking ptrdiff size
+==================
+*/
 void SV_AllocStringPool( void )
 {
 #ifdef XASH_64BIT
 	void *ptr = NULL;
+	string lenstr;
 
 	MsgDev( D_NOTE, "SV_AllocStringPool()\n" );
+	if( Sys_GetParmFromCmdLine( "-str64alloc", lenstr ) )
+	{
+		str64.maxstringarray = Q_atoi( lenstr );
+		if( str64.maxstringarray < 1024 || str64.maxstringarray >= INT_MAX )
+			str64.maxstringarray = 65536;
+	}
+	else str64.maxstringarray = 65536;
+	if( Sys_CheckParm( "-str64dup" ) )
+		str64.allowdup = true;
+
 #ifdef USE_MMAP
 	{
 		size_t pagesize = sysconf( _SC_PAGESIZE );
-		int arrlen = (MAX_STRING_ARRAY * 2) & ~(pagesize - 1);
+		int arrlen = (str64.maxstringarray * 2) & ~(pagesize - 1);
 		void *base = svgame.dllFuncs.pfnGameInit;
 		void *start = svgame.hInstance - arrlen;
 
@@ -3096,15 +3135,15 @@ void SV_AllocStringPool( void )
 		else
 		{
 			MsgDev( D_WARN, "SV_AllocStringPool: Failed to allocate string array near the server library!\n" );
-			ptr = str64.staticstringarray;
+			ptr = str64.staticstringarray = Mem_Alloc(host.mempool, str64.maxstringarray * 2);
 		}
 	}
 #else
-	ptr = str64.staticstringarray;
+	ptr = str64.staticstringarray = Mem_Alloc(host.mempool, str64.maxstringarray * 2);
 #endif
 
 	str64.pstringarray = ptr;
-	str64.pstringarraystatic = ptr + MAX_STRING_ARRAY;
+	str64.pstringarraystatic = ptr + str64.maxstringarray;
 	str64.pstringbase = str64.poldstringbase = ptr;
 	str64.plast = ptr + 1;
 	svgame.globals->pStringBase = ptr;
@@ -3120,7 +3159,9 @@ void SV_FreeStringPool( void )
 	MsgDev( D_NOTE, "SV_FreeStringPool()\n" );
 
 	if( str64.pstringarray != str64.staticstringarray )
-		munmap( str64.pstringarray, (MAX_STRING_ARRAY * 2) & ~(sysconf( _SC_PAGESIZE ) - 1) );
+		munmap( str64.pstringarray, (str64.maxstringarray * 2) & ~(sysconf( _SC_PAGESIZE ) - 1) );
+	else
+		Mem_Free( str64.staticstringarray );
 #else
 	Mem_FreePool( &svgame.stringspool );
 #endif
@@ -3131,34 +3172,47 @@ void SV_FreeStringPool( void )
 SV_AllocString
 
 allocate new engine string
+on 64bit platforms find in array string if deduplication enabled (default)
+if not found, add to array
+use -str64dup to disable deduplication, -str64alloc to set array size
 =============
 */
 string_t GAME_EXPORT SV_AllocString( const char *szValue )
 {
-	const char *newString;
+	const char *newString = NULL;
 
 	if( svgame.physFuncs.pfnAllocString != NULL )
 		return svgame.physFuncs.pfnAllocString( szValue );
 #ifdef XASH_64BIT
 	int cmp = 1;
 
-	for( newString = str64.poldstringbase + 1; newString < str64.plast && ( cmp = Q_strcmp( newString, szValue ) ); newString += Q_strlen( newString ) + 1 );
+	if( !str64.allowdup )
+		for( newString = str64.poldstringbase + 1; newString < str64.plast && ( cmp = Q_strcmp( newString, szValue ) ); newString += Q_strlen( newString ) + 1 );
 
 	if( cmp )
 	{
 		uint len = Q_strlen( szValue );
 
-		if( str64.plast - str64.poldstringbase + len + 2 > MAX_STRING_ARRAY )
-			str64.plast = str64.pstringbase + 1, str64.poldstringbase = str64.pstringbase;
+		if( str64.plast - str64.poldstringbase + len + 2 > str64.maxstringarray )
+		{
+			str64.plast = str64.pstringbase + 1;
+			str64.poldstringbase = str64.pstringbase;
+			str64.numoverflows++;
+		}
 
 		//MsgDev( D_NOTE, "SV_AllocString: %ld %s\n", str64.plast - svgame.globals->pStringBase, szValue );
 		Q_memcpy( str64.plast, szValue, len + 1 );
+		str64.totalalloc += len + 1;
 
 		newString = str64.plast;
 		str64.plast += len + 1;
 	}
-	//else
+	else
+		str64.numdups++;
 		//MsgDev( D_NOTE, "SV_AllocString: dup %ld %s\n", newString - svgame.globals->pStringBase, szValue );
+
+	if( newString - str64.pstringarray > str64.maxalloc )
+		str64.maxalloc = newString - str64.pstringarray;
 
 	return newString - svgame.globals->pStringBase;
 #else
@@ -3166,6 +3220,20 @@ string_t GAME_EXPORT SV_AllocString( const char *szValue )
 	return newString - svgame.globals->pStringBase;
 #endif
 }
+
+#ifdef XASH_64BIT
+void SV_PrintStr64Stats_f( void )
+{
+	Msg( "====================\n" );
+	Msg( "64 bit string pool statistics\n" );
+	Msg( "====================\n" );
+	Msg( "string array size: %lu\n", str64.maxstringarray );
+	Msg( "total alloc %lu\n", str64.totalalloc );
+	Msg( "maximum array usage: %lu\n", str64.maxalloc );
+	Msg( "overflow counter: %lu\n", str64.numoverflows );
+	Msg( "dup string counter: %lu\n", str64.numdups );
+}
+#endif
 
 /*
 =============
@@ -5103,10 +5171,6 @@ void SV_UnloadProgs( void )
 	// before pointers on them will be lost...
 	Cmd_ExecuteString( "@unlink\n", src_command );
 	Cmd_Unlink( CMD_EXTDLL );
-
-	// restore lost cvars after unlink
-	Cbuf_AddText( "exec game.cfg\n" );
-	Cbuf_Execute();
 
 	Mod_ResetStudioAPI ();
 	Com_FreeLibrary( svgame.hInstance );

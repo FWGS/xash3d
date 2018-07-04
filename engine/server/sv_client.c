@@ -42,6 +42,8 @@ typedef struct ucmd_s
 
 static int	g_userid = 1;
 
+static void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo );
+
 /*
 =================
 SV_GetChallenge
@@ -1985,7 +1987,11 @@ void SV_Baselines_f( sv_client_t *cl )
 		start++;
 	}
 
-	if( start == svgame.numEntities ) Q_snprintf( cmd, MAX_STRING, "precache %i\n", svs.spawncount );
+	if( start == svgame.numEntities )
+	{
+		// a1ba: force server cheats value
+		Q_snprintf( cmd, MAX_STRING, "precache %i %i\n", svs.spawncount, Cvar_VariableInteger( "sv_cheats" ) );
+	}
 	else Q_snprintf( cmd, MAX_STRING, "cmd baselines %i %i\n", svs.spawncount, start );
 
 	// send next command
@@ -2080,21 +2086,74 @@ void SV_Pause_f( sv_client_t *cl )
 
 /*
 =================
+SV_ShouldUpdateUserinfo
+
+=================
+*/
+static qboolean SV_ShouldUpdateUserinfo( sv_client_t *cl )
+{
+	qboolean allow = true; // predict state
+
+	if( !sv_userinfo_enable_penalty->value )
+		return allow;
+
+	if( cl->fakeclient )
+		return allow;
+
+	// start from 1 second
+	if( !cl->userinfo_penalty )
+		cl->userinfo_penalty = sv_userinfo_penalty_time->value;
+
+	// player changes userinfo after limit time window, but before
+	// next timewindow
+	// he seems to be spammer, so just increase change attempts
+	if( host.realtime < cl->userinfo_next_changetime + cl->userinfo_penalty * sv_userinfo_penalty_multiplier->value )
+	{
+		// player changes userinfo too quick! ignore!
+		if( host.realtime < cl->userinfo_next_changetime )
+		{
+			MsgDev( D_INFO, "SV_ShouldUpdateUserinfo: ignore userinfo update for %s: penalty %f, attempts %i\n",
+				cl->name, cl->userinfo_penalty, cl->userinfo_change_attempts );
+			allow = false;
+		}
+
+		cl->userinfo_change_attempts++;
+	}
+
+	// he spammed too fast, increase penalty
+	if( cl->userinfo_change_attempts > sv_userinfo_penalty_attempts->value )
+	{
+		MsgDev( D_INFO, "SV_ShouldUpdateUserinfo: penalty set %f for %s\n",
+			cl->userinfo_penalty, cl->name );
+		cl->userinfo_penalty *= sv_userinfo_penalty_multiplier->value;
+		cl->userinfo_change_attempts = 0;
+	}
+
+	cl->userinfo_next_changetime = host.realtime + cl->userinfo_penalty;
+
+	return allow;
+}
+
+/*
+=================
 SV_UserinfoChanged
 
 Pull specific info from a newly changed userinfo string
 into a more C freindly form.
 =================
 */
-void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
+static void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 {
 	int		i, dupc = 1;
 	edict_t		*ent = cl->edict;
 	string		temp1, temp2;
 	sv_client_t	*current;
 	char		*val;
+	const char *model;
 
 	if( !userinfo || !userinfo[0] ) return; // ignored
+
+	if( !SV_ShouldUpdateUserinfo( cl )) return; // ignored
 
 	Q_strncpy( cl->userinfo, userinfo, sizeof( cl->userinfo ));
 
@@ -2193,7 +2252,7 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 		cl->cl_updaterate = 1.0f / i;
 	}
 
-	const char *model = Info_ValueForKey( cl->userinfo, "model" );
+	model = Info_ValueForKey( cl->userinfo, "model" );
 
 	// apply custom playermodel
 	if( Q_strlen( model ) && Q_stricmp( model, "player" ))
@@ -2228,10 +2287,12 @@ void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo )
 SV_UpdateUserinfo_f
 ==================
 */
+#if 0
 static void SV_UpdateUserinfo_f( sv_client_t *cl )
 {
 	SV_UserinfoChanged( cl, Cmd_Argv( 1 ));
 }
+#endif
 
 /*
 ==================
@@ -3106,7 +3167,7 @@ ucmd_t ucmds[] =
 { "eventlist", SV_WriteEvents_f },
 { "disconnect", SV_Disconnect_f },
 { "usermsgs", SV_UserMessages_f },
-{ "userinfo", SV_UpdateUserinfo_f },
+//{ "userinfo", SV_UpdateUserinfo_f },
 { "lightstyles", SV_WriteLightstyles_f },
 { "getresourcelist", SV_SendResourceList_f },
 { "continueloading", SV_ContinueLoading_f },
@@ -3297,7 +3358,6 @@ void SV_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	char	*args;
 	char	*c, buf[MAX_SYSPATH];
 	int	len = sizeof( buf );
-	char *gamedir = GI->gamefolder;
 
 	// prevent flooding from banned address
 	if( SV_CheckIP( &from ) )

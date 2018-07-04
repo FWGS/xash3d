@@ -323,6 +323,7 @@ const char* Q_timestamp( int format )
 
 	return timestamp;
 }
+
 #ifndef XASH_SKIPCRTLIB
 char *Q_strstr( const char *string, const char *string2 )
 {
@@ -371,15 +372,13 @@ char *Q_stristr( const char *string, const char *string2 )
 	}
 	return (char *)string;
 }
-#ifndef USE_STB_SPRINTF
-#define USE_STB_SPRINTF 1
-#endif
-#if USE_STB_SPRINTF
-#define STB_SPRINTF_IMPLEMENTATION
-#define STB_SPRINTF_DECORATE(name) Q_##name
-#undef Q_vsprintf
-#include "stb/stb_sprintf.h"
-#else
+
+#if XASH_USE_STB_SPRINTF
+	#define STB_SPRINTF_IMPLEMENTATION
+	#define STB_SPRINTF_DECORATE(name) Q_##name
+	#undef Q_vsprintf
+	#include "stb/stb_sprintf.h"
+#else // XASH_USE_STB_SPRINTF
 int Q_vsnprintf( char *buffer, size_t buffersize, const char *format, va_list args )
 {
 	int	result;
@@ -417,8 +416,9 @@ int Q_sprintf( char *buffer, const char *format, ... )
 
 	return result;
 }
-#endif // USE_STB_SRPINTF
+#endif // XASH_USE_STB_SPRINTF
 #endif // XASH_SKIPCRTLIB
+
 char *Q_pretifymem( float value, int digitsafterdecimal )
 {
 	static char	output[8][32];

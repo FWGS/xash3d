@@ -23,6 +23,8 @@ GNU General Public License for more details.
 #include "input.h"
 #include "gl_vidnt.h"
 
+#include "strobe/r_strobe_core.h"
+
 extern convar_t *renderinfo;
 convar_t	*gl_allow_software;
 convar_t	*gl_extensions;
@@ -78,6 +80,8 @@ convar_t	*r_lightmap;
 convar_t	*r_fastsky;
 convar_t	*r_vbo;
 convar_t 	*r_bump;
+convar_t	*r_vbo_dlightmode;
+convar_t	*r_underwater_distortion;
 convar_t	*mp_decals;
 
 convar_t	*vid_displayfrequency;
@@ -868,6 +872,7 @@ void GL_InitCommands( void )
 	r_decals = Cvar_Get( "r_decals", "4096", 0, "sets the maximum number of decals" );
 	r_xpos = Cvar_Get( "r_xpos", "130", CVAR_GLCONFIG, "window position by horizontal" );
 	r_ypos = Cvar_Get( "r_ypos", "48", CVAR_GLCONFIG, "window position by vertical" );
+	r_underwater_distortion = Cvar_Get( "r_underwater_distortion", "0.4", CVAR_ARCHIVE, "underwater distortion speed" );
 	mp_decals = Cvar_Get( "mp_decals", "300", CVAR_ARCHIVE, "sets the maximum number of decals in multiplayer" );
 
 	gl_picmip = Cvar_Get( "gl_picmip", "0", CVAR_GLCONFIG, "reduces resolution of textures by powers of 2" );
@@ -950,7 +955,7 @@ void Win_SetDPIAwareness( void )
 				MsgDev( D_NOTE, "SetDPIAwareness: Success\n" );
 				bSuccess = TRUE;
 			}
-			else if( hResult = E_INVALIDARG ) MsgDev( D_NOTE, "SetDPIAwareness: Invalid argument\n" );
+			else if( hResult == E_INVALIDARG ) MsgDev( D_NOTE, "SetDPIAwareness: Invalid argument\n" );
 			else if( hResult == E_ACCESSDENIED ) MsgDev( D_NOTE, "SetDPIAwareness: Access Denied\n" );
 		}
 		else MsgDev( D_NOTE, "SetDPIAwareness: Can't get SetProcessDpiAwareness\n" );
@@ -995,14 +1000,81 @@ register VBO cvars and get default value
 static void R_CheckVBO( void )
 {
 	const char *def = "1";
+	const char *dlightmode = "1";
 	int flags = CVAR_ARCHIVE;
+	qboolean disable = false;
 
 	// some bad GLES1 implementations breaks dlights completely
 	if( glConfig.max_texture_units < 3 )
+		disable = true;
+
+#ifdef __ANDROID__
+	// VideoCore4 drivers have a problem with mixing VBO and client arrays
+	// Disable it, as there is no suitable workaround here
+	if( Q_stristr( glConfig.renderer_string, "VideoCore IV" ) || Q_stristr( glConfig.renderer_string, "vc4" ) )
+		disable = true;
+
+	// dlightmode 1 is not too much tested on android
+	// so better to left it off
+	dlightmode = "0";
+#endif
+
+	if( disable )
+	{
+		// do not keep in config unless dev > 3 and enabled
+		flags = 0;
 		def = "0";
+	}
 
 	r_vbo = Cvar_Get( "r_vbo", def, flags, "draw world using VBO" );
-	r_bump = Cvar_Get( "r_bump", def, flags, "enable bump-mapping (r_vbo required)" );
+	r_bump = Cvar_Get( "r_bump", def, CVAR_ARCHIVE, "enable bump-mapping (r_vbo required)" );
+	r_vbo_dlightmode = Cvar_Get( "r_vbo_dlightmode", dlightmode, CVAR_ARCHIVE, "vbo dlight rendering mode(0-1)" );
+
+	// check if enabled manually
+	if( r_vbo->integer && host.developer > 3 )
+		r_vbo->flags |= CVAR_ARCHIVE;
+}
+
+static int GetCommandLineIntegerValue(const char* argName)
+{
+	int argIndex = Sys_CheckParm(argName);
+
+	if ( argIndex < 1 || argIndex + 1 >= host.argc || !host.argv[argIndex + 1] )
+	{
+		return 0;
+	}
+
+	return Q_atoi(host.argv[argIndex + 1]);
+}
+
+static void SetWidthAndHeightFromCommandLine()
+{
+	int width = GetCommandLineIntegerValue("-width");
+	int height = GetCommandLineIntegerValue("-height");
+
+	if ( width < 1 || height < 1 )
+	{
+		// Not specified or invalid, so don't bother.
+		return;
+	}
+
+	Cvar_SetFloat("vid_mode", VID_NOMODE);
+	Cvar_SetFloat("width", width);
+	Cvar_SetFloat("height", height);
+}
+
+static void SetFullscreenModeFromCommandLine()
+{
+#ifndef __ANDROID__
+	if ( Sys_CheckParm("-fullscreen") )
+	{
+		Cvar_Set2("fullscreen", "1", true);
+	}
+	else if ( Sys_CheckParm("-windowed") )
+	{
+		Cvar_Set2("fullscreen", "0", true);
+	}
+#endif
 }
 
 /*
@@ -1019,6 +1091,12 @@ qboolean R_Init( void )
 	Cbuf_AddText( "exec opengl.cfg\n" );
 
 	GL_InitCommands();
+	
+	// Set screen resolution and fullscreen mode if passed in on command line.
+	// This is done after executing opengl.cfg, as the command line values should take priority.
+	SetWidthAndHeightFromCommandLine();
+	SetFullscreenModeFromCommandLine();
+
 	GL_SetDefaultState();
 
 #ifdef WIN32
@@ -1045,6 +1123,11 @@ qboolean R_Init( void )
 	R_InitImages();
 	R_SpriteInit();
 	R_StudioInit();
+
+#ifdef STROBE_ENABLED
+	R_InitStrobeAPI();
+#endif
+
 	R_ClearDecals();
 	R_ClearScene();
 

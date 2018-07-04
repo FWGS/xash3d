@@ -154,18 +154,18 @@ BaseCmd_Remove
 Remove base command from hashmap
 ============
 */
-void BaseCmd_Remove( base_command_type_e type, base_command_t *basecmd, const char *name )
+void BaseCmd_Remove(base_command_type_e type, const char *name )
 {
 	uint hash = Com_HashKey( name, HASH_SIZE );
 	base_command_hashmap_t *i, *prev;
 
 	for( prev = NULL, i = hashed_cmds[hash]; i &&
-		 ( i->basecmd != basecmd || i->type != type); // filter out
+		 ( Q_strcmp( i->name, name ) || i->type != type); // filter out
 		 prev = i, i = i->next );
 
 	if( !i )
 	{
-		MsgDev( D_ERROR, "Couldn't find %s in buckets", name );
+		MsgDev( D_ERROR, "Couldn't find %s in buckets\n", name );
 		return;
 	}
 

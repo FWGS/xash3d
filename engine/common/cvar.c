@@ -73,9 +73,9 @@ convar_t *Cvar_FindVar( const char *var_name )
 		if( !Q_stricmp( var_name, var->name ))
 			return var;
 	}
-#endif
 
 	return NULL;
+#endif
 }
 
 /*
@@ -1153,7 +1153,7 @@ void Cvar_Restart_f( void )
 		if( var->flags & CVAR_USER_CREATED )
 		{
 #if defined(XASH_HASHED_VARS)
-			BaseCmd_Remove( HM_CVAR, var, var->name );
+			BaseCmd_Remove( HM_CVAR, var->name );
 #endif
 
 			*prev = var->next;
@@ -1281,7 +1281,7 @@ void Cvar_Unlink_f( void )
 
 		// throw out any variables the game created
 #if defined(XASH_HASHED_VARS)
-		BaseCmd_Remove( HM_CVAR, var, var->name );
+		BaseCmd_Remove( HM_CVAR, var->name );
 #endif
 		*prev = var->next;
 		Z_Free( var->string );
@@ -1317,7 +1317,7 @@ void Cvar_Unlink( void )
 
 		// throw out any variables the game created
 #if defined(XASH_HASHED_VARS)
-		BaseCmd_Remove( HM_CVAR, var, var->name );
+		BaseCmd_Remove( HM_CVAR, var->name );
 #endif
 
 		*prev = var->next;

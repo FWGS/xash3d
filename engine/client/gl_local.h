@@ -634,6 +634,7 @@ typedef struct
 	qboolean		software;		// OpenGL software emulation
 	qboolean		initialized;	// OpenGL subsystem started
 	qboolean		extended;
+	int		safe;
 } glwstate_t;
 
 extern glconfig_t		glConfig;
@@ -698,7 +699,10 @@ extern convar_t	*r_dynamic;
 extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
 extern convar_t	*r_vbo;
+extern convar_t	*r_vbo_dlightmode;
+
 extern convar_t	*r_bump;
+extern convar_t *r_underwater_distortion;
 
 extern convar_t *mp_decals;
 
@@ -709,4 +713,4 @@ extern convar_t	*vid_texgamma;
 extern convar_t	*vid_mode;
 extern convar_t *vid_highdpi;
 
-#endif//GL_LOCAL_H
+#endif //GL_LOCAL_H

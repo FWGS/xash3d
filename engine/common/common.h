@@ -24,6 +24,8 @@ extern "C" {
 
 #include "backends.h"
 #include "defaults.h"
+#include "wrect.h"
+
 //
 // check if selected backend not allowed
 //
@@ -51,7 +53,11 @@ extern "C" {
 #include <stdarg.h> // va_list
 #include <stdlib.h> // rand, abs
 
+#ifdef __i386__
+#define EXPORT __attribute__ ((visibility ("default"),force_align_arg_pointer))
+#else
 #define EXPORT __attribute__ ((visibility ("default")))
+#endif
 #else
 #include <sys/types.h> // off_t
 #include <stdio.h>
@@ -126,7 +132,6 @@ _inline float LittleFloat( float f )
 typedef unsigned int	dword;
 typedef unsigned int	uint;
 typedef char		string[MAX_STRING];
-typedef struct searchpath_s searchpath_t;
 typedef struct wfile_s	wfile_t;		// wad file
 typedef struct file_s file_t;     // normal file
 #define FILE_T_DEFINED
@@ -163,7 +168,7 @@ typedef enum
 #include "crtlib.h"
 #include "base_cmd.h"
 
-#define XASH_VERSION	"0.19.1"		// engine current version
+#define XASH_VERSION	"0.19.2"		// engine current version
 // since this fork have own version, this is just left for compability
 #define BASED_VERSION	0.98f
 
@@ -471,8 +476,8 @@ const char *FS_FileWithoutPath( const char *in );
 wfile_t *W_Open( const char *filename, const char *mode );
 byte *W_LoadLump( wfile_t *wad, const char *lumpname, size_t *lumpsizeptr, const char type );
 void W_Close( wfile_t *wad );
-searchpath_t *FS_FindFile( const char *name, int *index, qboolean gamedironly );
-searchpath_t *FS_GetSearchPaths( void );
+struct searchpath_s *FS_FindFile( const char *name, int *index, qboolean gamedironly );
+struct searchpath_s *FS_GetSearchPaths( void );
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly );
 byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr );
@@ -956,7 +961,7 @@ qboolean CL_IsIntermission( void );
 void CL_WarnLostSplitPacket( void );
 float CL_GetServerTime( void );
 float CL_GetLerpFrac( void );
-void CL_CharEvent( int key );
+void CL_CharEvent( int ch );
 qboolean CL_DisableVisibility( void );
 int CL_PointContents( const vec3_t point );
 char *COM_ParseFile( char *data, char *token );
@@ -1075,6 +1080,8 @@ void Con_ClearAutoComplete();
 //
 // console.c
 //
+extern rectf_t con_rect;
+
 void Con_Clear( void );
 
 extern const char *svc_strings[256];

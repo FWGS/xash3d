@@ -226,9 +226,10 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 
 		// remove MSAA, if it present, because
 		// window creating may fail on GLX visual choose
-		if( gl_msaa->integer )
+		if( gl_msaa->integer || glw_state.safe >= 0 )
 		{
 			Cvar_Set("gl_msaa", "0");
+			glw_state.safe++;
 			GL_SetupAttributes(); // re-choose attributes
 
 			// try again
@@ -369,6 +370,7 @@ void R_ChangeDisplaySettingsFast( int width, int height )
 rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 {
 	SDL_DisplayMode displayMode;
+	qboolean old_fullscreen = glState.fullScreen;
 
 	SDL_GetCurrentDisplayMode(0, &displayMode);
 #ifdef XASH_NOMODESWITCH
@@ -377,6 +379,7 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 	fullscreen = false;
 #endif
 
+	MsgDev(D_INFO, "R_ChangeDisplaySettings: Setting video mode to %dx%d %s\n", width, height, fullscreen ? "fullscreen" : "windowed");
 	R_SaveVideoMode( width, height );
 
 	// check our desktop attributes
@@ -403,7 +406,7 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		if( !VID_SetScreenResolution( width, height ) )
 			return rserr_invalid_fullscreen;
 	}
-	else
+	else if( old_fullscreen )
 	{
 		VID_RestoreScreenResolution();
 		if( SDL_SetWindowFullscreen(host.hWnd, 0) )
@@ -417,6 +420,13 @@ rserr_t R_ChangeDisplaySettings( int width, int height, qboolean fullscreen )
 		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
 		R_ChangeDisplaySettingsFast( width, height );
 	}
+	else
+	{
+		SDL_SetWindowSize( host.hWnd, width, height );
+		SDL_GL_GetDrawableSize( host.hWnd, &width, &height );
+		R_ChangeDisplaySettingsFast( width, height );
+	}
+
 #endif
 
 	return rserr_ok;

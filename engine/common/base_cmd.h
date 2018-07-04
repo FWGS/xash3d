@@ -50,7 +50,7 @@ void BaseCmd_FindAll( const char *name,
 	base_command_t **cmd, base_command_t **alias, base_command_t **cvar );
 void BaseCmd_Insert ( base_command_type_e type, base_command_t *basecmd, const char *name );
 qboolean BaseCmd_Replace( base_command_type_e type, base_command_t *basecmd, const char *name ); // only if same name
-void BaseCmd_Remove ( base_command_type_e type, base_command_t *basecmd, const char *name );
+void BaseCmd_Remove ( base_command_type_e type, const char *name );
 
 #endif // XASH_HASHED_VARS
 

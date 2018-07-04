@@ -257,7 +257,7 @@ extern convar_t	*s_test;
 extern convar_t	*s_phs;
 extern convar_t *s_reverse_channels;
 extern convar_t	*dsp_room;
-
+extern convar_t *s_samplecount;
 extern portable_samplepair_t		s_rawsamples[MAX_RAW_SAMPLES];
 
 void S_InitScaletable( void );
@@ -300,8 +300,8 @@ void S_Shutdown( void );
 void S_SoundList_f( void );
 void S_SoundInfo_f( void );
 
-channel_t *SND_PickDynamicChannel( int entnum, int channel, sfx_t *sfx );
-channel_t *SND_PickStaticChannel( int entnum, sfx_t *sfx, const vec3_t pos );
+channel_t *SND_PickDynamicChannel( int entnum, int channel, sfx_t *sfx, qboolean *ignore );
+channel_t *SND_PickStaticChannel( const vec3_t pos , sfx_t *sfx );
 int S_GetCurrentStaticSounds( soundlist_t *pout, int size );
 int S_GetCurrentDynamicSounds( soundlist_t *pout, int size );
 sfx_t *S_GetSfxByHandle( sound_t handle );

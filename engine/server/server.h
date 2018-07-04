@@ -270,6 +270,10 @@ typedef struct sv_client_s
 	int		resources_count;
 	char	useragent[MAX_INFO_STRING];
 	char	auth_id[64];
+
+	float	userinfo_next_changetime;
+	float	userinfo_penalty;
+	int		userinfo_change_attempts;
 } sv_client_t;
 
 
@@ -470,6 +474,10 @@ extern	convar_t		*sv_allow_compress;
 extern	convar_t		*sv_maxpacket;
 extern	convar_t		*sv_forcesimulating;
 extern  convar_t		*sv_password;
+extern  convar_t		*sv_userinfo_enable_penalty;
+extern  convar_t		*sv_userinfo_penalty_time;
+extern  convar_t		*sv_userinfo_penalty_multiplier;
+extern  convar_t		*sv_userinfo_penalty_attempts;
 
 //===========================================================
 //
@@ -486,7 +494,6 @@ int SV_CalcPacketLoss( sv_client_t *cl );
 void SV_ExecuteUserCommand (char *s);
 void SV_InitOperatorCommands( void );
 void SV_KillOperatorCommands( void );
-void SV_UserinfoChanged( sv_client_t *cl, const char *userinfo );
 void SV_PrepWorldFrame( void );
 void SV_ProcessFile( sv_client_t *cl, char *filename );
 void SV_SendResourceList_f( sv_client_t *cl );
@@ -620,6 +627,9 @@ string_t SV_MakeString( const char *szValue );
 const char *SV_GetString( string_t iString );
 void SV_SetStringArrayMode( qboolean dynamic );
 void SV_EmptyStringPool( void );
+#ifdef XASH_64BIT
+void SV_PrintStr64Stats_f( void );
+#endif
 sv_client_t *SV_ClientFromEdict( const edict_t *pEdict, qboolean spawned_only );
 void SV_SetClientMaxspeed( sv_client_t *cl, float fNewMaxspeed );
 int SV_MapIsValid( const char *filename, const char *spawn_entity, const char *landmark_name );

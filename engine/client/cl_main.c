@@ -695,7 +695,7 @@ void CL_WritePacket( void )
 		BF_Clear( &cls.datagram );
 
 		// deliver the message (or update reliable)
-		Netchan_Transmit( &cls.netchan, BF_GetNumBytesWritten( &buf ), BF_GetData( &buf ));
+		Netchan_TransmitBits( &cls.netchan, BF_GetNumBitsWritten( &buf ), BF_GetData( &buf ));
 	}
 	else
 	{
@@ -1634,10 +1634,12 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	// server connection
 	if( !Q_strcmp( c, "client_connect" ))
 	{
+		unsigned int extensions;
+
 		if( !CL_IsFromConnectingServer( from ) )
 			return;
 
-		unsigned int extensions = Q_atoi( Cmd_Argv( 1 ) );
+		extensions = Q_atoi( Cmd_Argv( 1 ) );
 		if( cls.state == ca_connected )
 		{
 			MsgDev( D_INFO, "Dup connect received. Ignored.\n");
@@ -1721,10 +1723,12 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 	}
 	else if( !Q_strcmp( c, "errormsg" ))
 	{
+		char *str;
+
 		if( !CL_IsFromConnectingServer( from ))
 			return;
 
-		char *str = BF_ReadString( msg );
+		str = BF_ReadString( msg );
 		if( UI_IsVisible() )
 			Cmd_ExecuteString( va("menu_showmessagebox \"^3Server message^7\n%s\"", str ), src_command );
 		Msg( "%s", str );
@@ -1739,7 +1743,7 @@ void CL_ConnectionlessPacket( netadr_t from, sizebuf_t *msg )
 		if( !Q_strcmp( Cmd_Argv( 1 ), "nostore" ) )
 			preferStore = false;
 
-		if( NET_StringToAdr( DEFAULT_SV_MASTER, &adr ) )
+		if( NET_StringToAdr( DEFAULT_PRIMARY_MASTER, &adr ) )
 		{
 			if( NET_CompareAdr( from, adr ))
 			{
@@ -2020,6 +2024,19 @@ void CL_Precache_f( void )
 	CL_PrepSound();
 	CL_PrepVideo();
 
+	if( Cmd_Argc() > 2 )
+	{
+		int svCheatState = Q_atoi( Cmd_Argv( 2 ) );
+
+		// don't let server send other values than 1 or 0
+		Cvar_SetFloat("sv_cheats", svCheatState ? 1.0f : 0.0f );
+	}
+	else
+	{
+		// disable just in case for old servers.
+		// TODO: move to a part of new protocol
+		Cvar_SetFloat("sv_cheats", 0.0f );
+	}
 	Cvar_SetCheatState( false );
 
 	BF_WriteByte( &cls.netchan.message, clc_stringcmd );
@@ -2319,7 +2336,7 @@ void CL_Init( void )
 	// unreliable buffer. unsed for unreliable commands and voice stream
 	BF_Init( &cls.datagram, "cls.datagram", cls.datagram_buf, sizeof( cls.datagram_buf ));
 
-	IN_TouchInit();
+	Touch_Init();
 
 	{
 		char clientlib[256];
@@ -2365,7 +2382,7 @@ void CL_Shutdown( void )
 		Host_WriteOpenGLConfig ();
 		Host_WriteVideoConfig ();
 	}
-	IN_TouchShutdown();
+	Touch_Shutdown();
 	CL_CloseDemoHeader();
 	IN_Shutdown ();
 	Mobile_Shutdown();

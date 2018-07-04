@@ -300,7 +300,13 @@ _Pvt_Extensions
 
 # Kate
 *.kate-swp
-*.apk
+*.swp
 
 # QtCreator
 build-*
+
+# Android
+*.apk
+
+# Visual Studio CMake support
+CMakeSettings.json

@@ -22,9 +22,7 @@
 
 include(FindPackageHandleStandardArgs)
 
-message("<FindVGUI.cmake>")
-
-if(NOT HL_SDK_DIR)
+if(NOT HL_SDK_DIR AND NOT XASH_DOWNLOAD_DEPENDENCIES)
 	message( FATAL_ERROR "Pass a HL_SDK_DIR variable to CMake to be able use VGUI" )
 endif()
 
@@ -39,6 +37,8 @@ find_path(VGUI_INCLUDE_DIR
 	PATHS ${VGUI_SEARCH_PATHS}
 )
 
+message(STATUS "<FindVGUI.cmake> ${VGUI_SEARCH_PATHS}")
+
 if(APPLE)
 	set(LIBNAMES vgui.dylib)
 else()
@@ -49,7 +49,9 @@ find_library(VGUI_LIBRARY
 	NAMES ${LIBNAMES}
 	HINTS $ENV{VGUIDIR}
 	PATH_SUFFIXES 
-	    games/lib/xash3d         # libvgui debian package
+		games/lib/xash3d         # libvgui debian package
+		lib/xash3d               # Maybe installed in system?
+		xash3d/			 # Maybe installed in system? [2]
 		utils/vgui/lib/win32_vc6 # Win32 VC6
 		linux/                   # Linux
 		linux/release            # OSX
@@ -86,5 +88,5 @@ endmacro()
 
 find_package_handle_standard_args(VGUI REQUIRED_VARS VGUI_LIBRARY VGUI_INCLUDE_DIR)
 
-message("</FindVGUI.cmake>")
+message(STATUS "</FindVGUI.cmake> ${VGUI_LIBRARY}")
 

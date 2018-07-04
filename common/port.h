@@ -31,6 +31,12 @@ GNU General Public License for more details.
 #define XASH_MOBILE_PLATFORM
 #endif
 
+#ifdef _WIN32
+#define PATH_SPLITTER "\\"
+#else
+#define PATH_SPLITTER "/"
+#endif
+
 #if !defined(_WIN32)
 	#include <limits.h>
 	#include <dlfcn.h>
@@ -45,6 +51,11 @@ GNU General Public License for more details.
 	#else
 		#define OS_LIB_EXT "so"
         #define OPEN_COMMAND "xdg-open"
+	#endif
+
+
+	#ifdef __EMSCRIPTEN__
+	#include <emscripten.h>
 	#endif
 
 	#if defined(__ANDROID__)

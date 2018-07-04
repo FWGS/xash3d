@@ -38,7 +38,7 @@ int	in_mouse_oldbuttonstate;
 int	in_mouse_buttons;
 static struct inputstate_s
 {
-float lastpitch, lastyaw;
+	float lastpitch, lastyaw;
 } inputstate;
 
 extern convar_t *vid_fullscreen;
@@ -433,11 +433,11 @@ void IN_StartupMouse( void )
 
 	m_ignore = Cvar_Get( "m_ignore", DEFAULT_M_IGNORE, CVAR_ARCHIVE , "ignore mouse events" );
 
-	m_enginemouse = Cvar_Get("m_enginemouse", "0", CVAR_ARCHIVE, "Read mouse events in engine instead of client");
-	m_enginesens = Cvar_Get("m_enginesens", "0.3", CVAR_ARCHIVE, "Mouse sensitivity, when m_enginemouse enabled");
-	m_pitch = Cvar_Get("m_pitch", "0.022", CVAR_ARCHIVE, "Mouse pitch value");
-	m_yaw = Cvar_Get("m_yaw", "0.022", CVAR_ARCHIVE, "Mouse yaw value");
-	look_filter = Cvar_Get( "look_filter", "0", CVAR_ARCHIVE, "Filter look events making t smoother" );
+	m_enginemouse = Cvar_Get( "m_enginemouse", "0", CVAR_ARCHIVE, "read mouse events in engine instead of client" );
+	m_enginesens = Cvar_Get( "m_enginesens", "0.3", CVAR_ARCHIVE, "mouse sensitivity, when m_enginemouse enabled" );
+	m_pitch = Cvar_Get( "m_pitch", "0.022", CVAR_ARCHIVE, "mouse pitch value" );
+	m_yaw = Cvar_Get( "m_yaw", "0.022", CVAR_ARCHIVE, "mouse yaw value" );
+	look_filter = Cvar_Get( "look_filter", "0", CVAR_ARCHIVE, "filter look events making it smoother" );
 	
 	// You can use -nomouse argument to prevent using mouse from client
 	// -noenginemouse will disable all mouse input
@@ -880,7 +880,7 @@ void IN_EngineAppendMove( float frametime, usercmd_t *cmd, qboolean active )
 		}
 #endif
 		Joy_FinalizeMove( &forward, &side, &dyaw, &dpitch );
-		IN_TouchMove( &forward, &side, &dyaw, &dpitch );
+		Touch_GetMove( &forward, &side, &dyaw, &dpitch );
 		IN_JoyAppendMove( cmd, forward, side );
 #ifdef USE_EVDEV
 		IN_EvdevMove( &dyaw, &dpitch );
@@ -935,7 +935,7 @@ void Host_InputFrame( void )
 #endif
 
 		Joy_FinalizeMove( &forward, &side, &yaw, &pitch );
-		IN_TouchMove( &forward, &side, &yaw, &pitch );
+		Touch_GetMove( &forward, &side, &yaw, &pitch );
 #ifdef USE_EVDEV
 		IN_EvdevMove( &yaw, &pitch );
 #endif

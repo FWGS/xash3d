@@ -21,8 +21,7 @@ GNU General Public License for more details.
 #include "common.h"
 #include "mathlib.h"
 
-#ifdef VECTORIZE_SINCOS
-
+#ifdef XASH_VECTORIZE_SINCOS
 // Test shown that this is not so effictively
 #if defined(__SSE__) || defined(_M_IX86_FP)
 #if defined(__SSE2__) || defined(_M_IX86_FP)
@@ -30,12 +29,9 @@ GNU General Public License for more details.
  #endif
 #include "sse_mathfun.h"
 #endif
-
-
 #if defined(__ARM_NEON__) || defined(__NEON__)
 	#include "neon_mathfun.h"
 #endif
-
 #endif
 
 vec3_t	vec3_origin = { 0, 0, 0 };
@@ -203,7 +199,7 @@ void SinCos( float radians, float *sine, float *cosine )
 #endif
 }
 
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 void SinCosFastVector4(float r1, float r2, float r3, float r4,
 					  float *s0, float *s1, float *s2, float *s3,
 					  float *c0, float *c1, float *c2, float *c3)
@@ -213,15 +209,15 @@ void SinCosFastVector4(float r1, float r2, float r3, float r4,
 
 	sincos_ps(rad_vector, &sin_vector, &cos_vector);
 
-	*s0 = sin_vector[0];
-	*s1 = sin_vector[1];
-	*s2 = sin_vector[2];
-	*s3 = sin_vector[3];
+	*s0 = s4f_x(sin_vector);
+	*s1 = s4f_y(sin_vector);
+	*s2 = s4f_z(sin_vector);
+	*s3 = s4f_w(sin_vector);
 
-	*c0 = cos_vector[0];
-	*c1 = cos_vector[1];
-	*c2 = cos_vector[2];
-	*c3 = cos_vector[3];
+	*c0 = s4f_x(cos_vector);
+	*c1 = s4f_y(cos_vector);
+	*c2 = s4f_z(cos_vector);
+	*c3 = s4f_w(cos_vector);
 }
 
 void SinCosFastVector3(float r1, float r2, float r3,
@@ -233,13 +229,13 @@ void SinCosFastVector3(float r1, float r2, float r3,
 
 	sincos_ps(rad_vector, &sin_vector, &cos_vector);
 
-	*s0 = sin_vector[0];
-	*s1 = sin_vector[1];
-	*s2 = sin_vector[2];
+	*s0 = s4f_x(sin_vector);
+	*s1 = s4f_y(sin_vector);
+	*s2 = s4f_z(sin_vector);
 
-	*c0 = cos_vector[0];
-	*c1 = cos_vector[1];
-	*c2 = cos_vector[2];
+	*c0 = s4f_x(cos_vector);
+	*c1 = s4f_y(cos_vector);
+	*c2 = s4f_z(cos_vector);
 }
 
 void SinCosFastVector2(float r1, float r2,
@@ -251,11 +247,11 @@ void SinCosFastVector2(float r1, float r2,
 
 	sincos_ps(rad_vector, &sin_vector, &cos_vector);
 
-	*s0 = sin_vector[0];
-	*s1 = sin_vector[1];
+	*s0 = s4f_x(sin_vector);
+	*s1 = s4f_y(sin_vector);
 
-	*c0 = cos_vector[0];
-	*c1 = cos_vector[1];
+	*c0 = s4f_x(cos_vector);
+	*c1 = s4f_y(cos_vector);
 }
 
 void SinFastVector3(float r1, float r2, float r3,
@@ -266,9 +262,9 @@ void SinFastVector3(float r1, float r2, float r3,
 
 	sin_vector = sin_ps(rad_vector);
 
-	*s0 = sin_vector[0];
-	*s1 = sin_vector[1];
-	*s2 = sin_vector[2];
+	*s0 = s4f_x(sin_vector);
+	*s1 = s4f_y(sin_vector);
+	*s2 = s4f_z(sin_vector);
 }
 #endif
 
@@ -314,7 +310,7 @@ void GAME_EXPORT AngleVectors( const vec3_t angles, vec3_t forward, vec3_t right
 {
 	static float	sr, sp, sy, cr, cp, cy;
 
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 	SinCosFastVector3( DEG2RAD(angles[YAW]), DEG2RAD(angles[PITCH]), DEG2RAD(angles[ROLL]),
 		&sy, &sp, &sr,
 		&cy, &cp, &cr);
@@ -563,7 +559,7 @@ void AngleQuaternion( const vec3_t angles, vec4_t q )
 {
 	float	sr, sp, sy, cr, cp, cy;
 
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 	SinCosFastVector3( angles[2] * 0.5f, angles[1] * 0.5f, angles[0] * 0.5f,
 		&sy, &sp, &sr,
 		&cy, &cp, &cr);
@@ -621,7 +617,7 @@ void QuaternionSlerp( const vec4_t p, vec4_t q, float t, vec4_t qt )
 		{
 			omega = acos( cosom );
 
-#ifdef VECTORIZE_SINCOS
+#ifdef XASH_VECTORIZE_SINCOS
 			SinFastVector3( omega, ( 1.0f - t ) * omega, t * omega,
 				&sinom, &sclp, &sclq );
 			sclp /= sinom;

@@ -95,15 +95,16 @@ static void R_DecalUnlink( decal_t *pdecal )
 				}
 			}
 		}
+
+		pdecal->psurface = NULL;
 	}
 
 	if( pdecal->mesh )
 	{
 		Mem_Free( pdecal->mesh );
-	}
 
-	pdecal->psurface = NULL;
-	pdecal->mesh = NULL;
+		pdecal->mesh = NULL;
+	}
 }
 
 // Just reuse next decal in list
@@ -111,10 +112,9 @@ static void R_DecalUnlink( decal_t *pdecal )
 // as each surface needs it's own.
 static decal_t *R_DecalAlloc( decal_t *pdecal )
 {
-	int	limit = MAX_RENDER_DECALS;
+	int	limit;
 
-	if( r_decals->integer < limit )
-		limit = r_decals->integer;
+	limit = min( r_decals->integer, MAX_RENDER_DECALS );
 	
 	if( !limit ) return NULL;
 
@@ -138,17 +138,6 @@ static decal_t *R_DecalAlloc( decal_t *pdecal )
 	R_DecalUnlink( pdecal );
 
 	return pdecal;	
-}
-
-//-----------------------------------------------------------------------------
-// find decal image and grab size from it
-//-----------------------------------------------------------------------------
-static void R_GetDecalDimensions( int texture, int *width, int *height )
-{
-	if( width ) *width = 1;	// to avoid divide by zero
-	if( height ) *height = 1;
-
-	R_GetTextureParms( width, height, texture );
 }
 
 //-----------------------------------------------------------------------------
@@ -201,7 +190,7 @@ void R_SetupDecalTextureSpaceBasis( decal_t *pDecal, msurface_t *surf, int textu
 
 	// Compute the non-scaled decal basis
 	R_DecalComputeBasis( surf, sAxis, textureSpaceBasis );
-	R_GetDecalDimensions( texture, &width, &height );
+	R_GetTextureParms( &width, &height, texture );
 
 	// world width of decal = ptexture->width / pDecal->scale
 	// world height of decal = ptexture->height / pDecal->scale
@@ -447,7 +436,7 @@ static decal_t *R_DecalIntersect( decalinfo_t *decalinfo, msurface_t *surf, int 
 	texture = decalinfo->m_iTexture;
 	
 	// precalculate the extents of decalinfo's decal in world space.
-	R_GetDecalDimensions( texture, &mapSize[0], &mapSize[1] );
+	R_GetTextureParms( &mapSize[0], &mapSize[1], texture );
 	VectorScale( decalinfo->m_Basis[0], ((mapSize[0] / decalinfo->m_scale) * 0.5f), decalExtents[0] );
 	VectorScale( decalinfo->m_Basis[1], ((mapSize[1] / decalinfo->m_scale) * 0.5f), decalExtents[1] );
 
@@ -528,6 +517,7 @@ msurfmesh_t *R_DecalCreateMesh( decalinfo_t *decalinfo, decal_t *pdecal, msurfac
 	int		numVerts, numElems;
 	byte		*buffer;
 	msurfmesh_t	*mesh;
+	float inv_w, inv_h;
 
 	if( pdecal->mesh )
 	{
@@ -564,10 +554,10 @@ msurfmesh_t *R_DecalCreateMesh( decalinfo_t *decalinfo, decal_t *pdecal, msurfac
 		mesh->elems[i*3+1] = i + 1;
 		mesh->elems[i*3+2] = i + 2;
 	}
-	#ifdef __arm__
-	float inv_w = 1.0f / surf->texinfo->texture->width;
-	float inv_h = 1.0f / surf->texinfo->texture->height;
-	#endif
+
+	// a1ba: calc inverted for anyone, originally was only for ARM
+	inv_w = 1.0f / surf->texinfo->texture->width;
+	inv_h = 1.0f / surf->texinfo->texture->height;
 
 	// fill the mesh
 	for( i = 0; i < numVerts; i++, v += VERTEXSIZE )
@@ -582,18 +572,8 @@ msurfmesh_t *R_DecalCreateMesh( decalinfo_t *decalinfo, decal_t *pdecal, msurfac
 		out->stcoord[1] = v[4];
 		out->lmcoord[0] = v[5];
 		out->lmcoord[1] = v[6];
-		out->sccoord[0] = (( DotProduct( v , surf->texinfo->vecs[0] ) + surf->texinfo->vecs[0][3] ) 
-		#ifdef __arm__
-			* inv_w );
-		#else
-			/ surf->texinfo->texture->width );
-		#endif
-		out->sccoord[1] = (( DotProduct( v , surf->texinfo->vecs[1] ) + surf->texinfo->vecs[1][3] ) 
-		#ifdef __arm__
-			* inv_h );
-		#else
-			/ surf->texinfo->texture->height );
-		#endif
+		out->sccoord[0] = (( DotProduct( v , surf->texinfo->vecs[0] ) + surf->texinfo->vecs[0][3] ) * inv_w );
+		out->sccoord[1] = (( DotProduct( v , surf->texinfo->vecs[1] ) + surf->texinfo->vecs[1][3] ) * inv_h );
 
 		// clear colors (it can be used for vertex lighting)
 		Q_memset( out->color, 0xFF, sizeof( out->color ));
@@ -907,7 +887,8 @@ void R_DecalShoot( int textureIndex, int entityIndex, int modelIndex, vec3_t pos
 	decalInfo.m_Entity = entityIndex;
 	decalInfo.m_Flags = flags;
 
-	R_GetDecalDimensions( textureIndex, &width, &height );
+	R_GetTextureParms( &width, &height, textureIndex );
+
 	decalInfo.m_Size = width >> 1;
 	if(( height >> 1 ) > decalInfo.m_Size )
 		decalInfo.m_Size = height >> 1;

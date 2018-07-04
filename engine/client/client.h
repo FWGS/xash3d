@@ -32,6 +32,7 @@ GNU General Public License for more details.
 #include "netchan.h"
 #include "net_api.h"
 #include "world.h"
+#include "qfont.h"
 
 #define MAX_DEMOS		32
 #define MAX_MOVIES		8
@@ -271,8 +272,8 @@ typedef struct
 typedef struct
 {
 	int		hFontTexture;		// handle to texture
-	wrect_t		fontRc[256];		// rectangles
-	byte		charWidths[256];
+	wrect_t		fontRc[NUM_GLYPHS];		// rectangles
+	byte		charWidths[NUM_GLYPHS];
 	int		charHeight;
 	qboolean		valid;			// all rectangles are valid
 } cl_font_t;
@@ -795,10 +796,11 @@ void CL_InitStudioAPI( void );
 //
 // cl_frame.c
 //
+typedef struct channel_s  channel_t;
 int CL_ParsePacketEntities( sizebuf_t *msg, qboolean delta );
 qboolean CL_AddVisibleEntity( cl_entity_t *ent, int entityType );
 void CL_UpdateStudioVars( cl_entity_t *ent, entity_state_t *newstate, qboolean noInterp );
-qboolean CL_GetEntitySpatialization( int entnum, vec3_t origin, float *pradius );
+qboolean CL_GetEntitySpatialization( channel_t *ch );
 qboolean CL_UpdateEntityFields( cl_entity_t *ent );
 qboolean CL_IsPlayerIndex( int idx );
 void CL_SetIdealPitch( void );

@@ -36,8 +36,10 @@ CEngineApp          staticApp;
 
 void VGui_Startup( int width, int height )
 {
-	if(!g_FontCache)
+	if( !g_FontCache )
+	{
 		g_FontCache = new FontCache();
+	}
 
 	if( rootpanel )
 	{

@@ -24,6 +24,8 @@ GNU General Public License for more details.
 #include "particledef.h"
 #include "entity_types.h"
 
+#include "strobe/r_strobe_core.h"
+
 #define IsLiquidContents( cnt )	( cnt == CONTENTS_WATER || cnt == CONTENTS_SLIME || cnt == CONTENTS_LAVA )
 
 msurface_t	*r_debug_surface;
@@ -837,10 +839,10 @@ R_SetupGL
 */
 static void R_SetupGL( void )
 {
-	if( RI.refdef.waterlevel >= 3 )
+	if( r_underwater_distortion->value && RI.refdef.waterlevel >= 3 )
 	{
 		float	f;
-		f = sin( cl.time * 0.4f * ( M_PI * 2.7f ));
+		f = sin( cl.time * r_underwater_distortion->value * ( M_PI * 2.7f ));
 		RI.refdef.fov_x += f;
 		RI.refdef.fov_y -= f;
 	}
@@ -1333,8 +1335,14 @@ R_EndFrame
 */
 void R_EndFrame( void )
 {
+#ifdef STROBE_ENABLED
+	// StrobeAPI.Invoker( STROBE_INVOKE(STROBE_TEMPLATE) );
+	StrobeAPI.Invoker( STROBE_INVOKE(STROBE_CORE) );
+#else
 	// flush any remaining 2D bits
 	R_Set2DMode( false );
+#endif
+
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );
 #elif defined __ANDROID__ // For direct android backend

@@ -22,7 +22,6 @@ GNU General Public License for more details.
 #include "ref_params.h"
 #include "pm_local.h"
 
-#define MAX_DUPLICATED_CHANNELS	4		// threshold for identical static channels (probably error)
 #define SND_CLIP_DISTANCE		(float)(GI->soundclip_dist)
 
 dma_t		dma;
@@ -58,7 +57,7 @@ convar_t		*s_cull;		// cull sounds by geometry
 convar_t		*s_test;		// cvar for testing new effects
 convar_t		*s_phs;
 convar_t		*s_reverse_channels;
-
+convar_t		*s_samplecount;
 /*
 =============================================================================
 
@@ -275,7 +274,7 @@ override any other sound playing on the same channel (see code comments below fo
 exceptions).
 =================
 */
-channel_t *SND_PickDynamicChannel( int entnum, int channel, sfx_t *sfx )
+channel_t *SND_PickDynamicChannel( int entnum, int channel, sfx_t *sfx, qboolean *ignore )
 {
 	int	ch_idx;
 	int	first_to_die;
@@ -285,6 +284,7 @@ channel_t *SND_PickDynamicChannel( int entnum, int channel, sfx_t *sfx )
 	// check for replacement sound, or find the best one to replace
 	first_to_die = -1;
 	life_left = 0x7fffffff;
+	if( ignore ) *ignore = false;
 
 	for( ch_idx = NUM_AMBIENTS; ch_idx < MAX_DYNAMIC_CHANNELS; ch_idx++ )
 	{
@@ -334,6 +334,7 @@ channel_t *SND_PickDynamicChannel( int entnum, int channel, sfx_t *sfx )
 
 			if( ch->entnum == entnum && ch->entchannel == channel && ch->sfx == sfx )
 			{
+				if( ignore ) *ignore = true;
 				// same looping sound, same ent, same channel, don't restart the sound
 				return NULL;
 			}
@@ -356,30 +357,18 @@ we're trying to allocate a channel for a stream sound that is
 already playing.
 =====================
 */
-channel_t *SND_PickStaticChannel( int entnum, sfx_t *sfx, const vec3_t pos )
+channel_t *SND_PickStaticChannel( const vec3_t pos, sfx_t *sfx )
 {
 	channel_t	*ch = NULL;
 	int	i;
 
-#if 1
-	int dupe = 0;
-
-	// TODO: remove this code when predicting is will be done
-	// check for duplicate sounds
-	for( i = 0; i < total_channels; i++ )
-	{
-		if( channels[i].sfx == sfx && VectorCompare( channels[i].origin, pos ))
-			dupe++;
-	}
-
-	// check for duplicated static channels (same origin and same sfx)
-	if( dupe > MAX_DUPLICATED_CHANNELS )
-		return NULL;
-#endif
 	// check for replacement sound, or find the best one to replace
  	for( i = MAX_DYNAMIC_CHANNELS; i < total_channels; i++ )
  	{
 		if( channels[i].sfx == NULL )
+			break;
+
+		if( VectorCompare( pos, channels[i].origin ) && channels[i].sfx == sfx )
 			break;
 	}
 
@@ -794,7 +783,7 @@ void SND_Spatialize( channel_t *ch )
 
 	if( !ch->staticsound )
 	{
-		if( !CL_GetEntitySpatialization( ch->entnum, ch->origin, &ch->radius ) || !SND_CheckPHS( ch ))
+		if( !CL_GetEntitySpatialization( ch ) || !SND_CheckPHS( ch ))
 		{
 			// origin is null and entity not exist on client
 			ch->leftvol = ch->rightvol = 0;
@@ -813,26 +802,23 @@ void SND_Spatialize( channel_t *ch )
 	dot = DotProduct( s_listener.right, source_vec );
 
 	// for sounds with a radius, spatialize left/right evenly within the radius
-
-	// Commented because this code cause too LOUD sounds in multiplayers.
-	// when blend is equal 0
-	// TODO: Test sound behaviour without radius code, maybe it must be reviewed or deleted
-
-	/*if( ch->radius > 0 && dist < ch->radius )
+#if 0
+	if( ch->radius > 0 && dist < ch->radius )
 	{
 		float	interval = ch->radius * 0.5f;
 		float	blend = dist - interval;
 
-		if( blend < 0 )
-			blend = 0;
+		if( blend > 0 )
+		{
+			blend /= interval;
 
-		blend /= interval;	
-
-		// blend is 0.0 - 1.0, from 50% radius -> 100% radius
-		// at radius * 0.5, dot is 0 (ie: sound centered left/right)
-		// at radius dot == dot
-		dot *= blend;
-	}*/
+			// blend is 0.0 - 1.0, from 50% radius -> 100% radius
+			// at radius * 0.5, dot is 0 (ie: sound centered left/right)
+			// at radius dot == dot
+			dot *= blend;
+		}
+	}
+#endif
 
 	if( s_cull->integer )
 	{
@@ -876,6 +862,7 @@ void S_StartSound( const vec3_t pos, int ent, int chan, sound_t handle, float fv
 	sfx_t	*sfx = NULL;
 	channel_t	*target_chan, *check;
 	int	vol, ch_idx;
+	qboolean bIgnore = false;
 
 	if( !dma.initialized ) return;
 	sfx = S_GetSfxByHandle( handle );
@@ -903,12 +890,13 @@ void S_StartSound( const vec3_t pos, int ent, int chan, sound_t handle, float fv
 	if( !pos ) pos = cl.refdef.vieworg;
 
 	// pick a channel to play on
-	if( chan == CHAN_STATIC ) target_chan = SND_PickStaticChannel( ent, sfx, pos );
-	else target_chan = SND_PickDynamicChannel( ent, chan, sfx );
+	if( chan == CHAN_STATIC ) target_chan = SND_PickStaticChannel( pos, sfx );
+	else target_chan = SND_PickDynamicChannel( ent, chan, sfx, &bIgnore );
 
 	if( !target_chan )
 	{
-		MsgDev( D_NOTE, "^1Error: ^7dropped sound \"sound/%s\"\n", sfx->name );
+		if( !bIgnore )
+			MsgDev( D_NOTE, "^1Error: ^7dropped sound \"sound/%s\"\n", sfx->name );
 		return;
 	}
 
@@ -1012,6 +1000,7 @@ void S_RestoreSound( const vec3_t pos, int ent, int chan, sound_t handle, float 
 	wavdata_t	*pSource;
 	sfx_t	*sfx = NULL;
 	channel_t	*target_chan;
+	qboolean bIgnore = false;
 	int	vol;
 
 	if( !dma.initialized ) return;
@@ -1028,13 +1017,13 @@ void S_RestoreSound( const vec3_t pos, int ent, int chan, sound_t handle, float 
 	}
 
 	// pick a channel to play on
-	if( chan == CHAN_STATIC )
-		target_chan = SND_PickStaticChannel( ent, sfx, pos );
-	else target_chan = SND_PickDynamicChannel( ent, chan, sfx );
+	if( chan == CHAN_STATIC ) target_chan = SND_PickStaticChannel( pos, sfx );
+	else target_chan = SND_PickDynamicChannel( ent, chan, sfx, &bIgnore );
 
 	if( !target_chan )
 	{
-		MsgDev( D_ERROR, "S_RestoreSound: dropped sound \"sound/%s\"\n", sfx->name );
+		if( !bIgnore )
+			MsgDev( D_ERROR, "S_RestoreSound: dropped sound \"sound/%s\"\n", sfx->name );
 		return;
 	}
 
@@ -1142,7 +1131,6 @@ void S_AmbientSound( const vec3_t pos, int ent, sound_t handle, float fvol, floa
 	sfx_t	*sfx = NULL;
 	int	vol, fvox = 0;
 	float	radius = SND_RADIUS_MAX;
-	vec3_t	origin;		
 
 	if( !dma.initialized ) return;
 	sfx = S_GetSfxByHandle( handle );
@@ -1164,14 +1152,14 @@ void S_AmbientSound( const vec3_t pos, int ent, sound_t handle, float fvol, floa
 		return;
 	}
 
-	if( pos ) VectorCopy( pos, origin );
-	else VectorClear( origin );
-
-	CL_GetEntitySpatialization( ent, origin, &radius );
-
 	// pick a channel to play on from the static area
-	ch = SND_PickStaticChannel( ent, sfx, origin );
+	ch = SND_PickStaticChannel( pos, sfx );
 	if( !ch ) return;
+
+	VectorCopy( pos, ch->origin );
+	ch->entnum = ent;
+
+	CL_GetEntitySpatialization( ch );
 
 	if( S_TestSoundChar( sfx->name, '!' ))
 	{
@@ -1201,8 +1189,6 @@ void S_AmbientSound( const vec3_t pos, int ent, sound_t handle, float fvol, floa
 		S_FreeChannel( ch );
 		return;
 	}
-
-	VectorCopy( origin, ch->origin );
 
 	// never update positions if source entity is 0
 	ch->staticsound = ( ent == 0 ) ? true : false;
@@ -1565,7 +1551,8 @@ void S_RenderFrame( ref_params_t *fd )
 		// try to combine static sounds with a previous channel of the same
 		// sound effect so we don't mix five torches every frame
 		// g-cont: perfomance option, probably kill stereo effect in most cases
-		if( i >= MAX_DYNAMIC_CHANNELS && s_combine_sounds->integer )
+		// a1ba: disable for multiplayer, because it breaks a vital function: stereo
+		if( i >= MAX_DYNAMIC_CHANNELS && s_combine_sounds->integer && SV_Active() && CL_GetMaxClients() == 1 )
 		{
 			// see if it can just use the last one
 			if( combine && combine->sfx == ch->sfx )
@@ -1807,13 +1794,13 @@ qboolean S_Init( void )
 {
 
 	s_volume = Cvar_Get( "volume", "0.7", CVAR_ARCHIVE, "sound volume" );
-	s_musicvolume = Cvar_Get( "musicvolume", "1.0", CVAR_ARCHIVE, "background music volume" );
+	s_musicvolume = Cvar_Get( "MP3Volume", "1.0", CVAR_ARCHIVE, "background music volume" );
 	s_mixahead = Cvar_Get( "_snd_mixahead", "0.12", 0, "how much sound to mix ahead of time" );
 	s_show = Cvar_Get( "s_show", "0", CVAR_ARCHIVE, "show playing sounds" );
 	s_lerping = Cvar_Get( "s_lerping", "0", CVAR_ARCHIVE, "apply interpolation to sound output" );
 	s_ambient_level = Cvar_Get( "ambient_level", "0.3", 0, "volume of environment noises (water and wind)" );
 	s_ambient_fade = Cvar_Get( "ambient_fade", "100", 0, "rate of volume fading when client is moving" );
-	s_combine_sounds = Cvar_Get( "s_combine_channels", "1", CVAR_ARCHIVE, "combine channels with same sounds" ); 
+	s_combine_sounds = Cvar_Get( "s_combine_sounds", "0", CVAR_ARCHIVE, "combine channels with same sounds. Useful for quake, may break stereo sound" );
 	snd_foliage_db_loss = Cvar_Get( "snd_foliage_db_loss", "4", 0, "foliage loss factor" ); 
 	snd_gain_max = Cvar_Get( "snd_gain_max", "1", 0, "gain maximal threshold" );
 	snd_gain_min = Cvar_Get( "snd_gain_min", "0.01", 0, "gain minimal threshold" );
@@ -1825,6 +1812,7 @@ qboolean S_Init( void )
 	s_test = Cvar_Get( "s_test", "0", 0, "engine developer cvar for quick testing of new features" );
 	s_phs = Cvar_Get( "s_phs", "0", CVAR_ARCHIVE, "cull sounds by PHS" );
 	s_reverse_channels = Cvar_Get( "s_reverse_channels", "0", CVAR_ARCHIVE, "reverse left and right channels" );
+	s_samplecount = Cvar_Get( "s_samplecount", "0", CVAR_ARCHIVE, "sample count (0 for default value)" );
 
 #if XASH_SOUND != SOUND_NULL
 	if( Sys_CheckParm( "-nosound" ))

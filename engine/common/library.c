@@ -39,10 +39,10 @@ void Com_PushLibraryError( const char *error )
 
 void *Com_FunctionFromName_SR( void *hInstance, const char *pName )
 {
-	#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
+#ifdef XASH_ALLOW_SAVERESTORE_OFFSETS
 	if( !Q_memcmp( pName, "ofs:",4 ) )
 		return svgame.dllFuncs.pfnGameInit + Q_atoi(pName + 4);
-	#endif
+#endif
 	return Com_FunctionFromName( hInstance, pName );
 }
 
@@ -142,7 +142,7 @@ static void *IOS_LoadLibrary( const char *dllname )
 	char *postfix = g_szLibrarySuffix;
 	char *pHandle;
 
-	if( !postfix ) postfix = GI->gamedir;
+	if( !postfix ) postfix = GI->gamefolder;
 
 	Q_snprintf( name, MAX_STRING, "%s_%s", dllname, postfix );
 	pHandle = IOS_LoadLibraryInternal( name );
@@ -151,10 +151,6 @@ static void *IOS_LoadLibrary( const char *dllname )
 	return IOS_LoadLibraryInternal( dllname );
 }
 
-#endif
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
 #endif
 
 void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )

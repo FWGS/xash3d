@@ -1393,7 +1393,17 @@ static void GAME_EXPORT R_StudioSetupModel( int bodypart, void **ppbodypart, voi
 
 	m_pBodyPart = (mstudiobodyparts_t *)((byte *)m_pStudioHeader + m_pStudioHeader->bodypartindex) + bodypart;
 
-	index = RI.currententity->curstate.body / m_pBodyPart->base;
+	// this cannot be equal 0 for valid model
+	if( m_pBodyPart->base )
+	{
+		index = RI.currententity->curstate.body / m_pBodyPart->base;
+	}
+	else
+	{
+		MsgDev( D_ERROR, "R_StudioSetupModel: m_pBodyPart->base = 0 in %s\n", RI.currentmodel->name );
+		index = 0;
+	}
+
 	index = index % m_pBodyPart->nummodels;
 
 	m_pSubModel = (mstudiomodel_t *)((byte *)m_pStudioHeader + m_pBodyPart->modelindex) + index;
@@ -2958,7 +2968,7 @@ static void GAME_EXPORT R_StudioSetupRenderer( int rendermode )
 
 	// was done before, in R_DrawViewModel
 	if( g_iBackFaceCull )
-		GL_FrontFace( true );
+		GL_FrontFace( !glState.frontFace );
 }
 
 /*
@@ -2979,7 +2989,7 @@ static void GAME_EXPORT R_StudioRestoreRenderer( void )
 
 	// was done before, in R_DrawViewModel
 	if( g_iBackFaceCull )
-		GL_FrontFace( false );
+		GL_FrontFace( !glState.frontFace );
 
 	g_iBackFaceCull = false;
 	m_fDoRemap = false;

@@ -31,15 +31,20 @@ extern convar_t *vid_fullscreen;
 extern convar_t *snd_mute_losefocus;
 static int wheelbutton;
 static SDL_Joystick *joy;
+static SDL_GameController *gamecontroller;
 
 void R_ChangeDisplaySettingsFast( int w, int h );
-void SDLash_SendCharEvent( int ch );
 
-#define DECLARE_KEY_RANGE( min, max, repl ) if( keynum >= (min) && keynum <= (max) ) { keynum = keynum - (min) + (repl); }
+/*
+=============
+SDLash_KeyEvent
 
-void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
+=============
+*/
+static void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 {
 	int keynum = key.keysym.scancode;
+	qboolean numLock = SDL_GetModState() & KMOD_NUM;
 
 	if( SDL_IsTextInputActive() && down )
 	{
@@ -48,16 +53,23 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 			if( keynum >= SDL_SCANCODE_A && keynum <= SDL_SCANCODE_Z )
 			{
 				keynum = keynum - SDL_SCANCODE_A + 1;
-				SDLash_SendCharEvent( keynum );
+				CL_CharEvent( keynum );
 			}
 
 			return;
 		}
 	}
 
+#define DECLARE_KEY_RANGE( min, max, repl ) \
+	if( keynum >= (min) && keynum <= (max) ) \
+	{ \
+		keynum = keynum - (min) + (repl); \
+	}
+
 	DECLARE_KEY_RANGE( SDL_SCANCODE_A, SDL_SCANCODE_Z, 'a' )
 	else DECLARE_KEY_RANGE( SDL_SCANCODE_1, SDL_SCANCODE_9, '1' )
 	else DECLARE_KEY_RANGE( SDL_SCANCODE_F1, SDL_SCANCODE_F12, K_F1 )
+#undef DECLARE_KEY_RANGE
 	else
 	{
 		switch( keynum )
@@ -92,16 +104,16 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 		case SDL_SCANCODE_PAGEUP: keynum = K_PGUP; break;
 		case SDL_SCANCODE_HOME: keynum = K_HOME; break;
 		case SDL_SCANCODE_END: keynum = K_END; break;
-		case SDL_SCANCODE_KP_7: keynum = K_KP_HOME; break;
-		case SDL_SCANCODE_KP_8: keynum = K_KP_UPARROW; break;
-		case SDL_SCANCODE_KP_9: keynum = K_KP_PGUP; break;
-		case SDL_SCANCODE_KP_4: keynum = K_KP_LEFTARROW; break;
-		case SDL_SCANCODE_KP_5: keynum = K_KP_5; break;
-		case SDL_SCANCODE_KP_6: keynum = K_KP_RIGHTARROW; break;
-		case SDL_SCANCODE_KP_1: keynum = K_KP_END; break;
-		case SDL_SCANCODE_KP_2: keynum = K_KP_DOWNARROW; break;
-		case SDL_SCANCODE_KP_3: keynum = K_KP_PGDN; break;
-		case SDL_SCANCODE_KP_0: keynum = K_KP_INS; break;
+		case SDL_SCANCODE_KP_1: keynum = numLock ? '1' : K_KP_END; break;
+		case SDL_SCANCODE_KP_2: keynum = numLock ? '2' : K_KP_DOWNARROW; break;
+		case SDL_SCANCODE_KP_3: keynum = numLock ? '3' : K_KP_PGDN; break;
+		case SDL_SCANCODE_KP_4: keynum = numLock ? '4' : K_KP_LEFTARROW; break;
+		case SDL_SCANCODE_KP_5: keynum = numLock ? '5' : K_KP_5; break;
+		case SDL_SCANCODE_KP_6: keynum = numLock ? '6' : K_KP_RIGHTARROW; break;
+		case SDL_SCANCODE_KP_7: keynum = numLock ? '7' : K_KP_HOME; break;
+		case SDL_SCANCODE_KP_8: keynum = numLock ? '8' : K_KP_UPARROW; break;
+		case SDL_SCANCODE_KP_9: keynum = numLock ? '9' : K_KP_PGUP; break;
+		case SDL_SCANCODE_KP_0: keynum = numLock ? '0' : K_KP_INS; break;
 		case SDL_SCANCODE_KP_PERIOD: keynum = K_KP_DEL; break;
 		case SDL_SCANCODE_KP_ENTER: keynum = K_KP_ENTER; break;
 		case SDL_SCANCODE_KP_PLUS: keynum = K_KP_PLUS; break;
@@ -122,6 +134,13 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 			host.force_draw_version_time = host.realtime + FORCE_DRAW_VERSION_TIME;
 			break;
 		}
+		// don't console spam on known functional buttons, but not used in engine
+		case SDL_SCANCODE_MUTE:
+		case SDL_SCANCODE_VOLUMEUP:
+		case SDL_SCANCODE_VOLUMEDOWN:
+		case SDL_SCANCODE_BRIGHTNESSDOWN:
+		case SDL_SCANCODE_BRIGHTNESSUP:
+			return;
 		case SDL_SCANCODE_UNKNOWN:
 		{
 			if( down ) MsgDev( D_INFO, "SDLash_KeyEvent: Unknown scancode\n" );
@@ -136,7 +155,13 @@ void SDLash_KeyEvent( SDL_KeyboardEvent key, int down )
 	Key_Event( keynum, down );
 }
 
-void SDLash_MouseEvent(SDL_MouseButtonEvent button)
+/*
+=============
+SDLash_MouseEvent
+
+=============
+*/
+static void SDLash_MouseEvent( SDL_MouseButtonEvent button )
 {
 	int down = button.type == SDL_MOUSEBUTTONDOWN ? 1 : 0;
 	if( in_mouseinitialized && !m_ignore->integer && button.which != SDL_TOUCH_MOUSEID )
@@ -145,13 +170,13 @@ void SDLash_MouseEvent(SDL_MouseButtonEvent button)
 	}
 }
 
-void SDLash_WheelEvent(SDL_MouseWheelEvent wheel)
-{
-	wheelbutton = wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
-	Key_Event( wheelbutton, true );
-}
+/*
+=============
+SDLash_InputEvent
 
-void SDLash_InputEvent(SDL_TextInputEvent input)
+=============
+*/
+static void SDLash_InputEvent( SDL_TextInputEvent input )
 {
 	int i;
 
@@ -168,19 +193,16 @@ void SDLash_InputEvent(SDL_TextInputEvent input)
 		if( !ch )
 			continue;
 
-		SDLash_SendCharEvent( ch );
+		CL_CharEvent( ch );
 	}
 }
 
-void SDLash_SendCharEvent( int ch )
-{
-	Con_CharEvent( ch );
-	if( cls.key_dest == key_menu )
-		UI_CharEvent ( ch );
-	if( cls.key_dest == key_game )
-		VGui_KeyEvent( ch, 2 );
-}
+/*
+=============
+SDLash_EnableTextInput
 
+=============
+*/
 void SDLash_EnableTextInput( int enable, qboolean force )
 {
 	if( force )
@@ -205,10 +227,16 @@ void SDLash_EnableTextInput( int enable, qboolean force )
 	}
 }
 
-void SDLash_EventFilter( void *ev )
+/*
+=============
+SDLash_EventFilter
+
+=============
+*/
+static void SDLash_EventFilter( SDL_Event *event )
 {
-	SDL_Event *event = (SDL_Event*)ev;
 	static int mdown;
+
 	if( wheelbutton )
 	{
 		Key_Event( wheelbutton, false );
@@ -228,7 +256,7 @@ void SDLash_EventFilter( void *ev )
 						   event->motion.y/scr_height->value,
 						   event->motion.xrel/scr_width->value,
 						   event->motion.yrel/scr_height->value );
-		SDL_ShowCursor( true );
+
 #endif
 		break;
 
@@ -238,6 +266,9 @@ void SDLash_EventFilter( void *ev )
 		IN_TouchEvent( event_up, 0,
 					   event->button.x/scr_width->value,
 					   event->button.y/scr_height->value, 0, 0);
+		SDL_SetRelativeMouseMode( SDL_FALSE );
+		SDL_ShowCursor( true );
+		IN_DeactivateMouse();
 #else
 		SDLash_MouseEvent( event->button );
 #endif
@@ -248,13 +279,17 @@ void SDLash_EventFilter( void *ev )
 		IN_TouchEvent( event_down, 0,
 					   event->button.x/scr_width->value,
 					   event->button.y/scr_height->value, 0, 0);
+		SDL_SetRelativeMouseMode( SDL_FALSE );
+		SDL_ShowCursor( true );
+		IN_DeactivateMouse();
 #else
 		SDLash_MouseEvent( event->button );
 #endif
 		break;
 
 	case SDL_MOUSEWHEEL:
-		SDLash_WheelEvent( event->wheel );
+		wheelbutton = event->wheel.y < 0 ? K_MWHEELDOWN : K_MWHEELUP;
+		Key_Event( wheelbutton, true );
 		break;
 
 	/* Keyboard events */
@@ -353,6 +388,48 @@ void SDLash_EventFilter( void *ev )
 		Joy_RemoveEvent( event->jdevice.which );
 		break;
 
+	/* GameController API */
+	case SDL_CONTROLLERAXISMOTION:
+		if( event->caxis.axis == (Uint8)SDL_CONTROLLER_AXIS_INVALID )
+			break;
+
+		// Swap axis to follow default axis binding:
+		// LeftX, LeftY, RightX, RightY, TriggerRight, TriggerLeft
+		if( event->caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT )
+			event->caxis.axis = SDL_CONTROLLER_AXIS_TRIGGERRIGHT;
+		else if( event->caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT )
+			event->caxis.axis = SDL_CONTROLLER_AXIS_TRIGGERLEFT;
+
+		Joy_AxisMotionEvent( event->caxis.which, event->caxis.axis, event->caxis.value );
+		break;
+
+	case SDL_CONTROLLERBUTTONDOWN:
+	case SDL_CONTROLLERBUTTONUP:
+	{
+		static int sdlControllerButtonToEngine[] =
+		{
+			K_AUX16, // invalid
+			K_A_BUTTON, K_B_BUTTON, K_X_BUTTON,	K_Y_BUTTON,
+			K_BACK_BUTTON, K_MODE_BUTTON, K_START_BUTTON,
+			K_LSTICK, K_RSTICK,
+			K_L1_BUTTON, K_R1_BUTTON,
+			K_UPARROW, K_DOWNARROW, K_LEFTARROW, K_RIGHTARROW
+		};
+
+		// TODO: Use joyinput funcs, for future multiple gamepads support
+		if( Joy_IsActive() )
+			Key_Event( sdlControllerButtonToEngine[event->cbutton.button], event->cbutton.state );
+		break;
+	}
+
+	case SDL_CONTROLLERDEVICEADDED:
+		Joy_AddEvent( event->cdevice.which );
+		break;
+
+	case SDL_CONTROLLERDEVICEREMOVED:
+		Joy_RemoveEvent( event->cdevice.which );
+		break;
+
 	case SDL_QUIT:
 		Sys_Quit();
 		break;
@@ -441,7 +518,27 @@ void SDLash_EventFilter( void *ev )
 	}
 }
 
-int SDLash_JoyInit( int numjoy )
+/*
+=============
+SDLash_RunEvents
+
+=============
+*/
+void SDLash_RunEvents( void )
+{
+	SDL_Event event;
+
+	while( !host.crashed && !host.shutdown_issued && SDL_PollEvent( &event ) )
+		SDLash_EventFilter( &event );
+}
+
+/*
+=============
+SDLash_JoyInit_Old
+
+=============
+*/
+static int SDLash_JoyInit_Old( int numjoy )
 {
 	int num;
 	int i;
@@ -491,9 +588,98 @@ int SDLash_JoyInit( int numjoy )
 		SDL_JoystickName( joy ), SDL_JoystickNumAxes( joy ), SDL_JoystickNumHats( joy ),
 		SDL_JoystickNumButtons( joy ), SDL_JoystickNumBalls( joy ) );
 
+	SDL_GameControllerEventState( SDL_DISABLE );
 	SDL_JoystickEventState( SDL_ENABLE );
 
 	return num;
 }
+
+/*
+=============
+SDLash_JoyInit_New
+
+=============
+*/
+static int SDLash_JoyInit_New( int numjoy )
+{
+	int temp, num;
+	int i;
+
+	MsgDev( D_INFO, "Joystick: SDL GameController API\n" );
+
+	if( SDL_WasInit( SDL_INIT_GAMECONTROLLER ) != SDL_INIT_GAMECONTROLLER &&
+		SDL_InitSubSystem( SDL_INIT_GAMECONTROLLER ) )
+	{
+		MsgDev( D_INFO, "Failed to initialize SDL GameController API: %s\n", SDL_GetError() );
+		return 0;
+	}
+
+	// chance to add mappings from file
+	SDL_GameControllerAddMappingsFromFile( "controllermappings.txt" );
+
+	if( gamecontroller )
+	{
+		SDL_GameControllerClose( gamecontroller );
+	}
+
+	temp = SDL_NumJoysticks();
+	num = 0;
+
+	for( i = 0; i < temp; i++ )
+	{
+		if( SDL_IsGameController( i ))
+			num++;
+	}
+
+	if( num > 0 )
+		MsgDev( D_INFO, "%i joysticks found:\n", num );
+	else
+	{
+		MsgDev( D_INFO, "No joystick found.\n" );
+		return 0;
+	}
+
+	for( i = 0; i < num; i++ )
+		MsgDev( D_INFO, "%i\t: %s\n", i, SDL_GameControllerNameForIndex( i ) );
+
+	MsgDev( D_INFO, "Pass +set joy_index N to command line, where N is number, to select active joystick\n" );
+
+	gamecontroller = SDL_GameControllerOpen( numjoy );
+
+	if( !gamecontroller )
+	{
+		MsgDev( D_INFO, "Failed to select joystick: %s\n", SDL_GetError( ) );
+		return 0;
+	}
+// was added in SDL2-2.0.6, allow build with earlier versions just in case
+#if SDL_MAJOR_VERSION > 2 || SDL_MINOR_VERSION > 0 || SDL_PATCHLEVEL >= 6
+	MsgDev( D_INFO, "Selected joystick: %s (%i:%i:%i)\n",
+		SDL_GameControllerName( gamecontroller ),
+		SDL_GameControllerGetVendor( gamecontroller ),
+		SDL_GameControllerGetProduct( gamecontroller ),
+		SDL_GameControllerGetProductVersion( gamecontroller ));
+#endif
+	SDL_GameControllerEventState( SDL_ENABLE );
+	SDL_JoystickEventState( SDL_DISABLE );
+
+	return num;
+}
+
+/*
+=============
+SDLash_JoyInit
+
+=============
+*/
+int SDLash_JoyInit( int numjoy )
+{
+	// SDL_Joystick is now an old API
+	// SDL_GameController is preferred
+	if( Sys_CheckParm( "-sdl_joy_old_api" ) )
+		return SDLash_JoyInit_Old(numjoy);
+
+	return SDLash_JoyInit_New(numjoy);
+}
+
 
 #endif // XASH_SDL

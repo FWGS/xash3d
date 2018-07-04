@@ -33,6 +33,8 @@ convar_t	*con_fontscale;
 convar_t	*con_fontnum;
 convar_t	*vgui_utf8;
 
+rectf_t	con_rect;
+
 static int g_codepage = 0;
 static qboolean g_utf8 = false;
 
@@ -1698,18 +1700,22 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		y *= frac;
 	if( y >= 1 )
 	{
+		con_rect.x = 0;
+		con_rect.y = y - scr_width->value * 3 / 4;
+		con_rect.w = scr_width->value;
+		con_rect.h = scr_width->value * 3 / 4;
 		if( fill )
 		{
 			GL_SetRenderMode( kRenderNormal );
 			if( con_black->integer )
 			{
 				pglColor4ub( 0, 0, 0, 255 );
-				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
 			{
 				pglColor4ub( 255, 255, 255, 255 );
-				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, con.background );
+				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, con.background );
 			}
 		}
 		else
@@ -1718,12 +1724,12 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 			if( con_black->value )
 			{
 				pglColor4ub( 0, 0, 0, 255 * con_alpha->value );
-				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, cls.fillImage );
+				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, cls.fillImage );
 			}
 			else
 			{
 				pglColor4ub( 255, 255, 255, 255 * con_alpha->value );
-				R_DrawStretchPic( 0, y - scr_width->value * 3 / 4, scr_width->value, scr_width->value * 3 / 4, 0, 0, 1, 1, con.background );
+				R_DrawStretchPic( con_rect.x, con_rect.y, con_rect.w, con_rect.h, 0, 0, 1, 1, con.background );
 			}
 		}
 		pglColor4ub( 255, 255, 255, 255 );
@@ -1741,7 +1747,7 @@ void Con_DrawSolidConsole( float frac, qboolean fill )
 		int	stringLen, width = 0, charH;
 
 		Q_snprintf( curbuild, MAX_STRING, "Xash3D FWGS %i/%s build %i %s %s-%s", PROTOCOL_VERSION,
-					XASH_VERSION, Q_buildnum( ), Q_buildcommit( ), Q_buildos( ), Q_buildarch( ) );
+			XASH_VERSION, Q_buildnum( ), Q_buildcommit( ), Q_buildos( ), Q_buildarch( ) );
 		Con_DrawStringLen( curbuild, &stringLen, &charH );
 		start = scr_width->integer - stringLen;
 		stringLen = Con_StringLength( curbuild );
@@ -1965,6 +1971,9 @@ void Con_RunConsole( void )
 
 	if( con_charset->modified || con_fontscale->modified || con_fontnum->modified || cl_charset->modified )
 	{
+		if( con_fontscale->integer <= 0 )
+			Cvar_SetFloat( "con_fontscale", 1 );
+
 		// update codepage parameters
 		g_codepage = 0;
 		if( !Q_stricmp( con_charset->string, "cp1251" ) )
