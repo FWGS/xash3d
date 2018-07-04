@@ -1006,7 +1006,7 @@ static void R_CheckVBO( void )
 	if( glConfig.max_texture_units < 3 )
 		disable = true;
 
-#ifdef __ANDROID__
+#ifdef XASH_MOBILE_PLATFORM
 	// VideoCore4 drivers have a problem with mixing VBO and client arrays
 	// Disable it, as there is no suitable workaround here
 	if( Q_stristr( glConfig.renderer_string, "VideoCore IV" ) || Q_stristr( glConfig.renderer_string, "vc4" ) )
@@ -1063,7 +1063,7 @@ static void SetWidthAndHeightFromCommandLine()
 
 static void SetFullscreenModeFromCommandLine()
 {
-#ifndef __ANDROID__
+#ifndef XASH_MOBILE_PLATFORM
 	if ( Sys_CheckParm("-fullscreen") )
 	{
 		Cvar_Set2("fullscreen", "1", true);

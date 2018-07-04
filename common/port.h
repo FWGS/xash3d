@@ -27,7 +27,7 @@ GNU General Public License for more details.
 #define ARCH_SUFFIX
 #endif
 
-#if defined(__ANDROID__) || TARGET_OS_IOS
+#if defined(__ANDROID__) || TARGET_OS_IOS || defined(__SAILFISH__)
 #define XASH_MOBILE_PLATFORM
 #endif
 
@@ -70,9 +70,18 @@ GNU General Public License for more details.
 		#define CLIENTDLL "libclient" POSTFIX "." OS_LIB_EXT
 		#define SERVERDLL "libserver" POSTFIX "." OS_LIB_EXT
 		#define GAMEPATH "/sdcard/xash"
+	#elif defined(__SAILFISH__)
+		#define POSTFIX
+		// don't change these names
+		#define MENUDLL   "libmenu"   POSTFIX "." OS_LIB_EXT
+		#define CLIENTDLL "libclient" POSTFIX "." OS_LIB_EXT
+		#define SERVERDLL "libserver" POSTFIX "." OS_LIB_EXT
+		#define GAMEPATH "/home/nemo/xash"
+		#define LIBPATH "/usr/lib/xash3d/"
+		#define SHAREPATH "/usr/share/xash3d/"
 	#else
-        #define MENUDLL "libxashmenu" ARCH_SUFFIX "." OS_LIB_EXT
-        #define CLIENTDLL "client" ARCH_SUFFIX "." OS_LIB_EXT
+		#define MENUDLL   "libxashmenu" ARCH_SUFFIX "." OS_LIB_EXT
+		#define CLIENTDLL "client"      ARCH_SUFFIX "." OS_LIB_EXT
 	#endif
 
 	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT

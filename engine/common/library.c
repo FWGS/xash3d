@@ -114,7 +114,7 @@ static void *IOS_LoadLibraryInternal( const char *dllname )
 	// NOTE: Apple polices forbids loading code from shared places
 #ifdef ENABLE_FRAMEWORK_SIDELOAD
 	Q_snprintf( path, MAX_SYSPATH, "%s.framework/lib", dllname );
-	if( pHandle = dlopen( path, RTLD_LAZY ) )
+	if( pHandle = dlopen( path, RTLD_NOW ) )
 		return pHandle;
 	Q_snprintf( errorstring, MAX_STRING, dlerror() );
 #endif
@@ -126,7 +126,7 @@ static void *IOS_LoadLibraryInternal( const char *dllname )
 	// load libraries from app root to allow re-signing ipa with custom utilities
 	Q_snprintf( path, MAX_SYSPATH, "%s%s", SDL_GetBasePath(), dllname );
 #endif
-	pHandle = dlopen( path, RTLD_LAZY );
+	pHandle = dlopen( path, RTLD_NOW );
 	if( !pHandle )
 	{
 		Com_PushLibraryError(errorstring);
@@ -171,7 +171,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		string prefix;
 		Q_strcpy(prefix, getenv( "LIBRARY_PREFIX" ) );
 		Q_snprintf( path, MAX_SYSPATH, "%s%s%s",  prefix, dllname, getenv( "LIBRARY_SUFFIX" ) );
-		pHandle = dlopen( path, RTLD_LAZY );
+		pHandle = dlopen( path, RTLD_NOW );
 		if( !pHandle )
 		{
 			Com_PushLibraryError( va("Loading %s:\n", path ) );
@@ -195,7 +195,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		for( i = 0; i < 2; i++ )
 		{
 			Q_snprintf( path, MAX_SYSPATH, "%s/lib%s"POSTFIX"."OS_LIB_EXT, libdir[i], dllname );
-			pHandle = dlopen( path, RTLD_LAZY );
+			pHandle = dlopen( path, RTLD_NOW );
 			if( pHandle )
 				return pHandle;
 
@@ -203,11 +203,33 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		}
 
 		// HACKHACK: keep old behaviour for compability
-		pHandle = dlopen( dllname, RTLD_LAZY );
+		pHandle = dlopen( dllname, RTLD_NOW );
 		if( pHandle )
 			return pHandle;
 
 		Com_PushLibraryError( dlerror() );
+	}
+#elif defined __SAILFISH__
+	{
+		char path[MAX_SYSPATH];
+		const char *libdir[2];
+		int i;
+
+		// try from game library directory at first
+		libdir[0] = va( LIBPATH"/gamelibs/%s", GI ? GI->gamefolder : "" );
+
+		// try from engine path
+		libdir[1] = LIBPATH;
+
+		for( i = 0; i < 2; i++ )
+		{
+			Q_snprintf( path, MAX_SYSPATH, "%s/lib%s."OS_LIB_EXT, libdir[i], dllname );
+			pHandle = dlopen( path, RTLD_NOW );
+			if( pHandle )
+				return pHandle;
+
+			Com_PushLibraryError( dlerror() );
+		}
 	}
 #endif
 
@@ -227,7 +249,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 		// try to find by linker(LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, LD_32_LIBRARY_PATH and so on...)
 		if( !pHandle )
 		{
-			pHandle = dlopen( dllname, RTLD_LAZY );
+			pHandle = dlopen( dllname, RTLD_NOW );
 			if( pHandle )
 				return pHandle;
 
@@ -264,7 +286,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 	else
 #endif
 	{
-		if( !( hInst->hInstance = dlopen( hInst->fullPath, RTLD_LAZY ) ) )
+		if( !( hInst->hInstance = dlopen( hInst->fullPath, RTLD_NOW ) ) )
 		{
 			Com_PushLibraryError( dlerror() );
 			Mem_Free( hInst );
@@ -281,14 +303,14 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 
 void Com_FreeLibrary( void *hInstance )
 {
+#if !defined __EMSCRIPTEN__ || defined EMSCRIPTEN_LIB_FS
 #ifdef DLL_LOADER
 	void *wm;
 	if( host.enabledll && (wm = Loader_GetDllHandle( hInstance )) )
 		return Loader_FreeLibrary( hInstance );
 	else
 #endif
-#if !defined __EMSCRIPTEN__ || defined EMSCRIPTEN_LIB_FS
-	dlclose( hInstance );
+		dlclose( hInstance );
 #endif
 }
 

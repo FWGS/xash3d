@@ -141,6 +141,10 @@ if(XASH_GLES)
 	add_definitions(-DXASH_GLES -DXASH_GL_STATIC)
 endif()
 
+if(XASH_SAILFISH)
+	add_definitions(-D__SAILFISH__)
+endif()
+
 if(XASH_DLL_LOADER)
 	add_definitions(-DDLL_LOADER)
 

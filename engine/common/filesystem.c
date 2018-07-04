@@ -1138,6 +1138,11 @@ void FS_Rescan( void )
 		FS_AddPack_Fullpath( va( "%sextras.pak", SDL_GetBasePath() ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 		FS_AddPack_Fullpath( va( "%sextras_%s.pak", SDL_GetBasePath(), GI->gamefolder ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	}
+#elif defined(__SAILFISH__)
+	{
+		FS_AddPack_Fullpath( va( SHAREPATH"/extras.pak" ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		FS_AddPack_Fullpath( va( SHAREPATH"/%s/extras.pak", GI->gamefolder ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	}
 #endif
 
 	if( Q_stricmp( GI->basedir, GI->gamefolder ))
@@ -1770,8 +1775,8 @@ void FS_LoadGameInfo( const char *rootfolder )
 	}
 	if( !Sys_GetParmFromCmdLine( "-clientlib", SI.clientlib ) )
 	{
-#ifdef __ANDROID__
-		Q_strncpy( SI.clientlib, CLIENTDLL, sizeof( SI.clientlib ) );
+#ifdef XASH_INTERNAL_GAMELIBS
+		Q_strncpy( SI.clientlib, "client", sizeof( SI.clientlib ) );
 #else
 		Q_strncpy( SI.clientlib, GI->client_lib, sizeof( SI.clientlib ) );
 #endif

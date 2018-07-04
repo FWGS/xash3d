@@ -58,6 +58,7 @@ cmake_dependent_option(XASH_DLL_LOADER "Enable DLL loading on x86 Linux/*nix." O
 option(XASH_GLES   "Enable if Xash3D is running over GL to GLES translator." OFF)
 option(XASH_NANOGL "Use NanoGL(GLES1). Implicitly enables XASH_GLES." OFF)
 option(XASH_WES    "Use gl-wes-v2(GLES2). Implicitly enables XASH_GLES." OFF)
+option(XASH_SAILFISH "Build for Sailfish OS. Implicitly enables XASH_WES, XASH_GLES." OFF)
 option(XASH_STATIC "Static build. Implicitly enables XASH_SINGLE_BINARY." OFF)
 option(XASH_NO_ASYNC_NS_RESOLVE "Disable asynchronous domain name resolving." OFF)
 
@@ -115,6 +116,10 @@ endif()
 # Dependencies
 if(XASH_STATIC)
 	set(XASH_SINGLE_BINARY ON)
+endif()
+
+if(XASH_SAILFISH)
+	set(XASH_WES ON)
 endif()
 
 if(XASH_NANOGL OR XASH_WES)
