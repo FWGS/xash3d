@@ -71,6 +71,7 @@ LOCAL_SRC_FILES := \
            client/gl_rmisc.c \
            client/gl_rpart.c \
            client/gl_rsurf.c \
+           client/gl_rstrobe.c \
            client/gl_sprite.c \
            client/gl_studio.c \
            client/vid_common.c \
