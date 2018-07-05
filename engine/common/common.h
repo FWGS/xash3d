@@ -1048,6 +1048,8 @@ cvar_t *Cvar_GetList( void );
 void Cmd_Null_f( void );
 int CSCR_LoadDefaultCVars( const char *scriptfilename );
 int CSCR_WriteGameCVars( file_t *cfg, const char *scriptfilename );
+void Com_EscapeCommand( char *newCommand, const char *oldCommand, int len );
+
 
 void HTTP_AddDownload( char *path, int size, qboolean process );
 void HTTP_ResetProcessState ( void );

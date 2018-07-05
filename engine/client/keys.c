@@ -459,8 +459,12 @@ void Key_WriteBindings( file_t *f )
 
 	for( i = 0; i < 256; i++ )
 	{
+		string command;
+
+		Com_EscapeCommand( command, keys[i].binding, MAX_STRING );
+
 		if( keys[i].binding && keys[i].binding[0] )
-			FS_Printf( f, "bind %s \"%s\"\n", Key_KeynumToString(i), keys[i].binding );
+			FS_Printf( f, "bind %s \"%s\"\n", Key_KeynumToString(i), command );
 	}
 }
 
