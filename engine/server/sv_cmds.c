@@ -304,7 +304,7 @@ void SV_Maps_f(void)
 		return;
 	}
 
-        mapList = FS_Search(va("maps/*%s*.bsp", argStr), true, true);
+        mapList = FS_Search(va("maps/*%s*.bsp", argStr), false, true);
 	if (!mapList)
 	{
 		Msg("No related map found in \"%s/maps\"\n", GI->gamefolder);
