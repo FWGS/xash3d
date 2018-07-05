@@ -91,8 +91,6 @@ LOCAL_SRC_FILES := \
            client/s_stream.c \
            client/s_utils.c \
            client/s_vox.c \
-		   client/strobe/r_strobe_api.c \
-		   client/strobe/r_strobe_core.c \
            common/avikit.c \
            common/build.c \
            common/base_cmd.c \
