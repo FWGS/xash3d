@@ -659,11 +659,13 @@ void R_StrobeDrawDebug( void )
 	int offsetY;
 	int fixer;
 	double newtime;
-	qboolean strobeDebug = r_strobe_debug->integer ? true : false;
 
-	if ( cls.state != ca_active )
+	if( !r_strobe->integer )
 		return;
-	if ( ( !strobeDebug && !cl_showfps->integer ) || cl.background )
+
+	if( cls.state != ca_active )
+		return;
+	if( ( !r_strobe_debug->integer && !cl_showfps->integer ) || cl.background )
 		return;
 
 	switch ( cls.scrshot_action )
@@ -676,28 +678,28 @@ void R_StrobeDrawDebug( void )
 		return;
 	}
 
-	if ( strobeDebug )
+	if( r_strobe_debug->integer )
 	{
 		newtime = Sys_DoubleTime( );
-		if ( newtime >= strobecore.nexttime )
+		if( newtime >= strobecore.nexttime )
 		{
 			Strobe_GenerateDebugStatistics( strobecore.debugStr, sizeof( strobecore.debugStr ) );
 			strobecore.lasttime = newtime;
 			strobecore.nexttime = max( strobecore.nexttime + 0.15, strobecore.lasttime - 0.15 ); // Make this configurable
 		}
 	}
-	else if ( cl_showfps->integer )
+	else if( cl_showfps->integer )
 	{
 		Q_snprintf( strobecore.debugStr, sizeof( strobecore.debugStr ), "%3d eFPS", (int)round( Strobe_GetEffectiveFPS() ) );
 	}
 
 	MakeRGBA( color, 255, 255, 255, 255 );
 	Con_DrawStringLen( strobecore.debugStr, &fixer, &offsetY );
-	if ( strobeDebug )
+	if( r_strobe_debug->integer )
 		Con_DrawString( scr_width->integer - strobecore.offsetX - 50, 4, strobecore.debugStr, color );
 	else
 		Con_DrawString( scr_width->integer - strobecore.offsetX - 2, offsetY + 8, strobecore.debugStr, color );
-	if ( abs( fixer - strobecore.offsetX ) > 50 || strobecore.offsetX == 0 ) // 50 is for 1080p ! Needs to be dynamic !
+	if( abs( fixer - strobecore.offsetX ) > 50 || strobecore.offsetX == 0 ) // 50 is for 1080p ! Needs to be dynamic !
 		strobecore.offsetX = fixer;
 }
 
