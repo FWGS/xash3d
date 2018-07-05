@@ -50,16 +50,22 @@ include_directories(
 )
 
 if(XASH_NANOGL)
-	file(GLOB_RECURSE XASH_ENGINE_GLESWRAP_SOURCES  nanogl/*.cpp) # NanoGL version
+	file(GLOB_RECURSE XASH_ENGINE_GLESWRAP_SOURCES ${XASH_NANOGL_SRC}/*.cpp) # NanoGL version
+	if(NOT XASH_ENGINE_GLESWRAP_SOURCES)
+		message(FATAL_ERROR "Clone both nanogl sources to engine folder!")
+	endif()
 	list(APPEND XASH_ENGINE_SOURCES ${XASH_ENGINE_GLESWRAP_SOURCES})
 
-	include_directories(nanogl/ nanogl/GL/)
+	include_directories(${XASH_NANOGL_SRC}/ ${XASH_NANOGL_SRC}/GL/)
 	add_definitions(-DXASH_NANOGL -D__MULTITEXTURE_SUPPORT__)
 elseif(XASH_WES)
-	file(GLOB XASH_ENGINE_GLESWRAP_SOURCES  gl-wes-v2/src/*.c) # wesgl version
+	file(GLOB XASH_ENGINE_GLESWRAP_SOURCES ${XASH_WES_SRC}/src/*.c) # wesgl version
+	if(NOT XASH_ENGINE_GLESWRAP_SOURCES)
+		message(FATAL_ERROR "Clone both gl-wes-v2 and nanogl sources to engine folder!")
+	endif()
 	list(APPEND XASH_ENGINE_SOURCES ${XASH_ENGINE_GLESWRAP_SOURCES})
 
-	include_directories(nanogl/ nanogl/GL/ gl-wes-v2/src/)
+	include_directories(${XASH_NANOGL_SRC}/ ${XASH_NANOGL_SRC}/GL/ ${XASH_WES_SRC}/src/)
 	add_definitions(-DXASH_WES)
 endif()
 
