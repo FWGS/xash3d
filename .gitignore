@@ -310,3 +310,6 @@ build-*
 
 # Visual Studio CMake support
 CMakeSettings.json
+
+# rpmbuild
+RPMS/
