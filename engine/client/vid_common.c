@@ -23,8 +23,6 @@ GNU General Public License for more details.
 #include "input.h"
 #include "gl_vidnt.h"
 
-#include "strobe/r_strobe_core.h"
-
 extern convar_t *renderinfo;
 convar_t	*gl_allow_software;
 convar_t	*gl_extensions;
@@ -1124,9 +1122,7 @@ qboolean R_Init( void )
 	R_SpriteInit();
 	R_StudioInit();
 
-#ifdef STROBE_ENABLED
-	R_InitStrobeAPI();
-#endif
+	R_InitStrobe();
 
 	R_ClearDecals();
 	R_ClearScene();
