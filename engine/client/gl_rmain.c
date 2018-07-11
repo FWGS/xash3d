@@ -24,8 +24,6 @@ GNU General Public License for more details.
 #include "particledef.h"
 #include "entity_types.h"
 
-#include "strobe/r_strobe_core.h"
-
 #define IsLiquidContents( cnt )	( cnt == CONTENTS_WATER || cnt == CONTENTS_SLIME || cnt == CONTENTS_LAVA )
 
 msurface_t	*r_debug_surface;
@@ -1335,13 +1333,10 @@ R_EndFrame
 */
 void R_EndFrame( void )
 {
-#ifdef STROBE_ENABLED
-	// StrobeAPI.Invoker( STROBE_INVOKE(STROBE_TEMPLATE) );
-	StrobeAPI.Invoker( STROBE_INVOKE(STROBE_CORE) );
-#else
-	// flush any remaining 2D bits
-	R_Set2DMode( false );
-#endif
+	if( r_strobe->integer )
+		R_Strobe();
+	else
+		R_Set2DMode( false );
 
 #ifdef XASH_SDL
 	SDL_GL_SwapWindow( host.hWnd );

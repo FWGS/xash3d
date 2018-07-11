@@ -75,6 +75,8 @@ const char *Q_buildos( void )
 	osname = "Win32-MinGW";
 #elif defined(__ANDROID__)
 	osname = "Android";
+#elif defined(__SAILFISH__)
+	osname = "SailfishOS";
 #elif defined(__linux__)
 	osname = "Linux";
 #elif defined(__APPLE__)

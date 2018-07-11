@@ -917,7 +917,7 @@ void Host_InputFrame( void )
 	{
 		int dx, dy;
 
-#ifndef __ANDROID__
+#if XASH_INPUT == INPUT_SDL
 		if( in_mouseinitialized && !m_ignore->integer )
 		{
 			SDL_GetRelativeMouseState( &dx, &dy );

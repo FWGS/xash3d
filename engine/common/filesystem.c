@@ -1138,6 +1138,11 @@ void FS_Rescan( void )
 		FS_AddPack_Fullpath( va( "%sextras.pak", SDL_GetBasePath() ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 		FS_AddPack_Fullpath( va( "%sextras_%s.pak", SDL_GetBasePath(), GI->gamefolder ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	}
+#elif defined(__SAILFISH__)
+	{
+		FS_AddPack_Fullpath( va( SHAREPATH"/extras.pak" ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+		FS_AddPack_Fullpath( va( SHAREPATH"/%s/extras.pak", GI->gamefolder ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	}
 #endif
 
 	if( Q_stricmp( GI->basedir, GI->gamefolder ))
@@ -1770,8 +1775,8 @@ void FS_LoadGameInfo( const char *rootfolder )
 	}
 	if( !Sys_GetParmFromCmdLine( "-clientlib", SI.clientlib ) )
 	{
-#ifdef __ANDROID__
-		Q_strncpy( SI.clientlib, CLIENTDLL, sizeof( SI.clientlib ) );
+#ifdef XASH_INTERNAL_GAMELIBS
+		Q_strncpy( SI.clientlib, "client", sizeof( SI.clientlib ) );
 #else
 		Q_strncpy( SI.clientlib, GI->client_lib, sizeof( SI.clientlib ) );
 #endif
@@ -1960,29 +1965,6 @@ static int FS_SysFileTime( const char *filename )
 		return -1;
 
 	return buf.st_mtime;
-}
-
-/*
-====================
-FS_ToLowerCase
-
-Function to set all characters of path lowercase
-====================
-*/
-char* FS_ToLowerCase( const char* path )
-{
-	if (path) {
-		char *result = malloc(strlen(path) + 1);
-		int i = 0;
-		while( path[i] )
-		{
-			result[i] = tolower( path[i] );
-			++i;
-		}
-		result[i] = '\0';
-		return result;
-	}
-	return NULL;
 }
 
 /*
@@ -2740,20 +2722,12 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 
 	if( !file )
 	{
-		// Try to open this file with lowered path
-		char *loweredPath = FS_ToLowerCase( path );
-		file = FS_Open( loweredPath, "rb", gamedironly );
-		free(loweredPath);
-		if( !file )
-		{
-			// Now it truly doesn't exist in file system
-			buf = W_LoadFile( path, &filesize, gamedironly );
+		buf = W_LoadFile( path, &filesize, gamedironly );
 
-			if( filesizeptr )
-				*filesizeptr = filesize;
+		if( filesizeptr )
+			*filesizeptr = filesize;
 
-			return buf;
-		}
+		return buf;
 	}
 
 	// Try to load
@@ -2786,16 +2760,7 @@ byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr )
 	file = FS_SysOpen( path, "rb" );
 
 	if( !file )
-	{
-		// Try to open this file with lowered path
-		char *loweredPath = FS_ToLowerCase( path );
-		file = FS_SysOpen( loweredPath, "rb" );
-		free(loweredPath);
-		if( !file )
-		{
-			return NULL;
-		}
-	}
+		return NULL;
 
 	// Try to load
 	filesize = file->real_length;
@@ -2820,13 +2785,6 @@ Simply version of FS_Open
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly )
 {
 	file_t	*file = FS_Open( path, "rb", gamedironly );
-
-	if( !file )
-	{
-		char *loweredPath = FS_ToLowerCase( path );
-		file = FS_Open( loweredPath, "rb", gamedironly );
-		free(loweredPath);
-	}
 
 	if( filesizeptr )
 	{

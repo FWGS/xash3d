@@ -459,7 +459,6 @@ int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive 
 int matchpattern_with_separator( const char *in, const char *pattern, qboolean caseinsensitive, const char *separators, qboolean wildcard_least_one );
 void FS_Init( void );
 void FS_Path( void );
-char *FS_ToLowerCase( const char *path );
 void FS_Shutdown( void );
 void FS_ClearSearchPath( void );
 void FS_AllowDirectPaths( qboolean enable );
@@ -1048,6 +1047,8 @@ cvar_t *Cvar_GetList( void );
 void Cmd_Null_f( void );
 int CSCR_LoadDefaultCVars( const char *scriptfilename );
 int CSCR_WriteGameCVars( file_t *cfg, const char *scriptfilename );
+void Com_EscapeCommand( char *newCommand, const char *oldCommand, int len );
+
 
 void HTTP_AddDownload( char *path, int size, qboolean process );
 void HTTP_ResetProcessState ( void );

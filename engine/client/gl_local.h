@@ -441,6 +441,13 @@ void EmitWaterPolys( glpoly_t *polys, qboolean noCull );
 void R_DrawSkyChain( msurface_t *s );
 
 //
+// gl_rstrobe.c
+//
+void R_StrobeDrawDebug( void );
+void R_Strobe( void );
+void R_InitStrobe( void );
+
+//
 // gl_vidnt.c
 //
 #define GL_CheckForErrors() GL_CheckForErrors_( __FILE__, __LINE__ )
@@ -700,6 +707,7 @@ extern convar_t	*r_lightmap;
 extern convar_t	*r_fastsky;
 extern convar_t	*r_vbo;
 extern convar_t	*r_vbo_dlightmode;
+extern convar_t *r_strobe;
 
 extern convar_t	*r_bump;
 extern convar_t *r_underwater_distortion;

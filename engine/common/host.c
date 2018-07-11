@@ -1042,15 +1042,17 @@ void Host_InitCommon( int argc, const char** argv, const char *progname, qboolea
 		Setup_LDT_Keeper( ); // Must call before creating any thread
 #endif
 
-	if( ( baseDir = getenv( "XASH3D_BASEDIR" ) ) )
+	if(( baseDir = getenv( "XASH3D_BASEDIR" )))
 	{
-		Q_strncpy( host.rootdir, baseDir, sizeof(host.rootdir) );
+		Q_strncpy( host.rootdir, baseDir, sizeof(host.rootdir));
 	}
 	else
 	{
 #if TARGET_OS_IOS
 		const char *IOS_GetDocsDir();
-		Q_strncpy( host.rootdir, IOS_GetDocsDir(), sizeof(host.rootdir) );
+		Q_strncpy( host.rootdir, IOS_GetDocsDir(), sizeof( host.rootdir ));
+#elif defined(__SAILFISH__)
+		Q_strncpy( host.rootdir, GAMEPATH, sizeof( host.rootdir ));
 #elif defined(XASH_SDL)
 		if( !( baseDir = SDL_GetBasePath() ) )
 			Sys_Error( "couldn't determine current directory: %s", SDL_GetError() );

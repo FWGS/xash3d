@@ -993,7 +993,7 @@ void CL_Rcon_f( void )
 {
 	char	message[1024];
 	netadr_t	to;
-	int	i;
+	int	i = 1;
 
 	if( !rcon_client_password->string )
 	{
@@ -1009,14 +1009,31 @@ void CL_Rcon_f( void )
 
 	NET_Config( true, false );	// allow remote
 
-	Q_strcat( message, "rcon " );
-	Q_strcat( message, rcon_client_password->string );
-	Q_strcat( message, " " );
+	Q_strncat( message, "rcon ", sizeof( message ) );
 
-	for( i = 1; i < Cmd_Argc(); i++ )
+	if( !rcon_client_password->string[0] )
 	{
-		Q_strcat( message, Cmd_Argv( i ));
-		Q_strcat( message, " " );
+		// HACK: allow pass password with first argument
+		// do not port this to new engine, it is better to fix on server side
+		Q_strncat( message, Cmd_Argv( 1 ), sizeof( message ) );
+		Q_strncat( message, " ", sizeof( message ) );
+		i++;
+	}
+	else
+	{
+		Q_strncat( message, rcon_client_password->string, sizeof( message ) );
+		Q_strncat( message, " ", sizeof( message ) );
+	}
+
+	for( ; i < Cmd_Argc(); i++ )
+	{
+		string command;
+
+		Com_EscapeCommand( command, Cmd_Argv( i ), MAX_STRING );
+
+		Q_strncat( message, "\"", sizeof( message ) );
+		Q_strncat( message, command, sizeof( message ) );
+		Q_strncat( message, "\" ", sizeof( message ) );
 	}
 
 	if( cls.state >= ca_connected )

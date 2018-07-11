@@ -23,8 +23,6 @@ GNU General Public License for more details.
 #include "input.h"
 #include "gl_vidnt.h"
 
-#include "strobe/r_strobe_core.h"
-
 extern convar_t *renderinfo;
 convar_t	*gl_allow_software;
 convar_t	*gl_extensions;
@@ -1008,7 +1006,7 @@ static void R_CheckVBO( void )
 	if( glConfig.max_texture_units < 3 )
 		disable = true;
 
-#ifdef __ANDROID__
+#ifdef XASH_MOBILE_PLATFORM
 	// VideoCore4 drivers have a problem with mixing VBO and client arrays
 	// Disable it, as there is no suitable workaround here
 	if( Q_stristr( glConfig.renderer_string, "VideoCore IV" ) || Q_stristr( glConfig.renderer_string, "vc4" ) )
@@ -1065,7 +1063,7 @@ static void SetWidthAndHeightFromCommandLine()
 
 static void SetFullscreenModeFromCommandLine()
 {
-#ifndef __ANDROID__
+#ifndef XASH_MOBILE_PLATFORM
 	if ( Sys_CheckParm("-fullscreen") )
 	{
 		Cvar_Set2("fullscreen", "1", true);
@@ -1124,9 +1122,7 @@ qboolean R_Init( void )
 	R_SpriteInit();
 	R_StudioInit();
 
-#ifdef STROBE_ENABLED
-	R_InitStrobeAPI();
-#endif
+	R_InitStrobe();
 
 	R_ClearDecals();
 	R_ClearScene();

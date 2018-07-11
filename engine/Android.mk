@@ -71,6 +71,7 @@ LOCAL_SRC_FILES := \
            client/gl_rmisc.c \
            client/gl_rpart.c \
            client/gl_rsurf.c \
+           client/gl_rstrobe.c \
            client/gl_sprite.c \
            client/gl_studio.c \
            client/vid_common.c \
@@ -91,8 +92,6 @@ LOCAL_SRC_FILES := \
            client/s_stream.c \
            client/s_utils.c \
            client/s_vox.c \
-		   client/strobe/r_strobe_api.c \
-		   client/strobe/r_strobe_core.c \
            common/avikit.c \
            common/build.c \
            common/base_cmd.c \

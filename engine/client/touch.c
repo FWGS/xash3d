@@ -222,6 +222,7 @@ void Touch_WriteConfig( void )
 
 		for( button = touch.list_user.first; button; button = button->next )
 		{
+			string newCommand;
 			int flags = button->flags;
 
 			if( flags & TOUCH_FL_CLIENT )
@@ -233,8 +234,10 @@ void Touch_WriteConfig( void )
 			if( flags & TOUCH_FL_DEF_HIDE )
 				flags |= TOUCH_FL_HIDE;
 
+			Com_EscapeCommand( newCommand, B(command), MAX_STRING );
+
 			FS_Printf( f, "touch_addbutton \"%s\" \"%s\" \"%s\" %f %f %f %f %d %d %d %d %d\n", 
-				B(name), B(texturefile), B(command),
+				B(name), B(texturefile), newCommand,
 				B(x1), B(y1), B(x2), B(y2),
 				B(color[0]), B(color[1]), B(color[2]), B(color[3]), flags );
 		}
@@ -316,6 +319,7 @@ void Touch_ExportConfig_f( void )
 		FS_Printf( f, "touch_removeall\n" );
 		for( button = touch.list_user.first; button; button = button->next )
 		{
+			string newCommand;
 			float aspect;
 			int flags = button->flags;
 			if( flags & TOUCH_FL_CLIENT )
@@ -327,8 +331,10 @@ void Touch_ExportConfig_f( void )
 
 			aspect = ( B(y2) - B(y1) ) / ( ( B(x2) - B(x1) ) /(SCR_H/SCR_W) );
 
+			Com_EscapeCommand( newCommand, B(command), MAX_STRING );
+
 			FS_Printf( f, "touch_addbutton \"%s\" \"%s\" \"%s\" %f %f %f %f %d %d %d %d %d %f\n", 
-				B(name), B(texturefile), B(command),
+				B(name), B(texturefile), newCommand,
 				B(x1), B(y1), B(x2), B(y2),
 				B(color[0]), B(color[1]), B(color[2]), B(color[3]), flags, aspect );
 		}
