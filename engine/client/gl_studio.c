@@ -540,8 +540,8 @@ void R_StudioSetUpTransform( cl_entity_t *e )
 	// interpolate monsters position (moved into UpdateEntityFields by user request)
 	if( e->curstate.movetype == MOVETYPE_STEP && !( host.features & ENGINE_COMPUTE_STUDIO_LERP )) 
 	{
-		float f = 0.0f;
-		// int	i;
+		float	d, f = 0.0f;
+		int	i;
 
 		// don't do it if the goalstarttime hasn't updated in a while.
 		// NOTE: Because we need to interpolate multiplayer characters, the interpolation time limit

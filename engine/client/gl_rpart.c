@@ -609,7 +609,7 @@ set EF_BRIGHTFIELD effect
 */
 void GAME_EXPORT CL_EntityParticles( cl_entity_t *ent )
 {
-	// float		angle;
+	float		angle;
 	float		sr, sp, sy, cr, cp, cy;
 	vec3_t		forward;	
 	particle_t	*p;
