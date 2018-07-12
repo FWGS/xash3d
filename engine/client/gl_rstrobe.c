@@ -4,7 +4,7 @@
 #include "client.h"
 #include "gl_local.h"
 
-#define DEVIATION_LIMIT 1.5
+#define DEVIATION_LIMIT 1.25
 #define DEVIATION_SIZE 120
 
 #define lossCalculator( x, y ) ( ( ( x ) - ( y ) ) * 100.0 / ( x ) )
@@ -77,11 +77,7 @@ static void _makeFrameBlack( float opacity )
 
 	if ( CL_IsInConsole( ) ) // No strobing on the console
 	{
-		if ( !vid_fullscreen->integer ) // Disable when not in fullscreen due to viewport problems
-		{
-			R_Set2DMode( false );
-			return;
-		}
+
 		pglEnable( GL_SCISSOR_TEST );
 		pglScissor( con_rect.x, ( -con_rect.y ) - ( con_rect.h * 1.25 ), con_rect.w, con_rect.h ); // Preview strobe setting on static
 		pglClearColor( 0.0f, 0.0f, 0.0f, opacity );
@@ -97,13 +93,14 @@ static void _makeFrameBlack( float opacity )
 
 _inline double _cooldown( void )
 {
+	int cooldown = r_strobe_cooldown->integer; 
 	if ( 0 < strobe.cdTimer )
 	{
-		return ( (double)abs( r_strobe_cooldown->integer ) - strobe.cdTimer );
+		return ( (double)abs( cooldown ) - strobe.cdTimer );
 	}
 	else
 	{
-		return 0.0;
+		return cooldown;
 	}
 }
 
@@ -213,9 +210,9 @@ static void _generateDiffBar( char *dst, int size, char type )
 	{
 		if ( strobe.nCounter && strobe.pCounter )
 		{
-			_a   = ( abs( strobe.pNCounter - strobe.pBCounter ) * 100 / strobe.pCounter );
-			_b   = ( abs( strobe.nNCounter - strobe.nBCounter ) * 100 / strobe.nCounter );
-			diff = abs( ( ( (int)( strobe.pNCounter - strobe.pBCounter ) > 0 ) ? _a : ( -_a ) ) - ( ( ( (int)( strobe.nNCounter - strobe.nBCounter ) > 0 ) ? _b : ( -_b ) ) ) ); // Min 0 Max 200
+			_a   = ( (strobe.pNCounter - strobe.pBCounter) * 100 / strobe.pCounter );
+			_b   = ( (strobe.nNCounter - strobe.nBCounter) * 100 / strobe.nCounter );
+			diff = abs( _a - _b );
 		}
 		break;
 	}
@@ -283,14 +280,8 @@ static void _generateDiffBar( char *dst, int size, char type )
 			}
 		}
 	}
-	if ( type == 2 )
-	{
-		Q_strcat( dst, va( "] - %d / 200", diff ) );
-	}
-	else
-	{
-		Q_strcat( dst, va( "] - %d%%", ( Neg ? -diff : diff ) ) );
-	}
+
+	Q_strcat( dst, "]" );
 }
 
 _inline double _frequency( void )
@@ -467,7 +458,7 @@ static void _generateDebugInfo( char *dst, int size )
 	int nPositiveNormal, nPositiveBlack, nNegativeNormal, nNegativeBlack;
 	static int positiveNormal, positiveBlack, negativeNormal, negativeBlack;
 	int diffP_NB, diffN_NB;
-	double diffP = 0.0, diffN = 0.0;
+	double diffP = 0.0, diffN = 0.0, diffT = 0.0;
 	int strobeMethod = strobe.strobeInterval;
 	char strobemethod[128];
 
@@ -475,10 +466,15 @@ static void _generateDebugInfo( char *dst, int size )
 	diffN_NB = ( strobe.nNCounter - strobe.nBCounter );
 
 	if ( strobe.pCounter )
-		diffP = abs( diffP_NB ) * 100.0 / strobe.pCounter; // round( abs( diffP_NB ) * 100 / strobe.pCounter );
+		diffP = diffP_NB * 100.0 / strobe.pCounter; // round( abs( diffP_NB ) * 100 / strobe.pCounter );
 
 	if ( strobe.nCounter )
-		diffN = abs( diffN_NB ) * 100.0 / strobe.nCounter; // round( abs( diffN_NB ) * 100 / strobe.nCounter );
+		diffN = diffN_NB * 100.0 / strobe.nCounter; // round( abs( diffN_NB ) * 100 / strobe.nCounter );
+	
+	
+	diffT = fabs( diffP - diffN );
+	diffP = fabs( diffP );
+	diffN = fabs( diffN );
 
 	_generateDiffBar( diffBarP, sizeof( diffBarP ), 0 );
 	_generateDiffBar( diffBarN, sizeof( diffBarN ), 1 );
@@ -516,14 +512,14 @@ static void _generateDebugInfo( char *dst, int size )
 	            "PWM Simulation:\n"
 	            " |-> Frequency: %.2f Hz\n"
 	            " |-> Duty Cycle: %.2f%%\n"
-	            " |-> Current Phase Shift: +%.2f msec || -%.2f msec\n"
-	            " |-> Period: %.2f msec\n"
+	            " |-> Phase Shift: +%.2f || -%.2f millisecond(s)\n"
+	            " |-> Period: %.2f millisecond(s)\n"
 	            "Brightness Reduction:\n"
 	            " |-> [^7LINEAR^3] Actual Reduction: %.2f%%\n"
 	            " |-> [^7LOG^3] Realistic Reduction (350 cd/m2 base): %.2f%%\n"
 	            " |-> [^7SQUARE^3] Realistic Reduction (350 cd/m2 base): %.2f%%\n"
 	            " |-> [^7CUBE^3] Realistic Reduction (350 cd/m2 base): %.2f%%\n"
-	            "Difference (+): %s\nDifference (-): %s\nDifference (Total): %s\n"
+	            "Difference (+): %s - %.2f%%\nDifference (-): %s - %.2f%%\nDifference (Total): %s - %.2f / 200\n"
 	            "Geometric Mean: %.4f\n"
 	            "Geometric / Arithmetic Mean Difference: %.4f\n"
 	            "[^7EXPERIMENTAL^3] Badness: %.4f\n"
@@ -543,11 +539,11 @@ static void _generateDebugInfo( char *dst, int size )
 	            _isPhaseInverted( ),
 	            _frameCount( TotalFrame ),
 	            _frameCount( PositiveFrame ),
-	            ( nPositiveNormal > positiveNormal ? va( "^2|-> Normal Frame Count: %d^7", nPositiveNormal ) : va( "|-> Normal Frame Count: %d", nPositiveNormal ) ),
-	            ( nPositiveBlack > positiveBlack ? va( "^2|-> Black Frame Count: %d^7", nPositiveBlack ) : va( "|-> Black Frame Count: %d", nPositiveBlack ) ),
+	            ( nPositiveNormal > positiveNormal ? va( "^2 |-> Normal Frame Count: %d^7", nPositiveNormal ) : va( " |-> Normal Frame Count: %d", nPositiveNormal ) ),
+	            ( nPositiveBlack > positiveBlack ? va( "^2 |-> Black Frame Count: %d^7", nPositiveBlack ) : va( " |-> Black Frame Count: %d", nPositiveBlack ) ),
 	            _frameCount( NegativeFrame ),
-	            ( nNegativeNormal > negativeNormal ? va( "^2|-> Normal Frame Count: %d^7", nNegativeNormal ) : va( "|-> Normal Frame Count: %d", nNegativeNormal ) ),
-	            ( nNegativeBlack > negativeBlack ? va( "^2|-> Black Frame Count: %d^7", nNegativeBlack ) : va( "|-> Black Frame Count: %d", nNegativeBlack ) ),
+	            ( nNegativeNormal > negativeNormal ? va( "^2 |-> Normal Frame Count: %d^7", nNegativeNormal ) : va( " |-> Normal Frame Count: %d", nNegativeNormal ) ),
+	            ( nNegativeBlack > negativeBlack ? va( "^2 |-> Black Frame Count: %d^7", nNegativeBlack ) : va( " |-> Black Frame Count: %d", nNegativeBlack ) ),
 	            _frequency( ),
 	            _dutyCycle( ),
 	            _positivePhaseShift( ),
@@ -557,9 +553,9 @@ static void _generateDebugInfo( char *dst, int size )
 	            _logarithmicBrightnessReduction( 350.0 ),
 	            _squareBrightnessReduction( 350.0 ),
 	            _cubeBrightnessReduction( 350.0 ),
-	            diffBarP,
-	            diffBarN,
-	            diffBarT,
+	            diffBarP, diffP,
+	            diffBarN, diffN,
+	            diffBarT, diffT,
 	            _geometricMean( diffP, diffN ),
 	            _arithmeticMean( diffP, diffN ) - _geometricMean( diffP, diffN ),
 	            _badness( false ),
@@ -690,15 +686,15 @@ void R_Strobe_Tick( void )
 	static double recentTime                 = 0.0;
 	static double deltaArray[DEVIATION_SIZE] = {0.0};
 
-	delta2             = currentTime - recentTime2;
-	recentTime2        = currentTime;
-	strobe.elapsedTime = currentTime - strobe.initialTime;
-
-	if ( CL_IsInMenu( ) )
+	if ( CL_IsInMenu( ) || ( !vid_fullscreen->integer && CL_IsInConsole( ) ) ) // Disable when not in fullscreen due to viewport problems
 	{
 		R_Set2DMode( false );
 		return;
 	}
+
+	delta2             = currentTime - recentTime2;
+	recentTime2        = currentTime;
+	strobe.elapsedTime = currentTime - strobe.initialTime;
 
 	/*
 	if (deltaArray[0] == -1.0)
