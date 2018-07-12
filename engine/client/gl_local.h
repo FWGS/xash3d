@@ -443,9 +443,9 @@ void R_DrawSkyChain( msurface_t *s );
 //
 // gl_rstrobe.c
 //
-void R_StrobeDrawDebug( void );
-void R_Strobe( void );
-void R_InitStrobe( void );
+void R_Strobe_DrawDebugInfo( void );
+void R_Strobe_Tick( void );
+void R_Strobe_Init( void );
 
 //
 // gl_vidnt.c

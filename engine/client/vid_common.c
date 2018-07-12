@@ -1122,7 +1122,7 @@ qboolean R_Init( void )
 	R_SpriteInit();
 	R_StudioInit();
 
-	R_InitStrobe();
+	R_Strobe_Init();
 
 	R_ClearDecals();
 	R_ClearScene();
