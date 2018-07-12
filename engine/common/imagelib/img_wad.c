@@ -73,7 +73,7 @@ qboolean Image_LoadFNT( const char *name, const byte *buffer, size_t filesize )
 	const byte	*pal, *fin;
 	size_t		size;
 	int		numcolors;
-	int i;
+	// int i;
 
 	if( image.hint == IL_HINT_Q1 )
 		return false;	// Quake1 doesn't have qfonts
