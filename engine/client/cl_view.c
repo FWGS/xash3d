@@ -419,7 +419,7 @@ void V_PostRender( void )
 		SCR_RSpeeds();
 		SCR_NetSpeeds();
 		SCR_DrawFPS();
-		R_StrobeDrawDebug();
+		R_Strobe_DrawDebugInfo( );
 
 		SCR_DrawPos();
 		SV_DrawOrthoTriangles();

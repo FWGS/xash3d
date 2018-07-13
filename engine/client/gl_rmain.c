@@ -1334,7 +1334,7 @@ R_EndFrame
 void R_EndFrame( void )
 {
 	if( r_strobe->integer )
-		R_Strobe();
+		R_Strobe_Tick();
 	else
 		R_Set2DMode( false );
 
