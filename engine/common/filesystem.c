@@ -345,7 +345,7 @@ const char *FS_FixFileCase( const char *path )
 
 	//MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
 
-	if( isupper(path2[0]) && !( dir = opendir( path2 ) ) )
+	if( !( dir = opendir( path2 ) ) )
 	{
 		char *path3 = Q_strrchr(path2,'/');
 		Q_strnlwr( path3, path3, PATH_MAX );
