@@ -351,11 +351,10 @@ const char *FS_FixFileCase( const char *path )
 		if( path3 )
 			Q_strlwr( path3, path3 );
 	}
-#endif
 
 	if( !( dir = opendir( path2 ) ) )
 		Q_strnlwr( path2, path2, PATH_MAX );
-
+#endif
 	if( !( dir = opendir( path2 ) ) )
 		return path;
 
