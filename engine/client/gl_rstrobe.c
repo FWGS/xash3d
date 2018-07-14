@@ -454,6 +454,7 @@ static int _frameCount( CountType type )
 
 static void _generateDebugInfo( char *dst, int size )
 {
+	int _k;
 	char diffBarP[128], diffBarN[128], diffBarT[128];
 	int nPositiveNormal, nPositiveBlack, nNegativeNormal, nNegativeBlack;
 	static int positiveNormal, positiveBlack, negativeNormal, negativeBlack;
@@ -486,7 +487,6 @@ static void _generateDebugInfo( char *dst, int size )
 	nNegativeBlack  = _frameCount( NegativeBlackFrame );
 
 	Q_snprintf( strobemethod, sizeof( strobemethod ), ( strobeMethod > 0 ? "%d [R" : "%d [B" ), strobeMethod );
-	int _k;
 	for ( _k = 1; _k <= abs( strobeMethod ); ++_k )
 	{
 		Q_strcat( strobemethod, ( strobeMethod > 0 ? " - B" : " - R" ) );

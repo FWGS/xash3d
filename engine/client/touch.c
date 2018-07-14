@@ -1036,14 +1036,6 @@ void Touch_DrawTexture ( float x1, float y1, float x2, float y2, int texture, by
 		0, 0, 1, 1, texture );
 }
 
-#if defined(_MSC_VER) && (_MSC_VER < 1700) 
-static __inline int round(float f)
-{
-    return (int)(f + 0.5);
-
-}
-#endif
-
 #define GRID_COUNT_X (touch_grid_count->integer)
 #define GRID_COUNT_Y (touch_grid_count->integer * SCR_H / SCR_W)
 #define GRID_X (1.0/GRID_COUNT_X)

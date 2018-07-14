@@ -22,7 +22,7 @@ ifeq ($(CC),cc)
 endif
 
 # Optimized build
-CFLAGS = -DDEBUG_RESOLVE -O2 -fno-omit-frame-pointer -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse2 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=i686
+CFLAGS = -DDEBUG_RESOLVE -DVECTORIZE_SINCOS -O2 -fno-omit-frame-pointer -ggdb -funsafe-loop-optimizations -funsafe-math-optimizations -msse2 -msse3 -ftree-vectorize -mstackrealign -mpreferred-stack-boundary=4 -finline-limit=512 -march=i686
 LDFLAGS =
 
 XASH_COMMIT := $(firstword $(shell git rev-parse --short=6 HEAD) unknown)
@@ -36,9 +36,12 @@ endif
 MACHINE := $(shell $(CC) -dumpmachine)
 ifneq ($(64BIT),1)
 	ifeq ($(MACHINE),x86_64-w64-mingw32)
-		LDFLAGS += -m32
-		CFLAGS += -m32
+		LDFLAGS += -m32 -L$(SDL_DIR)/i686-w64-mingw32/lib
+		CFLAGS += -m32 -I$(SDL_DIR)/i686-w64-mingw32/include/SDL2
 	endif
+else
+	LDFLAGS += -L$(SDL_DIR)/x86_64-w64-mingw32/lib
+	CFLAGS += -I$(SDL_DIR)/x86_64-w64-mingw32/include/SDL2
 endif
 
 # You should download SDL2 mingw
@@ -76,7 +79,7 @@ endif
 # XASH_W32CON  - enable graphical win32 console
 # DBGHELP - enable crashhandler with dbghelp library
 #############################
-DEFINES += -DDEBUGNAN -DSINGLE_BINARY -DXASH_FORCEINLINE -DXASH_W32CON -DDBGHELP
+DEFINES += -DSINGLE_BINARY -DXASH_FORCEINLINE -DXASH_W32CON -DDBGHELP
 
 # Specify commit hash in version string
 DEFINES += -DXASH_BUILD_COMMIT=\"$(XASH_COMMIT)\"
