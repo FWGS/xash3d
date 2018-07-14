@@ -1984,20 +1984,21 @@ FS_ToLowerCase
 Function to set all characters of path lowercase
 ====================
 */
-char* FS_ToLowerCase( const char* path )
+static char* FS_ToLowerCase( const char* path )
 {
-	if (path) {
-		char *result = malloc(strlen(path) + 1);
-		int i = 0;
-		while( path[i] )
-		{
-			result[i] = tolower( path[i] );
-			++i;
-		}
-		result[i] = '\0';
-		return result;
+	static char path2[MAX_SYSPATH];
+	int i;
+
+	ASSERT( path );
+
+	for( i = 0; path[i]; i++ )
+	{
+		path2[i] = Q_tolower( path[i] );
 	}
-	return NULL;
+
+	path2[i] = 0;
+
+	return path2;
 }
 
 /*
@@ -2753,22 +2754,23 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 
 	file = FS_Open( path, "rb", gamedironly );
 
+#ifndef _WIN32
 	if( !file )
 	{
 		// Try to open this file with lowered path
-		char *loweredPath = FS_ToLowerCase( path );
-		file = FS_Open( loweredPath, "rb", gamedironly );
-		free(loweredPath);
-		if( !file )
-		{
-			// Now it truly doesn't exist in file system
-			buf = W_LoadFile( path, &filesize, gamedironly );
+		file = FS_Open( FS_ToLowerCase( path ), "rb", gamedironly );
+	}
+#endif // _WIN32
 
-			if( filesizeptr )
-				*filesizeptr = filesize;
+	if( !file )
+	{
+		// Now it truly doesn't exist in file system
+		buf = W_LoadFile( path, &filesize, gamedironly );
 
-			return buf;
-		}
+		if( filesizeptr )
+			*filesizeptr = filesize;
+
+		return buf;
 	}
 
 	// Try to load
@@ -2800,17 +2802,17 @@ byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr )
 
 	file = FS_SysOpen( path, "rb" );
 
+#ifndef _WIN32
 	if( !file )
 	{
 		// Try to open this file with lowered path
-		char *loweredPath = FS_ToLowerCase( path );
-		file = FS_SysOpen( loweredPath, "rb" );
-		free(loweredPath);
-		if( !file )
-		{
-			return NULL;
-		}
+		file = FS_SysOpen( FS_ToLowerCase( path ), "rb" );
 	}
+#endif // _WIN32
+
+	if( !file )
+		return NULL;
+
 
 	// Try to load
 	filesize = file->real_length;
@@ -2836,12 +2838,10 @@ file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedi
 {
 	file_t	*file = FS_Open( path, "rb", gamedironly );
 
+#ifndef _WIN32
 	if( !file )
-	{
-		char *loweredPath = FS_ToLowerCase( path );
-		file = FS_Open( loweredPath, "rb", gamedironly );
-		free(loweredPath);
-	}
+		file = FS_Open( FS_ToLowerCase( path ), "rb", gamedironly );
+#endif // _WIN32
 
 	if( filesizeptr )
 	{
