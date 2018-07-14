@@ -344,13 +344,14 @@ const char *FS_FixFileCase( const char *path )
 	}
 
 	//MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
-
+#if 0
 	if( !( dir = opendir( path2 ) ) )
 	{
 		char *path3 = Q_strrchr( path2, '/' );
 		if( path3 )
 			Q_strlwr( path3, path3 );
 	}
+#endif
 
 	if( !( dir = opendir( path2 ) ) )
 		Q_strnlwr( path2, path2, PATH_MAX );
