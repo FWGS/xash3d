@@ -57,7 +57,11 @@ INCLUDES += -I/usr/include/SDL2 -Icommon -I../common -I. -I../pm_shared -Iclient
 DEFINES = -DUSE_SELECT -DCOLORIZE_CONSOLE -DDEBUGNAN -DXASH_FORCEINLINE -DGDB_BREAK
 
 # Specify commit hash in version string
+ifneq ($(XASH_RELEASE),1)
 DEFINES += -DXASH_BUILD_COMMIT=\"$(XASH_COMMIT)\"
+else
+DEFINES += -DXASH_RELEASE
+endif
 
 # Enable optimized crt functions for 32-bit systems
 ifneq ($(64BIT),1)
@@ -169,7 +173,7 @@ endif
 
 ifeq ($(XASH_DLL_LOADER),1)
 $(LOADER):
-	$(MAKE) -f ../loader/Makefile.linux -C ../loader $(LOADER)
+	$(MAKE) -f ../loader/Makefile.dllloader -C ../loader $(LOADER)
 	cp ../loader/$(LOADER) .
 endif
 

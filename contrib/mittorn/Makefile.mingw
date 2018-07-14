@@ -81,8 +81,12 @@ endif
 #############################
 DEFINES += -DSINGLE_BINARY -DXASH_FORCEINLINE -DXASH_W32CON -DDBGHELP
 
+ifneq ($(XASH_RELEASE),1)
 # Specify commit hash in version string
 DEFINES += -DXASH_BUILD_COMMIT=\"$(XASH_COMMIT)\"
+else
+DEFINES += -DXASH_RELEASE
+endif
 
 # Enable optimized crt functions for 32-bit systems
 ifneq ($(64BIT),1)
