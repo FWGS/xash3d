@@ -489,7 +489,11 @@ qboolean _Sys_GetParmFromCmdLine( char *parm, char *out, size_t size )
 	if( !argc ) return false;
 	if( !out ) return false;
 	if( !host.argv[argc + 1] ) return false;
-	Q_strncpy( out, host.argv[argc+1], size );
+	if( argc < 0 || argc >= host.argc ) return false;
+	if( argc + 1 == host.argc )
+		Q_strncpy( out, "", size );
+	else
+		Q_strncpy( out, host.argv[argc+1], size );
 
 	return true;
 }

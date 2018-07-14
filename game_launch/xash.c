@@ -180,7 +180,7 @@ int __stdcall WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int 
 	int ret, i;
 
 	lpArgv = CommandLineToArgvW( GetCommandLineW(), &szArgc );
-	szArgv = ( char** )malloc( szArgc * sizeof( char* ));
+	szArgv = ( char** )сalloc( szArgc + 1, sizeof( char* ));
 
 	for( i = 0; i < szArgc; ++i )
 	{
