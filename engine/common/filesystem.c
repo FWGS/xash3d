@@ -347,8 +347,9 @@ const char *FS_FixFileCase( const char *path )
 
 	if( !( dir = opendir( path2 ) ) )
 	{
-		char *path3 = Q_strrchr(path2,'/');
-		Q_strnlwr( path3, path3, PATH_MAX );
+		char *path3 = Q_strrchr( path2, '/' );
+		if( path3 )
+			Q_strlwr( path3, path3 );
 	}
 
 	if( !( dir = opendir( path2 ) ) )
