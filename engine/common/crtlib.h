@@ -156,7 +156,7 @@ void Cmd_ForwardToServer( void );
 
 #define Q_strupr( in, out ) Q_strnupr( in, out, 99999 )
 void Q_strnupr( const char *in, char *out, size_t size_out );
-#define Q_strlwr( int, out ) Q_strnlwr( in, out, 99999 )
+#define Q_strlwr( in, out ) Q_strnlwr( in, out, 99999 )
 void Q_strnlwr( const char *in, char *out, size_t size_out );
 
 #ifndef XASH_SKIPCRTLIB
