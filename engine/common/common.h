@@ -459,6 +459,7 @@ int matchpattern( const char *in, const char *pattern, qboolean caseinsensitive 
 int matchpattern_with_separator( const char *in, const char *pattern, qboolean caseinsensitive, const char *separators, qboolean wildcard_least_one );
 void FS_Init( void );
 void FS_Path( void );
+char *FS_ToLowerCase( const char *path );
 void FS_Shutdown( void );
 void FS_ClearSearchPath( void );
 void FS_AllowDirectPaths( qboolean enable );

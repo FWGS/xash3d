@@ -1979,6 +1979,29 @@ static int FS_SysFileTime( const char *filename )
 
 /*
 ====================
+FS_ToLowerCase
+
+Function to set all characters of path lowercase
+====================
+*/
+char* FS_ToLowerCase( const char* path )
+{
+	if (path) {
+		char *result = malloc(strlen(path) + 1);
+		int i = 0;
+		while( path[i] )
+		{
+			result[i] = tolower( path[i] );
+			++i;
+		}
+		result[i] = '\0';
+		return result;
+	}
+	return NULL;
+}
+
+/*
+====================
 FS_SysOpen
 
 Internal function used to create a file_t and open the relevant non-packed file on disk
@@ -2732,12 +2755,20 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 
 	if( !file )
 	{
-		buf = W_LoadFile( path, &filesize, gamedironly );
+		// Try to open this file with lowered path
+		char *loweredPath = FS_ToLowerCase( path );
+		file = FS_Open( loweredPath, "rb", gamedironly );
+		free(loweredPath);
+		if( !file )
+		{
+			// Now it truly doesn't exist in file system
+			buf = W_LoadFile( path, &filesize, gamedironly );
 
-		if( filesizeptr )
-			*filesizeptr = filesize;
+			if( filesizeptr )
+				*filesizeptr = filesize;
 
-		return buf;
+			return buf;
+		}
 	}
 
 	// Try to load
@@ -2770,7 +2801,16 @@ byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr )
 	file = FS_SysOpen( path, "rb" );
 
 	if( !file )
-		return NULL;
+	{
+		// Try to open this file with lowered path
+		char *loweredPath = FS_ToLowerCase( path );
+		file = FS_SysOpen( loweredPath, "rb" );
+		free(loweredPath);
+		if( !file )
+		{
+			return NULL;
+		}
+	}
 
 	// Try to load
 	filesize = file->real_length;
@@ -2795,6 +2835,13 @@ Simply version of FS_Open
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly )
 {
 	file_t	*file = FS_Open( path, "rb", gamedironly );
+
+	if( !file )
+	{
+		char *loweredPath = FS_ToLowerCase( path );
+		file = FS_Open( loweredPath, "rb", gamedironly );
+		free(loweredPath);
+	}
 
 	if( filesizeptr )
 	{
