@@ -346,6 +346,9 @@ const char *FS_FixFileCase( const char *path )
 	//MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
 
 	if( !( dir = opendir( path2 ) ) )
+		Q_strnlwr( path2, path2, PATH_MAX );
+
+	if( !( dir = opendir( path2 ) ) )
 		return path;
 
 	while( ( entry = readdir( dir ) ) )
