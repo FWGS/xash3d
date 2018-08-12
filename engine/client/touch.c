@@ -117,11 +117,14 @@ struct touch_s
 	touch_button_t *selection;
 	touch_button_t *hidebutton;
 	int resize_finger;
-	qboolean showbuttons;
+	qboolean showeditbuttons;
+
+	// other features
 	qboolean clientonly;
 	rgba_t scolor;
 	int swidth;
 	qboolean precision;
+
 	// textures
 	int joytexture; // touch indicator
 	qboolean configchanged;
@@ -884,7 +887,7 @@ void Touch_Init( void )
 	MsgDev( D_NOTE, "IN_TouchInit()\n");
 	touch.move_finger = touch.resize_finger = touch.look_finger = -1;
 	touch.state = state_none;
-	touch.showbuttons = true;
+	touch.showeditbuttons = true;
 	touch.clientonly = false;
 	touch.precision = false;
 	MakeRGBA( touch.scolor, 255, 255, 255, 255 );
@@ -1273,7 +1276,7 @@ void Touch_Draw( void )
 		Touch_DrawTexture( 0, 0, GRID_X, GRID_Y, cls.fillImage, 255, 255, 255, 64 );
 
 
-		if( touch.showbuttons )
+		if( touch.showeditbuttons )
 			Touch_DrawButtons( &touch.list_edit );
 
 		/// TODO: move to mainui
@@ -1665,11 +1668,11 @@ static qboolean Touch_ButtonEdit( touchEventType type, int fingerID, float x, fl
 	{
 		if( (x < GRID_X) && (y < GRID_Y) )
 		{
-			touch.showbuttons ^= true;
+			touch.showeditbuttons ^= true;
 			return true;
 		}
 
-		if( Touch_ButtonPress( &touch.list_edit, type, fingerID, x, y, dx, dy ) )
+		if( touch.showeditbuttons && Touch_ButtonPress( &touch.list_edit, type, fingerID, x, y, dx, dy ) )
 			return true;
 	}
 
