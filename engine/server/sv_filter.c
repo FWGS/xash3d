@@ -413,7 +413,7 @@ void SV_WriteIP_f( void )
 
 	for( filter = ipfilter; filter; filter = filter->next )
 		if( !filter->endTime ) // only permanent
-			FS_Printf( f, "banid 0 %d.%d.%d.%d %d.%d.%d.%d\n", IPARGS(filter->ip), IPARGS(filter->mask) );
+			FS_Printf( f, "addip 0 %d.%d.%d.%d %d.%d.%d.%d\n", IPARGS(filter->ip), IPARGS(filter->mask) );
 
 	FS_Close( f );
 }
@@ -452,4 +452,5 @@ void SV_ShutdownFilter( void )
 	}
 
 	cidfilter = NULL;
+	ipfilter = NULL;
 }
