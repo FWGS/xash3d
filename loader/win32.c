@@ -82,7 +82,6 @@ for DLL to know too much about its environment.
 #include <sys/mman.h>
 
 #include "mmap_anon.h"
-#include <execinfo.h>
 //#include "libavutil/avstring.h"
 //#include "cpudetect.h"
 
@@ -6412,9 +6411,11 @@ static char *extcode = NULL;
 static void mystub()
 {
   printf("Called stub function:\n");
+#ifdef __GLIBC__
   void *trace[32];
   backtrace_symbols_fd(trace, backtrace(trace, 32), 1);
   printf("%s\n", MODULE_FindNearFunctionName(trace[1]));
+#endif
 }
 
 static void* add_stub(void)

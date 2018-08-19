@@ -41,17 +41,19 @@
 #ifdef __linux__
 #include <asm/unistd.h>
 #include <asm/ldt.h>
-// 2.5.xx+ calls this user_desc:
-#include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,47)
-#define modify_ldt_ldt_s user_desc
-#endif
-/// declare modify_ldt with the _syscall3 macro for older glibcs
-#if defined(__GLIBC__) &&  (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
-_syscall3( int, modify_ldt, int, func, void *, ptr, unsigned long, bytecount );
-#else
-int modify_ldt(int func, void *ptr, unsigned long bytecount);
-#endif
+#include <sys/syscall.h>
+
+struct modify_ldt_ldt_s {
+        unsigned int  entry_number;
+        unsigned long base_addr;
+        unsigned int  limit;
+        unsigned int  seg_32bit:1;
+        unsigned int  contents:2;
+        unsigned int  read_exec_only:1;
+        unsigned int  limit_in_pages:1;
+        unsigned int  seg_not_present:1;
+        unsigned int  useable:1;
+};
 #else
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 #include <machine/segments.h>
@@ -215,7 +217,7 @@ ldt_fs_t* Setup_LDT_Keeper(void)
     array.limit_in_pages=0;
 #ifdef __linux__
     //ret=LDT_Modify(0x1, &array, sizeof(struct modify_ldt_ldt_s));
-    ret=modify_ldt(0x1, &array, sizeof(struct modify_ldt_ldt_s));
+    ret=syscall(SYS_modify_ldt, 0x1, &array, sizeof(struct modify_ldt_ldt_s));
     if(ret<0)
     {
 	perror("install_fs");
