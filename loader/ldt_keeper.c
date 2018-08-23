@@ -217,11 +217,17 @@ ldt_fs_t* Setup_LDT_Keeper(void)
     array.limit_in_pages=0;
 #ifdef __linux__
     //ret=LDT_Modify(0x1, &array, sizeof(struct modify_ldt_ldt_s));
-    ret=syscall(SYS_modify_ldt, 0x1, &array, sizeof(struct modify_ldt_ldt_s));
+    ret = syscall(SYS_set_thread_area, &array);
     if(ret<0)
     {
-	perror("install_fs");
-	printf("Couldn't install fs segment, expect segfault\n");
+        perror("set_thread_area");
+        ret = syscall(SYS_modify_ldt, 0x1, &array, sizeof(struct modify_ldt_ldt_s));
+        if(ret<0)
+        {
+            perror("modify_ldt");
+            printf("Couldn't install fs segment, expect segfault\n");
+            return NULL;
+        }
     }
 #elif defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__) || defined(__APPLE__)
     {
