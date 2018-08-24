@@ -220,13 +220,6 @@ static inline void dbgprintf(char* fmt, ...)
 #define dbgprintf(...)
 #endif
 
-char export_names[300][32]={
-    "name1",
-    //"name2",
-    //"name3"
-};
-//#define min(x,y) ((x)<(y)?(x):(y))
-
 void destroy_event(void* event);
 
 struct th_list_t;
@@ -6392,66 +6385,62 @@ static const struct glfuncs glfunctions[]={
     
 };
 
-static WIN_BOOL WINAPI ext_stubs(void)
+#define MAX_NUM_STUBS 1024
+static struct stubprint_s
 {
-    // NOTE! these magic values will be replaced at runtime, make sure
-    // add_stub can still find them if you change them.
-    volatile int idx = 0x0deadabc;
-    // make sure gcc does not do eip-relative call or something like that
-    void (* volatile my_printf)(char *, char *) = (void *)0xdeadfbcd;
-    my_printf("Called unk_%s\n", export_names[idx]);
-    return 0;
+int pos;
+char *extcode;
+char names[MAX_NUM_STUBS][32];
+} stubprint;
+
+
+static void stubprint_func(int i)
+{
+	printf("Stub function called: %s\n", stubprint.names[i]);
 }
 
-#define MAX_STUB_SIZE 0x60
-#define MAX_NUM_STUBS 200
-static int pos=0;
-static char *extcode = NULL;
+static int stubprint_thunk[] = {0xbeefb855, 0xe589dead, 0x6814ec83, 0xcafebaad, 0xc483d0ff, 0x66c3c910};
+#define STUB_TARGET_ADDR_OFFSET 2
+#define STUB_ARG_OFFSET 12
+#define MAX_STUB_SIZE 24
 
-static void mystub()
+static void stubprint_mystub()
 {
-  printf("Called stub function:\n");
+  printf("Called stub function!\n");
 #ifdef __GLIBC__
   void *trace[32];
   backtrace_symbols_fd(trace, backtrace(trace, 32), 1);
-  printf("%s\n", MODULE_FindNearFunctionName(trace[1]));
+  char *func =  MODULE_FindNearFunctionName(trace[1]);
+  if( func )
+	printf("%s\n", func);
 #endif
 }
 
-static void* add_stub(void)
+
+static void* add_stub(const char *library, const char *name, int ordinal)
 {
-    /*int i;
-    int found = 0;
-    // generated code in runtime!
-    char* answ;
-    if (!extcode)
-      extcode = mmap_anon(NULL, MAX_NUM_STUBS * MAX_STUB_SIZE,
-                  PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, 0);
-    answ = extcode + pos * MAX_STUB_SIZE;
-    if (pos >= MAX_NUM_STUBS) {
-      printf("too many stubs, expect crash\n");
-      return NULL;
-    }
-    memcpy(answ, ext_stubs, MAX_STUB_SIZE);
-    for (i = 0; i < MAX_STUB_SIZE - 3; i++) {
-      int *magic = (int *)(answ + i);
-      if (*magic == 0x0deadabc) {
-        *magic = pos;
-        found |= 1;
-      }
-      if (*magic == 0xdeadfbcd) {
-        *magic = (intptr_t)printf;
-        found |= 2;
-      }
-    }
-    if (found != 3) {
-      printf("magic code not found in ext_subs, expect crash\n");
-      return NULL;
-    }
-    pos++;
-    printf("Generated stub %p\n", answ);
-    return (void*)answ;*/
-    return (void*)mystub;
+	void* answ;
+
+	if (!stubprint.extcode)
+		stubprint.extcode = mmap_anon(NULL, MAX_NUM_STUBS * MAX_STUB_SIZE,
+				PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, 0);
+	if (stubprint.pos >= MAX_NUM_STUBS) {
+	  return (void*)stubprint_mystub;
+	}
+	int addr = (int)&stubprint_func;
+
+	if( name )
+		snprintf( stubprint.names[stubprint.pos], 31, "%s:%s", library, name );
+	else
+		snprintf( stubprint.names[stubprint.pos], 31, "%s:%d", library, ordinal );
+
+	answ = stubprint.extcode + stubprint.pos * MAX_STUB_SIZE;
+	memcpy(answ, stubprint_thunk, MAX_STUB_SIZE);
+	memcpy(answ + STUB_TARGET_ADDR_OFFSET, &addr, 4);
+	memcpy(answ + STUB_ARG_OFFSET, &stubprint.pos, 4);
+	stubprint.pos++;
+
+	return answ;
 }
 
 void* LookupExternal(const char* library, int ordinal)
@@ -6512,9 +6501,8 @@ void* LookupExternal(const char* library, int ordinal)
     }
 
 no_dll:
-    if(pos>150)return 0;
-    snprintf(export_names[pos], sizeof(export_names[pos]), "%s:%d", library, ordinal);
-    return add_stub();
+	printf("Could not find %s:%d\n", library, ordinal);
+	return add_stub(library, NULL, ordinal);
 }
 
 void* LookupExternalByName(const char* library, const char* name)
@@ -6579,10 +6567,8 @@ void* LookupExternalByName(const char* library, const char* name)
     }
 
 no_dll_byname:
-    if(pos>150)return 0;// to many symbols
-    snprintf(export_names[pos], sizeof(export_names[pos]), "%s", name);
-    printf("Could not find %s:%s\n", library, name);
-    return add_stub();
+	printf("Could not find %s:%s\n", library, name);
+	return add_stub(library, name, 0);
 }
 
 void *GL_GetProcAddress( const char *name ); // defined by Xash's video backend
