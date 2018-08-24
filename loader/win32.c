@@ -6394,17 +6394,28 @@ char names[MAX_NUM_STUBS][32];
 } stubprint;
 
 
-static void stubprint_func(int i)
+static void  __alignp stubprint_func(int i)
 {
 	printf("Stub function called: %s\n", stubprint.names[i]);
 }
 
-static int stubprint_thunk[] = {0xbeefb855, 0xe589dead, 0x6814ec83, 0xcafebaad, 0xc483d0ff, 0x66c3c910};
+static int stubprint_thunk[] = {0xbeefb855, 0xe589dead, 0x6814ec83, 0xcafebaad, 0xc483d0ff, 0x00c3c910};
+
+//  0:   55                      push   %ebp
+//  1:   b8 ef be ad de          mov    $0xdeadbeef,%eax
+//  6:   89 e5                   mov    %esp,%ebp
+//  8:   83 ec 14                sub    $0x14,%esp
+//  b:   68 ad ba fe ca          push   $0xcafebaad
+// 10:   ff d0                   call   *%eax
+// 12:   83 c4 10                add    $0x10,%esp
+// 15:   c9                      leave
+// 16:   c3                      ret
+
 #define STUB_TARGET_ADDR_OFFSET 2
 #define STUB_ARG_OFFSET 12
 #define MAX_STUB_SIZE 24
 
-static void stubprint_mystub()
+static void  __alignp stubprint_fallback()
 {
   printf("Called stub function!\n");
 #ifdef __GLIBC__
@@ -6420,14 +6431,18 @@ static void stubprint_mystub()
 static void* add_stub(const char *library, const char *name, int ordinal)
 {
 	void* answ;
+#ifdef __i386__
+	if (stubprint.pos >= MAX_NUM_STUBS) {
+	  return (void*)stubprint_fallback;
+	}
+	if (!stubprint.extcode) // initialize
+	{
+		int addr = (int)&stubprint_func;
 
-	if (!stubprint.extcode)
 		stubprint.extcode = mmap_anon(NULL, MAX_NUM_STUBS * MAX_STUB_SIZE,
 				PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, 0);
-	if (stubprint.pos >= MAX_NUM_STUBS) {
-	  return (void*)stubprint_mystub;
+		memcpy( ((char*)stubprint_thunk) + STUB_TARGET_ADDR_OFFSET, &addr, 4); // replace 0xdeadbeef placeholder
 	}
-	int addr = (int)&stubprint_func;
 
 	if( name )
 		snprintf( stubprint.names[stubprint.pos], 31, "%s:%s", library, name );
@@ -6436,11 +6451,13 @@ static void* add_stub(const char *library, const char *name, int ordinal)
 
 	answ = stubprint.extcode + stubprint.pos * MAX_STUB_SIZE;
 	memcpy(answ, stubprint_thunk, MAX_STUB_SIZE);
-	memcpy(answ + STUB_TARGET_ADDR_OFFSET, &addr, 4);
-	memcpy(answ + STUB_ARG_OFFSET, &stubprint.pos, 4);
+	memcpy(answ + STUB_ARG_OFFSET, &stubprint.pos, 4); // replace 0xcafebaad placeholder
 	stubprint.pos++;
 
 	return answ;
+#else
+	return (void*)stubprint_fallback;
+#endif
 }
 
 void* LookupExternal(const char* library, int ordinal)
