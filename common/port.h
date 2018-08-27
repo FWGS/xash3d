@@ -152,6 +152,24 @@ GNU General Public License for more details.
 	#define MENUDLL "menu"ARCH_SUFFIX"." OS_LIB_EXT
 	#define CLIENTDLL "client"ARCH_SUFFIX"." OS_LIB_EXT
 	#define VGUI_SUPPORT_DLL "../vgui_support." OS_LIB_EXT
+	#include <limits.h>
+	
+#if defined(_MSC_VER) && (_MSC_VER < 1700) 
+#include <math.h>
+static __inline int round(float f)
+{
+    return (int)(f + 0.5);
+
+}
+static __inline float cbrt(float f)
+{
+    return pow(f,1.0/3.0);
+
+}
+
+#endif
+
+
 #ifdef XASH_64BIT
 // windows NameForFunction not implemented yet
 #define XASH_ALLOW_SAVERESTORE_OFFSETS

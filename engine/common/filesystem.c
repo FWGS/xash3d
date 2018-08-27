@@ -326,7 +326,7 @@ const char *FS_FixFileCase( const char *path )
 	}
 
 	/* android has too slow directory scanning,
-	   so drop out some not useful cases */
+	   so drop out some useless cases */
 	if( fname - path2 > 4 )
 	{
 		char *point;
@@ -344,7 +344,17 @@ const char *FS_FixFileCase( const char *path )
 	}
 
 	//MsgDev( D_NOTE, "FS_FixFileCase: %s\n", path );
+#if 0
+	if( !( dir = opendir( path2 ) ) )
+	{
+		char *path3 = Q_strrchr( path2, '/' );
+		if( path3 )
+			Q_strlwr( path3, path3 );
+	}
 
+	if( !( dir = opendir( path2 ) ) )
+		Q_strnlwr( path2, path2, PATH_MAX );
+#endif
 	if( !( dir = opendir( path2 ) ) )
 		return path;
 
@@ -1969,6 +1979,30 @@ static int FS_SysFileTime( const char *filename )
 
 /*
 ====================
+FS_ToLowerCase
+
+Function to set all characters of path lowercase
+====================
+*/
+static char* FS_ToLowerCase( const char* path )
+{
+	static char path2[MAX_SYSPATH];
+	int i;
+
+	ASSERT( path );
+
+	for( i = 0; path[i]; i++ )
+	{
+		path2[i] = Q_tolower( path[i] );
+	}
+
+	path2[i] = 0;
+
+	return path2;
+}
+
+/*
+====================
 FS_SysOpen
 
 Internal function used to create a file_t and open the relevant non-packed file on disk
@@ -2720,8 +2754,17 @@ byte *FS_LoadFile( const char *path, fs_offset_t *filesizeptr, qboolean gamediro
 
 	file = FS_Open( path, "rb", gamedironly );
 
+#ifndef _WIN32
 	if( !file )
 	{
+		// Try to open this file with lowered path
+		file = FS_Open( FS_ToLowerCase( path ), "rb", gamedironly );
+	}
+#endif // _WIN32
+
+	if( !file )
+	{
+		// Now it truly doesn't exist in file system
 		buf = W_LoadFile( path, &filesize, gamedironly );
 
 		if( filesizeptr )
@@ -2759,8 +2802,17 @@ byte *FS_LoadDirectFile( const char *path, fs_offset_t *filesizeptr )
 
 	file = FS_SysOpen( path, "rb" );
 
+#ifndef _WIN32
+	if( !file )
+	{
+		// Try to open this file with lowered path
+		file = FS_SysOpen( FS_ToLowerCase( path ), "rb" );
+	}
+#endif // _WIN32
+
 	if( !file )
 		return NULL;
+
 
 	// Try to load
 	filesize = file->real_length;
@@ -2785,6 +2837,11 @@ Simply version of FS_Open
 file_t *FS_OpenFile( const char *path, fs_offset_t *filesizeptr, qboolean gamedironly )
 {
 	file_t	*file = FS_Open( path, "rb", gamedironly );
+
+#ifndef _WIN32
+	if( !file )
+		file = FS_Open( FS_ToLowerCase( path ), "rb", gamedironly );
+#endif // _WIN32
 
 	if( filesizeptr )
 	{
@@ -2834,7 +2891,11 @@ void FS_StripExtension( char *path )
 {
 	size_t	length;
 
-	length = Q_strlen( path ) - 1;
+	length = Q_strlen( path );
+
+	if( length )
+		length--;
+
 	while( length > 0 && path[length] != '.' )
 	{
 		length--;

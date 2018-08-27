@@ -49,7 +49,7 @@ int __stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdLine, int n
 	char **szArgv;
 	LPWSTR* lpArgv = CommandLineToArgvW(GetCommandLineW(), &szArgc);
 	int size, i = 0;
-	szArgv = (char**)malloc(szArgc*sizeof(char*));
+	szArgv = (char**)сalloc(szArgc + 1,sizeof(char*));
 	for (; i < szArgc; ++i)
 	{
 		size = wcslen(lpArgv[i]) + 1;

@@ -18,7 +18,7 @@ GNU General Public License for more details.
 #define XASH_GENERATE_BUILDNUM
 
 #if defined(XASH_GENERATE_BUILDNUM)
-static char *date = __DATE__ ;
+static char *date = __DATE__;
 static char *mon[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 static char mond[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 #endif

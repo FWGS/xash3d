@@ -1095,6 +1095,8 @@ int S_GetCurrentStaticSounds( soundlist_t *pout, int size );
 void S_StopAllSounds( void );
 
 // gamma routines
+#define MAX_GAMMA 7.0f
+#define MIN_GAMMA 1.8f
 void BuildGammaTable( float gamma, float texGamma );
 byte TextureToTexGamma( byte b );
 byte TextureToGamma( byte b );

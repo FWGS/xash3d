@@ -486,10 +486,6 @@ extern  convar_t		*sv_userinfo_penalty_attempts;
 void SV_FinalMessage( char *message, qboolean reconnect );
 void SV_DropClient( sv_client_t *drop );
 void SV_UpdateMovevars( qboolean initialize );
-int SV_ModelIndex( const char *name );
-int SV_SoundIndex( const char *name );
-int SV_EventIndex( const char *name );
-int SV_GenericIndex( const char *name );
 int SV_CalcPacketLoss( sv_client_t *cl );
 void SV_ExecuteUserCommand (char *s);
 void SV_InitOperatorCommands( void );
@@ -511,6 +507,10 @@ void SV_ActivateServer( void );
 void SV_DeactivateServer( void );
 void SV_LevelInit( const char *pMapName, char const *pOldLevel, char const *pLandmarkName, qboolean loadGame );
 qboolean SV_SpawnServer( const char *server, const char *startspot );
+int SV_ModelIndex( const char *name );
+int SV_SoundIndex( const char *name );
+int SV_EventIndex( const char *name );
+int SV_GenericIndex( const char *name );
 
 //
 // sv_phys.c
