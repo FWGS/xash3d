@@ -118,7 +118,7 @@ qboolean Sys_DebuggerPresent( void )
 	if( status_fd == -1 )
 		return 0;
 
-	ssize_t num_read = read( status_fd, buf, sizeof( buf ) );
+	size_t num_read = read( status_fd, buf, sizeof( buf ) - 1 );
 
 	if( num_read > 0 )
 	{
