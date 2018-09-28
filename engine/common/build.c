@@ -54,7 +54,7 @@ int Q_buildnum( void )
 
 	return b;
 #else
-	return 1096; // Aug 13 2016
+	return 1276; // Aug 28 2018
 #endif
 }
 
