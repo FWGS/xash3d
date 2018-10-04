@@ -32,10 +32,10 @@ typedef enum
 {
 	TotalFrame,
 	PositiveFrame,
-	PositiveNormalFrame,
+	PositiveRenderedFrame,
 	PositiveBlackFrame,
 	NegativeFrame,
-	NegativeNormalFrame,
+	NegativeRenderedFrame,
 	NegativeBlackFrame
 } CountType;
 
@@ -43,8 +43,13 @@ typedef enum
 {
 	PHASE_POSITIVE = BIT( 0 ),
 	PHASE_INVERTED = BIT( 1 ),
-	FRAME_RENDER   = BIT( 2 )
-} FrameState; // Frame State
+	FRAME_RENDER   = BIT( 2 ),
+
+	_unassigned1 = ( PHASE_POSITIVE | PHASE_INVERTED ),
+	_unassigned2 = ( PHASE_POSITIVE | FRAME_RENDER ),
+	_unassigned3 = ( PHASE_INVERTED | FRAME_RENDER ),
+	_unassigned4 = ( PHASE_POSITIVE | PHASE_INVERTED | FRAME_RENDER )
+} FrameState;
 
 typedef struct
 {
@@ -52,9 +57,9 @@ typedef struct
 
 	FrameState frameState;
 
-	int fCounter;                       // Frame counter
-	int pCounter, pNCounter, pBCounter; // Positive phase counters
-	int nCounter, nNCounter, nBCounter; // Negative phase counters
+	int pRCounter, pBCounter; // Positive phase counters
+	int nRCounter, nBCounter; // Negtive phase counters
+
 	int strobeInterval;
 	int swapInterval;
 
@@ -66,7 +71,7 @@ typedef struct
 
 static Strobe strobe;
 
-static double _standardDeviation( double *data, int n )
+static double _standardDeviation( const double *data, int n )
 {
 	double mean = 0.0, sum_deviation = 0.0;
 	int i;
@@ -141,21 +146,61 @@ _inline qboolean _isPositive( void )
 	return __checkState( PHASE_POSITIVE );
 }
 
+static int _frameCount( CountType type )
+{
+	switch ( type )
+	{
+	case ( PositiveFrame ):
+	{
+		return ( _frameCount( PositiveRenderedFrame ) + _frameCount( PositiveBlackFrame ) );
+		break;
+	}
+	case ( PositiveRenderedFrame ):
+	{
+		return strobe.pRCounter;
+		break;
+	}
+	case ( PositiveBlackFrame ):
+	{
+		return strobe.pBCounter;
+		break;
+	}
+	case ( NegativeFrame ):
+	{
+		return ( _frameCount( NegativeRenderedFrame ) + _frameCount( NegativeBlackFrame ) );
+		break;
+	}
+	case ( NegativeRenderedFrame ):
+	{
+		return strobe.nRCounter;
+		break;
+	}
+	case ( NegativeBlackFrame ):
+	{
+		return strobe.nBCounter;
+		break;
+	}
+	case ( TotalFrame ):
+	default:
+		return ( _frameCount( PositiveFrame ) + _frameCount( NegativeFrame ) );
+		break;
+	}
+}
+
 static double _currentFPS( void )
 {
 	static double oldTime = 0;
-	static int mark       = 0;
 	static double oldVal  = 0;
+	static int mark       = 0;
 	double val;
 	double curTime = Sys_DoubleTime( );
-
 	double diff = curTime - oldTime;
 
 	if ( diff > 0.5 )
 	{
-		val     = ( strobe.fCounter - mark ) / ( diff );
+		val     = ( _frameCount( TotalFrame ) - mark ) / ( diff );
 		oldTime = curTime;
-		mark    = strobe.fCounter;
+		mark    = _frameCount( TotalFrame );
 	}
 	else
 	{
@@ -202,30 +247,30 @@ static void _generateDiffBar( char *dst, int size, char type )
 
 	switch ( type )
 	{
-	case ( 0 ): // Positive Difference
+	case ( 0 ):
 	{
-		diff_NB = ( strobe.pNCounter - strobe.pBCounter );
+		diff_NB = ( _frameCount( PositiveRenderedFrame ) - _frameCount( PositiveBlackFrame ) );
 
-		if ( strobe.pCounter )
-			diff = round( abs( diff_NB ) * 100 / strobe.pCounter );
+		if ( _frameCount( PositiveFrame ) )
+			diff = round( abs( diff_NB ) * 100 / _frameCount( PositiveFrame ) );
 
 		break;
 	}
-	case ( 1 ): // Negative Difference
+	case ( 1 ):
 	{
-		diff_NB = ( strobe.nNCounter - strobe.nBCounter );
+		diff_NB = ( _frameCount( NegativeRenderedFrame ) - _frameCount( NegativeBlackFrame ) );
 
-		if ( strobe.nCounter )
-			diff = round( abs( diff_NB ) * 100 / strobe.nCounter );
+		if ( _frameCount( NegativeFrame ) )
+			diff = round( abs( diff_NB ) * 100 / _frameCount( NegativeFrame ) );
 
 		break;
 	}
-	case ( 2 ): // Difference of difference
+	case ( 2 ):
 	{
-		if ( strobe.nCounter && strobe.pCounter )
+		if ( _frameCount( NegativeFrame ) && _frameCount( PositiveFrame ) )
 		{
-			_a   = ( (strobe.pNCounter - strobe.pBCounter) * 100 / strobe.pCounter );
-			_b   = ( (strobe.nNCounter - strobe.nBCounter) * 100 / strobe.nCounter );
+			_a   = ( (_frameCount( PositiveRenderedFrame ) - _frameCount( PositiveBlackFrame )) * 100 / _frameCount( PositiveFrame ) );
+			_b   = ( (_frameCount( NegativeRenderedFrame ) - _frameCount( NegativeBlackFrame )) * 100 / _frameCount( NegativeFrame ) );
 			diff = abs( _a - _b );
 		}
 		break;
@@ -365,16 +410,17 @@ _inline double _otherBrightnessReduction( double base, double ( *reductionFuncti
 static double _badness_reduced( qboolean PWMInvolved )
 {
 	double badness, Diff;
-	int diffP_NB, diffN_NB;
 	double diffP = 0.0, diffN = 0.0;
-	diffP_NB = ( strobe.pNCounter - strobe.pBCounter );
-	diffN_NB = ( strobe.nNCounter - strobe.nBCounter );
+	int diffP_NB, diffN_NB;
 
-	if ( strobe.pCounter )
-		diffP = abs( diffP_NB ) * 100.0 / strobe.pCounter;
+	diffP_NB = ( _frameCount( PositiveRenderedFrame ) - _frameCount( PositiveBlackFrame ) );
+	diffN_NB = ( _frameCount( NegativeRenderedFrame ) - _frameCount( NegativeBlackFrame ) );
 
-	if ( strobe.nCounter )
-		diffN = abs( diffN_NB ) * 100.0 / strobe.nCounter;
+	if ( _frameCount( PositiveFrame ) )
+		diffP = abs( diffP_NB ) * 100.0 / _frameCount( PositiveFrame );
+
+	if ( _frameCount( NegativeFrame ) )
+		diffN = abs( diffN_NB ) * 100.0 / _frameCount( NegativeFrame );
 
 	if ( diffP_NB < 0.0 )
 		diffP = -diffP;
@@ -403,14 +449,14 @@ static double _badness( qboolean PWMInvolved )
 	double absoluteDifference = 0.0;
 	double badness            = 0.0;
 
-	diffP_NB = ( strobe.pNCounter - strobe.pBCounter );
-	diffN_NB = ( strobe.nNCounter - strobe.nBCounter );
+	diffP_NB = ( _frameCount( PositiveRenderedFrame ) - _frameCount( PositiveBlackFrame ) );
+	diffN_NB = ( _frameCount( NegativeRenderedFrame ) - _frameCount( NegativeBlackFrame ) );
 
-	if ( strobe.pCounter )
-		diffP = abs( diffP_NB ) * 100.0 / strobe.pCounter;
+	if ( _frameCount( PositiveFrame ) )
+		diffP = abs( diffP_NB ) * 100.0 / _frameCount( PositiveFrame );
 
-	if ( strobe.nCounter )
-		diffN = abs( diffN_NB ) * 100.0 / strobe.nCounter;
+	if ( _frameCount( NegativeFrame ) )
+		diffN = abs( diffN_NB ) * 100.0 / _frameCount( NegativeFrame );
 
 	absoluteDifference = fabs( diffP - diffN );
 	if ( absoluteDifference > 100.0 )
@@ -425,66 +471,25 @@ static double _badness( qboolean PWMInvolved )
 		return badness;
 }
 
-static int _frameCount( CountType type )
-{
-	switch ( type )
-	{
-	case ( PositiveFrame ):
-	{
-		return strobe.pCounter;
-		break;
-	}
-	case ( PositiveNormalFrame ):
-	{
-		return strobe.pNCounter;
-		break;
-	}
-	case ( PositiveBlackFrame ):
-	{
-		return strobe.pBCounter;
-		break;
-	}
-	case ( NegativeFrame ):
-	{
-		return strobe.nCounter;
-		break;
-	}
-	case ( NegativeNormalFrame ):
-	{
-		return strobe.nNCounter;
-		break;
-	}
-	case ( NegativeBlackFrame ):
-	{
-		return strobe.nBCounter;
-		break;
-	}
-	case ( TotalFrame ):
-	default:
-		return strobe.fCounter;
-		break;
-	}
-}
-
 static void _generateDebugInfo( char *dst, int size )
 {
-	int _k;
-	char diffBarP[128], diffBarN[128], diffBarT[128];
-	int nPositiveNormal, nPositiveBlack, nNegativeNormal, nNegativeBlack;
 	static int positiveNormal, positiveBlack, negativeNormal, negativeBlack;
+	int _k;
+	int nPositiveNormal, nPositiveBlack, nNegativeNormal, nNegativeBlack;
 	int diffP_NB, diffN_NB;
-	double diffP = 0.0, diffN = 0.0, diffT = 0.0;
 	int strobeMethod = strobe.strobeInterval;
 	char strobemethod[128];
+	char diffBarP[128], diffBarN[128], diffBarT[128];
+	double diffP = 0.0, diffN = 0.0, diffT = 0.0;
 
-	diffP_NB = ( strobe.pNCounter - strobe.pBCounter );
-	diffN_NB = ( strobe.nNCounter - strobe.nBCounter );
+	diffP_NB = ( _frameCount( PositiveRenderedFrame ) - _frameCount( PositiveBlackFrame ) );
+	diffN_NB = ( _frameCount( NegativeRenderedFrame ) - _frameCount( NegativeBlackFrame ) );
 
-	if ( strobe.pCounter )
-		diffP = diffP_NB * 100.0 / strobe.pCounter; // round( abs( diffP_NB ) * 100 / strobe.pCounter );
+	if ( _frameCount( PositiveFrame ) )
+		diffP = diffP_NB * 100.0 / _frameCount( PositiveFrame );
 
-	if ( strobe.nCounter )
-		diffN = diffN_NB * 100.0 / strobe.nCounter; // round( abs( diffN_NB ) * 100 / strobe.nCounter );
+	if ( _frameCount( NegativeFrame ) )
+		diffN = diffN_NB * 100.0 / _frameCount( NegativeFrame );
 	
 	
 	diffT = fabs( diffP - diffN );
@@ -495,9 +500,9 @@ static void _generateDebugInfo( char *dst, int size )
 	_generateDiffBar( diffBarN, sizeof( diffBarN ), 1 );
 	_generateDiffBar( diffBarT, sizeof( diffBarT ), 2 );
 
-	nPositiveNormal = _frameCount( PositiveNormalFrame );
+	nPositiveNormal = _frameCount( PositiveRenderedFrame );
 	nPositiveBlack  = _frameCount( PositiveBlackFrame );
-	nNegativeNormal = _frameCount( NegativeNormalFrame );
+	nNegativeNormal = _frameCount( NegativeRenderedFrame );
 	nNegativeBlack  = _frameCount( NegativeBlackFrame );
 
 	Q_snprintf( strobemethod, sizeof( strobemethod ), ( strobeMethod > 0 ? "%d [R" : "%d [B" ), strobeMethod );
@@ -510,8 +515,8 @@ static void _generateDebugInfo( char *dst, int size )
 	Q_snprintf( dst,
 	            size,
 	            "%.2f FPS\n%.2f eFPS\n"
-	            "Strobe Method: %s\n"
-	            "Strobe Phase Swap Interval: %d second(s)\n"
+	            "Strobe Mode: %s\n"
+	            "Phase Switch Interval: %d second(s)\n"
 	            "Strobe Cooldown Delay: %d second(s)\n"
 	            "Elapsed Time: %.2f second(s)\n"
 	            "isPhaseInverted = %d\n"
@@ -553,10 +558,10 @@ static void _generateDebugInfo( char *dst, int size )
 	            _isPhaseInverted( ),
 	            _frameCount( TotalFrame ),
 	            _frameCount( PositiveFrame ),
-	            ( nPositiveNormal > positiveNormal ? va( "^2 |-> Normal Frame Count: %d^7", nPositiveNormal ) : va( " |-> Normal Frame Count: %d", nPositiveNormal ) ),
+	            ( nPositiveNormal > positiveNormal ? va( "^2 |-> Rendered Frame Count: %d^7", nPositiveNormal ) : va( " |-> Rendered Frame Count: %d", nPositiveNormal ) ),
 	            ( nPositiveBlack > positiveBlack ? va( "^2 |-> Black Frame Count: %d^7", nPositiveBlack ) : va( " |-> Black Frame Count: %d", nPositiveBlack ) ),
 	            _frameCount( NegativeFrame ),
-	            ( nNegativeNormal > negativeNormal ? va( "^2 |-> Normal Frame Count: %d^7", nNegativeNormal ) : va( " |-> Normal Frame Count: %d", nNegativeNormal ) ),
+	            ( nNegativeNormal > negativeNormal ? va( "^2 |-> Rendered Frame Count: %d^7", nNegativeNormal ) : va( " |-> Rendered Frame Count: %d", nNegativeNormal ) ),
 	            ( nNegativeBlack > negativeBlack ? va( "^2 |-> Black Frame Count: %d^7", nNegativeBlack ) : va( " |-> Black Frame Count: %d", nNegativeBlack ) ),
 	            _frequency( ),
 	            _dutyCycle( ),
@@ -603,9 +608,9 @@ static void _processFrame( void )
 	if ( _isNormal( ) ) // Show normal
 	{
 		if ( _isPositive( ) )
-			++strobe.pNCounter;
+			++strobe.pRCounter;
 		else
-			++strobe.nNCounter;
+			++strobe.nRCounter;
 
 		if ( !firstInverted )
 			R_Set2DMode( false );
@@ -628,7 +633,6 @@ static void _processFrame( void )
 	}
 
 	phase = _isPhaseInverted( );
-	++strobe.fCounter;
 }
 
 static void _reset( )
@@ -722,12 +726,12 @@ void R_Strobe_Tick( void )
 
 	if ( strobe.cdTimer >= 0.0 && delta2 > 0.0 )
 		strobe.cdTimer += delta2;
-	if ( strobe.fCounter - frameSnapshot == 1 )
+	if ( _frameCount( TotalFrame ) - frameSnapshot == 1 )
 	{
-		deltaArray[strobe.fCounter % ARRAYSIZE( deltaArray )] = _currentFPS( );
+		deltaArray[_frameCount( TotalFrame ) % ARRAYSIZE( deltaArray )] = _currentFPS( );
 		strobe.deviation                                      = _standardDeviation( deltaArray, ARRAYSIZE( deltaArray ) );
 	}
-	frameSnapshot = strobe.fCounter;
+	frameSnapshot = _frameCount( TotalFrame );
 
 	if ( r_strobe_cooldown->integer > 0 )
 	{
@@ -737,7 +741,7 @@ void R_Strobe_Tick( void )
 			strobe.cdTimer     = -1.0;
 		}
 
-		if ( strobe.fCounter > ARRAYSIZE( deltaArray ) )
+		if ( _frameCount( TotalFrame ) > ARRAYSIZE( deltaArray ) )
 		{
 			if ( strobe.deviation > DEVIATION_LIMIT )
 			{
@@ -753,7 +757,7 @@ void R_Strobe_Tick( void )
 
 	if ( ( ( strobe.strobeInterval != r_strobe->integer ) && ( strobe.strobeInterval ) ) ||
 	     /*((swapInterval != r_strobe_swapinterval->integer) && (swapInterval != 0)) || */
-	     strobe.fCounter == INT_MAX )
+	     _frameCount( TotalFrame ) == INT_MAX )
 	{
 		_reset( );
 		R_Strobe_Tick( );
@@ -778,14 +782,12 @@ void R_Strobe_Tick( void )
 		return;
 	}
 
-	if ( ( strobe.fCounter % 2 ) == 0 )
+	if ( ( _frameCount( TotalFrame ) % 2 ) == 0 )
 	{
-		++strobe.pCounter;
 		strobe.frameState |= PHASE_POSITIVE;
 	}
 	else
 	{
-		++strobe.nCounter;
 		strobe.frameState &= ~PHASE_POSITIVE;
 	}
 
@@ -813,38 +815,38 @@ void R_Strobe_Tick( void )
 	{
 	case ( PHASE_POSITIVE | PHASE_INVERTED ):
 		if ( ( abs( strobe.strobeInterval ) % 2 ) == 0 )
-			strobe.frameState = ( ( ( strobe.pCounter - 1 ) % ( abs( strobe.strobeInterval ) + 1 ) ) == ( abs( strobe.strobeInterval ) / 2 ) ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //even
+			strobe.frameState = ( ( ( _frameCount( PositiveFrame ) ) % ( abs( strobe.strobeInterval ) + 1 ) ) == ( abs( strobe.strobeInterval ) / 2 ) ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //even
 		else
 			strobe.frameState &= ~FRAME_RENDER;
 		break;
 
 	case ( PHASE_POSITIVE & ~PHASE_INVERTED ):
 		if ( abs( strobe.strobeInterval ) % 2 == 0 )
-			strobe.frameState = ( ( ( strobe.pCounter - 1 ) % ( abs( strobe.strobeInterval ) + 1 ) ) == 0 ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //even
+			strobe.frameState = ( ( ( _frameCount( PositiveFrame ) ) % ( abs( strobe.strobeInterval ) + 1 ) ) == 0 ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //even
 		else
 		{
 			if ( abs( strobe.strobeInterval ) == 1 )
 				strobe.frameState |= FRAME_RENDER;
 			else
-				strobe.frameState = ( ( ( strobe.pCounter - 1 ) % ( ( abs( strobe.strobeInterval ) + 1 ) / 2 ) ) == 0 ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //odd
+				strobe.frameState = ( ( ( _frameCount( PositiveFrame ) ) % ( ( abs( strobe.strobeInterval ) + 1 ) / 2 ) ) == 0 ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //odd
 		}
 		break;
 
 	case ( ~PHASE_POSITIVE & PHASE_INVERTED ):
 		if ( abs( strobe.strobeInterval ) % 2 == 0 )
-			strobe.frameState = ( ( ( strobe.nCounter - 1 ) % ( abs( strobe.strobeInterval ) + 1 ) ) == 0 ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //even
+			strobe.frameState = ( ( ( _frameCount( NegativeFrame ) ) % ( abs( strobe.strobeInterval ) + 1 ) ) == 0 ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //even
 		else
 		{
 			if ( abs( strobe.strobeInterval ) == 1 )
 				strobe.frameState |= FRAME_RENDER;
 			else
-				strobe.frameState = ( ( ( strobe.nCounter - 1 ) % ( ( abs( strobe.strobeInterval ) + 1 ) / 2 ) ) == 0 ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //odd
+				strobe.frameState = ( ( ( _frameCount( NegativeFrame ) ) % ( ( abs( strobe.strobeInterval ) + 1 ) / 2 ) ) == 0 ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //odd
 		}
 		break;
 
 	case 0:
 		if ( ( abs( strobe.strobeInterval ) % 2 ) == 0 )
-			strobe.frameState = ( ( ( strobe.nCounter - 1 ) % ( abs( strobe.strobeInterval ) + 1 ) ) == ( abs( strobe.strobeInterval ) / 2 ) ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //even
+			strobe.frameState = ( ( ( _frameCount( NegativeFrame ) ) % ( abs( strobe.strobeInterval ) + 1 ) ) == ( abs( strobe.strobeInterval ) / 2 ) ) ? strobe.frameState | FRAME_RENDER : strobe.frameState & ~FRAME_RENDER; //even
 		else
 			strobe.frameState &= ~FRAME_RENDER;
 		break;
