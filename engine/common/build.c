@@ -77,6 +77,8 @@ const char *Q_buildos( void )
 	osname = "Android";
 #elif defined(__SAILFISH__)
 	osname = "SailfishOS";
+#elif defined(__HAIKU__)
+	osname = "HaikuOS";
 #elif defined(__linux__)
 	osname = "Linux";
 #elif defined(__APPLE__)

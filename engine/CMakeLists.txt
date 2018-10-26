@@ -202,7 +202,11 @@ endif()
 fwgs_set_default_properties(${XASH_ENGINE})
 
 if(NOT WIN32)
-	target_link_libraries(${XASH_ENGINE} -lm -lpthread)
+	if(NOT HAIKU)
+		target_link_libraries(${XASH_ENGINE} -lm -lpthread)
+	else()
+		target_link_libraries(${XASH_ENGINE} -lm -lpthread -lnetwork)
+	endif()
 	# For single binary builds we change name to game_launch's executable name
 	if(XASH_SINGLE_BINARY)
 		set_target_properties(${XASH_ENGINE} PROPERTIES

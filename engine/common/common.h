@@ -1105,6 +1105,10 @@ byte TextureToGamma( byte b );
 #include "platform/android/android-main.h"
 #endif
 
+#ifdef __HAIKU__
+#include <FindDirectory.h>
+#endif
+
 #ifdef __cplusplus
 }
 #endif
