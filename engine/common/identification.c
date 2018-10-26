@@ -640,7 +640,12 @@ void ID_Init( void )
 	}
 #else
 	{
+#ifndef __HAIKU__
 		const char *home = getenv( "HOME" );
+#else
+		char home[MAX_SYSPATH];
+		find_directory( B_USER_SETTINGS_DIRECTORY, -1, false, home, MAX_SYSPATH );
+#endif
 		if( home )
 		{
 			FILE *cfg = fopen( va( "%s/.config/.xash_id", home ), "r" );
@@ -690,7 +695,12 @@ void ID_Init( void )
 	}
 #else
 	{
+#ifndef __HAIKU__
 		const char *home = getenv( "HOME" );
+#else
+		char home[MAX_SYSPATH];
+		find_directory( B_USER_SETTINGS_DIRECTORY, -1, false, home, MAX_SYSPATH );
+#endif
 		if( home )
 		{
 			FILE *cfg = fopen( va( "%s/.config/.xash_id", home ), "w" );

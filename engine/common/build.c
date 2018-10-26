@@ -77,6 +77,8 @@ const char *Q_buildos( void )
 	osname = "Android";
 #elif defined(__SAILFISH__)
 	osname = "SailfishOS";
+#elif defined(__HAIKU__)
+	osname = "HaikuOS";
 #elif defined(__linux__)
 	osname = "Linux";
 #elif defined(__APPLE__)
@@ -152,7 +154,7 @@ const char *Q_buildcommit( void )
 =============
 Q_buildnum_compat
 
-Returns a Xash3D build number. This is left for compability with original Xash3D.
+Returns a Xash3D build number. This is left for compatibility with original Xash3D.
 IMPORTANT: this value must be changed ONLY after updating to newer Xash3D
 IMPORTANT: this value must be acquired through "build" cvar.
 =============

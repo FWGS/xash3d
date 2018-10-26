@@ -310,7 +310,7 @@ char *Sys_GetCurrentUser( void )
 	return "Player";
 }
 
-#if (defined(__linux__) && !defined(__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__) || defined(__HAIKU__)
 qboolean Sys_FindExecutable( const char *baseName, char *buf, size_t size )
 {
 	char *envPath;
@@ -376,10 +376,18 @@ void Sys_ShellExecute( const char *path, const char *parms, qboolean shouldExit 
 					document.location.href = Pointer_stringify($0);
 				return 0;
 			}, (int)path );
-#elif (defined(__linux__) && !defined (__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+#elif (defined(__linux__) && !defined (__ANDROID__)) || defined (__FreeBSD__) || defined (__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__) || defined(__HAIKU__)
 
 	if( !Q_strcmp( path, GENERIC_UPDATE_PAGE ) || !Q_strcmp( path, PLATFORM_UPDATE_PAGE ))
 		path = XASH_UPDATE_PAGE;
+
+	// Prevent "open: www.url.com: No such file or directory" error
+	char http[MAX_SYSPATH];
+	if( Q_strstr( path, "www" ) && Q_strncmp( path, "http", 4 ) )
+	{
+		Q_snprintf( http, MAX_SYSPATH, "%s%s", "http://", path );
+		path = http;
+	}
 
 	char xdgOpen[128];
 	if( Sys_FindExecutable( OPEN_COMMAND, xdgOpen, sizeof( xdgOpen ) ) )
@@ -660,7 +668,7 @@ before call this
 void Sys_Error( const char *format, ... )
 {
 	va_list	argptr;
-	char	text[MAX_SYSPATH];
+	char text[4096];
 
 	DEBUG_BREAK;
 

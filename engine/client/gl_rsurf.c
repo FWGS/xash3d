@@ -2217,7 +2217,7 @@ static void R_DisableDetail( void )
 ===================
 R_EnableDetail
 
-enable detail tmu if availiable
+enable detail tmu if available
 ===================
 */
 static void R_EnableDetail( void )
@@ -2300,7 +2300,7 @@ static void R_DisableBump()
 		mtst.tmu_lm = XASH_TEXTURE1;
 		mtst.tmu_gl = XASH_TEXTURE0;
 
-		// now details availiable on tmu2
+		// now details available on tmu2
 		if( mtst.details_enabled )
 			mtst.tmu_dt = XASH_TEXTURE2;
 	}
