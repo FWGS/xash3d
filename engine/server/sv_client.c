@@ -2941,7 +2941,7 @@ void SV_EntFire_f( sv_client_t *cl )
 		}
 		else if( !Q_stricmp( Cmd_Argv( 2 ), "help" ) )
 		{
-			SV_ClientPrintf( cl, PRINT_LOW, "Availiavle commands:\n"
+			SV_ClientPrintf( cl, PRINT_LOW, "Available commands:\n"
 				"Set fields:\n"
 				"        (Only set entity field, does not call any functions)\n"
 				"    health\n"

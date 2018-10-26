@@ -169,7 +169,7 @@ typedef enum
 #include "base_cmd.h"
 
 #define XASH_VERSION	"0.19.3"		// engine current version
-// since this fork have own version, this is just left for compability
+// since this fork have own version, this is just left for compatibility
 #define BASED_VERSION	0.98f
 
 // generic update page, see ShellExecute

@@ -152,7 +152,7 @@ const char *Q_buildcommit( void )
 =============
 Q_buildnum_compat
 
-Returns a Xash3D build number. This is left for compability with original Xash3D.
+Returns a Xash3D build number. This is left for compatibility with original Xash3D.
 IMPORTANT: this value must be changed ONLY after updating to newer Xash3D
 IMPORTANT: this value must be acquired through "build" cvar.
 =============

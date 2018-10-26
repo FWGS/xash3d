@@ -202,7 +202,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 			Com_PushLibraryError( dlerror() );
 		}
 
-		// HACKHACK: keep old behaviour for compability
+		// HACKHACK: keep old behaviour for compatibility
 		pHandle = dlopen( dllname, RTLD_NOW );
 		if( pHandle )
 			return pHandle;
