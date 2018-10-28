@@ -895,8 +895,14 @@ void SV_InactivateClients( void )
 		if( !cl->state || !cl->edict )
 			continue;
 			
-		if( !cl->edict || (cl->edict->v.flags & FL_FAKECLIENT))
+		if( !cl->edict )
 			continue;
+
+		if( cl->edict->v.flags & FL_FAKECLIENT )
+		{
+			SV_DropClient( cl );
+			continue;
+		}
 
 		if( svs.clients[i].state > cs_connected )
 			svs.clients[i].state = cs_connected;
