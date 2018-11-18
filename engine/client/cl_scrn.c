@@ -150,9 +150,9 @@ void SCR_DrawPos( void )
 	speed = VectorLength( cl.frame.client.velocity );
 
 	if( cl_showpos->integer >= 2 )
-		Q_sprintf(vel, "%.2f %.2f %2.2f", cl.frame.client.velocity[0],cl.frame.client.velocity[1], cl.frame.client.velocity[2] );
+		Q_snprintf(vel, 64, "%.2f %.2f %2.2f", cl.frame.client.velocity[0],cl.frame.client.velocity[1], cl.frame.client.velocity[2] );
 	else
-		Q_sprintf(vel,"%.2f",speed);
+		Q_snprintf(vel, 64, "%.2f",speed);
 
 	Q_snprintf( msg, MAX_SYSPATH,
 	"pos: %.2f %.2f %.2f\n"
