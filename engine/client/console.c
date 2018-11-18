@@ -1375,6 +1375,9 @@ void Key_Console( int key )
 	// command history (ctrl-p ctrl-n for unix style)
 	if(( key == K_MWHEELUP && Key_IsDown( K_SHIFT )) || ( key == K_UPARROW ) || (( Q_tolower(key) == 'p' ) && Key_IsDown( K_CTRL )))
 	{
+		if( con.historyLine == con.nextHistoryLine )
+			con.historyLines[con.nextHistoryLine % CON_HISTORY] = con.input;
+
 		if( con.nextHistoryLine - con.historyLine < CON_HISTORY && con.historyLine > 0 )
 		{
 			con.historyLine--;
