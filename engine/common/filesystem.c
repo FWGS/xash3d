@@ -1153,6 +1153,12 @@ void FS_Rescan( void )
 		FS_AddPack_Fullpath( va( SHAREPATH"/extras.pak" ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 		FS_AddPack_Fullpath( va( SHAREPATH"/%s/extras.pak", GI->gamefolder ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 	}
+#elif defined(__HAIKU__)
+	char *dir;
+	if( dir = getenv( "XASH3D_MIRRORDIR" ) )
+		FS_AddPack_Fullpath( va( "%s/extras.pak", dir ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
+	if( dir = getenv( "XASH3D_BASEDIR" ) )
+		FS_AddPack_Fullpath( va( "%s/%s/extras.pak", dir , GI->gamefolder ), NULL, false, FS_NOWRITE_PATH | FS_CUSTOM_PATH );
 #endif
 
 	if( Q_stricmp( GI->basedir, GI->gamefolder ))
@@ -1779,6 +1785,8 @@ void FS_LoadGameInfo( const char *rootfolder )
 		Q_strncpy( SI.gamedll, GI->game_dll, sizeof( SI.gamedll ) );
 #elif defined(__APPLE__)
 		Q_strncpy( SI.gamedll, GI->game_dll_osx, sizeof( SI.gamedll ) );
+#elif defined(__HAIKU__)
+		Q_strncpy( SI.gamedll, "dlls/"SERVERDLL, sizeof( SI.gamedll ) );
 #else
 		Q_strncpy( SI.gamedll, GI->game_dll_linux, sizeof( SI.gamedll ) );
 #endif

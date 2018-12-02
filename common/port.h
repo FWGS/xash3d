@@ -46,11 +46,14 @@ GNU General Public License for more details.
 	#if defined(__APPLE__)
 		#include <sys/syslimits.h>
 		#define OS_LIB_EXT "dylib"
-        #define OPEN_COMMAND "open"
+		#define OPEN_COMMAND "open"
 		#include "TargetConditionals.h"
+	#elif defined(__HAIKU__)
+		#define OS_LIB_EXT "so"
+		#define OPEN_COMMAND "/bin/open"
 	#else
 		#define OS_LIB_EXT "so"
-        #define OPEN_COMMAND "xdg-open"
+		#define OPEN_COMMAND "xdg-open"
 	#endif
 
 
@@ -79,6 +82,12 @@ GNU General Public License for more details.
 		#define GAMEPATH "/home/nemo/xash"
 		#define LIBPATH "/usr/lib/xash3d/"
 		#define SHAREPATH "/usr/share/xash3d/"
+	#elif defined(__HAIKU__)
+		#define POSTFIX   "-haiku"
+		#define MENUDLL   "libmenu"                       "." OS_LIB_EXT
+		#define CLIENTDLL "libclient" POSTFIX ARCH_SUFFIX "." OS_LIB_EXT
+		#define SERVERDLL "libserver" POSTFIX ARCH_SUFFIX "." OS_LIB_EXT
+		#define PACKAGE   "/Xash3D"
 	#else
 		#define MENUDLL   "libxashmenu" ARCH_SUFFIX "." OS_LIB_EXT
 		#define CLIENTDLL "client"      ARCH_SUFFIX "." OS_LIB_EXT
@@ -87,7 +96,9 @@ GNU General Public License for more details.
 	#define VGUI_SUPPORT_DLL "libvgui_support." OS_LIB_EXT
 
 	// Windows-specific
+#ifndef __HAIKU__
 	#define __cdecl
+#endif
 	#define _inline	static inline
 	#define O_BINARY 0 // O_BINARY is Windows extension
 	#define O_TEXT 0 // O_TEXT is Windows extension

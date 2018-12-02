@@ -36,6 +36,18 @@ GNU General Public License for more details.
 	#define XASHLIB    "libxash.so"
 	#define dlmount(x) dlopen(x, RTLD_NOW)
 	#define HINSTANCE  void*
+#elif __HAIKU__
+	#include <dlfcn.h>
+	#include <errno.h>
+	#include <libgen.h>
+	#include <limits.h>
+	#include <unistd.h>
+	#define XASHLIB     "libxash.so"
+	#define dlmount(x)  dlopen(x, RTLD_NOW)
+	#define HINSTANCE   void*
+	#define E_GAME      "XASH3D_GAME"
+	#define E_BASEDIR   "XASH3D_BASEDIR"
+	#define E_MIRRORDIR "XASH3D_MIRRORDIR"
 #elif _WIN32
 	#define dlmount(x) LoadLibraryA(x)
 	#define dlclose(x) FreeLibrary(x)
@@ -114,7 +126,15 @@ static const char *GetStringLastError()
 
 static void Sys_LoadEngine( void )
 {
+#ifdef __HAIKU__
+	char path[PATH_MAX];
+	char *engine = getenv( E_MIRRORDIR );
+	strncpy( path, engine, PATH_MAX );
+	strncat( path, "/"XASHLIB, PATH_MAX );
+	if(( hEngine = dlmount( path )) == NULL )
+#else
 	if(( hEngine = dlmount( XASHLIB )) == NULL )
+#endif
 	{
 		Xash_Error("Unable to load the " XASHLIB ": %s", dlerror() );
 	}
@@ -158,7 +178,12 @@ _inline int Sys_Start( void )
 	int ret;
 
 	Sys_LoadEngine();
+#ifndef __HAIKU__
 	ret = Xash_Main( szArgc, szArgv, GAME_PATH, false, Xash_Shutdown ? Sys_ChangeGame : NULL );
+#else
+	const char* game = getenv( E_GAME );
+	ret = Xash_Main( szArgc, szArgv, game, false, Xash_Shutdown ? Sys_ChangeGame : NULL );
+#endif
 	Sys_UnloadEngine();
 
 	return ret;
@@ -169,6 +194,41 @@ int main( int argc, char **argv )
 {
 	szArgc = argc;
 	szArgv = argv;
+
+#ifdef __HAIKU__
+	// To make it able to start from Deskbar
+	chdir( dirname( argv[0] ) );
+	char path[PATH_MAX];
+	getcwd( path, PATH_MAX );
+	const char *game = getenv( E_GAME );
+	if( !game )
+		setenv( E_GAME, GAME_PATH, 1 );
+	const char *basedir = getenv( E_BASEDIR );
+	if( !basedir )
+		setenv( E_BASEDIR, path, 1 );
+	const char *mirrordir = getenv( E_MIRRORDIR );
+	// The mirror "extras/" directory structure for Haiku OS which is needeed for the HPGK-package:
+	// extras.pak
+	// libmenu.so
+	// libxash.so
+	// bshift/
+	//  cl_dlls/
+	//   libclient-haiku64.so
+	//  dlls/
+	//   libserver-haiku64.so
+	// valve/
+	//  cl_dlls/
+	//   libclient-haiku64.so
+	//  dlls/
+	//   libserver-haiku64.so
+	if( !mirrordir )
+	{
+		strncpy( path, getenv( E_BASEDIR ), PATH_MAX );
+		strncat( path, "/extras", PATH_MAX );
+		setenv( E_MIRRORDIR, path, 1 );
+	}
+	// fprintf( stderr, "%s\n%s\n%s\n", getenv( E_GAME ), getenv( E_BASEDIR ), getenv( E_MIRRORDIR ) );
+#endif
 
 	return Sys_Start();
 }

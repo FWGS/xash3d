@@ -202,7 +202,7 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 			Com_PushLibraryError( dlerror() );
 		}
 
-		// HACKHACK: keep old behaviour for compability
+		// HACKHACK: keep old behaviour for compatibility
 		pHandle = dlopen( dllname, RTLD_NOW );
 		if( pHandle )
 			return pHandle;
@@ -231,6 +231,23 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 			Com_PushLibraryError( dlerror() );
 		}
 	}
+#elif defined __HAIKU__
+	// First look for libraries in the mirror directory
+	const char *libdir = getenv( "XASH3D_MIRRORDIR" );
+	if( libdir ) {
+		char path[MAX_SYSPATH];
+		char game[MAX_SYSPATH] = { 0 };
+		if( GI && !Q_strstr( dllname, "menu" ) )
+			Q_snprintf( game, MAX_SYSPATH, "/%s", GI->gamefolder );
+		Q_snprintf( path, MAX_SYSPATH, "%s%s/%s", libdir, game, dllname );
+		// fprintf( stderr, "===> %s: %s\n", dllname, path );
+		pHandle = dlopen( path, RTLD_NOW );
+		if( pHandle )
+			return pHandle;
+
+		Com_PushLibraryError( dlerror() );
+	}
+	// Then through FS_FindLibrary() function in the gamebase directory
 #endif
 
 	// platforms where gameinfo mechanism is working goes here

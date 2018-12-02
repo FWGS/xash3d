@@ -139,7 +139,7 @@ convar_t *sxdly_lp;        // lowpass
 convar_t *sxdly_feedback;  // cycles
 convar_t *sxdly_delay;     // current delay in seconds
 
-convar_t *dsp_room;        // for compability
+convar_t *dsp_room;        // for compatibility
 convar_t *hisound;
 int idsp_room;
 
@@ -220,7 +220,7 @@ void SX_Init( void )
 
 	Cmd_AddCommand( "dsp_profile", SX_Profiling_f, "dsp stress-test, first argument is room_type" );
 
-	// for compability
+	// for compatibility
 	dsp_room         = room_type;
 	SX_ReloadRoomFX();
 }

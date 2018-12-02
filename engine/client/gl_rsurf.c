@@ -1979,7 +1979,7 @@ void R_GenerateVBO()
 				vbos.surfdata[i].startindex = vbo->array_len;
 				vbos.surfdata[i].texturenum = j;
 				vbo->array_len += surf->polys->numverts;
-				vbotex->len += surf->polys->numverts;
+				vbotex->len += 3 * (surf->polys->numverts - 2);	// 3 indices for n-2 vertices on each face - see R_AddSurfToVBO().
 				vbotex->vboarray = vbo;
 			}
 		}
@@ -2003,7 +2003,7 @@ void R_GenerateVBO()
 			vbotexture_t *vbotex = &vbos.textures[k * numtextures + j];
 
 			// preallocate index arrays
-			vbotex->indexarray = Mem_Alloc( vbos.mempool, sizeof( unsigned short ) * 6 *  vbotex->len );
+			vbotex->indexarray = Mem_Alloc( vbos.mempool, sizeof( unsigned short ) * vbotex->len );
 			vbotex->lightmaptexturenum = k;
 
 			if( maxindex < vbotex->len )
@@ -2035,7 +2035,7 @@ void R_GenerateVBO()
 
 					vbo = vbo->next;
 					vbotex = vbotex->next;
-					vbotex->indexarray = Mem_Alloc( vbos.mempool, sizeof( unsigned short ) * 6 *  vbotex->len );
+					vbotex->indexarray = Mem_Alloc( vbos.mempool, sizeof( unsigned short ) * vbotex->len );
 					vbotex->lightmaptexturenum = k;
 
 					// calculate limits for dlights
@@ -2217,7 +2217,7 @@ static void R_DisableDetail( void )
 ===================
 R_EnableDetail
 
-enable detail tmu if availiable
+enable detail tmu if available
 ===================
 */
 static void R_EnableDetail( void )
@@ -2300,7 +2300,7 @@ static void R_DisableBump()
 		mtst.tmu_lm = XASH_TEXTURE1;
 		mtst.tmu_gl = XASH_TEXTURE0;
 
-		// now details availiable on tmu2
+		// now details available on tmu2
 		if( mtst.details_enabled )
 			mtst.tmu_dt = XASH_TEXTURE2;
 	}
@@ -2971,7 +2971,9 @@ void R_DrawVBO( qboolean drawlightmap, qboolean drawtextures )
 			if( !vbotex->vboarray )
 				continue;
 
-			ASSERT( vbotex->vboarray == vbo );
+			// ASSERT( vbotex->vboarray == vbo );
+			if( vbotex->vboarray != vbo )
+				continue;
 
 			if( vbotex->curindex || vbotex->dlightchain )
 			{
@@ -3148,7 +3150,7 @@ void R_DrawVBO( qboolean drawlightmap, qboolean drawtextures )
 		if( !drawtextures || !drawlightmap )
 			vbos.decaldata->lm[k] = NULL;
 	}
-	ASSERT( !vbo->next );
+	// ASSERT( !vbo->next );
 
 	// restore states
 	R_DisableBump();
@@ -3309,9 +3311,13 @@ qboolean R_AddSurfToVBO( msurface_t *surf, qboolean buildlightmap )
 			// GL_TRIANGLE_FAN: 0 1 2 0 2 3 0 3 4 ...
 			for( index = indexbase + 2; index < indexbase + surf->polys->numverts; index++ )
 			{
-				vbotex->indexarray[vbotex->curindex++] = indexbase;
-				vbotex->indexarray[vbotex->curindex++] = index - 1;
-				vbotex->indexarray[vbotex->curindex++] = index;
+				// Make sure we don't overflow the index array.
+				if ( vbotex->curindex + 2 < vbotex->len )
+				{
+					vbotex->indexarray[vbotex->curindex++] = indexbase;
+					vbotex->indexarray[vbotex->curindex++] = index - 1;
+					vbotex->indexarray[vbotex->curindex++] = index;
+				}
 			}
 
 			// if surface has decals, add it to decal lightmapchain

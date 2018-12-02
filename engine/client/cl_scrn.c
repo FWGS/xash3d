@@ -138,6 +138,7 @@ Draw local player position, angles and velocity
 void SCR_DrawPos( void )
 {
 	static char	msg[MAX_SYSPATH];
+	char vel[64];
 	float speed;
 	cl_entity_t *pPlayer;
 	rgba_t color;
@@ -148,12 +149,17 @@ void SCR_DrawPos( void )
 	pPlayer = CL_GetLocalPlayer();
 	speed = VectorLength( cl.frame.client.velocity );
 
+	if( cl_showpos->integer >= 2 )
+		Q_snprintf( vel, sizeof( vel ), "%.2f %.2f %2.2f", cl.frame.client.velocity[0],cl.frame.client.velocity[1], cl.frame.client.velocity[2] );
+	else
+		Q_snprintf( vel, sizeof( vel ), "%.2f", speed );
+
 	Q_snprintf( msg, MAX_SYSPATH,
 	"pos: %.2f %.2f %.2f\n"
 	"ang: %.2f %.2f %.2f\n"
-	"velocity: %.2f", pPlayer->origin[0], pPlayer->origin[1], pPlayer->origin[2],
+	"vel: %s", pPlayer->origin[0], pPlayer->origin[1], pPlayer->origin[2],
 					pPlayer->angles[0], pPlayer->angles[1], pPlayer->angles[2],
-					speed );
+					vel );
 
 	MakeRGBA( color, 255, 255, 255, 255 );
 

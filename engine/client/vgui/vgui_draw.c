@@ -244,7 +244,7 @@ void VGui_Startup( int width, int height )
 				F( &vgui );
 				vgui.initialized = true;
 				VGUI_InitCursors();
-				MsgDev( D_INFO, "vgui_support: found interal client support\n" );
+				MsgDev( D_INFO, "vgui_support: found internal client support\n" );
 			}
 		}
 #endif // XASH_INTERNAL_GAMELIBS
