@@ -408,12 +408,12 @@ void *Com_LoadLibrary( const char *dllname, int build_ordinals_table )
 {
 	dll_user_t *hInst;
 	string fullPath;
-	hInst = FS_FindLibrary(dllname, false);
-	if (!hInst)
+	hInst = FS_FindLibrary( dllname, false );
+	if ( !hInst )
 		return NULL;
 
-	strcpy(fullPath, hInst->fullPath);
-	Mem_Free(hInst);
+	strcpy( fullPath, hInst->fullPath );
+	Mem_Free( hInst );
 
 	return LoadLibraryA( fullPath );
 }
