@@ -270,7 +270,7 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 #ifdef _WIN64
 	hFile = _findfirsti64( pattern, &n_file );
 #else
-	hFile = _findfirst(pattern, &n_file);
+	hFile = _findfirst( pattern, &n_file );
 #endif
 	if ( hFile == -1 ) return;
 
@@ -280,7 +280,7 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 #ifdef _WIN64
 	while (_findnexti64( hFile, &n_file ) == 0 )
 #else
-	while (_findnext(hFile, &n_file) == 0)
+	while (_findnext( hFile, &n_file ) == 0)
 #endif
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
