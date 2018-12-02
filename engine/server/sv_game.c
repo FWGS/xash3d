@@ -3100,7 +3100,7 @@ void SV_AllocStringPool( void )
 		
 #ifdef _WIN32
 		SYSTEM_INFO si;
-		GetSystemInfo( si );
+		GetSystemInfo( &si );
 		pagesize = si.dwPageSize;
 #else
 		pagesize = sysconf( _SC_PAGESIZE );
