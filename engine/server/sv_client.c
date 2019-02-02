@@ -301,6 +301,7 @@ gotnewcl:
 	}
 
 	BF_Init( &newcl->datagram, "Datagram", newcl->datagram_buf, sizeof( newcl->datagram_buf )); // datagram buf
+	newcl->cl_updaterate = 0.05;	// 20 fps as default
 
 	// parse some info from the info strings (this can override cl_updaterate)
 	SV_UserinfoChanged( newcl, userinfo );
@@ -312,7 +313,6 @@ gotnewcl:
 				newcl->userid, SV_GetClientIDString( newcl ), NET_AdrToString( newcl->netchan.remote_address ) );
 
 	newcl->state = cs_connected;
-	newcl->cl_updaterate = 0.05;	// 20 fps as default
 	newcl->lastmessage = host.realtime;
 	newcl->lastconnect = host.realtime;
 	newcl->delta_sequence = -1;
