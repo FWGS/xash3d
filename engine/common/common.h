@@ -767,10 +767,13 @@ qboolean Host_NewGame( const char *mapName, qboolean loadGame );
 void Host_EndGame( const char *message, ... );
 #ifdef __GNUC__
 void EXPORT Host_AbortCurrentFrame( void ) __attribute__ ((noreturn)) __attribute__ ((noinline)) ;
-#endif
-#ifdef _MSC_VER
+#elif defined _MSC_VER
 __declspec(noreturn) void EXPORT Host_AbortCurrentFrame( void );
+#else
+void EXPORT Host_AbortCurrentFrame( void );
 #endif
+
+
 void Host_RestartAmbientSounds( void );
 void Host_RestartDecals( void );
 qboolean CL_ChangeGame( const char *gamefolder, qboolean bReset );
