@@ -27,7 +27,7 @@ configuration:
 
 before_build:
   - git submodule update --init --recursive
-  - cmake -G "%GENERATOR_NAME%"
+  - cmake -G "%GENERATOR_NAME%" c:\projects\xash\xash3d
 
 after_build:
   # Create archive
