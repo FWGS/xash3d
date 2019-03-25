@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SCRIPT_DIR=${PWD##*/}
+SCRIPT_DIR=$(cd "$(dirname -- "$0")" && pwd)
 SCRIPT_NAME=$(basename "$0")
 IS64BIT=$(getconf LONG_BIT)
 
@@ -14,15 +14,20 @@ if [ -z "$GAMEEXE" ]; then
 	GAMEEXE=${SCRIPT_NAME%.*} # strip extension(not required, but do anyway)
 fi
 
+# Check if Xash3D FWGS installed in system
 if [ "$SCRIPT_DIR" = "bin" ]; then
-	# Xash3D SDL is installed in system, so run it from lib/xash3d/ directory with Steam HL basedir if XASH3D_BASEDIR is not set
-	if [ -d "$XASH3D_BASEDIR" ]; then
-		export XASH3D_BASEDIR="$HOME/.steam/steam/steamapps/common/Half-Life/"
+	# Run it from lib/xash3d/ directory with Steam HL basedir if XASH3D_BASEDIR is not set
+	if [ -z "$XASH3D_BASEDIR" ]; then
+		if [ -d "$HOME/.steam/steam/steamapps/common/Half-Life/" ]; then
+			export XASH3D_BASEDIR="$HOME/.steam/steam/steamapps/common/Half-Life/"
+		else
+			export XASH3D_BASEDIR="$PWD"
+		fi
 	fi
 	GAMEROOT=${PWD}/../${LIBPREFIX}/${GAMEEXE}
-	echo "Xash3D FWGS is installed in system."
+	echo "Xash3D FWGS is installed in system. Game directory is set to: $XASH3D_BASEDIR"
 else
-	GAMEROOT=$(dirname -- "$(readlink -f -- "$0")")
+	GAMEROOT="$SCRIPT_DIR"
 fi
 
 #determine platform
