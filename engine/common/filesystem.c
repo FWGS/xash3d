@@ -249,7 +249,6 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 {
 	int		i;
 	signed char *c;
-
 #ifdef _WIN64		// Windows x64
 	char pattern[4096];
 	struct _finddatai64_t	n_file;
@@ -279,7 +278,7 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 	// start a new chain with the the first name
 	stringlistappend( list, n_file.name );
 	// iterate through the directory
-	while( _findnext( hFile, &n_file ) == 0)
+	while( _findnext( hFile, &n_file ) == 0 )
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
 #else			// Non-Windows
