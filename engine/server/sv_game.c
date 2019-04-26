@@ -3093,18 +3093,10 @@ void SV_AllocStringPool( void )
 
 #ifdef USE_MMAP
 	{
-		size_t pagesize;
+		size_t pagesize = sysconf( _SC_PAGESIZE );
 		int arrlen = ( str64.maxstringarray * 2 ) & ~( pagesize - 1 );
 		void *base = svgame.dllFuncs.pfnGameInit;
 		void *start = svgame.hInstance - arrlen;
-		
-#ifdef _WIN32
-		SYSTEM_INFO si;
-		GetSystemInfo( &si );
-		pagesize = si.dwPageSize;
-#else
-		pagesize = sysconf( _SC_PAGESIZE );
-#endif
 
 		while( start - base > INT_MIN )
 		{
