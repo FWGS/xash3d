@@ -3164,16 +3164,7 @@ void SV_AllocStringPool( void )
 void SV_FreeStringPool( void )
 {
 #ifdef XASH_64BIT
-	size_t pagesize;
 	MsgDev( D_NOTE, "SV_FreeStringPool()\n" );
-	
-#ifdef _WIN32
-	SYSTEM_INFO si;
-	GetSystemInfo( &si );
-	pagesize = si.dwPageSize;
-#else
-	pagesize = sysconf( _SC_PAGESIZE );
-#endif
 
 #ifdef USE_MMAP
 	if( str64.pstringarray != str64.staticstringarray )
