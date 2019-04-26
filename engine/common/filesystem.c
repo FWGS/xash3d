@@ -258,12 +258,12 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 
 	// ask for the directory listing handle
 	hFile = _findfirsti64( pattern, &n_file );
-	if ( hFile == -1 ) return;
+	if( hFile == -1 ) return;
 
 	// start a new chain with the the first name
 	stringlistappend( list, n_file.name );
 	// iterate through the directory
-	while (_findnexti64( hFile, &n_file ) == 0 )
+	while( _findnexti64( hFile, &n_file ) == 0 )
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
 #elif defined(_WIN32)	// Windows x86
@@ -274,12 +274,12 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 
 	// ask for the directory listing handle
 	hFile = _findfirst( pattern, &n_file );
-	if ( hFile == -1 ) return;
+	if( hFile == -1 ) return;
 
 	// start a new chain with the the first name
 	stringlistappend( list, n_file.name );
 	// iterate through the directory
-	while (_findnext( hFile, &n_file ) == 0)
+	while( _findnext( hFile, &n_file ) == 0)
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
 #else			// Non-Windows
