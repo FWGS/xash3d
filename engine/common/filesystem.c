@@ -249,42 +249,42 @@ static void listdirectory( stringlist_t *list, const char *path, qboolean lowerc
 {
 	int		i;
 	signed char *c;
-#ifdef _WIN32
+
+#ifdef _WIN64		// Windows x64
 	char pattern[4096];
-#ifdef _WIN64
 	struct _finddatai64_t	n_file;
 	intptr_t		hFile;
-#else
-	struct _finddata_t	n_file;
-	int		hFile;
-#endif
-#else
-	DIR *dir;
-	struct dirent *entry;
-#endif
-
-#ifdef _WIN32
 	Q_snprintf( pattern, sizeof( pattern ), "%s*", path );
 
 	// ask for the directory listing handle
-#ifdef _WIN64
 	hFile = _findfirsti64( pattern, &n_file );
-#else
-	hFile = _findfirst( pattern, &n_file );
-#endif
 	if ( hFile == -1 ) return;
 
 	// start a new chain with the the first name
 	stringlistappend( list, n_file.name );
 	// iterate through the directory
-#ifdef _WIN64
 	while (_findnexti64( hFile, &n_file ) == 0 )
-#else
-	while (_findnext( hFile, &n_file ) == 0)
-#endif
 		stringlistappend( list, n_file.name );
 	_findclose( hFile );
-#else
+#elif defined(_WIN32)	// Windows x86
+	char pattern[4096];
+	struct _finddata_t	n_file;
+	int		hFile;
+	Q_snprintf( pattern, sizeof( pattern ), "%s*", path );
+
+	// ask for the directory listing handle
+	hFile = _findfirst( pattern, &n_file );
+	if ( hFile == -1 ) return;
+
+	// start a new chain with the the first name
+	stringlistappend( list, n_file.name );
+	// iterate through the directory
+	while (_findnext( hFile, &n_file ) == 0)
+		stringlistappend( list, n_file.name );
+	_findclose( hFile );
+#else			// Non-Windows
+	DIR *dir;
+	struct dirent *entry;
 	if( !( dir = opendir( path ) ) )
 		return;
 
