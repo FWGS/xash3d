@@ -3143,9 +3143,9 @@ void SV_AllocStringPool( void )
 #endif
 
 	str64.pstringarray = ptr;
-	str64.pstringarraystatic = (uintptr_t)ptr + str64.maxstringarray;
+	str64.pstringarraystatic = (byte *)ptr + str64.maxstringarray;
 	str64.pstringbase = str64.poldstringbase = ptr;
-	str64.plast = (uintptr_t)ptr + 1;
+	str64.plast = (byte *)ptr + 1;
 	svgame.globals->pStringBase = ptr;
 #else
 	svgame.stringspool = Mem_AllocPool( "Server Strings" );
