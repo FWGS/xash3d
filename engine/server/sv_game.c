@@ -3058,7 +3058,7 @@ void SV_SetStringArrayMode( qboolean dynamic )
 }
 
 #ifdef XASH_64BIT
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
 #define USE_MMAP
 #include <sys/mman.h>
 #endif
