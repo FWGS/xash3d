@@ -32,7 +32,7 @@ os:
 before_script:
     - sh scripts/travis_${TRAVIS_OS_NAME}_deps.sh
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export ANDROID_HOME=$PWD/android-sdk-linux; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH=${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH=${PATH}:$PWD/apache-ant-1.10.6/bin:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk; fi
     - sh scripts/travis_common_deps.sh
 script:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh scripts/build_android_engine.sh; fi
