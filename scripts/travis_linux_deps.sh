@@ -6,6 +6,7 @@ curl http://mirror.linux-ia64.org/apache//ant/binaries/apache-ant-1.10.6-bin.tar
 export ANDROID_HOME=$PWD/android-sdk-linux
 export PATH=${PATH}:$PWD/apache-ant-1.10.6/bin:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools:$PWD/android-ndk
 sleep 3s; echo y | android update sdk -u --filter platform-tools,build-tools-19.0.0,android-19 --force --all > /dev/null
+sed -e 's/1\.5/1\.6/g' -i $PWD/android-sdk-linux/tools/ant/build.xml
 wget http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin >/dev/null 2>/dev/null
 7z x ./android-ndk-r10e-linux-x86_64.bin > /dev/null
 mv android-ndk-r10e android-ndk
